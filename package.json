@@ -1,6 +1,9 @@
 {
   "name": "kpubdata-studio",
   "version": "0.4.0",
+  "engines": {
+    "node": ">=22"
+  },
   "private": true,
   "type": "module",
   "scripts": {
