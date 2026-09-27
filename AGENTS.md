@@ -1,114 +1,130 @@
 # AGENTS.md — kpubdata-studio
 
-> **프로젝트 관리·리뷰 정책의 정본은 [POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md) 하나다.**
-> Epic · Issue · Priority · Review Level · Verification · Release 규칙은 그 문서를 따른다.
-> 이 문서에는 이 저장소 고유의 절차(빌드 명령, 디렉터리 규칙)만 남긴다.
-> 충돌하면 POLICY.md 가 우선한다.
+> **[POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md)
+> is the single canonical source for project-management and review policy.** Epic,
+> Issue, Priority, Review Level, Verification and Release rules come from there.
+> This file keeps only what is specific to this repository — build commands and
+> directory rules. POLICY.md wins any conflict.
 
-## 미션
+## Mission
 
-`kpubdata-builder`를 위한 UI 셸이자 워크플로 인터페이스로 KPubData Studio를 구현합니다.
+Implement KPubData Studio: the UI shell and workflow interface for
+`kpubdata-builder`.
 
-## 기본 원칙
+## Ground rules
 
-- Studio는 builder 로직을 다시 구현하면 안 됩니다.
-- UI 상태 전이는 명시적으로 유지합니다.
-- 생성되는 스펙은 이식 가능해야 합니다.
-- 검증 결과와 manifest를 명확히 드러냅니다.
-- preview를 핵심 기능으로 다룹니다.
+- Studio does not reimplement builder logic.
+- Keep UI state transitions explicit.
+- Generated specs must be portable.
+- Surface validation results and the manifest, do not bury them.
+- Treat preview as a core feature, not a nice-to-have.
 
-## 언어 정책
+## Language policy
 
-> 정본은 [kpubdata ADR 0003](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0003-language-policy.md)
-> 이다. 근거(한국 OSS 10곳 실측)와 기각한 대안이 거기 있다.
+> [kpubdata ADR 0003](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0003-language-policy.md)
+> is canonical. The evidence (measurements across ten Korean OSS projects) and the
+> rejected alternatives are there.
 
-**제목은 영어, 본문은 자유.** 제목은 목록·검색·릴리스 노트에 나타난다.
+**Titles are English; bodies are free.** Titles show up in lists, searches and
+release notes.
 
-| 영역 | 언어 |
+| Area | Language |
 |---|---|
-| 코드 식별자·주석·docstring | 영어 |
-| 커밋 메시지 | 영어 |
-| **PR 제목** | 영어 (Conventional Commits) — squash merge 에서 커밋이 된다 |
-| CHANGELOG·릴리스 노트 | 영어 |
-| **README** | 한국어 기본 + 같은 파일에 영어 절 |
-| **이슈 제목** | 영어 |
-| 이슈 본문 | 한국어 또는 영어 |
-| PR 본문·리뷰 코멘트 | 한국어 또는 영어 |
-| 한국 도메인 문서 (활용신청·공공누리 절차) | 한국어 유지 |
-| 사용자에게 보이는 문자열 리터럴 | **대상 아님** (런타임 동작, 별도 결정) |
+| Code identifiers, comments, JSDoc | English |
+| Commit messages | English |
+| **PR titles** | English (Conventional Commits) — a squash merge turns it into a commit |
+| CHANGELOG and release notes | English |
+| **Governance documents** (`AGENTS.md`, `CONTRIBUTING.md`) | English |
+| **README** | Korean first, with an English section in the same file |
+| **Issue titles** | English |
+| Issue bodies | Korean or English |
+| PR bodies and review comments | Korean or English |
+| Korean-domain documents (활용신청, 공공누리 procedures) | Korean |
+| User-visible string literals | **Out of scope** — runtime behaviour, decided separately |
 
-## 라벨 — 무엇을 붙이나
+That last row matters most here. Studio is the repository users actually see, so
+**a Korean UI label is not a violation.** Translating one would change the product,
+which is a separate decision (#427).
 
-POLICY 2.1 · 2.1.1 · 2.1.2 절이 정본이다. **표에 없는 라벨은 새로 만들지 않는다.**
-라벨을 추가하려면 `epic:governance` 를 거친다.
+Operating rules:
 
-| 축 | 라벨 | 누가 |
+- Answer an issue in the language it was written in.
+- Write `good first issue` in English, or in both.
+- **Do not let English block a contribution.** If a title is hard to write in
+  English, open it in Korean and say so — triage and review will sort it out.
+
+## Labels — what to apply
+
+POLICY sections 2.1, 2.1.1 and 2.1.2 are canonical. **Do not create a label that
+is not in the table below.** Adding one goes through `epic:governance`.
+
+| Axis | Labels | Who |
 |---|---|---|
-| Epic | `epic:trust` `epic:warehouse` `epic:governance` `epic:byok` `epic:policy` `epic:datasets` `epic:distribution` `epic:brand` `epic:onboarding` | 기존 라벨은 누구나. **새 `epic:*` 를 만드는 것은 사람만** |
-| Priority | `priority:critical` `priority:high` `priority:medium` `priority:low` | **High 이상 승격은 사람만** (POLICY 8) |
-| Review Level | `review:R0` ~ `review:R3` | 자동 부여 대상. **낮추는 것은 사람만** |
-| 유형 | `type:feat` `type:bug` `type:docs` `type:chore` `type:test` `type:refactor` | 누구나 |
-| 영역 | `area:*` | 누구나 |
+| Epic | `epic:trust` `epic:warehouse` `epic:governance` `epic:byok` `epic:policy` `epic:datasets` `epic:distribution` `epic:brand` `epic:onboarding` | Anyone may apply an existing label. **Only a person creates a new `epic:*`** |
+| Priority | `priority:critical` `priority:high` `priority:medium` `priority:low` | **Only a person promotes to High or above** (POLICY 8) |
+| Review Level | `review:R0` – `review:R3` | Assigned by path. **Only a person lowers one** |
+| Type | `type:feat` `type:bug` `type:docs` `type:chore` `type:test` `type:refactor` | Anyone |
+| Area | `area:*` | Anyone |
 
-새 이슈에는 **최소 `epic:*` 와 `type:*`** 를 붙인다. Priority 는 근거가 없으면
-붙이지 않는다 — POLICY 8 은 High 이상에 `Impact:` · `Blocks:` · `Evidence:` 를
-요구하고, 근거 없는 등급은 틀린 등급이다.
+A new issue carries **at least `epic:*` and `type:*`**. Leave Priority off when
+there is no evidence for it — POLICY 8 requires `Impact:`, `Blocks:` and
+`Evidence:` for High and above, and a rating without evidence is a wrong rating.
 
-에이전트가 하지 않는 것:
+What an agent does not do:
 
-- `priority:high` · `priority:critical` 로 올리기 (사람의 판단)
-- 새 `epic:*` 라벨 만들기
-- `review:*` 를 낮추기
-- Epic 이슈를 만들기 — Epic 은 라벨이다 (POLICY 4.1)
+- Promote to `priority:high` or `priority:critical` — that is a person's judgement.
+- Create a new `epic:*` label.
+- Lower a `review:*` level.
+- Create an Epic issue. Epic is a label (POLICY 4.1).
 
-`P0` / `P1` / `P2` 는 **폐기됐다.** 기계적으로 `priority:*` 로 치환하지 않는다 —
-POLICY 8 이 원점 재판정을 요구한다.
+`P0` / `P1` / `P2` are **retired.** Do not substitute them mechanically for
+`priority:*` — POLICY 8 requires a re-rating from zero, so that a wrong priority
+does not survive under a new name.
 
-제목에 `GOV-01:` · `WH-03:` 같은 접두사를 붙이지 않는다. 그것은 백로그 문서의
-일련번호이고 이슈의 이름이 아니다. 분류는 라벨이 한다.
+Do not prefix a title with `GOV-01:` or `WH-03:`. Those are serial numbers from a
+backlog document, not the issue's name. Labels do the classifying.
 
-- 영어로 올라온 이슈에는 영어로 답한다.
-- `good first issue` 는 영어로 쓰거나 병기한다.
-- **영어로 쓰기 어렵다는 이유로 기여를 막지 않는다.** 이슈나 PR 제목을 영어로 쓰기
-  어려우면 한국어로 올리고 그렇게 말해 달라 — triage·리뷰에서 함께 정리한다.
+## Branch rules
 
+- The default branch is `main`. **Never push to `main` directly.** Branch
+  protection now enforces this, so a direct push is refused rather than merely
+  discouraged.
+- Always work on a feature branch and open a PR.
+- Branch names: `feat/issue-<number>-<short-description>`,
+  `fix/issue-<number>-<short-description>`, `docs/<short-description>`.
+- Never force-push to `main`. Never delete `main`.
+- Do not rename or delete a branch you did not create.
+- If a git operation is not obviously safe, **ask instead of guessing.**
 
-## 브랜치 규칙
+## Build order
 
-- 기본 브랜치는 `main`입니다. **절대 `main`에 직접 push하지 마세요.**
-- 항상 기능 브랜치에서 작업하고 PR을 엽니다.
-- 브랜치 이름 규칙: `feat/issue-<number>-<short-description>`, `fix/issue-<number>-<short-description>`, `docs/<short-description>`
-- `main`에 force-push하지 마세요. `main`을 삭제하지 마세요.
-- 직접 만들지 않은 브랜치를 이름 변경하거나 삭제하지 마세요.
-- git 작업이 확실하지 않다면 **추측하지 말고 먼저 물어보세요.**
-
-## 우선순위
-
-1. 정보 구조
-2. 빌드 초안 상태
-3. builder API 연동 계층
-4. 미리보기 및 검증 화면
-5. 아티팩트 뷰어
-6. 출판 흐름
+1. Information architecture
+2. Build draft state
+3. The builder API integration layer
+4. Preview and validation screens
+5. The artifact viewer
+6. The publish flow
 
 ---
 
-## 이 프로젝트 이해하기
+## How this project fits together
 
-KPubData Studio는 `kpubdata-builder` 출판사에서 만드는 **책(데이터셋)을 기획하고 미리보는 작업실**과 같습니다. 코딩 없이 버튼 몇 번으로 어떤 데이터를 가져올지 정하고, 결과가 어떻게 나올지 눈으로 확인하며 최종 출판까지 관리하는 웹 화면입니다.
+`kpubdata-builder` runs the pipeline; Studio is where a person decides what to
+build, watches it run, and looks at what came out before publishing it. No code is
+written by the user.
 
-### 핵심 개념 용어 사전
+### Vocabulary
 
-| 용어 | 설명 |
+| Term | Meaning |
 | :--- | :--- |
-| **Draft** | 아직 저장되지 않은 임시 기획 상태 (편집 중) |
-| **Build Run** | 실제로 빌드를 돌려 데이터를 가져오는 과정 |
-| **Preview** | 빌드 결과물을 미리 눈으로 확인하는 화면 |
-| **State Model** | 기획(Draft)부터 실행(Run), 출판(Publish)까지의 상태 흐름도 |
-| **Studio Shell** | 전체 웹 화면을 구성하는 기본 틀과 내비게이션 |
-| **UI Spec** | 화면의 각 요소가 어떻게 보이고 반응해야 하는지에 대한 약속 |
+| **Draft** | An unsaved, in-progress build definition |
+| **Build Run** | An actual build execution fetching data |
+| **Preview** | The screen showing what a build produced |
+| **State Model** | The flow from Draft through Run to Published |
+| **Studio Shell** | The frame and navigation every screen sits in |
+| **UI Spec** | The contract for how each element looks and responds |
 
-### 이 프로젝트의 코드가 실행되는 흐름 (Vite + React SPA)
+### Request flow (Vite + React SPA)
 
 ```mermaid
 graph TD
@@ -124,98 +140,108 @@ graph TD
 [main.tsx] -> [App.tsx] -> [router.tsx] -> [pages/*] -> [features/*]
 ```
 
+## Agent coding rules
 
-## AI 에이전트 코딩 가이드
+### Prompts that work
 
-### 좋은 프롬프트 예시
-- "`src/pages/NewBuildPage.tsx`에 새 빌드 기획 시작 화면을 정리해줘."
-- "`src/features/preview/api/index.ts`와 연결되는 미리보기 패널 UI를 추가해줘."
+- "Lay out the new-build screen in `src/pages/NewBuildPage.tsx`."
+- "Add the preview panel that talks to `src/features/preview/api/index.ts`."
 
-### 에이전트 금지 사항
-- **빌더 로직 중복 금지**: 데이터 수집 로직은 직접 짜지 말고 `kpubdata-builder` API를 호출하세요.
-- **상태 관리 누락 금지**: 페이지 이동 시 기획서의 임시 저장 상태(Draft)가 유지되도록 하세요.
+### Forbidden
 
-### 에이전트 결과물 검증 체크리스트
-- [ ] `npm run lint`를 통과했는가?
-- [ ] 새로운 페이지가 Sidebar 내비게이션에 포함되었는가?
-- [ ] 반응형 디자인이 모바일에서도 깨지지 않는가?
+- **Duplicating builder logic.** Call the `kpubdata-builder` API; do not write
+  collection logic here.
+- **Losing state.** A Draft survives navigation.
 
-## 파일 구조 가이드
+### Before handing work back
+
+- [ ] Does `npm run lint` pass?
+- [ ] Is a new page reachable from the sidebar navigation?
+- [ ] Does the layout hold up at phone width?
+
+## Directory layout
 
 ```mermaid
 graph TD
-    src[src/] --> main[main.tsx: Vite 엔트리]
-    src --> app[app/: 앱 조립 및 라우터]
-    src --> pages[pages/: 라우트 단위 화면]
-    src --> features[features/: 기능별 모듈]
-    src --> shared[shared/: 공통 유틸/타입/UI]
-    src --> entities[entities/: 도메인 모델]
+    src[src/] --> main[main.tsx: Vite entry]
+    src --> app[app/: assembly and router]
+    src --> pages[pages/: one per route]
+    src --> features[features/: per-feature modules]
+    src --> shared[shared/: shared utils, types, UI]
+    src --> entities[entities/: domain models]
 ```
 
 ```text
 src/
-├── main.tsx         # Vite 엔트리 포인트
-├── app/             # App 조립 및 React Router 설정
-├── pages/           # URL 단위 페이지 컴포넌트
-├── features/        # 기능별 UI/API/상태 모듈
-├── shared/          # 공통 유틸리티, 타입, UI 조각
-└── entities/        # build, dataset, manifest, artifact 모델
+├── main.tsx         # Vite entry point
+├── app/             # App assembly and React Router setup
+├── pages/           # one component per URL
+├── features/        # per-feature UI, API and state
+├── shared/          # shared utilities, types, UI pieces
+└── entities/        # build, dataset, manifest, artifact models
 ```
 
-### 이 파일을 수정해야 할 때
-- **새로운 화면(URL)을 만들고 싶을 때**: `src/pages/`에 페이지 컴포넌트를 추가하고 `src/app/router.tsx`에 경로를 연결합니다.
-- **모든 화면에서 공유되는 셸을 바꿀 때**: `src/app/App.tsx` 또는 `src/app/router.tsx`의 App Shell을 수정합니다.
-- **기능별 API/상태/UI를 바꿀 때**: 해당 `src/features/<feature>/` 아래에서 작업합니다.
+### Which file to change
 
-## SPA 및 개발 가이드
+- **A new screen (URL)**: add a component under `src/pages/` and wire the route in
+  `src/app/router.tsx`.
+- **The shell every screen shares**: `src/app/App.tsx` or the app shell in
+  `src/app/router.tsx`.
+- **A feature's API, state or UI**: work inside that `src/features/<feature>/`.
 
-### Vite + React Router 기초 (초보자용)
-- `main.tsx`: 브라우저의 `#root`에 애플리케이션을 마운트하는 시작점입니다.
-- `App.tsx`: 전체 앱을 감싸고 `RouterProvider`를 연결하는 파일입니다.
-- `router.tsx`: 브라우저 경로와 페이지 컴포넌트를 연결하는 라우팅 설정 파일입니다.
-- `src/pages/*.tsx`: 실제 화면 단위 페이지입니다.
-- `src/features/*`: 특정 기능의 API, UI, 상태를 묶어 관리하는 폴더입니다.
+## SPA notes
 
-### 새 페이지 추가하는 방법
-1. `src/pages/` 아래에 새 페이지 컴포넌트를 만듭니다.
-2. `src/app/router.tsx`에 해당 페이지를 경로와 함께 등록합니다.
-3. 브라우저에서 `localhost:5173`의 해당 경로로 접속하여 확인합니다.
+### What each entry file does
 
-### State Model 설명
-사용자가 작업을 시작하면 데이터는 다음 순서로 상태가 변합니다:
+- `main.tsx` mounts the application onto `#root`.
+- `App.tsx` wraps the app and connects `RouterProvider`.
+- `router.tsx` maps browser paths to page components.
+- `src/pages/*.tsx` are the screens.
+- `src/features/*` groups one feature's API, UI and state.
+
+### Adding a page
+
+1. Create the component under `src/pages/`.
+2. Register it with a path in `src/app/router.tsx`.
+3. Open that path on `localhost:5173`.
+
+### The state model
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Draft: 수정 중
-    Draft --> Build_Run: 실행 버튼 클릭
-    Build_Run --> Published: 검증 및 전송 완료
-    Build_Run --> Draft: 실패 시 수정
+    [*] --> Draft: editing
+    Draft --> Build_Run: run clicked
+    Build_Run --> Published: validated and delivered
+    Build_Run --> Draft: failed, back to editing
     Published --> [*]
 ```
 
-- **Draft**: 사용자가 내용을 고치고 있는 상태입니다. (수정 중)
-- **Build Run**: '실행' 버튼을 눌러 실제로 데이터를 모으는 중입니다.
-- **Published**: 모든 검증을 마치고 결과물이 공유된 상태입니다.
+- **Draft** — the user is still editing.
+- **Build Run** — data is being collected.
+- **Published** — validation passed and the result is shared.
 
 ---
 
-## 관련 문서
+## Related documents
 
-### 이 저장소 내 문서
-| 문서 | 설명 |
+### In this repository
+
+| Document | What it covers |
 | :--- | :--- |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 기여 가이드 |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | 시스템 아키텍처 |
-| [STATE_MODEL.md](./STATE_MODEL.md) | 상태 관리 모델 |
-| [UI_SPEC.md](./UI_SPEC.md) | UI 디자인 규격 |
-| [USER_FLOWS.md](./USER_FLOWS.md) | 사용자 흐름도 |
-| [INFORMATION_ARCHITECTURE.md](./INFORMATION_ARCHITECTURE.md) | 정보 구조 설계 |
-| [API_CONTRACT.md](./API_CONTRACT.md) | API 연동 규약 |
-| [PRD.md](./PRD.md) | 제품 요구사항 |
-| [ROADMAP.md](./ROADMAP.md) | 개발 로드맵 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture |
+| [STATE_MODEL.md](./STATE_MODEL.md) | State model |
+| [UI_SPEC.md](./UI_SPEC.md) | UI specification |
+| [USER_FLOWS.md](./USER_FLOWS.md) | User flows |
+| [INFORMATION_ARCHITECTURE.md](./INFORMATION_ARCHITECTURE.md) | Information architecture |
+| [API_CONTRACT.md](./API_CONTRACT.md) | API contract |
+| [PRD.md](./PRD.md) | Product requirements |
+| [ROADMAP.md](./ROADMAP.md) | Roadmap |
+| [SECURITY.md](./SECURITY.md) | Security policy and known limits |
 
-### KPubData Product Family
-| 저장소 | 문서 | 설명 |
+### KPubData product family
+
+| Repository | Document | What it covers |
 | :--- | :--- | :--- |
-| [kpubdata](https://github.com/yeongseon/kpubdata) | [AGENTS.md](https://github.com/yeongseon/kpubdata/blob/main/AGENTS.md) | Core 에이전트 가이드 |
-| [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [AGENTS.md](https://github.com/yeongseon/kpubdata-builder/blob/main/AGENTS.md) | Builder 에이전트 가이드 |
+| [kpubdata](https://github.com/yeongseon/kpubdata) | [AGENTS.md](https://github.com/yeongseon/kpubdata/blob/main/AGENTS.md) | Core agent guide |
+| [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [AGENTS.md](https://github.com/yeongseon/kpubdata-builder/blob/main/AGENTS.md) | Builder agent guide |
