@@ -2,7 +2,7 @@
   "name": "kpubdata-studio",
   "version": "0.4.0",
   "engines": {
-    "node": ">=22"
+    "node": "^22.13.0 || >=24"
   },
   "private": true,
   "type": "module",
