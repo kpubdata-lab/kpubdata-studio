@@ -610,7 +610,8 @@
       "expandLabel": "Ask KPubData 확장하기",
       "collapse": "기본",
       "expand": "확장",
-      "close": "Ask KPubData 닫기"
+      "close": "Ask KPubData 닫기",
+      "label": "Ask KPubData"
     },
     "parse": {
       "empty": "LLM이 빈 응답을 반환했습니다.",
@@ -625,7 +626,9 @@
       "approve": "승인"
     },
     "page": {
-      "desc": "현재 화면·Dataset·Build·Quality 문맥을 사용해 Evidence 기반 답변과 다음 Action까지 연결합니다."
+      "desc": "현재 화면·Dataset·Build·Quality 문맥을 사용해 Evidence 기반 답변과 다음 Action까지 연결합니다.",
+      "eyebrow": "도우미",
+      "title": "Ask KPubData"
     }
   },
   "quality": {

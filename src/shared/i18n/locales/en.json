@@ -610,7 +610,8 @@
       "expandLabel": "Expand Ask KPubData",
       "collapse": "Default",
       "expand": "Expand",
-      "close": "Close Ask KPubData"
+      "close": "Close Ask KPubData",
+      "label": "Ask KPubData"
     },
     "parse": {
       "empty": "The LLM returned an empty response.",
@@ -625,7 +626,9 @@
       "approve": "Approve"
     },
     "page": {
-      "desc": "Uses the current screen, dataset, build and quality context to give evidence-based answers and the next action."
+      "desc": "Uses the current screen, dataset, build and quality context to give evidence-based answers and the next action.",
+      "eyebrow": "Assistant",
+      "title": "Ask KPubData"
     }
   },
   "quality": {

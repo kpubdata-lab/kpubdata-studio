@@ -1,6 +1,9 @@
 /**
  * The stale-UI-literal gate has to actually fail (studio#429).
  *
+ * The fixture strings are synthetic on purpose. Using a real removed product string
+ * made the gate flag this very file — a false positive it created for itself.
+ *
  * Two earlier versions of this gate passed everything, and both were only found by
  * deliberately breaking something and watching the gate stay green. So the gate gets
  * a test that breaks something on purpose.
@@ -59,10 +62,10 @@ beforeEach(() => {
   git(["config", "user.email", "t@example.com"]);
   git(["config", "user.name", "t"]);
   mkdirSync(join(repo, "__tests__"), { recursive: true });
-  writeLocales("어디서 시작할지 모르겠다면 Kubi에게 물어보세요");
+  writeLocales("합성된예전문구입니다테스트전용");
   writeFileSync(
     join(repo, "__tests__/home.test.tsx"),
-    'const HERO = "어디서 시작할지 모르겠다면 Kubi에게 물어보세요";\n',
+    'const HERO = "합성된예전문구입니다테스트전용";\n',
   );
   git(["add", "-A"]);
   git(["commit", "-qm", "base"]);
@@ -75,7 +78,7 @@ afterEach(() => {
 describe("stale UI literal gate", () => {
   it("fails when a removed string is still asserted", () => {
     // The change that caused #429: the locale value moves, the test does not.
-    writeLocales("어디서 시작할지 모르겠다면 Ask KPubData");
+    writeLocales("합성된새문구입니다테스트전용");
     git(["add", "-A"]);
     git(["commit", "-qm", "rename"]);
 
@@ -83,14 +86,14 @@ describe("stale UI literal gate", () => {
 
     expect(code).toBe(1);
     expect(out).toContain("__tests__/home.test.tsx");
-    expect(out).toContain("Kubi에게");
+    expect(out).toContain("합성된예전문구");
   });
 
   it("passes when the test moved with the string", () => {
-    writeLocales("어디서 시작할지 모르겠다면 Ask KPubData");
+    writeLocales("합성된새문구입니다테스트전용");
     writeFileSync(
       join(repo, "__tests__/home.test.tsx"),
-      'const HERO = "어디서 시작할지 모르겠다면 Ask KPubData";\n',
+      'const HERO = "합성된새문구입니다테스트전용";\n',
     );
     git(["add", "-A"]);
     git(["commit", "-qm", "rename with tests"]);
@@ -106,7 +109,7 @@ describe("stale UI literal gate", () => {
         join(dir, `${locale}.json`),
         `${JSON.stringify(
           {
-            nav: { assistant: "어디서 시작할지 모르겠다면 Kubi에게 물어보세요" },
+            nav: { assistant: "합성된예전문구입니다테스트전용" },
             extra: { added: "새로 추가한 문장입니다" },
           },
           null,
