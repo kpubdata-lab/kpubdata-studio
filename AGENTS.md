@@ -237,7 +237,7 @@ stateDiagram-v2
 | [API_CONTRACT.md](./API_CONTRACT.md) | API contract |
 | [PRD.md](./PRD.md) | Product requirements |
 | [ROADMAP.md](./ROADMAP.md) | Roadmap |
-| [SECURITY.md](./SECURITY.md) | Security policy and known limits |
+| [SECURITY.md](https://github.com/yeongseon/kpubdata-studio/blob/main/SECURITY.md) | Security policy and known limits |
 
 ### KPubData product family
 
