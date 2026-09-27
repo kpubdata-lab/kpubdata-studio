@@ -26,7 +26,7 @@ KPubData Studio의 설계 철학, 아키텍처, 개발 방법을 안내하는 �
 | 문서 | 설명 |
 |---|---|
 | [PRD.md](../PRD.md) | 제품 요구사항 정의 및 목표 (Product requirements and goals) |
-| [ROADMAP.md](../ROADMAP.md) | 향후 개발 계획 및 마일스톤 (Development plan and milestones) |
+| [ROADMAP.md](https://github.com/yeongseon/kpubdata-studio/blob/main/ROADMAP.md) | 향후 개발 계획 및 마일스톤 (Development plan and milestones) |
 
 ## 상세 참고 (Detailed Reference)
 
@@ -44,4 +44,4 @@ KPubData Studio의 설계 철학, 아키텍처, 개발 방법을 안내하는 �
 |---|---|---|
 | [kpubdata](https://github.com/yeongseon/kpubdata) | 접근 + 파싱 + 정규화 | [ARCHITECTURE.md](https://github.com/yeongseon/kpubdata/blob/main/ARCHITECTURE.md) |
 | [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | 데이터셋 조립 + 파이프라인 | [ARCHITECTURE.md](https://github.com/yeongseon/kpubdata-builder/blob/main/ARCHITECTURE.md) |
-| [kpubdata-studio](https://github.com/yeongseon/kpubdata-studio) | 시각적 인터페이스 | [README.md](../README.md) |
+| [kpubdata-studio](https://github.com/yeongseon/kpubdata-studio) | 시각적 인터페이스 | [README.md](https://github.com/yeongseon/kpubdata-studio/blob/main/README.md) |
