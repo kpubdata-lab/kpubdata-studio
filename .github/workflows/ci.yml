@@ -24,7 +24,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["20", "22"]
+        # Node 20 은 빼야 한다. vitest 의 jsdom 경로가 undici 를 통해
+        # ``webidl.util.markAsUncloneable`` 을 호출하고, 그 내부 API 는 Node 22
+        # 부터 있다 — 20.20.2 에서 워커가 전부 기동에 실패한다(#400).
+        #
+        # 이것은 **개발 도구의 요구**이고 사용자 요구가 아니다. 배포 산출물은
+        # 정적 빌드라 최종 사용자에게 Node 가 필요하지 않다. Node 20 을 유지하면
+        # undici/jsdom/vitest 를 고정해야 하고, 그러면 보안 업데이트가 막힌다.
+        node-version: ["22", "24"]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
