@@ -1,6 +1,6 @@
 import { i18n } from "@/shared/i18n";
 /**
- * Builder HTTP API 클라이언트 (#29).
+ * Builder HTTP API client (#29).
  *
  * kpubdata-builder service(`service/app.py`)가 실제로 제공하는 엔드포인트
  * (`/version`, `/validate`, `/preview`, `/build`, `/artifacts/{run_id}`)를 감싼다.
@@ -23,7 +23,7 @@ import * as schemas from "./builderApi.schema";
 import { z } from "zod";
 
 /**
- * Studio의 현재 통합 표면(async build job + cooperative cancel + manifest
+ * Studio's current integration surface (async build job + cooperative cancel + manifest
  * status/partial + provider credential + monitoring + publish)이 요구하는 **최소**
  * Builder API 버전이다. exact contract pin이 아니다 — Builder ADR 0013에 따라
  * Studio는 "같은 major, server >= 이 최소값"이면 호환으로 간주하고, 더 높은
@@ -36,7 +36,7 @@ import { z } from "zod";
  */
 export const MIN_BUILDER_API_VERSION = "1.18.0";
 
-/** `major.minor.patch` 세 부분으로 파싱한다. 형식이 어긋나면 null(fail-closed 신호). */
+/** parse into three parts `major.minor.patch`. Return null if format is invalid (fail-closed signal). */
 function parseSemver(version: string): [number, number, number] | null {
   const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(version.trim());
   if (!match) return null;
@@ -44,9 +44,9 @@ function parseSemver(version: string): [number, number, number] | null {
 }
 
 /**
- * Builder가 보고한 `api_version`이 Studio 통합 표면과 호환되는지 판정한다 (ADR 0013).
+ * Determines if Builder's reported `api_version` is compatible with Studio integration surface (ADR 0013).
  *
- * 규칙:
+ * Rules:
  * - server major == required major (major가 다르면 breaking — 2.0.0은 비호환)
  * - server >= required (같은 major 안에서 minor/patch가 최소값 이상)
  * - 더 높은 additive minor/patch는 호환 (1.21.0 OK)
@@ -71,12 +71,12 @@ export function isBuilderApiCompatible(
   return true;
 }
 
-/** 실제 Builder 호출 활성화 여부(미설정 시 mock 사용). */
+/** whether to enable actual Builder calls (uses mock if not set). */
 export function isRealBuilderEnabled(): boolean {
   return import.meta.env.VITE_USE_REAL_BUILDER === "true";
 }
 
-/** Builder가 반환한 비정상 응답을 표현하는 구조화 에러. */
+/** Structured error representing abnormal responses returned by Builder. */
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -92,16 +92,16 @@ interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
   signal?: AbortSignal;
-  /** 자동 타임아웃(ms). 미지정 시 DEFAULT_TIMEOUT_MS. 0 이하이면 타임아웃 비활성화. */
+  /** Auto timeout (ms). Uses DEFAULT_TIMEOUT_MS if not set. ≤0 disables timeout. */
   timeoutMs?: number;
-  /** 네트워크 오류·5xx 발생 시 추가 재시도 횟수(지수 백오프). 미지정 시 DEFAULT_RETRIES. */
+  /** Additional retry count on network errors/5xx (exponential backoff). Uses DEFAULT_RETRIES if not set. */
   retries?: number;
-  /** 인증 헤더 생략 (/healthz 등 무인증 엔드포인트, #186). */
+  /** Omit auth header (for unauthenticated endpoints like /healthz, #186). */
   skipAuth?: boolean;
 }
 
 /**
- * Builder 요청에 붙일 Bearer 토큰을 제공하는 provider (#186).
+ * Provider that supplies Bearer token to attach to Builder requests (#186).
  * null을 반환하면 해당 요청에 Authorization 헤더를 붙이지 않는다 —
  * mock 모드·미로그인 상태에서 빈 헤더가 나가는 것을 방지한다.
  *
@@ -110,12 +110,12 @@ interface RequestOptions {
  */
 export type AuthTokenProvider = () => string | null | Promise<string | null>;
 
-// Studio는 서버가 없는 정적 SPA라 토큰을 메모리(zustand 스토어)에만 보관한다 (#187 예정).
-// apiFetch는 주입받은 provider를 통해 그 토큰을 읽는다 — 전역을 직접 참조하면 테스트가 어렵다.
+// Studio is a serverless static SPA, so tokens are stored only in memory (zustand store) (#187 예정).
+// apiFetch reads tokens via the injected provider — direct global reference makes testing difficult.
 let authTokenProvider: AuthTokenProvider | null = null;
 
 /**
- * Builder 요청에 붙일 Bearer 토큰 provider를 등록한다 (#186).
+ * Register Bearer token provider to attach to Builder requests (#186).
  * provider를 null로(또는 해제) 두면 인증 헤더가 나가지 않아, 미로그인/mock 모드에서
  * 기존 요청 형태와 완전히 동일하게 동작한다(회귀 없음).
  */
@@ -124,9 +124,9 @@ export function setAuthTokenProvider(provider: AuthTokenProvider | null): void {
 }
 
 /**
- * 401 응답을 auth 계층에 알리는 콜백 (#189).
+ * Callback to notify auth layer of 401 response (#189).
  *
- * `true`를 반환하면 "재인증에 성공했으니 같은 요청을 새 토큰으로 한 번 더 보내도 된다"는
+ * Returning `true` means "re-auth succeeded, so retry same request with new token". 번 더 보내도 된다"는
  * 뜻이다. 그 외(`void`/`false`)는 기존과 동일하게 세션 정리만 하고 401을 그대로 던진다.
  */
 export type AuthErrorCallback = () => void | boolean | Promise<void | boolean>;
@@ -138,9 +138,9 @@ export function setAuthErrorCallback(cb: AuthErrorCallback | null): void {
 }
 
 /**
- * 401을 auth 계층에 알리고 재인증에 성공했는지 반환한다.
+ * Notify auth layer of 401 and return whether re-auth succeeded.
  *
- * Builder는 라우팅 이전의 단일 인증 게이트에서 401을 내므로(builder `_dispatch_impl`),
+ * Builder 라우팅 이전의 단일 인증 게이트에서 401을 내므로(builder `_dispatch_impl`),
  * 401은 서버가 요청을 처리하기 전에 거부했다는 뜻이다 — 비멱등 POST라도 새 토큰으로
  * 한 번 더 보내는 것이 안전하다. 재인증 콜백이 던지는 예외는 원래의 401을 가리지
  * 않도록 흡수한다.
@@ -154,22 +154,22 @@ async function recoverFromUnauthorized(): Promise<boolean> {
   }
 }
 
-/** 자동 타임아웃 기본값(ms). Builder /build는 외부 API를 호출해 느릴 수 있어 넉넉히 잡는다. */
+/** Default auto timeout (ms). Builder /build calls external APIs so set generously. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 
-/** 네트워크 오류·5xx에 대한 기본 재시도 횟수(최초 시도 외 추가 횟수). */
+/** Default retry count for network errors/5xx (additional count beyond initial attempt). */
 export const DEFAULT_RETRIES = 2;
 
-/** 타임아웃으로 요청이 중단됐는지 식별하는 ApiError 상태값. */
+/** ApiError status value to identify if request was aborted by timeout. */
 const TIMEOUT_STATUS = 408;
 
-/** 재시도 사이 지수 백오프 지연(ms)을 만든다. */
+/** Create exponential backoff delay (ms) between retries. */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * 사용자 취소 signal과 타임아웃 signal을 결합해, 둘 중 먼저 발화하는 쪽이 요청을 중단하게 한다.
+ * combine user cancel signal and timeout signal; whichever fires first aborts request.
  *
  * @param signal - 호출자가 넘긴 취소 signal(선택).
  * @param timeoutMs - 자동 타임아웃(ms). 0 이하이면 타임아웃 없이 signal만 사용한다.
@@ -190,20 +190,20 @@ function withTimeout(
     cleanup();
     return { signal, cleanup: () => {} };
   }
-  // 사용자 취소가 발생하면 타임아웃 컨트롤러도 함께 중단해 fetch를 즉시 끊는다.
+  // if user cancels, also abort timeout controller to immediately cut fetch.
   signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
   return { signal: controller.signal, cleanup };
 }
 
-/** 타임아웃 때문에 발생한 abort인지 판별한다(사용자 취소와 구분). */
+/** distinguish abort from timeout vs user cancel. */
 function isTimeoutAbort(cause: unknown): boolean {
   return cause instanceof DOMException && cause.name === "TimeoutError";
 }
 
 /**
- * 한 번의 논리적 요청을 보낸다 — 네트워크 오류·타임아웃·5xx에 대한 제한 재시도까지 포함한다.
+ * send one logical request — includes limited retry for network errors/timeout/5xx.
  *
- * 인증 헤더는 매 시도마다 `authTokenProvider`에서 새로 읽는다. 401 재인증 후 재호출되면
+ * auth header is refreshed each attempt with `authTokenProvider`에서 새로 읽는다. 401 재인증 후 재호출되면
  * 갱신된 토큰이 자연스럽게 반영된다(#189).
  */
 async function fetchWithRetries(path: string, options: RequestOptions): Promise<Response> {
@@ -232,7 +232,7 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
       });
     } catch (cause) {
       cleanup();
-      // 호출자가 명시적으로 취소한 경우엔 재시도하지 않고 그대로 전파한다.
+      // if caller explicitly cancels, propagate without retry.
       if (signal?.aborted) throw cause;
       if (isTimeoutAbort(cause)) {
         if (attempt < retries) {
@@ -241,7 +241,7 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
         }
         throw new ApiError(TIMEOUT_STATUS, i18n.t("api.timeout"), cause);
       }
-      // 네트워크 오류: 남은 재시도가 있으면 백오프 후 다시 시도한다.
+      // network error: retry with backoff if retries remain.
       if (attempt < retries) {
         await delay(500 * 2 ** attempt);
         continue;
@@ -250,7 +250,7 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
     }
     cleanup();
 
-    // 5xx는 일시 장애일 수 있어 제한 재시도한다. 4xx는 즉시 처리(재시도 무의미).
+    // 5xx may be transient; limited retry. 4xx handled immediately (retry meaningless).
     if (response.status >= 500 && attempt < retries) {
       await delay(500 * 2 ** attempt);
       response = undefined;
@@ -266,9 +266,9 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
   return response;
 }
 /**
- * Builder API에 JSON 요청을 보내고 JSON 응답을 파싱한다.
+ * send JSON request to Builder API and parse JSON response.
  *
- * 네트워크 일시 장애와 5xx에는 지수 백오프로 제한 재시도하고(#94), 응답이 없을 경우
+ * network transients and 5xx use exponential backoff limited retry도하고(#94), 응답이 없을 경우
  * UI가 무한 대기에 빠지지 않도록 자동 타임아웃을 건다(#94). 호출자 취소 signal은 그대로 존중한다.
  *
  * 런타임 타입 검증 (#158, #103):
@@ -276,7 +276,7 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
  * - 검증 실패 시 ApiError를 던진다.
  *
  * @param path - 선행 슬래시를 포함한 엔드포인트 경로(예: "/version").
- * @param options - 메서드/바디/취소 시그널/타임아웃/재시도.
+ * @param options - metadata)서드/바디/취소 시그널/타임아웃/재시도.
  * @param schema - 응답을 검증할 Zod 스키마 (선택).
  * @returns 파싱된 응답 본문.
  * @throws ApiError 응답이 2xx가 아니거나 네트워크/파싱/타임아웃/스키마 검증 오류가 발생한 경우.
@@ -288,10 +288,10 @@ export async function apiFetch<T>(
 ): Promise<T> {
   let response = await fetchWithRetries(path, options);
 
-  // 401: 재인증에 성공하면 새 토큰으로 같은 요청을 딱 한 번 더 보낸다 (#189).
-  // 실패한 첫 시도를 사용자 에러로 노출하지 않기 위함이며, 재시도는 1회로 제한해
-  // 만료가 아닌 진짜 인가 실패에서 루프가 생기지 않게 한다. 인증 헤더를 붙이지 않는
-  // 요청(skipAuth)은 다시 보내도 결과가 같으므로 재시도하지 않는다.
+  // 401: if re-auth succeeds, send same request exactly once with new token (#189).
+  // avoid exposing first failed attempt to user, limit retry to 1
+  // prevent loop on real auth failure (not expiry). Don't attach auth header
+  // request (skipAuth) returns same result on replay do not retry.
   if (response.status === 401) {
     const recovered = await recoverFromUnauthorized();
     if (recovered && !options.skipAuth) {
@@ -315,11 +315,11 @@ export async function apiFetch<T>(
     throw new ApiError(response.status, message, parsed);
   }
 
-  // Zod 스키마로 런타임 타입 검증 (#158, #103)
+  // runtime type validation via Zod schema (#158, #103)
   if (schema) {
     const result = schema.safeParse(parsed);
     if (!result.success) {
-      // 스키마 불일치 시 사용자에게 표시 가능한 명시적 에러 (#159)
+      // explicit error displayable to user on schema mismatch (#159)
       const errorDetails = result.error.issues.map((issue) => {
         const path = issue.path.length > 0 ? `\`${issue.path.join(".")}\`` : i18n.t("api.schemaDefault");
         const message = issue.message || i18n.t("api.schemaIssueDefault");
@@ -335,19 +335,19 @@ export async function apiFetch<T>(
     return result.data;
   }
 
-  // 스키마가 없는 경우 (하위 호환): as T 캐스팅만 수행
+  // if no schema (backward compat): perform as T casting only
   return parsed as T;
 }
 
 /**
- * Builder의 비정상 응답 본문에서 사람이 읽을 메시지를 추출한다.
+ * extract human-readable message from Builder abnormal response body.
  *
- * 우선순위(하위 호환 유지):
- *   1) 최상위 `error` 필드(있으면 그대로 사용 — builder PR이 추가 중).
+ * priority (maintain backward compat):
+ *   1) top-level `error` 필드(있으면 그대로 사용 — builder PR이 추가 중).
  *   2) `outcomes[].error` — 실패한 소스별 사유(join). /build 502의 실제 와이어 형태.
  *
  * @param parsed - 파싱된 응답 본문(unknown).
- * @returns 추출한 메시지 또는 undefined.
+ * @returns 추출한 metadata)시지 또는 undefined.
  */
 export function extractErrorMessage(parsed: unknown): string | undefined {
   if (!parsed || typeof parsed !== "object") return undefined;
@@ -372,18 +372,18 @@ export function extractErrorMessage(parsed: unknown): string | undefined {
 }
 
 /**
- * HTTP 상태 코드와 응답 본문을 사용자에게 표시 가능한 에러 메시지로 변환합니다 (#159).
+ * converts HTTP status code and response body to user-displayable error message (#159).
  *
  * @param status - HTTP 상태 코드
  * @param parsed - 파싱된 응답 본문
- * @returns 사용자에게 표시할 수 있는 명시적인 에러 메시지
+ * @returns 사용자에게 표시할 수 있는 명시적인 에러 metadata)시지
  */
 export function formatApiErrorMessage(status: number, parsed: unknown): string {
-  // 먼저 구조화된 에러 메시지 추출 시도
+  // try extracting structured error message first
   const extracted = extractErrorMessage(parsed);
   if (extracted) return extracted;
 
-  // 상태 코드별 기본 메시지
+  // default message by status code
   const statusMessages: Record<number, string> = {
     400: i18n.t("api.http.400"),
     401: i18n.t("api.http.401"),
@@ -400,7 +400,7 @@ export function formatApiErrorMessage(status: number, parsed: unknown): string {
 
   const baseMessage = statusMessages[status] ?? i18n.t("api.http.fallback", { status });
 
-  // 응답에 추가 정보가 있는 경우 덧붙임
+  // append if response has additional information
   if (parsed && typeof parsed === "object") {
     const record = parsed as Record<string, unknown>;
     if (record.run_id) {
@@ -417,27 +417,27 @@ export function formatApiErrorMessage(status: number, parsed: unknown): string {
   return baseMessage;
 }
 
-/** GET /builds 응답의 단일 빌드 요약(builder contract BuildSummary 기준). */
+/** single build summary in GET /builds response (per builder contract BuildSummary). */
 export interface BuildSummary {
-  /** 빌드 실행 식별자 */
+  /** build execution identifier */
   run_id: string;
   /**
-   * 빌드 상태. Builder canonical BuildSummary 어휘는 "ok" | "failed" | "cancelled"이다
+   * build status. Builder canonical BuildSummary vocabulary is "ok" | "failed" | "cancelled"
    * (취소된 run은 failed가 아니라 cancelled로 온다 — 이력/KPI에서 구분해야 한다).
    */
   status: "ok" | "failed" | "cancelled";
-  /** 빌드 시작 시각(ISO 8601, null, 또는 생략됨) */
+  /** build start time (ISO 8601, null, or omitted) */
   started_at?: string | null;
-  /** 빌드 완료 시각(ISO 8601, null, 또는 생략됨) */
+  /** build end time (ISO 8601, null, or omitted) */
   finished_at?: string | null;
 }
 
-/** GET /builds 응답 와이어 형태(builder contract BuildsResponse 기준). */
+/** GET /builds response wire form (per builder contract BuildsResponse). */
 export interface BuildsResponse {
   builds: BuildSummary[];
 }
 
-// --- 응답 타입 (Zod 스키마에서 추출) ---
+// --- response type (extracted from Zod schema) ---
 
 export type BuildJob = schemas.BuildJob;
 export type VersionResponse = schemas.VersionResponse;
@@ -498,20 +498,20 @@ export type BuildEventStageName = schemas.BuildEventStageName;
 export type BuildEvent = schemas.BuildEvent;
 export type BuildEventsResponse = schemas.BuildEventsResponse;
 
-/** Builder service 엔드포인트를 감싼 클라이언트. */
+/** client wrapping Builder service endpoint. */
 export const builderApi = {
-  /** GET /version — 계약 버전 확인(메타). */
+  /** GET /version — contract version check (meta). */
   version: (signal?: AbortSignal) =>
     apiFetch("/version", { signal }, schemas.versionResponseSchema),
 
-  /** POST /validate — BuildSpec YAML 검증. */
+  /** POST /validate — BuildSpec YAML validation. */
   validate: (specYaml: string, signal?: AbortSignal) =>
     apiFetch("/validate", { method: "POST", body: { spec: specYaml }, signal }, schemas.validateResponseSchema),
 
   /**
-   * POST /preview — BuildSpec 기반 샘플 미리보기.
+   * POST /preview — sample preview based on BuildSpec.
    *
-   * `options`는 #497 sampling 계약(limit 1~1000·기본 5, sample_mode first/random,
+   * `options` per #497 sampling contract (limit 1~1000·기본 5, sample_mode first/random,
    * seed)을 그대로 전달한다. 생략하면 기존 client와 동일하게 상위 5행을 반환한다.
    */
   preview: (
@@ -525,7 +525,7 @@ export const builderApi = {
       schemas.previewResponseSchema,
     ),
 
-  /** POST /build — 빌드 실행. run_id 생략 가능. 비멱등 요청이므로 재시도하지 않는다 (#117). */
+  /** POST /build — execute build. run_id optional. Non-idempotent; no retry (#117). */
   build: (specYaml: string, runId?: string, signal?: AbortSignal) =>
     apiFetch(
       "/build",
@@ -538,7 +538,7 @@ export const builderApi = {
       schemas.buildResponseSchema,
     ),
 
-  /** POST /builds — 비동기 build job 제출 (#245, builder #482/#480). 재시도하지 않는다. */
+  /** POST /builds — async build job submission (#245, builder #482/#480). do not retry. */
   submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal) =>
     apiFetch(
       "/builds",
@@ -551,7 +551,7 @@ export const builderApi = {
       schemas.buildJobSchema,
     ),
 
-  /** GET /builds/{run_id} — 비동기 build job 상태 polling (#245, builder #482/#480). */
+  /** GET /builds/{run_id} — async build job status polling (#245, builder #482/#480). */
   getBuildJob: (runId: string, signal?: AbortSignal) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}`,
@@ -560,9 +560,9 @@ export const builderApi = {
     ),
 
   /**
-   * POST /builds/{run_id}/cancel — 진행 중인 async build job의 협조적 취소 요청
+   * POST /builds/{run_id}/cancel — cooperative cancel request for in-progress async build job
    * (#245, builder #481). queued/running → cancelling/cancelled로 전이한다. 취소는
-   * side effect가 있는 비멱등 요청이므로 재시도하지 않는다. 응답은 최신 job 스냅샷이다.
+   * side effect가 있는 비멱등 요청이므로 do not retry. 응답은 최신 job 스냅샷이다.
    */
   cancelBuildJob: (runId: string, signal?: AbortSignal) =>
     apiFetch(
@@ -571,11 +571,11 @@ export const builderApi = {
       schemas.buildJobSchema,
     ),
 
-  /** GET /artifacts/{runId} — 실행 산출물 파일 목록. */
+  /** GET /artifacts/{runId} — list of execution artifact files. */
   artifacts: (runId: string, signal?: AbortSignal) =>
     apiFetch(`/artifacts/${encodeURIComponent(runId)}`, { signal }, schemas.artifactsResponseSchema),
 
-  /** GET /builds/{runId}/manifest — Builder가 기록한 authoritative manifest 본문. */
+  /** GET /builds/{runId}/manifest — authoritative manifest body recorded by Builder. */
   getBuildManifest: (runId: string, signal?: AbortSignal) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}/manifest`,
@@ -583,23 +583,23 @@ export const builderApi = {
       schemas.buildManifestResponseSchema,
     ),
 
-  /** GET /builds — 빌드 이력 목록(#153, builder #250). */
+  /** GET /builds — build history list (#153, builder #250). */
   listBuilds: (limit?: number, signal?: AbortSignal) => {
     const query = limit !== undefined ? `?limit=${limit}` : "";
     return apiFetch<BuildsResponse>(`/builds${query}`, { signal });
   },
 
-  /** GET /catalog — provider/dataset 카탈로그 (#416, BL2). */
+  /** GET /catalog — provider/dataset catalog (#416, BL2). */
   catalog: (signal?: AbortSignal) =>
     apiFetch("/catalog", { signal }, schemas.catalogResponseSchema),
 
-  /** GET /datasets — 실제 built dataset 목록. `/catalog` 원천 목록과 구분한다. */
+  /** GET /datasets — actual built dataset list. Distinct from `/catalog` source list. */
   listDatasets: (limit?: number, signal?: AbortSignal) => {
     const query = limit !== undefined ? `?limit=${limit}` : "";
     return apiFetch(`/datasets${query}`, { signal }, schemas.datasetsResponseSchema);
   },
 
-  /** GET /datasets/{dataset_id} — latest accessible run 기준 dataset 상세. */
+  /** GET /datasets/{dataset_id} — dataset detail per latest accessible run. */
   getDataset: (datasetId: string, signal?: AbortSignal) =>
     apiFetch(
       `/datasets/${encodeURIComponent(datasetId)}`,
@@ -607,7 +607,7 @@ export const builderApi = {
       schemas.datasetDetailResponseSchema,
     ),
 
-  /** GET /datasets/{dataset_id}/runs — dataset의 접근 가능한 run history. */
+  /** GET /datasets/{dataset_id}/runs — accessible run history of dataset. */
   listDatasetRuns: (datasetId: string, limit?: number, signal?: AbortSignal) => {
     const query = limit !== undefined ? `?limit=${limit}` : "";
     return apiFetch(
@@ -617,7 +617,7 @@ export const builderApi = {
     );
   },
 
-  /** GET /builds/{run_id}/stages — source별 Bronze/Silver/Gold 상태. */
+  /** GET /builds/{run_id}/stages — Bronze/Silver/Gold status per source. */
   listBuildStages: (runId: string, signal?: AbortSignal) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}/stages`,
@@ -625,7 +625,7 @@ export const builderApi = {
       schemas.runStagesResponseSchema,
     ),
 
-  /** GET /builds/{run_id}/stages/{stage} — 선택 source/stage의 안전한 상세. */
+  /** GET /builds/{run_id}/stages/{stage} — safe details of selected source/stage. */
   getBuildStageDetail: (
     runId: string,
     stage: schemas.StageDetailResponse["stage"],
@@ -642,7 +642,7 @@ export const builderApi = {
     );
   },
 
-  /** GET /builds/{run_id}/quality — run scoped quality와 schema drift. */
+  /** GET /builds/{run_id}/quality — run-scoped quality and schema drift. */
   getBuildQuality: (runId: string, signal?: AbortSignal) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}/quality`,
@@ -650,7 +650,7 @@ export const builderApi = {
       schemas.buildQualityResponseSchema,
     ),
 
-  /** GET /builds/{run_id}/publish/readiness — Builder가 계산한 게시 준비 상태. */
+  /** GET /builds/{run_id}/publish/readiness — publication readiness computed by Builder. */
   getPublishReadiness: (
     runId: string,
     target: schemas.PublishTarget,
@@ -664,7 +664,7 @@ export const builderApi = {
     );
   },
 
-  /** POST /builds/{run_id}/publish — 원격 side effect이므로 클라이언트 자동 재시도 금지. */
+  /** POST /builds/{run_id}/publish — remote side effect; client auto-retry forbidden. */
   publishBuild: (runId: string, request: schemas.PublishRequest, signal?: AbortSignal) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}/publish`,
@@ -672,7 +672,7 @@ export const builderApi = {
       schemas.publishResponseSchema,
     ),
 
-  /** GET /datasets/{dataset_id}/quality/history — dataset quality 이력. */
+  /** GET /datasets/{dataset_id}/quality/history — dataset quality history. */
   getDatasetQualityHistory: (datasetId: string, limit?: number, signal?: AbortSignal) => {
     const query = limit !== undefined ? `?limit=${limit}` : "";
     return apiFetch(
@@ -683,10 +683,10 @@ export const builderApi = {
   },
 
   /**
-   * POST /query — server-resolved Silver/Gold table에 read-only SQL 실행 (#504, 1.7.0).
+   * POST /query — execute read-only SQL on server-resolved Silver/Gold table (#504, 1.7.0).
    *
    * Bronze는 Builder가 거부한다(Studio도 UI 단에서 선제 차단, `features/kubi/query.ts`).
-   * SQL은 사용자가 명시적으로 실행을 선택했을 때만 호출해야 하며, 자동 재시도하지 않는다
+   * SQL은 사용자가 명시적으로 실행을 선택했을 때만 호출해야 하며, 자동 do not retry
    * (429/504가 이미 포화·타임아웃 신호이므로 재시도가 상황을 악화시킬 수 있다).
    */
    query: (request: schemas.QueryRequest, signal?: AbortSignal) =>
@@ -697,7 +697,7 @@ export const builderApi = {
      ),
 
   /**
-   * GET /monitoring/summary — Builder API/Queue/Workers/Artifact Store 시스템
+   * GET /monitoring/summary — Builder API/Queue/Workers/Artifact Store system
    * 상태 요약 (#516). 개인 데이터는 포함하지 않는다.
    */
   getMonitoringSummary: (signal?: AbortSignal) =>
@@ -708,7 +708,7 @@ export const builderApi = {
     ),
 
   /**
-   * GET /monitoring/builds — 24시간 시간별 build 통계와 recent runs (#516).
+   * GET /monitoring/builds — 24-hour hourly build stats and recent runs (#516).
    * ENFORCE_OWNERSHIP에서는 요청 principal이 접근 가능한 run만 집계된다.
    */
   getMonitoringBuilds: (signal?: AbortSignal) =>
@@ -719,7 +719,7 @@ export const builderApi = {
     ),
 
   /**
-   * GET /quality/summary — 최근 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
+   * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
    * Home "QUALITY WARN (24H)" KPI가 이 값을 authoritative하게 읽는다. 1.21.0 이하
    * Builder에서는 404이므로 호출부가 이 KPI만 독립적으로 "확인 불가" 처리한다 —
    * 다른 KPI/Recent Builds는 영향받지 않는다.
@@ -732,13 +732,13 @@ export const builderApi = {
     ),
 
   /**
-   * POST /providers/{provider}/test — 현재 principal credential로 lightweight
+   * POST /providers/{provider}/test — lightweight with current principal credential
    * connection test 실행 (#492). Add Data의 Public API 단계에서 "연결 테스트"
    * 버튼이 호출한다. credential 값 자체는 Studio가 주고받지 않는다 — Builder가
    * 서버에 저장된 credential(또는 무인증 provider)로 직접 검사한다.
    */
   /**
-   * GET /providers — 런타임 Provider 목록과 현재 principal의 configured 상태(#492).
+   * GET /providers — runtime Provider list and current principal's configured status(#492).
    * 응답은 부울 요약만 담는다 — credential 원문은 어디에도 존재하지 않는다.
    */
   listProviders: (signal?: AbortSignal) =>
@@ -756,7 +756,7 @@ export const builderApi = {
     ),
 
   /**
-   * GET /providers/{provider}/status — 서버에 저장된 credential(또는 무인증 provider)로
+   * GET /providers/{provider}/status — with server-stored credential (or unauthenticated provider)
    * 실행하는 lightweight connection 점검 (#259, builder provider credentials API).
    * credential 원문은 주고받지 않는다. 응답 형태는 POST /providers/{provider}/test와 공통이다.
    */
@@ -768,8 +768,8 @@ export const builderApi = {
     ),
 
   /**
-   * GET /providers/{provider}/credential — 현재 principal이 저장한 credential의
-   * 메타데이터(#259, ADR 0012). `{ configured, masked, updated_at }`만 반환하며 raw
+   * GET /providers/{provider}/credential — credential saved by current principal
+   * metadata)(#259, ADR 0012). `{ configured, masked, updated_at }`만 반환하며 raw
    * secret은 포함하지 않는다. GET /providers 요약의 `configured`(effective provider
    * configuration)와 달리 이 `configured`는 "이 사용자가 직접 저장한 credential이
    * 있는지"만 뜻한다.
@@ -782,9 +782,9 @@ export const builderApi = {
     ),
 
   /**
-   * PUT /providers/{provider}/credential — raw credential 등록/교체 (#259).
+   * PUT /providers/{provider}/credential — register/replace raw credential (#259).
    * body는 `{ credential }` 하나뿐이고, 응답에는 원문이 존재하지 않는다(Studio도
-   * 저장/로그/echo하지 않는다). 비멱등 side effect이므로 재시도하지 않는다.
+   * 저장/로그/echo하지 않는다). 비멱등 side effect이므로 do not retry.
    */
   putProviderCredential: (provider: string, credential: string, signal?: AbortSignal) =>
     apiFetch<unknown>(
@@ -792,7 +792,7 @@ export const builderApi = {
       { method: "PUT", body: { credential }, signal, retries: 0 },
     ),
 
-  /** DELETE /providers/{provider}/credential — 저장된 credential 제거 (#259). */
+  /** DELETE /providers/{provider}/credential — remove saved credential (#259). */
   deleteProviderCredential: (provider: string, signal?: AbortSignal) =>
     apiFetch<unknown>(
       `/providers/${encodeURIComponent(provider)}/credential`,
@@ -800,7 +800,7 @@ export const builderApi = {
     ),
 
   /**
-   * GET /builds/{run_id}/spec — 실행에 사용한 canonical(redaction된) BuildSpec snapshot (#487).
+   * GET /builds/{run_id}/spec — canonical (redacted) BuildSpec snapshot used for executionot (#487).
    *
    * legacy run(snapshot 없음)은 404다 — Studio는 이를 "정보 없음"이 아니라
    * "snapshot unavailable"로 구분해서 표시해야 한다.
@@ -833,20 +833,20 @@ export const builderApi = {
     );
   },
 
-  // uploadFile은 JSON이 아닌 raw body를 보내야 해서 apiFetch를 쓰지 않는 별도 함수로
-  // 아래에 정의한다(함수 선언은 호이스팅되므로 여기서 참조할 수 있다).
+  // uploadFile sends raw body (not JSON), so uses separate function instead of apiFetch
+  // defined below (function hoisting allows reference here).
   uploadFile,
-  // downloadArtifactFile도 응답이 바이너리라 apiFetch를 쓰지 않는 별도 함수다.
+  // downloadArtifactFile is also separate function since response is binary, doesn't use apiFetch.
   downloadArtifactFile,
 };
 
 /**
- * POST /uploads — kind="file" source용 파일 업로드 (#498).
+ * POST /uploads — file upload for kind="file" source (#498).
  *
- * 요청 body가 JSON이 아니라 raw bytes(`application/octet-stream`)라 `apiFetch`의
+ * request body is not JSON but raw bytes(`application/octet-stream`)라 `apiFetch`의
  * JSON-only 경로를 재사용할 수 없다. 인증/재시도/타임아웃 관례는 최대한 맞추되
  * (Bearer 헤더는 authTokenProvider를 그대로 사용), 비멱등 업로드이므로 네트워크
- * 오류·5xx에는 재시도하지 않는다. 401은 예외다 — Builder가 라우팅 전 인증 게이트에서
+ * 오류·5xx에는 do not retry. 401은 예외다 — Builder가 라우팅 전 인증 게이트에서
  * 거부한 것이라 업로드가 수행되지 않았고, 재인증에 성공하면 한 번만 다시 보낸다(#189).
  * `format`/`encoding`/`filename`은 query parameter로 보낸다.
  */
@@ -899,7 +899,7 @@ export async function uploadFile(
   return result.data;
 }
 
-/** Content-Disposition 헤더에서 filename을 안전하게 뽑는다(없으면 null). 경로 구분자는 제거한다. */
+/** safely extract filename from Content-Disposition header (null if missing). Remove path separators. */
 function filenameFromContentDisposition(header: string | null): string | null {
   if (!header) return null;
   const star = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(header);
@@ -910,16 +910,16 @@ function filenameFromContentDisposition(header: string | null): string | null {
   try {
     value = decodeURIComponent(value);
   } catch {
-    /* 인코딩되지 않은 값은 그대로 쓴다 */
+    /* use unencoded value as-is */
   }
-  // 디렉터리 성분은 버리고 파일명만 남긴다.
+  // discard directory component, keep filename only.
   return value.split(/[\\/]/).pop() || null;
 }
 
 /**
- * GET /artifacts/{run_id}/{file_path} — 실행 산출물 개별 파일을 인증된 요청으로 받는다.
+ * GET /artifacts/{run_id}/{file_path} — receive individual execution artifact file via authenticated request.
  *
- * 응답이 JSON이 아니라 바이너리 파일이라 `apiFetch`의 JSON 경로를 쓸 수 없다. Bearer
+ * response is JSON이 아니라 바이너리 파일이라 `apiFetch`의 JSON 경로를 쓸 수 없다. Bearer
  * 헤더는 `uploadFile`과 동일하게 `authTokenProvider`를 재사용하고, 401이면 동일한
  * `authErrorCallback`으로 재인증을 시도한 뒤 성공 시 한 번만 다시 받는다(#189).
  *

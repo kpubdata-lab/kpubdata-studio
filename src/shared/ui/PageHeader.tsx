@@ -1,26 +1,26 @@
 /**
- * 공통 PageHeader 컴포넌트.
+ * common PageHeader component.
  *
- * 각 페이지 상단에서 반복되던 "eyebrow 라벨 + 제목 + 설명 + 우측 액션" 패턴을 통일한다.
+ * unify "eyebrow label + title + description + right action" pattern repeated at page top일한다.
  */
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
 export interface PageHeaderProps {
-  /** 제목 위에 표시할 작은 대문자 라벨(예: "Runs") */
+  /** small uppercase label above title (e.g., "Runs") */
   eyebrow?: string;
-  /** 페이지 제목 */
+  /** page title */
   title: string;
-  /** 제목 아래 보조 설명 */
+  /** auxiliary description below title */
   description?: ReactNode;
-  /** 우측 정렬 액션 영역(버튼 등) */
+  /** right-aligned action area (buttons etc) */
   actions?: ReactNode;
-  /** 추가 className */
+  /** additional className */
   className?: string;
 }
 
 /**
- * 페이지 머리말(라벨/제목/설명/액션)을 일관된 레이아웃으로 렌더링한다.
+ * render page heading (label/title/description/action) in consistent layout.
  *
  * @param props - eyebrow/title/description/actions.
  * @returns 페이지 헤더 엘리먼트.

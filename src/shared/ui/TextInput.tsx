@@ -1,19 +1,19 @@
 /**
- * 공통 TextInput 컴포넌트.
+ * common TextInput component.
  *
- * react-hook-form의 register가 ref를 주입할 수 있도록 forwardRef로 구현한다.
+ * uses forwardRef to allow react-hook-form's register to inject ref 구현한다.
  * 오류 상태(invalid)에 따라 테두리 색과 focus 링을 바꾼다.
  */
 import { forwardRef, type InputHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 export interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
-  /** 검증 오류 상태. true이면 빨간 테두리와 aria-invalid를 적용한다. */
+  /** validation error state. If true, applies red border and aria-invalid. */
   invalid?: boolean;
 }
 
 /**
- * 스타일과 오류 상태를 갖춘 텍스트 입력 컨트롤.
+ * text input control with styling and error state.
  */
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function TextInput(
   { invalid, className, ...rest },

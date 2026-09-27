@@ -1,52 +1,52 @@
 /**
- * 앱 셸 전반에서 재사용하는 UI 전역 상태 스토어.
+ * UI global state store reused throughout the app shell.
  *
- * 모바일 사이드바 오버레이 열림 여부, 데스크톱 사이드바 접힘 여부, 전역 Kubi drawer 열림 여부,
+ * Mobile sidebar overlay open state, desktop sidebar collapsed state, global Kubi drawer 열림 여부,
  * 테마 선택처럼 페이지를 넘나들며 유지해야 하는 시각 상태를 관리한다. 모바일 오버레이와 데스크톱
  * collapse는 서로 다른 레이아웃 개념이라 상태를 분리한다 — 모바일에서 열어둔 오버레이가 데스크톱
  * collapse에 영향을 주거나, 그 반대가 되어서는 안 된다(#247).
  *
  * `persist` 미들웨어로 localStorage에 저장하는 값은 테마(#83)와 데스크톱 collapse 선호(#247)뿐이다.
- * 모바일 오버레이 열림 상태는 의도적으로 저장하지 않아, 새로고침 후 모바일 메뉴가 열린 채로
+ * 모바일 오버레이 열림 상태는 의도적으로 저장하지 않아, 새로고침 후 모바일 metadata)뉴가 열린 채로
  * 되살아나지 않는다(항상 닫힌 상태로 시작).
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-/** 현재 Studio 셸이 지원하는 테마 모드 집합 */
+/** Set of theme modes currently supported by Studio shell */
 export type ThemeMode = "system" | "light" | "dark";
 
 interface UIState {
-  /** 모바일/태블릿 레이아웃에서 사이드바 오버레이가 열려 있는지 여부 (persist 안 함) */
+  /** Whether sidebar overlay is open in mobile/tablet layout (not persisted) */
   isMobileSidebarOpen: boolean;
-  /** 데스크톱 레이아웃에서 사이드바가 접혀 있는지 여부 (persist 가능, #247) */
+  /** Whether sidebar is collapsed in desktop layout (can be persisted, #247) */
   isDesktopSidebarCollapsed: boolean;
-  /** 전역 Kubi drawer가 열려 있는지 여부 (#247) */
+  /** Whether the global Kubi drawer is open (#247) (#247) */
   isKubiDrawerOpen: boolean;
-  /** 사용자가 선택한 테마 모드 */
+  /** The theme mode selected by the user */
   theme: ThemeMode;
-  /** 모바일 사이드바 오버레이 열림/닫힘 상태를 뒤집는 액션 */
+  /** Action to toggle mobile sidebar overlay open/closed state */
   toggleMobileSidebar: () => void;
-  /** 모바일 사이드바 오버레이를 강제로 여는 액션 */
+  /** Action to force open the mobile sidebar overlay */
   openMobileSidebar: () => void;
-  /** 모바일 사이드바 오버레이를 강제로 닫는 액션 */
+  /** Action to force close the mobile sidebar overlay */
   closeMobileSidebar: () => void;
-  /** 데스크톱 사이드바 접힘/펼침 상태를 뒤집는 액션 */
+  /** Action to toggle desktop sidebar collapsed/expanded state */
   toggleDesktopSidebarCollapsed: () => void;
-  /** Kubi drawer를 여는 액션 */
+  /** Action to open Kubi drawer */
   openKubiDrawer: () => void;
-  /** Kubi drawer를 닫는 액션 */
+  /** Action to close Kubi drawer */
   closeKubiDrawer: () => void;
-  /** Kubi drawer 열림/닫힘 상태를 뒤집는 액션 */
+  /** Action to toggle Kubi drawer open/closed state */
   toggleKubiDrawer: () => void;
-  /** 테마 모드를 새 값으로 갱신하는 액션 */
+  /** Action to update theme mode to a new value */
   setTheme: (theme: ThemeMode) => void;
 }
 
 /**
- * 레이아웃 공통 UI 상태를 읽고 갱신하는 Zustand 훅.
+ * Zustand hook to read and update common layout UI state.
  *
- * @returns 현재 UI 상태와 상태 변경 액션 집합.
+ * @returns Current UI state and actions to modify state.
  */
 export const useUIStore = create<UIState>()(
   persist(
@@ -68,8 +68,8 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "kpubdata-studio:ui",
-      // 테마와 데스크톱 collapse 선호만 저장한다. 모바일 오버레이 열림 상태는 저장하지 않아
-      // 새로고침 시 항상 닫힌 채 시작한다(데스크톱 collapse 복원과는 독립적으로 동작해야 함).
+      // Save only theme and desktop collapse preference. Mobile overlay state is not saved, so
+      // it always starts closed on refresh (independent of desktop collapse restoration).
       partialize: (state) => ({
         theme: state.theme,
         isDesktopSidebarCollapsed: state.isDesktopSidebarCollapsed,

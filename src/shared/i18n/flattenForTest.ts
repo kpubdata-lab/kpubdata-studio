@@ -1,4 +1,4 @@
-/** 테스트용 로케일 JSON 평탄화 — 키 집합 비교에 쓴다. */
+/** Flatten locale JSON for testing — used for key set comparison. */
 export function flattenForTest(resource: Record<string, unknown>): Set<string> {
   const keys = new Set<string>();
   const walk = (node: unknown, prefix: string) => {
