@@ -1,5 +1,10 @@
 # AGENTS.md — kpubdata-studio
 
+> **프로젝트 관리·리뷰 정책의 정본은 [POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md) 하나다.**
+> Epic · Issue · Priority · Review Level · Verification · Release 규칙은 그 문서를 따른다.
+> 이 문서에는 이 저장소 고유의 절차(빌드 명령, 디렉터리 규칙)만 남긴다.
+> 충돌하면 POLICY.md 가 우선한다.
+
 ## 미션
 
 `kpubdata-builder`를 위한 UI 셸이자 워크플로 인터페이스로 KPubData Studio를 구현합니다.

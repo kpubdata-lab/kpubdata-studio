@@ -1,5 +1,9 @@
 # 로드맵 — kpubdata-studio
 
+> **이 문서는 작업 진행상태의 정본이 아니다.** 방향(NOW / NEXT / LATER)만 적는다.
+> Issue 의 Status · Priority · Epic · Target Release 는 GitHub Project 에서 관리한다 — [POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md) 2.1절.
+> 데이터셋 지원 상태는 이 저장소가 소유하지 않는다 — [kpubdata 의 생성 문서](https://github.com/yeongseon/kpubdata/blob/main/SUPPORTED_DATA.md)가 기준이다(POLICY 3절).
+
 > 한국 공공데이터 빌드 과정을 기획, 미리보기, 실행 및 검사하는 웹 기반 작업실.
 
 ## v0.1 ✅ 완료
