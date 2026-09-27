@@ -1,8 +1,9 @@
 /**
- * Add Data 1단계 — Source 선택 (#250).
+ * Add Data step 1 — Source selection (#250).
  *
- * Prototype(`kpubdata_ui_prototype_v1.html`의 `addData()`/`source-card`)의 3-카드
- * 레이아웃을 그대로 따른다: Public API / File Upload / URL·REST API.
+ * Directly follows the 3-card layout from Prototype
+ * (`kpubdata_ui_prototype_v1.html`'s `addData()`/`source-card`):
+ * Public API / File Upload / URL·REST API.
  */
 import { useTranslation } from "react-i18next";
 import type { SourceKind } from "@/shared/lib/types";
@@ -11,7 +12,7 @@ import { Card } from "@/shared/ui";
 interface SourceOption {
   kind: SourceKind;
   title: string;
-  /** 설명 문구의 i18n 키(`addData.source.kind.*`) — 상수에 문구를 박지 않는다(#350). */
+  /** i18n key for description text (`addData.source.kind.*`) — don't hardcode strings (#350). */
   descriptionKey: string;
 }
 

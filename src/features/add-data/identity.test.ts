@@ -18,86 +18,86 @@ function dataset(overrides: Partial<CatalogDataset> = {}): CatalogDataset {
 }
 
 describe("slugify/datasetIdFromParts", () => {
-  it("허용되지 않는 문자를 -로 치환하고 앞뒤 -를 제거한다", () => {
+  it("Replaces disallowed characters with -, removes leading/trailing -", () => {
     expect(slugify("Air Quality (2026)!!")).toBe("air-quality-2026");
   });
 
-  it("빈 입력이면 fallback을 반환한다", () => {
+  it("Empty input returns fallback", () => {
     expect(slugify("   ")).toBe("dataset");
   });
 
-  it("여러 조각을 이어붙여 slug화한다", () => {
+  it("Joins multiple parts and slugifies", () => {
     expect(datasetIdFromParts("datago", "apt_trade")).toBe("datago-apt-trade");
   });
 });
 
 describe("identityFromCatalog (Public API, #250 amendment 2)", () => {
-  it("provider+dataset name 기반 deterministic dataset_id와 catalog title/description을 그대로 쓴다", () => {
+  it("Deterministic dataset_id from provider+dataset name, catalog title/description as-is", () => {
     const identity = identityFromCatalog("datago", dataset());
     expect(identity.datasetId).toBe("datago-apt-trade");
     expect(identity.title).toBe("아파트 실거래가");
     expect(identity.description).toBe("국토교통부 아파트 매매 실거래가 조회");
   });
 
-  it("catalog description이 null이면 provider/dataset 출처만 서술하는 factual 기본값을 쓴다(내용을 지어내지 않음)", () => {
+  it("If catalog description null, use factual default (source only, don't fabricate)", () => {
     const identity = identityFromCatalog("datago", dataset({ description: null }));
     expect(identity.description).toBe("datago/apt_trade 데이터셋입니다.");
   });
 });
 
 describe("identityFromFilename (File, #250 amendment 2)", () => {
-  it("확장자를 제거하고 정규화한 slug를 dataset_id로 쓴다", () => {
+  it("Removes extension, uses normalized slug as dataset_id", () => {
     expect(identityFromFilename("2026 Apt Trades.csv").datasetId).toBe("2026-apt-trades");
   });
 
-  it("title은 사람이 읽기 쉬운 형태로 만든다", () => {
+  it("Title formatted human-readable", () => {
     expect(identityFromFilename("apt_trade_seoul.jsonl").title).toBe("Apt Trade Seoul");
   });
 });
 
 describe("identityFromUrl (URL, #250 amendment 2)", () => {
-  it("hostname+path만으로 dataset_id/title을 만든다", () => {
+  it("Creates dataset_id/title from hostname+path only", () => {
     const identity = identityFromUrl("https://api.example.org/v1/air-quality");
     expect(identity.datasetId).toBe("api-example-org-v1-air-quality");
   });
 
-  it("query string은 identity에 포함하지 않는다", () => {
+  it("Query string not included in identity", () => {
     const withQuery = identityFromUrl("https://api.example.org/v1/air-quality?token=SECRET&region=seoul");
     const withoutQuery = identityFromUrl("https://api.example.org/v1/air-quality");
     expect(withQuery.datasetId).toBe(withoutQuery.datasetId);
     expect(withQuery.datasetId).not.toMatch(/secret|token/i);
   });
 
-  it("credential(user:pass@host)은 identity에 포함하지 않는다", () => {
+  it("Credential (user:pass@host) not included in identity", () => {
     const identity = identityFromUrl("https://user:s3cr3t@api.example.org/data");
     expect(identity.datasetId).not.toMatch(/user|s3cr3t/i);
   });
 
-  it("잘못된 URL이면 빈 identity를 반환한다", () => {
+  it("Invalid URL returns empty identity", () => {
     expect(identityFromUrl("not-a-url")).toEqual({ datasetId: "", title: "", description: "" });
   });
 
-  it("description도 query string/credential 없는 base만 사용한다", () => {
+  it("Description also uses base without query string/credential", () => {
     const identity = identityFromUrl("https://user:s3cr3t@api.example.org/data?token=SECRET");
     expect(identity.description).not.toMatch(/secret|token|s3cr3t/i);
   });
 
-  // #250 최종 검증 §2: "URL 객체가 credential/query를 담지 않는다"는 설명은 틀렸다 —
-  // `new URL(...)`은 username/password/search/hash를 그대로 보존한다
-  // (`url.username`/`url.password`/`url.search`/`url.hash`로 읽을 수 있다). 실제
-  // 안전성은 identity 생성 시 `url.hostname`/`url.pathname`만 allowlist 방식으로
-  // 골라 쓰기 때문이지, URL 객체 자체가 그 값들을 안 담기 때문이 아니다. 아래는 그
-  // allowlist 동작을 credential+query+fragment가 모두 섞인 URL로 직접 검증한다.
-  it("username/password/query/fragment가 모두 있어도 URL 객체 자체는 이를 보존하지만, dataset identity에는 새지 않는다", () => {
+  // #250 final verification §2: Description "URL object doesn't hold credential/query"
+  // is wrong — `new URL(...)` preserves username/password/search/hash as-is
+  // (readable via `url.username`/`url.password`/`url.search`/`url.hash`). Actual
+  // safety comes from identityFromUrl using only `url.hostname`/`url.pathname` via
+  // allowlist, not from URL object not holding those values. Below verifies that
+  // allowlist behavior with credential+query+fragment all mixed in.
+  it("Even with username/password/query/fragment, URL object preserves them, but not in dataset identity", () => {
     const endpoint = "https://user:secret@example.com/api/data?token=abc#section";
     const url = new URL(endpoint);
-    // 전제 확인: URL 객체는 실제로 credential/query/fragment를 담는다.
+    // Prerequisite check: URL object actually holds credential/query/fragment.
     expect(url.username).toBe("user");
     expect(url.password).toBe("secret");
     expect(url.search).toBe("?token=abc");
     expect(url.hash).toBe("#section");
 
-    // 안전성은 identityFromUrl이 hostname+pathname만 골라 쓰는 데서 온다.
+    // Safety comes from identityFromUrl using only hostname+pathname.
     const identity = identityFromUrl(endpoint);
     const serialized = `${identity.datasetId} ${identity.title} ${identity.description}`;
     expect(serialized).not.toMatch(/user|secret|token|abc|section/i);
@@ -108,12 +108,12 @@ describe("identityFromUrl (URL, #250 amendment 2)", () => {
 describe("findProvider/findDataset", () => {
   const providers: CatalogProvider[] = [{ name: "datago", datasets: [dataset()] }];
 
-  it("이름으로 provider/dataset을 찾는다", () => {
+  it("Finds provider/dataset by name", () => {
     expect(findProvider(providers, "datago")?.name).toBe("datago");
     expect(findDataset(providers, "datago", "apt_trade")?.title).toBe("아파트 실거래가");
   });
 
-  it("없는 이름이면 undefined를 반환한다", () => {
+  it("Returns undefined if name not found", () => {
     expect(findDataset(providers, "datago", "missing")).toBeUndefined();
   });
 });
