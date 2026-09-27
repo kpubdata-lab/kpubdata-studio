@@ -60,10 +60,10 @@ jobs:
       - name: i18n extraction gate
         run: npm run i18n:check
 
-      # ADR 0003 (kpubdata) puts comments in English. Residual debt is frozen
-      # per-file; this fails only when a count grows (#427). Zero → hard gate.
-      - name: Korean comment ratchet (#427)
-        run: python3 scripts/check_korean_ts_ratchet.py
+      # ADR 0003 (kpubdata) puts comments in English. The debt is at ZERO
+      # (#427): any Korean comment now fails the build outright.
+      - name: Korean comment gate (#427)
+        run: python3 scripts/check_korean_ts_comments.py src e2e
 
       - name: Test (Vitest)
         run: npm test
