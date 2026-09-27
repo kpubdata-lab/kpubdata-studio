@@ -272,11 +272,12 @@ export function buildSpecFromDraft(draft: AddDataDraft): BuildSpecResult {
 }
 
 /**
- * YAML 에디터 표시 전용 — 제출 가능 여부(sentinel fail-closed, 스키마 검증)와
- * 무관하게 지금 draft로 보여줄 수 있는 canonical BuildSpec을 만든다(#283 후속
- * 리뷰 §3). sentinel이 남아 있어도 candidate 자체는 반환해, 사용자가 YAML에서
- * sentinel을 실제 값으로 교체해 다시 Apply할 자리를 잃지 않게 한다. Preview/Build
- * 제출에는 절대 쓰지 않는다 — 그쪽은 항상 `buildSpecFromDraft`를 거친다.
+ * YAML editor display-only — creates canonical BuildSpec that can be shown for
+ * draft now, independent of submission readiness (sentinel fail-closed, schema
+ * validation) (#283 follow-up §3). Even if sentinel remains, returns candidate
+ * so user doesn't lose place to replace sentinel with real value in YAML and
+ * re-apply. Never used for Preview/Build submission — those always go through
+ * `buildSpecFromDraft`.
  */
 export function buildEditableSpecFromDraft(draft: AddDataDraft): BuildSpec | undefined {
   return buildCandidateFromDraft(draft).candidate;

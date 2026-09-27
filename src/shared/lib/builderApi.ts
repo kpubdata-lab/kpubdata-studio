@@ -47,13 +47,13 @@ function parseSemver(version: string): [number, number, number] | null {
  * Determines if Builder's reported `api_version` is compatible with Studio integration surface (ADR 0013).
  *
  * Rules:
- * - server major == required major (major가 다르면 breaking — 2.0.0은 비호환)
- * - server >= required (같은 major 안에서 minor/patch가 최소값 이상)
- * - 더 높은 additive minor/patch는 호환 (1.21.0 OK)
- * - 파싱 불가/형식 오류는 fail-closed로 비호환 처리
+ * - server major == required major (if major differs, breaking — 2.0.0 incompatible)
+ * - server >= required (within same major, minor/patch must meet minimum)
+ * - higher additive minor/patch compatible (1.21.0 OK)
+ * - parse failure/format error treated as incompatible (fail-closed)
  *
- * @param serverVersion - GET /version 응답의 `api_version`.
- * @param requiredVersion - 요구 최소 버전(기본 MIN_BUILDER_API_VERSION).
+ * @param serverVersion - `api_version` from GET /version response.
+ * @param requiredVersion - minimum required version (default MIN_BUILDER_API_VERSION).
  */
 export function isBuilderApiCompatible(
   serverVersion: string | undefined | null,
@@ -102,11 +102,11 @@ interface RequestOptions {
 
 /**
  * Provider that supplies Bearer token to attach to Builder requests (#186).
- * null을 반환하면 해당 요청에 Authorization 헤더를 붙이지 않는다 —
- * mock 모드·미로그인 상태에서 빈 헤더가 나가는 것을 방지한다.
+ * Returning null omits Authorization header — prevents empty header in mock mode/logged-out
+ * state.
  *
- * OIDC 연동에서는 provider가 요청 직전 `keycloak.updateToken()`으로 만료 임박 토큰을
- * 갱신하므로 Promise를 반환할 수 있다 — apiFetch는 값을 await한 뒤 헤더를 붙인다.
+ * OIDC integration: provider can return Promise since it calls `keycloak.updateToken()`
+ * before request — apiFetch awaits the value before attaching header.
  */
 export type AuthTokenProvider = () => string | null | Promise<string | null>;
 
@@ -116,8 +116,8 @@ let authTokenProvider: AuthTokenProvider | null = null;
 
 /**
  * Register Bearer token provider to attach to Builder requests (#186).
- * provider를 null로(또는 해제) 두면 인증 헤더가 나가지 않아, 미로그인/mock 모드에서
- * 기존 요청 형태와 완전히 동일하게 동작한다(회귀 없음).
+ * Omitting auth header (for unauthenticated endpoints like /healthz, #186) operates
+ * identically to old request behavior (no regression).
  */
 export function setAuthTokenProvider(provider: AuthTokenProvider | null): void {
   authTokenProvider = provider;
@@ -126,8 +126,8 @@ export function setAuthTokenProvider(provider: AuthTokenProvider | null): void {
 /**
  * Callback to notify auth layer of 401 response (#189).
  *
- * Returning `true` means "re-auth succeeded, so retry same request with new token". 번 더 보내도 된다"는
- * 뜻이다. 그 외(`void`/`false`)는 기존과 동일하게 세션 정리만 하고 401을 그대로 던진다.
+ * Returning `true` means "re-auth succeeded, retry same request with new token".
+ * Otherwise (`void`/`false`): clean up session and throw original 401.
  */
 export type AuthErrorCallback = () => void | boolean | Promise<void | boolean>;
 
@@ -140,10 +140,9 @@ export function setAuthErrorCallback(cb: AuthErrorCallback | null): void {
 /**
  * Notify auth layer of 401 and return whether re-auth succeeded.
  *
- * Builder 라우팅 이전의 단일 인증 게이트에서 401을 내므로(builder `_dispatch_impl`),
- * 401은 서버가 요청을 처리하기 전에 거부했다는 뜻이다 — 비멱등 POST라도 새 토큰으로
- * 한 번 더 보내는 것이 안전하다. 재인증 콜백이 던지는 예외는 원래의 401을 가리지
- * 않도록 흡수한다.
+ * 401 comes from single auth gate before Builder routing (`builder _dispatch_impl`), so
+ * 401 means server rejected before processing — safe to retry non-idempotent POST with
+ * new token. Exceptions from re-auth callback are caught to not mask original 401.
  */
 async function recoverFromUnauthorized(): Promise<boolean> {
   if (!authErrorCallback) return false;
@@ -201,10 +200,10 @@ function isTimeoutAbort(cause: unknown): boolean {
 }
 
 /**
- * send one logical request — includes limited retry for network errors/timeout/5xx.
+ * Send one logical request — includes limited retry for network errors/timeout/5xx.
  *
- * auth header is refreshed each attempt with `authTokenProvider`에서 새로 읽는다. 401 재인증 후 재호출되면
- * 갱신된 토큰이 자연스럽게 반영된다(#189).
+ * Auth header refreshed each attempt via `authTokenProvider`. After 401 re-auth and
+ * retry, updated token naturally reflected (#189).
  */
 async function fetchWithRetries(path: string, options: RequestOptions): Promise<Response> {
   const {
@@ -341,14 +340,14 @@ export async function apiFetch<T>(
 }
 
 /**
- * extract human-readable message from Builder abnormal response body.
+ * Extract human-readable message from Builder abnormal response body.
  *
- * priority (maintain backward compat):
- *   1) top-level `error` 필드(있으면 그대로 사용 — builder PR이 추가 중).
- *   2) `outcomes[].error` — 실패한 소스별 사유(join). /build 502의 실제 와이어 형태.
+ * Priority (maintain backward compat):
+ *   1) top-level `error` field (if present, use as-is — builder PR adding).
+ *   2) `outcomes[].error` — per-source failure reason (joined). actual /build 502 wire format.
  *
- * @param parsed - 파싱된 응답 본문(unknown).
- * @returns 추출한 metadata)시지 또는 undefined.
+ * @param parsed - parsed response body (unknown).
+ * @returns extracted message or undefined.
  */
 export function extractErrorMessage(parsed: unknown): string | undefined {
   if (!parsed || typeof parsed !== "object") return undefined;
@@ -697,10 +696,10 @@ export const builderApi = {
        schemas.queryResponseSchema,
      ),
 
-  /**
-   * GET /monitoring/summary — Builder API/Queue/Workers/Artifact Store system
-   * 상태 요약 (#516). 개인 데이터는 포함하지 않는다.
-   */
+   /**
+    * GET /monitoring/summary — Builder API/Queue/Workers/Artifact Store system
+    * status summary (#516). Does not include personal data.
+    */
   getMonitoringSummary: (signal?: AbortSignal) =>
     apiFetch(
       "/monitoring/summary",
@@ -708,10 +707,10 @@ export const builderApi = {
       schemas.monitoringSummaryResponseSchema,
     ),
 
-  /**
-   * GET /monitoring/builds — 24-hour hourly build stats and recent runs (#516).
-   * ENFORCE_OWNERSHIP에서는 요청 principal이 접근 가능한 run만 집계된다.
-   */
+   /**
+    * GET /monitoring/builds — 24-hour hourly build stats and recent runs (#516).
+    * Under ENFORCE_OWNERSHIP, only runs accessible to request principal are aggregated.
+    */
   getMonitoringBuilds: (signal?: AbortSignal) =>
     apiFetch(
       "/monitoring/builds?window=24h&bucket=hour",
@@ -719,12 +718,12 @@ export const builderApi = {
       schemas.monitoringBuildsResponseSchema,
     ),
 
-  /**
-   * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
-   * Home "QUALITY WARN (24H)" KPI가 이 값을 authoritative하게 읽는다. 1.21.0 이하
-   * Builder에서는 404이므로 호출부가 이 KPI만 독립적으로 "확인 불가" 처리한다 —
-   * 다른 KPI/Recent Builds는 영향받지 않는다.
-   */
+   /**
+    * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 follow-up).
+    * Home "QUALITY WARN (24H)" KPI reads this authoritatively. In Builder 1.21.0 and earlier,
+    * 404 returned, so caller handles only this KPI independently as "unavailable" — other
+    * KPIs/Recent Builds unaffected.
+    */
   getQualitySummary: (signal?: AbortSignal) =>
     apiFetch(
       "/quality/summary?window=24h",
@@ -732,12 +731,12 @@ export const builderApi = {
       schemas.qualitySummaryResponseSchema,
     ),
 
-  /**
-   * POST /providers/{provider}/test — lightweight with current principal credential
-   * connection test 실행 (#492). Add Data의 Public API 단계에서 "연결 테스트"
-   * 버튼이 호출한다. credential 값 자체는 Studio가 주고받지 않는다 — Builder가
-   * 서버에 저장된 credential(또는 무인증 provider)로 직접 검사한다.
-   */
+   /**
+    * POST /providers/{provider}/test — lightweight connection test with current principal
+    * credential (#492). Add Data Public API stage "Test Connection" button invokes this.
+    * Credential text not exchanged — Builder checks directly against server-stored
+    * credential (or unauthenticated provider).
+    */
    /**
     * GET /providers — Runtime Provider list and current principal's configured status (#492).
     * Response contains only boolean summary — credential text does not exist anywhere.
@@ -768,13 +767,13 @@ export const builderApi = {
       schemas.providerTestResponseSchema,
     ),
 
-  /**
-   * GET /providers/{provider}/credential — credential saved by current principal
-   * metadata)(#259, ADR 0012). `{ configured, masked, updated_at }`만 반환하며 raw
-   * secret은 포함하지 않는다. GET /providers 요약의 `configured`(effective provider
-   * configuration)와 달리 이 `configured`는 "이 사용자가 직접 저장한 credential이
-   * 있는지"만 뜻한다.
-   */
+   /**
+    * GET /providers/{provider}/credential — credential saved by current principal
+    * metadata (#259, ADR 0012). Returns only `{ configured, masked, updated_at }`;
+    * raw secret not included. Unlike `configured` in GET /providers summary (effective
+    * provider configuration), this `configured` means only "does this user have directly
+    * saved credential".
+    */
   getProviderCredential: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/credential`,
@@ -800,12 +799,12 @@ export const builderApi = {
       { method: "DELETE", signal, retries: 0 },
     ),
 
-  /**
-   * GET /builds/{run_id}/spec — canonical (redacted) BuildSpec snapshot used for executionot (#487).
-   *
-   * legacy run(snapshot 없음)은 404다 — Studio는 이를 "정보 없음"이 아니라
-   * "snapshot unavailable"로 구분해서 표시해야 한다.
-   */
+   /**
+    * GET /builds/{run_id}/spec — canonical (redacted) BuildSpec snapshot used for execution (#487).
+    *
+    * Legacy run (no snapshot) returns 404 — Studio must distinguish this as
+    * "snapshot unavailable", not "no info".
+    */
   getBuildSpecSnapshot: (runId: string, signal?: AbortSignal) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}/spec`,
@@ -813,11 +812,11 @@ export const builderApi = {
       schemas.buildSpecSnapshotResponseSchema,
     ),
 
-  /**
-   * GET /builds/{run_id}/events — append-only structured run event timeline (#496).
-   *
-   * `tail: true`면 최신 `limit`개를 고르되 반환은 항상 chronological ascending이다.
-   */
+   /**
+    * GET /builds/{run_id}/events — append-only structured run event timeline (#496).
+    *
+    * If `tail: true`, selects latest `limit` items, but return is always chronological ascending.
+    */
   getBuildEvents: (
     runId: string,
     options?: { limit?: number; tail?: boolean },
@@ -844,12 +843,12 @@ export const builderApi = {
 /**
  * POST /uploads — file upload for kind="file" source (#498).
  *
- * request body is not JSON but raw bytes(`application/octet-stream`)라 `apiFetch`의
- * JSON-only 경로를 재사용할 수 없다. 인증/재시도/타임아웃 관례는 최대한 맞추되
- * (Bearer 헤더는 authTokenProvider를 그대로 사용), 비멱등 업로드이므로 네트워크
- * 오류·5xx에는 do not retry. 401은 예외다 — Builder가 라우팅 전 인증 게이트에서
- * 거부한 것이라 업로드가 수행되지 않았고, 재인증에 성공하면 한 번만 다시 보낸다(#189).
- * `format`/`encoding`/`filename`은 query parameter로 보낸다.
+ * Request body is not JSON but raw bytes (`application/octet-stream`), so can't reuse
+ * apiFetch's JSON-only path. Auth/retry/timeout conventions matched as much as possible
+ * (Bearer header uses authTokenProvider directly), but upload is non-idempotent so
+ * do not retry on network errors/5xx. 401 is exception — Builder rejects at auth gate
+ * before routing, so upload didn't occur; if re-auth succeeds, retry once (#189).
+ * `format`/`encoding`/`filename` sent as query parameters.
  */
 export async function uploadFile(
   bytes: Blob | ArrayBuffer,
