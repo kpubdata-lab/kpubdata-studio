@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { crossCheckAsk KPubDataResponse } from "./crossCheck";
-import { datasetRunMembershipRef, type Ask KPubDataEvidence, type Ask KPubDataKnownRefs, type Ask KPubDataStructuredResponse } from "./types";
+import { crossCheckKubiResponse } from "./crossCheck";
+import { datasetRunMembershipRef, type KubiEvidence, type KubiKnownRefs, type KubiStructuredResponse } from "./types";
 
-function makeEvidence(overrides: Partial<Ask KPubDataEvidence> = {}): Ask KPubDataEvidence {
+function makeEvidence(overrides: Partial<KubiEvidence> = {}): KubiEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00.000Z",
     context: { page: "dataset-detail", datasetId: "ds-1", runId: "run-1", stage: "silver" },
@@ -13,7 +13,7 @@ function makeEvidence(overrides: Partial<Ask KPubDataEvidence> = {}): Ask KPubDa
   };
 }
 
-function makeKnownRefs(overrides: Partial<Ask KPubDataKnownRefs> = {}): Ask KPubDataKnownRefs {
+function makeKnownRefs(overrides: Partial<KubiKnownRefs> = {}): KubiKnownRefs {
   return {
     datasetIds: new Set(["ds-1"]),
     runIds: new Set(["run-1"]),
@@ -27,7 +27,7 @@ function makeKnownRefs(overrides: Partial<Ask KPubDataKnownRefs> = {}): Ask KPub
   };
 }
 
-function makeResponse(overrides: Partial<Ask KPubDataStructuredResponse> = {}): Ask KPubDataStructuredResponse {
+function makeResponse(overrides: Partial<KubiStructuredResponse> = {}): KubiStructuredResponse {
   return {
     answer: "요약 답변입니다.",
     evidenceRefs: [],
@@ -37,9 +37,9 @@ function makeResponse(overrides: Partial<Ask KPubDataStructuredResponse> = {}): 
   };
 }
 
-describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
+describe("crossCheckKubiResponse (#256 hallucination gate)", () => {
   it("keeps evidenceRefs that match known ids", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ evidenceRefs: [{ kind: "dataset", id: "ds-1", label: "ds-1" }] }),
       makeEvidence(),
       makeKnownRefs(),
@@ -49,7 +49,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("drops a hallucinated dataset ref that doesn't exist in evidence", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ evidenceRefs: [{ kind: "dataset", id: "ghost-dataset", label: "존재하지 않음" }] }),
       makeEvidence(),
       makeKnownRefs(),
@@ -59,7 +59,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("drops a hallucinated quality result ref", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ evidenceRefs: [{ kind: "quality", id: "made-up-rule", label: "가짜 규칙" }] }),
       makeEvidence(),
       makeKnownRefs(),
@@ -75,7 +75,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
     });
     const known = makeKnownRefs({ stageIds: new Set([refId]), sourceKeys: new Set(["provider.dataset"]) });
 
-    const valid = crossCheckAsk KPubDataResponse(
+    const valid = crossCheckKubiResponse(
       makeResponse({ evidenceRefs: [{ kind: "stage", id: refId, label: "Gold" }] }),
       evidence,
       known,
@@ -87,7 +87,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
       "run-1::wrong.source::gold",
       "run-1::provider.dataset::silver",
     ]) {
-      const checked = crossCheckAsk KPubDataResponse(
+      const checked = crossCheckKubiResponse(
         makeResponse({ evidenceRefs: [{ kind: "stage", id: wrong, label: "unknown" }] }),
         evidence,
         known,
@@ -97,7 +97,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("rejects OPEN_BUILD referencing an unknown run", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [{ type: "OPEN_BUILD", runId: "run-does-not-exist", reason: "확인해보세요" }],
       }),
@@ -109,7 +109,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("keeps OPEN_QUALITY referencing a known dataset/run", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [
           { type: "OPEN_QUALITY", datasetId: "ds-1", runId: "run-1", reason: "품질을 확인하세요" },
@@ -122,7 +122,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("rejects OPEN_QUALITY referencing a missing dataset", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [
           { type: "OPEN_QUALITY", datasetId: "missing-dataset", runId: "run-1", reason: "품질을 확인하세요" },
@@ -137,7 +137,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("rejects OPEN_QUALITY when dataset and run exist separately but the membership differs", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [
           { type: "OPEN_QUALITY", datasetId: "ds-1", runId: "run-2", reason: "품질을 확인하세요" },
@@ -155,7 +155,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("fails closed when Builder membership lookup was unavailable", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [
           { type: "OPEN_QUALITY", datasetId: "ds-1", runId: "run-1", reason: "품질을 확인하세요" },
@@ -170,7 +170,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("keeps dataset-only OPEN_QUALITY when no run was requested", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "ds-1", reason: "최신 품질을 확인하세요" }],
       }),
@@ -182,7 +182,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("rejects PATCH_BUILDSPEC when no buildSpecSummary is available (spec unrecoverable)", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [
           { type: "PATCH_BUILDSPEC", runId: "run-1", patch: [{ op: "replace", path: "/title", value: "x" }], reason: "..." },
@@ -196,7 +196,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("rejects CREATE_BUILD_DRAFT with a dataset not in the source catalog", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         suggestedActions: [
           {
@@ -213,7 +213,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("drops generatedSql when its stage doesn't match the current context stage", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "gold" } }),
       makeEvidence({ context: { page: "dataset-detail", datasetId: "ds-1", runId: "run-1", stage: "silver" } }),
       makeKnownRefs(),
@@ -223,7 +223,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("keeps generatedSql when stage matches", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver" } }),
       makeEvidence({ context: { page: "dataset-detail", datasetId: "ds-1", runId: "run-1", stage: "silver" } }),
       makeKnownRefs(),
@@ -232,7 +232,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("keeps generatedSql.source when it exactly matches a known canonical source_key", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago.air_quality" } }),
       makeEvidence(),
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality"]) }),
@@ -246,7 +246,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("validates generatedSql.source even when stage evidence is unavailable (uses knownRefs.sourceKeys)", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago__air" } }),
       makeEvidence({ stage: undefined, dataset: undefined }),
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality", "kma.weather"]) }),
@@ -257,7 +257,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("drops only the source (keeps SQL) for a single-source run with an unverifiable source", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago__air" } }),
       makeEvidence({ stage: undefined }),
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality"]) }),
@@ -267,7 +267,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("uses dataset.sources length as the single-source signal when no sourceKeys were collected", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "guessed.source" } }),
       makeEvidence({
         stage: undefined,
@@ -289,7 +289,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("fail-closes (drops whole SQL) for a multi-source run when nothing verifies the source", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "guessed.source" } }),
       makeEvidence({
         stage: undefined,
@@ -313,7 +313,7 @@ describe("crossCheckAsk KPubDataResponse (#256 hallucination gate)", () => {
   });
 
   it("does not discard the whole answer when some refs/actions are rejected", () => {
-    const result = crossCheckAsk KPubDataResponse(
+    const result = crossCheckKubiResponse(
       makeResponse({
         evidenceRefs: [{ kind: "dataset", id: "ghost", label: "ghost" }],
         suggestedActions: [{ type: "OPEN_BUILD", runId: "run-1", reason: "실제 run" }],

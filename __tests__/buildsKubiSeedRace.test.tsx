@@ -1,11 +1,11 @@
 /**
  * C1 regression — Builds "이 Run 분석" seed vs. normalizeBuildContextSearch race (#255 §2 / #256 stale guard).
  *
- * 버그: spec/stages 응답이 아직 loading인 상태에서 "이 Run 분석"을 즉시 누르면 `Ask KPubDataRunAnalysis`가
+ * 버그: spec/stages 응답이 아직 loading인 상태에서 "이 Run 분석"을 즉시 누르면 `KubiRunAnalysis`가
  * mount되며 pending seed를 소비해 `ask()`가 그 순간의 `liveContext`(= `?run=` 하나뿐, dataset/
  * stage/source 없음)를 그대로 turn.context로 고정한다. 잠시 뒤 `normalizeBuildContextSearch`가
  * `?dataset=`을 URL에 채우면 `contextsMatch`가 깨져 방금 만든 turn이 stale로 분류되고,
- * `Ask KPubDataRunAnalysis`의 turn 선택 memo(`!isStale`만 통과)가 답변을 버리고 "분석 준비 중…"으로
+ * `KubiRunAnalysis`의 turn 선택 memo(`!isStale`만 통과)가 답변을 버리고 "분석 준비 중…"으로
  * 되돌아간다.
  *
  * 수정: 클릭은 즉시 카드를 열되, URL이 normalizeBuildContextSearch의 고정점(canonical)이 될
@@ -20,7 +20,7 @@ import * as runsApi from "@/features/runs/api";
 import * as runDetailApi from "@/features/runs/api/runDetail";
 import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
-import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
+import { useKubiStore } from "@/features/kubi/useKubiSession";
 import { BuildsPage } from "@/pages/BuildsPage";
 import type { BuildListItem } from "@/shared/lib/types";
 import type {
@@ -118,7 +118,7 @@ function renderBuilds() {
 }
 
 beforeEach(() => {
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   act(() => {
     useAssistConfig.getState().setConfig({ apiKey: "sk-test-key", model: "gpt-4o-mini", baseUrl: "" });
   });
@@ -147,8 +147,8 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     });
 
     await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
-    expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull();
+    expect(useKubiStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().pendingSeed).toBeNull();
     expect(streamCalls).toBe(0);
   });
 
@@ -170,7 +170,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     // 카드는 즉시 열린다.
     expect(await screen.findByRole("heading", { name: "Run 분석" })).toBeInTheDocument();
     // 아직 context가 canonical하지 않으므로 seed하지 않는다 — turn이 생기지 않는다.
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().turns).toHaveLength(0);
     expect(screen.getByText("분석 준비 중…")).toBeInTheDocument();
 
     // spec/stages가 도착하고, BuildsPage의 normalizeBuildContextSearch가 URL을 정규화한다.
@@ -183,8 +183,8 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     expect(await screen.findByText("테스트 분석 답변입니다.")).toBeInTheDocument();
 
     // turn.context는 정규화된 canonical 값(dataset/stage/source)을 담고 있어야 한다.
-    const turn = useAsk KPubDataStore.getState().turns[0];
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(1);
+    const turn = useKubiStore.getState().turns[0];
+    expect(useKubiStore.getState().turns).toHaveLength(1);
     expect(turn.context.datasetId).toBe("air-quality");
     expect(turn.context.stage).toBe("silver");
     expect(turn.context.source).toBe("datago__air");
@@ -215,7 +215,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     fireEvent.click(analyzeButton);
 
     expect(await screen.findByRole("heading", { name: "Run 분석" })).toBeInTheDocument();
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().turns).toHaveLength(0);
 
     // stages 도착 → normalizeBuildContextSearch가 ?stage=silver&source=datago__air 추가.
     await act(async () => {
@@ -223,7 +223,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     });
 
     expect(await screen.findByText("테스트 분석 답변입니다.")).toBeInTheDocument();
-    const turn = useAsk KPubDataStore.getState().turns[0];
+    const turn = useKubiStore.getState().turns[0];
     expect(turn.context.stage).toBe("silver");
     expect(turn.context.source).toBe("datago__air");
 
@@ -246,7 +246,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
     expect(await screen.findByRole("heading", { name: "Run 분석" }));
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().turns).toHaveLength(0);
 
     // 다른 run 선택 → 이전 pending analyze 의도가 폐기돼야 한다.
     fireEvent.click(screen.getByText("Other Run"));
@@ -254,8 +254,8 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     await new Promise((r) => setTimeout(r, 50));
     // 이전 run의 pending seed가 뒤늦게 실행되지 않는다.
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
-    expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull();
+    expect(useKubiStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().pendingSeed).toBeNull();
   });
 
   it("re-clicking '이 Run 분석' on the same run re-analyzes (retry after an errored analysis is not blocked)", async () => {
@@ -275,15 +275,15 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     // 1차: LLM 오류로 실패한 turn이 인라인 카드에 표시된다.
     expect(await screen.findByText("LLM 일시 오류")).toBeInTheDocument();
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(1);
+    expect(useKubiStore.getState().turns).toHaveLength(1);
     expect(streamCalls).toBe(1);
 
     // 재클릭 → 새 분석이 시작되고 이번엔 성공한다.
     fireEvent.click(analyzeButton);
 
     expect(await screen.findByText(ANSWER)).toBeInTheDocument();
-    await waitFor(() => expect(useAsk KPubDataStore.getState().turns).toHaveLength(2));
-    expect(useAsk KPubDataStore.getState().turns[1].status).toBe("ok");
+    await waitFor(() => expect(useKubiStore.getState().turns).toHaveLength(2));
+    expect(useKubiStore.getState().turns[1].status).toBe("ok");
     expect(streamCalls).toBe(2);
   });
 
@@ -298,14 +298,14 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     fireEvent.click(analyzeButton);
     expect(await screen.findByText(ANSWER)).toBeInTheDocument();
-    await waitFor(() => expect(useAsk KPubDataStore.getState().turns).toHaveLength(1));
+    await waitFor(() => expect(useKubiStore.getState().turns).toHaveLength(1));
     expect(streamCalls).toBe(1);
 
     fireEvent.click(analyzeButton);
-    await waitFor(() => expect(useAsk KPubDataStore.getState().turns).toHaveLength(2));
+    await waitFor(() => expect(useKubiStore.getState().turns).toHaveLength(2));
     // 재클릭 후 여유를 둬도 3번째 turn/LLM 호출이 새어 나오지 않는다.
     await new Promise((r) => setTimeout(r, 50));
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(2);
+    expect(useKubiStore.getState().turns).toHaveLength(2);
     expect(streamCalls).toBe(2);
   });
 
@@ -325,7 +325,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     fireEvent.click(analyzeButton);
     fireEvent.click(analyzeButton);
     fireEvent.click(analyzeButton);
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().turns).toHaveLength(0);
 
     await act(async () => {
       spec.resolve(specSnapshot);
@@ -334,7 +334,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     expect(await screen.findByText(ANSWER)).toBeInTheDocument();
     await new Promise((r) => setTimeout(r, 50));
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(1);
+    expect(useKubiStore.getState().turns).toHaveLength(1);
     expect(streamCalls).toBe(1);
   });
 
@@ -355,15 +355,15 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
     expect(await screen.findByRole("heading", { name: "Run 분석" }));
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().turns).toHaveLength(0);
 
     // run 변경 → 이전 pending 폐기. B의 context가 canonical해져도 클릭 없이 자동 분석하지 않는다.
     fireEvent.click(screen.getByText("Other Run"));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Other Run" })).toBeInTheDocument());
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
-    expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull();
+    expect(useKubiStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().pendingSeed).toBeNull();
   });
 
   it("does not stay pending forever when the BuildSpec snapshot request errors (spec error is 'settled')", async () => {
@@ -378,9 +378,9 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     // spec error도 settled로 취급되므로 seed가 실행되고 분석이 진행된다.
     expect(await screen.findByText(ANSWER)).toBeInTheDocument();
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(1);
+    expect(useKubiStore.getState().turns).toHaveLength(1);
     // dataset은 spec이 없어 못 채우지만 stage/source는 stages에서 canonical하게 채워진다.
-    expect(useAsk KPubDataStore.getState().turns[0].context.stage).toBe("silver");
-    expect(useAsk KPubDataStore.getState().turns[0].context.datasetId).toBeUndefined();
+    expect(useKubiStore.getState().turns[0].context.stage).toBe("silver");
+    expect(useKubiStore.getState().turns[0].context.datasetId).toBeUndefined();
   });
 });

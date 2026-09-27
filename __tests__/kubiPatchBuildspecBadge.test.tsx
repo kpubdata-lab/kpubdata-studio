@@ -1,11 +1,11 @@
 /**
  * PATCH_BUILDSPEC "BuildSpec 변경 제안" type badge 테스트 (Phase 2 UI polish).
  *
- * ActionCard(Ask KPubDataContent.tsx)에 badge를 추가한 변경이 (1) PATCH_BUILDSPEC에만 표시되고 다른
+ * ActionCard(KubiContent.tsx)에 badge를 추가한 변경이 (1) PATCH_BUILDSPEC에만 표시되고 다른
  * action type에는 새지 않는지, (2) 기존 승인(pending_approval → approve → preview/SpecDiff →
  * confirm) semantics를 그대로 유지하는지 확인한다. approve/preview/confirm 로직 자체는 이미
  * `kubiSession.test.tsx`(#256 리뷰 §10)가 hook 레벨에서 충분히 검증하므로, 여기서는 그 흐름을
- * 실제 DOM(Ask KPubDataPage)에서 재확인하며 badge assertion만 추가한다.
+ * 실제 DOM(KubiPage)에서 재확인하며 badge assertion만 추가한다.
  */
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -14,8 +14,8 @@ import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import type { BuildSpec } from "@/shared/lib/types";
-import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
-import { Ask KPubDataPage } from "@/pages/Ask KPubDataPage";
+import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { KubiPage } from "@/pages/KubiPage";
 
 vi.mock("@/features/assistant/provider", () => ({
   createProvider: vi.fn(),
@@ -51,10 +51,10 @@ function configureKey() {
   });
 }
 
-function renderAsk KPubDataPage() {
+function renderKubiPage() {
   render(
     <MemoryRouter initialEntries={["/datasets/air-quality?run=air-2026-08-14"]}>
-      <Ask KPubDataPage />
+      <KubiPage />
     </MemoryRouter>,
   );
 }
@@ -65,7 +65,7 @@ function ask(question: string) {
 }
 
 beforeEach(() => {
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
 });
 
@@ -95,7 +95,7 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
         ],
       }),
     );
-    renderAsk KPubDataPage();
+    renderKubiPage();
     ask("이 run에 대해 알려줘");
 
     // 세 action card가 모두 뜰 때까지 기다린다(승인 버튼 두 개 + PATCH_BUILDSPEC 승인 버튼).
@@ -133,7 +133,7 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
         ],
       }),
     );
-    renderAsk KPubDataPage();
+    renderKubiPage();
     ask("metadata에 노트 추가해줘");
 
     // pending_approval: badge와 승인 버튼이 함께 보이고, 아직 diff는 보이지 않는다.

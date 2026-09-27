@@ -3,7 +3,7 @@
  * evidence와 대조").
  *
  * 순수 함수 로직은 `src/features/kubi/relatedDatasets.test.ts`가 담당한다. 여기서는 실제
- * evidence 로딩(`loadAsk KPubDataEvidence` → Builder `/catalog`)부터 `Ask KPubDataContent`의 non-compact
+ * evidence 로딩(`loadKubiEvidence` → Builder `/catalog`)부터 `KubiContent`의 non-compact
  * 사이드 패널 렌더링까지 전체 배선이 맞는지 확인한다 — 프로토타입의 하드코딩된 "관련 데이터셋"
  * 목록과 달리, 실제로 존재하지 않는 provider/dataset을 만들어내지 않아야 한다.
  */
@@ -13,8 +13,8 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
-import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
-import { Ask KPubDataPage } from "@/pages/Ask KPubDataPage";
+import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { KubiPage } from "@/pages/KubiPage";
 import { API_BASE } from "@/shared/config/env";
 import { mswServer } from "../vitest.setup";
 
@@ -52,7 +52,7 @@ function configureKeyAndAsk() {
 async function askAbout(datasetId: string) {
   render(
     <MemoryRouter initialEntries={[`/kubi?dataset=${datasetId}`]}>
-      <Ask KPubDataPage />
+      <KubiPage />
     </MemoryRouter>,
   );
   fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: "이 데이터셋 상태 알려줘" } });
@@ -61,7 +61,7 @@ async function askAbout(datasetId: string) {
 }
 
 beforeEach(() => {
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
 });
 

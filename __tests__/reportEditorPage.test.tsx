@@ -18,13 +18,13 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
-import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
+import { useKubiStore } from "@/features/kubi/useKubiSession";
 import { buildDeterministicSections } from "@/features/reports/deterministicSections";
 import * as reportEvidenceApi from "@/features/reports/evidence";
 import { buildEvidenceRefs, fetchReportEvidence } from "@/features/reports/evidence";
 import { createReport, getReport, saveReport } from "@/features/reports/repository";
-import type { BuilderEvidenceBlock, Ask KPubDataInterpretationBlock, ReportDraft } from "@/features/reports/types";
-import { listAsk KPubDataReportNotes, queueAsk KPubDataReportNote } from "@/features/kubi/reportInbox";
+import type { BuilderEvidenceBlock, KubiInterpretationBlock, ReportDraft } from "@/features/reports/types";
+import { listKubiReportNotes, queueKubiReportNote } from "@/features/kubi/reportInbox";
 import { ReportEditorPage } from "@/pages/ReportEditorPage";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 
@@ -69,7 +69,7 @@ function stripSummary(block: ReportDraft["blocks"][number]): ReportDraft["blocks
   return clone as BuilderEvidenceBlock;
 }
 
-function makeAsk KPubDataBlock(overrides: Partial<Ask KPubDataInterpretationBlock> = {}): Ask KPubDataInterpretationBlock {
+function makeKubiBlock(overrides: Partial<KubiInterpretationBlock> = {}): KubiInterpretationBlock {
   const now = new Date().toISOString();
   return {
     id: "kubi-1",
@@ -87,8 +87,8 @@ function makeAsk KPubDataBlock(overrides: Partial<Ask KPubDataInterpretationBloc
 
 beforeEach(() => {
   localStorage.clear();
-  useUIStore.setState({ isAsk KPubDataDrawerOpen: false });
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useUIStore.setState({ isKubiDrawerOpen: false });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
 });
 
@@ -130,7 +130,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
 
   it("Ask KPubData 블록과 Builder Evidence 블록이 provenance 배지로 시각적으로 구분된다", async () => {
     let report = await makeReport("air-quality", "air-2026-08-14");
-    report = { ...report, blocks: [...report.blocks, makeAsk KPubDataBlock()] };
+    report = { ...report, blocks: [...report.blocks, makeKubiBlock()] };
     saveReport(report, { force: true });
 
     renderReport(report.id);
@@ -188,7 +188,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
 describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정)", () => {
   it("summary 없는 legacy draft를 다시 열면 현재 evidence 기준 요약 문장이 화면에 보강되고, 저장된 draft/baseRunId/블록은 그대로 유지된다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
-    const legacyBlocks = [...report.blocks.map(stripSummary), makeAsk KPubDataBlock()];
+    const legacyBlocks = [...report.blocks.map(stripSummary), makeKubiBlock()];
     saveReport({ ...report, blocks: legacyBlocks }, { force: true });
 
     // 저장된 draft 자체에는 summary가 없다.
@@ -305,7 +305,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     expect(screen.getByLabelText("API Key")).toBeInTheDocument();
   });
 
-  it("직접 질문하기를 누르면 기존 Ask KPubDataContent 채팅이 펼쳐지고, global Ask KPubData drawer는 열리지 않는다", async () => {
+  it("직접 질문하기를 누르면 기존 KubiContent 채팅이 펼쳐지고, global Ask KPubData drawer는 열리지 않는다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     renderReport(report.id);
 
@@ -314,7 +314,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
 
     const chat = await screen.findByTestId("kubi-report-chat");
     expect(within(chat).getByLabelText("Ask KPubData 에 질문하기")).toBeInTheDocument();
-    expect(useUIStore.getState().isAsk KPubDataDrawerOpen).toBe(false);
+    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
   });
 
   it("이 문제 설명 보기 패널은 Report가 고정한 dataset/baseRunId를 context로 유지한다(최신 run 자동 전환 금지)", async () => {
@@ -337,7 +337,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     await screen.findByTestId("kubi-report-panel");
     // 질문을 보내기 전에 URL이 Report 기준 dataset/run으로 이미 고정되어 있는지 먼저 기다린다
     // (그렇지 않으면 turn의 context가 비어 있는 채로 생성되어 미리보기가 이 Report와 매칭되지
-    // 않는다 — Ask KPubDataReportPanel의 useEffect가 그 값을 채운다).
+    // 않는다 — KubiReportPanel의 useEffect가 그 값을 채운다).
     await waitFor(() => {
       expect(screen.getByTestId("location").textContent).toContain("dataset=air-quality");
     });
@@ -359,7 +359,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
 
   it("대기 중인 참고 노트를 승인하면 기존 동작대로 KUBI_INTERPRETATION 블록이 추가된다(ADD_REPORT_BLOCK 승인 흐름 유지)", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
-    queueAsk KPubDataReportNote({
+    queueKubiReportNote({
       note: "가격 결측이 특정 지역에 집중됩니다.",
       reason: "품질 이슈 참고용",
       context: { datasetId: "air-quality", runId: "air-2026-08-14" },
@@ -373,6 +373,6 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
 
     const kubiBlock = await screen.findByTestId("block-kubi");
     expect(within(kubiBlock).getByText(/가격 결측이 특정 지역에 집중됩니다\./)).toBeInTheDocument();
-    expect(listAsk KPubDataReportNotes()).toHaveLength(0);
+    expect(listKubiReportNotes()).toHaveLength(0);
   });
 });

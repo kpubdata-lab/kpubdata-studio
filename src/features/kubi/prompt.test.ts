@@ -3,10 +3,10 @@
  * "dataset"만 조회해야 한다).
  */
 import { describe, expect, it } from "vitest";
-import { buildAsk KPubDataMessages } from "./prompt";
-import type { Ask KPubDataEvidence } from "./types";
+import { buildKubiMessages } from "./prompt";
+import type { KubiEvidence } from "./types";
 
-function baseEvidence(overrides: Partial<Ask KPubDataEvidence> = {}): Ask KPubDataEvidence {
+function baseEvidence(overrides: Partial<KubiEvidence> = {}): KubiEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00Z",
     context: { page: "dataset-detail", datasetId: "air-quality" },
@@ -17,9 +17,9 @@ function baseEvidence(overrides: Partial<Ask KPubDataEvidence> = {}): Ask KPubDa
   };
 }
 
-describe("buildAsk KPubDataMessages (#256 프롬프트)", () => {
+describe("buildKubiMessages (#256 프롬프트)", () => {
   it("states the logical relation \"dataset\" rule in the system prompt's response contract", () => {
-    const [systemMessage] = buildAsk KPubDataMessages("질문", baseEvidence());
+    const [systemMessage] = buildKubiMessages("질문", baseEvidence());
     expect(systemMessage.role).toBe("system");
     expect(systemMessage.content).toContain('logical relation "dataset"');
     expect(systemMessage.content).toContain("source_key");
@@ -27,13 +27,13 @@ describe("buildAsk KPubDataMessages (#256 프롬프트)", () => {
   });
 
   it("instructs that the real source_key must not be used as the SQL FROM table name", () => {
-    const [systemMessage] = buildAsk KPubDataMessages("질문", baseEvidence());
+    const [systemMessage] = buildKubiMessages("질문", baseEvidence());
     expect(systemMessage.content).toContain("FROM의 테이블명으로 쓰지 마세요");
     expect(systemMessage.content).toContain("generatedSql.source 필드로만 전달");
   });
 
   it("states the exact-column-name + TRY_CAST authoring invariants in the response contract", () => {
-    const [systemMessage] = buildAsk KPubDataMessages("질문", baseEvidence());
+    const [systemMessage] = buildKubiMessages("질문", baseEvidence());
     // 컬럼명 추측 금지 + schema evidence 참조
     expect(systemMessage.content).toContain("evidence.stage.schema");
     expect(systemMessage.content).toContain("evidence.stage.columns");
@@ -60,7 +60,7 @@ describe("buildAsk KPubDataMessages (#256 프롬프트)", () => {
         columns: ["stationName", "pm10Value"],
       },
     });
-    const messages = buildAsk KPubDataMessages("측정소별 PM10 평균 SQL 만들어줘", evidence);
+    const messages = buildKubiMessages("측정소별 PM10 평균 SQL 만들어줘", evidence);
     // schema evidence는 structuredContent로만 전달되고 프롬프트 지시문에 문자열로 박히지 않는다.
     expect(messages[1].structuredContent).toEqual(evidence);
     expect(messages[0].content).not.toContain("pm10Value");
@@ -71,7 +71,7 @@ describe("buildAsk KPubDataMessages (#256 프롬프트)", () => {
     const evidence = baseEvidence({
       stage: { refId: "r1::datago__air::silver", stage: "silver", source: "datago__air", status: "completed", available: true, rowCount: 10 },
     });
-    const messages = buildAsk KPubDataMessages("서울 데이터 보여줘", evidence);
+    const messages = buildKubiMessages("서울 데이터 보여줘", evidence);
     expect(messages).toHaveLength(3);
     expect(messages[1].content).toContain("structured content");
     expect(messages[1].structuredContent).toEqual(evidence);

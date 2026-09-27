@@ -7,10 +7,10 @@
  */
 import { describe, expect, it } from "vitest";
 import { START_QUESTIONS, getSuggestedQuestions } from "./suggestedQuestions";
-import type { Ask KPubDataContext, Ask KPubDataEvidence, Ask KPubDataTurn } from "./types";
+import type { KubiContext, KubiEvidence, KubiTurn } from "./types";
 
 /** 필수 필드만 채운 최소 evidence(테스트가 지정한 조각을 덮어쓴다). */
-function evidence(partial: Partial<Ask KPubDataEvidence>): Ask KPubDataEvidence {
+function evidence(partial: Partial<KubiEvidence>): KubiEvidence {
   return {
     fetchedAt: "2026-09-02T00:00:00Z",
     context: { page: "kubi" },
@@ -21,7 +21,7 @@ function evidence(partial: Partial<Ask KPubDataEvidence>): Ask KPubDataEvidence 
   };
 }
 
-function turn(overrides: Partial<Ask KPubDataTurn>): Ask KPubDataTurn {
+function turn(overrides: Partial<KubiTurn>): KubiTurn {
   return {
     id: "t1",
     question: "q",
@@ -35,7 +35,7 @@ function turn(overrides: Partial<Ask KPubDataTurn>): Ask KPubDataTurn {
   };
 }
 
-const ask = (context: Ask KPubDataContext, turns: Ask KPubDataTurn[] = []) =>
+const ask = (context: KubiContext, turns: KubiTurn[] = []) =>
   getSuggestedQuestions({ context, turns });
 
 describe("getSuggestedQuestions — context별 초기 추천", () => {
@@ -92,7 +92,7 @@ describe("getSuggestedQuestions — context별 초기 추천", () => {
 
 describe("getSuggestedQuestions — 최근 대화 기반 follow-up", () => {
   it("첫 turn 전 추천과 answered turn 후 추천이 달라진다", () => {
-    const context: Ask KPubDataContext = { page: "kubi" };
+    const context: KubiContext = { page: "kubi" };
     const before = ask(context);
     const after = getSuggestedQuestions({
       context,

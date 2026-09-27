@@ -7,7 +7,7 @@ import { BuildsPage } from "@/pages/BuildsPage";
 import { ApiError, builderApi } from "@/shared/lib/builderApi";
 import { DEMO_DATASETS } from "@/shared/lib/demoDatasets";
 import { useAssistConfig } from "@/features/assistant/config";
-import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
+import { useKubiStore } from "@/features/kubi/useKubiSession";
 
 function renderBuilds(initialPath = "/builds") {
   return render(
@@ -370,7 +370,7 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
 describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   afterEach(() => {
     useAssistConfig.getState().clear();
-    useAsk KPubDataStore.setState({ pendingSeed: null });
+    useKubiStore.setState({ pendingSeed: null });
   });
 
   it("API Key 미설정: '이 Run 분석' 클릭 시 seed하지 않고 inline card에 설정 안내만 연다", async () => {
@@ -380,7 +380,7 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
 
     // seed 자체가 발생하지 않는다 — mock mode의 session.isDemoAvailable로 우회하지 않는다.
-    expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull();
+    expect(useKubiStore.getState().pendingSeed).toBeNull();
 
     expect(await screen.findByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ask KPubData 설정 열기" })).toBeInTheDocument();
@@ -410,8 +410,8 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
 
-    // seed가 실제로 소비되어(기존 useAsk KPubDataSession ask 경로) pendingSeed가 비워진다.
-    await waitFor(() => expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull());
+    // seed가 실제로 소비되어(기존 useKubiSession ask 경로) pendingSeed가 비워진다.
+    await waitFor(() => expect(useKubiStore.getState().pendingSeed).toBeNull());
     expect(screen.queryByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).not.toBeInTheDocument();
   });
 });

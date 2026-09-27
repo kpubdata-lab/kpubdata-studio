@@ -12,8 +12,8 @@ import {
   draftValuesFromAction,
   previewBuildSpecPatch,
 } from "./actions";
-import { listAsk KPubDataReportNotes } from "./reportInbox";
-import type { Ask KPubDataAction } from "./schema";
+import { listKubiReportNotes } from "./reportInbox";
+import type { KubiAction } from "./schema";
 
 const BASE_SPEC: BuildSpec = {
   datasetId: "air-quality",
@@ -30,7 +30,7 @@ afterEach(() => {
 
 describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
   it("fails when no spec is stored for the run (Builder doesn't persist specs)", () => {
-    const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+    const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
       type: "PATCH_BUILDSPEC",
       runId: "unknown-run",
       patch: [{ op: "replace", path: "/title", value: "x" }],
@@ -42,7 +42,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
   it("rejects a patch path outside the allowlist (e.g. datasetId identity swap)", () => {
     saveBuildSpec("run-1", BASE_SPEC);
-    const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+    const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
       type: "PATCH_BUILDSPEC",
       runId: "run-1",
       patch: [{ op: "replace", path: "/datasetId", value: "swapped" }],
@@ -55,7 +55,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
   it("rejects a patch that would rewrite the source provider/dataset identity", () => {
     saveBuildSpec("run-1", BASE_SPEC);
-    const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+    const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
       type: "PATCH_BUILDSPEC",
       runId: "run-1",
       patch: [{ op: "replace", path: "/sources/0/provider", value: "other" }],
@@ -66,7 +66,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
   it("produces a before/after diff for an allowed metadata patch", () => {
     saveBuildSpec("run-1", BASE_SPEC);
-    const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+    const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
       type: "PATCH_BUILDSPEC",
       runId: "run-1",
       patch: [{ op: "replace", path: "/metadata/note", value: "updated" }],
@@ -87,7 +87,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
     "allows an ordinary (non-credential) source param patch: /sources/0/params/%s",
     (key) => {
       saveBuildSpec("run-1", BASE_SPEC);
-      const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+      const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
         type: "PATCH_BUILDSPEC",
         runId: "run-1",
         patch: [{ op: "add", path: `/sources/0/params/${key}`, value: "x" }],
@@ -101,7 +101,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
     "rejects a credential-like source param patch: /sources/0/params/%s (#277 리뷰)",
     (key) => {
       saveBuildSpec("run-1", BASE_SPEC);
-      const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+      const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
         type: "PATCH_BUILDSPEC",
         runId: "run-1",
         patch: [{ op: "add", path: `/sources/0/params/${key}`, value: "leaked" }],
@@ -115,7 +115,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
   it("never saves the spec or calls Builder /validate for a rejected credential patch", async () => {
     saveBuildSpec("run-1", BASE_SPEC);
-    const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+    const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
       type: "PATCH_BUILDSPEC",
       runId: "run-1",
       patch: [{ op: "add", path: "/sources/0/params/serviceKey", value: "leaked-secret-value" }],
@@ -129,7 +129,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
   it("applies an approved patch: saves it and re-runs Builder /validate", async () => {
     saveBuildSpec("run-1", BASE_SPEC);
-    const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+    const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
       type: "PATCH_BUILDSPEC",
       runId: "run-1",
       patch: [{ op: "add", path: "/sources/0/params/foo", value: "bar" }],
@@ -174,7 +174,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
         (loadBuildSpec("run-x")?.sources[0].params as Record<string, unknown>).serviceKey,
       ).toBe("[REDACTED]");
 
-      const action: Extract<Ask KPubDataAction, { type: "PATCH_BUILDSPEC" }> = {
+      const action: Extract<KubiAction, { type: "PATCH_BUILDSPEC" }> = {
         type: "PATCH_BUILDSPEC",
         runId: "run-x",
         patch: [{ op: "replace", path: "/metadata/note", value: "updated" }],
@@ -222,7 +222,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
 describe("draftValuesFromAction / applyCreateBuildDraft (#256)", () => {
   it("fills sane defaults for optional fields", () => {
-    const action: Extract<Ask KPubDataAction, { type: "CREATE_BUILD_DRAFT" }> = {
+    const action: Extract<KubiAction, { type: "CREATE_BUILD_DRAFT" }> = {
       type: "CREATE_BUILD_DRAFT",
       values: { datasetId: "d1", title: "t", description: "d", provider: "datago", sourceDataset: "air_quality" },
       reason: "test",
@@ -235,7 +235,7 @@ describe("draftValuesFromAction / applyCreateBuildDraft (#256)", () => {
   });
 
   it("writes to the New Build wizard's single draft slot", () => {
-    const action: Extract<Ask KPubDataAction, { type: "CREATE_BUILD_DRAFT" }> = {
+    const action: Extract<KubiAction, { type: "CREATE_BUILD_DRAFT" }> = {
       type: "CREATE_BUILD_DRAFT",
       values: { datasetId: "d1", title: "t", description: "d", provider: "datago", sourceDataset: "air_quality" },
       reason: "test",
@@ -246,7 +246,7 @@ describe("draftValuesFromAction / applyCreateBuildDraft (#256)", () => {
   });
 
   it("rejects credential and unresolved placeholder values", () => {
-    const base: Extract<Ask KPubDataAction, { type: "CREATE_BUILD_DRAFT" }> = {
+    const base: Extract<KubiAction, { type: "CREATE_BUILD_DRAFT" }> = {
       type: "CREATE_BUILD_DRAFT",
       values: {
         datasetId: "d1",
@@ -275,13 +275,13 @@ describe("draftValuesFromAction / applyCreateBuildDraft (#256)", () => {
 
 describe("applyAddReportBlock (#256, #258 handoff only)", () => {
   it("queues the note with its context instead of writing into Reports directly", () => {
-    const action: Extract<Ask KPubDataAction, { type: "ADD_REPORT_BLOCK" }> = {
+    const action: Extract<KubiAction, { type: "ADD_REPORT_BLOCK" }> = {
       type: "ADD_REPORT_BLOCK",
       note: "가격 결측이 특정 지역에 집중됩니다.",
       reason: "test",
     };
     applyAddReportBlock(action, { page: "quality", datasetId: "d1", runId: "r1", stage: "gold" });
-    const notes = listAsk KPubDataReportNotes();
+    const notes = listKubiReportNotes();
     expect(notes.at(-1)?.note).toBe(action.note);
     expect(notes.at(-1)?.context).toEqual({ datasetId: "d1", runId: "r1", stage: "gold" });
   });
@@ -324,7 +324,7 @@ describe("actionHref / describeAction", () => {
   });
 
   it("describes every action type in Korean", () => {
-    const actions: Ask KPubDataAction[] = [
+    const actions: KubiAction[] = [
       { type: "OPEN_PROVIDER", provider: "datago", reason: "x" },
       { type: "OPEN_BUILD", runId: "r1", reason: "x" },
       { type: "OPEN_QUALITY", datasetId: "d1", reason: "x" },

@@ -2,7 +2,7 @@
  * Result Preview 테이블 렌더링 regression test (#256 리뷰 §1).
  *
  * `/query` row에 array/object 값이 오면 실제 DOM에도 "[object Object]"가 아니라 JSON 내용이
- * 보여야 한다. `formatQueryValue`의 단위 테스트(`src/features/kubi/Ask KPubDataContent.test.tsx`)에
+ * 보여야 한다. `formatQueryValue`의 단위 테스트(`src/features/kubi/KubiContent.test.tsx`)에
  * 더해, 실제 테이블 셀까지 이어지는 것을 확인한다.
  */
 import { act, fireEvent, render, screen } from "@testing-library/react";
@@ -10,8 +10,8 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
-import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
-import { Ask KPubDataPage } from "@/pages/Ask KPubDataPage";
+import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { KubiPage } from "@/pages/KubiPage";
 
 vi.mock("@/features/assistant/provider", () => ({
   createProvider: vi.fn(),
@@ -45,7 +45,7 @@ function configureKey() {
 }
 
 beforeEach(() => {
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
 });
 
@@ -71,7 +71,7 @@ describe("Result Preview table — array/object values (#256 리뷰 §1)", () =>
 
     render(
       <MemoryRouter initialEntries={["/datasets/air-quality?run=air-2026-08-14&stage=silver"]}>
-        <Ask KPubDataPage />
+        <KubiPage />
       </MemoryRouter>,
     );
     fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: "SQL 만들어줘" } });

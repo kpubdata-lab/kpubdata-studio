@@ -16,7 +16,7 @@ describe("global Ask KPubData drawer (#247)", () => {
   beforeEach(() => {
     // jsdom에는 matchMedia가 없으므로 system 테마 분기를 피하도록 light로 고정한다.
     act(() =>
-      useUIStore.setState({ theme: "light", isMobileSidebarOpen: false, isAsk KPubDataDrawerOpen: false }),
+      useUIStore.setState({ theme: "light", isMobileSidebarOpen: false, isKubiDrawerOpen: false }),
     );
   });
 

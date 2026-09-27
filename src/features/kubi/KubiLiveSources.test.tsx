@@ -2,8 +2,8 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as datasetsApi from "@/features/datasets/api";
-import { Ask KPubDataPage } from "@/pages/Ask KPubDataPage";
-import { useAsk KPubDataStore } from "./useAsk KPubDataSession";
+import { KubiPage } from "@/pages/KubiPage";
+import { useKubiStore } from "./useKubiSession";
 import type { RunStagesResponse } from "@/shared/lib/builderApi";
 
 function stages(runId: string, sourceKeys: string[]): RunStagesResponse {
@@ -21,7 +21,7 @@ function stages(runId: string, sourceKeys: string[]): RunStagesResponse {
 function Harness({ initialPath = "/kubi?run=run-a" }: { initialPath?: string }) {
   return (
     <MemoryRouter initialEntries={[initialPath]}>
-      <Ask KPubDataPage />
+      <KubiPage />
       <LocationHarness />
     </MemoryRouter>
   );
@@ -46,7 +46,7 @@ function deferred<T>() {
 }
 
 beforeEach(() => {
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   vi.restoreAllMocks();
 });
 
@@ -55,7 +55,7 @@ describe("Ask KPubData live Builder-confirmed source picker", () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
     render(<Harness />);
     const picker = await screen.findByLabelText("분석 Source");
-    expect(useAsk KPubDataStore.getState().turns).toHaveLength(0);
+    expect(useKubiStore.getState().turns).toHaveLength(0);
     expect(picker).toHaveTextContent("provider.a");
     expect(picker).toHaveTextContent("provider.b");
   });

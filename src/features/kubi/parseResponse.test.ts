@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAsk KPubDataResponse } from "./parseResponse";
+import { parseKubiResponse } from "./parseResponse";
 
 const VALID_JSON = {
   answer: "안녕하세요",
@@ -8,31 +8,31 @@ const VALID_JSON = {
   suggestedActions: [],
 };
 
-describe("parseAsk KPubDataResponse (#256)", () => {
+describe("parseKubiResponse (#256)", () => {
   it("parses a fenced ```json block", () => {
     const raw = `여기 답변입니다.\n\n\`\`\`json\n${JSON.stringify(VALID_JSON)}\n\`\`\`countertext`;
-    const result = parseAsk KPubDataResponse(raw);
+    const result = parseKubiResponse(raw);
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.response.answer).toBe("안녕하세요");
   });
 
   it("parses bare JSON with no fence", () => {
-    const result = parseAsk KPubDataResponse(JSON.stringify(VALID_JSON));
+    const result = parseKubiResponse(JSON.stringify(VALID_JSON));
     expect(result.ok).toBe(true);
   });
 
   it("rejects empty output", () => {
-    const result = parseAsk KPubDataResponse("   ");
+    const result = parseKubiResponse("   ");
     expect(result.ok).toBe(false);
   });
 
   it("rejects non-JSON garbage", () => {
-    const result = parseAsk KPubDataResponse("죄송합니다, 답변을 드릴 수 없습니다.");
+    const result = parseKubiResponse("죄송합니다, 답변을 드릴 수 없습니다.");
     expect(result.ok).toBe(false);
   });
 
   it("rejects a JSON object missing required fields (zod shape check)", () => {
-    const result = parseAsk KPubDataResponse(JSON.stringify({ answer: "x" }).replace('"answer"', '"notanswer"'));
+    const result = parseKubiResponse(JSON.stringify({ answer: "x" }).replace('"answer"', '"notanswer"'));
     expect(result.ok).toBe(false);
   });
 
@@ -41,7 +41,7 @@ describe("parseAsk KPubDataResponse (#256)", () => {
       ...VALID_JSON,
       suggestedActions: [{ type: "RUN_BUILD", reason: "자동 실행해볼게요" }],
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(false);
   });
 
@@ -51,7 +51,7 @@ describe("parseAsk KPubDataResponse (#256)", () => {
       ...VALID_JSON,
       suggestedActions: [{ type: "PATCH_BUILDSPEC", runId: "r1", patch: [], reason: "..." }],
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(false);
   });
 
@@ -60,13 +60,13 @@ describe("parseAsk KPubDataResponse (#256)", () => {
       ...VALID_JSON,
       suggestedActions: [{ type: "OPEN_BUILD", runId: "run-1", reason: "실패 원인을 보여줄게요" }],
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.response.suggestedActions).toHaveLength(1);
   });
 
   it("defaults missing optional fields (evidenceRefs/generatedSql/suggestedActions)", () => {
-    const result = parseAsk KPubDataResponse(JSON.stringify({ answer: "간단 답변" }));
+    const result = parseKubiResponse(JSON.stringify({ answer: "간단 답변" }));
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.response.evidenceRefs).toEqual([]);
@@ -76,7 +76,7 @@ describe("parseAsk KPubDataResponse (#256)", () => {
   });
 });
 
-describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)", () => {
+describe("parseKubiResponse — evidenceRefs 부분 복구 (#256 리뷰)", () => {
   it("잘못된 evidenceRef 항목 하나 때문에 answer 전체를 버리지 않는다", () => {
     const payload = {
       answer: "정상 답변",
@@ -87,7 +87,7 @@ describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)
       generatedSql: null,
       suggestedActions: [],
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.response.answer).toBe("정상 답변");
@@ -105,7 +105,7 @@ describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)
         { kind: "run", label: "id 없음" },
       ],
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.response.answer).toBe("정상 답변");
@@ -115,7 +115,7 @@ describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)
   });
 
   it("evidenceRefs가 배열이 아니면 비우고 answer는 유지한다", () => {
-    const result = parseAsk KPubDataResponse(JSON.stringify({ answer: "정상 답변", evidenceRefs: "oops" }));
+    const result = parseKubiResponse(JSON.stringify({ answer: "정상 답변", evidenceRefs: "oops" }));
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.response.evidenceRefs).toEqual([]);
@@ -124,14 +124,14 @@ describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)
   });
 
   it("answer가 없으면 여전히 실패한다(fail-closed 유지)", () => {
-    const result = parseAsk KPubDataResponse(
+    const result = parseKubiResponse(
       JSON.stringify({ evidenceRefs: [{ kind: "bogus", id: "x", label: "y" }] }),
     );
     expect(result.ok).toBe(false);
   });
 
   it("answer 타입이 잘못되면 여전히 실패한다", () => {
-    const result = parseAsk KPubDataResponse(
+    const result = parseKubiResponse(
       JSON.stringify({ answer: 123, evidenceRefs: [{ kind: "dataset", id: "d1", label: "l" }] }),
     );
     expect(result.ok).toBe(false);
@@ -143,7 +143,7 @@ describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)
       evidenceRefs: [{ kind: "dataset", id: "d1", label: "l" }],
       suggestedActions: [{ type: "RUN_BUILD", reason: "자동 실행" }],
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(false);
   });
 
@@ -153,7 +153,7 @@ describe("parseAsk KPubDataResponse — evidenceRefs 부분 복구 (#256 리뷰)
       evidenceRefs: [{ kind: "dataset", id: "d1", label: "l" }],
       generatedSql: { sql: "", stage: "bronze" },
     };
-    const result = parseAsk KPubDataResponse(JSON.stringify(payload));
+    const result = parseKubiResponse(JSON.stringify(payload));
     expect(result.ok).toBe(false);
   });
 });

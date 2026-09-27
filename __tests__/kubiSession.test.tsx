@@ -1,5 +1,5 @@
 /**
- * useAsk KPubDataSession 통합 테스트 (#256).
+ * useKubiSession 통합 테스트 (#256).
  *
  * evidence 조회는 기존 mock 데이터 경로(features/datasets/api, isRealBuilderEnabled=false)를
  * 그대로 타게 하고, LLM 호출만 `createProvider`를 모킹해 응답을 통제한다.
@@ -12,7 +12,7 @@ import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import type { BuildSpec } from "@/shared/lib/types";
-import { useAsk KPubDataSession, useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
+import { useKubiSession, useKubiStore } from "@/features/kubi/useKubiSession";
 
 vi.mock("@/features/assistant/provider", () => ({
   createProvider: vi.fn(),
@@ -96,7 +96,7 @@ function makeWrapper(initialPath: string) {
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
-  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
   navigateRef = null;
 });
@@ -107,9 +107,9 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () => {
+describe("useKubiSession — key/base URL/LLM error states (#256)", () => {
   it("shows a no_key error and never calls the provider without an API key", async () => {
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     await act(async () => {
       await result.current.ask("질문");
     });
@@ -121,7 +121,7 @@ describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () =
     act(() => {
       useAssistConfig.getState().setConfig({ apiKey: "sk-test", baseUrl: "http://insecure.example.com" });
     });
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     await act(async () => {
       await result.current.ask("질문");
     });
@@ -132,7 +132,7 @@ describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () =
   it("surfaces a structured llm_error when the provider throws", async () => {
     configureKey();
     mockStream(() => throwingStream("rate limited"));
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     await act(async () => {
       await result.current.ask("질문");
     });
@@ -144,7 +144,7 @@ describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () =
     configureKey();
     mockStream((_messages, signal) => abortableStream(signal));
 
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     let askPromise!: Promise<void>;
     act(() => {
       askPromise = result.current.ask("질문");
@@ -161,7 +161,7 @@ describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () =
   it("rejects malformed structured output (including an unknown suggested-action type) as a safe error state", async () => {
     configureKey();
     mockStream(() => textOf("이건 그냥 자유 텍스트입니다, JSON이 아니에요."));
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     await act(async () => {
       await result.current.ask("질문");
     });
@@ -180,7 +180,7 @@ describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () =
         suggestedActions: [{ type: "RUN_BUILD", reason: "자동으로 재실행합니다" }],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     await act(async () => {
       await result.current.ask("빌드를 재실행해줘");
     });
@@ -189,7 +189,7 @@ describe("useAsk KPubDataSession — key/base URL/LLM error states (#256)", () =
   });
 });
 
-describe("useAsk KPubDataSession — evidence grounding & hallucination gate (#256)", () => {
+describe("useKubiSession — evidence grounding & hallucination gate (#256)", () => {
   it("drops a hallucinated dataset ref but keeps the rest of the answer, and flags the turn", async () => {
     configureKey();
     mockStream(() =>
@@ -200,7 +200,7 @@ describe("useAsk KPubDataSession — evidence grounding & hallucination gate (#2
         suggestedActions: [],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/") });
     await act(async () => {
       await result.current.ask("질문");
     });
@@ -221,7 +221,7 @@ describe("useAsk KPubDataSession — evidence grounding & hallucination gate (#2
         suggestedActions: [],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&stage=bronze"),
     });
     await act(async () => {
@@ -242,7 +242,7 @@ describe("useAsk KPubDataSession — evidence grounding & hallucination gate (#2
         suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "실패 원인을 확인하세요" }],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
@@ -256,7 +256,7 @@ describe("useAsk KPubDataSession — evidence grounding & hallucination gate (#2
   });
 });
 
-describe("useAsk KPubDataSession — stale context guard (#256 리뷰 §6)", () => {
+describe("useKubiSession — stale context guard (#256 리뷰 §6)", () => {
   it("flags a turn as stale once the route context changes, and blocks query/action execution", async () => {
     configureKey();
     mockStream(() =>
@@ -267,7 +267,7 @@ describe("useAsk KPubDataSession — stale context guard (#256 리뷰 §6)", () 
         suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "확인해보세요" }],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&stage=silver"),
     });
     await act(async () => {
@@ -291,7 +291,7 @@ describe("useAsk KPubDataSession — stale context guard (#256 리뷰 §6)", () 
   });
 });
 
-describe("useAsk KPubDataSession — Generated SQL execution via Builder /query (#256, builder #504)", () => {
+describe("useKubiSession — Generated SQL execution via Builder /query (#256, builder #504)", () => {
   function fetchStub(queryResponder: () => Response) {
     vi.stubGlobal(
       "fetch",
@@ -318,7 +318,7 @@ describe("useAsk KPubDataSession — Generated SQL execution via Builder /query 
         suggestedActions: [],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&stage=silver"),
     });
     await act(async () => {
@@ -369,10 +369,10 @@ describe("useAsk KPubDataSession — Generated SQL execution via Builder /query 
   });
 });
 
-describe("useAsk KPubDataSession — askDemo (#256 review, mock mode Ask KPubData 데모)", () => {
+describe("useKubiSession — askDemo (#256 review, mock mode Ask KPubData 데모)", () => {
   it("works without any API key configured and never calls the LLM provider", async () => {
     vi.mocked(createProvider).mockClear();
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
     });
     expect(result.current.isConfigured).toBe(false);
@@ -391,7 +391,7 @@ describe("useAsk KPubDataSession — askDemo (#256 review, mock mode Ask KPubDat
 
   it("is unavailable in real mode — askDemo becomes a no-op so real mode always requires BYOK", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    const { result } = renderHook(() => useAsk KPubDataSession(), { wrapper: makeWrapper("/datasets/air-quality") });
+    const { result } = renderHook(() => useKubiSession(), { wrapper: makeWrapper("/datasets/air-quality") });
     expect(result.current.isDemoAvailable).toBe(false);
 
     await act(async () => {
@@ -405,7 +405,7 @@ describe("useAsk KPubDataSession — askDemo (#256 review, mock mode Ask KPubDat
     // evidence 조회(catalog 등)는 그대로 mock 경로를 타지만, 데모는 절대 실제 /query를 호출하지 않는다.
     const fetchMock = vi.fn(async (_input: unknown) => new Response(null, { status: 500 }));
     vi.stubGlobal("fetch", fetchMock);
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
     });
     await act(async () => {
@@ -424,7 +424,7 @@ describe("useAsk KPubDataSession — askDemo (#256 review, mock mode Ask KPubDat
   });
 });
 
-describe("useAsk KPubDataSession — Suggested Actions require approval (#256)", () => {
+describe("useKubiSession — Suggested Actions require approval (#256)", () => {
   it("does not navigate until approveAction is called (approval required)", async () => {
     configureKey();
     mockStream(() =>
@@ -435,7 +435,7 @@ describe("useAsk KPubDataSession — Suggested Actions require approval (#256)",
         suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "확인" }],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
@@ -460,7 +460,7 @@ describe("useAsk KPubDataSession — Suggested Actions require approval (#256)",
         suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "확인" }],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
@@ -472,7 +472,7 @@ describe("useAsk KPubDataSession — Suggested Actions require approval (#256)",
   });
 });
 
-describe("useAsk KPubDataSession — PATCH_BUILDSPEC diff + validate path (#256 리뷰 §10)", () => {
+describe("useKubiSession — PATCH_BUILDSPEC diff + validate path (#256 리뷰 §10)", () => {
   const SPEC: BuildSpec = {
     datasetId: "air-quality",
     title: "대기질",
@@ -500,7 +500,7 @@ describe("useAsk KPubDataSession — PATCH_BUILDSPEC diff + validate path (#256 
         ],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
@@ -547,7 +547,7 @@ describe("useAsk KPubDataSession — PATCH_BUILDSPEC diff + validate path (#256 
         ],
       }),
     );
-    const { result } = renderHook(() => useAsk KPubDataSession(), {
+    const { result } = renderHook(() => useKubiSession(), {
       wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
