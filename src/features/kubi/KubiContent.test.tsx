@@ -5,8 +5,8 @@
  * 내용이 보이는지 확인한다. null/primitive는 기존 표시 방식을 그대로 유지해야 한다.
  */
 import { describe, expect, it } from "vitest";
-import { evidenceDetail, evidenceDetailEntries, evidenceHref, formatQueryValue } from "./KubiContent";
-import type { KubiTurn } from "./types";
+import { evidenceDetail, evidenceDetailEntries, evidenceHref, formatQueryValue } from "./Ask KPubDataContent";
+import type { Ask KPubDataTurn } from "./types";
 
 describe("formatQueryValue (#256 리뷰 §1)", () => {
   it("shows a dash for null/undefined, matching the previous behavior", () => {
@@ -63,7 +63,7 @@ describe("stage evidence detail", () => {
         partial: false,
         unavailable: [],
       },
-    } satisfies KubiTurn;
+    } satisfies Ask KPubDataTurn;
     expect(evidenceDetail(turn, { kind: "stage", id: refId, label: "Gold" })).toMatchObject({
       stage: "gold",
       source: "provider.dataset",
@@ -102,7 +102,7 @@ describe("evidenceHref run navigation", () => {
       partial: false,
       unavailable: [],
     },
-  } satisfies KubiTurn;
+  } satisfies Ask KPubDataTurn;
 
   it("uses the verified current run detail and retains its source/stage context", () => {
     expect(evidenceHref(turn, { kind: "run", id: "run-current", label: "현재 Run" })).toBe(

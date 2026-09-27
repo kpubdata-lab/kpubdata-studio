@@ -2,7 +2,7 @@
  * Run provenance 통합 회귀 (독립 리뷰 blocker).
  *
  * 단위 테스트 두 개(evidence.test.ts / crossCheck.test.ts)만으로는 실제 흐름
- *   loadKubiEvidence → 반환된 knownRefs → crossCheckKubiResponse
+ *   loadAsk KPubDataEvidence → 반환된 knownRefs → crossCheckAsk KPubDataResponse
  * 에서 "확인되지 않은 route runId 가 known 으로 새는" 회귀를 막지 못한다. 세 케이스를
  * 결합 흐름으로 고정한다.
  */
@@ -10,16 +10,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import * as runDetailApi from "@/features/runs/api/runDetail";
 import type { BuildSpec } from "@/shared/lib/types";
-import { loadKubiEvidence } from "./evidence";
-import { crossCheckKubiResponse } from "./crossCheck";
-import type { KubiContext, KubiStructuredResponse } from "./types";
+import { loadAsk KPubDataEvidence } from "./evidence";
+import { crossCheckAsk KPubDataResponse } from "./crossCheck";
+import type { Ask KPubDataContext, Ask KPubDataStructuredResponse } from "./types";
 
 afterEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
 });
 
-function response(overrides: Partial<KubiStructuredResponse> = {}): KubiStructuredResponse {
+function response(overrides: Partial<Ask KPubDataStructuredResponse> = {}): Ask KPubDataStructuredResponse {
   return {
     answer: "요약 답변입니다.",
     evidenceRefs: [],
@@ -29,17 +29,17 @@ function response(overrides: Partial<KubiStructuredResponse> = {}): KubiStructur
   };
 }
 
-describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () => {
+describe("run provenance — loadAsk KPubDataEvidence → crossCheckAsk KPubDataResponse", () => {
   it("Case A — 확인되지 않은 route run 은 evidenceRef/OPEN_BUILD/OPEN_QUALITY(runId)/PATCH_BUILDSPEC 에서 모두 reject 된다", async () => {
     const unverified = "unverified-private-run-1788004513063";
     // dataset 자체는 존재하지만 이 runId 는 dataset/runs 에 없고 quality/stage 요청도 404.
-    const context: KubiContext = { page: "build-detail", datasetId: "air-quality", runId: unverified };
-    const { evidence, knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", datasetId: "air-quality", runId: unverified };
+    const { evidence, knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
 
     expect(knownRefs.runIds.has(unverified)).toBe(false);
     expect(safeRunIds.has(unverified)).toBe(false);
 
-    const checked = crossCheckKubiResponse(
+    const checked = crossCheckAsk KPubDataResponse(
       response({
         evidenceRefs: [{ kind: "run", id: unverified, label: "빌드 실행" }],
         suggestedActions: [
@@ -76,13 +76,13 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
     };
     saveBuildSpec(actualRunId, spec);
 
-    const context: KubiContext = { page: "build-detail", datasetId: "air-quality", runId: actualRunId };
-    const { evidence, knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", datasetId: "air-quality", runId: actualRunId };
+    const { evidence, knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
 
     expect(knownRefs.runIds.has(actualRunId)).toBe(true);
     expect(safeRunIds.has(actualRunId)).toBe(true);
 
-    const checked = crossCheckKubiResponse(
+    const checked = crossCheckAsk KPubDataResponse(
       response({
         evidenceRefs: [{ kind: "run", id: actualRunId, label: "빌드 실행" }],
         suggestedActions: [
@@ -107,8 +107,8 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
 
   it("Case C — context.runId 와 Builder 가 확인한 run 이 다르면, context 쪽만 known/safe 에서 빠진다", async () => {
     const mismatch = "context-only-run-1788004513099";
-    const context: KubiContext = { page: "build-detail", datasetId: "air-quality", runId: mismatch };
-    const { evidence, knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", datasetId: "air-quality", runId: mismatch };
+    const { evidence, knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
 
     // Builder 가 확인한 run(air-quality dataset/runs).
     expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);
@@ -117,14 +117,14 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
     expect(knownRefs.runIds.has(mismatch)).toBe(false);
     expect(safeRunIds.has(mismatch)).toBe(false);
 
-    const rejected = crossCheckKubiResponse(
+    const rejected = crossCheckAsk KPubDataResponse(
       response({ suggestedActions: [{ type: "OPEN_BUILD", runId: mismatch, reason: "context" }] }),
       evidence,
       knownRefs,
     );
     expect(rejected.response.suggestedActions).toHaveLength(0);
 
-    const accepted = crossCheckKubiResponse(
+    const accepted = crossCheckAsk KPubDataResponse(
       response({ suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "builder" }] }),
       evidence,
       knownRefs,
@@ -133,18 +133,18 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
   });
 
   it("Case D — 다른 dataset 소속으로 확인된 run의 OPEN_QUALITY를 거부한다", async () => {
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "quality",
       datasetId: "air-quality",
       runId: "population-2026-08-13",
     };
-    const { evidence, knownRefs } = await loadKubiEvidence(context);
+    const { evidence, knownRefs } = await loadAsk KPubDataEvidence(context);
 
     // dataset과 run은 각각 Builder 응답으로 존재가 확인된다. 다만 run은 population 소속이다.
     expect(knownRefs.datasetIds.has("air-quality")).toBe(true);
     expect(knownRefs.runIds.has("population-2026-08-13")).toBe(true);
 
-    const checked = crossCheckKubiResponse(
+    const checked = crossCheckAsk KPubDataResponse(
       response({
         suggestedActions: [
           {
@@ -171,7 +171,7 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
       spec_digest: `sha256:${"0".repeat(64)}`,
     });
 
-    const { evidence, knownRefs } = await loadKubiEvidence({
+    const { evidence, knownRefs } = await loadAsk KPubDataEvidence({
       page: "build-detail",
       datasetId: "air-quality",
       runId: oldRunId,
@@ -179,7 +179,7 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
     expect(evidence.recentRuns?.some((run) => run.runId === oldRunId)).toBe(false);
     expect(evidence.dataset?.latestRunId).not.toBe(oldRunId);
 
-    const checked = crossCheckKubiResponse(
+    const checked = crossCheckAsk KPubDataResponse(
       response({
         suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "air-quality", runId: oldRunId, reason: "품질" }],
       }),
@@ -198,12 +198,12 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
       spec_digest: `sha256:${"1".repeat(64)}`,
     });
 
-    const { evidence, knownRefs } = await loadKubiEvidence({
+    const { evidence, knownRefs } = await loadAsk KPubDataEvidence({
       page: "build-detail",
       datasetId: "air-quality",
       runId: oldRunId,
     });
-    const checked = crossCheckKubiResponse(
+    const checked = crossCheckAsk KPubDataResponse(
       response({
         suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "air-quality", runId: oldRunId, reason: "품질" }],
       }),
@@ -219,12 +219,12 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
     const oldRunId = "old-run-without-membership-evidence";
     vi.spyOn(runDetailApi, "getBuildSpecSnapshot").mockRejectedValue(new Error("snapshot unavailable"));
 
-    const { evidence, knownRefs } = await loadKubiEvidence({
+    const { evidence, knownRefs } = await loadAsk KPubDataEvidence({
       page: "build-detail",
       datasetId: "air-quality",
       runId: oldRunId,
     });
-    const checked = crossCheckKubiResponse(
+    const checked = crossCheckAsk KPubDataResponse(
       response({
         suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "air-quality", runId: oldRunId, reason: "품질" }],
       }),

@@ -9,9 +9,9 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
-import { listKubiReportNotes } from "@/features/kubi/reportInbox";
-import { KubiPage } from "@/pages/KubiPage";
+import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
+import { listAsk KPubDataReportNotes } from "@/features/kubi/reportInbox";
+import { Ask KPubDataPage } from "@/pages/Ask KPubDataPage";
 
 vi.mock("@/features/assistant/provider", () => ({
   createProvider: vi.fn(),
@@ -39,7 +39,7 @@ function configureKey() {
 }
 
 beforeEach(() => {
-  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
   localStorage.removeItem("kpubdata-studio:kubi-report-inbox");
 });
@@ -60,11 +60,11 @@ async function askForReportBlock() {
   );
   render(
     <MemoryRouter initialEntries={["/datasets/air-quality?run=air-2026-08-14"]}>
-      <KubiPage />
+      <Ask KPubDataPage />
     </MemoryRouter>,
   );
-  fireEvent.change(screen.getByLabelText("Kubi에게 질문하기"), { target: { value: "가격 결측 요약해줘" } });
-  fireEvent.submit(screen.getByLabelText("Kubi에게 질문하기").closest("form")!);
+  fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: "가격 결측 요약해줘" } });
+  fireEvent.submit(screen.getByLabelText("Ask KPubData 에 질문하기").closest("form")!);
   // ask()는 fire-and-forget(submit 핸들러가 await하지 않는다) — 승인 버튼이 뜰 때까지 기다린다.
   await screen.findByRole("button", { name: "승인" });
 }
@@ -77,17 +77,17 @@ describe("ADD_REPORT_BLOCK approval preview (#256 리뷰 §3)", () => {
     // "대기질 통합 데이터"는 turn 전체 Evidence 목록과 ADD_REPORT_BLOCK 미리보기 양쪽에 나타날 수 있다 —
     // 적어도 action card 미리보기 안에는 반드시 있어야 한다.
     expect(screen.getAllByText("대기질 통합 데이터").length).toBeGreaterThan(0);
-    expect(listKubiReportNotes()).toHaveLength(0);
+    expect(listAsk KPubDataReportNotes()).toHaveLength(0);
   });
 
   it("only queues the note into the Reports inbox after the user clicks 승인 (not before)", async () => {
     await askForReportBlock();
-    expect(listKubiReportNotes()).toHaveLength(0);
+    expect(listAsk KPubDataReportNotes()).toHaveLength(0);
 
     fireEvent.click(screen.getByRole("button", { name: "승인" }));
     await screen.findByText("Report 참고 노트로 추가했습니다.");
 
-    const notes = listKubiReportNotes();
+    const notes = listAsk KPubDataReportNotes();
     expect(notes).toHaveLength(1);
     expect(notes[0].note).toBe(NOTE);
     // 승인 후에도 미리보기 텍스트는 그대로 남아있어 사용자가 무엇을 승인했는지 확인할 수 있다.
@@ -100,6 +100,6 @@ describe("ADD_REPORT_BLOCK approval preview (#256 리뷰 §3)", () => {
     fireEvent.click(screen.getByRole("button", { name: "거부" }));
     await screen.findByText("거부됨");
 
-    expect(listKubiReportNotes()).toHaveLength(0);
+    expect(listAsk KPubDataReportNotes()).toHaveLength(0);
   });
 });

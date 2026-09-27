@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { relatedCatalogDatasets } from "./relatedDatasets";
-import type { KubiEvidence } from "./types";
+import type { Ask KPubDataEvidence } from "./types";
 
-function makeEvidence(overrides: Partial<KubiEvidence> = {}): KubiEvidence {
+function makeEvidence(overrides: Partial<Ask KPubDataEvidence> = {}): Ask KPubDataEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00.000Z",
     context: { page: "dataset-detail", datasetId: "air-quality" },

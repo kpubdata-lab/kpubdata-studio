@@ -20,7 +20,7 @@ function renderDetail(initialEntry = "/datasets/air-quality") {
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
-  act(() => useUIStore.setState({ isKubiDrawerOpen: false }));
+  act(() => useUIStore.setState({ isAsk KPubDataDrawerOpen: false }));
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -152,9 +152,9 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/builds/air-2026-08-14");
   });
 
-  it("propagates the known latest-run context to Kubi when opening the AI tab, not '—' (audit #5)", async () => {
+  it("propagates the known latest-run context to Ask KPubData when opening the AI tab, not '—' (audit #5)", async () => {
     // 기본 진입(초기 URL에 ?run= 없음, latest run 암묵 선택)에서 AI 탭을 클릭한다 — stage와 달리
-    // run은 URL에 명시적으로 반영되지 않아 Kubi RUN context가 "—"로 보이던 문제를 재현한다.
+    // run은 URL에 명시적으로 반영되지 않아 Ask KPubData RUN context가 "—"로 보이던 문제를 재현한다.
     renderDetail();
     await screen.findByLabelText("Run 선택");
     fireEvent.click(screen.getByRole("tab", { name: "AI" }));
@@ -166,7 +166,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("back-fills the canonical run/source/stage context on direct entry to ?tab=ai, matching the tab-click path (A1)", async () => {
     // goToTab("ai")를 거치지 않는 직접 진입/새로고침에서도 화면이 확정한 latest run과
-    // canonical source·stage가 Kubi URL context에 반영돼야 한다(#319 후속).
+    // canonical source·stage가 Ask KPubData URL context에 반영돼야 한다(#319 후속).
     renderDetail("/datasets/air-quality?tab=ai");
 
     await waitFor(() => {
@@ -196,13 +196,13 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(location).toContain("stage=silver");
   });
 
-  it("renders Kubi inline on the AI tab with this dataset's context, not a drawer launcher (#256 review)", async () => {
+  it("renders Ask KPubData inline on the AI tab with this dataset's context, not a drawer launcher (#256 review)", async () => {
     renderDetail("/datasets/air-quality?tab=ai");
     const panel = await screen.findByRole("tabpanel", { name: "AI" });
-    // 프로토타입처럼 AI 탭 자체가 Kubi 전체 화면(context bar/질문/답변)이어야 한다 — drawer를 대신 여는 launcher card가 아니다.
+    // 프로토타입처럼 AI 탭 자체가 Ask KPubData 전체 화면(context bar/질문/답변)이어야 한다 — drawer를 대신 여는 launcher card가 아니다.
     expect(within(panel).getByText("air-quality")).toBeInTheDocument();
     expect(within(panel).getByText(/BYOK/)).toBeInTheDocument();
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
+    expect(useUIStore.getState().isAsk KPubDataDrawerOpen).toBe(false);
   });
 
   it("AI tab demo (no API key, mock mode): Generated SQL and Result Preview render deterministically, clearly labeled as demo (#256 review)", async () => {
@@ -294,10 +294,10 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     expect(within(passport).queryByText(/인증/)).not.toBeInTheDocument();
   });
 
-  it("navigates to the AI tab from the Passport's Kubi entry point", async () => {
+  it("navigates to the AI tab from the Passport's Ask KPubData entry point", async () => {
     renderDetail();
     const passport = await findPassport();
-    fireEvent.click(within(passport).getByRole("button", { name: /Kubi가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다/ }));
+    fireEvent.click(within(passport).getByRole("button", { name: /Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다/ }));
 
     const panel = await screen.findByRole("tabpanel", { name: "AI" });
     expect(within(panel).getByText("air-quality")).toBeInTheDocument();

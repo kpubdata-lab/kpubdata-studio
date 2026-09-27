@@ -1,11 +1,11 @@
 /**
- * Kubi mock/dev 데모 단위 테스트 (#256 review — mock mode Kubi 데모).
+ * Ask KPubData mock/dev 데모 단위 테스트 (#256 review — mock mode Ask KPubData 데모).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildKubiDemoResponse, isKubiDemoAvailable, runKubiDemoQuery } from "./demo";
-import type { KubiEvidence } from "./types";
+import { buildAsk KPubDataDemoResponse, isAsk KPubDataDemoAvailable, runAsk KPubDataDemoQuery } from "./demo";
+import type { Ask KPubDataEvidence } from "./types";
 
-function baseEvidence(overrides: Partial<KubiEvidence> = {}): KubiEvidence {
+function baseEvidence(overrides: Partial<Ask KPubDataEvidence> = {}): Ask KPubDataEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00Z",
     context: { page: "dataset-detail", datasetId: "air-quality" },
@@ -20,20 +20,20 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("isKubiDemoAvailable (#256 데모)", () => {
+describe("isAsk KPubDataDemoAvailable (#256 데모)", () => {
   it("is available when VITE_USE_REAL_BUILDER is unset (mock mode)", () => {
-    expect(isKubiDemoAvailable()).toBe(true);
+    expect(isAsk KPubDataDemoAvailable()).toBe(true);
   });
 
   it("is unavailable in real mode — real mode always requires BYOK", () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    expect(isKubiDemoAvailable()).toBe(false);
+    expect(isAsk KPubDataDemoAvailable()).toBe(false);
   });
 });
 
-describe("buildKubiDemoResponse (#256 데모)", () => {
+describe("buildAsk KPubDataDemoResponse (#256 데모)", () => {
   it("never fabricates a dataset — with no dataset evidence it says so plainly and adds no dataset ref/actions", () => {
-    const response = buildKubiDemoResponse(baseEvidence({ context: { page: "home" } }));
+    const response = buildAsk KPubDataDemoResponse(baseEvidence({ context: { page: "home" } }));
     expect(response.answer).toContain("[DEMO]");
     expect(response.answer).toContain("선택된 Dataset이 없어");
     expect(response.evidenceRefs).toHaveLength(0);
@@ -73,7 +73,7 @@ describe("buildKubiDemoResponse (#256 데모)", () => {
       },
     });
 
-    const response = buildKubiDemoResponse(evidence);
+    const response = buildAsk KPubDataDemoResponse(evidence);
 
     expect(response.evidenceRefs).toContainEqual({ kind: "dataset", id: "air-quality", label: "대기질 통합 데이터" });
     expect(response.evidenceRefs).toContainEqual({
@@ -98,14 +98,14 @@ describe("buildKubiDemoResponse (#256 데모)", () => {
         totalRowCount: 100,
       },
     });
-    expect(buildKubiDemoResponse(datasetOnly).generatedSql).toBeNull();
+    expect(buildAsk KPubDataDemoResponse(datasetOnly).generatedSql).toBeNull();
 
     const withStage = baseEvidence({
       ...datasetOnly,
       context: { page: "dataset-detail", datasetId: "air-quality", stage: "silver" },
       stage: { refId: "run-1::datago__air::silver", stage: "silver", source: "datago__air", status: "completed", available: true, rowCount: 1000 },
     });
-    const response = buildKubiDemoResponse(withStage);
+    const response = buildAsk KPubDataDemoResponse(withStage);
     expect(response.generatedSql).toEqual({
       sql: "SELECT region, COUNT(*) AS count FROM dataset GROUP BY region",
       stage: "silver",
@@ -119,18 +119,18 @@ describe("buildKubiDemoResponse (#256 데모)", () => {
       context: { page: "dataset-detail", datasetId: "air-quality", stage: "gold" },
       stage: { refId: "run-1::datago__air::gold", stage: "gold", source: "datago__air", status: "completed", available: true, rowCount: 1000 },
     });
-    const response = buildKubiDemoResponse(evidence);
+    const response = buildAsk KPubDataDemoResponse(evidence);
     expect(response.generatedSql?.sql).toMatch(/FROM dataset\b/);
     expect(response.generatedSql?.sql).not.toContain(evidence.stage!.source);
     expect(response.generatedSql?.source).toBe("datago__air");
   });
 });
 
-describe("runKubiDemoQuery (#256 데모)", () => {
+describe("runAsk KPubDataDemoQuery (#256 데모)", () => {
   it("never calls fetch and returns a fixed mock result", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const result = await runKubiDemoQuery();
+    const result = await runAsk KPubDataDemoQuery();
     expect(result.status).toBe("success");
     if (result.status === "success") {
       expect(result.result.columns).toEqual(["region", "count"]);

@@ -6,7 +6,7 @@ import { AddDataPage } from "@/pages/AddDataPage";
 import { DatasetCatalogPage } from "@/pages/DatasetCatalogPage";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
 import { DiscoverPage } from "@/pages/DiscoverPage";
-import { KubiPage } from "@/pages/KubiPage";
+import { Ask KPubDataPage } from "@/pages/Ask KPubDataPage";
 import { MonitoringPage } from "@/pages/MonitoringPage";
 import { ProviderPage } from "@/pages/ProviderPage";
 import { QualityPage } from "@/pages/QualityPage";
@@ -49,9 +49,9 @@ describe("새 IA placeholder 화면 (#247)", () => {
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 
-  it("Kubi is replaced with the real context-aware Kubi screen (#256)", () => {
-    renderPage(<KubiPage />);
-    expect(screen.getByRole("heading", { name: "Kubi · AI Data Copilot" })).toBeInTheDocument();
+  it("Ask KPubData is replaced with the real context-aware Ask KPubData screen (#256)", () => {
+    renderPage(<Ask KPubDataPage />);
+    expect(screen.getByRole("heading", { name: "Ask KPubData · AI Data Copilot" })).toBeInTheDocument();
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 

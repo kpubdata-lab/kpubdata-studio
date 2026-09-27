@@ -81,7 +81,7 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
     expect(md).toContain("STALE");
   });
 
-  it("HTML 내보내기는 <script> 태그를 절대 포함하지 않는다(Kubi note에 악성 문자열이 있어도)", () => {
+  it("HTML 내보내기는 <script> 태그를 절대 포함하지 않는다(Ask KPubData note에 악성 문자열이 있어도)", () => {
     const html = generateHtmlExport(makeReport(), "current");
     expect(html).not.toContain("<script>");
     expect(html.toLowerCase()).not.toContain("<script");
@@ -95,7 +95,7 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
     expect(html).toContain("사용자 작성");
   });
 
-  it("다른 Run 기준 Kubi 블록은 참고 분석으로 구분해서 내보낸다", () => {
+  it("다른 Run 기준 Ask KPubData 블록은 참고 분석으로 구분해서 내보낸다", () => {
     const report = makeReport({
       blocks: [
         {

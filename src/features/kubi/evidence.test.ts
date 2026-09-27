@@ -2,18 +2,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import * as datasetsApi from "@/features/datasets/api";
 import type { BuildSpec } from "@/shared/lib/types";
-import { loadKubiEvidence } from "./evidence";
-import type { KubiContext } from "./types";
+import { loadAsk KPubDataEvidence } from "./evidence";
+import type { Ask KPubDataContext } from "./types";
 
 afterEach(() => {
   localStorage.clear();
   vi.restoreAllMocks();
 });
 
-describe("loadKubiEvidence (#256)", () => {
+describe("loadAsk KPubDataEvidence (#256)", () => {
   it("builds dataset/run/quality evidence with deep links and known refs for a valid dataset", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
-    const { evidence, knownRefs } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const { evidence, knownRefs } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.dataset?.datasetId).toBe("air-quality");
     expect(evidence.deepLinks.datasetDetail).toBe("/datasets/air-quality");
@@ -26,8 +26,8 @@ describe("loadKubiEvidence (#256)", () => {
   });
 
   it("marks evidence partial and lists what failed when the dataset doesn't exist", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "does-not-exist" };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "does-not-exist" };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.partial).toBe(true);
     expect(evidence.unavailable).toContain("dataset");
@@ -35,29 +35,29 @@ describe("loadKubiEvidence (#256)", () => {
   });
 
   it("keeps quality unavailability distinct from PASS (population run has availability=unavailable)", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "population", runId: "population-2026-08-13" };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "population", runId: "population-2026-08-13" };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.quality?.availability).toBe("unavailable");
     expect(evidence.quality?.evaluatedChecks).toBe(0);
   });
 
   it("does not fetch stage evidence when the context has no stage (no guessed source)", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
     expect(evidence.stage).toBeUndefined();
   });
 
   it("includes stage evidence (status/rowCount only, no raw sample rows) for the context source_key", async () => {
     // air-2026-08-14는 multi-source(datago__air + kma__weather)라 어느 소스인지 명시해야 한다.
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "dataset-detail",
       datasetId: "air-quality",
       runId: "air-2026-08-14",
       stage: "silver",
       source: "datago__air",
     };
-    const { evidence, knownRefs, safeEvidenceIds } = await loadKubiEvidence(context);
+    const { evidence, knownRefs, safeEvidenceIds } = await loadAsk KPubDataEvidence(context);
     expect(evidence.stage?.stage).toBe("silver");
     expect(evidence.stage?.source).toBe("datago__air");
     expect(evidence.stage?.refId).toBe("air-2026-08-14::datago__air::silver");
@@ -68,26 +68,26 @@ describe("loadKubiEvidence (#256)", () => {
   });
 
   it("fails closed (stage unavailable) for a multi-source run when the context has no source_key", async () => {
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "quality",
       datasetId: "air-quality",
       runId: "air-2026-08-14",
       stage: "silver",
     };
-    const { evidence } = await loadKubiEvidence(context);
+    const { evidence } = await loadAsk KPubDataEvidence(context);
     // 임의로 첫 source를 고르지 않는다 — 어느 소스인지 모호하면 stage를 unavailable로 둔다.
     expect(evidence.stage).toBeUndefined();
     expect(evidence.unavailable).toContain("stage");
   });
 
   it("falls back to the sole source_key for a single-source run when the context has no source_key", async () => {
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "quality",
       datasetId: "population",
       runId: "population-2026-08-13",
       stage: "silver",
     };
-    const { evidence } = await loadKubiEvidence(context);
+    const { evidence } = await loadAsk KPubDataEvidence(context);
     expect(evidence.stage?.stage).toBe("silver");
     expect(evidence.stage?.source).toBe("kosis__population");
   });
@@ -96,13 +96,13 @@ describe("loadKubiEvidence (#256)", () => {
     // 실 Builder `/builds/{run}/stages/{stage}` 는 limit 을 "1..1000 양의 정수" 로만 받는다.
     // limit=0 이면 400 → settle 실패 → stage 가 항상 unavailable 로 빠지던 실 runtime 버그.
     const spy = vi.spyOn(datasetsApi, "getBuildStageDetail");
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "quality",
       datasetId: "population",
       runId: "population-2026-08-13",
       stage: "silver",
     };
-    await loadKubiEvidence(context);
+    await loadAsk KPubDataEvidence(context);
     expect(spy).toHaveBeenCalled();
     for (const call of spy.mock.calls) {
       const limit = call[3];
@@ -130,13 +130,13 @@ describe("loadKubiEvidence (#256)", () => {
       sample: [{ stationName: "종로구", pm10Value: "-" }],
     });
 
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "quality",
       datasetId: "population",
       runId: "population-2026-08-13",
       stage: "silver",
     };
-    const { evidence } = await loadKubiEvidence(context);
+    const { evidence } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.stage?.columns).toEqual(["stationName", "pm10Value"]);
     expect(evidence.stage?.schema).toContainEqual({ name: "pm10Value", dtype: "String" });
@@ -163,13 +163,13 @@ describe("loadKubiEvidence (#256)", () => {
       sample_available: false,
     });
 
-    const context: KubiContext = {
+    const context: Ask KPubDataContext = {
       page: "quality",
       datasetId: "population",
       runId: "population-2026-08-13",
       stage: "gold",
     };
-    const { evidence } = await loadKubiEvidence(context);
+    const { evidence } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.stage?.columns).toEqual(["stationName", "pm10Value"]);
     // gold stage detail은 dtype을 주지 않는다 — 지어내지 않고 schema는 생략한다.
@@ -188,8 +188,8 @@ describe("loadKubiEvidence (#256)", () => {
     };
     saveBuildSpec("air-2026-08-14", spec);
 
-    const context: KubiContext = { page: "build-detail", runId: "air-2026-08-14" };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", runId: "air-2026-08-14" };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.buildSpecSummary?.sources[0].paramKeys).toEqual(["serviceKey", "region"]);
     const serialized = JSON.stringify(evidence);
@@ -198,14 +198,14 @@ describe("loadKubiEvidence (#256)", () => {
   });
 
   it("scrubs any residual secret-shaped values as a defense-in-depth pass", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
     expect(JSON.stringify(evidence)).not.toContain("__SCRUBBED_");
   });
 
   it("keeps deterministic quality/schema-drift evidence ids out of entropy redaction (safeEvidenceIds provenance)", async () => {
-    const context: KubiContext = { page: "quality", datasetId: "air-quality", runId: "air-2026-08-14" };
-    const { evidence, knownRefs, safeEvidenceIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "quality", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const { evidence, knownRefs, safeEvidenceIds } = await loadAsk KPubDataEvidence(context);
 
     const results = evidence.quality?.results ?? [];
     expect(results.length).toBeGreaterThan(0);
@@ -229,8 +229,8 @@ describe("loadKubiEvidence (#256)", () => {
   });
 
   it("omits stage/buildSpecSummary/quality when the context has no runId at all", async () => {
-    const context: KubiContext = { page: "quality" };
-    const { evidence, knownRefs } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "quality" };
+    const { evidence, knownRefs } = await loadAsk KPubDataEvidence(context);
     expect(evidence.quality).toBeUndefined();
     expect(evidence.buildSpecSummary).toBeUndefined();
     expect(knownRefs.runIds.size).toBe(0);
@@ -245,10 +245,10 @@ describe("loadKubiEvidence (#256)", () => {
  * route/context.runId 는 evidence.context / deepLink 에는 남을 수 있어도, 존재가 확인되기
  * 전에는 knownRefs.runIds / safeRunIds 어디에도 들어가지 않는다.
  */
-describe("loadKubiEvidence — run provenance (knownRefs.runIds / safeRunIds)", () => {
+describe("loadAsk KPubDataEvidence — run provenance (knownRefs.runIds / safeRunIds)", () => {
   it("Builder 응답(getDataset.latest_run_id / listDatasetRuns)이 확인한 run id 는 safeRunIds 에 들어간다", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
-    const { knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const { knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
 
     expect(safeRunIds.has("air-2026-08-14")).toBe(true);
     // listDatasetRuns 로 확인된 과거 run 도 포함.
@@ -260,8 +260,8 @@ describe("loadKubiEvidence — run provenance (knownRefs.runIds / safeRunIds)", 
   it("Builder 어느 응답에서도 확인되지 않은 route runId 는 knownRefs.runIds / safeRunIds 어디에도 없다", async () => {
     // datasetId 없음 → getDataset/listDatasetRuns 호출 안 함. quality/stage 는 이 run id 로 404.
     const unverified = "service-secret-production-abcdef-1788004513062";
-    const context: KubiContext = { page: "build-detail", runId: unverified };
-    const { knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", runId: unverified };
+    const { knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
 
     expect(safeRunIds.has(unverified)).toBe(false);
     expect(safeRunIds.size).toBe(0);
@@ -273,8 +273,8 @@ describe("loadKubiEvidence — run provenance (knownRefs.runIds / safeRunIds)", 
   it("확인되지 않은 저엔트로피 route runId 는 evidence.context/deepLink 에는 남지만 trust set 에는 안 들어간다", async () => {
     // 저엔트로피라 redactSecrets 가 마스킹하지 않으므로 context 잔존을 직접 확인할 수 있다.
     const unverified = "fake-run";
-    const context: KubiContext = { page: "build-detail", runId: unverified };
-    const { evidence, knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", runId: unverified };
+    const { evidence, knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
 
     expect(evidence.context.runId).toBe("fake-run");
     expect(evidence.deepLinks.buildDetail).toContain("fake-run");
@@ -284,23 +284,23 @@ describe("loadKubiEvidence — run provenance (knownRefs.runIds / safeRunIds)", 
 
   it("확인되지 않은 고엔트로피 route runId 는 evidence 에서 redact 된다(safeRunIds 로 면제하지 않으므로)", async () => {
     const unverified = "service-secret-production-abcdef-1788004513062";
-    const context: KubiContext = { page: "build-detail", runId: unverified };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", runId: unverified };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
 
     // safeRunIds 가 비어 있으므로 이 고엔트로피 값은 엔트로피 오탐 면제를 받지 못하고 마스킹된다.
     expect(evidence.context.runId).toBe("[REDACTED]");
   });
 
   it("확인된(safe) 저엔트로피 run id 는 evidence 에 그대로 남는다", async () => {
-    const context: KubiContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
-    const { evidence } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const { evidence } = await loadAsk KPubDataEvidence(context);
     expect(evidence.context.runId).toBe("air-2026-08-14");
     expect(evidence.deepLinks.buildDetail).toContain("air-2026-08-14");
   });
 
   it("getBuildQuality 가 이 run id 로 정상 응답하면 knownRefs/safeRunIds 양쪽에 추가한다(datasetId 없이도)", async () => {
-    const context: KubiContext = { page: "build-detail", runId: "air-2026-08-14" };
-    const { knownRefs, safeRunIds } = await loadKubiEvidence(context);
+    const context: Ask KPubDataContext = { page: "build-detail", runId: "air-2026-08-14" };
+    const { knownRefs, safeRunIds } = await loadAsk KPubDataEvidence(context);
     expect(safeRunIds.has("air-2026-08-14")).toBe(true);
     expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);
   });

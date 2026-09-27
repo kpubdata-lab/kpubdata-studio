@@ -43,7 +43,7 @@ test("키보드로 내비게이션 링크에 focus가 도달하고 focus가 보�
   await expectNoPageErrors(errors);
 });
 
-test("390x844에서 topbar subtitle이 Kubi/avatar 버튼과 겹치지 않는다 (UI audit #6-A)", async ({ page }) => {
+test("390x844에서 topbar subtitle이 Ask KPubData/avatar 버튼과 겹치지 않는다 (UI audit #6-A)", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
@@ -65,7 +65,7 @@ test("390x844에서 topbar subtitle이 Kubi/avatar 버튼과 겹치지 않는다
   if (subtitleBox && kubiBox) {
     const overlapsHorizontally = subtitleBox.x < kubiBox.x + kubiBox.width && kubiBox.x < subtitleBox.x + subtitleBox.width;
     const overlapsVertically = subtitleBox.y < kubiBox.y + kubiBox.height && kubiBox.y < subtitleBox.y + subtitleBox.height;
-    expect(overlapsHorizontally && overlapsVertically, "subtitle과 Kubi 버튼이 겹칩니다").toBe(false);
+    expect(overlapsHorizontally && overlapsVertically, "subtitle과 Ask KPubData 버튼이 겹칩니다").toBe(false);
   }
 
   await expectNoPageErrors(errors);

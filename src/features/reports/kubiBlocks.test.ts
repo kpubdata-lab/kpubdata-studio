@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { KubiReportNote } from "@/features/kubi/reportInbox";
+import type { Ask KPubDataReportNote } from "@/features/kubi/reportInbox";
 import { noteMatchesReportContext, reportNoteToBlock } from "./kubiBlocks";
 
-function makeNote(overrides: Partial<KubiReportNote> = {}): KubiReportNote {
+function makeNote(overrides: Partial<Ask KPubDataReportNote> = {}): Ask KPubDataReportNote {
   return {
     note: "price 결측 1.8%가 특정 지역에 집중되어 있습니다.",
     reason: "Gold column profile 기준",

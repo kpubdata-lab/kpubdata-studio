@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { contextsMatch, resolveKubiContext } from "./context";
+import { contextsMatch, resolveAsk KPubDataContext } from "./context";
 
 /**
- * KubiContext SSOT resolver (#256 + #319 후속).
+ * Ask KPubDataContext SSOT resolver (#256 + #319 후속).
  *
- * Kubi 는 route(`?dataset=&run=&source=&stage=`)만 문맥으로 읽는다. QualityPage/Dataset Detail 이
+ * Ask KPubData 는 route(`?dataset=&run=&source=&stage=`)만 문맥으로 읽는다. QualityPage/Dataset Detail 이
  * 선택한 source 를 `?source=` 로 실어 보내면 resolver 가 `source` 로 넘겨야 multi-source run 에서
  * stage evidence 를 올바른 소스로 조회하고, source 를 바꿨을 때 이전 turn 이 stale 처리된다.
  */
-describe("resolveKubiContext — source_key", () => {
+describe("resolveAsk KPubDataContext — source_key", () => {
   it("carries ?source= into context.source on the quality route", () => {
-    const { context } = resolveKubiContext(
+    const { context } = resolveAsk KPubDataContext(
       "/quality",
       "?dataset=air-quality&run=air-2026-08-14&source=datago__air&stage=silver",
     );
@@ -24,12 +24,12 @@ describe("resolveKubiContext — source_key", () => {
   });
 
   it("treats an empty ?source= ('전체 소스') as no source_key — not guessed", () => {
-    const { context } = resolveKubiContext("/quality", "?dataset=air-quality&run=r1&source=");
+    const { context } = resolveAsk KPubDataContext("/quality", "?dataset=air-quality&run=r1&source=");
     expect(context.source).toBeUndefined();
   });
 
   it("resolves ?source= on the dataset-detail route too", () => {
-    const { context } = resolveKubiContext("/datasets/air-quality", "?run=r1&source=kma__weather&stage=gold");
+    const { context } = resolveAsk KPubDataContext("/datasets/air-quality", "?run=r1&source=kma__weather&stage=gold");
     expect(context.source).toBe("kma__weather");
   });
 });

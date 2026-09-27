@@ -128,14 +128,14 @@ describe("Quality Center P0 (#254)", () => {
     await waitFor(() => expect(screen.getByText("0 / 1")).toBeInTheDocument());
   });
 
-  it("links Recent Quality Issues rows to the global Kubi drawer without running real diagnosis", async () => {
+  it("links Recent Quality Issues rows to the global Ask KPubData drawer without running real diagnosis", async () => {
     const { useUIStore } = await import("@/shared/hooks/useUIStore");
-    act(() => useUIStore.setState({ isKubiDrawerOpen: false }));
+    act(() => useUIStore.setState({ isAsk KPubDataDrawerOpen: false }));
     renderQuality();
-    const buttons = await screen.findAllByRole("button", { name: "Kubi 분석" });
+    const buttons = await screen.findAllByRole("button", { name: "이 문제 설명 보기" });
     expect(buttons.length).toBeGreaterThan(0);
     act(() => fireEvent.click(buttons[0]));
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(true);
+    expect(useUIStore.getState().isAsk KPubDataDrawerOpen).toBe(true);
   });
 
   it("shows an empty dataset picker distinctly from a loading or errored dataset list", async () => {

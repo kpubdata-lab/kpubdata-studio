@@ -1,15 +1,15 @@
 /**
- * ReportEditorPage 회귀 테스트 (#258, #258 Kubi/legacy summary/sticky sidebar 수정).
+ * ReportEditorPage 회귀 테스트 (#258, #258 Ask KPubData/legacy summary/sticky sidebar 수정).
  *
  * - Builder evidence 요약 문장이 실제 evidence 값과 일치하는지(0/PASS로 꾸미지 않는지)
  * - summary가 없는 legacy Report도 재조회한 evidence로 요약 문장을 보강해서 보여주는지,
- *   저장된 draft/baseRunId/user·Kubi 블록은 건드리지 않는지, evidence 재조회 실패 시
+ *   저장된 draft/baseRunId/user·Ask KPubData 블록은 건드리지 않는지, evidence 재조회 실패 시
  *   기존 표시를 그대로 유지하는지
  * - 상세 evidence 표가 여전히 존재하고 펼칠 수 있는지
- * - Kubi/Builder 블록이 시각적으로 구분되는지
+ * - Ask KPubData/Builder 블록이 시각적으로 구분되는지
  * - Report Context sidebar가 실제 값만 보여주고, desktop에서 sticky로 고정되는지
  * - STALE이어도 baseRunId가 자동으로 바뀌지 않는지
- * - "7. Kubi 분석"이 Reports 전용 축소 UX(기본 CTA/quick action, BYOK/채팅은 펼쳐야만 노출,
+ * - "7. Ask KPubData 분석"이 Reports 전용 축소 UX(기본 CTA/quick action, BYOK/채팅은 펼쳐야만 노출,
  *   global drawer 미사용, Report 고정 dataset/run, 승인 전 미저장)로 동작하는지
  * - 좁은 viewport에서 sidebar가 아래로 collapse하는 반응형 grid recipe가 그대로인지
  * - PDF/DOCX CTA가 없는지
@@ -18,13 +18,13 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
 import { buildDeterministicSections } from "@/features/reports/deterministicSections";
 import * as reportEvidenceApi from "@/features/reports/evidence";
 import { buildEvidenceRefs, fetchReportEvidence } from "@/features/reports/evidence";
 import { createReport, getReport, saveReport } from "@/features/reports/repository";
-import type { BuilderEvidenceBlock, KubiInterpretationBlock, ReportDraft } from "@/features/reports/types";
-import { listKubiReportNotes, queueKubiReportNote } from "@/features/kubi/reportInbox";
+import type { BuilderEvidenceBlock, Ask KPubDataInterpretationBlock, ReportDraft } from "@/features/reports/types";
+import { listAsk KPubDataReportNotes, queueAsk KPubDataReportNote } from "@/features/kubi/reportInbox";
 import { ReportEditorPage } from "@/pages/ReportEditorPage";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 
@@ -69,7 +69,7 @@ function stripSummary(block: ReportDraft["blocks"][number]): ReportDraft["blocks
   return clone as BuilderEvidenceBlock;
 }
 
-function makeKubiBlock(overrides: Partial<KubiInterpretationBlock> = {}): KubiInterpretationBlock {
+function makeAsk KPubDataBlock(overrides: Partial<Ask KPubDataInterpretationBlock> = {}): Ask KPubDataInterpretationBlock {
   const now = new Date().toISOString();
   return {
     id: "kubi-1",
@@ -87,8 +87,8 @@ function makeKubiBlock(overrides: Partial<KubiInterpretationBlock> = {}): KubiIn
 
 beforeEach(() => {
   localStorage.clear();
-  useUIStore.setState({ isKubiDrawerOpen: false });
-  useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+  useUIStore.setState({ isAsk KPubDataDrawerOpen: false });
+  useAsk KPubDataStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
 });
 
@@ -128,17 +128,17 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
     expect(await within(schemaBlock).findByText("datetime")).toBeInTheDocument();
   });
 
-  it("Kubi 블록과 Builder Evidence 블록이 provenance 배지로 시각적으로 구분된다", async () => {
+  it("Ask KPubData 블록과 Builder Evidence 블록이 provenance 배지로 시각적으로 구분된다", async () => {
     let report = await makeReport("air-quality", "air-2026-08-14");
-    report = { ...report, blocks: [...report.blocks, makeKubiBlock()] };
+    report = { ...report, blocks: [...report.blocks, makeAsk KPubDataBlock()] };
     saveReport(report, { force: true });
 
     renderReport(report.id);
 
     await screen.findByTestId("block-kubi");
-    expect(screen.getByText("Kubi 분석 · AI 작성")).toBeInTheDocument();
+    expect(screen.getByText("Ask KPubData 분석 · AI 작성")).toBeInTheDocument();
     expect(screen.getAllByText("Builder Evidence").length).toBeGreaterThan(0);
-    expect(screen.getByText("AI 작성 · Kubi")).toBeInTheDocument();
+    expect(screen.getByText("AI 작성 · Ask KPubData")).toBeInTheDocument();
   });
 
   it("Report Context sidebar가 실제 base dataset/run/evidence 상태를 보여준다", async () => {
@@ -188,7 +188,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
 describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정)", () => {
   it("summary 없는 legacy draft를 다시 열면 현재 evidence 기준 요약 문장이 화면에 보강되고, 저장된 draft/baseRunId/블록은 그대로 유지된다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
-    const legacyBlocks = [...report.blocks.map(stripSummary), makeKubiBlock()];
+    const legacyBlocks = [...report.blocks.map(stripSummary), makeAsk KPubDataBlock()];
     saveReport({ ...report, blocks: legacyBlocks }, { force: true });
 
     // 저장된 draft 자체에는 summary가 없다.
@@ -209,7 +209,7 @@ describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정
       (block): block is BuilderEvidenceBlock => block.provenance === "BUILDER_EVIDENCE" && block.section === "overview",
     );
     expect(overviewAfter?.summary).toBeUndefined();
-    // 기존 Kubi 블록은 보존된다.
+    // 기존 Ask KPubData 블록은 보존된다.
     expect(screen.getByTestId("block-kubi")).toBeInTheDocument();
   });
 
@@ -253,14 +253,14 @@ describe("ReportEditorPage — Report Context sidebar sticky (#258 sticky sideba
   });
 });
 
-describe("ReportEditorPage — 7. Kubi 분석 (#258 Kubi Report UX 수정)", () => {
+describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report UX 수정)", () => {
   it("기본 상태에서는 전체 BYOK/채팅 form을 바로 노출하지 않는다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("kubi-report-panel");
     expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Kubi에게 질문하기")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Ask KPubData 에 질문하기")).not.toBeInTheDocument();
     expect(screen.queryByText("데모 질문 보내보기")).not.toBeInTheDocument();
   });
 
@@ -305,7 +305,7 @@ describe("ReportEditorPage — 7. Kubi 분석 (#258 Kubi Report UX 수정)", () 
     expect(screen.getByLabelText("API Key")).toBeInTheDocument();
   });
 
-  it("직접 질문하기를 누르면 기존 KubiContent 채팅이 펼쳐지고, global Kubi drawer는 열리지 않는다", async () => {
+  it("직접 질문하기를 누르면 기존 Ask KPubDataContent 채팅이 펼쳐지고, global Ask KPubData drawer는 열리지 않는다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     renderReport(report.id);
 
@@ -313,11 +313,11 @@ describe("ReportEditorPage — 7. Kubi 분석 (#258 Kubi Report UX 수정)", () 
     fireEvent.click(screen.getByRole("button", { name: "직접 질문하기" }));
 
     const chat = await screen.findByTestId("kubi-report-chat");
-    expect(within(chat).getByLabelText("Kubi에게 질문하기")).toBeInTheDocument();
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
+    expect(within(chat).getByLabelText("Ask KPubData 에 질문하기")).toBeInTheDocument();
+    expect(useUIStore.getState().isAsk KPubDataDrawerOpen).toBe(false);
   });
 
-  it("Kubi 분석 패널은 Report가 고정한 dataset/baseRunId를 context로 유지한다(최신 run 자동 전환 금지)", async () => {
+  it("이 문제 설명 보기 패널은 Report가 고정한 dataset/baseRunId를 context로 유지한다(최신 run 자동 전환 금지)", async () => {
     // air-2026-08-13은 최신이 아니다(최신은 air-2026-08-14) — STALE 상태에서도 이 값을 써야 한다.
     const report = await makeReport("air-quality", "air-2026-08-13");
     renderReport(report.id);
@@ -337,7 +337,7 @@ describe("ReportEditorPage — 7. Kubi 분석 (#258 Kubi Report UX 수정)", () 
     await screen.findByTestId("kubi-report-panel");
     // 질문을 보내기 전에 URL이 Report 기준 dataset/run으로 이미 고정되어 있는지 먼저 기다린다
     // (그렇지 않으면 turn의 context가 비어 있는 채로 생성되어 미리보기가 이 Report와 매칭되지
-    // 않는다 — KubiReportPanel의 useEffect가 그 값을 채운다).
+    // 않는다 — Ask KPubDataReportPanel의 useEffect가 그 값을 채운다).
     await waitFor(() => {
       expect(screen.getByTestId("location").textContent).toContain("dataset=air-quality");
     });
@@ -357,9 +357,9 @@ describe("ReportEditorPage — 7. Kubi 분석 (#258 Kubi Report UX 수정)", () 
     expect(getReport(report.id)?.blocks.some((block) => block.provenance === "KUBI_INTERPRETATION")).toBe(true);
   });
 
-  it("대기 중인 Kubi 노트를 승인하면 기존 동작대로 KUBI_INTERPRETATION 블록이 추가된다(ADD_REPORT_BLOCK 승인 흐름 유지)", async () => {
+  it("대기 중인 참고 노트를 승인하면 기존 동작대로 KUBI_INTERPRETATION 블록이 추가된다(ADD_REPORT_BLOCK 승인 흐름 유지)", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
-    queueKubiReportNote({
+    queueAsk KPubDataReportNote({
       note: "가격 결측이 특정 지역에 집중됩니다.",
       reason: "품질 이슈 참고용",
       context: { datasetId: "air-quality", runId: "air-2026-08-14" },
@@ -373,6 +373,6 @@ describe("ReportEditorPage — 7. Kubi 분석 (#258 Kubi Report UX 수정)", () 
 
     const kubiBlock = await screen.findByTestId("block-kubi");
     expect(within(kubiBlock).getByText(/가격 결측이 특정 지역에 집중됩니다\./)).toBeInTheDocument();
-    expect(listKubiReportNotes()).toHaveLength(0);
+    expect(listAsk KPubDataReportNotes()).toHaveLength(0);
   });
 });

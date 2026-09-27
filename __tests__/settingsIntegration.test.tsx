@@ -1,10 +1,10 @@
 /**
  * Settings 통합 테스트 (#301).
  *
- * - 계정/Provider 자격 증명/Kubi BYOK가 분리된 영역으로 존재
+ * - 계정/Provider 자격 증명/Ask KPubData BYOK가 분리된 영역으로 존재
  * - Provider 자격 증명 요약은 GET /providers 부울만 사용(원문 키 없음)
  * - 실연동에서 구성 상태 배지·요약 카운트 렌더링, /provider CTA 동작
- * - Kubi BYOK는 메모리 전용 기본값 + opt-in 경고 정책 유지
+ * - Ask KPubData BYOK는 메모리 전용 기본값 + opt-in 경고 정책 유지
  * - 가짜 team/project 기능이 표시되지 않음(#292 회귀 금지)
  */
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
@@ -54,7 +54,7 @@ describe("SettingsPage 통합 (#301)", () => {
     localStorage.clear();
   });
 
-  it("계정·Provider 자격 증명·Kubi BYOK가 서로 분리된 영역으로 렌더링된다", async () => {
+  it("계정·Provider 자격 증명·Ask KPubData BYOK가 서로 분리된 영역으로 렌더링된다", async () => {
     renderSettings();
 
     expect(screen.getByTestId("settings-account")).toBeInTheDocument();
@@ -133,12 +133,12 @@ describe("SettingsPage 통합 (#301)", () => {
     expect(locationRef.current?.pathname).toBe("/provider");
   });
 
-  it("Kubi BYOK는 기본 메모리 전용임을 알리고 opt-in 경고를 유지한다", async () => {
+  it("Ask KPubData BYOK는 기본 메모리 전용임을 알리고 opt-in 경고를 유지한다", async () => {
     renderSettings();
 
     expect(screen.getByText(/메모리에만 보관/)).toBeInTheDocument();
     expect(screen.getByText(/브라우저 저장: 꺼짐/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Kubi에서 설정" })).toHaveAttribute("href", "/kubi");
+    expect(screen.getByRole("link", { name: "Ask KPubData 에서 설정" })).toHaveAttribute("href", "/kubi");
   });
 
   it("로그인 상태에서 계정 영역이 이메일과 로그아웃을 표시한다", async () => {

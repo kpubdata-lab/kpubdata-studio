@@ -7,7 +7,7 @@ import { BuildsPage } from "@/pages/BuildsPage";
 import { ApiError, builderApi } from "@/shared/lib/builderApi";
 import { DEMO_DATASETS } from "@/shared/lib/demoDatasets";
 import { useAssistConfig } from "@/features/assistant/config";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { useAsk KPubDataStore } from "@/features/kubi/useAsk KPubDataSession";
 
 function renderBuilds(initialPath = "/builds") {
   return render(
@@ -367,10 +367,10 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
   });
 });
 
-describe("Kubi Run 분석 no-key UX (#286 후속 보완)", () => {
+describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   afterEach(() => {
     useAssistConfig.getState().clear();
-    useKubiStore.setState({ pendingSeed: null });
+    useAsk KPubDataStore.setState({ pendingSeed: null });
   });
 
   it("API Key 미설정: '이 Run 분석' 클릭 시 seed하지 않고 inline card에 설정 안내만 연다", async () => {
@@ -380,24 +380,24 @@ describe("Kubi Run 분석 no-key UX (#286 후속 보완)", () => {
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
 
     // seed 자체가 발생하지 않는다 — mock mode의 session.isDemoAvailable로 우회하지 않는다.
-    expect(useKubiStore.getState().pendingSeed).toBeNull();
+    expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull();
 
-    expect(await screen.findByText("Kubi를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Kubi 설정 열기" })).toBeInTheDocument();
+    expect(await screen.findByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ask KPubData 설정 열기" })).toBeInTheDocument();
     // no_key ErrorNotice를 복제해서 보여주지 않는다.
     expect(screen.queryByText("API Key가 설정되어 있지 않습니다. 위에서 먼저 설정하세요.")).not.toBeInTheDocument();
     // no-key 상태에서는 "더 질문하기"를 보여주지 않는다.
     expect(screen.queryByRole("button", { name: "더 질문하기" })).not.toBeInTheDocument();
   });
 
-  it("API Key 미설정: 'Kubi 설정 열기'를 누르면 기존 Kubi Drawer를 연다", async () => {
+  it("API Key 미설정: 'Ask KPubData 설정 열기'를 누르면 기존 Ask KPubData Drawer를 연다", async () => {
     renderBuilds("/builds?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Kubi 설정 열기" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Ask KPubData 설정 열기" }));
 
-    // App shell(전역 Kubi drawer)이 이 화면 트리 밖에 있어 직접 열림을 확인할 수는 없지만,
+    // App shell(전역 Ask KPubData drawer)이 이 화면 트리 밖에 있어 직접 열림을 확인할 수는 없지만,
     // 최소한 별도의 API Key 입력 UI를 inline에 만들지 않았음을 확인한다.
     expect(screen.queryByLabelText(/API Key/)).not.toBeInTheDocument();
   });
@@ -410,8 +410,8 @@ describe("Kubi Run 분석 no-key UX (#286 후속 보완)", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
 
-    // seed가 실제로 소비되어(기존 useKubiSession ask 경로) pendingSeed가 비워진다.
-    await waitFor(() => expect(useKubiStore.getState().pendingSeed).toBeNull());
-    expect(screen.queryByText("Kubi를 사용하려면 API Key 설정이 필요합니다.")).not.toBeInTheDocument();
+    // seed가 실제로 소비되어(기존 useAsk KPubDataSession ask 경로) pendingSeed가 비워진다.
+    await waitFor(() => expect(useAsk KPubDataStore.getState().pendingSeed).toBeNull());
+    expect(screen.queryByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).not.toBeInTheDocument();
   });
 });

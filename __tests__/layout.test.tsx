@@ -20,7 +20,7 @@ describe("Layout sidebar accessibility", () => {
         theme: "light",
         isMobileSidebarOpen: false,
         isDesktopSidebarCollapsed: false,
-        isKubiDrawerOpen: false,
+        isAsk KPubDataDrawerOpen: false,
       }),
     );
   });
@@ -57,7 +57,7 @@ describe("Layout 제품 문구 중복 제거", () => {
         theme: "light",
         isMobileSidebarOpen: false,
         isDesktopSidebarCollapsed: false,
-        isKubiDrawerOpen: false,
+        isAsk KPubDataDrawerOpen: false,
       }),
     );
   });
@@ -85,7 +85,7 @@ describe("Layout desktop sidebar collapse (#247)", () => {
         theme: "light",
         isMobileSidebarOpen: false,
         isDesktopSidebarCollapsed: false,
-        isKubiDrawerOpen: false,
+        isAsk KPubDataDrawerOpen: false,
       }),
     );
   });

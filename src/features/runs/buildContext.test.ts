@@ -27,7 +27,7 @@ function normalize(query: string, spec = loadingSpec, stages = loadingStages): U
   return normalizeBuildContextSearch(new URLSearchParams(query), spec, stages);
 }
 
-describe("Builds Kubi context URL normalization", () => {
+describe("Builds Ask KPubData context URL normalization", () => {
   it("preserves valid-looking source/stage while stages are loading", () => {
     expect(normalize("source=B&stage=gold").toString()).toBe("source=B&stage=gold");
   });
