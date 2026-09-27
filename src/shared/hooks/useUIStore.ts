@@ -1,14 +1,16 @@
 /**
  * UI global state store reused throughout the app shell.
  *
- * Mobile sidebar overlay open state, desktop sidebar collapsed state, global Kubi drawer 열림 여부,
- * 테마 선택처럼 페이지를 넘나들며 유지해야 하는 시각 상태를 관리한다. 모바일 오버레이와 데스크톱
- * collapse는 서로 다른 레이아웃 개념이라 상태를 분리한다 — 모바일에서 열어둔 오버레이가 데스크톱
- * collapse에 영향을 주거나, 그 반대가 되어서는 안 된다(#247).
+ * Mobile sidebar overlay open state, desktop sidebar collapsed state, global Kubi drawer
+ * open state, and visual state like theme selection that must persist across page
+ * navigation. Mobile overlay and desktop collapse are separate layout concepts, so
+ * state is kept separate — mobile overlay opened on mobile should not affect desktop
+ * collapse or vice versa (#247).
  *
- * `persist` 미들웨어로 localStorage에 저장하는 값은 테마(#83)와 데스크톱 collapse 선호(#247)뿐이다.
- * 모바일 오버레이 열림 상태는 의도적으로 저장하지 않아, 새로고침 후 모바일 metadata)뉴가 열린 채로
- * 되살아나지 않는다(항상 닫힌 상태로 시작).
+ * Values persisted to localStorage via `persist` middleware are theme (#83) and
+ * desktop collapse preference (#247) only. Mobile overlay open state is intentionally
+ * not saved, so it does not restore in a dangling-open state after refresh (always
+ * starts closed).
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";

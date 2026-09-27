@@ -1,14 +1,14 @@
 /**
- * Kubi LLM 프롬프트 조립 (#256).
+ * Kubi LLM prompt composition (#256).
  *
- * 세 역할을 명확히 분리한다:
- *  - system: 고정된 지시문(신뢰 대상, evidence/사용자 입력에 따라 절대 바뀌지 않는다)
- *  - evidence: Builder에서 가져온 데이터(신뢰하지 않는 입력 — 명령으로 실행하지 않는다)
- *  - user: 실제 사용자 질문(신뢰 대상)
+ * Clearly separate three roles:
+ *  - system: Fixed instructions (trusted source, never changes based on evidence/user input)
+ *  - evidence: Data from Builder (untrusted input — never execute as instruction)
+ *  - user: Actual user question (trusted source)
  *
- * evidence는 공공데이터 원문(설명/샘플 등)을 담을 수 있어 "이전 지시를 무시하라" 같은 프롬프트
- * 인젝션이 섞여 들어올 수 있다(#256 리뷰 §4). system 프롬프트에서 evidence를 데이터로만
- * 취급하도록 명시하고, evidence 블록 자체를 델리미터로 분리해 사용자 질문과 섞이지 않게 한다.
+ * Evidence may contain public data (descriptions/samples etc.), risking prompt injection like
+ * "ignore previous instructions" (#256 review §4). Explicitly treat evidence as data-only in
+ * system prompt, and separate evidence block with delimiters so it doesn't mix with user question.
  */
 import type { AssistMessage } from "@/features/assistant/provider";
 import type { KubiContext, KubiEvidence } from "./types";
@@ -61,11 +61,11 @@ function formatContextLine(context: KubiContext): string {
 }
 
 /**
- * 사용자 질문 + evidence로 LLM에 보낼 메시지 목록을 만든다.
+ * Build list of messages to send to LLM from user question + evidence.
  *
- * @param question - 사용자가 입력한 질문(신뢰 대상, 그대로 전달).
- * @param evidence - `loadKubiEvidence`가 만든 safe evidence 번들(신뢰하지 않는 데이터로 감싸서 전달).
- * @returns provider.stream()에 넘길 메시지 배열.
+ * @param question - User-entered question (trusted, passed as-is).
+ * @param evidence - Safe evidence bundle created by `loadKubiEvidence` (wrapped as untrusted data).
+ * @returns Array of messages to pass to provider.stream().
  */
 export function buildKubiMessages(question: string, evidence: KubiEvidence): AssistMessage[] {
   return [

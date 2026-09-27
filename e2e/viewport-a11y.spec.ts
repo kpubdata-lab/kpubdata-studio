@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
 
 /**
- * 반응형·키보드 기초 검증 (#268: 최소 viewport + keyboard/focus).
- * desktop/mobile 두 프로젝트에서 동일 스펙이 실행된다(playwright.config projects).
+ * Responsive·keyboard basics validation (#268: minimal viewport + keyboard/focus).
+ * Same spec runs on both desktop/mobile projects (playwright.config projects).
  */
 test.beforeEach(async ({ page }) => {
   await prepareCleanPage(page);
@@ -31,12 +31,12 @@ test("키보드로 내비게이션 링크에 focus가 도달하고 focus가 보�
 
   await page.goto("/");
 
-  // 첫 Tab이 포커스 가능 요소에 도달한다(정확한 요소가 아닌 도달 자체가 목적).
+  // First Tab reaches focusable element (reaching itself is the goal, not exact element).
   await page.keyboard.press("Tab");
   const focused = page.locator(":focus");
   await expect(focused).toBeVisible();
 
-  // focus-visible 스타일이 있는 요소는 outline 등으로 강조된다 — 클래스 존재만 확인.
+  // Elements with focus-visible style are highlighted with outline etc. — only check class exists.
   const focusableCount = await page.locator("a[href], button:not([disabled])").count();
   expect(focusableCount).toBeGreaterThan(0);
 
@@ -60,8 +60,8 @@ test("390x844에서 topbar subtitle이 Kubi/avatar 버튼과 겹치지 않는다
   const kubiBox = await kubiButton.boundingBox();
   expect(subtitleBox).not.toBeNull();
   expect(kubiBox).not.toBeNull();
-  // 두 사각형이 겹치면 안 된다 — 한쪽이 상대의 왼쪽에서 완전히 끝나거나(가로) 위에서
-  // 완전히 끝나야(세로, 줄바꿈된 경우) "겹치지 않음"이다.
+   // Two rectangles must not overlap — one must completely end to left of other (horizontal) or above
+   // (vertical, if wrapped) to be "non-overlapping".
   if (subtitleBox && kubiBox) {
     const overlapsHorizontally = subtitleBox.x < kubiBox.x + kubiBox.width && kubiBox.x < subtitleBox.x + subtitleBox.width;
     const overlapsVertically = subtitleBox.y < kubiBox.y + kubiBox.height && kubiBox.y < subtitleBox.y + subtitleBox.height;
@@ -97,7 +97,7 @@ test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮�
   expect(buildBox).not.toBeNull();
   expect(stickyBox).not.toBeNull();
   if (buildBox && stickyBox) {
-    // "Build 시작" 버튼의 아래쪽 절반이라도 sticky bar에 가려지면 안 된다.
+     // Even bottom half of Start Build button must not be hidden by sticky bar.
     expect(buildBox.y + buildBox.height, "Build 시작 버튼이 sticky bar에 가려집니다").toBeLessThanOrEqual(stickyBox.y);
   }
 

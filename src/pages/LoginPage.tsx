@@ -1,16 +1,16 @@
 /**
- * 로그인 화면 (/login, #263; OIDC 연동에서 실제 Keycloak 로그인 진입점 추가).
+ * Login screen (/login, #263; added as real Keycloak login entry point in OIDC integration).
  *
- * 실제 IdP는 kpubdata-builder ADR 0015가 self-hosted Keycloak + Authorization Code +
- * PKCE(S256)로 확정했다. 이 화면은 환경에 따라 분기한다:
- * - mock/demo 환경(`!isRealBuilderEnabled()`): 기존 mockAuthProvider 이메일/비밀번호
- *   폼을 그대로 유지한다(dev/demo 전용).
- * - 실연동 + OIDC 활성: Keycloak 로그인 리다이렉트 버튼만 제공한다. 이메일/비밀번호,
- *   비밀번호 재설정, 이메일 인증은 모두 Keycloak 책임이므로 Studio는 입력 폼을 두지 않는다.
- * - 실연동 + OIDC 미구성/오류: 안내만 보여준다 — 가짜 redirect/token flow를 만들지 않는다.
+ * Real IdP: kpubdata-builder ADR 0015 confirmed self-hosted Keycloak + Authorization Code +
+ * PKCE (S256). This screen branches by environment:
+ * - Mock/demo environment (`!isRealBuilderEnabled()`): keep existing mockAuthProvider email/password
+ *   form (dev/demo only).
+ * - Real connection + OIDC enabled: provide only Keycloak login redirect button. Email/password,
+ *   password reset, email verification are all Keycloak's responsibility, so Studio has no input form.
+ * - Real connection + OIDC not configured/error: display guidance only — don't fabricate fake redirect/token flow.
  *
- * Google 로그인은 Keycloak identity broker로 위임한다(`keycloakLogin(returnTo, "google")`) —
- * Studio가 Google SDK를 직접 로드하거나 Google 토큰을 Builder에 보내지 않는다.
+ * Google login delegates to Keycloak identity broker (`keycloakLogin(returnTo, "google")`) —
+ * Studio never loads Google SDK directly or sends Google tokens to Builder.
  */
 import { Trans, useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -28,7 +28,7 @@ import { Button, Card, DemoBadge, ErrorMessage, FormField, TextInput } from "@/s
 const darkLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
 const lightLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_light.svg", import.meta.url).href;
 
-/** Auth 화면에 표시하는 짧은 제품 소개. */
+/** Brief product introduction shown on auth screen. */
 function BrandPanel() {
   const { t } = useTranslation();
   return (
@@ -85,7 +85,7 @@ export function LoginPage() {
   const oidc = getOidcConfig();
   const returnTo = getSafeReturnTo(new URLSearchParams(location.search).get("returnTo"));
 
-  // 이미 Keycloak 세션이 확인되면 앱으로 돌려보낸다(로그인 화면에 머물지 않게).
+    // If Keycloak session already confirmed, return to app (don't stay on login screen).
   useEffect(() => {
     if (!demoMode && oidcStatus === "authenticated") {
       navigate(returnTo, { replace: true });

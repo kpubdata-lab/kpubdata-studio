@@ -2,7 +2,7 @@
  * Language switch toggle — Korean/English.
  *
  * Shows current language in button label and cycles through supported languages on click.
- * 선택은 i18next 감지 캐시(localStorage)에 저장되어 재방문 시 유지된다.
+ * Selection is persisted in i18next localStorage cache and retained on revisit.
  */
 import { useTranslation } from "react-i18next";
 

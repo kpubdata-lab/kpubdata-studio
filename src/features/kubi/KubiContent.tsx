@@ -1,9 +1,9 @@
 /**
- * Kubi 대화 UI (#256).
+ * Kubi conversation UI (#256).
  *
- * `KubiDrawer`(전역 drawer)와 `/kubi` 전용 페이지가 이 컴포넌트 하나를 공유한다 — 두 번째
- * Kubi 시스템을 만들지 않는다. `compact`는 drawer(좁은 폭)와 페이지(넓은 폭) 레이아웃만
- * 다르게 하고, 상태 로직은 전부 `useKubiSession`에 있다.
+ * `KubiDrawer` (global drawer) and `/kubi` dedicated page share this single component — don't create
+ * a second Kubi system. `compact` differs only layout between drawer (narrow) and page (wide);
+ * all state logic lives in `useKubiSession`.
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -24,13 +24,13 @@ import type { KubiEvidenceRef } from "./types";
 import { formatSqlForDisplay } from "./formatSqlForDisplay";
 import { useLiveRunSources } from "./useLiveRunSources";
 
-/** 데모 CTA와 onboarding 예시 질문이 함께 쓰는 기본 질문(mock evidence만으로도 답이 나온다). */
+/** Demo CTA and onboarding example use the same default question (works with mock evidence only). */
 const getDemoQuestion = () => i18n.t("kubi.empty.demoQuestion");
 
 /**
- * 프로토타입 구조(DATASET/BUILD(RUN)/STAGE/QUALITY 4칸)를 따르는 context bar (#256 review).
- * PAGE는 프로토타입에서도 별도 grid cell이 아니라 drawer 헤더의 보조 캡션이었으므로, 여기서도
- * 작은 캡션 한 줄로만 표시한다 — 4칸을 차지하지 않는다.
+ * Prototype structure (DATASET/BUILD(RUN)/STAGE/QUALITY 4-cell) context bar (#256 review).
+ * PAGE was not a separate grid cell in prototype but a helper caption in drawer header, so display
+ * here also as small single-line caption — does not take up 4 cells.
  */
 function ContextBar({ context, pageLabel, qualityLabel, sources, onContextChange }: { context: KubiContext; pageLabel: string; qualityLabel: string; sources: string[]; onContextChange: (key: "stage" | "source", value?: string) => void }) {
   const { t } = useTranslation();
@@ -39,9 +39,9 @@ function ContextBar({ context, pageLabel, qualityLabel, sources, onContextChange
     { label: "RUN", value: context.runId ?? "—" },
     { label: "QUALITY", value: qualityLabel },
   ];
-  // Stage 근거 조회는 run이 있어야 하고, multi-source run에서는 source가 확정돼야 가능하다
-  // (source 미선택이면 evidence 로더가 stage를 fail-closed로 비운다 — evidence.ts). 단일 소스
-  // run은 Builder가 유일 소스를 자동 선택하므로 source 미선택이어도 Stage를 쓸 수 있다.
+  // Stage evidence query requires run to exist, and for multi-source runs source must be determined
+  // (if source not selected, evidence loader fails-closed stage — evidence.ts). Single-source
+  // run has Builder automatically select the unique source, so Stage works even if source not selected.
   const stageSelectDisabled = !context.runId || (sources.length > 1 && !context.source);
   return (
     <div>
@@ -64,9 +64,9 @@ function ContextBar({ context, pageLabel, qualityLabel, sources, onContextChange
 }
 
 /**
- * BYOK(API Key/Model/Base URL) 설정 폼. `KubiContent`(BYOK 미설정 시 기본 노출)와
- * `KubiReportPanel`(#258 — "AI 설정"을 눌렀을 때만 노출)이 이 컴포넌트 하나를 공유한다.
- * 새 BYOK storage/security semantics를 만들지 않는다 — `useAssistConfig`만 그대로 재사용한다.
+ * BYOK (API Key/Model/Base URL) config form. `KubiContent` (exposed by default when BYOK not set) and
+ * `KubiReportPanel` (#258 — exposed only when "AI Settings" clicked) share this single component.
+ * Don't create new BYOK storage/security semantics — reuse `useAssistConfig` as-is.
  */
 export function ApiKeySetup() {
   const { t } = useTranslation();
@@ -180,11 +180,11 @@ const QUERY_ERROR_LABEL: Record<string, string> = {
 };
 
 /**
- * `/query` row 값을 표시용 문자열로 바꾼다(#256 review §1).
+ * Convert `/query` row value to display string (#256 review §1).
  *
- * null/undefined는 기존처럼 "—"로, 문자열/숫자/불리언 같은 primitive는 그대로 보여준다.
- * array/object는 `String()`이 "[object Object]"를 만들어버리므로 `JSON.stringify`로 실제
- * 내용을 보여준다 — 값 자체를 요약하거나 변형하지 않는다.
+ * null/undefined become "—" as before; primitives like string/number/boolean shown as-is.
+ * array/object: String() produces "[object Object]", so use JSON.stringify to show actual
+ * content — never summarize or transform the value itself.
  */
 export function formatQueryValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
@@ -383,8 +383,8 @@ export function evidenceHref(turn: KubiTurn, ref: KubiEvidenceRef): string | nul
     const targetRunId = detail.runId;
     const params = new URLSearchParams({ run: targetRunId });
     if (turn.context.datasetId) params.set("dataset", turn.context.datasetId);
-    // source/stage는 해당 run에서 검증된 문맥일 때만 유효하다. 다른 recent run으로 이동할
-    // 때 현재 run의 선택을 carry하면 존재하지 않는 조합이 되므로 함께 넘기지 않는다.
+    // source/stage valid only when context is validated in that run. Moving to different recent run —
+    // carrying current run's selection creates non-existent combination, so don't pass together.
     if (targetRunId === turn.context.runId) {
       if (turn.context.source) params.set("source", turn.context.source);
       if (turn.context.stage) params.set("stage", turn.context.stage);
@@ -531,7 +531,7 @@ export interface KubiContentProps {
   compact?: boolean;
 }
 
-/** Kubi 대화 화면. drawer/페이지 공용. */
+/** Kubi conversation screen. Shared between drawer/page. */
 export function KubiContent({ compact = false }: KubiContentProps) {
   const { t } = useTranslation();
   const session = useKubiSession();
@@ -545,11 +545,11 @@ export function KubiContent({ compact = false }: KubiContentProps) {
   const latestRef = useRef<HTMLDivElement>(null);
   const composingRef = useRef(false);
 
-  // BYOK가 없어도 mock 모드에서는 데모로 질문을 보낼 수 있다(#256 데모, real mode는 항상 BYOK 필요).
+  // Without BYOK, mock mode allows demo questions (#256 demo; real mode always needs BYOK).
   const canSubmit = isConfigured || session.isDemoAvailable;
 
-  // context bar의 QUALITY 칸: 현재 문맥과 일치하는(=stale 아닌) 가장 최근 turn의 evidence에서만 채운다.
-  // route만으로는 quality를 알 수 없으므로, evidence가 아직 없으면 꾸며내지 않고 "—"로 둔다.
+  // Context bar QUALITY cell: filled only from most recent turn's evidence that matches current context (not stale).
+  // Can't determine quality from route alone, so if evidence not yet available, don't fabricate — show "—".
   const qualityLabel = useMemo(() => {
     for (let i = session.turns.length - 1; i >= 0; i -= 1) {
       const turn = session.turns[i];
@@ -558,9 +558,9 @@ export function KubiContent({ compact = false }: KubiContentProps) {
     return "—";
   }, [session.turns, session.isStale]);
 
-  // "관련 데이터셋" 후보: LLM이 아니라 가장 최근 non-stale turn의 실제 catalog evidence만 근거로
-  // 계산한다(#256 이슈 체크리스트, relatedDatasets.ts). turn이 아직 없으면(=evidence 미조회)
-  // 빈 배열로 두고, 아래에서 그 이유를 그대로 안내한다 — 추측해서 채우지 않는다.
+  // "Related dataset" candidates: not LLM but only actual catalog evidence from most recent non-stale turn
+  // (#256 issue checklist, relatedDatasets.ts). If no turn yet (=evidence not retrieved),
+  // keep empty array and explain reason below — don't infer and fill.
   const relatedDatasets = useMemo(() => {
     for (let i = session.turns.length - 1; i >= 0; i -= 1) {
       const turn = session.turns[i];
@@ -569,12 +569,12 @@ export function KubiContent({ compact = false }: KubiContentProps) {
     return [];
   }, [session.turns, session.isStale]);
 
-  // 첫 질문 전에도 현재 Run의 Builder-confirmed stage source 목록을 authoritative하게 쓴다.
-  // 과거 turn/LLM/quality 결과는 live source 후보를 만들 근거로 사용하지 않는다.
+  // Even before first question, authoritatively use current Run's Builder-confirmed stage source list.
+  // Past turn/LLM/quality results don't inform live source candidates.
   const contextSources = useLiveRunSources(session.liveContext.runId);
 
-  // 추천 질문은 현재 context와 최근 대화에서 deterministic하게 고른다(LLM 추가 호출
-  // 없음, suggestedQuestions.ts). turns가 바뀌면(첫 질문 후 등) 곧바로 갱신된다.
+  // Suggested questions chosen deterministically from current context and recent conversation (no extra LLM call,
+  // suggestedQuestions.ts). Updated immediately when turns change (after first question etc.).
   const suggestedQuestions = useMemo(
     () =>
       getSuggestedQuestions({

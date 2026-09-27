@@ -1,8 +1,8 @@
 /**
- * 공통 Button 컴포넌트.
+ * Common Button component.
  *
- * unified repeated Tailwind button styles across pages by variant/size/loading state다.
- * 접근성을 위해 focus-visible 링과 disabled/loading 시 상호작용 차단을 기본 제공한다.
+ * Unified repeated Tailwind button styles across pages by variant/size/loading state.
+ * Provides focus-visible ring and interaction blocking in disabled/loading states for accessibility.
  */
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { buttonClassName, type ButtonSize, type ButtonVariant } from "./buttonStyles";
@@ -21,10 +21,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * render button with consistent styling and state.
+ * Render button with consistent styling and state.
  *
- * @param props - standard button props plus variant/size/loading/leadingIcon을 더한 값.
- * @returns 버튼 엘리먼트.
+ * @param props - Standard button props plus variant/size/loading/leadingIcon.
+ * @returns Button element.
  */
 export function Button({
   variant = "primary",

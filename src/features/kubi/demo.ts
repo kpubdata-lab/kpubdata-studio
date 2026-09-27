@@ -1,17 +1,17 @@
 /**
- * Kubi mock/dev 데모 (#256 review — "지금 프로토타입이랑 좀 다르게 만들어 진 것 같음" 후속).
+ * Kubi mock/dev demo (follow-up to #256 review — "seems different from the current prototype").
  *
- * BYOK API key가 없어도 mock Builder 모드에서 Kubi의 evidence → 구조화 응답 → Generated SQL →
- * Result Preview 흐름을 볼 수 있게 하는 결정적(deterministic) 데모 경로다. 실제 LLM을 호출하지
- * 않고, 실제 Builder `/query`도 호출하지 않는다 — 오직 `features/datasets/api`가 이미 제공하는
- * mock evidence(#256 evidence.ts가 그대로 재사용)만 근거로 고정된 텍스트를 조립한다.
+ * A deterministic demo path that lets you see Kubi's evidence → structured response → generated SQL →
+ * result preview flow in mock Builder mode without a BYOK API key. It does not call a real LLM
+ * nor the actual Builder `/query` — it deterministically assembles fixed text using only the mock
+ * evidence already provided by `features/datasets/api` (reusing #256 evidence.ts).
  *
- * **"실제 결과"처럼 속이지 않는다**: 이 모듈이 만든 모든 turn은 `KubiTurn.isDemo = true`로
- * 표시되고, 답변 첫 줄에도 데모임을 명시한다. UI는 이 값을 보고 항상 데모 배지를 그려야 한다.
+ * **Does not pretend to be real results**: every turn created by this module is marked with
+ * `KubiTurn.isDemo = true` and the first line of the answer notes it is a demo. The UI should always
  *
- * real mode(`VITE_USE_REAL_BUILDER=true`)에서는 이 모듈이 전혀 쓰이지 않는다 — 그대로
- * BYOK → 실제 LLM(`features/assistant/provider`) → Builder `/query`(`features/kubi/query.ts`)
- * 경로를 탄다.
+ * In real mode (`VITE_USE_REAL_BUILDER=true`) this module is not used — the flow goes
+ * BYOK → real LLM (`features/assistant/provider`) → Builder `/query` (`features/kubi/query.ts`).
+ * continues the same flow.
  */
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { QueryResponse } from "@/shared/lib/builderApi";
@@ -20,11 +20,11 @@ import { summarizeKubiQuality } from "./types";
 import type { KubiEvidence, KubiQueryState, KubiStructuredResponse } from "./types";
 import { i18n } from "@/shared/i18n";
 
-/** 이 파일의 문구는 모두 `kubi.demo.*` 아래에 있다(#350). */
+/** The phrases used in this file also exist under all `kubi.demo.*` keys (#350). */
 const t = (key: string, params?: Record<string, unknown>): string =>
   i18n.t(`kubi.demo.${key}`, params ?? {});
 
-/** 데모를 제공할 수 있는지: mock Builder 모드(기본값)에서만 — real mode는 항상 BYOK를 요구한다. */
+/** Whether a demo can be provided: only in mock Builder mode (default). Real mode always requires BYOK. */
 export function isKubiDemoAvailable(): boolean {
   return !isRealBuilderEnabled();
 }
@@ -32,10 +32,10 @@ export function isKubiDemoAvailable(): boolean {
 const demoDisclaimer = (): string => t("disclaimer");
 
 /**
- * 실제로 조회된(mock) evidence만 근거로 결정적 구조화 응답을 만든다. LLM을 호출하지 않으므로
- * evidence에 없는 id를 인용할 수 없다 — 그래서 hallucination cross-check 없이도 안전하다.
+ * Builds a deterministic structured response based only on actually fetched (mock) evidence. Because it
+ * does not call an LLM, it cannot cite ids missing from the evidence — making it safe without a
  *
- * @param evidence - `loadKubiEvidence`가 반환한 evidence(데모에서도 실제 mock 데이터 경로를 그대로 탄다).
+ * @param evidence - evidence returned by `loadKubiEvidence` (the demo uses the same mock data path).
  */
 export function buildKubiDemoResponse(evidence: KubiEvidence): KubiStructuredResponse {
   const lines: string[] = [demoDisclaimer()];
@@ -80,8 +80,8 @@ export function buildKubiDemoResponse(evidence: KubiEvidence): KubiStructuredRes
   let generatedSql: KubiStructuredResponse["generatedSql"] = null;
   if (evidence.stage && (evidence.context.stage === "silver" || evidence.context.stage === "gold")) {
     generatedSql = {
-      // Builder #504 contract: SQL은 logical relation "dataset"만 조회한다 — 실제 source_key는
-      // FROM 테이블명이 아니라 아래 source 필드로 별도 전달한다(query.ts가 /query 요청에 얹는다).
+       // Builder #504 contract: SQL must query only the logical relation "dataset" — the real source_key
+       // is not used as the FROM table name but is passed separately via the generatedSql.source field (query.ts attaches it to the /query request).
       sql: `SELECT region, COUNT(*) AS count FROM dataset GROUP BY region`,
       stage: evidence.context.stage,
       source: evidence.stage.source,
@@ -99,7 +99,7 @@ export function buildKubiDemoResponse(evidence: KubiEvidence): KubiStructuredRes
   return { answer: lines.join("\n"), evidenceRefs, generatedSql, suggestedActions };
 }
 
-/** 데모 Generated SQL(`SELECT region, COUNT(*) ... GROUP BY region`) "실행"을 눌렀을 때 보여줄 고정 mock 결과. */
+ /** Shown fixed mock result when the demo generated SQL (`SELECT region, COUNT(*) ... GROUP BY region`) is executed. */
 const DEMO_QUERY_RESULT: QueryResponse = {
   columns: ["region", "count"],
   rows: [
@@ -112,8 +112,8 @@ const DEMO_QUERY_RESULT: QueryResponse = {
 };
 
 /**
- * 데모 turn의 Generated SQL "실행" — Builder `/query`를 호출하지 않고 고정된 mock 결과를
- * 즉시 반환한다(`features/kubi/query.ts`의 `runKubiQuery`와 달리 real mode에서는 쓰이지 않음).
+ * Executes generated SQL for a demo turn — returns a fixed mock result immediately without calling the Builder `/query`
+ * (unlike `runKubiQuery` in features/kubi/query.ts; not used in real mode).
  */
 export async function runKubiDemoQuery(): Promise<KubiQueryState> {
   return { status: "success", result: DEMO_QUERY_RESULT };

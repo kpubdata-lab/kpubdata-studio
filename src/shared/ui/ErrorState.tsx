@@ -1,8 +1,9 @@
 /**
- * common ErrorState component (proposal §11).
+ * Common ErrorState component (proposal §11).
  *
- * consistently express error state with "error cause + retry" structure. role="alert"로 보조기기에
- * 즉시 guidance하고, onRetry가 있으면 재시도 버튼을 노출한다.
+ * Consistently express error state with "error cause + retry" structure. Provides
+ * immediate guidance to assistive tech via role="alert", and shows retry button if
+ * onRetry present.
  */
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
@@ -23,10 +24,10 @@ export interface ErrorStateProps {
 }
 
 /**
- * show error cause and (optional) retry button.
+ * Show error cause and (optional) retry button.
  *
  * @param props - title/message/onRetry/retryLabel.
- * @returns 에러 상태 엘리먼트.
+ * @returns Error state element.
  */
 export function ErrorState({
   title,

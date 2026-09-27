@@ -1,13 +1,14 @@
 /**
- * 빌드 실행 추적 페이지 (/builds/:buildId/run) — legacy deep-link 호환용.
+ * Build execution trace page (/builds/:buildId/run) — legacy deep-link compatibility.
  *
- * 이전에는 buildId와 무관하게 항상 "대기(queued)"·0번째 stepper를 보여주는 정적
- * placeholder였다(UI audit #3). 지금은 Builds 목록/상세(BuildsPage)와 동일한 canonical
- * 상태(historical summary + live job polling)만 보여준다.
+ * Previously, this was a static placeholder always showing "waiting (queued)" and stepper step 0,
+ * regardless of buildId (UI audit #3). Now it displays the same canonical state as Builds list/detail
+ * (BuildsPage): historical summary + live job polling.
  *
- * 단계별 진행(Bronze/Silver/Gold), 실행 이벤트 타임라인, 협조적 실행 취소는 canonical
- * Build 상세(`/builds?run=...`)가 이미 제공한다 — 이 legacy 화면은 두 번째 상태 머신을
- * 만들지 않고 canonical 상세로 안내한다. "API 미지원" 같은 사실과 다른 문구는 두지 않는다.
+ * Step-by-step progress (Bronze/Silver/Gold), execution event timeline, and cooperative execution
+ * cancellation are already provided by canonical Build detail (`/builds?run=...`) — this legacy screen
+ * doesn't create a second state machine; it guides users to canonical detail instead. Facts and their
+ * wording are kept consistent ("API unsupported" is the same across both).
  */
 import { useParams } from "react-router-dom";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
@@ -18,22 +19,22 @@ import { Card, EmptyState, LinkButton, PageHeader, Skeleton, StatusBadge } from 
 import { useTranslation } from "react-i18next";
 
 /**
- * 빌드 실행의 canonical 상태를 추적하는 페이지.
+ * Page tracking canonical state of build execution.
  *
- * @returns 실행 상태 화면.
+ * @returns Execution state screen.
  */
 export function BuildRunPage() {
   const { t } = useTranslation();
   const { buildId = "" } = useParams();
 
-  // historical: Builds 목록/편집과 같은 getBuild() 조회(mock 모드는 결정적 mock, 실연동은
-  // Builder 이력 + Studio가 보관한 스펙).
+   // historical: same getBuild() query as Builds list/edit (mock mode uses deterministic mock,
+   // real mode uses Builder history + Studio-stored spec).
   const { build, isLoading: historicalLoading, error: historicalError } = useBuild(buildId);
 
-  // live: registry에 살아있는 job이 있으면(#245/#255) 그 상태가 가장 최신이다 — Builds
-  // 상세(BuildsPage)와 동일한 hook을 재사용해 두 화면이 같은 canonical run state를 쓰게 한다.
-  // mock 모드는 getBuildJob이 항상 실패하는 stub이라(#255 §3 주석 참고) live polling 자체를
-  // 켜지 않고, 위 historical(deterministic mock) 상태를 그대로 신뢰한다.
+   // live: if an active job exists in the registry (#245/#255), its state is most recent — reuse
+   // the same hook as Builds detail (BuildsPage) to ensure both screens use the same canonical run state.
+   // In mock mode, getBuildJob is a stub that always fails (#255 §3 comment reference), so live polling
+   // is not enabled and the historical (deterministic mock) state above is trusted as-is.
   const live = useSelectedRunPolling(isRealBuilderEnabled() ? buildId || null : null);
 
   const runStatus: BuildRunStatus | undefined =

@@ -81,10 +81,10 @@ export interface SourceRef {
   schema?: SchemaContract;
   /** required for kind="file". Identifier issued by `POST /uploads` (`upl_` + 32 hex chars). */
   uploadId?: string;
-  /**
-   * source content format. Required for kind="file" (must match validated format on upload
-   * 함), kind="url"에서는 선택(json/jsonl/csv만 허용, 생략 시 Content-Type로 추론).
-   */
+   /**
+    * Source content format. Required for kind="file" (must match validated format on upload).
+    * For kind="url", optional (json/jsonl/csv only; inferred from Content-Type if omitted).
+    */
   format?: SourceFormat;
   /** encoding for text (csv/json/jsonl) decoding in kind="file". Default utf-8. */
   encoding?: string;

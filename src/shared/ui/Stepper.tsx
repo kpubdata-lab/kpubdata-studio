@@ -1,9 +1,9 @@
 /**
- * common Stepper component.
+ * Common Stepper component.
  *
- * display progress of multi-step flow like New Build Wizard. Each step is
- * upcoming/current/complete/error 상태를 가지며, 현재 단계에 aria-current="step"을
- * 부여해 보조기기에서 위치를 알 수 있게 한다(접근성, 제안 §12).
+ * Display progress of multi-step flow like New Build Wizard. Each step has
+ * upcoming/current/complete/error state, with aria-current="step" on current stage
+ * for assistive tech positioning (accessibility, proposal §12).
  */
 import { cn } from "./cn";
 
@@ -44,10 +44,10 @@ const STATE_CIRCLE: Record<StepState, string> = {
 };
 
 /**
- * render horizontal step indicator for multi-step flow progress.
+ * Render horizontal step indicator for multi-step flow progress.
  *
  * @param props - steps/current/errorSteps/onStepClick.
- * @returns 스텝퍼 엘리먼트.
+ * @returns Stepper element.
  */
 export function Stepper({
   steps,

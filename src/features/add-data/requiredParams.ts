@@ -1,18 +1,18 @@
 /**
- * Preview 전 usability preflight — 선택한 Dataset의 metadata(`request_parameters`)로
- * 필수 요청 파라미터를 아는 경우에만 동작한다.
+ * Usability preflight before Preview — only works when Dataset metadata
+ * (`request_parameters`) makes required request parameters known.
  *
- * - JSON 구문 오류는 여기서 만들지 않는다(그 경로는 `buildSpecFromDraft`가 이미
- *   담당) — 필수 key 누락만 사용자 문구로 돌려준다.
- * - 빈 문자열/공백만 있는 값도 누락으로 취급한다(공공데이터 API 다수가 빈 값을
- *   "미전달"로 처리하고, 실제 E2E에서도 `{}` → NO_MANDATORY_REQUEST_PARAMETERS).
- * - Builder/Core validation을 대체하지 않는다 — 어디까지나 사전 안내다.
+ * - JSON syntax errors not generated here (that's `buildSpecFromDraft`'s job) —
+ *   only missing required key reported as user-facing message.
+ * - Empty string or whitespace-only values count as missing (many public data
+ *   APIs treat empty as "not transmitted"; real E2E also `{}` → NO_MANDATORY_REQUEST_PARAMETERS).
+ * - Does not replace Builder/Core validation — just pre-guidance.
  */
 import { i18n } from "@/shared/i18n";
 import type { CatalogRequestParameter } from "@/shared/lib/builderApi";
 
 export interface RequiredParamsCheck {
-  /** 사용자에게 보여줄 오류(없으면 통과). */
+  /** Error shown to user (empty if validation passes). */
   error?: string;
 }
 
@@ -33,7 +33,7 @@ export function checkRequiredParams(
   try {
     parsed = JSON.parse(sourceParamsText.trim() || "{}");
   } catch {
-    // JSON 오류는 별도 경로에서 안내한다.
+    // JSON errors guided separately.
     return {};
   }
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
@@ -48,21 +48,21 @@ export function checkRequiredParams(
 }
 
 /**
- * 요청 파라미터 입력 도움말/placeholder에 쓸 예시 JSON 텍스트.
- * metadata가 있으면 그 파라미터로 구체 예시를, 없으면 중립 예시를 만든다.
+ * Example JSON text for request parameter input help/placeholder.
+ * With metadata, show concrete example; without, show neutral example.
  */
 export function exampleParamsText(
   requestParameters: readonly CatalogRequestParameter[] | undefined,
 ): string {
   const params = requestParameters ?? [];
   if (params.length === 0) return '{"region": "seoul"}';
-  // 예시는 "필수 최소치"를 보여준다 — 필수가 하나도 없으면 전체를 쓴다.
+  // Example shows "required minimum" — if no required params exist, show all.
   const shown = params.some((p) => p.required) ? params.filter((p) => p.required) : params;
   const entries = shown.map((p) => [p.name, p.example ?? ""] as const);
   return JSON.stringify(Object.fromEntries(entries));
 }
 
-/** "예시값 적용" 버튼에 표시할 대상이 있는지 — example이 있는 파라미터가 하나라도 있어야 한다. */
+/** Check if there's a target for "apply example" button — must have at least one parameter with example. */
 export function hasExampleParams(
   requestParameters: readonly CatalogRequestParameter[] | undefined,
 ): boolean {
@@ -70,14 +70,17 @@ export function hasExampleParams(
 }
 
 /**
- * "예시값 적용" 버튼 동작 — metadata의 example 값을 요청 파라미터 JSON에 채운다.
+ * "Apply example" button behavior — fill request parameter JSON with example values
+ * from metadata.
  *
- * - secret parameter는 애초에 Builder `/catalog`가 request_parameters에 담지
- *   않으므로(serviceKey 등 allowlist에서 제외) 여기서 생성할 값 자체가 없다.
- * - example이 없는 parameter에 임의 값을 만들지 않는다 — example이 있는 항목만 채운다.
- * - 사용자가 이미 입력한 값은 덮어쓰지 않는다(이미 채워진 key는 건드리지 않는 안전한
- *   merge) — 버튼을 눌러도 기존 입력을 잃지 않는다.
- * - 기존 텍스트가 유효한 JSON object가 아니면(빈 값 포함) example만으로 새로 만든다.
+ * - Secret parameters never in Builder `/catalog` request_parameters (excluded from
+ *   allowlist like serviceKey), so no values generated here.
+ * - Do not invent values for parameters without example — only fill where example
+ *   exists.
+ * - Do not overwrite user-entered values (safe merge: skip already-filled keys) —
+ *   clicking button does not lose existing input.
+ * - If existing text not valid JSON object (including empty), create fresh from
+ *   examples alone.
  */
 export function mergeExampleParams(
   currentText: string,
@@ -95,7 +98,7 @@ export function mergeExampleParams(
       base = { ...(parsed as Record<string, unknown>) };
     }
   } catch {
-    // 기존 텍스트가 JSON이 아니면 example만으로 새로 만든다.
+    // If existing text not JSON, create fresh from examples alone.
   }
 
   for (const p of withExample) {

@@ -1,8 +1,9 @@
 /**
- * LLM 원본 출력에서 구조화 응답을 추출/검증한다 (#256).
+ * Extracts and validates a structured response from raw LLM output (#256).
  *
- * 4중 게이트의 1단계(zod 파싱)만 담당한다. "모양"은 맞지만 "내용"(실존 dataset/run 등)이
- * 맞는지는 `crossCheck.ts`가 담당한다.
+ * This performs only the first of four hallucination gates (Zod parsing). Zod checks the
+ * "shape" only — whether referenced resources actually exist (datasets, runs, etc.) is
+ * verified later by `crossCheck.ts`.
  */
 import { i18n } from "@/shared/i18n";
 import { kubiEvidenceRefSchema, kubiStructuredResponseSchema } from "./schema";
@@ -12,7 +13,7 @@ export type ParseKubiResponseResult =
   | { ok: true; response: KubiStructuredResponse; malformedEvidenceRefs: string[] }
   | { ok: false; message: string };
 
-/** 잘못된 evidenceRef 항목을 사용자에게 보여줄 짧은 설명으로 바꾼다. */
+/** Produce a short, user-facing description for a malformed evidenceRef item. */
 function describeMalformedRef(item: unknown): string {
   if (item && typeof item === "object") {
     const record = item as Record<string, unknown>;
@@ -25,11 +26,12 @@ function describeMalformedRef(item: unknown): string {
 }
 
 /**
- * evidenceRefs를 항목 단위로 검증한다(#256 리뷰 — evidenceRefs만 tolerant).
+ * Validate evidenceRefs on an item-by-item basis (#256 review — evidenceRefs are tolerant).
  *
- * evidenceRefs는 표시 전용이고 이후 `crossCheck`가 evidence와 대조하므로, 개별 항목 하나가
- * (예: `kind`가 허용 목록 밖) 잘못돼도 실행 가능한 `answer`/`generatedSql`/`suggestedActions`
- * 전체를 버리지 않는다. 잘못된 항목만 떼어내고, 나머지는 strict schema가 그대로 검증한다.
+ * evidenceRefs are for display only and are later reconciled against evidence by
+ * `crossCheck`. A single malformed item (e.g., an out-of-list `kind`) should not cause the
+ * entire `answer`/`generatedSql`/`suggestedActions` to be discarded. Remove only the bad
+ * items and let the strict schema validate the remainder.
  */
 function sanitizeEvidenceRefs(candidate: unknown): { malformed: string[] } {
   if (!candidate || typeof candidate !== "object") return { malformed: [] };
@@ -38,8 +40,7 @@ function sanitizeEvidenceRefs(candidate: unknown): { malformed: string[] } {
 
   const raw = record.evidenceRefs;
   if (!Array.isArray(raw)) {
-    // 배열 자체가 아니면 항목 단위 검증이 불가능하다 — evidenceRefs는 표시 전용이므로
-    // 통째로 비우고(실행 안전성에 영향 없음) 나머지 응답은 살린다.
+    // If evidenceRefs is not an array, clear it (does not affect execution) and keep the rest.
     record.evidenceRefs = [];
     return { malformed: [describeMalformedRef(raw)] };
   }
@@ -55,10 +56,10 @@ function sanitizeEvidenceRefs(candidate: unknown): { malformed: string[] } {
 }
 
 /**
- * LLM 원본 텍스트에서 ```json 블록(또는 텍스트 전체)을 추출해 zod로 검증한다.
+ * Extract a ```json``` block (or use the whole text) from raw LLM output and validate with Zod.
  *
- * @param rawOutput - provider.stream()이 반환한 누적 텍스트.
- * @returns 검증된 구조화 응답 또는 사람이 읽을 수 있는 실패 사유.
+ * @param rawOutput - The accumulated text returned by provider.stream().
+ * @returns A validated structured response or a human-readable failure reason.
  */
 export function parseKubiResponse(rawOutput: string): ParseKubiResponseResult {
   const trimmed = rawOutput.trim();
@@ -76,8 +77,8 @@ export function parseKubiResponse(rawOutput: string): ParseKubiResponseResult {
     return { ok: false, message: i18n.t("kubi.parse.notJson") };
   }
 
-  // evidenceRefs만 항목 단위로 관대하게 정리한다. answer/generatedSql/suggestedActions는
-  // 아래 strict schema가 그대로 검증한다(fail-closed 유지).
+  // evidenceRefs are tolerated and sanitized item-by-item. answer/generatedSql/suggestedActions
+  // are validated by the strict schema as-is (fail-closed).
   const { malformed: malformedEvidenceRefs } = sanitizeEvidenceRefs(candidate);
 
   const result = kubiStructuredResponseSchema.safeParse(candidate);

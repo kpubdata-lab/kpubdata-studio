@@ -1,16 +1,16 @@
 /**
- * 미리보기 페이지 (/preview, 레거시 딥링크).
+ * Preview page (/preview, legacy deep-link).
  *
- * 미리보기는 이제 New Build 마법사의 ‘미리보기’ 단계에 통합되어 있다(제안 §5.3).
- * 이 화면은 딥링크 호환을 위해 유지하며, 마법사로 안내한다.
+ * Preview is now integrated into New Build Wizard's 'preview' step (proposal §5.3).
+ * This screen is maintained for deep-link compatibility and guides to wizard.
  */
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, PageHeader } from "@/shared/ui";
 
 /**
- * 미리보기 흐름을 마법사로 안내하는 레거시 페이지.
+ * Legacy page guiding preview flow to wizard.
  *
- * @returns 미리보기 안내 화면.
+ * @returns Preview guidance screen.
  */
 export function PreviewPage() {
   const { t } = useTranslation();

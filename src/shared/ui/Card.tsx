@@ -1,8 +1,8 @@
 /**
- * 공통 Card 컴포넌트.
+ * Common Card component.
  *
- * repeated `rounded-[2rem] border ... bg-white/80 shadow-l across pagesg` 패턴을
- * variant로 통일한다.
+ * Unified repeated `rounded-[2rem] border ... bg-white/80 shadow-l across pages` pattern
+ * using variants.
  */
 import type { HTMLAttributes } from "react";
 import { cn } from "./cn";
@@ -28,10 +28,10 @@ const VARIANT_CLASS: Record<CardVariant, string> = {
 };
 
 /**
- * render card container with standard padding and corners.
+ * Render card container with standard padding and corners.
  *
- * @param props - standard div props plus variant.
- * @returns 카드 엘리먼트.
+ * @param props - Standard div props plus variant.
+ * @returns Card element.
  */
 export function Card({ variant = "default", className, children, ...rest }: CardProps) {
   return (

@@ -104,8 +104,8 @@ describe("relatedCatalogDatasets (#256 이슈 — 관련 데이터셋 후보는 
   });
 
   it("does not fabricate a candidate for a catalog dataset name that never actually appeared", () => {
-    // catalog에 없는 provider를 dataset.providers가 우연히 들고 있어도(예: 조회 실패 후 잔여값)
-    // datasetsByProvider에 없는 provider는 빈 배열로 취급해 아무것도 만들어내지 않는다.
+     // If catalog is missing a provider that dataset.providers happens to include (e.g., residual value
+     // after query failure), missing provider in datasetsByProvider is treated as empty, not fabricated.
     const evidence = makeEvidence({
       dataset: {
         datasetId: "air-quality",

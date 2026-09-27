@@ -1,4 +1,4 @@
-/** 공개 회원가입은 Studio가 아닌 Keycloak hosted UI에서 처리한다. */
+/** Public signup handled by Keycloak hosted UI, not Studio. */
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { keycloakLogin } from "@/features/auth/keycloak";

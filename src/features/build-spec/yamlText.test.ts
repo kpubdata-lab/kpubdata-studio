@@ -1,5 +1,5 @@
 /**
- * Canonical BuildSpec GUI ↔ YAML round-trip 테스트 (#250, #251).
+ * Canonical BuildSpec GUI ↔ YAML round-trip test (#250, #251).
  */
 import { describe, expect, it } from "vitest";
 import { BuildSpecShapeError, YamlSyntaxError, fromYamlText, toYamlText } from "./yamlText";

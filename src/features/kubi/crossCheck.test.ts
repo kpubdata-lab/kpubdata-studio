@@ -251,7 +251,7 @@ describe("crossCheckKubiResponse (#256 hallucination gate)", () => {
       makeEvidence({ stage: undefined, dataset: undefined }),
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality", "kma.weather"]) }),
     );
-    // multi-source + 미검증 source → fail-closed (SQL 통째로 제외)
+    // multi-source + unverified source → fail-closed (SQL excluded entirely)
     expect(result.response.generatedSql).toBeNull();
     expect(result.rejectedSqlReason).toContain("datago__air");
   });

@@ -1,10 +1,10 @@
 /**
- * Run provenance 통합 회귀 (독립 리뷰 blocker).
+ * Integration regression tests for run provenance (independent review blocker).
  *
- * 단위 테스트 두 개(evidence.test.ts / crossCheck.test.ts)만으로는 실제 흐름
- *   loadKubiEvidence → 반환된 knownRefs → crossCheckKubiResponse
- * 에서 "확인되지 않은 route runId 가 known 으로 새는" 회귀를 막지 못한다. 세 케이스를
- * 결합 흐름으로 고정한다.
+ * The two unit tests (evidence.test.ts / crossCheck.test.ts) do not fully prevent a regression
+ * where an unverified route runId leaks into knownRefs in the real flow:
+ *   loadKubiEvidence → returned knownRefs → crossCheckKubiResponse
+ * Combine cases here to lock the flow down.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
@@ -32,7 +32,7 @@ function response(overrides: Partial<KubiStructuredResponse> = {}): KubiStructur
 describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () => {
   it("Case A — 확인되지 않은 route run 은 evidenceRef/OPEN_BUILD/OPEN_QUALITY(runId)/PATCH_BUILDSPEC 에서 모두 reject 된다", async () => {
     const unverified = "unverified-private-run-1788004513063";
-    // dataset 자체는 존재하지만 이 runId 는 dataset/runs 에 없고 quality/stage 요청도 404.
+    // The dataset exists but this runId is not in dataset/runs and quality/stage requests return 404.
     const context: KubiContext = { page: "build-detail", datasetId: "air-quality", runId: unverified };
     const { evidence, knownRefs, safeRunIds } = await loadKubiEvidence(context);
 
@@ -110,10 +110,10 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
     const context: KubiContext = { page: "build-detail", datasetId: "air-quality", runId: mismatch };
     const { evidence, knownRefs, safeRunIds } = await loadKubiEvidence(context);
 
-    // Builder 가 확인한 run(air-quality dataset/runs).
+    // The run confirmed by Builder (exists in air-quality dataset/runs).
     expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);
     expect(safeRunIds.has("air-2026-08-14")).toBe(true);
-    // context 에서만 온 run.
+    // Run coming only from the context (not Builder-confirmed).
     expect(knownRefs.runIds.has(mismatch)).toBe(false);
     expect(safeRunIds.has(mismatch)).toBe(false);
 
@@ -140,7 +140,8 @@ describe("run provenance — loadKubiEvidence → crossCheckKubiResponse", () =>
     };
     const { evidence, knownRefs } = await loadKubiEvidence(context);
 
-    // dataset과 run은 각각 Builder 응답으로 존재가 확인된다. 다만 run은 population 소속이다.
+    // The dataset and run each exist and are confirmed by Builder responses. The 'population' run
+  // belongs to a different dataset.
     expect(knownRefs.datasetIds.has("air-quality")).toBe(true);
     expect(knownRefs.runIds.has("population-2026-08-13")).toBe(true);
 

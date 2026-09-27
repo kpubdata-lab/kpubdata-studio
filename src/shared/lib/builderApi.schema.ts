@@ -149,8 +149,8 @@ export const previewColumnSchema = z.object({
   unique_count: z.number(),
 });
 
-// previewSourceSchema/previewResponseSchema depend on tableStatisticsSchema·qualityCheckResultSchema에
-// depend on (#497), so define them after those schemas are declared (after Quality section) — const has
+// previewSourceSchema/previewResponseSchema depend on tableStatisticsSchema and qualityCheckResultSchema
+// (see line 152 comment), so define them after those schemas are declared (after Quality section) — const has
 // TDZ so references before declaration become runtime errors.
 
 /**
@@ -872,10 +872,10 @@ export const buildEventNameSchema = z.enum([
 
 export const buildEventStatusSchema = z.enum(["ok", "warn", "fail"]);
 
-/** medallion stage (bronze/silver/gold) + export execution stage. RunStagesResponse의 3-stage와는 별개 vocabulary다. */
+/** Medallion stage (bronze/silver/gold) + export execution stage. Separate vocabulary from RunStagesResponse 3-stage. */
 export const buildEventStageNameSchema = z.enum(["bronze", "silver", "gold", "export"]);
 
-/** Single structured run event (#496). Bounded fields that don't contain raw logs/stack traces/free objects만 있다. */
+/** Single structured run event (#496). Bounded fields only — no raw logs/stack traces/free-form objects. */
 export const buildEventSchema = z.object({
   seq: z.number().int(),
   timestamp: z.string(),

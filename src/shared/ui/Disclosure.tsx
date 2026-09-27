@@ -1,16 +1,17 @@
 /**
- * minimal accessible disclosure (collapse/expand) pattern (#255 §3).
+ * Minimal accessible disclosure (collapse/expand) pattern (#255 §3).
  *
- * secondary evidence (Run Events, BuildSpec snapshot처럼 핵심 판정을 대체하지 않는 부가 정보)를
- * 기본 collapsed로 두되, 키보드/스크린리더로도 펼칠 수 있게 실제 `<button>` + `aria-expanded`만
- * 쓴다. 새 accordion 라이브러리를 추가하지 않는다.
+ * Shows secondary evidence (like Run Events, BuildSpec snapshot — supplemental info that
+ * does not replace core decision-making) as collapsed by default, but expandable via
+ * keyboard/screen reader using only actual `<button>` + `aria-expanded`. Does not add
+ * new accordion library.
  */
 import { useId, useState, type ReactNode } from "react";
 
 export interface DisclosureProps {
   /** title always visible when collapsed (only definite values like count, no guessing). */
   title: ReactNode;
-  /** whether initially expanded. Default false (collapsed) — don't use for primary info always expanded는다. */
+   /** Whether initially expanded. Default false (collapsed) — don't use for primary info always visible. */
   defaultOpen?: boolean;
   children: ReactNode;
   className?: string;

@@ -1,8 +1,8 @@
 /**
- * common Select component.
+ * Common Select component.
  *
- * unify selection input for Provider/Dataset/data unit etc. react-hook-form ref 주입을
- * 위해 forwardRef로 구현한다. 옵션은 children(<option>)으로 전달한다.
+ * Unify selection input for Provider/Dataset/data unit etc. Implemented with forwardRef
+ * to allow react-hook-form ref injection. Options passed via children (<option>).
  */
 import { forwardRef, type SelectHTMLAttributes } from "react";
 import { cn } from "./cn";

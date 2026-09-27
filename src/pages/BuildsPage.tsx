@@ -1,13 +1,13 @@
 /**
- * Builds / Runs master-detail 화면 (`/builds`, `/builds?run=<id>`, 레거시 `/builds/:buildId`, #255).
+ * Builds / Runs master-detail screen (`/builds`, `/builds?run=<id>`, legacy `/builds/:buildId`, #255).
  *
- * 상단 KPI → Run 목록(master) → 선택 Run 상세(Pipeline/Stage Progress, Quality, Failure
- * evidence, Artifacts/Dataset navigation) 구조로 Builder 상태를 있는 그대로 보여준다.
- * Studio는 Builder가 반환한 값을 재계산하거나 추측하지 않는다(#246 원칙).
+ * Top KPI → Run list (master) → selected Run detail (Pipeline/Stage Progress, Quality, Failure
+ * evidence, Artifacts/Dataset navigation) structure displays Builder state as-is.
+ * Studio never recalculates or guesses values returned by Builder (#246 principle).
  *
- * 이 파일은 **화면 조립만** 담당한다(#379). 조각은 `features/runs` 아래에 있다 —
- * 목록/상세 패널과 파이프라인은 `components/`, URL 문맥·stage detail·비동기 상태는
- * 각각 `buildContext.ts`/`stageDetails.ts`/`asyncState.ts`.
+ * This file handles **screen assembly only** (#379). Components live under `features/runs` —
+ * list/detail panels and pipeline are in `components/`, URL context/stage detail/async state are in
+ * `buildContext.ts`/`stageDetails.ts`/`asyncState.ts` respectively.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -33,7 +33,7 @@ import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { BuildListItem } from "@/shared/lib/types";
 import { Card, EmptyState, PageHeader, TermHelp } from "@/shared/ui";
 
-/** `/builds` 요청 scope. Builder에 전체 count가 없으므로 KPI는 반드시 이 값 안에서만 계산한다. */
+/** `/builds` request scope. Builder has no total count, so KPI must be calculated within this value only. */
 const LIST_LIMIT = 100;
 
 export function BuildsPage() {
@@ -65,8 +65,8 @@ export function BuildsPage() {
 
   useEffect(() => loadList(), [loadList]);
 
-  // 새 canonical form은 ?run=. 레거시 /builds/:buildId 딥링크도 같은 context를 연다(#255 §5).
-  // 둘 다 있으면 canonical(?run=)이 우선한다.
+  // New canonical form is ?run=. Legacy /builds/:buildId deep-link also opens same context (#255 §5).
+  // If both exist, canonical (?run=) takes priority.
   const selectedRunId = searchParams.get("run") || legacyRunId || null;
 
   const selectRun = useCallback(
@@ -79,8 +79,8 @@ export function BuildsPage() {
   const clearSelection = useCallback(() => {
     const next = new URLSearchParams(searchParams);
     next.delete("run");
-    // dataset/stage는 selected Run에서 파생된 Kubi context 값이다(#255 §2) — run 선택을
-    // 지우면 함께 지워 다음 화면에 이전 run의 문맥이 남지 않게 한다.
+    // dataset/stage are Kubi context values derived from selected Run (#255 §2) — clearing
+    // run selection also clears them to prevent previous run context leaking to next screen.
     next.delete("dataset");
     next.delete("stage");
     next.delete("source");
@@ -118,39 +118,38 @@ export function BuildsPage() {
     t("builds.errors.loadSpec"),
   );
 
-  // Selected Run live(job registry) polling은 실제로 상태가 불확실한 경우에만 켠다(#286 후속
-  // 보완 §1). mock mode는 builderApi.getBuildJob이 항상 실제 fetch를 시도하는 stub이라
-  // succeeded/failed 같은 historical run에서도 매번 실패해 불필요한 "실시간 상태 갱신 실패"
-  // 경고가 떴다 — mock mode에서는 목록의 deterministic mock status를 그대로 신뢰하고 live
-  // polling 자체를 하지 않는다. real mode에서는 `GET /builds` 목록에 이미 존재하는 run은
-  // 그 계약상 완료된(ok/failed) 이력만이므로 이미 terminal이 확정된 상태다 — 목록 로딩이
-  // 끝나 그게 확인될 때까지는 조회를 켜지 않는다(단 한 번의 낭비 호출도 만들지 않기 위해
-  // listState.status === "loaded"까지 기다린다). 목록 로딩이 끝났는데도 scope 밖(deep-link
-  // run)이면 실제로 running/queued/cancelling일 수 있으므로 기존과 동일하게 getBuildJob으로
-  // 확인한다.
+  // Selected Run live (job registry) polling is enabled only when state is genuinely uncertain (#286
+  // follow-up §1). In mock mode, builderApi.getBuildJob is a stub that always attempts real fetch,
+  // causing repeated failures even for succeeded/failed historical runs, producing unnecessary
+  // "live state update failure" warnings — in mock mode, we trust the list's deterministic mock
+  // status as-is and skip live polling entirely. In real mode, runs already in the `GET /builds` list
+  // are contractually completed (ok/failed) history only, so terminal status is already confirmed — we
+  // don't enable queries until list loading finishes and confirms this (waiting for listState.status === "loaded"
+  // avoids even one wasted call). If list loading finishes but run is out of scope (deep-link run),
+  // it may actually be running/queued/cancelling, so we check with getBuildJob as before.
   const shouldPollLiveStatus =
     Boolean(selectedRunId) && isRealBuilderEnabled() && listState.status === "loaded" && !selectedListItem;
   const live = useSelectedRunPolling(shouldPollLiveStatus ? selectedRunId : null);
 
-  // event polling도 selected Run polling과 같은 "non-terminal이면 계속, terminal이면 멈춤"
-  // 정책을 따른다(#255 §3). listItem의 historical 상태는 표시에는 쓰되(RunDetailPanel의
-  // runStatus), interval polling을 켜는 판단에는 쓰지 않는다 — 확인된 live job이 실제로
-  // non-terminal일 때만 polling을 시작한다(useSelectedRunPolling과 동일한 원칙).
+  // Event polling also follows the same "continue if non-terminal, stop if terminal" policy as
+  // selected Run polling (#255 §3). ListItem's historical status is used for display (RunDetailPanel's
+  // runStatus) but not for deciding whether to enable interval polling — we only start polling when
+  // confirmed live job is actually non-terminal (same principle as useSelectedRunPolling).
   const eventsPollingEnabled = live.kind === "job" && !isTerminalBuilderStatus(live.job.status);
   const eventsState = useRunEvents(selectedRunId, eventsPollingEnabled);
 
-  // Kubi Run context(#256)는 새 context store 없이, 기존 route resolver(features/kubi/context.ts)가
-  // 읽는 `?run=&dataset=&stage=` 쿼리 관례를 그대로 재사용한다(Quality/Dataset Detail과 동일).
-  // 이 화면에서 실제로 확인된 값만 반영한다 — failure message를 파싱해 stage를 추측하지 않고,
-  // 정확히 하나의 source만 실패했을 때만 그 failedStage를 안전한 문맥으로 취급한다(#255 §2).
+  // Kubi Run context (#256) reuses the `?run=&dataset=&stage=` query convention read by existing
+  // route resolver (features/kubi/context.ts) without a new context store (same as Quality/Dataset Detail).
+  // Only reflect values actually confirmed in this screen — don't parse failure messages to guess stage;
+  // only treat failedStage as safe context when exactly one source fails (#255 §2).
   useEffect(() => {
     if (!selectedRunId) return;
     const next = normalizeBuildContextSearch(searchParams, specState, stagesState);
     if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
   }, [selectedRunId, specState, stagesState, searchParams, setSearchParams]);
 
-  // Run 자체가 존재하지 않는다고 판정하는 기준: 목록 scope 밖이고, stage 조회도 404다.
-  // (stage endpoint는 목록 limit과 무관하게 임의 run_id를 바로 조회할 수 있어 더 신뢰할 수 있는 신호)
+  // Criteria for determining run doesn't exist: out of list scope AND stage query returns 404.
+  // (stage endpoint can query any run_id directly regardless of list limit, making it a more reliable signal)
   const runNotFound =
     Boolean(selectedRunId) &&
     listState.status === "loaded" &&
@@ -158,9 +157,9 @@ export function BuildsPage() {
     stagesState.status === "error" &&
     stagesState.notFound;
 
-  // 목록 scope 밖이라 존재 여부를 판단할 근거(listItem)가 없는데, 그 판단 근거로 쓰던
-  // stage 조회마저 403이면 "없다"가 아니라 "조회할 권한이 없다"로 구분한다(#255 P0).
-  // 404와 절대 뭉개지 않는다 — 둘 다 "정보를 못 봤다"는 같은 결과가 아니다.
+  // When out of list scope so we lack listItem to judge existence, if the stage query we relied on
+  // returns 403, distinguish "no permission to view" from "doesn't exist" (#255 P0).
+  // Never conflate 404 and 403 — both result in "couldn't see info" but differ in reason.
   const runPermissionDenied =
     Boolean(selectedRunId) &&
     listState.status === "loaded" &&
@@ -170,8 +169,7 @@ export function BuildsPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-      {/* App Shell topbar에 이미 전역 "새 빌드 만들기" CTA가 있다(#255 §1) — 여기서는 중복 action을
-          추가하지 않는다. */}
+      {/* App Shell topbar already has global "create new build" CTA (#255 §1) — don't duplicate action here. */}
       <PageHeader
         eyebrow="Builds / Runs"
         title={t("builds.page.title")}

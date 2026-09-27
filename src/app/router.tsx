@@ -1,7 +1,8 @@
 /**
- * React Router 기반 Studio 라우트 트리를 정의하는 파일.
+ * File that defines Studio's React Router route tree based on React Router.
  *
- * 공통 `Layout` 아래에 홈, 빌드 초안, 검증, 미리보기, 설정 같은 작업실 화면을 배치한다.
+ * Arranges workspace pages like Home, Build Draft, Validation, Preview, and Settings
+ * under the common `Layout`.
  */
 import { lazy, Suspense, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,13 +13,13 @@ import { LoginGate } from "@/features/auth/LoginGate";
 import { Skeleton } from "@/shared/ui";
 
 /**
- * 라우트 단위 코드 분할 (#378).
+ * Per-route code splitting (#378).
  *
- * 모든 페이지를 정적으로 import 하면 첫 화면 하나를 열려고 Monitoring·Reports·Kubi까지
- * 전부 내려받게 된다(단일 청크 1.14 MB). 각 페이지를 동적 import로 바꿔 라우트를 청크
- * 경계로 삼는다.
+ * If all pages were statically imported, loading just the first screen would fetch
+ * Monitoring·Reports·Kubi too (single chunk 1.14 MB). Switching each page to dynamic
+ * import makes routes chunk boundaries.
  *
- * 페이지는 named export라 `lazy`가 요구하는 default 형태로 감싼다.
+ * Pages use named export, so wrapped in `lazy`'s required default form.
  */
 const AddDataPage = lazy(() =>
   import("@/pages/AddDataPage").then((m) => ({ default: m.AddDataPage })),
@@ -91,11 +92,10 @@ const WorkspacePage = lazy(() =>
 );
 
 /**
- * 페이지 청크를 받아오는 동안 보여줄 자리표시자.
+ * Placeholder shown while page chunk arrives.
  *
- * Skeleton 자체는 aria-hidden이므로, 보조기기에는 `role="status"`의 안내 문구로
- * "로딩 중"을 알린다 — 화면에는 빈 영역만 보이고 스크린리더에는 아무 말도 없는 상태를
- * 만들지 않기 위해서다.
+ * Skeleton itself is aria-hidden, so screen readers get guidance text with `role="status"`
+ * instead of seeing blank space with no announcement — ensures loading state is communicated.
  */
 function PageFallback() {
   const { t } = useTranslation();
@@ -113,37 +113,37 @@ function PageFallback() {
   );
 }
 
-/** 페이지 요소를 Suspense 경계로 감싼다 — 청크가 도착할 때까지 폴백을 보여준다. */
+/** Wraps page element in Suspense boundary — shows fallback until chunk arrives. */
 function withSuspense(element: ReactElement): ReactElement {
   return <Suspense fallback={<PageFallback />}>{element}</Suspense>;
 }
 
 /**
- * 페이지 요소를 feature 단위 ErrorBoundary로 감싼다 (#97).
+ * Wraps page element in feature-scoped ErrorBoundary (#97).
  *
- * 한 feature의 렌더 오류가 전역 폴백까지 버블업해 앱 전체(셸 포함)를 빈 화면으로 만들지 않도록,
- * 각 라우트 요소를 해당 영역만 폴백하는 경계로 감싼다. Layout의 `<Outlet />` 안쪽에서 동작하므로
- * 사이드바/헤더는 유지된다.
+ * Prevents one feature's render error from bubbling to global fallback and blanking entire app.
+ * Each route element wrapped in a boundary that falls back only that area. Operates inside
+ * Layout's `<Outlet />`, so sidebar/header stays intact.
  *
- * @param feature - 폴백에 노출할 기능 이름.
- * @param element - 보호할 페이지 요소.
- * @returns 경계로 감싼 요소.
+ * @param feature - Feature name to show in fallback.
+ * @param element - Page element to protect.
+ * @returns Element wrapped in boundary.
  */
-/** `feature`는 화면 이름이 아니라 i18n 키다(#350) — 폴백에서 현재 언어로 해석한다. */
+/** `feature` is an i18n key, not a screen name (#350) — fallback interprets it in current language. */
 function withFeatureBoundary(feature: string, element: ReactElement): ReactElement {
-  // Suspense를 경계 *안쪽*에 둔다 — 청크 로드 실패(네트워크 끊김 등)도 해당 feature의
-  // 폴백으로 잡히고, 셸 전체가 빈 화면이 되지 않는다.
+  // Place Suspense *inside* boundary — network failure (connection dropped, etc.) is also caught
+  // by fallback, so feature area doesn't blank out the entire screen.
   return <FeatureErrorBoundary feature={feature}>{withSuspense(element)}</FeatureErrorBoundary>;
 }
 
 /**
- * 브라우저 URL과 Studio 페이지 컴포넌트를 연결하는 전역 라우터.
+ * Global router connecting browser URLs to Studio page components.
  *
- * @returns 각 경로별 렌더링 규칙을 담은 브라우저 라우터 인스턴스.
+ * @returns Browser router instance with rendering rules per route.
  */
 export const router = createBrowserRouter([
-    // Login/Signup(#263)은 App Shell(사이드바/헤더) 밖의 독립 화면이라 Layout의 children이
-    // 아니라 최상위 형제 라우트로 둔다 — 로그인 전 상태에는 아직 보여줄 워크스페이스 셸이 없다.
+    // Login/Signup (#263) is a standalone screen outside App Shell (sidebar/header), so placed
+    // as top-level sibling route instead of under Layout's children — pre-login state has no workspace shell yet.
     {
       path: "/login",
       element: withSuspense(<LoginPage />),
@@ -161,8 +161,8 @@ export const router = createBrowserRouter([
         index: true,
         element: withFeatureBoundary("router.features.home", <HomePage />),
       },
-      // 새 IA(#247)의 WORKSPACE 그룹. Discover는 #249에서 구현됨. Workspace는 아직
-      // placeholder이며 #260에서 실제 화면으로 교체된다.
+       // New IA (#247) WORKSPACE group. Discover implemented in #249. Workspace is currently
+       // placeholder; will be replaced with actual screen in #260.
       {
         path: "discover",
         element: withFeatureBoundary("router.features.Discover", <DiscoverPage />),
@@ -171,7 +171,7 @@ export const router = createBrowserRouter([
         path: "workspace",
         element: withFeatureBoundary("router.features.Workspace", <WorkspacePage />),
       },
-      // 새 IA의 DATA 그룹. Add Data/Dataset Catalog/Quality는 #250/#253/#254에서 구현된다.
+       // New IA DATA group. Add Data/Dataset Catalog/Quality implemented in #250/#253/#254.
       {
         path: "add",
         element: withFeatureBoundary("router.features.AddData", <AddDataPage />),
@@ -196,15 +196,15 @@ export const router = createBrowserRouter([
         path: "quality",
         element: withFeatureBoundary("router.features.Quality", <QualityPage />),
       },
-      // Build 단위 중심 라우트 (제안 §3.3): 상세 → 편집/실행/결과물/게시.
-      // 레거시 딥링크(#255 §5): /builds/:buildId도 동일한 master-detail(BuildsPage)을
-      // 열어 canonical form(/builds?run=)과 같은 context를 보여준다.
+       // Build-unit-centric routes (§3.3 proposal): detail → edit/run/artifacts/publish.
+       // Legacy deep link (#255 §5): /builds/:buildId also uses same master-detail (BuildsPage)
+       // Opens to canonical form (/builds?run=) for same context.
       {
         path: "builds/:buildId",
         element: withFeatureBoundary("router.features.buildDetail", <BuildsPage />),
       },
       {
-        // 편집은 New Build와 동일한 에디터를 재사용한다.
+         // Edit reuses same editor as New Build.
         path: "builds/:buildId/edit",
         element: withFeatureBoundary("router.features.buildEdit", <NewBuildPage />),
       },
@@ -220,8 +220,8 @@ export const router = createBrowserRouter([
         path: "builds/:buildId/publish",
         element: withFeatureBoundary("router.features.publish", <BuildPublishPage />),
       },
-      // 새 IA의 AI 그룹(#256에서 실제 기능 구현). 전역 Kubi drawer는
-      // `src/features/kubi/KubiDrawer.tsx`로 Layout 수준에서 별도 mount된다.
+       // New IA AI group (actual feature implementation in #256). Global Kubi drawer
+       // mounted separately at Layout level in `src/features/kubi/KubiDrawer.tsx`.
       {
         path: "kubi",
         element: withFeatureBoundary("router.features.Kubi", <KubiPage />),
@@ -234,7 +234,7 @@ export const router = createBrowserRouter([
         path: "reports/:reportId",
         element: withFeatureBoundary("router.features.reportEditor", <ReportEditorPage />),
       },
-      // 새 IA의 SYSTEM 그룹(#259/#264에서 실제 기능 구현).
+       // New IA SYSTEM group (actual feature implementation in #259/#264).
       {
         path: "provider",
         element: withFeatureBoundary("router.features.Provider", <ProviderPage />),
@@ -243,9 +243,9 @@ export const router = createBrowserRouter([
         path: "monitoring",
         element: withFeatureBoundary("router.features.Monitoring", <MonitoringPage />),
       },
-      // 레거시 단독 라우트: 내비게이션에서는 제거됐지만 딥링크 호환을 위해 유지한다(#247 결정:
-      // 새 IA로 리다이렉트하지 않고 그대로 유지 — Validate/Preview/Artifacts는 New Build
-      // Wizard 내부 패널로 통합 예정이며, 통합 시점까지는 기존 화면이 fallback 역할을 한다).
+       // Legacy standalone route: removed from nav but kept for deep link compatibility (#247 decision:
+       // Don't redirect to new IA; keep as-is — Validate/Preview/Artifacts planned for integration as
+       // New Build Wizard panels; until then, existing screens act as fallback).
       {
         path: "validate",
         element: withFeatureBoundary("router.features.validate", <ValidatePage />),
@@ -266,7 +266,7 @@ export const router = createBrowserRouter([
   },
   ],
   {
-    // GitHub Pages 하위 경로(/kpubdata-studio/)에서도 라우팅이 동작하도록 base를 basename으로 사용한다.
+    // GitHub Pages subfolder (/kpubdata-studio/) routing works when base is set to basename.
     basename: import.meta.env.BASE_URL.replace(/\/+$/, "") || "/",
   },
 );

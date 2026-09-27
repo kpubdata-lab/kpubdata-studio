@@ -1,25 +1,25 @@
 /**
- * 두 BuildSpec 간의 필드 단위 차이를 계산한다 (#13, v0.3 MVP).
+ * Calculate field-level differences between two BuildSpecs (#13, v0.3 MVP).
  *
- * 스펙을 path→value 맵으로 평탄화한 뒤 비교해, 추가/삭제/변경된 경로 목록을 만든다.
- * 실행 이력 비교(#12)나 편집 전/후 비교 UI에서 재사용한다.
+ * Flatten specs to path→value maps, compare, and produce lists of added/removed/changed paths.
+ * Reused in execution history comparison (#12) and before/after diff UI.
  */
 import type { BuildSpec } from "@/shared/lib/types";
 
 export type SpecChangeKind = "added" | "removed" | "changed";
 
 export interface SpecChange {
-  /** 변경된 필드 경로(예: `sources[0].dataset`) */
+  /** Changed field path (example: `sources[0].dataset`) */
   path: string;
-  /** 이전 값(removed/changed) */
+  /** Previous value (removed/changed) */
   before?: string;
-  /** 이후 값(added/changed) */
+  /** Subsequent value (added/changed) */
   after?: string;
-  /** 변경 종류 */
+  /** Kind of change */
   kind: SpecChangeKind;
 }
 
-/** BuildSpec을 path→value 평탄화 맵으로 만든다. */
+/** Flatten BuildSpec to path→value map. */
 function flatten(spec: BuildSpec): Map<string, string> {
   const map = new Map<string, string>();
   map.set("datasetId", spec.datasetId);
@@ -50,11 +50,11 @@ function flatten(spec: BuildSpec): Map<string, string> {
 }
 
 /**
- * 두 BuildSpec의 필드 단위 차이를 경로순으로 반환한다.
+ * Return field-level differences between two BuildSpecs in path order.
  *
- * @param before - 이전 스펙.
- * @param after - 이후 스펙.
- * @returns 변경 목록(경로 오름차순). 동일하면 빈 배열.
+ * @param before - Previous spec.
+ * @param after - Subsequent spec.
+ * @returns Changes in ascending path order. Empty if identical.
  */
 export function diffSpecs(before: BuildSpec, after: BuildSpec): SpecChange[] {
   const a = flatten(before);
