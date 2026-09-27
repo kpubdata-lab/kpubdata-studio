@@ -77,7 +77,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
     if (preview.ok) {
       expect(preview.before.metadata.note).toBe("orig");
       expect(preview.after.metadata.note).toBe("updated");
-      // 건드리지 않은 필드는 그대로 보존된다.
+      // Untouched fields are preserved as-is.
       expect(preview.after.sources).toEqual(BASE_SPEC.sources);
       expect(preview.after.exports).toEqual(BASE_SPEC.exports);
     }
@@ -123,7 +123,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
     };
     const preview = previewBuildSpecPatch(action);
     expect(preview.ok).toBe(false);
-    // 저장된 spec은 원본 그대로다 — reject된 patch는 loadBuildSpec에 반영되지 않는다.
+    // The saved spec is original as-is — rejected patches do not appear in loadBuildSpec.
     expect(loadBuildSpec("run-1")).toEqual(BASE_SPEC);
   });
 
@@ -139,7 +139,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
     expect(preview.ok).toBe(true);
     if (!preview.ok) return;
     const result = await applyBuildSpecPatch("run-1", preview.after);
-    expect(result.valid).toBe(true); // mock 모드에서는 항상 valid
+    expect(result.valid).toBe(true); // in mock mode always valid
   });
 
   it("does not save an invalid approved patch", async () => {
@@ -157,7 +157,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
   });
 
   describe("복원된 redaction marker는 fail-closed (S07 리뷰 §1)", () => {
-    // 실제 secret이 들어간 spec을 저장하면 specStore가 "[REDACTED]"로 redact해 보관한다.
+    // When a spec with real secrets is saved, specStore redacts them and stores "[REDACTED]".
     const SPEC_WITH_SECRET: BuildSpec = {
       ...BASE_SPEC,
       sources: [

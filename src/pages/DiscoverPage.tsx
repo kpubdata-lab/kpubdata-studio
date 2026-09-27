@@ -1,10 +1,11 @@
 /**
- * Discover 화면 (`/discover`, #249).
+ * Discover screen (`/discover`, #249).
  *
- * Builder 원천 provider/dataset 카탈로그(`GET /catalog`)를 정확 검색·필터로 탐색하고,
- * 선택한 항목을 Add Data Workbench(`/add`, #250)로 넘긴다. 자연어 검색(Kubi, #256)이나
- * 이미 빌드된 데이터셋 목록(Dataset Catalog, `/datasets`, #253)과는 다른 화면이다 —
- * `/catalog`(원본)와 `/datasets`(빌드 결과)를 섞지 않는다.
+ * Explores Builder's original provider/dataset catalog (`GET /catalog`) with exact search and filters,
+ * then passes selected items to Add Data Workbench (`/add`, #250). Distinct from:
+ * - Natural language search (Kubi, #256)
+ * - Already-built dataset list (Dataset Catalog, `/datasets`, #253)
+ * Does not mix `/catalog` (original) and `/datasets` (build results).
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";

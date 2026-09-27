@@ -1,8 +1,9 @@
 /**
- * common StatusBadge component.
+ * Common StatusBadge component.
  *
- * display all status values in draft/run/publish flow with Korean label + consistent color다.
- * 색상만으로 의미를 전달하지 않도록 항상 텍스트 라벨을 함께 노출한다(접근성).
+ * Display all status values in draft/run/publish flow with Korean label and consistent
+ * color. Always show text label together with color to avoid relying on color alone for
+ * meaning (accessibility).
  */
 import { cn } from "./cn";
 import { useTranslation } from "react-i18next";
@@ -53,24 +54,24 @@ const FALLBACK_META: StatusMeta = {
 };
 
 export interface StatusBadgeProps {
-  /**
-   * status value to display.
-   *
-   * if known `StatusValue`, use its label/color; else arbitrary string gets neutral label
-   * 중립 배지로 안전하게 표시한다(매핑 누락 시 크래시 방지).
-   */
+   /**
+    * Status value to display.
+    *
+    * If known `StatusValue`, use its label/color; otherwise display arbitrary string
+    * as neutral badge (prevents crash if mapping missing).
+    */
   status: StatusValue | (string & {});
   /** additional className */
   className?: string;
 }
 
 /**
- * render badge with label (in current language) and color for status value.
+ * Render badge with label (in current language) and color for status value.
  *
- * unknown status value uses original string as label with neutral badge지로 폴백한다.
+ * Unknown status value falls back to neutral badge with original string as label.
  *
- * @param props - status와 additional className.
- * @returns 상태 배지 엘리먼트.
+ * @param props - status and additional className.
+ * @returns Status badge element.
  */
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const { t } = useTranslation();

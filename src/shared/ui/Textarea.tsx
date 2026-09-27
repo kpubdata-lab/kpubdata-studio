@@ -1,7 +1,8 @@
 /**
- * common Textarea component.
+ * Common Textarea component.
  *
- * follows same style system as TextInput and uses forwardRef for react-hook-form ref injection forwardRef로 구현한다.
+ * Follows same style system as TextInput and uses forwardRef for react-hook-form ref
+ * injection.
  */
 import { forwardRef, type TextareaHTMLAttributes } from "react";
 import { cn } from "./cn";

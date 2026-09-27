@@ -1,9 +1,9 @@
 /**
- * common EmptyState component.
+ * Common EmptyState component.
  *
- * consistently express empty state with "what's missing + next action suggestion + CTA" structure (proposal §11).
- * CTA는 실제 동작(actionHref 또는 onAction)이 있을 때만 노출되며, 타입 차원에서도
- * actionLabel은 둘 중 하나와 함께만 지정할 수 있도록 제한한다.
+ * Consistently express empty state with "what's missing + next action suggestion + CTA"
+ * structure (proposal §11). CTA shown only when action actually exists (actionHref or
+ * onAction); type constraints ensure actionLabel specified only with one of them.
  */
 import type { ReactNode } from "react";
 import { Button } from "./Button";
@@ -28,10 +28,10 @@ export type EmptyStateProps = {
 } & EmptyStateAction;
 
 /**
- * show guidance text and (optional) next action CTA when data is empty.
+ * Show guidance text and (optional) next action CTA when data is empty.
  *
- * @param props - title/description/icon과 actionLabel+actionHref|onAction.
- * @returns 빈 상태 엘리먼트.
+ * @param props - title/description/icon and actionLabel+actionHref|onAction.
+ * @returns Empty state element.
  */
 export function EmptyState({
   title,

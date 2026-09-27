@@ -1,25 +1,26 @@
 /**
- * Public API source의 sourceParams 표시/저장용 secret redaction (#283 후속 리뷰 §1).
+ * Public API source sourceParams display/storage secret redaction (#283 follow-up
+ * review §1).
  *
- * publicApi.sourceParams는 JSON 텍스트이고 공공데이터포털 serviceKey 등 credential이
- * 섞여 들어올 수 있다 — `features/assistant/scrub.ts` 자체도 이를 전제로 만들어졌다.
- * `urlRedaction.ts`가 URL endpoint의 query parameter에 적용한 것과 같은 원칙을
- * sourceParams 객체/JSON 텍스트에도 적용한다. 새 secret detection 로직을 만들지 않고
- * `features/assistant/scrub.ts`의 기존 detector(`isSecretKey`/`looksLikeSecret`)를
- * 그대로 재사용해 key/value 단위로만 판정한다.
+ * publicApi.sourceParams is JSON text that may mix in credentials like public data
+ * portal serviceKey — `features/assistant/scrub.ts` itself was designed with this
+ * premise. Apply same principle as `urlRedaction.ts` applies to URL endpoint query
+ * parameters, now to sourceParams object/JSON text. No new secret detection logic —
+ * reuse existing detector (`isSecretKey`/`looksLikeSecret`) from
+ * `features/assistant/scrub.ts` directly, judging only at key/value level.
  *
- * 이 모듈은 표시/localStorage 저장 전용이다. 실제 Builder 제출값(`BuildSpec.sources[0]
- * .params`)에는 절대 관여하지 않는다 — 호출부(`ReviewBuildStep`/`model.ts`의
- * `redactBuildSpecForDisplay`/`draftStorage`)가 redact된 사본만 만들어 쓰고, in-memory
- * draft/spec은 원문 그대로 유지한다.
+ * This module is display/localStorage-save only. Never touches actual Builder
+ * submission value (`BuildSpec.sources[0].params`) — caller
+ * (`ReviewBuildStep`/`model.ts`'s `redactBuildSpecForDisplay`/`draftStorage`)
+ * creates only redacted copy, keeping in-memory draft/spec with original values.
  */
 import { hasSecretPlaceholder, isSecretKey, looksLikeSecret, REDACTED_SECRET_MARKER } from "@/features/assistant/scrub";
 import { REDACTED_PLACEHOLDER } from "@/features/add-data/urlRedaction";
 import type { JsonValue } from "@/shared/lib/types";
 
-// URL endpoint의 `REDACTED_PLACEHOLDER`(urlRedaction.ts)와 같은 이유로 프로젝트 전용
-// namespace를 쓴다 — bare `REDACTED`는 `{"status":"REDACTED"}`같은 정상 API 값과
-// 충돌할 수 있다(#283 후속 리뷰 §3와 동일 원칙).
+// Like URL endpoint `REDACTED_PLACEHOLDER` (urlRedaction.ts), use project
+// namespace — bare `REDACTED` could collide with normal API value like
+// {"status":"REDACTED"} (#283 follow-up review §3, same principle).
 export const PARAMS_REDACTED_SENTINEL = "__KPD_PARAMS_SECRET_REDACTED__";
 
 export interface RedactedParams {
@@ -28,8 +29,8 @@ export interface RedactedParams {
 }
 
 /**
- * source.params 객체(canonical BuildSpec의 `sources[0].params`)에서 secret으로
- * 판정되는 값만 sentinel로 치환한다. 비민감 key/value는 그대로 유지한다.
+ * From source.params object (canonical BuildSpec's `sources[0].params`), replace
+ * only values judged as secret with sentinel. Keep non-sensitive key/value unchanged.
  */
 export function redactSourceParamsObject(params: Record<string, JsonValue>): RedactedParams {
   let hadSecret = false;
@@ -61,14 +62,14 @@ export interface RedactedParamsText {
 }
 
 /**
- * `draft.publicApi.sourceParams`(Configure 단계 JSON textarea 원문)의 표시/저장용
- * redaction. JSON으로 정상 파싱되면 `redactSourceParamsObject`로 위임해 secret으로
- * 판정된 값만 가린다.
+ * Display/storage redaction for `draft.publicApi.sourceParams` (Configure step JSON
+ * textarea source). If valid JSON, delegate to `redactSourceParamsObject` to hide
+ * values judged as secret.
  *
- * JSON으로 파싱할 수 없는 값(입력 중인 임시 문자열 등)은 어느 부분이 key/value
- * 경계인지 신뢰성 있게 구분할 수 없으므로, 전체를 fail-closed로 sentinel 처리한다 —
- * URL endpoint의 malformed 저장 fail-closed(`sanitizeUrlEndpointForStorage`)와 같은
- * 원칙이다. 빈 문자열은 secret이 없으므로 그대로 둔다.
+ * For values that fail JSON parse (mid-edit temp strings etc.), cannot reliably
+ * distinguish key/value boundaries, so fail-closed whole to sentinel — same
+ * principle as malformed endpoint storage fail-closed (`sanitizeUrlEndpointForStorage`).
+ * Empty string has no secret, so leave as-is.
  */
 export function redactSourceParamsText(sourceParams: string): RedactedParamsText {
   let parsed: unknown;
@@ -91,14 +92,14 @@ export function redactSourceParamsText(sourceParams: string): RedactedParamsText
 }
 
 /**
- * 저장된 초안을 복원했을 때 sourceParams에 redaction marker가 남아있는지(= 실제 secret
- * 원문이 사라졌는지) 판정한다. `buildSpecFromDraft`/`toBuildSpec`을 fail-closed 시키는 데
- * 쓴다 — marker를 실제 파라미터 값처럼 Builder에 제출하지 않기 위함.
+ * On restored draft, check if sourceParams has redaction marker remaining (= real
+ * secret original lost). Triggers fail-closed in `buildSpecFromDraft`/`toBuildSpec`
+ * — prevent marker from being submitted to Builder as real parameter value.
  *
- * persistence 경계에서 쓰이는 모든 marker를 한 곳에서 인식한다(S07 리뷰 §1):
- * `redactSourceParamsText`의 `__KPD_PARAMS_SECRET_REDACTED__`, URL query의
- * `__KPD_URL_SECRET_REDACTED__`, `redactSecrets()`의 종결 `[REDACTED]`, scrub 내부
- * `__SCRUBBED_*`.
+ * All markers at persistence boundary recognized in one place (S07 review §1):
+ * `redactSourceParamsText`'s `__KPD_PARAMS_SECRET_REDACTED__`, URL query's
+ * `__KPD_URL_SECRET_REDACTED__`, `redactSecrets()`'s terminal `[REDACTED]`, scrub
+ * internals `__SCRUBBED_*`.
  */
 export function sourceParamsHasRedactedSecret(sourceParams: string): boolean {
   return (

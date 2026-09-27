@@ -1,9 +1,8 @@
 /**
- * useAuthStore (#188, #263 generic 세션 확장) 테스트.
+ * useAuthStore (#188, #263 generic session extension) test.
  *
- * setSession(mock/generic AuthProvider)과 setOidcIdentity(Keycloak)가 같은 store를
- * 공유하면서 서로의 필드를 오염시키지 않는지, 그리고 password가 store 어디에도 남지
- * 않는지 확인한다.
+ * Verify setSession (mock/generic AuthProvider) and setOidcIdentity (Keycloak) share same store
+ * without polluting each other's fields, and password never lingers in store.
  */
 import { afterEach, describe, expect, it } from "vitest";
 import { useAuthStore } from "./store";

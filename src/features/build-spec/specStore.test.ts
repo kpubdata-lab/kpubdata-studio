@@ -60,7 +60,7 @@ describe("specStore", () => {
 
   it("스키마를 통과하지 못하는 손상된 값은 버린다", () => {
     saveBuildSpec("run-broken", makeSpec());
-    // 저장 이후 스펙 형태가 바뀌었거나 값이 손상된 상황을 흉내낸다.
+    // Simulate corrupted spec after save (schema changed or value damaged).
     const raw = JSON.parse(localStorage.getItem("kpubdata-studio:build-specs") as string) as {
       entries: Record<string, { spec: unknown }>;
     };
@@ -109,7 +109,7 @@ describe("specStore", () => {
     expect((params.nested as Record<string, unknown>).note).toBe("keep-me");
     expect((params.list as unknown[])[0]).toEqual({ token: "[REDACTED]" });
     expect((params.list as unknown[])[1]).toBe("plain-value");
-    // 정상 BuildSpec 정보는 손상되지 않는다.
+    // Normal BuildSpec values are not corrupted.
     expect(loaded?.datasetId).toBe("air-quality");
     expect(loaded?.sources[0].provider).toBe("datago");
     expect(loaded?.metadata.source_url).toBe("https://example.test");
@@ -143,13 +143,13 @@ describe("specStore", () => {
       sources: [{ provider: "datago", dataset: "air", params: { serviceKey: secret } }],
     });
     saveBuildSpec("run-immutable", spec);
-    // 진행 중인 Preview/Build 요청이 쓰는 원본은 그대로여야 한다.
+    // Ongoing Preview/Build requests use original as-is.
     expect(spec.sources[0].params.serviceKey).toBe(secret);
   });
 
   it("과거 버전이 저장한 평문 credential을 load 시점에 sanitize + rewrite한다 (S07 리뷰 §2)", () => {
     const secret = "abcdef0123456789abcdef0123456789ABCDEF";
-    // redaction 도입 이전 포맷을 흉내낸다 — 평문 serviceKey를 직접 봉투에 넣는다.
+    // Simulate pre-redaction format — plaintext serviceKey directly in envelope.
     const legacy = makeSpec({
       sources: [{ provider: "datago", dataset: "air", params: { sidoName: "서울", serviceKey: secret } }],
     });
@@ -159,16 +159,16 @@ describe("specStore", () => {
     );
 
     const loaded = loadBuildSpec("run-legacy");
-    // 반환값에 raw secret이 없다(redacted 상태로만 복원).
+    // Loaded value has no raw secret (restored as redacted state only).
     expect((loaded?.sources[0].params as Record<string, unknown>).serviceKey).toBe("[REDACTED]");
     expect((loaded?.sources[0].params as Record<string, unknown>).sidoName).toBe("서울");
     expect(loaded?.datasetId).toBe("air-quality");
 
-    // localStorage도 즉시 sanitized 되어 raw secret이 남지 않는다.
+    // localStorage immediately sanitized; no raw secret persists.
     const raw = localStorage.getItem("kpubdata-studio:build-specs") as string;
     expect(raw).not.toContain(secret);
     expect(raw).toContain("[REDACTED]");
-    // savedAt 등 나머지 entry 메타는 보존.
+     // Other entry metadata (savedAt, etc.) is preserved.
     expect(JSON.parse(raw).entries["run-legacy"].savedAt).toBe("2020-01-01T00:00:00.000Z");
   });
 
@@ -176,13 +176,13 @@ describe("specStore", () => {
     const spec = makeSpec({
       sources: [{ provider: "datago", dataset: "air", params: { sidoName: "서울", serviceKey: "abcdef0123456789abcdef0123456789ABCDEF" } }],
     });
-    saveBuildSpec("run-clean", spec); // 이 시점에 이미 redact되어 저장됨
+     saveBuildSpec("run-clean", spec); // Redaction happens at this point during save
     const afterSave = localStorage.getItem("kpubdata-studio:build-specs") as string;
 
     const loaded = loadBuildSpec("run-clean");
     expect((loaded?.sources[0].params as Record<string, unknown>).serviceKey).toBe("[REDACTED]");
     expect((loaded?.sources[0].params as Record<string, unknown>).sidoName).toBe("서울");
-    // load가 destructive rewrite를 하지 않았다 — 바이트 단위로 동일.
+     // Load does not do destructive rewrite — byte-for-byte identical.
     expect(localStorage.getItem("kpubdata-studio:build-specs")).toBe(afterSave);
   });
 
@@ -191,7 +191,7 @@ describe("specStore", () => {
       saveBuildSpec(`run-${String(i).padStart(3, "0")}`, makeSpec({ datasetId: `ds-${i}` }));
     }
 
-    // 가장 먼저 저장한 항목은 밀려나고, 마지막 항목은 남아 있어야 한다.
+    // Oldest saved item is evicted; newest item remains.
     expect(loadBuildSpec("run-000")).toBeNull();
     expect(loadBuildSpec(`run-${String(SPEC_STORE_LIMIT + 4).padStart(3, "0")}`)).not.toBeNull();
   });

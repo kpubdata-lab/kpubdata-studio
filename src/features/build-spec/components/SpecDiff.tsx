@@ -1,8 +1,8 @@
 /**
- * 두 BuildSpec의 차이를 시각적으로 보여주는 컴포넌트 (#13, v0.3 MVP).
+ * Component showing visual diff of two BuildSpecs (#13, v0.3 MVP).
  *
- * diffSpecs 결과를 추가(초록)/삭제(빨강)/변경(노랑) 행으로 렌더링한다. 변경 없으면
- * "차이 없음" 안내를 보여준다.
+ * Render diffSpecs result as added (green)/removed (red)/changed (yellow) rows.
+ * Show "no changes" message if unchanged.
  */
 import { diffSpecs, type SpecChangeKind } from "@/features/build-spec/specDiff";
 import type { BuildSpec } from "@/shared/lib/types";
@@ -28,17 +28,17 @@ const KIND_META: Record<SpecChangeKind, { labelKey: string; className: string; s
 };
 
 export interface SpecDiffProps {
-  /** 이전 스펙 */
+  /** Previous spec */
   before: BuildSpec;
-  /** 이후 스펙 */
+  /** After spec */
   after: BuildSpec;
 }
 
 /**
- * 두 스펙의 필드 단위 차이를 목록으로 렌더링한다.
+ * Render field-level diff of two specs as list.
  *
- * @param props - before/after 스펙.
- * @returns 스펙 diff 엘리먼트.
+ * @param props - before/after specs.
+ * @returns Spec diff element.
  */
 export function SpecDiff({ before, after }: SpecDiffProps) {
   const { t } = useTranslation();

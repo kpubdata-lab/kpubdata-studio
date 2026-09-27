@@ -1,37 +1,36 @@
 /**
- * Studio BuildSpec(camelCase) → Builder BuildSpec(snake_case) 매핑 (#37).
+ * Studio BuildSpec (camelCase) ↔ Builder BuildSpec (snake_case) mapping (#37).
  *
- * Studio가 작성한 스펙을 Builder가 기대하는 필드 이름/구조로 변환한다. Builder는 YAML
- * 스펙을 받지만 JSON은 YAML의 부분집합이므로, 매핑된 객체를 JSON 문자열로 직렬화해
- * `/validate`·`/build`의 `spec` 필드로 전송할 수 있다.
+ * Transforms specs written in Studio to the field names/structure expected by Builder.
+ * Builder accepts YAML, but JSON is a subset of YAML, so the mapped object can be
+ * serialized to JSON and sent as the `spec` field in `/validate` and `/build` requests.
  *
- * 주요 변환:
+ * Key transformations:
  *   - datasetId → dataset_id
- *   - exports[].format → exports[].kind (+ output_path 파생)
- *   - sources 필드(provider/dataset/params/alias)는 이름이 동일하다.
+ *   - exports[].format → exports[].kind (+ output_path derived)
+ *   - sources fields (provider/dataset/params/alias) keep the same names.
  */
 import type { BuildSpec, ExportTarget, JsonValue, SourceFormat, SourceKind } from "@/shared/lib/types";
 
-/** Builder가 기대하는 export 대상(snake_case). */
+/** Export target expected by Builder (snake_case). */
 interface BuilderExport {
   kind: string;
   output_path: string;
   options?: Record<string, JsonValue>;
 }
 
-/** Builder가 기대하는 source 참조(snake_case, #498 kind=public_api/file/url). */
+/** Source reference expected by Builder (snake_case, #498 kind=public_api/file/url). */
 interface BuilderSourceRef {
   kind?: SourceKind;
   provider?: string;
   dataset?: string;
   /**
-   * Builder loader.py SSOT(_FILE_ONLY_FIELDS/_URL_ONLY_FIELDS)는 kind=file/url에서
-   * `params`가 키로 존재하기만 해도 foreign field로 거부한다 — public_api에서만
-   * 보낸다(#283 후속 리뷰 §1).
+   * Builder loader.py SSOT (_FILE_ONLY_FIELDS/_URL_ONLY_FIELDS) rejects `params` as a
+   * foreign field if present as a key in kind=file/url — send only for public_api (#283 follow-up review §1).
    */
   params?: Record<string, JsonValue>;
   alias?: string;
-  /** 소스 스키마 계약 (VAL-1). Studio SourceRef.schema 와 동일 구조. */
+  /** source schema contract (VAL-1). Same structure as Studio SourceRef.schema. */
   schema?: {
     required: string[];
     dtypes: Record<string, string>;
@@ -44,7 +43,7 @@ interface BuilderSourceRef {
   method?: "GET";
 }
 
-/** Builder가 기대하는 BuildSpec(snake_case). */
+/** BuildSpec expected by Builder (snake_case). */
 export interface BuilderSpec {
   dataset_id: string;
   title: string;
@@ -54,7 +53,7 @@ export interface BuilderSpec {
   metadata: Record<string, JsonValue>;
 }
 
-/** `toBuilderSpec`/`fromBuilderSpec`이 명시적으로 모델링하는 최상위 canonical 필드. */
+/** Top-level canonical fields explicitly modeled by `toBuilderSpec`/`fromBuilderSpec`. */
 const KNOWN_TOP_LEVEL_FIELDS = new Set([
   "dataset_id",
   "title",
@@ -71,7 +70,7 @@ const FORMAT_EXTENSION: Record<string, string> = {
   huggingface: "",
 };
 
-/** export별 output_path를 파생한다. huggingface는 디렉터리, 그 외는 파일 경로. */
+/** Derive output_path per export. huggingface targets a directory; others target file paths. */
 function deriveOutputPath(spec: BuildSpec, target: ExportTarget, index: number): string {
   const explicitPath = target.options?.["outputPath"];
   if (typeof explicitPath === "string" && explicitPath.length > 0) return explicitPath;
@@ -88,14 +87,14 @@ function deriveOutputPath(spec: BuildSpec, target: ExportTarget, index: number):
 }
 
 /**
- * Studio BuildSpec을 Builder BuildSpec 구조로 변환한다.
+ * Transform Studio BuildSpec to Builder BuildSpec structure.
  *
- * `spec.extra`(#250, canonical round-trip)를 먼저 펼치고 Studio가 실제로 편집하는
- * 필드로 덮어써, GUI가 모델링하지 않는 최상위 필드(publish/splits/pii/...)는 보존하되
- * 폼에서 편집한 값이 항상 우선하게 한다.
+ * First expand `spec.extra` (#250, canonical round-trip), then overwrite with fields
+ * actually edited in Studio. This preserves top-level fields not modeled by the GUI
+ * (publish/splits/pii/...) while ensuring form-edited values always take precedence.
  *
- * @param spec - Studio 측 BuildSpec(camelCase).
- * @returns Builder가 기대하는 snake_case 스펙 객체.
+ * @param spec - Studio BuildSpec (camelCase).
+ * @returns snake_case spec object expected by Builder.
  */
 export function toBuilderSpec(spec: BuildSpec): BuilderSpec {
   return {
@@ -107,8 +106,8 @@ export function toBuilderSpec(spec: BuildSpec): BuilderSpec {
       ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
       ...(source.provider !== undefined ? { provider: source.provider } : {}),
       ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
-      // Builder loader.py는 kind=file/url에서 `params`가 키로 존재하기만 해도
-      // foreign field로 거부한다 — public_api(kind 생략 포함)에서만 보낸다.
+      // Builder loader.py rejects `params` as a foreign field if it exists as a key in kind=file/url —
+      // send only for public_api (omit kind).
       ...(!source.kind || source.kind === "public_api" ? { params: source.params } : {}),
       ...(source.alias ? { alias: source.alias } : {}),
       ...(source.schema ? { schema: source.schema } : {}),
@@ -128,29 +127,28 @@ export function toBuilderSpec(spec: BuildSpec): BuilderSpec {
 }
 
 /**
- * Studio BuildSpec을 Builder가 받는 spec 텍스트(JSON=YAML 부분집합)로 직렬화한다.
+ * Serialize Studio BuildSpec to spec text received by Builder (JSON=YAML subset).
  *
- * @param spec - Studio 측 BuildSpec.
- * @returns `/validate`·`/build`의 spec 필드에 넣을 문자열.
+ * @param spec - Studio BuildSpec.
+ * @returns String for the spec field in `/validate` and `/build` requests.
  */
 export function serializeSpec(spec: BuildSpec): string {
   return JSON.stringify(toBuilderSpec(spec));
 }
 
 /**
- * Builder BuildSpec(snake_case)을 Studio BuildSpec(camelCase)으로 역변환한다.
+ * Reverse-map Builder BuildSpec (snake_case) to Studio BuildSpec (camelCase).
  *
- * toBuilderSpec()의 역연산. Builder에서 저장된 스펙을 불러와 Studio에서
- * 재편집할 때(#120), 그리고 YAML 에디터에서 파싱한 스펙을 GUI로 반영할 때(#250) 사용한다.
+ * Inverse of toBuilderSpec(). Used when loading saved specs from Builder to re-edit in Studio
+ * (#120), and when parsing specs from YAML editor to reflect in GUI (#250).
  *
- * `spec`은 `BuilderSpec`이 명시적으로 모델링하는 필드 외의 임의 최상위 키를 가질 수
- * 있다(YAML 텍스트를 그대로 파싱한 원본 객체) — 그런 키는 삭제하지 않고 `extra`에
- * 보존한다(#250 canonical field round-trip). 호출부는 Zod로 *검증만* 하고, 이 함수에는
- * 항상 파싱 직후의 원본 객체를 넘겨야 한다 — Zod `.parse()` 결과를 넘기면 스키마에
- * 없는 키가 조용히 strip될 수 있다.
+ * `spec` may carry arbitrary top-level keys beyond those `BuilderSpec` explicitly models
+ * (raw parsed YAML object) — these are not discarded but preserved in `extra` (#250 canonical
+ * field round-trip). Callers validate with Zod *only* and must always pass the original object
+ * right after parsing — Zod `.parse()` result will silently strip schema-unknown keys.
  *
- * 파라미터 타입은 `BuilderSpec`(알려진 필드만)이지만, 런타임에는 YAML을 그대로 파싱한
- * 객체처럼 그 외 임의 키를 실제로 가질 수 있다 — TS가 그 키들의 존재를 알 수 없을 뿐이다.
+ * Parameter type is `BuilderSpec` (known fields only), but at runtime may actually carry any
+ * keys like a raw YAML-parsed object — TypeScript just cannot see them.
  */
 export function fromBuilderSpec(spec: BuilderSpec): BuildSpec {
   const extra: Record<string, JsonValue> = {};
@@ -166,8 +164,8 @@ export function fromBuilderSpec(spec: BuilderSpec): BuildSpec {
       ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
       ...(source.provider !== undefined ? { provider: source.provider } : {}),
       ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
-      // wire의 file/url source에는 params가 없다 — Studio 내부 SourceRef.params는
-      // 필드가 여전히 required이므로 빈 객체로 채운다.
+      // file/url sources from wire have no params — Studio SourceRef.params is still
+      // required, so fill with empty object.
       params: source.params ?? {},
       ...(source.alias ? { alias: source.alias } : {}),
       ...(source.schema ? { schema: source.schema } : {}),
@@ -178,7 +176,7 @@ export function fromBuilderSpec(spec: BuilderSpec): BuildSpec {
       ...(source.method ? { method: source.method } : {}),
     })),
     exports: spec.exports.map((e) => {
-      // Builder의 output_path는 Studio ExportTarget에 대응 필드가 없어 options에 보존한다(#121).
+      // Builder output_path has no corresponding field in Studio ExportTarget, so store in options (#121).
       const options: Record<string, JsonValue> = { ...(e.options ?? {}) };
       if (e.output_path) {
         options["outputPath"] = e.output_path;

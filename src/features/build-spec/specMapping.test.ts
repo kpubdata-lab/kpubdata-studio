@@ -172,8 +172,8 @@ describe("toBuilderSpec/fromBuilderSpec — extra 최상위 필드 round-trip (#
       sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
       exports: [{ format: "jsonl" }],
       metadata: {},
-      // GUI 조작으로는 정상적으로 생기지 않지만(YAML 텍스트를 손으로 편집해 만들 수 있는
-      // 상황을 가정), extra에 known 필드와 같은 키가 들어와도 known 필드가 이겨야 한다.
+       // Never happens via GUI (would require hand-editing YAML), but assume extra key conflicts
+       // with known field — known field should win.
       extra: { title: "extra에만 있던 제목", datasetId: "should-not-win" } as never,
     };
 

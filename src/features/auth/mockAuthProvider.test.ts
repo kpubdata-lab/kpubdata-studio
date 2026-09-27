@@ -1,9 +1,8 @@
 /**
- * mockAuthProvider (#263) 테스트.
+ * mockAuthProvider (#263) test.
  *
- * generic AuthProvider 계약(signIn/signUp/signOut)이 mock 모드에서 동작하는지, 실패
- * 메시지 경로가 있는지, 그리고 반환된 AuthSession에 password가 절대 섞여 들어가지
- * 않는지 확인한다.
+ * Verify generic AuthProvider contract (signIn/signUp/signOut) works in mock mode, failure
+ * message path exists, and returned AuthSession never includes password.
  */
 import { describe, expect, it } from "vitest";
 import { mockAuthProvider } from "./mockAuthProvider";

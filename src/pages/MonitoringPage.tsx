@@ -1,13 +1,13 @@
 /**
- * Monitoring 화면 (`/monitoring`) — 시스템 리소스·Build 통계 모니터링 (#264, #302, #303).
+ * Monitoring screen (`/monitoring`) — system resource·Build statistics monitoring (#264, #302, #303).
  *
- * 본 파일은 상태·polling·탭 조립만 담고 표시 컴포넌트는
- * `features/monitoring/components/*`로 분리했다(#303).
+ * This file handles only state·polling·tab assembly; display components separated
+ * to `features/monitoring/components/*` (#303).
  *
- * Builder #516 실제 계약에 정합한다(#302):
- * - GET /monitoring/summary + GET /monitoring/builds?window=24h&bucket=hour 병렬 호출
- * - 실연동 모드에서 오류가 나면 mock으로 대체하지 않는다(정상 오인 방지).
- * - 401/403은 "권한 없음" 상태로 구분한다(ApiError.status 기반).
+ * Conforms to Builder #516 actual contract (#302):
+ * - GET /monitoring/summary + GET /monitoring/builds?window=24h&bucket=hour parallel calls
+ * - In real integration mode, errors are not masked as mock (prevents false success)
+ * - 401/403 distinguished as "unauthorized" status (based on ApiError.status).
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, PageHeader, Button, ErrorState } from "@/shared/ui";
@@ -68,7 +68,7 @@ export function MonitoringPage() {
       }
       previousStatusRef.current = summary.status;
     } catch (err) {
-      // 401/403은 인증/인가 문제로 구분해 안내한다 — 실API 응답 기준(#302).
+       // 401/403 distinguished as authentication/authorization issue — based on real API response (#302).
       if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
         setUnauthorized(true);
         setLoading("error");

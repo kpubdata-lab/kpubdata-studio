@@ -1,8 +1,8 @@
 /**
- * common TextInput component.
+ * Common TextInput component.
  *
- * uses forwardRef to allow react-hook-form's register to inject ref 구현한다.
- * 오류 상태(invalid)에 따라 테두리 색과 focus 링을 바꾼다.
+ * Uses forwardRef to allow react-hook-form's register to inject ref. Changes border
+ * color and focus ring based on error state (invalid).
  */
 import { forwardRef, type InputHTMLAttributes } from "react";
 import { cn } from "./cn";

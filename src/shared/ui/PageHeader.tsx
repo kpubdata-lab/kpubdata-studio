@@ -1,7 +1,8 @@
 /**
- * common PageHeader component.
+ * Common PageHeader component.
  *
- * unify "eyebrow label + title + description + right action" pattern repeated at page top일한다.
+ * Unify "eyebrow label + title + description + right action" pattern repeated at
+ * page top.
  */
 import type { ReactNode } from "react";
 import { cn } from "./cn";
@@ -20,10 +21,10 @@ export interface PageHeaderProps {
 }
 
 /**
- * render page heading (label/title/description/action) in consistent layout.
+ * Render page heading (label/title/description/action) in consistent layout.
  *
  * @param props - eyebrow/title/description/actions.
- * @returns 페이지 헤더 엘리먼트.
+ * @returns Page header element.
  */
 export function PageHeader({
   eyebrow,

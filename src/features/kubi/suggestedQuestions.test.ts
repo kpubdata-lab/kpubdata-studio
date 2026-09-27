@@ -1,15 +1,15 @@
 /**
- * 추천 질문 선택 로직 회귀 (#S-kubi-suggest).
+ * Regression tests for suggested questions selection logic (#S-kubi-suggest).
  *
- * - context가 없으면 Quality/Build 실패/SQL 질문을 강제로 노출하지 않는다.
- * - Dataset/Run/Quality context가 실제로 있을 때만 그에 맞는 질문을 노출한다.
- * - 최근 답변 turn이 있으면 그 구조화 단서로 follow-up을 바꾼다(LLM 재호출 없음).
+ * - Without context, do not force-expose Quality/Build failed/SQL questions.
+ * - Expose matching questions only when there is actual Dataset/Run/Quality context.
+ * - If there is a recent response turn, change follow-ups based on its structured cues (no LLM re-call).
  */
 import { describe, expect, it } from "vitest";
 import { START_QUESTIONS, getSuggestedQuestions } from "./suggestedQuestions";
 import type { KubiContext, KubiEvidence, KubiTurn } from "./types";
 
-/** 필수 필드만 채운 최소 evidence(테스트가 지정한 조각을 덮어쓴다). */
+/** Minimal evidence with only required fields (tests override specific fields). */
 function evidence(partial: Partial<KubiEvidence>): KubiEvidence {
   return {
     fetchedAt: "2026-09-02T00:00:00Z",

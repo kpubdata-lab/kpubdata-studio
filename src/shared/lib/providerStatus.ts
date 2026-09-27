@@ -1,18 +1,19 @@
 /**
- * single point for Provider status → user text conversion.
+ * Single point for Provider status → user text conversion.
  *
- * - `describeCredentialReadiness` (current user-facing): ProviderPage / Add Data가
- *   generic live probe 대신 쓰는 credential readiness 표현. Provider 수준에서
- *   신뢰성 있게 확인 가능한 축(요구 여부 / effective configured / 사용자 저장
- *   credential 유무)만 다룬다.
- * - `describeProviderProbe` (retained): Builder `ProviderTestResponse` 매핑.
- *   generic probe는 임의의 첫 Dataset을 필수 파라미터 없이 호출하므로 "연결 성공
- *   여부"로 신뢰할 수 없어 user flow에서는 제거됐다(#S-provider-probe). Builder
- *   API contract는 유지되므로 매핑/테스트는 남겨 둔다(직접 진단용).
- * - 어느 경우든 선택한 Dataset의 실제 사용 가능 여부는 Preview가 SSOT다.
+ * - `describeCredentialReadiness` (current user-facing): Used by ProviderPage / Add Data
+ *   instead of generic live probe for credential readiness expression. Only addresses
+ *   axes reliably confirmable at Provider level (requirement / effective configured /
+ *   user-saved credential presence).
+ * - `describeProviderProbe` (retained): Maps Builder `ProviderTestResponse`. Generic
+ *   probe calls arbitrary first Dataset without required params, so "connection success"
+ *   cannot be trusted and was removed from user flow (#S-provider-probe). Builder API
+ *   contract maintained, so mapping/tests retained (direct diagnostics).
+ * - In either case, Preview is SSOT for actual availability of chosen Dataset.
  *
- * 문구는 모두 `provider.status.*` 키로 옮겼다(#350). 상수로 고정하면 모듈 로드 시점에
- * 언어가 박혀 전환이 반영되지 않으므로, 호출 시점에 해석한다.
+ * All wording moved to `provider.status.*` keys (#350). Fixed constants would lock
+ * language at module load time, preventing language switch reflection, so interpretation
+ * happens at call time.
  */
 import { i18n } from "@/shared/i18n";
 
@@ -68,22 +69,22 @@ export function providerProbeScopeNote(): string {
 }
 
 /**
- * express Provider status as **credential readiness**(#S-provider-probe). Provider
- * 수준에서 신뢰성 있게 확인 가능한 축은 이것뿐이다:
- *   - provider가 credential을 요구하는지(`requires_credential`)
- *   - effective credential이 구성돼 있는지(`configured`: user credential > server
- *     default > 없음, ADR 0012)
- *   - 이 사용자가 직접 저장한 credential이 있는지(GET /providers/{provider}/credential)
+ * Express Provider status as **credential readiness** (#S-provider-probe). Only axis
+ * reliably confirmable at Provider level:
+ *   - Whether provider requires credential (`requires_credential`)
+ *   - Whether effective credential is configured (`configured`: user credential > server
+ *     default > none, ADR 0012)
+ *   - Whether this user has saved credential (GET /providers/{provider}/credential)
  *
- * "이 API Key가 해당 Dataset에서 실제 유효한가 / 활용신청이 됐는가 / 필수 파라미터가
- * 맞는가 / 실제 응답이 성공하는가" 는 Provider 수준에서 판정하지 않는다 — 선택한
- * Dataset의 Preview가 SSOT다. generic probe(`ProviderTestResponse`)를 사용자-facing
- * "연결 성공 여부" 로 쓰지 않는다.
+ * "Is this API Key valid for this Dataset / Is access requested / Are required params
+ * correct / Does actual response succeed" is not determined at Provider level —
+ * selected Dataset's Preview is SSOT. Generic probe (`ProviderTestResponse`) not used
+ * as user-facing "connection success".
  */
 export interface CredentialReadinessInput {
   /** GET /providers summary `requires_credential`. */
   requiresCredential: boolean;
-  /** effective `configured` in GET /providers summary (user credential > server default > none음). */
+   /** Effective `configured` in GET /providers summary (user credential > server default > none). */
   summaryConfigured: boolean;
   /**
    * whether this user has saved credential (GET /providers/{provider}/credential

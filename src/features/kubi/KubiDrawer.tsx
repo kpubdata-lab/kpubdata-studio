@@ -1,9 +1,10 @@
 /**
- * 전역 Kubi drawer (#247, #256).
+ * Global Kubi drawer (#247, #256).
  *
- * `Layout`에서 한 번만 mount되어 어느 화면에서도 동일한 Kubi UI가 열리도록 한다(page별 중복
- * 렌더 금지). 실제 LLM 연동, Evidence/Generated SQL, Suggested Action은 `KubiContent`
- * (`useKubiSession` 공유)가 담당하고, 이 컴포넌트는 drawer 자체의 열림/닫힘·포커스 트랩만 맡는다.
+ * Mounted once in `Layout` so the same Kubi UI can open from any page (avoid per-page duplicate
+ * renders). Actual LLM integration, evidence/Generated SQL, and Suggested Actions are handled by
+ * `KubiContent` (shared via `useKubiSession`); this component only manages opening/closing the
+ * drawer and focus trapping.
  */
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
@@ -11,9 +12,10 @@ import { useUIStore } from "@/shared/hooks/useUIStore";
 import { KubiContent } from "./KubiContent";
 
 /**
- * 어디서나 열리는 전역 Kubi drawer.
+ * A globally-openable Kubi drawer.
  *
- * @returns drawer가 닫혀 있으면 `null`, 열려 있으면 현재 화면 context를 반영한 Kubi 대화 패널.
+ * @returns `null` if closed, otherwise the Kubi conversation panel reflecting the current
+ *          screen context.
  */
 export function KubiDrawer() {
   const { t } = useTranslation();
@@ -24,8 +26,8 @@ export function KubiDrawer() {
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const [expanded, setExpanded] = useState(false);
 
-  // 열리는 순간 닫기 버튼으로 포커스를 옮기고, 모달 안에서 포커스를 순환시킨다.
-  // 닫히면 drawer를 열었던 요소로 포커스를 되돌린다(접근성).
+  // When opened, move focus to the close button and cycle focus within the drawer.
+  // When closed, restore focus to the element that opened the drawer (accessibility).
   useEffect(() => {
     if (!isOpen) return;
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -68,8 +70,8 @@ export function KubiDrawer() {
 
   return (
     <>
-      {/* 클릭 전용 overlay — 탭 순서/접근성 트리에서 제외(ESC·닫기 버튼이 AT 대안).
-          aria-hidden이므로 라벨을 넣지 않는다. */}
+      {/* Click-only overlay — excluded from tab order/accessibility tree (ESC and the close
+           button handle interaction inside). It is aria-hidden, so do not add a label. */}
       <button
         aria-hidden="true"
         className="fixed inset-0 z-40 bg-zinc-950/45"

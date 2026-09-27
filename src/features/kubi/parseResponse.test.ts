@@ -46,7 +46,7 @@ describe("parseKubiResponse (#256)", () => {
   });
 
   it("rejects a forbidden action disguised as an allowed type with extra fields", () => {
-    // 예: PATCH_BUILDSPEC이지만 patch가 비어있어 아무 의미 없는 케이스는 min(1)로 거부되어야 한다.
+     // Example: PATCH_BUILDSPEC with empty patch array — min(1) items required, must be rejected.
     const payload = {
       ...VALID_JSON,
       suggestedActions: [{ type: "PATCH_BUILDSPEC", runId: "r1", patch: [], reason: "..." }],

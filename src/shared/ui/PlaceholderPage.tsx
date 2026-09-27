@@ -1,9 +1,10 @@
 /**
- * common placeholder for routes not yet wired to actual screens (#247).
+ * Common placeholder for routes not yet wired to actual screens (#247).
  *
- * Epic #246's new IA is backward compat슈 단위로 순차 구현된다. App Shell/Navigation(#247) 단계에서
- * route와 metadata)뉴가 먼저 존재해야 이후 화면 이슈들이 동일한 layout에서 이어받을 수 있으므로,
- * 아직 구현되지 않은 화면은 관련 없는 기존 화면을 재사용하는 대신 명시적인 placeholder를 보여준다.
+ * Epic #246's new IA is backward-compat-per-phase sequentially implemented. In App
+ * Shell/Navigation (#247) stage, routes and menu must exist first so subsequent screen
+ * issues inherit same layout; unimplemented screens show explicit placeholder instead
+ * of reusing unrelated existing screen.
  */
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
@@ -22,10 +23,10 @@ export interface PlaceholderPageProps {
 }
 
 /**
- * placeholder page showing "coming soon" guidance with title/description.
+ * Placeholder page showing "coming soon" guidance with title/description.
  *
  * @param props - eyebrow/title/description/note.
- * @returns placeholder 화면 엘리먼트.
+ * @returns Placeholder screen element.
  */
 export function PlaceholderPage({ eyebrow, title, description, note }: PlaceholderPageProps) {
   const { t } = useTranslation();

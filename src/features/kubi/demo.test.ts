@@ -1,5 +1,5 @@
 /**
- * Kubi mock/dev 데모 단위 테스트 (#256 review — mock mode Kubi 데모).
+ * Unit tests for Kubi mock/dev demo (#256 review — Kubi demo in mock mode).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildKubiDemoResponse, isKubiDemoAvailable, runKubiDemoQuery } from "./demo";
@@ -81,7 +81,7 @@ describe("buildKubiDemoResponse (#256 데모)", () => {
       id: "datago__air::missing::max_null_ratio::pm10",
       label: "missing/max_null_ratio",
     });
-    // OPEN_QUALITY/ADD_REPORT_BLOCK만 제안한다 — Build 실행/Publish 등은 절대 제안하지 않는다.
+    // Only OPEN_QUALITY and ADD_REPORT_BLOCK are rendered — Build/execute/Publish etc. are never shown.
     expect(response.suggestedActions.map((a) => a.type).sort()).toEqual(["ADD_REPORT_BLOCK", "OPEN_QUALITY"]);
   });
 

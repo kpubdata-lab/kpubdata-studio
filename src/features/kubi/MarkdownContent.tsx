@@ -24,7 +24,7 @@ function inline(text: string): ReactNode[] {
   return parts;
 }
 
-/** raw HTML을 해석하지 않는 작은 Markdown renderer. LLM 문자열은 항상 React text node로 남는다. */
+/** A minimal Markdown renderer that does not parse raw HTML. LLM strings are always rendered as React text nodes only. */
 export function MarkdownContent({ children }: { children: string }) {
   const lines = children.replace(/\r\n/g, "\n").split("\n");
   const nodes: ReactNode[] = [];

@@ -1,8 +1,8 @@
 /**
- * New Build 마법사의 폼 ↔ BuildSpec 조립 로직 (#379로 NewBuildPage에서 분리).
+ * New Build wizard form ↔ BuildSpec assembly logic (#379 separated from NewBuildPage).
  *
- * 화면 렌더와 분리해 두면 "무엇이 스펙이 되는가"를 JSX 를 읽지 않고 확인할 수 있고,
- * 단계 구성이 바뀌어도 조립 규칙은 한 곳에 남는다.
+ * Keeping rendering separate from assembly lets us verify "what becomes spec" without
+ * reading JSX. When step order changes, assembly rules stay in one place.
  */
 import { parseSourceParams } from "@/features/build-spec/paramsInput";
 import {
@@ -51,7 +51,7 @@ export function buildSteps(t: (k: string) => string): StepItem[] {
   ];
 }
 
-// 각 단계에서 Next 진입 전에 검증할 폼 필드. Template/Preview/Review 단계는 입력 필드가 없다.
+// Form fields to validate before advancing in each step. Template/Preview/Review steps have no input fields.
 export const STEP_FIELDS: Array<Array<keyof BuildFormValues>> = [
   [],
   ["datasetId", "title", "description"],
@@ -63,26 +63,24 @@ export const STEP_FIELDS: Array<Array<keyof BuildFormValues>> = [
 ];
 
 /**
- * 폼 입력값으로 BuildSpec 후보를 만들고 zod로 검증한다.
+ * Build a BuildSpec candidate from form inputs and validate with zod.
  *
- * 폼은 소스 하나와 outputPath만 다루지만, 편집 대상 스펙은 소스를 여럿 갖거나 폼에
- * 대응 필드가 없는 메타데이터(source_url, hf_repo 등)를 갖고 있을 수 있다. `base`가
- * 주어지면 폼이 표현하지 못하는 부분을 그대로 이어받아, 편집 왕복만으로 스펙이
- * 손실되는 것을 막는다 (#120).
+ * The form handles only one source and outputPath, but the spec being edited may have
+ * multiple sources or metadata fields not in the form (source_url, hf_repo, etc.).
+ * If `base` is provided, preserve non-form parts to prevent data loss during edit round-trips (#120).
  *
- * @param values - 현재 폼 입력값.
-
- * @param base - 편집 중인 원본 스펙(신규 작성 시 생략).
- * @returns 검증을 통과한 스펙 또는 한국어 오류 메시지.
+ * @param values - Current form input values.
+ * @param base - Base spec being edited (omitted for new builds).
+ * @returns Validated spec or Korean error message.
  */
 export function toBuildSpec(
   values: BuildFormValues,
   base?: BuildSpec | null,
 ): { spec?: BuildSpec; error?: string } {
-  // 저장된 초안/스펙을 복원했는데 sourceParams의 secret 값이 이미 redaction marker로 지워져
-  // 있으면 fail-closed — marker를 실제 파라미터처럼 Builder에 제출하지 않는다(S07, Add Data
-  // Workbench의 `buildSpecFromDraft`와 동일 정책). 사용자가 값을 다시 입력해야 한다.
-  // `[REDACTED]`(specStore/savedSpecs) · `__KPD_*_REDACTED__`(draft) · `__SCRUBBED_*` 모두 포함.
+  // If loading saved draft/spec with sourceParams, secret values are already redacted markers.
+  // Fail-closed: don't submit redaction markers as real parameters to Builder (S07, Add Data
+  // Workbench's `buildSpecFromDraft` uses the same policy). User must re-enter values.
+  // `[REDACTED]` (specStore/savedSpecs) · `__KPD_*_REDACTED__` (draft) · `__SCRUBBED_*` all covered.
   if (sourceParamsHasRedactedSecret(values.sourceParams)) {
     return { error: i18n.t("newBuild.errors.draftSecretRemoved") };
   }
@@ -98,19 +96,19 @@ export function toBuildSpec(
     description: values.description,
     sources: [
       { provider: values.provider, dataset: values.sourceDataset, params: parsedParams.data ?? {} },
-      // 폼이 편집하지 않는 2번째 이후 소스는 원본 그대로 보존한다.
+      // Form does not edit sources[1+]; preserve as-is from base.
       ...(base?.sources.slice(1) ?? []),
     ],
     exports: values.exportFormats.map((format) => ({
       format,
       options: format === "huggingface" ? { outputPath: values.outputPath } : undefined,
     })),
-    // 원본 메타데이터를 먼저 펼쳐 폼이 다루지 않는 키를 유지하고, outputPath만 덮어쓴다.
+    // Spread original metadata first to keep form-unhandled keys; overwrite outputPath only.
     metadata: { ...base?.metadata, outputPath: values.outputPath },
   };
 
-  // 폼이 편집하지 않는 영역(base의 sources[1+], 원본 metadata)에 redaction marker가 남아
-  // 있으면 여기서 fail-closed — sources[0] sourceParams 검사만으로는 놓치는 경로다.
+  // Form-unhandled areas (base.sources[1+], original metadata) may still have redaction markers.
+  // Fail-closed here: sourceParams[0] check alone misses this path.
   if (jsonValueHasRedactedSecret(candidate)) {
     return { error: i18n.t("newBuild.errors.specSecretRemoved") };
   }
@@ -123,9 +121,9 @@ export function toBuildSpec(
 }
 
 /**
- * BuildSpec을 BuildFormValues로 변환한다.
+ * Transform BuildSpec to BuildFormValues.
  *
- * @param spec - BuildSpec 객체.
+ * @param spec - BuildSpec object.
  * @returns BuildFormValues.
  */
 export function toFormValues(spec: BuildSpec): BuildFormValues {
@@ -134,8 +132,8 @@ export function toFormValues(spec: BuildSpec): BuildFormValues {
     datasetId: spec.datasetId,
     title: spec.title,
     description: spec.description,
-    // New Build Wizard는 kind="public_api" source만 편집한다(file/url은 #250 Add Data
-    // Workbench 전용) — provider/dataset이 없는 소스를 불러오면 빈 문자열로 대체한다.
+    // New Build Wizard edits only kind="public_api" sources (file/url are #250 Add Data
+    // Workbench exclusive). If base has missing provider/dataset, substitute empty strings.
     provider: firstSource.provider ?? "",
     sourceDataset: firstSource.dataset ?? "",
     sourceParams: Object.keys(firstSource.params).length > 0
@@ -147,10 +145,10 @@ export function toFormValues(spec: BuildSpec): BuildFormValues {
 }
 
 /**
- * localStorage 초안 저장 경계 정책(S07): sourceParams JSON에 credential-like 값이 들어와도
- * 평문으로 남지 않도록 redact한다. 저장 직전(saveCurrentDraft)과 복원 직후(restoreDraft의
- * read-time rewrite) 양쪽에서 같은 함수를 써 초안 저장본이 항상 이 불변식을 만족하게 한다.
- * Add Data draft(`saveAddDataDraft`)와 동일한 `paramsRedaction` 헬퍼·sentinel을 재사용한다.
+ * localStorage draft storage boundary policy (S07): redact credential-like values in sourceParams JSON
+ * so they don't persist as plaintext. Apply the same function at save time (saveCurrentDraft) and
+ * restore time (restoreDraft read-time rewrite) to maintain this invariant. Reuses the same
+ * `paramsRedaction` helper and sentinel as Add Data draft (`saveAddDataDraft`).
  */
 export function redactDraftForStorage(values: BuildFormValues): BuildFormValues {
   return { ...values, sourceParams: redactSourceParamsText(values.sourceParams).text };

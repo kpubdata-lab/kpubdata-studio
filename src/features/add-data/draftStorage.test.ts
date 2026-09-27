@@ -1,8 +1,8 @@
 /**
- * Add Data local draft — secret redaction on save (PR #283 리뷰 대응, Epic #246).
+ * Add Data local draft — secret redaction on save (PR #283 review response, Epic #246).
  *
- * url source의 secret query parameter가 localStorage에 평문으로 저장되지 않는지,
- * 저장된 redacted draft를 복원한 뒤 재입력 없이 Preview/Build가 되지 않는지 검증한다.
+ * Verify url source secret query parameters don't save to localStorage as plaintext,
+ * and restored redacted draft cannot Preview/Build without re-entering.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { clearAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "./draftStorage";

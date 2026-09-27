@@ -1,7 +1,7 @@
 /**
- * initAuth (auth ↔ builderApi 배선 + OIDC 부트스트랩) 테스트.
+ * initAuth (auth ↔ builderApi wiring + OIDC bootstrap) test.
  *
- * keycloak-js SDK 경계는 mock한다.
+ * Mock keycloak-js SDK boundary.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -24,7 +24,7 @@ const { mockKeycloak, KeycloakCtor } = vi.hoisted(() => {
 
 vi.mock("keycloak-js", () => ({ default: KeycloakCtor }));
 
-// initAuth가 builderApi에 등록하는 콜백을 가로채, 401 복구 계약을 직접 호출해 검증한다.
+// Intercept callbacks that initAuth registers to builderApi; verify 401 recovery contract directly.
 const wiring = vi.hoisted(() => ({
   authError: undefined as undefined | (() => void | boolean | Promise<void | boolean>),
   tokenProvider: undefined as undefined | (() => string | null | Promise<string | null>),
@@ -105,7 +105,7 @@ describe("initAuth — OIDC enabled", () => {
     mockKeycloak.tokenParsed = { email: "tester@example.com", name: "테스터" };
 
     initAuth();
-    // 동기 지점에서는 이미 initializing.
+    // Already initializing at sync point.
     expect(useAuthStore.getState().oidcStatus).toBe("initializing");
 
     await flush();
@@ -113,7 +113,7 @@ describe("initAuth — OIDC enabled", () => {
     expect(useAuthStore.getState().oidcStatus).toBe("authenticated");
     expect(useAuthStore.getState().email).toBe("tester@example.com");
     expect(useAuthStore.getState().name).toBe("테스터");
-    // raw token은 store에 저장하지 않는다.
+    // Raw token not stored in store.
     expect(useAuthStore.getState().token).toBeNull();
   });
 
@@ -157,9 +157,9 @@ describe("initAuth — 401 복구 계약 (#189)", () => {
     await flush();
 
     await expect(wiring.authError?.()).resolves.toBe(true);
-    // 세션은 유지된다 — 재로그인으로 내보내지 않는다.
+    // Session maintained — not redirected to re-login.
     expect(useAuthStore.getState().oidcStatus).toBe("authenticated");
-    // 갱신된 토큰은 token provider를 통해 노출된다(store에는 저장하지 않는다).
+    // Refreshed token exposed via token provider (not stored in store).
     await expect(wiring.tokenProvider?.()).resolves.toBe("fresh-token");
   });
 

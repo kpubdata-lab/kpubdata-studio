@@ -1,5 +1,5 @@
 /**
- * New Build 1단계의 템플릿 카드 (#379로 NewBuildPage에서 분리).
+ * New Build step 1 template card (separated from NewBuildPage in #379).
  */
 import { catalogDataset, type CatalogState } from "@/features/build-spec/newBuildModel";
 import { isTemplateAvailable, type BuildTemplate } from "@/features/build-spec/templates";
@@ -7,7 +7,7 @@ import { i18n } from "@/shared/i18n";
 import { providerLabel } from "@/shared/lib/providerLabels";
 
 
-/** 템플릿 선택 버튼 — 사용 가능/준비 중 두 그리드가 이 렌더링 하나를 공유한다(#Phase2 UI polish). */
+/** Template select button — availability and ready states share this render (Phase 2 UI polish). */
 export function TemplateButton({ template, catalog, onSelect }: { template: BuildTemplate; catalog: CatalogState; onSelect: (template: BuildTemplate) => void }) {
   const available = isTemplateAvailable(template, catalog);
   const resolvedDataset = catalogDataset(catalog.providers, template.values.provider, template.values.sourceDataset);

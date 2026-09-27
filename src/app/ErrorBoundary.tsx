@@ -1,18 +1,18 @@
 /**
- * 앱 전역 React ErrorBoundary와 공통 오류 폴백 UI (#81).
+ * App-global React ErrorBoundary and shared error fallback UI (#81).
  *
- * 렌더 중 발생한 예외가 SPA 전체를 빈 화면으로 만들지 않도록, 클래스 컴포넌트
- * `ErrorBoundary`가 하위 트리의 throw를 잡아 한국어 폴백 화면(새로고침 동작 포함)을
- * 보여준다. 동일한 폴백을 라우터 `errorElement`에서도 재사용한다.
+ * When an exception occurs during render, the `ErrorBoundary` class component catches
+ * throws in the subtree and displays a Korean fallback screen (with refresh action).
+ * The same fallback is also reused in the router `errorElement`.
  */
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useRouteError } from "react-router-dom";
 import { i18n } from "@/shared/i18n";
 
 /**
- * 오류 발생 시 보여줄 한국어 폴백 화면.
+ * Fallback screen shown when an error occurs.
  *
- * @returns 새로고침 동작이 포함된 오류 안내 UI.
+ * @returns Error guidance UI with refresh action.
  */
 export function ErrorFallback() {
   return (
@@ -38,11 +38,11 @@ export function ErrorFallback() {
 }
 
 /**
- * 라우터 `errorElement`로 사용하는 오류 화면.
+ * Error screen used as router `errorElement`.
  *
- * 라우트 로더/액션/렌더 오류를 콘솔에 남기고 공통 폴백을 보여준다.
+ * Logs route loader/action/render errors to console and displays shared fallback.
  *
- * @returns 오류 폴백 UI.
+ * @returns Error fallback UI.
  */
 export function RouteErrorBoundary() {
   const error = useRouteError();
@@ -51,17 +51,17 @@ export function RouteErrorBoundary() {
 }
 
 interface ErrorBoundaryProps {
-  /** 보호할 하위 트리 */
+  /** Subtree to protect */
   children: ReactNode;
 }
 
 interface ErrorBoundaryState {
-  /** 하위 트리에서 예외가 발생했는지 여부 */
+  /** Whether exception occurred in subtree */
   hasError: boolean;
 }
 
 /**
- * 하위 트리의 렌더 예외를 잡아 폴백 UI로 대체하는 앱 전역 ErrorBoundary.
+ * App-global ErrorBoundary that catches render exceptions in subtree and replaces with fallback UI.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false };
@@ -83,14 +83,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 }
 
 /**
- * 단일 feature 영역에서만 보여줄 한국어 폴백 카드 (#97).
+ * Fallback card shown only in a single feature area (#97).
  *
- * 전역 폴백과 달리 화면 전체를 차지하지 않으며, 셸(사이드바/헤더)을 유지한 채 해당 feature
- * 영역만 오류 UI로 대체한다. 새로고침 대신 영역만 다시 그리는 ‘다시 시도’를 제공한다.
+ * Unlike the global fallback, it doesn't occupy the entire screen; instead replaces only
+ * the feature area while preserving the shell (sidebar/header). Provides a "Retry" action
+ * that re-renders only the area instead of full refresh.
  *
- * @param feature - 오류가 난 기능의 i18n 키(예: "router.features.preview").
- * @param onRetry - 경계 상태를 초기화해 하위 트리를 다시 렌더하는 콜백.
- * @returns 영역 한정 오류 안내 UI.
+ * @param feature - i18n key of the errored feature (e.g., "router.features.preview").
+ * @param onRetry - Callback to reset boundary state and re-render subtree.
+ * @returns Feature-scoped error guidance UI.
  */
 function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: () => void }) {
   return (
@@ -116,17 +117,17 @@ function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: 
 }
 
 interface FeatureErrorBoundaryProps {
-  /** 폴백 메시지에 노출할 기능 이름의 i18n 키 */
+  /** i18n key of feature name to show in fallback message */
   feature: string;
-  /** 보호할 feature 하위 트리 */
+  /** Subtree to protect */
   children: ReactNode;
 }
 
 /**
- * 개별 feature(라우트 세그먼트)의 렌더 예외를 잡아 해당 영역만 폴백으로 대체하는 경계 (#97).
+ * Feature-scoped ErrorBoundary that catches render exceptions in a route segment and replaces only that area with fallback (#97).
  *
- * 전역 `ErrorBoundary`까지 버블업해 앱 전체가 빈 화면이 되는 것을 막아, 한 기능의 오류가
- * 나머지 셸(내비게이션/헤더)에 영향을 주지 않게 한다. ‘다시 시도’ 시 경계 상태만 초기화한다.
+ * Prevents an error in one feature from bubbling up to the global `ErrorBoundary` and blanking the entire app.
+ * Instead, one feature's error doesn't affect the rest of the shell (nav/header). On "Retry", only the boundary state resets.
  */
 export class FeatureErrorBoundary extends Component<
   FeatureErrorBoundaryProps,

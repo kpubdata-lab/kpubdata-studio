@@ -1,11 +1,12 @@
 /**
- * common FormField component.
+ * Common FormField component.
  *
- * consistently layout label + help text + error message, connect for accessibility via control에
- * 연결할 id와 aria-describedby를 계산해 render-prop으로 넘긴다(제안 §8/§12.3).
+ * Consistently layout label + help text + error message, connected for accessibility
+ * via computing id and aria-describedby values to pass to control via render-prop
+ * (proposal §8/§12.3).
  *
- * 사용 예:
- *   <FormField id="datasetId" label="데이터셋 ID" help="예: kma-daily-observations"
+ * Usage example:
+ *   <FormField id="datasetId" label="Dataset ID" help="E.g. kma-daily-observations"
  *              error={errors.datasetId?.message}>
  *     {(field) => <TextInput {...register("datasetId")} {...field} />}
  *   </FormField>
@@ -42,10 +43,10 @@ export interface FormFieldProps {
 }
 
 /**
- * render form field wrapper with connected label/help/error and accessibility props.
+ * Render form field wrapper with connected label/help/error and accessibility props.
  *
  * @param props - id/label/help/error/required/children.
- * @returns 폼 필드 엘리먼트.
+ * @returns Form field element.
  */
 export function FormField({
   id,
