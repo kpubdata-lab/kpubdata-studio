@@ -1,8 +1,10 @@
 /**
- * Builds detail 패널 — 선택한 run 의 Pipeline/Stage Progress, Quality, 실패 증거,
- * Artifacts/Dataset 이동 (#379로 BuildsPage에서 분리).
+ * Builds detail panel — Pipeline/Stage Progress, Quality, failure evidence,
+ * and Artifacts/Dataset navigation for the selected run (split from
+ * BuildsPage in #379).
  *
- * 표면별 상태를 독립으로 들고 있어 하나가 실패해도 나머지를 계속 보여준다(#255 §8/§13).
+ * Each surface holds its own state independently, so one failing does not
+ * hide the others (#255 §8/§13).
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -79,12 +81,15 @@ export function RunDetailPanel({
   const { isConfigured } = useAssistConfig();
   const [searchParams] = useSearchParams();
 
-  // "이 Run 분석"은 더 이상 전역 Kubi drawer를 자동으로 열지 않는다(#255 §2) — 대신 이 Run summary
-  // 바로 아래에 inline card를 펼친다. Run을 바꾸면 카드를 닫아, 이전 Run의 분석 결과가 새 Run의
-  // context에서 유효한 것처럼 보이지 않게 한다(#256 stale-context guard와 같은 원칙).
+  // "Analyze this Run" no longer auto-opens the global Kubi drawer (#255
+  // §2) — instead it expands an inline card right under this Run summary.
+  // Switching runs closes the card so the previous run's analysis never
+  // looks valid in the new run's context (same principle as the #256
+  // stale-context guard).
   const [showKubiAnalysis, setShowKubiAnalysis] = useState(false);
-  // "이번 분석 클릭은 접수됐지만 아직 seed하지 않은" 상태. URL context가 canonical해질 때까지
-  // 보류한다. 클릭 1회 = 이 flag 1회 set = seed 1회. run이 바뀌면 폐기한다.
+  // "This analysis click was accepted but not yet seeded" state. Held
+  // until the URL context becomes canonical. One click = one flag set = one
+  // seed. Discarded when the run changes.
   const [analyzePending, setAnalyzePending] = useState(false);
 
   useEffect(() => {
@@ -94,10 +99,12 @@ export function RunDetailPanel({
 
   const analyzeQuestion = t("builds.detail.analyzeQuestion", { id: runId });
 
-  // "context가 canonical하다" = 현재 URL이 이미 normalizeBuildContextSearch의 고정점이다.
-  // BuildsPage의 정규화 effect와 정확히 같은 helper·같은 동등성 판정을 재사용한다(로직 복제 금지).
-  // spec/stages가 아직 settle되지 않았으면(추가로 dataset/stage/source가 붙을 수 있으므로)
-  // 겉보기 no-op이어도 canonical로 보지 않는다. error도 settle로 취급해 영구 대기를 막는다.
+  // "Context is canonical" = the current URL is already a fixed point of
+  // normalizeBuildContextSearch. Reuses exactly the same helper and equality
+  // check as BuildsPage's normalization effect (no logic duplication). If
+  // spec/stages have not settled yet (dataset/stage/source may still be
+  // appended), it is not canonical even if it looks like a no-op. Error also
+  // counts as settled, preventing an eternal wait.
   const contextCanonical = useMemo(() => {
     const specSettled = specState.status === "loaded" || specState.status === "error";
     const stagesSettled = stagesState.status === "loaded" || stagesState.status === "error";
@@ -108,11 +115,14 @@ export function RunDetailPanel({
     );
   }, [searchParams, specState, stagesState]);
 
-  // 보류된 분석 의도는 URL이 canonical해진 뒤에 seed한다. seed 직전에 pending flag를 내려
-  // 같은 클릭에 대한 재실행을 막는다(effect가 유일한 seeder다). 다음 "이 Run 분석" 클릭은
-  // flag를 다시 set하므로 재분석/에러 후 재시도는 그대로 가능하다 — 중복 방지는 "한 클릭당
-  // 한 번"이지 "run 수명 동안 한 번"이 아니다. (seed는 KubiRunAnalysis mount 시 useKubiSession의
-  // 기존 pending-seed 소비 effect가 ask()로 실행한다 — 그 경로/atomic consumeSeed는 미변경.)
+  // The deferred analysis intent is seeded once the URL is canonical. The
+  // pending flag is lowered right before seeding to prevent re-running for
+  // the same click (this effect is the sole seeder). The next "Analyze this
+  // Run" click sets the flag again, so re-analysis and retry-after-error
+  // still work — dedup is "once per click", not "once per run lifetime".
+  // (Seeding runs via useKubiSession's existing pending-seed consumption
+  // effect when KubiRunAnalysis mounts, calling ask() — that path and its
+  // atomic consumeSeed are unchanged.)
   useEffect(() => {
     if (!analyzePending || !isConfigured || !contextCanonical) return;
     setAnalyzePending(false);
@@ -124,9 +134,11 @@ export function RunDetailPanel({
   const failureEvidence = stagesState.status === "loaded" ? collectFailureEvidence(sources) : [];
   const stageDetails = useStageDetails(runId, stagesState);
 
-  // Quality error(요청 실패)와 Builder semantic unavailable(정상 응답, 결과 없음)을 절대 하나로
-  // 합치지 않는다(#255 후속 보완 §5). overall state는 정상 응답이 있을 때만 계산하고, error는
-  // 아래 렌더링에서 qualityState.status === "error"로 완전히 분리해서 다룬다.
+  // Never merge a Quality error (request failure) with Builder semantic
+  // unavailable (a normal response with no result) into one state (#255
+  // follow-up §5). Overall state is computed only when a normal response
+  // exists; errors are handled fully separately below via
+  // qualityState.status === "error".
   const qualityStatus = qualityState.status === "loaded" ? overallQualityState(qualityState.data) : undefined;
   const qualityFails = qualityState.status === "loaded" ? failQualityResults(qualityState.data) : [];
   const qualityScopedResults = qualityState.status === "loaded" ? flattenQualityResults(qualityState.data) : [];
@@ -143,16 +155,18 @@ export function RunDetailPanel({
   const events = eventsState.status === "loaded" ? eventsState.data.events : [];
   const failedEvents = failedRunEvents(events);
 
-  // Quality Center(#254)로 넘어갈 때도 현재 dataset/run 문맥을 잃지 않도록 같은 쿼리 관례를 쓴다.
+  // Navigating to Quality Center (#254) uses the same query convention so
+  // the current dataset/run context is not lost.
   const datasetId = specState.status === "loaded" ? extractDatasetId(specState.data.spec) : null;
   const qualityCenterHref = `/quality?${new URLSearchParams({
     ...(datasetId ? { dataset: datasetId } : {}),
     run: runId,
   }).toString()}`;
 
-  // Run 전체 status: registry에 살아있는 job(live)이 있으면 그 값이 가장 최신이다.
-  // 없으면(historical) 목록 요약(listItem.status)을 신뢰한다 — 절대 stage 상태를 run status로
-  // 뭉개서 재계산하지 않는다(#255 §6 원칙).
+  // Whole-run status: a live job in the registry is the freshest value.
+  // Otherwise (historical), trust the list summary (listItem.status) —
+  // never recompute run status by mashing stage states together
+  // (#255 §6 principle).
   const runStatus: BuildRunStatus | null = live.kind === "job" ? mapLiveStatus(live.job.status) : listItem?.status ?? null;
 
   return (
@@ -202,16 +216,20 @@ export function RunDetailPanel({
             variant="secondary"
             className="ml-auto"
             onClick={() => {
-              // 클릭은 즉시 inline card를 연다.
+              // The click opens the inline card immediately.
               setShowKubiAnalysis(true);
-              // API Key가 없으면 seed하지 않는다 — pending seed는 항상 useKubiSession의
-              // 일반 ask()로 소비되고, ask()는 isConfigured가 아니면 no_key 에러를 만든다
-              // (#286 후속 보완). inline card는 그래도 열어 KubiRunAnalysis가 no-key 안내를
-              // 보여주게 한다.
+              // Without an API Key, do not seed — the pending seed is always
+              // consumed by useKubiSession's ordinary ask(), and ask() raises
+              // a no_key error when not isConfigured (#286 follow-up). The
+              // inline card still opens so KubiRunAnalysis can show the
+              // no-key notice.
               if (!isConfigured) return;
-              // 클릭은 "이번 분석 의도"만 접수한다. 실제 seed는 위 effect가 URL이 canonical해진
-              // 뒤 1회 실행한다 — canonical이면 사실상 즉시. thin context로 turn이 고정돼 곧바로
-              // stale로 빠지는 race를 막고(C1), 재분석/에러 후 재시도는 그대로 가능하다.
+              // The click only records "the intent to analyze". The actual
+              // seed runs once, in the effect above, after the URL becomes
+              // canonical — effectively immediate when already canonical.
+              // Prevents the race where the turn is pinned to a thin context
+              // and immediately goes stale (C1); re-analysis and
+              // retry-after-error still work.
               setAnalyzePending(true);
             }}
           >
@@ -248,17 +266,18 @@ export function RunDetailPanel({
           <EmptyState title={t("builds.stage.noneTitle")} description={t("builds.stage.noneDesc")} />
         ) : (
           <div className="mt-4 flex flex-col gap-3">
-            {/* multi-source면 source별로 각자의 pipeline row를 보여준다 — 첫 source를 전체
-                대표로 뭉개지 않는다. */}
+            {/* multi-source shows a pipeline row per source — the first source is
+                not collapsed into a representative. */}
             {sources.map((source) => (
               <SourcePipelineRow key={source.source_key} source={source} details={stageDetails} />
             ))}
           </div>
         )}
         {qualityState.status === "loaded" && qualityChecksPassed ? (
-          // "별도 Validate stage"를 새로 만들지 않고, Silver/Gold 흐름과 이어지는 compact
-          // checkpoint로만 Quality를 언급한다(#255 후속 보완 §6). 실제 판정은 아래 Quality
-          // 카드가 정본이며, 여기서는 재계산 없이 그 값을 그대로 요약한다.
+          // No separate "Validate stage" is invented; Quality appears only
+          // as a compact checkpoint continuing the Silver/Gold flow (#255
+          // follow-up §6). The Quality card below is the authoritative
+          // verdict — this summary just relays it without recomputation.
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">Quality checkpoint</span>
             <QualityStateBadge state={qualityStatus ?? "NOT_EVALUATED"} />
@@ -284,9 +303,10 @@ export function RunDetailPanel({
         {qualityState.status === "loading" || qualityState.status === "idle" ? (
           <Skeleton className="mt-4 h-16 w-full" />
         ) : qualityState.status === "error" ? (
-          // (B) 요청 실패 — Builder의 semantic unavailable(정상 응답)과 절대 같은 상태로 합치지
-          // 않는다(#255 후속 보완 §5). UNAVAILABLE badge를 표시하지 않고, 403/404/network·5xx에
-          // 맞는 오류 메시지만 보여준다.
+          // (B) Request failure — never merged into the same state as
+          // Builder semantic unavailable (a normal response) (#255 follow-up
+          // §5). No UNAVAILABLE badge; only the error message matching
+          // 403/404/network/5xx.
           <div className="mt-3">
             <p className="text-sm font-semibold text-red-700 dark:text-red-300">{t("builds.quality.failedTitle")}</p>
             <p className="mt-1 text-sm text-red-700 dark:text-red-300">
@@ -298,8 +318,8 @@ export function RunDetailPanel({
             </p>
           </div>
         ) : qualityState.data.availability === "unavailable" ? (
-          // (A) 정상 응답 + availability=unavailable — Builder가 명시적으로 "결과 없음"이라고
-          // 답한 것이지 조회 실패가 아니다.
+          // (A) Normal response + availability=unavailable — Builder
+          // explicitly answered "no result", not a failed lookup.
           <EmptyState title={t("builds.quality.unavailableTitle")} description={t("builds.quality.unavailableDesc")} />
         ) : qualityState.data.evaluated_checks === 0 ? (
           <EmptyState title={t("builds.quality.noChecksTitle")} description={t("builds.quality.noChecksDesc")} />
@@ -330,8 +350,9 @@ export function RunDetailPanel({
               </div>
             ) : null}
 
-            {/* PASS 상세 전체 나열은 피하고, WARN/FAIL만 근거(source/category/rule/column/actual/threshold)와
-                함께 보여준다(#255 후속 보완 §1). */}
+            {/* Avoid listing all PASS details; only WARN/FAIL with their evidence
+                (source/category/rule/column/actual/threshold) shown alongside
+                (#255 follow-up §1). */}
             {qualityIssues.length > 0 ? (
               <ul className="flex flex-col gap-2">
                 {qualityIssues.map((result, index) => (
