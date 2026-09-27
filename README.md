@@ -418,3 +418,49 @@ manually and check every item.
 > (`https://<keycloak-host>/realms/<realm>/broker/google/endpoint`).
 
 > Pages 데모는 mock 모드(`VITE_USE_REAL_BUILDER` 미설정)라 Builder를 호출하지 않으므로 등록 대상이 아니다.
+
+---
+
+## In English
+
+Korean is the primary language of this README. This section is the minimum needed
+to decide whether to keep reading — not a full translation. See
+[ADR 0003 in kpubdata](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0003-language-policy.md)
+for why it is arranged this way.
+
+### What this is
+
+The visual workspace for the KPubData family. A React + TypeScript single-page app
+that talks to
+[kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) over its OpenAPI
+contract — browse sources, author a BuildSpec, run a build, inspect quality and
+schema drift.
+
+### What it deliberately does not do
+
+- **It does not hold your provider keys.** Provider credentials live in React state
+  for the duration of the session and are never written to browser storage. The
+  separate LLM assistant key is stored deliberately, under a different policy.
+- **It does not make authorization decisions.** Hiding a screen is a convenience;
+  the actual check is Builder's. A report that the UI merely hid something is
+  expected to say what Builder allowed.
+- **It does not execute SQL on your behalf from the assistant.** The assistant
+  suggests; you run it.
+
+### Requirements
+
+**Node 22 or newer.** The test toolchain reaches `webidl.util.markAsUncloneable`
+through undici, which exists from Node 22 — on Node 20 every test worker fails to
+start. The deployable artifact is a static build, so an end user needs no Node at
+all.
+
+```bash
+npm ci
+npm run dev          # demo mode, no Builder required
+npm run dev:real     # against a running Builder
+```
+
+### Contributing
+
+Issues and pull requests are welcome in **Korean or English**. Titles are in
+English; bodies may be either. [CONTRIBUTING.md](CONTRIBUTING.md) has the details.
