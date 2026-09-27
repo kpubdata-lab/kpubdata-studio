@@ -110,7 +110,7 @@ describe("Ask KPubData live Builder-confirmed source picker", () => {
     // findBy* only waits for the element to appear and does not wait for properties to change.
     // This select is initially rendered enabled and becomes disabled when run stages arrive;
     // on slow runners the property change may be missed. Wait for the condition itself.
-    await waitFor(() => expect(screen.getByLabelText("Ask KPubData 분석 Stage")).toBeDisabled());
+    await waitFor(() => expect(screen.getByLabelText("분석 Stage")).toBeDisabled());
     // Keep the disabled attribute set for accessibility.
     expect(screen.getByText("이 Run에는 source가 여러 개 있습니다. 분석할 source를 먼저 선택하세요.")).toBeInTheDocument();
 
