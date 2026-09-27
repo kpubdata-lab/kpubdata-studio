@@ -1,12 +1,15 @@
 /**
- * ProviderPage credential 상태·race 테스트.
+ * ProviderPage credential state and race tests.
  *
- * 검증 대상:
- * - credential configured / not-configured 상태를 각각 정확히 렌더
- * - GET /providers/{p}/credential 503(운영자가 master key 미구성)을 "저장소 미구성"으로
- *   구분해서 표시 — "아직 등록 안 함"이나 일반 오류와 섞지 않는다
- * - provider A 조회가 pending인 동안 B로 전환하면 A의 늦은 응답이 B 패널을 오염하지 않는다
- * - A의 credential mutation(저장) 완료 뒤의 늦은 metadata refresh도 B를 덮지 않는다
+ * Verifies:
+ * - configured / not-configured credential states each render exactly
+ * - GET /providers/{p}/credential 503 (operator has no master key) is shown
+ *   as "store not configured" — never blended with "not registered yet" or
+ *   ordinary errors
+ * - Switching from A to B while A's fetch is pending: A's late response does
+ *   not pollute the B panel
+ * - A late metadata refresh after A's credential mutation (save) also never
+ *   overwrites B
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -84,7 +87,7 @@ describe("ProviderPage credential 상태", () => {
     expect(
       await screen.findByText("자격 증명 저장소가 아직 구성되지 않았습니다"),
     ).toBeInTheDocument();
-    // 일반 오류 문구나 등록/삭제 컨트롤로 오인되지 않는다.
+    // Not mistakable for an ordinary error message or register/delete controls.
     expect(screen.queryByText("자격 증명 상태를 불러오지 못했습니다")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "등록하기" })).not.toBeInTheDocument();
@@ -152,10 +155,10 @@ describe("ProviderPage 연결 상태 표현 (credential readiness)", () => {
     expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
     expect(screen.getByText("자격 증명 (Credential) 상태")).toBeInTheDocument();
     expect(screen.getByText("연결 상태")).toBeInTheDocument();
-    // 사용자 저장 credential이 있으면 "API Key 등록됨" + Preview 안내.
+    // With a user-saved credential: "API Key registered" + Preview guidance.
     expect(screen.getAllByText("API Key 등록됨").length).toBeGreaterThan(0);
     expect(screen.getByText(/실제 Dataset API 사용 가능 여부는 Add Data의 Preview/)).toBeInTheDocument();
-    // generic probe UI는 없다.
+    // There is no generic probe UI.
     expect(screen.queryByRole("button", { name: "연결 테스트" })).not.toBeInTheDocument();
     expect(screen.queryByText("연결 / 실제 API 확인")).not.toBeInTheDocument();
   });
@@ -172,7 +175,7 @@ describe("ProviderPage 연결 상태 표현 (credential readiness)", () => {
       })),
     );
     renderProviders();
-    // 목록 배지 — provider 선택 전에도 요약 기준으로 표시된다.
+    // List badges — shown by summary criteria even before selecting a provider.
     expect(await screen.findAllByText("API Key 미설정")).not.toHaveLength(0);
     await selectProvider("datago");
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
@@ -212,10 +215,10 @@ describe("ProviderPage provider 전환 race", () => {
     await selectProvider("datago");
     await selectProvider("kosis");
 
-    // kosis는 자기 상태(미등록)를 보여준다.
+    // kosis shows its own state (unregistered).
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
 
-    // datago의 늦은 응답이 도착할 시간을 준다.
+    // Gives datago's late response time to arrive.
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     expect(screen.queryByText(/DATAGO-STALE/)).not.toBeInTheDocument();
@@ -257,11 +260,11 @@ describe("ProviderPage provider 전환 race", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
 
-    // 저장이 진행 중인 동안 B로 전환.
+    // Switch to B while the save is in flight.
     await selectProvider("kosis");
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
 
-    // B로 떠난 뒤에는 stale A metadata refresh를 새로 시작하지 않는다.
+    // After leaving for B, no new stale A metadata refresh is started.
     await waitFor(() => expect(datagoStored).toBe(true));
     expect(datagoCredentialGets).toBe(1);
 
@@ -300,7 +303,7 @@ describe("ProviderPage provider 전환 race", () => {
     await waitFor(() => expect(resolveKosis).toBeDefined());
     await waitFor(() => expect(resolvePut).toBeDefined());
     resolvePut?.(HttpResponse.json({ provider: "datago", configured: true, masked: "DG", updated_at: null }));
-    // A의 stale mutation 완료가 B request-generation을 증가시키지 않는다.
+    // A's stale mutation completion does not increase B's request-generation.
     await waitFor(() => expect(datagoCredentialGets).toBe(1));
     expect(datagoCredentialGets).toBe(1);
     resolveKosis?.(HttpResponse.json({ configured: false, masked: null, updated_at: null }));
