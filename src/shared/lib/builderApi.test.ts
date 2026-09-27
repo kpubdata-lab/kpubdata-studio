@@ -1,7 +1,7 @@
 /**
  * builderApi retry policy test (#117).
  *
- * Non-idempotent POST /build must not retry on 5xx; idempotent GET은 재시도한다.
+ * Non-idempotent POST /build must not retry on 5xx; idempotent GET does retry.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

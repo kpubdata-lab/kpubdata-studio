@@ -221,9 +221,10 @@ export function BuildPublishPage() {
             {readiness.data.blockers.length > 0 ? <IssueList title="Blockers" issues={readiness.data.blockers} tone="error" /> : null}
             {readiness.data.warnings.length > 0 ? <IssueList title="Warnings" issues={readiness.data.warnings} tone="warning" /> : null}
             {readiness.data.blockers.some((issue) => CREDENTIAL_BLOCKER_CODES.has(issue.code)) ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialNote")}</p> : null}
-            {/* credential_required 는 "어디에도 없다"(credential_unavailable)와 다르다 —
-                이 배포가 서버 토큰을 빌려주지 않는다는 뜻이라, 사용자가 직접 할 수 있는
-                조치가 있다. 그 조치를 알려주지 않으면 서버 문제로 읽힌다. */}
+                        {/* credential_required differs from "nowhere"
+                (credential_unavailable) — it means more direct user actions
+                exist. The two codes carry different guidance; the same
+                guidance is never reused. */}
             {readiness.data.blockers.some((issue) => issue.code === "credential_required") ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialRequiredNote")}</p> : null}
           </div>
         ) : null}

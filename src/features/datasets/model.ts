@@ -39,7 +39,7 @@ export function datasetHasStageStatus(dataset: DatasetSummary, status: StageStat
   );
 }
 
-/** Catalog에서는 source별 stage를 펼치지 않고 실제 상태를 한 개의 정직한 요약으로 표시한다. */
+/** The Catalog does not expand per-source stages; it shows one honest summary of the actual state. */
 export function summarizeDatasetStages(stages: Record<string, SourceStageStatus>): DatasetStageSummary {
   const sources = Object.values(stages);
   if (sources.length === 0) {

@@ -33,8 +33,8 @@ export interface ProviderProbeInput {
   responseCode?: number;
   /**
    * whether credential is (effectively) configured for this principal.
-   * saved credential exists but도 403이면 단순 인증 실패가 아니라 Dataset/API별
-   * 사용 권한 문제일 수 있으므로 "확인 필요"로 승격한다.
+   * With a saved credential a 403 still may be per-Dataset/API permission
+   * rather than plain auth failure, so it is escalated to "needs review".
    */
   credentialConfigured?: boolean;
 }
@@ -88,7 +88,7 @@ export interface CredentialReadinessInput {
   summaryConfigured: boolean;
   /**
    * whether this user has saved credential (GET /providers/{provider}/credential
-   * metadata)). server default와 구분한다 — 목록처럼 이 값을 모를 때는 생략한다.
+   * metadata)). Distinguished from the server default — omitted when unknown, like in the list.
    */
   userCredentialConfigured?: boolean;
 }

@@ -34,8 +34,8 @@ export type SelectedRunLiveState =
   | { kind: "error"; message: string };
 
 /**
- * @param runId - 지켜볼 run id. null이면 polling하지 않는다.
- * @returns 최신 async job 상태(존재하면). registry에 없으면 historical 데이터를 쓰라는 신호.
+ * @param runId - Run id to watch; null disables polling.
+ * @returns Latest async job state when present; a signal to use historical data when absent from the registry.
  */
 export function useSelectedRunPolling(runId: string | null): SelectedRunLiveState {
   const [state, setState] = useState<SelectedRunLiveState>({ kind: "idle" });

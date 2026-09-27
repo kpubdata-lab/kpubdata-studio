@@ -1,5 +1,5 @@
 /**
- * Discover(#249) model 헬퍼 테스트.
+ * Discover (#249) model-helper tests.
  */
 import { describe, expect, it } from "vitest";
 import type { CatalogResponse } from "@/shared/lib/builderApi";

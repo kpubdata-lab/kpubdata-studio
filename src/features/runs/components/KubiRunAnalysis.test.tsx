@@ -1,5 +1,5 @@
 /**
- * KubiRunAnalysis (#255 §2) — Builds/Runs "이 Run 분석" inline card.
+ * KubiRunAnalysis (#255 §2) — the Builds/Runs "Analyze this Run" inline card.
  *
  * No new Kubi engine — `useKubiSession` is reused as-is, so these tests
  * mock that hook and check the card shows exactly the right thing per turn

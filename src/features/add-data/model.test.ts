@@ -293,7 +293,7 @@ describe("redactBuildSpecForDisplay (#283 리뷰 대응, Epic #246)", () => {
     expect(JSON.stringify(displaySpec.sources[0].params)).not.toContain(secret);
     // Non-sensitive values keep Builder's canonical JSON types as-is.
     expect(displaySpec.sources[0].params.page).toBe(1);
-    // 원본 spec 객체는 변형되지 않는다(다른 곳에서 실제 제출에 계속 쓰인다).
+    // The original spec object is not mutated (it keeps being used for the real submission elsewhere).
     expect(original.sources[0].params.serviceKey).toBe(secret);
   });
 
