@@ -2,9 +2,11 @@
  * Recent Work composition helper (#260).
  *
  * Merges Datasets/Builds (Builder lookups) with Reports/Saved BuildSpecs
- * 합치되, 종류·출처(Builder vs 이 브라우저)·정확한 이동 경로를 각 항목에 명시적으로
- * 태그해 화면이 서로 다른 자산을 뭉뚱그리지 않게 한다. 순수 함수라 Builder 응답이나
- * localStorage를 직접 다루지 않는다 — 호출부가 이미 로드한 데이터를 넘겨준다.
+ * (Studio local) into one list, tagging each item explicitly with its kind,
+ * origin (Builder vs this browser) and exact navigation path so the screen
+ * never blurs different assets together. Pure functions — they touch
+ * neither Builder responses nor localStorage; callers pass already-loaded
+ * data.
  */
 import type { DatasetSummary } from "@/shared/lib/builderApi";
 import type { BuildListItem } from "@/shared/lib/types";

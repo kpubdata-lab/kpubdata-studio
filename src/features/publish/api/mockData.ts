@@ -1,13 +1,16 @@
 /**
- * Publish readiness/실행 결과의 결정적 mock 데이터 (UI audit #4).
+ * Deterministic mock data for publish readiness/results (UI audit #4).
  *
- * `getPublishReadiness`/`publishBuild`는 다른 모든 Builder 연동 엔드포인트(getDataset,
- * listBuildStages, getBuildQuality 등, `src/features/datasets/api/index.ts` 참고)와 달리
- * `isRealBuilderEnabled()` 분기가 없어 mock 모드에서도 항상 실제 네트워크 요청을 시도했다.
- * 로컬/데모 환경에는 Builder 서버가 없으므로 요청이 실패해 readiness 카드가 항상
- * loading→error(또는 실질적으로 빈 카드)로만 보였다 — 이 파일은 그 mock 스위치가 참조하는
- * 결정적 fixture다. Builder readiness를 재계산하지 않고, 이미 알려진 mock run별로 실제
- * Builder가 반환했을 값을 그대로 하드코딩한다(#246 원칙: 값을 새로 만들지 않는다).
+ * Unlike every other Builder endpoint (getDataset, listBuildStages,
+ * getBuildQuality etc. — see `src/features/datasets/api/index.ts`),
+ * `getPublishReadiness`/`publishBuild` had no `isRealBuilderEnabled()`
+ * branch, so mock mode always attempted real network requests. Local/demo
+ * environments have no Builder server, the request failed, and the
+ * readiness card only ever showed loading→error (effectively an empty
+ * card) — this file is the deterministic fixture that mock switch points
+ * at. It does not recompute Builder readiness; it hardcodes what the real
+ * Builder would have returned per known mock run (#246 principle: never
+ * invent values).
  */
 import type { PublishReadinessResponse, PublishResponse } from "@/shared/lib/builderApi";
 

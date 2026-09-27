@@ -1,6 +1,6 @@
 /**
- * System Resources 탭 (#264, #303) — Builder API/Queue/Workers/Artifact Store 카드.
- * 측정값 null은 0이 아니라 "—"로 표시한다(#516/#302 원칙).
+ * System Resources tab (#264, #303) — Builder API/Queue/Workers/Artifact Store cards.
+ * Null measurements render as "—", never 0 (#516/#302 principle).
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -61,7 +61,7 @@ function SystemHealthCard({
   api: MonitoringApiStatus;
 }) {
   const { t } = useTranslation();
-  // aggregate는 healthy/degraded 2값이고, api 자체 측정 불가는 availability가 알려준다.
+  // aggregate is two-valued (healthy/degraded); api-immeasurable is conveyed by availability.
   const statusLabel =
     api.availability === "unavailable"
       ? t("monitoring.api.unavailable")

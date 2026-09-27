@@ -188,9 +188,9 @@ describe("generateBuildSpec — ① zod 파싱 게이트", () => {
 
     expect(result.spec).toBeNull();
     expect(result.status).toBe("partial");
-    expect(result.attempts).toBe(3); // 최초 1회 + MAX_REPAIR_ATTEMPTS(2)
+    expect(result.attempts).toBe(3); // initial 1 + MAX_REPAIR_ATTEMPTS (2)
     expect(calls).toHaveLength(3);
-    expect(validateFn).not.toHaveBeenCalled(); // 파싱을 못 넘었으므로 Builder 까지 가지 않는다
+    expect(validateFn).not.toHaveBeenCalled(); // Never passed parsing, so it does not reach Builder
   });
 
   it("sources 가 없는 스펙은 구조 검증에서 막힌다", async () => {
@@ -292,7 +292,7 @@ describe("generateBuildSpec — ③ Builder /validate 게이트", () => {
     const result = await generateBuildSpec(provider, "아무거나", { catalog: CATALOG, validateFn });
 
     expect(result.spec).toBeNull();
-    expect(result.remaining_problems).toHaveLength(1); // 빈 목록을 "문제 없음"으로 읽지 않는다
+    expect(result.remaining_problems).toHaveLength(1); // Does not read an empty list as "no problems"
   });
 
   it("status:error 면 재시도하지 않고 즉시 중단한다", async () => {

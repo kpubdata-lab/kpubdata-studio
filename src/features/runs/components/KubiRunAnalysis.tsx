@@ -93,12 +93,13 @@ export function KubiRunAnalysis({ onClose, onAskMore }: KubiRunAnalysisProps) {
 
               {turn.response ? (
                 <>
-                  {/* Drawer(KubiContent)와 동일한 안전 Markdown 렌더러를 재사용한다(#320). */}
+                  {/* Reuses the same safe Markdown renderer as the Drawer (KubiContent) (#320). */}
                   <MarkdownContent>{turn.response.answer}</MarkdownContent>
 
-                  {/* status가 "ok"여도 cross-check가 근거/action/SQL을 제외했으면 그 사실을
-                      숨기지 않는다 — KubiContent와 동일한 경고 + EvidenceSection 표현을 쓴다.
-                      status === "error" 전용 ErrorNotice(위)와는 별개다. */}
+                  {/* Even with status "ok", if cross-check excluded evidence/
+                      action/SQL, that fact is not hidden — uses the same
+                      warning + EvidenceSection presentation as KubiContent.
+                      Distinct from the status === "error" ErrorNotice above. */}
                   {turn.error?.kind === "hallucinated_refs" ? (
                     <p role="alert" className="text-[11px] text-amber-700 dark:text-amber-400">
                       {turn.error.message}

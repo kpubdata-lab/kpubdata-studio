@@ -611,7 +611,7 @@ export const datasetQualityHistoryResponseSchema = z.object({
 });
 
 /**
- * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
+ * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 follow-up).
  * The Home "QUALITY WARN (24H)" KPI reads this
  * authoritative value with no synthesized numbers. Contains no per-run
  * quality_results/dataset/owner.
@@ -756,7 +756,7 @@ export type QualitySummaryResponse = z.infer<typeof qualitySummaryResponseSchema
 
 /**
  * Monitoring (#516) — Builder actual wire contract (GET /monitoring/summary,
- * GET /monitoring/builds) 그대로. The availability vocabulary is the same
+ * verbatim. The availability vocabulary is the same
  * available/partial/unavailable shared with quality (#486); never-measured
  * values come back as null, never disguised as 0 (#516 principle).
  */
@@ -808,7 +808,7 @@ export const monitoringBucketSchema = z.object({
 
 /**
  * recent run status passes BuildIndex internal value as-is (builder sends as
- * str로 직렬화) — in-flight statuses beyond ok/failed/cancelled can
+ * serialized as str) — in-flight statuses beyond ok/failed/cancelled can
  * appear, so a plain string is accepted instead of a narrow enum; display
  * mapping is the UI's job.
  */

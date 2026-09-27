@@ -51,7 +51,7 @@ function mockManifest(buildId: string): BuildManifest {
     schema_version: "1.0.0",
     build_id: buildId,
     started_at: dataset.startedAt,
-    finished_at: dataset.finishedAt, // undefined를 허용
+    finished_at: dataset.finishedAt, // allows undefined
     build_environment: {
       python_version: "3.12.3",
       kpubdata_version: "0.4.0",

@@ -100,8 +100,9 @@ function GoldStageBox({
 }
 
 /**
- * Output은 Stage가 아니다 — Gold export가 실제로 확인될 때만 compact하게 보여주고,
- * completed/failed 같은 Stage 상태로 표현하지 않는다.
+ * Output is not a Stage — shown compactly only when the Gold export is
+ * actually confirmed, never expressed with Stage states like
+ * completed/failed.
  */
 function OutputBox({ detail }: { detail: StageDetailEntry | undefined }) {
   const data = pickStageDetail(detail, "gold");

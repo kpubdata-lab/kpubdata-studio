@@ -2,7 +2,7 @@
  * Configure step — credential prerequisite / readiness (#S-add-data,
  * #S-provider-probe) and required request parameter UX regression tests.
  *
- * Generic provider probe ("Provider 연결 확인" button) was removed as unreliable —
+ * The generic provider probe ("check provider connection" button) was removed as unreliable —
  * Add Data uses only authoritative prerequisite (requires credential AND
  * configured=false), and actual data availability is verified by Preview.
  */

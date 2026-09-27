@@ -1,7 +1,7 @@
 /**
  * collection of zod-based input/domain schemas used by Studio.
  *
- * runtime validation to ensure form inputs and API payloads don't violate shared type contracts 규칙을 제공한다.
+ * runtime validation rules ensuring form inputs and API payloads don't violate shared type contracts.
  */
 import { i18n } from "@/shared/i18n";
 import { z } from "zod";
@@ -53,9 +53,11 @@ export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, i18n.t("sch
 /**
  * schema validating fields that single source data reference must have (#250, #498).
  *
- * required fields by kind are discriminatedd union 대신 `superRefine`으로 강제한다 — Builder
- * 계약(SourceRef) 자체가 OpenAPI object schema로 조건부 필수를 표현하지 않고
- * `additionalProperties: true` 위에서 loader/validator가 강제하는 것과 같은 패턴이다.
+ * required fields by kind are enforced via `superRefine` instead of a
+ * discriminated union — the same pattern as the Builder contract
+ * (SourceRef) itself, which expresses no conditional requirements in its
+ * OpenAPI object schema and lets the loader/validator enforce them over
+ * `additionalProperties: true`.
  */
 export const sourceRefSchema = z
   .object({
@@ -121,8 +123,9 @@ export const buildSpecSchema = z.object({
 /**
  * schema validating New Build Wizard form input values (actual form persisted as localStorage draft).
  *
- * saved draft (#84)을 복원할 때 형태가 깨졌거나 오래된 버전인 경우를 안전하게 걸러내기 위해
- * 사용한다. 빌드 실행용 스펙(`buildSpecSchema`)이 아니라 폼 입력 형태를 기술한다.
+ * used to safely filter broken or outdated shapes when restoring a saved
+ * draft (#84). Describes the form-input shape, not the executable build
+ * spec (`buildSpecSchema`).
  */
 export const buildFormValuesSchema = z.object({
   datasetId: z.string(),

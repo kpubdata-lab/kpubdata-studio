@@ -221,7 +221,7 @@ describe("P6 safeRunIds — provenance 기반 exact-value 면제 (#284)", () => 
   });
 
   it("F. safe set 에 없는 run-id 처럼 생긴 문자열은 면제하지 않는다(exact match 만)", () => {
-    const lookalike = "other-dataset-private-1788004513063"; // entropy ≥ 4, safe set 밖
+    const lookalike = "other-dataset-private-1788004513063"; // entropy ≥ 4, outside the safe set
     expect(looksLikeSecret(lookalike, safeRunIds)).toBe(true);
 
     const scrubber = createSecretScrubber("p6-f", { safeRunIds });
@@ -319,7 +319,7 @@ describe("safe evidence id — canonical quality identifier 면제 (#319)", () =
 describe("P6 adjacency — safe run id 옆에 붙은 시크릿 조각도 스크럽 (#284)", () => {
   const RUN_ID = "datago-air-quality-1788004513062";
   const safeRunIds = new Set([RUN_ID]);
-  const HIGH_ENTROPY = "xJ7kL9mN2pQ4rT6vW8yB3cD5eF7gH9j"; // 31자, entropy ≥ 4
+  const HIGH_ENTROPY = "xJ7kL9mN2pQ4rT6vW8yB3cD5eF7gH9j"; // 31 chars, entropy ≥ 4
 
   const SEPARATORS: [name: string, char: string][] = [
     ["slash", "/"],
@@ -352,8 +352,8 @@ describe("P6 adjacency — safe run id 옆에 붙은 시크릿 조각도 스크�
   it("safe id 가 긴 고엔트로피 토큰을 둘로 쪼개도 양쪽 조각이 모두 스크럽된다", () => {
     // Each fragment is under 24 chars once the safe id is removed — per-fragment entropy checks alone would miss them.
     const scrubber = createSecretScrubber("p6-adj-split", { safeRunIds });
-    const head = "xJ7kL9mN2pQ4"; // 12자
-    const tail = "rT6vW8yB3cD5eF7gH9j"; // 19자
+    const head = "xJ7kL9mN2pQ4"; // 12 chars
+    const tail = "rT6vW8yB3cD5eF7gH9j"; // 19 chars
     const out = scrubber.scrubText(`${head}/${RUN_ID}/${tail}`);
     expect(out).toContain(RUN_ID);
     expect(out).not.toContain(head);

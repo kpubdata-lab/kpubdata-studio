@@ -1,8 +1,9 @@
 /**
- * loadCatalog (#249) mock/real 분기 테스트.
+ * loadCatalog (#249) mock/real branch tests.
  *
- * mock 모드에서는 네트워크를 전혀 치지 않고 결정적 fixture를 반환하고, 실연동 모드에서는
- * Builder GET /catalog를 호출하는지 확인한다(#246 mock/real 구분 원칙).
+ * Verifies mock mode returns the deterministic fixture without touching the
+ * network, and real mode calls Builder GET /catalog (#246 mock/real
+ * separation principle).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadCatalog } from "./api";

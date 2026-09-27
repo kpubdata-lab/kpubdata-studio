@@ -108,7 +108,7 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
-/** Dataset별 quality 요청을 최대 4개로 제한하고, 개별 실패를 N/A로 격리한다. */
+/** Caps per-dataset quality requests at 4 and isolates individual failures as N/A. */
 export async function loadDatasetCatalog(signal?: AbortSignal): Promise<CatalogDataset[]> {
   const datasets = await listDatasets(50, signal);
   return mapWithConcurrency(datasets, 4, async (dataset) => {

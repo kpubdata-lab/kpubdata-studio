@@ -171,7 +171,7 @@ export function renderMarkdownToReact(markdown: string): ReactNode {
       const key = `block-${index}`;
       switch (block.type) {
         case "heading": {
-          const tag = `h${block.level + 2}`; // 문서 내 상대 크기 — h1은 Report 제목이 쓴다.
+          const tag = `h${block.level + 2}`; // Relative size within the document — h1 is reserved for the Report title.
           return createElement(tag, { key, className: "font-semibold" }, renderInlineToReact(block.text, key));
         }
         case "paragraph":
