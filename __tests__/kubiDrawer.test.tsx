@@ -22,18 +22,18 @@ describe("global Ask KPubData drawer (#247)", () => {
 
   it("is closed by default and opens from the topbar Ask KPubData button", () => {
     renderLayoutAt("/");
-    expect(screen.queryByRole("dialog", { name: "Ask KPubData AI Assistant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Ask KPubData" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 열기" }));
 
-    expect(screen.getByRole("dialog", { name: "Ask KPubData AI Assistant" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Ask KPubData" })).toBeInTheDocument();
   });
 
   it("shows the current screen's context label", () => {
     renderLayoutAt("/quality");
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 열기" }));
 
-    const dialog = screen.getByRole("dialog", { name: "Ask KPubData AI Assistant" });
+    const dialog = screen.getByRole("dialog", { name: "Ask KPubData" });
     // PAGE는 프로토타입처럼 grid cell이 아니라 보조 캡션으로만 표시된다(#256 review).
     expect(within(dialog).getByText(/현재 Context · Quality/)).toBeInTheDocument();
     // context bar는 프로토타입 구조(DATASET/RUN/STAGE/QUALITY)를 따른다.
@@ -44,11 +44,11 @@ describe("global Ask KPubData drawer (#247)", () => {
   it("closes on Escape", () => {
     renderLayoutAt("/");
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 열기" }));
-    expect(screen.getByRole("dialog", { name: "Ask KPubData AI Assistant" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Ask KPubData" })).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
 
-    expect(screen.queryByRole("dialog", { name: "Ask KPubData AI Assistant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Ask KPubData" })).not.toBeInTheDocument();
   });
 
   it("traps keyboard focus and restores it to the opener when closed", () => {
@@ -76,11 +76,11 @@ describe("global Ask KPubData drawer (#247)", () => {
     expect(screen.queryAllByRole("button", { name: "Ask KPubData 닫기" })).toHaveLength(1);
 
     fireEvent.click(screen.getByTestId("kubi-drawer-overlay"));
-    expect(screen.queryByRole("dialog", { name: "Ask KPubData AI Assistant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Ask KPubData" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 열기" }));
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 닫기" }));
-    expect(screen.queryByRole("dialog", { name: "Ask KPubData AI Assistant" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Ask KPubData" })).not.toBeInTheDocument();
   });
 
   it("opens the drawer when the topbar search is submitted", () => {
@@ -89,6 +89,6 @@ describe("global Ask KPubData drawer (#247)", () => {
     fireEvent.change(searchInput, { target: { value: "서울 대기오염 데이터셋 찾아줘" } });
     fireEvent.submit(searchInput.closest("form")!);
 
-    expect(screen.getByRole("dialog", { name: "Ask KPubData AI Assistant" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Ask KPubData" })).toBeInTheDocument();
   });
 });
