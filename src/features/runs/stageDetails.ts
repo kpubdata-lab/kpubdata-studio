@@ -1,5 +1,5 @@
 /**
- * Run stage detail 조회와 그 표현 헬퍼 (#379로 BuildsPage에서 분리).
+ * Run stage detail query and representation helpers (#379 split from BuildsPage).
  */
 import { useEffect, useState } from "react";
 
@@ -14,10 +14,10 @@ import type {
 } from "@/shared/lib/builderApi";
 
 /**
- * Pipeline / Stage Progress 시각화(#255 후속 보완 §6).
+ * Pipeline / Stage Progress visualization (#255 follow-up §6).
  *
- * Bronze/Silver/Gold만 정본 Stage로 취급한다 — Source/Output은 그 자체로는 Stage 상태가
- * 아니라 문맥/endpoint 표현이며, Validate·Artifact 같은 새 Stage를 만들지 않는다.
+ * Treat only Bronze/Silver/Gold as canonical Stages — Source/Output are context/endpoint representations,
+ * not Stage states themselves. Do not create new Stages like Validate or Artifact.
  */
 export type StageName = (typeof DATASET_STAGES)[number];
 
@@ -31,7 +31,7 @@ export function stageDetailKey(sourceKey: string, stage: StageName): string {
   return `${sourceKey}:${stage}`;
 }
 
-/** entry가 실제로 요청한 stage의 detail을 담고 있을 때만 그 타입으로 좁혀서 돌려준다. */
+/** Narrow entry type to the requested stage's detail only when entry actually contains it. */
 export function pickStageDetail<S extends StageName>(
   entry: StageDetailEntry | undefined,
   stage: S,
@@ -41,9 +41,9 @@ export function pickStageDetail<S extends StageName>(
 }
 
 /**
- * completed && available인 source×stage에 대해서만 stage detail을 조회한다 — 모든
- * source×stage를 무조건 eager-fetch해 요청을 폭증시키지 않는다. bounded concurrency(3)로
- * 조회하고, run이 바뀌면 이전 요청은 abort한다.
+ * Fetch stage detail only for completed && available source×stage pairs — avoid eager-fetching
+ * all source×stage and exploding request volume. Query with bounded concurrency (3); abort
+ * previous requests when run changes.
  */
 export function useStageDetails(runId: string, stagesState: AsyncState<RunStagesResponse>): Record<string, StageDetailEntry> {
   const [details, setDetails] = useState<Record<string, StageDetailEntry>>({});
@@ -77,8 +77,8 @@ export function useStageDetails(runId: string, stagesState: AsyncState<RunStages
           setDetails((prev) => ({ ...prev, [key]: { status: "loaded", data: detail } }));
         } catch {
           if (controller.signal.aborted) return;
-          // detail은 compact 부가 정보일 뿐이다 — 실패해도 Stage summary(status/available)는
-          // 이미 확보되어 있으므로 badge 자체는 계속 정상 표시된다.
+          // detail is compact supplementary info only — even if fetch fails, Stage summary (status/available)
+          // is already confirmed, so the badge continues displaying normally.
           setDetails((prev) => ({ ...prev, [key]: { status: "error" } }));
         }
       }
@@ -91,7 +91,7 @@ export function useStageDetails(runId: string, stagesState: AsyncState<RunStages
   return details;
 }
 
-/** source 안에서, 실제 failed로 기록된 stage 이후에 오는 not_run stage("아직 미도달"). 추측이 아니라 순서 비교다. */
+/** Within a source, not_run stages that come after the actual failed stage ("not yet reached"). Comparison, not guessing. */
 export function isUnreachedStage(source: RunStageEntry, stage: StageName): boolean {
   const failedAt = firstFailedStage(source);
   if (!failedAt || source[stage].status !== "not_run") return false;

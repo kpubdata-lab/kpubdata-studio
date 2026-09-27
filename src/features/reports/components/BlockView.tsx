@@ -1,13 +1,13 @@
 /**
- * 단일 Report 블록을 provenance에 맞게 읽기 전용으로 렌더링한다 (#258 §10, IA 개편).
+ * Renders a single Report block as read-only aligned with its provenance (#258 §10, IA redesign).
  *
- * BUILDER_EVIDENCE 블록은 항상 read-only다(사용자가 실제 값을 몰래 바꿔치기할 수 없게 —
- * #258 §3, §10). 수정하고 싶으면 evidence를 새로고침해 재생성하거나, 별도 USER_CONTENT
- * 블록으로 자기 설명을 덧붙인다.
+ * BUILDER_EVIDENCE blocks are always read-only (to prevent users from secretly swapping values —
+ * #258 §3, §10). To modify, refresh evidence and regenerate, or add user explanation via a separate
+ * USER_CONTENT block.
  *
- * IA 개편(표만 나열하는 조회 화면 금지): `summary`(deterministic 문장 요약)를 먼저 보여주고,
- * 기존 `markdown`(표/상세 근거)는 `<details>`로 접어 필요할 때만 펼친다. 표 자체는 지우지
- * 않는다 — 위치만 옮긴다.
+ * IA redesign (no list-only view): show `summary` (deterministic narrative) first; existing
+ * `markdown` (table/detail evidence) goes in `<details>` collapsible. Table itself is preserved —
+ * only position changes.
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,7 +17,7 @@ import { renderMarkdownToReact } from "../markdown";
 import type { BuilderEvidenceBlock, BuilderEvidenceSection, ReportBlock, ReportEvidenceRef } from "../types";
 import { ProvenanceBadge } from "./ProvenanceBadge";
 
-/** 상수로 두면 모듈 로드 시점에 언어가 고정돼 전환이 반영되지 않는다 — 호출 시 해석한다. */
+/** Language is fixed at module load time if constant; resolve at call time to reflect switches. */
 function evidenceStatusLabel(status: string): string {
   return status === "ok" ? "" : i18n.t(`reports.block.status.${status}`);
 }
@@ -27,19 +27,20 @@ function sectionLabel(section: BuilderEvidenceSection): string {
 }
 
 /**
- * NewBuildPage(#97)의 `<details className="group">` disclosure 패턴을 재사용하되, 열림 상태를
- * React state로 직접 제어한다 — 브라우저 기본 toggle 동작에만 기대면 테스트 환경/스크린리더
- * 조합에 따라 동작이 갈릴 수 있어, `summary` 클릭에서 기본 동작을 막고 state로만 연다/닫는다.
+ * Reuse `<details className="group">` disclosure pattern from NewBuildPage(#97), but control
+ * open state via React state — relying only on browser default toggle risks varying behavior
+ * across test environments/screen reader combinations. Prevent default on summary click and
+ * control open/close by state only.
  */
 function BuilderEvidenceBlockCard({ block }: { block: BuilderEvidenceBlock }) {
   const { t } = useTranslation();
   const [detailOpen, setDetailOpen] = useState(false);
 
-  // Output이 확인 불가할 때는 summary가 이미 사유를 전부 담고 있어, 표를 펼쳐도 같은 문장을
-  // 반복할 뿐이다 — 이때만 상세 근거 disclosure를 만들지 않는다(#258 IA 개편 §4).
+  // When output cannot be verified, summary already contains full reason; expanding table repeats
+  // same text — omit detail disclosure only then (#258 IA redesign §4).
   const hasDetail = !(block.section === "output" && block.evidenceStatus === "unavailable");
-  // summary가 이미 evidenceStatus 사유를 문장으로 담고 있는 섹션이 많아, output에서는 배지성
-  // 경고 문구를 중복 표시하지 않는다.
+  // Many sections where summary already contains evidenceStatus reason as text; output does not
+  // duplicate badge warning.
   const showStatusBanner = block.evidenceStatus !== "ok" && block.section !== "output";
 
   return (
@@ -88,7 +89,7 @@ export function BlockView({
   onRemoveKubiBlock,
 }: {
   block: ReportBlock;
-  /** KUBI_INTERPRETATION 블록이 현재 Report와 같은 dataset/run 기준일 때만 넘긴다(#258 §7). */
+  /** KUBI_INTERPRETATION block passed only when its dataset/run context matches this Report (#258 §7). */
   reportEvidenceRefs?: ReportEvidenceRef[];
   onEditUserContent?: (id: string) => void;
   onDeleteUserContent?: (id: string) => void;

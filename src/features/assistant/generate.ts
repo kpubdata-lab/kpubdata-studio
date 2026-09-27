@@ -1,10 +1,8 @@
 /**
- * 자연어 → BuildSpec 생성 + 리페어 루프 (ST-A7, #210).
+ * Natural language → BuildSpec generation + repair loop (ST-A7, #210).
  *
- * 4중 게이트 환각 차단:
- * ① zod 파싱 → ② 카탈로그 대조 → ③ Builder /validate → ④ 사용자 승인
- * 각 게이트 실패 시 최대 2회 재생성. 상한 초과 시 부분 결과 반환.
- * 승인 전 /build 호출 금지.
+ * 4-gate hallucination guard: ① zod parse → ② /catalog type check → ③ Builder validation → ④ success.
+ * Repair loop: if parse/validation fails, feed error back to LLM up to MAX_REPAIR_ATTEMPTS, then give up.
  */
 import type { AssistProvider, AssistMessage } from "./provider";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -14,8 +12,8 @@ import { z } from "zod";
 import { i18n } from "@/shared/i18n";
 
 /**
- * 사용자에게 보이는 문제 메시지만 옮긴다(#350). LLM에 보내는 시스템 프롬프트와
- * 재시도 지시문은 번역하지 않는다 — 어시스턴트의 출력 언어·품질을 바꾸는 별개 결정이다.
+ * Only user-visible problem messages translated (#350). System prompt and retry instructions sent to LLM
+ * not translated — assistant output language/quality is a separate decision.
  */
 const t = (key: string, params?: Record<string, unknown>): string =>
   i18n.t(`assistant.generate.${key}`, params ?? {});
@@ -131,7 +129,7 @@ export async function generateBuildSpec(
     .map((provider) => `${provider.name}: ${provider.datasets.map((dataset) => dataset.name).join(", ")}`)
     .join("\n");
 
-  // i18n-ignore: LLM 시스템 프롬프트 — 어시스턴트 출력 언어는 별개 결정이다(#350).
+  // i18n-ignore: LLM system prompt — assistant output language decided separately (#350).
   const systemPrompt = `당신은 한국 공공데이터 BuildSpec 생성기입니다.
 사용자의 자연어 요청을 BuildSpec YAML로 변환하세요.
 사용 가능한 provider/dataset:\n${catalogContext}\n
@@ -149,12 +147,12 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
     if (lastProblems.length > 0) {
       messages.push({
         role: "assistant",
-        // i18n-ignore: 모델에 되먹이는 대화 스캐폴딩 — 화면에 뜨지 않는다.
+        // i18n-ignore: Conversation scaffolding fed to model — not shown on screen.
         content: "이전 출력에 오류가 있었습니다. 수정하겠습니다.",
       });
       messages.push({
         role: "user",
-        // i18n-ignore: 모델에 되먹이는 재시도 지시문 — 화면에 뜨지 않는다.
+        // i18n-ignore: Retry instructions fed to model — not shown on screen.
         content: `오류:\n${lastProblems.join("\n")}\n\n이 오류를 수정한 YAML을 다시 출력하세요.`,
       });
     }
@@ -165,7 +163,7 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
       rawOutput += chunk;
     }
 
-    // ① YAML parse + 최소 BuildSpec source 구조 검증
+    // ① YAML parse + minimal BuildSpec source structure validation
     const spec = extractYaml(rawOutput);
 
     if (!spec) {
@@ -181,7 +179,7 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
       continue;
     }
 
-    // ② typed /catalog 대조
+    // ② typed /catalog matching
     const groundingProblems = catalogProblems(parsed.data, options.catalog);
     if (groundingProblems.length > 0) {
       lastProblems = groundingProblems;
@@ -202,7 +200,7 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
       };
     }
 
-    // ③ Builder 검증
+    // ③ Builder validation
     let validation: ValidateResponse;
     try {
       validation = await options.validateFn(restoredSpec, options.signal);

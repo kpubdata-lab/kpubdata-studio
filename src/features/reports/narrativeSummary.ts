@@ -1,12 +1,11 @@
 /**
- * Report 본문 요약 문장 생성 (#258 IA 개편 — 표만 나열하는 조회 화면이 아니라 "읽을 수 있는
- * 보고서 본문"이 먼저 보이게 한다).
+ * Report narrative summary generation (#258 IA redesign — not table-only view but readable
+ * report body shown first).
  *
- * `deterministicSections.ts`가 만드는 상세 표(BuilderEvidenceBlock.markdown)는 그대로 두고,
- * 그 앞에 놓일 문장 요약만 이 파일에서 만든다. 값은 전부 `ReportEvidenceBundle`(Builder에서
- * 그대로 가져온 값)에서만 가져오며 LLM은 관여하지 않는다 — row count/PASS·WARN·FAIL/schema/
- * pipeline status/실제값·기준값 중 어떤 것도 새로 만들지 않는다(#258 §4와 동일 불변식).
- * 확인하지 못한 값은 "확인할 수 없습니다"라고 쓰지 0/PASS로 꾸미지 않는다.
+ * Detail table from `deterministicSections.ts` (BuilderEvidenceBlock.markdown) kept; only prepend
+ * narrative summary here. Values from `ReportEvidenceBundle` (raw from Builder) only; LLM not
+ * involved — never invent row count/PASS·WARN·FAIL/schema/pipeline status/actual·expected values
+ * (#258 §4 same invariant). Unverified values written "cannot verify", not papered over as 0/PASS.
  */
 import {
   flattenQualityResults,
@@ -21,7 +20,7 @@ import type { QualityCheckResult, SchemaDriftFinding, StageStatus } from "@/shar
 import type { ReportEvidenceBundle, ReportSourceSchema } from "./evidence";
 import type { BuilderEvidenceSection } from "./types";
 
-/** 이 파일의 문장 키는 모두 이 네임스페이스 아래에 있다(#350). */
+/** All sentence keys in this file live under this namespace (#350). */
 const t = (key: string, params?: Record<string, unknown>): string =>
   i18n.t(`reports.narrative.${key}`, params ?? {});
 
@@ -33,7 +32,7 @@ const STAGE_LABEL: Record<keyof StageTriple, string> = {
   gold: "Gold",
 };
 
-/** 숫자 구분자는 화면 언어를 따른다 — 문장만 번역하고 숫자를 한국식으로 두면 어색하다. */
+/** Numeric separators follow screen language — translating text while using Korean numerals looks odd. */
 function numberLocale(): string {
   return i18n.language?.startsWith("en") ? "en-US" : "ko-KR";
 }
@@ -52,7 +51,7 @@ export interface QualityCounts {
 }
 
 // ---------------------------------------------------------------------------
-// 1. 데이터 개요
+// 1. Data overview
 // ---------------------------------------------------------------------------
 
 export function buildOverviewSummary(evidence: ReportEvidenceBundle): string {
@@ -75,12 +74,12 @@ export function buildOverviewSummary(evidence: ReportEvidenceBundle): string {
 }
 
 // ---------------------------------------------------------------------------
-// 2. 처리 흐름
+// 2. Pipeline flow
 // ---------------------------------------------------------------------------
 
 function pipelineFlowLine(sourceKey: string, stage: StageTriple): string {
-  // 마크다운 렌더러는 한 줄바꿈을 별도 줄로 만들지 않으므로(GFM hard-break 미지원), 소스명과
-  // 흐름을 각자 문단으로 나눠 굵은 글씨 줄이 실제로 별도 줄에 보이게 한다.
+  // Markdown renderer does not make single line-breaks separate lines (GFM hard-break unsupported);
+  // split source name and flow as separate paragraphs so bold-text line appears as actual separate line.
   return t("pipeline.flow", {
     sourceKey,
     bronze: stageIcon(stage.bronze),
@@ -145,10 +144,10 @@ export function buildPipelineSummary(evidence: ReportEvidenceBundle): string {
 }
 
 // ---------------------------------------------------------------------------
-// 3. 품질 진단
+// 3. Quality diagnosis
 // ---------------------------------------------------------------------------
 
-/** 실제 evidence가 있을 때만 값을 채운다(quality 응답 자체가 없거나 availability=unavailable이면 null). */
+/** Populate only when actual evidence exists (null if quality response missing or availability=unavailable). */
 export function computeQualityCounts(evidence: ReportEvidenceBundle): QualityCounts | null {
   if (!evidence.quality.ok || evidence.quality.value.availability === "unavailable") return null;
   const results = flattenQualityResults(evidence.quality.value);
@@ -163,14 +162,14 @@ export function computeQualityCounts(evidence: ReportEvidenceBundle): QualityCou
 function qualityResultSentence(result: QualityCheckResult): string {
   const source = `\`${result.source_key}\``;
   const column = result.column ? `\`${result.column}\`` : null;
-  // PASS/WARN/FAIL은 Builder가 쓰는 값 그대로다 — 번역하지 않는다.
+  // PASS/WARN/FAIL are Builder's raw values — not translated.
   const verb = result.status === "pass" ? "PASS" : result.status === "warn" ? "WARN" : "FAIL";
   const passed = result.status === "pass";
 
   if (isMissingCategory(result.category) && result.rule === "max_null_ratio") {
     const actual = formatQualityValue(result.rule, result.actual);
     const threshold = formatQualityValue(result.rule, result.threshold);
-    // 통과/미통과는 문장 구조가 달라 연결어만 갈아끼우지 않고 문장 전체를 분리한다.
+    // Pass/fail have different sentence structure; don't swap connectors alone — split full sentences.
     return t(passed ? "quality.missingRatioPass" : "quality.missingRatioFail", {
       source,
       column: column ?? t("quality.targetColumn"),
@@ -211,7 +210,7 @@ function qualityResultSentence(result: QualityCheckResult): string {
     });
   }
 
-  // 알 수 없는 rule은 의미를 추측하지 않고 실제값/기준값을 그대로 서술한다.
+  // Unknown rule: don't infer meaning; describe actual/expected values as-is.
   const actual = formatQualityValue(result.rule, result.actual);
   const threshold = formatQualityValue(result.rule, result.threshold);
   return t("quality.unknownRule", {
@@ -250,8 +249,8 @@ export function buildQualitySummary(evidence: ReportEvidenceBundle): string {
   const pass = results.filter((r) => r.status === "pass").length;
   const warn = results.filter((r) => r.status === "warn").length;
   const fail = results.filter((r) => r.status === "fail").length;
-  // WARN이 0건이면 문장에서 생략한다(예시처럼 PASS/FAIL만 자연스럽게 언급) — 그래도 evaluated_checks
-  // 분모는 항상 실제 건수를 그대로 쓴다.
+  // If zero WARNs, omit from sentence (mention PASS/FAIL naturally) — but evaluated_checks denominator
+  // always uses actual count.
   const parts = [
     t("quality.countPass", { count: pass }),
     warn > 0 ? t("quality.countWarn", { count: warn }) : null,
@@ -265,7 +264,7 @@ export function buildQualitySummary(evidence: ReportEvidenceBundle): string {
 }
 
 // ---------------------------------------------------------------------------
-// 4. 데이터 구조
+// 4. Data structure
 // ---------------------------------------------------------------------------
 
 function schemaSourceSentence(sourceKey: string, schema: ReportSourceSchema): string {
@@ -292,7 +291,7 @@ export function buildSchemaSummary(evidence: ReportEvidenceBundle): string {
 }
 
 // ---------------------------------------------------------------------------
-// 5. 데이터 규모
+// 5. Data scale
 // ---------------------------------------------------------------------------
 
 export function buildDataSummarySummary(evidence: ReportEvidenceBundle): string {

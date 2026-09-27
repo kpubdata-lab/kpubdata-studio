@@ -1,26 +1,21 @@
 /**
- * URL source endpoint display/storage secret redaction (PR #283 review response,
- * Epic #246).
+ * URL source endpoint secret redaction for display/storage (PR #283 review response, Epic #246).
  *
- * URL source has no separate params field; secrets mix into endpoint string itself
- * as query parameters (`?api_key=...`, `?serviceKey=...`). Reuse key-name/entropy
- * detector (`isSecretKey`/`looksLikeSecret`) from `features/assistant/scrub.ts`
- * directly, judging only query parameter "values"; keep hostname/path/non-sensitive
- * parameters unchanged — no new secret detection logic here.
+ * URL source has no separate params field; secrets are mixed into the endpoint string's query parameters
+ * (`?api_key=...`, `?serviceKey=...`). Reuse the key-name/entropy-based detector from features/assistant/scrub.ts
+ * (isSecretKey/looksLikeSecret) to judge only query parameter "values"; keep hostname/path/non-sensitive parameters unchanged —
+ * do not reinvent secret detection logic here.
  *
- * This module is display/localStorage-save only. Never touches actual Builder
- * submission value (`BuildSpec.sources[0].endpoint`) — caller
- * (`ReviewBuildStep`/`draftStorage`) creates only redacted copy, keeping in-memory
- * draft/spec with original values.
+ * This module is for display/localStorage storage only. Never touch actual Builder submission values (BuildSpec.sources[0].endpoint) —
+ * callers (ReviewBuildStep/draftStorage) create only redacted copies, keeping in-memory draft/spec unchanged.
  */
 import { isSecretKey, looksLikeSecret } from "@/features/assistant/scrub";
 
-// Use text without brackets — `URLSearchParams` percent-encodes values, so
-// `[REDACTED]` displays as `%5BREDACTED%5D` (hard to read for humans, #283 review).
+// Use text without brackets — URLSearchParams percent-encodes values, so `[REDACTED]` becomes
+// `%5BREDACTED%5D` and is hard to read (#283 review response).
 //
-// Use sufficiently namespaced project value (#283 follow-up review §3) — old bare
-// `REDACTED` collided with common normal API value like `?status=REDACTED`,
-// causing false credential-loss detection.
+// Use namespace-qualified values for the project (#283 follow-up §3) — bare `REDACTED` before
+// conflicted with common legitimate API values like `?status=REDACTED`, making credentials appear lost.
 export const REDACTED_PLACEHOLDER = "__KPD_URL_SECRET_REDACTED__";
 
 export interface RedactedEndpoint {
@@ -29,18 +24,15 @@ export interface RedactedEndpoint {
 }
 
 /**
- * Redact only values judged as secret from endpoint query parameters to placeholder,
- * and completely remove userinfo credential (`user:pass@host`).
- * Keep hostname/path/fragment/non-sensitive parameters unchanged (avoid unnecessary
- * removal).
+ * Redact only query parameter values identified as secrets, remove userinfo credential (`user:pass@host`).
+ * Keep hostname/path/fragment/non-sensitive parameters unchanged (no unnecessary removal).
  *
- * URL Auth is not in contract (#283 follow-up review §4) — do not just hide
- * userinfo; remove entirely instead of leaving it.
+ * URL Auth is not in the contract (#283 follow-up §4) — redact userinfo completely instead of
+ * leaving it behind.
  *
- * Values `new URL()` cannot parse (mid-edit temp strings etc.) returned unchanged —
- * `buildSpecFromDraft` already enforces https:// format separately, no need to
- * block again here. (localStorage save path uses `sanitizeUrlEndpointForStorage`
- * instead.)
+ * Values that new URL() cannot parse (incomplete input strings, etc.) are returned as-is —
+ * buildSpecFromDraft already enforces https:// format separately, so don't block here.
+ * (For localStorage storage path, use sanitizeUrlEndpointForStorage instead of this function.)
  */
 export function redactUrlEndpoint(endpoint: string): RedactedEndpoint {
   let url: URL;
@@ -67,9 +59,9 @@ export function redactUrlEndpoint(endpoint: string): RedactedEndpoint {
 }
 
 /**
- * On restored draft, check if any endpoint query parameter already redacted (= real
- * secret original lost). Triggers fail-closed for Preview/Build — prevent redacted
- * placeholder from being submitted as real endpoint/credential.
+ * When restoring a saved draft, check if any query parameter in endpoint is already redacted
+ * (= actual secret original is lost). Used to fail-closed Preview/Build — avoid submitting
+ * redacted placeholder as if it were actual endpoint/credential.
  */
 export function endpointHasRedactedSecret(endpoint: string): boolean {
   try {
@@ -82,8 +74,8 @@ export function endpointHasRedactedSecret(endpoint: string): boolean {
 
 /**
  * Check if endpoint contains userinfo credential (`https://user:pass@host/...`).
- * Auth=None contract with no stated URL Auth support, so always error if present
- * (#283 follow-up review §4) — `buildSpecFromDraft` blocks submission using this.
+ * Auth=None contract and no explicit URL Auth support, so always treat as error (#283 follow-up §4) —
+ * buildSpecFromDraft blocks submission with this value.
  */
 export function urlHasUserinfo(endpoint: string): boolean {
   try {
@@ -95,19 +87,16 @@ export function urlHasUserinfo(endpoint: string): boolean {
 }
 
 /**
- * Fail-closed sanitizer used only right before localStorage save (#283 follow-up
- * review §2).
+ * Fail-closed sanitizer used only right before localStorage storage (#283 follow-up §2).
  *
- * `redactUrlEndpoint` (display) returns malformed values (`new URL()` cannot parse)
- * unchanged — used when incomplete input still being edited. But storing malformed
- * value in localStorage (like `not-a-url?token=...` where query boundary unknown)
- * could leave secrets unredacted as plaintext. So storage path is separate function
- * that returns empty string on parse failure — naturally prompts re-entry via
- * https:// validation in `buildSpecFromDraft`.
+ * redactUrlEndpoint (for display) returns unparseable values as-is — used during Configure
+ * to show incomplete input. But storing malformed values in localStorage (e.g., `not-a-url?token=...`
+ * where query param boundaries are unknown) leaves secrets unredacted in plaintext. So isolate
+ * the storage path with a separate function that returns empty string on parse failure —
+ * buildSpecFromDraft's https:// validation naturally requires re-entry.
  *
- * URLs with userinfo also return empty for same reason — silently removing
- * credential while keeping rest could mislead user that Auth was applied in saved
- * version (#283 follow-up review §4).
+ * URLs with userinfo credential also return empty for the same reason — silently removing only
+ * the credential while keeping the rest would mislead users into thinking Auth was applied (#283 follow-up §4).
  */
 export function sanitizeUrlEndpointForStorage(endpoint: string): string {
   try {

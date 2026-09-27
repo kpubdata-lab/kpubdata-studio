@@ -1,17 +1,14 @@
 /**
- * Add Data 4단계 — Review & Build (#250).
+ * Add Data Step 4 — Review & Build (#250).
  *
- * 표시되는 "실제 제출될 canonical BuildSpec"은 `toBuilderSpec(spec)`을 그대로
- * pretty-print한 것이다 — Build 제출에 쓰는 `serializeSpec`(compact JSON)과 같은
- * `toBuilderSpec` 호출 결과이므로 표시값과 제출값이 절대 갈라지지 않는다
- * (#250 amendment 1). stale preview(직전 Preview 이후 spec/옵션이 바뀜)면 Build를 막는다.
+ * The displayed "actual canonical BuildSpec to be submitted" is the pretty-printed result of toBuilderSpec(spec) —
+ * same toBuilderSpec call result as serializeSpec (compact JSON) used for build submission, so displayed and
+ * submitted values never diverge (#250 amendment 1). Block build if preview is stale (spec/options changed since last preview).
  *
- * 예외 두 가지(#283 리뷰 대응, Epic #246, 후속 리뷰 §1): url source의 endpoint,
- * public_api source의 sourceParams는 secret query/param(`api_key`/`serviceKey`/
- * `token`/`secret`, 고엔트로피 값)을 담을 수 있어 `redactBuildSpecForDisplay`/
- * `redactSourceParamsText`로 화면 표시 사본만 별도로 만든다 — 실제 Build 제출은
- * (`AddDataPage`의 onBuild → `job.start(specResult.spec)`) 이 컴포넌트를 거치지 않고
- * 원문 spec을 그대로 쓰므로, 표시용 redaction이 제출값에 영향을 주지 않는다.
+ * Two exceptions (#283 review response, Epic #246, follow-up §1): url source endpoint and public_api source sourceParams
+ * may contain secret query/param values (api_key/serviceKey/token/secret, high-entropy), so redactBuildSpecForDisplay/
+ * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specResult.spec))
+ * bypasses this component and uses the original spec, so display redaction does not affect submitted values.
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -32,23 +29,22 @@ export interface ReviewBuildStepProps {
   spec?: BuildSpec;
   specError?: string;
   validation: { status: "idle" | "validating" | "validated"; valid: boolean; errors: string[] };
-  /** Builder /preview가 반환한 모든 source(#250 §3) — 첫 항목만 쓰지 않는다. */
+  /** All sources returned by Builder /preview (#250 §3) — do not use only the first item. */
   previewSources: PreviewSource[];
   previewLimit: PreviewLimit;
   previewSampleMode: PreviewSampleMode;
   isStale: boolean;
   jobStatus: BuildJobStatus;
   jobError?: string;
-  /** 사용자가 진행 중인 요청을 클라이언트에서 중단함(서버 실행 결과 미확인, sync build). */
+  /** User interrupted an in-flight request on the client (server execution result unknown, sync build). */
   jobInterrupted?: boolean;
   runId?: string;
   onBuild: () => void;
   onCancel: () => void;
 }
 
-// 표시 전용 — sourceSummary/querySummary는 실제 Builder 제출값이 아니라 사람이 읽는
-// Review 요약이므로 secret query parameter를 redact한 endpoint를 쓴다(#283 리뷰
-// 대응, Epic #246). 실제 제출은 이 함수들을 거치지 않는다.
+// Display-only — sourceSummary/querySummary are Review summaries for human reading, not actual Builder submission values,
+// so use redacted endpoint without secret query parameters (#283 review response, Epic #246). Actual submission bypasses these functions.
 function sourceSummary(draft: AddDataDraft): string {
   if (draft.sourceKind === "public_api") return `Public API · ${draft.publicApi.provider}/${draft.publicApi.dataset}`;
   if (draft.sourceKind === "file") return `File Upload · ${draft.file.filename ?? draft.file.format ?? ""}`;
@@ -66,9 +62,9 @@ function querySummary(draft: AddDataDraft): string {
 const PIPELINE_STAGES = ["Bronze", "Validate", "Silver", "Gold"] as const;
 
 /**
- * Pipeline stage-flow 표시용 상태(Prototype `reviewBuild()`의 stage-flow와 동일 발상).
- * Studio는 useBuildJob에서 stage 단위 진행률을 받지 않으므로, 실제로 아는 것(build job 전체
- * 상태)만 정직하게 반영한다 — 가짜 세부 진행률을 지어내지 않는다.
+ * Pipeline stage-flow display state (same principle as Prototype reviewBuild() stage-flow).
+ * Studio does not receive stage-level progress from useBuildJob, so reflect only what is known (overall build job status) —
+ * do not fabricate fake granular progress.
  */
 function pipelineStageStatus(jobStatus: BuildJobStatus): string {
   if (jobStatus === "succeeded") return "Done";
@@ -93,16 +89,13 @@ export function ReviewBuildStep({
   onBuild,
   onCancel,
 }: ReviewBuildStepProps) {
-  // 실제 제출은 항상 원문 `spec`으로 이뤄진다(AddDataPage의 onBuild가 이 컴포넌트가
-  // 아니라 자신의 specResult.spec을 그대로 job.start에 넘긴다) — 여기서 만드는
-  // displaySpec은 화면 표시 전용 사본이며, redact 여부가 실제 제출값에 전혀 영향을
-  // 주지 않는다(#283 리뷰 대응, Epic #246).
+  // Actual submission always uses the original spec (AddDataPage onBuild passes specResult.spec to job.start directly) —
+  // displaySpec here is a display-only copy, and redaction has no effect on actual submission (#283 review response, Epic #246).
   const { t } = useTranslation();
   const displaySpec = spec ? redactBuildSpecForDisplay(spec) : null;
   const displaySubmissionSpec = displaySpec ? toBuilderSpec(displaySpec) : null;
-  // 여러 source의 quality_results를 합쳐 하나의 PASS로 지어내지 않는다 — Builder가
-  // 실제로 반환한 결과를 그대로 합산(pass/warn/fail 카운트)하고, source별 상태가 갈리면
-  // mixed로 표시한다(#250 §3).
+   // Do not fabricate fake single PASS from multiple sources' quality_results — sum results as Builder actually returned
+   // (pass/warn/fail counts), and if per-source status varies, display as mixed (#250 §3).
   const totalRows = previewSources.length > 0 ? previewSources[0].total_rows : undefined;
   const previewsSummary = summarizePreviewSources(previewSources);
   const quality = previewSources.length > 0

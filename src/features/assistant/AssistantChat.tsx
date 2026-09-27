@@ -1,8 +1,8 @@
 /**
- * BuildSpec 어시스턴트 채팅 UI (#207, ST-A4).
+ * BuildSpec assistant chat UI (#207, ST-A4).
  *
- * 스트리밍 응답 표시, 취소 버튼, 대화 초기화.
- * shared/ui 컴포넌트 재사용, 라이트/다크 테마 대응.
+ * Display streaming response, cancel button, reset conversation.
+ * Reuse shared/ui components, support light/dark theme.
  */
 import { useCallback, useRef, useState } from "react";
 import { Button, Card, Textarea } from "@/shared/ui";

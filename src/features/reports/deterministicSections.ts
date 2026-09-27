@@ -1,9 +1,9 @@
 /**
- * Deterministic Report section 생성 (#258 §4, §5).
+ * Deterministic Report section generation (#258 §4, §5).
  *
- * `ReportEvidenceBundle`(Builder에서 그대로 가져온 값)만 입력으로 받아 코드가 그대로
- * BUILDER_EVIDENCE 블록을 구성한다 — LLM은 이 단계에 전혀 관여하지 않는다. 값이 없거나
- * 조회에 실패한 항목은 "N/A"/"확인할 수 없음"으로 표시하며 0/PASS/정상으로 바꾸지 않는다.
+ * Takes only `ReportEvidenceBundle` (values from Builder as-is) as input; code directly constructs
+ * BUILDER_EVIDENCE blocks — LLM never involved in this stage. Missing or failed-to-fetch items
+ * display "N/A"/"cannot verify" without converting to 0/PASS/normal.
  */
 import { formatDateTime, sourceLabel } from "@/features/datasets/model";
 import {
@@ -16,11 +16,11 @@ import type { ReportEvidenceBundle } from "./evidence";
 import { buildSectionSummaries, computeQualityCounts } from "./narrativeSummary";
 import type { BuilderEvidenceBlock, BuilderEvidenceSection } from "./types";
 
-/** 이 파일의 문장 키는 모두 이 네임스페이스 아래에 있다(#350). */
+/** All sentence keys in this file live under this namespace (#350). */
 const t = (key: string, params?: Record<string, unknown>): string =>
   i18n.t(`reports.sections.${key}`, params ?? {});
 
-/** 숫자 구분자는 화면 언어를 따른다. */
+/** Numeric separators follow screen language. */
 function numberLocale(): string {
   return i18n.language?.startsWith("en") ? "en-US" : "ko-KR";
 }
@@ -127,7 +127,7 @@ function buildPipeline(evidence: ReportEvidenceBundle, now: string, summary: str
     );
   }
 
-  // stage 상세 조회는 실패했지만 dataset 요약에 stage map이 남아있으면 그걸로 대체한다(부분 실패 허용).
+  // Stage detail fetch failed but stage map remains in dataset summary; use that (partial failure allowed).
   if (evidence.dataset.ok) {
     const rows = Object.entries(evidence.dataset.value.stages).map(([sourceKey, stage]) => [
       `\`${sourceKey}\``,
@@ -319,7 +319,7 @@ function buildOutput(evidence: ReportEvidenceBundle, now: string, summary: strin
   );
 }
 
-/** evidence bundle로부터 6개 deterministic BUILDER_EVIDENCE 블록을 생성한다. */
+/** Generate 6 deterministic BUILDER_EVIDENCE blocks from evidence bundle. */
 export function buildDeterministicSections(evidence: ReportEvidenceBundle): BuilderEvidenceBlock[] {
   const now = new Date().toISOString();
   const summaries = buildSectionSummaries(evidence);

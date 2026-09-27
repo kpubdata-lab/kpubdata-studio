@@ -1,30 +1,32 @@
 /**
- * 컬럼 의미 해독 — dataset card 보강 (AI-1, #228).
+/**
+ * Column meaning decoding — augment dataset card (AI-1, #228).
  *
- * 한국 공공데이터 컬럼명(MTHDT, BSNS_LCNS_NO, OPNSFTEAM_CODE 등)의 한국어
- * 설명 초안을 LLM으로 생성한다. 샘플 값은 structured content로 공통 provider
- * egress에 전달되어 직렬화 전에 스크러빙된다. 승인 전에는 metadata에 반영되지 않는다.
+ * Korean public data column names (MTHDT, BSNS_LCNS_NM, DTLBDT_SE, etc.) look like abbreviations/ciphers;
+ * hard to parse meaning. LLM seeing column name with sample rows (actual values) can generate
+ * "oh, monthly date and business license name" style descriptions. These functions manage prompt
+ * composition and generation requests.
  */
 import type { AssistProvider, AssistMessage } from "./provider";
 
-/** 컬럼 설명 초안 결과. */
+/** Column description draft result. */
 export interface ColumnMeaningResult {
   descriptions: Record<string, string>;
   status: "ok" | "error";
   scrubbed: boolean;
 }
 
-/** 컬럼 메타데이터 (PreviewColumn 의 부분집합). */
+/** Column metadata (subset of PreviewColumn). */
 export interface ColumnMeta {
   name: string;
   dtype: string;
 }
 
 /**
- * 컬럼 목록과 샘플 행에서 LLM 프롬프트를 구성한다 (#228).
+ * Compose LLM prompt from column list and sample rows (#228).
  *
- * 샘플 행은 문자열로 미리 직렬화하지 않고 structured content로 유지한다.
- * 공통 provider egress가 key-aware 스크러빙한 뒤 최종 payload를 만든다.
+ * Sample rows not pre-serialized to string; kept as structured content.
+ * Common provider egress does key-aware scrubbing, then creates final payload.
  */
 export function buildColumnMeaningPrompt(
   columns: ColumnMeta[],
@@ -55,13 +57,13 @@ ${colList}
 }
 
 /**
- * 컬럼 설명 초안을 LLM 으로 생성한다 (#228).
+ * Generate column description draft via LLM (#228).
  *
  * @param provider LLM provider (BYOK).
- * @param columns 컬럼 메타데이터.
- * @param sampleRows 샘플 행 (공통 provider egress에서 스크러빙 후 LLM 전송).
- * @param signal 취소 신호.
- * @returns 컬럼명 → 한국어 설명 매핑. LLM 미설정 시 status="error".
+ * @param columns Column metadata.
+ * @param sampleRows Sample rows (scrubbed by common provider egress before LLM transmission).
+ * @param signal Abort signal.
+ * @returns Column name → Korean description mapping. status="error" if LLM not configured.
  */
 export async function generateColumnMeanings(
   provider: AssistProvider,
@@ -77,7 +79,7 @@ export async function generateColumnMeanings(
     rawOutput += chunk;
   }
 
-  // JSON 추출 (```json 블록 또는 직접 JSON).
+  // JSON extraction (```json block or direct JSON).
   const jsonMatch =
     rawOutput.match(/```json\n([\s\S]*?)\n```/) ?? rawOutput.match(/\{[\s\S]*\}/);
   const jsonStr = jsonMatch ? (jsonMatch[1] ?? jsonMatch[0]) : rawOutput.trim();

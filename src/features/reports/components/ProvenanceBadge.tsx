@@ -1,8 +1,8 @@
 /**
- * Report 블록의 출처(provenance)를 항상 눈에 보이게 표시하는 배지 (#258 §2, §10).
+ * Badge always visibly marks Report block provenance (#258 §2, §10).
  *
- * Builder evidence/AI 해석/사용자 작성 내용을 시각적으로 구분해, 어떤 값이 정본이고
- * 어떤 값이 사람 또는 AI가 쓴 설명인지 색으로만이 아니라 텍스트로도 드러낸다.
+ * Visually distinguishes Builder evidence/AI interpretation/user content, revealing which
+ * values are canonical and which are human or AI explanations — not just by color but also by text.
  */
 import { useTranslation } from "react-i18next";
 import type { BlockProvenance } from "../types";

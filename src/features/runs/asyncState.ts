@@ -1,8 +1,9 @@
 /**
- * Builder 조회 표면 하나의 상태와 그 로더 (#379).
+ * State and its loader for one Builder query surface (#379).
  *
- * Builds 화면은 Quality/Artifact/BuildSpec snapshot 등 표면마다 독립된 상태를 들고
- * 하나가 실패해도 나머지를 계속 보여준다(#255 §8/§13) — 그 단위가 이 타입이다.
+ * Builds screen holds independent state per surface (Quality/Artifact/BuildSpec snapshot,
+ * etc.) and keeps showing remaining surfaces even if one fails (#255 §8/§13) — this type
+ * is that unit.
  */
 import { useEffect, useState } from "react";
 

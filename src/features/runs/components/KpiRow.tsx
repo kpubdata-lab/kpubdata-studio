@@ -1,8 +1,8 @@
 /**
- * Builds 상단 KPI 타일 (#379로 BuildsPage에서 분리).
+ * Builds top KPI tile (#379 split from BuildsPage).
  *
- * KPI 는 `/builds` 가 돌려준 목록 안에서만 계산한다 — Builder 에 전체 count 가 없으므로
- * 이 범위를 넘어선 수치를 지어내지 않는다.
+ * KPI calculated only within list returned by `/builds` — do not fabricate figures beyond
+ * this scope since Builder has no total count.
  */
 import { useTranslation } from "react-i18next";
 
@@ -21,8 +21,8 @@ function KpiTile({ label, value, hint }: { label: string; value: string; hint?: 
 }
 
 /**
- * Running KPI는 running+queued(+cancelling) 합계를 값으로 유지하되(기존 정책), hint에는
- * 실제 조회 scope에서 센 status별 breakdown만 보여준다 — 값을 추측하지 않는다(#286 후속 보완 §3).
+ * Running KPI maintains running+queued(+cancelling) sum as value (existing policy), but hint shows
+ * only status breakdown counted within actual query scope — never guess figures (#286 follow-up §3).
  */
 function runningBreakdownHint(
   kpi: ReturnType<typeof computeBuildKpi>,
