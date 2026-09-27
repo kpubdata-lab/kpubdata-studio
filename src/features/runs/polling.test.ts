@@ -1,12 +1,13 @@
 /**
- * visibility-aware polling(#255 §3) 계열 훅 테스트를 한 파일로 모았다.
+ * Collects visibility-aware polling (#255 §3) hook tests into one file.
  *
- * `useVisibilityAwarePolling`(공유 primitive), `useSelectedRunPolling`(#245/#255 P0),
- * `useRunEvents`(#255 P1)는 서로 독립적이지만 같은 fake-timer/visibilitychange 픽스처를
- * 공유하므로, 파일마다 별도 jsdom 환경을 새로 만드는 대신 한 파일에 모아 CI 부담을 줄인다.
+ * `useVisibilityAwarePolling` (shared primitive), `useSelectedRunPolling`
+ * (#245/#255 P0) and `useRunEvents` (#255 P1) are independent but share the
+ * same fake-timer/visibilitychange fixtures — one file instead of a fresh
+ * jsdom environment per file keeps CI cost down.
  *
- * fake sleep/timeout 증가에 의존하지 않고, vi.useFakeTimers + visibilitychange dispatch로
- * deterministic하게 검증한다.
+ * Deterministic via vi.useFakeTimers + visibilitychange dispatch; no
+ * reliance on inflating fake sleep/timeout durations.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
@@ -129,7 +130,7 @@ describe("useSelectedRunPolling", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
-    // terminal이므로 interval이 예약되지 않아 추가 호출이 없어야 한다.
+    // Terminal — no interval is scheduled, so there must be no further calls.
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
@@ -141,7 +142,7 @@ describe("useSelectedRunPolling", () => {
     const spy = vi.spyOn(builderApi, "getBuildJob").mockImplementationOnce(() => pending);
     renderHook(() => useSelectedRunPolling("run-1"));
 
-    // 아직 "loading" 상태다 — 첫 조회가 끝나기 전에는 interval을 잡지 않는다.
+    // Still "loading" — no interval is taken before the first fetch finishes.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
@@ -200,7 +201,7 @@ describe("useSelectedRunPolling", () => {
     const { result } = renderHook(() => useSelectedRunPolling("run-1"));
     await vi.waitFor(() => expect(result.current).toEqual({ kind: "job", job: job({ status: "running" }) }));
 
-    // 두 번째 조회가 일시적으로 실패한다 — 마지막으로 확인된 job(running)을 유지하고 warning만 얹는다.
+    // The second fetch fails transiently — keeps the last-confirmed job (running) and layers a warning on top.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(800);
     });
@@ -211,15 +212,15 @@ describe("useSelectedRunPolling", () => {
     });
     expect(spy).toHaveBeenCalledTimes(2);
 
-    // 여전히 non-terminal("job" kind)이라 다음 interval polling도 계속된다 — 멈추지 않는다.
+    // Still non-terminal ("job" kind), so interval polling continues — it does not stop.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(800);
     });
     expect(spy).toHaveBeenCalledTimes(3);
-    // 회복되면 warning이 사라진다.
+    // On recovery the warning disappears.
     expect(result.current).toEqual({ kind: "job", job: job({ status: "running" }) });
 
-    // terminal에 도달하면 정상적으로 polling이 멈춘다.
+    // On reaching terminal, polling stops normally.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(800);
     });
@@ -248,7 +249,7 @@ describe("useSelectedRunPolling", () => {
     rerender({ runId: "run-b" });
     await vi.waitFor(() => expect(result.current).toEqual({ kind: "job", job: job({ run_id: "run-b", status: "succeeded" }) }));
 
-    // run-a의 늦은 응답이 이제 도착해도 run-b 선택을 덮어써서는 안 된다.
+    // run-a's late response may arrive now, but must not overwrite the run-b selection.
     resolveFirst(job({ run_id: "run-a", status: "succeeded" }));
     await Promise.resolve();
     expect(result.current).toEqual({ kind: "job", job: job({ run_id: "run-b", status: "succeeded" }) });
@@ -258,7 +259,7 @@ describe("useSelectedRunPolling", () => {
 
 describe("useRunEvents", () => {
   it("mock 모드에서는 MockUnsupportedError를 network 오류와 구분되는 mockUnsupported로 노출한다", async () => {
-    // 기본 테스트 환경은 VITE_USE_REAL_BUILDER가 설정되지 않은 mock 모드다.
+    // The default test environment is mock mode (VITE_USE_REAL_BUILDER unset).
     const { result } = renderHook(() => useRunEvents("run-1", true));
     await vi.waitFor(() => expect(result.current.status).toBe("error"));
     expect(result.current).toMatchObject({ status: "error", mockUnsupported: true });
@@ -278,7 +279,7 @@ describe("useRunEvents", () => {
     });
     expect(spy).toHaveBeenCalledTimes(2);
 
-    // Run이 terminal이 되어 호출부가 pollingEnabled=false로 넘기면 더 이상 polling하지 않는다.
+    // When the Run turns terminal and the caller passes pollingEnabled=false, polling stops.
     rerender({ enabled: false });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10000);
@@ -322,8 +323,9 @@ describe("useRunEvents", () => {
     vi.spyOn(builderApi, "getBuildEvents").mockRejectedValue(new Error("network down"));
     const { result } = renderHook(() => useRunEvents("run-1", true));
     await vi.waitFor(() => expect(result.current.status).toBe("error"));
-    // 이 훅은 자기 자신의 상태만 갖고 있다 — 다른 카드(Stage/Quality/Spec)의 상태와는
-    // 완전히 분리된 훅이므로, 실패해도 이 반환값 밖으로 아무 영향을 주지 않는다.
+    // This hook holds only its own state — fully separate from the other
+    // cards (Stage/Quality/Spec), so a failure cannot leak past this return
+    // value.
     expect(result.current).toMatchObject({ status: "error" });
 
     vi.unstubAllEnvs();
