@@ -79,9 +79,10 @@ export const MOCK_RUNS: Record<string, DatasetRunsResponse> = {
 };
 
 export const MOCK_STAGES: Record<string, RunStagesResponse> = {
-  // Builds/Runs 목록(mockBuilds → DEMO_DATASETS.buildId)이 실제로 쓰는 run id로도
-  // stage/quality fixture를 조회할 수 있도록 정합시킨다(#255 마감 보완). 새 mock
-  // 의미를 만들지 않고, 아래 air-2026-08-* fixture와 같은 모양을 그대로 재사용한다.
+  // Aligns so stage/quality fixtures are also reachable under the run ids
+  // the Builds/Runs list actually uses (mockBuilds → DEMO_DATASETS.buildId)
+  // (#255 closing fix). No new mock semantics — reuses the exact shape of
+  // the air-2026-08-* fixtures below.
   "air-quality-20260621": {
     run_id: "air-quality-20260621",
     sources: [
@@ -94,7 +95,7 @@ export const MOCK_STAGES: Record<string, RunStagesResponse> = {
       { source_key: "datago__dur_older_adult_caution", bronze: { status: "failed", available: false }, silver: { status: "not_run", available: false }, gold: { status: "not_run", available: false } },
     ],
   },
-  // succeeded DEMO_DATASETS run — bronze/silver/gold 모두 completed(#255 마감 보완, fixture 정합성).
+  // succeeded DEMO_DATASETS run — bronze/silver/gold all completed (#255 closing fix, fixture consistency).
   "dur-product-info-20260620": {
     run_id: "dur-product-info-20260620",
     sources: [
@@ -107,8 +108,9 @@ export const MOCK_STAGES: Record<string, RunStagesResponse> = {
       { source_key: "datago__dur_usjnt_taboo", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
     ],
   },
-  // running/queued DEMO_DATASETS run — Builder RunStages contract에 진행 중 상태가 없으므로
-  // 억지로 만들지 않고 not_run/unavailable만 사용한다(#255 마감 보완 원칙).
+  // running/queued DEMO_DATASETS run — the Builder RunStages contract has no
+  // in-progress states, so none are invented; only not_run/unavailable are
+  // used (#255 closing principle).
   "dur-pregnancy-taboo-20260621": {
     run_id: "dur-pregnancy-taboo-20260621",
     sources: [
@@ -146,8 +148,9 @@ export const MOCK_STAGES: Record<string, RunStagesResponse> = {
 };
 
 export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
-  // MOCK_STAGES와 같은 run id 정합 보완(#255) — mockBuilds()가 실제로 노출하는
-  // succeeded/failed run 각 하나에 실제 Quality 결과를 붙인다.
+  // Same run-id alignment as MOCK_STAGES (#255) — attaches real Quality
+  // results to the one succeeded and one failed run mockBuilds() actually
+  // exposes.
   "air-quality-20260621": {
     run_id: "air-quality-20260621",
     availability: "available",
@@ -159,8 +162,8 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
     },
     schema_drift: { datago__air_quality: [] },
   },
-  // bronze 단계에서 실패한 run이라 quality가 계산되지 않았다(N/A ≠ PASS) —
-  // MOCK_STAGES의 bronze failed와 정합되는, 지어내지 않은 값.
+  // A run that failed at bronze, so quality was never computed (N/A ≠
+  // PASS) — consistent with MOCK_STAGES' bronze failed; nothing invented.
   "dur-older-adult-caution-20260618": {
     run_id: "dur-older-adult-caution-20260618",
     availability: "unavailable",
@@ -168,7 +171,7 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
     quality_results: {},
     schema_drift: {},
   },
-  // succeeded — 실제 DEMO_DATASETS recordCount와 정합되는 최소 quality fixture(지어낸 rule 없음).
+  // succeeded — minimal quality fixture consistent with the real DEMO_DATASETS recordCount (no invented rules).
   "dur-product-info-20260620": {
     run_id: "dur-product-info-20260620",
     availability: "available",
@@ -191,7 +194,7 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
     },
     schema_drift: { datago__dur_usjnt_taboo: [] },
   },
-  // running/queued — 아직 평가되지 않았다(N/A ≠ PASS). MOCK_STAGES의 not_run과 정합된다.
+  // running/queued — not yet evaluated (N/A ≠ PASS). Consistent with MOCK_STAGES' not_run.
   "dur-pregnancy-taboo-20260621": {
     run_id: "dur-pregnancy-taboo-20260621",
     availability: "unavailable",
@@ -250,20 +253,22 @@ export function mockDatasetDetail(datasetId: string): DatasetDetailResponse | un
   return dataset ? { ...dataset, run_count: MOCK_RUNS[datasetId]?.runs.length ?? 0 } : undefined;
 }
 
-/** DEMO_DATASETS.buildId → 해당 데모 데이터셋(Builds/Runs 화면이 쓰는 run들). */
+/** DEMO_DATASETS.buildId → that demo dataset (the runs the Builds/Runs screens use). */
 const DEMO_DATASET_BY_BUILD_ID = new Map(DEMO_DATASETS.map((dataset) => [dataset.buildId, dataset] as const));
 
-/** DEMO_DATASETS의 dataset이 이 run에서 실제로 쓰는 유일한 source_key(providerDataset 기반). */
+/** The single source_key a DEMO_DATASETS dataset actually uses in this run (providerDataset-based). */
 function demoSourceKey(dataset: (typeof DEMO_DATASETS)[number]): string {
   return `datago__${dataset.providerDataset}`;
 }
 
 /**
- * Builds/Runs 화면(#255)의 DEMO_DATASETS run(runId)이면, generic weather-shaped fixture 대신
- * 그 run의 실제 demo 값(recordCount/날짜/필드/exports)으로 Stage detail을 만든다(#286 후속
- * 보완 §2). air-2026-08-14 같은 기존 dataset-catalog 전용 run(DEMO_DATASETS에 없음)은 이
- * 함수가 undefined를 반환해 아래 generic fixture로 그대로 폴백한다 — 기존 화면 동작은
- * 바뀌지 않는다.
+ * For a DEMO_DATASETS run (runId) of the Builds/Runs screens (#255),
+ * builds the Stage detail from that run's actual demo values
+ * (recordCount/dates/fields/exports) instead of the generic weather-shaped
+ * fixture (#286 follow-up §2). Existing dataset-catalog-only runs like
+ * air-2026-08-14 (not in DEMO_DATASETS) get undefined from this function
+ * and fall straight through to the generic fixture below — existing screen
+ * behavior unchanged.
  */
 function demoStageDetail(
   runId: string,
@@ -282,7 +287,7 @@ function demoStageDetail(
       ...state,
       provider: "datago",
       dataset: dataset.providerDataset,
-      // Run 시각과 모순되지 않도록 이 run의 실제 startedAt을 그대로 쓴다(generic 2026-08-14 금지).
+      // Uses this run's actual startedAt to avoid contradicting the Run time (no generic 2026-08-14).
       fetched_at: state.available ? dataset.startedAt : null,
       record_count: state.available ? dataset.recordCount : null,
     };
@@ -292,7 +297,7 @@ function demoStageDetail(
       name: field.name,
       dtype: field.type,
       nullable: field.nullable,
-      // 실제로 계산한 값이 아니므로 정밀한 것처럼 보이는 숫자를 지어내지 않는다.
+      // Not actually computed — never invents numbers that look precise.
       unique_count: 0,
     }));
     return {
@@ -310,7 +315,7 @@ function demoStageDetail(
           }
         : null,
       validation: state.available ? { ok: true, problems: [] } : null,
-      // 실제 row sample을 만들어낼 근거가 없으므로 빈 배열로 둔다(가짜 medical/DUR 값 지어내지 않음).
+      // No basis to fabricate row samples, so an empty array (no fake medical/DUR values).
       sample: [],
     };
   }
@@ -321,9 +326,9 @@ function demoStageDetail(
     ...state,
     row_count: state.available ? dataset.recordCount : null,
     columns: state.available ? dataset.fields.map((field) => field.name) : [],
-    // DEMO_DATASETS에 split 정보가 없으므로 지어내지 않는다.
+    // DEMO_DATASETS has no split info, so none is invented.
     splits: null,
-    // 실제 demo export 형식(예: air-quality → parquet + huggingface)을 그대로 반영한다.
+    // Reflects the actual demo export formats (e.g. air-quality → parquet + huggingface).
     exports: state.available ? dataset.exports.map((target) => ({ kind: target.format })) : [],
     sample: null,
     sample_available: false,
