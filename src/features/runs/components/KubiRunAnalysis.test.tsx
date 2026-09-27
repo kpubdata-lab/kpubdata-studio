@@ -1,9 +1,10 @@
 /**
  * KubiRunAnalysis (#255 §2) — Builds/Runs "이 Run 분석" inline card.
  *
- * 새 Kubi 엔진을 만들지 않고 `useKubiSession`을 그대로 재사용하므로, 여기서는 그 훅을 mock해
- * turn 상태별로 카드가 올바른 것만 보여주는지 확인한다: BYOK 미설정, 로딩 준비 중, 진행 중,
- * 답변 도착, 에러, 그리고 stale turn을 제외하는지(#256 stale-context guard).
+ * No new Kubi engine — `useKubiSession` is reused as-is, so these tests
+ * mock that hook and check the card shows exactly the right thing per turn
+ * state: BYOK unset, loading-prep, in progress, answer arrived, error, and
+ * stale-turn exclusion (#256 stale-context guard).
  */
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -74,9 +75,10 @@ describe("KubiRunAnalysis", () => {
   });
 
   it("does not let session.isDemoAvailable(mock Builder mode) bypass the no-key state (#286 후속 보완)", () => {
-    // mock Builder 모드에서는 isDemoAvailable이 항상 true지만, pending seed는 항상 일반
-    // ask()로 소비되고 ask()는 isConfigured만 본다 — canAsk도 isConfigured만 기준으로 판단해야
-    // seed 후 no_key 에러가 뜨는 상황을 막을 수 있다.
+    // In mock Builder mode isDemoAvailable is always true, but the pending
+    // seed is always consumed by the ordinary ask(), and ask() looks only at
+    // isConfigured — so canAsk must key off isConfigured alone to prevent a
+    // post-seed no_key error.
     useKubiSessionMock.mockReturnValue(session({ turns: [], isDemoAvailable: true }));
     useAssistConfigMock.mockReturnValue({ isConfigured: false });
 
@@ -84,7 +86,7 @@ describe("KubiRunAnalysis", () => {
 
     expect(screen.getByText("Kubi를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
     expect(screen.queryByText(/분석 준비 중/)).not.toBeInTheDocument();
-    // no-key 상태에서는 "더 질문하기"를 표시하지 않는다.
+    // In the no-key state, "Ask more" is not shown.
     expect(screen.queryByRole("button", { name: "더 질문하기" })).not.toBeInTheDocument();
   });
 
@@ -144,11 +146,11 @@ describe("KubiRunAnalysis", () => {
 
     render(<KubiRunAnalysis onClose={vi.fn()} onAskMore={vi.fn()} />);
 
-    // Drawer와 동일한 안전 Markdown 렌더러를 재사용한다 — "**"는 리터럴로 남지 않는다.
+    // Reuses the same safe Markdown renderer as the Drawer — "**" never remains literal.
     expect(screen.getByText("source air").tagName).toBe("STRONG");
     expect(screen.queryByText(/\*\*source air\*\*/)).not.toBeInTheDocument();
 
-    // 근거는 KubiContent와 동일한 EvidenceSection(Disclosure)로 제공된다.
+    // Evidence is provided by the same EvidenceSection (Disclosure) as KubiContent.
     fireEvent.click(screen.getByRole("button", { name: /근거 1개/ }));
     expect(screen.getByText("air / silver")).toBeInTheDocument();
   });
@@ -174,9 +176,9 @@ describe("KubiRunAnalysis", () => {
 
     render(<KubiRunAnalysis onClose={vi.fn()} onAskMore={vi.fn()} />);
 
-    // 정상 answer는 그대로 보이고,
+    // The normal answer stays visible, and
     expect(screen.getByText("요약된 정상 답변입니다.")).toBeInTheDocument();
-    // 제외된 근거가 있었다는 사실은 숨기지 않는다(role="alert").
+    // the fact that evidence was excluded is not hidden (role="alert").
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent("제외된 근거: run:ghost-run");
   });

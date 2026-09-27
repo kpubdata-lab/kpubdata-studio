@@ -1,4 +1,4 @@
-/** Builder PR #547의 publish HTTP 계약을 Studio 공용 API 계층에 연결한다. */
+/** Connects the publish HTTP contract from Builder PR #547 into Studio's shared API layer. */
 import {
   ApiError,
   builderApi,
@@ -12,7 +12,7 @@ import {
 import { i18n } from "@/shared/i18n";
 import { MOCK_PUBLISH_READINESS, mockPublishResult } from "./mockData";
 
-/** 이 파일의 문구는 모두 `publish.errors.*` 아래에 있다(#350). */
+/** All wording in this file lives under `publish.errors.*` (#350). */
 const t = (key: string): string => i18n.t(`publish.errors.${key}`);
 
 export type {
@@ -39,11 +39,13 @@ function throwIfAborted(signal?: AbortSignal): void {
 }
 
 /**
- * 다른 Builder 연동 엔드포인트(getDataset/listBuildStages 등, `features/datasets/api`)와
- * 동일하게 mock/real을 분기한다 — 이전에는 이 분기가 없어 mock 모드에서도 항상 실제
- * Builder 서버로 요청을 보냈고, 로컬/데모 환경(Builder 미기동)에서는 그 요청이 항상 실패해
- * readiness 카드가 사실상 항상 비어 보였다(UI audit #4). Builder가 없는 mock run_id는
- * 값을 지어내지 않고 404로 처리한다.
+ * Branches mock/real the same way as the other Builder endpoints
+ * (getDataset/listBuildStages etc. in `features/datasets/api`) — previously
+ * this branch did not exist, so mock mode always hit the real Builder
+ * server; in local/demo environments (Builder not running) that request
+ * always failed and the readiness card was effectively always empty (UI
+ * audit #4). A mock run_id with no Builder is treated as 404, never
+ * invented.
  */
 export async function getPublishReadiness(
   runId: string,
@@ -92,7 +94,7 @@ function errorCode(cause: ApiError): PublishErrorCode | undefined {
   return undefined;
 }
 
-/** 서버 원문/HTML/secret을 화면에 되비추지 않고 stable status/code만 번역한다. */
+/** Translates only stable status/codes — never echoes server plaintext/HTML/secrets to the screen. */
 export function describePublishFailure(cause: unknown): PublishFailure {
   if (!(cause instanceof ApiError)) {
     return { kind: "unknown", message: t("unknown") };
