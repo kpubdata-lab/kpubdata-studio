@@ -1,10 +1,9 @@
 /**
- * Kubi 참고 노트 큐 → Report 반영 승인 패널 (#258 §7).
+ * Kubi reference note queue → Report approval panel (#258 §7).
  *
- * `features/kubi/reportInbox.ts`(#256)에 쌓인, 사용자가 Kubi 채팅에서 이미 한 번
- * 승인한 노트를 보여준다. 여기서 다시 한번: note 원문 → 연결 evidence(문맥) →
- * 현재 Report의 기준 dataset/run과 같은지 → 사용자 승인 순서를 거친 뒤에만 Report에
- * KUBI_INTERPRETATION 블록으로 추가한다. 자동으로 추가되지 않는다.
+ * Shows notes stashed in `features/kubi/reportInbox.ts`(#256), already approved once by user in Kubi chat.
+ * User re-approves here: note text → linked evidence (context) → matches current Report's dataset/run?
+ * → user approval order → only then add as KUBI_INTERPRETATION block to Report. Never auto-added.
  */
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
@@ -20,7 +19,7 @@ export function KubiInboxPanel({
 }: {
   report: Pick<ReportDraft, "datasetId" | "baseRunId">;
   onApprove: (block: KubiInterpretationBlock) => void;
-  /** 승인/무시로 큐가 바뀔 때마다 호출된다(Report Context sidebar의 대기 노트 수 갱신용). */
+   /** Called when queue changes via approval/discard (refresh Report Context sidebar pending note count). */
   onNotesChanged?: () => void;
 }) {
   const { t } = useTranslation();

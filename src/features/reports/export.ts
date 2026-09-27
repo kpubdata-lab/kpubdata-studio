@@ -1,31 +1,30 @@
 /**
- * Report 내보내기 (#258 §12, §13).
+ * Report export (#258 §12, §13).
  *
- * 실제로 구현하는 형식만 제공한다: Markdown 다운로드, 안전한 HTML 다운로드, Browser Print.
- * PDF/DOCX는 만들지 않으며 그렇게 보이게 표시하지 않는다 — Browser Print는 "PDF 생성"이
- * 아니라 브라우저 인쇄 대화상자를 여는 것뿐이다.
+ * Provides only formats actually implemented: Markdown download, safe HTML download, Browser Print.
+ * PDF/DOCX not created or advertised — Browser Print opens browser print dialog, not "Generate PDF".
  *
- * 내보내는 파일에는 항상 title/dataset/base run/createdAt/evidenceFetchedAt/provenance
- * 구분/stale-orphan 경고를 포함한다. Kubi/사용자 콘텐츠는 `markdown.ts`의 안전 렌더러만
- * 거쳐 HTML로 들어간다 — 원문을 그대로 삽입하지 않는다.
+ * Exported files always include title/dataset/base run/createdAt/evidenceFetchedAt/provenance
+ * distinction/stale-orphan warning. Kubi/user content only passes through safe renderer in
+ * `markdown.ts` to HTML — raw source never inserted.
  */
 import { i18n } from "@/shared/i18n";
 import { escapeHtml, renderMarkdownToHtml } from "./markdown";
 import type { EvidenceRunStatus } from "./types";
 import type { ReportDraft } from "./types";
 
-/** 이 파일의 문장 키는 모두 이 네임스페이스 아래에 있다(#350). */
+/** All sentence keys in this file live under this namespace (#350). */
 const t = (key: string, params?: Record<string, unknown>): string =>
   i18n.t(`reports.export.${key}`, params ?? {});
 
-/** 상태 라벨은 모듈 상수가 아니라 호출 시점에 만든다 — 상수로 두면 언어 전환이 반영되지 않는다. */
+/** Status labels created at call time, not module constant — constant would ignore language switch. */
 function statusLabel(status: EvidenceRunStatus): string {
   return t(`status.${status}`);
 }
 
 const FILENAME_INVALID_CHARS = /["*/:<>?\\|]/g;
 
-/** 경로 구분자 등 파일명에 쓸 수 없는 문자를 제거하고 길이를 제한한다. */
+/** Remove filename-invalid chars like path separators; cap length. */
 export function sanitizeFilename(title: string): string {
   const cleaned = title
     .replace(FILENAME_INVALID_CHARS, "")
@@ -55,7 +54,7 @@ function provenanceLabel(kind: "BUILDER_EVIDENCE" | "KUBI_INTERPRETATION" | "USE
   return kind === "KUBI_INTERPRETATION" ? t("provenance.kubi") : t("provenance.user");
 }
 
-/** Markdown 파일 내용을 만든다. */
+/** Create Markdown file content. */
 export function generateMarkdownExport(report: ReportDraft, staleness: EvidenceRunStatus | null): string {
   const parts = [`# ${report.title}`, "", metadataLines(report, staleness).map((line) => `- ${line}`).join("\n"), ""];
 
@@ -107,7 +106,7 @@ const HTML_DOC_STYLE = `
   .warn { color: #92400e; background: #fff4e5; border: 1px solid #f3d9a8; border-radius: 6px; padding: .5rem .75rem; font-size: .85rem; }
 `;
 
-/** 안전한 self-contained HTML 문서를 만든다. `<script>`는 절대 포함하지 않는다. */
+/** Create safe self-contained HTML document. Never includes `<script>`. */
 export function generateHtmlExport(report: ReportDraft, staleness: EvidenceRunStatus | null): string {
   const meta = metadataLines(report, staleness).map((line) => `<li>${escapeHtml(line)}</li>`).join("");
   const staleWarning =
@@ -149,7 +148,7 @@ export function generateHtmlExport(report: ReportDraft, staleness: EvidenceRunSt
   ].join("\n");
 }
 
-/** Blob을 만들어 브라우저 다운로드를 시작한다(실제 배포 웹앱 - Claude Artifact 샌드박스와 무관). */
+/** Create Blob and trigger browser download (production web app — unrelated to Claude Artifact sandbox). */
 export function triggerDownload(filename: string, content: string, mimeType: string): void {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);

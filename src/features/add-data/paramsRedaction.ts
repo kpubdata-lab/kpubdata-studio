@@ -1,26 +1,22 @@
 /**
- * Public API source sourceParams display/storage secret redaction (#283 follow-up
- * review §1).
+ * Public API source sourceParams display/storage secret redaction (#283 follow-up §1).
  *
- * publicApi.sourceParams is JSON text that may mix in credentials like public data
- * portal serviceKey — `features/assistant/scrub.ts` itself was designed with this
- * premise. Apply same principle as `urlRedaction.ts` applies to URL endpoint query
- * parameters, now to sourceParams object/JSON text. No new secret detection logic —
- * reuse existing detector (`isSecretKey`/`looksLikeSecret`) from
- * `features/assistant/scrub.ts` directly, judging only at key/value level.
+ * publicApi.sourceParams is JSON text and may contain credentials like public data portal serviceKey —
+ * features/assistant/scrub.ts itself is built on this assumption. Apply the same principle that
+ * urlRedaction.ts applies to URL endpoint query parameters to sourceParams object/JSON text.
+ * Do not create new secret detection logic; reuse existing detectors from features/assistant/scrub.ts
+ * (isSecretKey/looksLikeSecret) and judge only at key/value granularity.
  *
- * This module is display/localStorage-save only. Never touches actual Builder
- * submission value (`BuildSpec.sources[0].params`) — caller
- * (`ReviewBuildStep`/`model.ts`'s `redactBuildSpecForDisplay`/`draftStorage`)
- * creates only redacted copy, keeping in-memory draft/spec with original values.
+ * This module is for display/localStorage storage only. Never touch actual Builder submission values
+ * (BuildSpec.sources[0].params) — callers (ReviewBuildStep/model.ts redactBuildSpecForDisplay/draftStorage)
+ * create only redacted copies, keeping in-memory draft/spec unchanged.
  */
 import { hasSecretPlaceholder, isSecretKey, looksLikeSecret, REDACTED_SECRET_MARKER } from "@/features/assistant/scrub";
 import { REDACTED_PLACEHOLDER } from "@/features/add-data/urlRedaction";
 import type { JsonValue } from "@/shared/lib/types";
 
-// Like URL endpoint `REDACTED_PLACEHOLDER` (urlRedaction.ts), use project
-// namespace — bare `REDACTED` could collide with normal API value like
-// {"status":"REDACTED"} (#283 follow-up review §3, same principle).
+// Same reason as URL endpoint's REDACTED_PLACEHOLDER (urlRedaction.ts): use project-scoped namespace —
+// bare REDACTED could conflict with legitimate API values like {"status":"REDACTED"} (#283 follow-up §3, same principle).
 export const PARAMS_REDACTED_SENTINEL = "__KPD_PARAMS_SECRET_REDACTED__";
 
 export interface RedactedParams {
@@ -29,8 +25,8 @@ export interface RedactedParams {
 }
 
 /**
- * From source.params object (canonical BuildSpec's `sources[0].params`), replace
- * only values judged as secret with sentinel. Keep non-sensitive key/value unchanged.
+ * In source.params object (canonical BuildSpec's sources[0].params), replace only values identified
+ * as secrets with sentinel. Keep non-sensitive key/values unchanged.
  */
 export function redactSourceParamsObject(params: Record<string, JsonValue>): RedactedParams {
   let hadSecret = false;
@@ -62,14 +58,12 @@ export interface RedactedParamsText {
 }
 
 /**
- * Display/storage redaction for `draft.publicApi.sourceParams` (Configure step JSON
- * textarea source). If valid JSON, delegate to `redactSourceParamsObject` to hide
- * values judged as secret.
+ * Display/storage redaction for draft.publicApi.sourceParams (Configure step JSON textarea source).
+ * If valid JSON, delegate to redactSourceParamsObject to hide only secret-identified values.
  *
- * For values that fail JSON parse (mid-edit temp strings etc.), cannot reliably
- * distinguish key/value boundaries, so fail-closed whole to sentinel — same
- * principle as malformed endpoint storage fail-closed (`sanitizeUrlEndpointForStorage`).
- * Empty string has no secret, so leave as-is.
+ * If unparseable as JSON (incomplete input strings, etc.), cannot reliably distinguish key/value boundaries,
+ * so fail-closed: treat entire content as sentinel — same principle as malformed URL storage fail-closed
+ * (sanitizeUrlEndpointForStorage). Empty strings have no secrets, so keep as-is.
  */
 export function redactSourceParamsText(sourceParams: string): RedactedParamsText {
   let parsed: unknown;
@@ -92,14 +86,12 @@ export function redactSourceParamsText(sourceParams: string): RedactedParamsText
 }
 
 /**
- * On restored draft, check if sourceParams has redaction marker remaining (= real
- * secret original lost). Triggers fail-closed in `buildSpecFromDraft`/`toBuildSpec`
- * — prevent marker from being submitted to Builder as real parameter value.
+ * When restoring a saved draft, check if sourceParams contains redaction markers (= actual secret original is lost).
+ * Used to fail-closed buildSpecFromDraft/toBuildSpec — avoid submitting marker as if it were a real parameter value.
  *
- * All markers at persistence boundary recognized in one place (S07 review §1):
- * `redactSourceParamsText`'s `__KPD_PARAMS_SECRET_REDACTED__`, URL query's
- * `__KPD_URL_SECRET_REDACTED__`, `redactSecrets()`'s terminal `[REDACTED]`, scrub
- * internals `__SCRUBBED_*`.
+ * Recognize all markers used at persistence boundaries in one place (S07 review §1):
+ * redactSourceParamsText's __KPD_PARAMS_SECRET_REDACTED__, URL query's __KPD_URL_SECRET_REDACTED__,
+ * redactSecrets()'s terminal [REDACTED], scrub internals __SCRUBBED_*.
  */
 export function sourceParamsHasRedactedSecret(sourceParams: string): boolean {
   return (

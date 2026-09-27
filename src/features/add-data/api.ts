@@ -1,9 +1,8 @@
 /**
- * Thin wrapper for Builder API used by Add Data Workbench (#250).
+ * Thin wrapper around Builder API used by Add Data Workbench (#250).
  *
- * Wraps the client from `shared/lib/builderApi.ts` without reimplementing new
- * endpoints. This module handles (1) mock/real branching, and (2) light polishing
- * of responses into a form the UI can directly consume.
+ * Reuses client from shared/lib/builderApi.ts as-is without reimplementing new endpoints.
+ * Work here is only (1) mock/real branching, (2) slight response reshaping for screen consumption.
  */
 import { builderApi, isRealBuilderEnabled, type CatalogResponse, type ProviderTestResponse, type UploadMetadata } from "@/shared/lib/builderApi";
 import type { SourceFormat } from "@/shared/lib/types";
@@ -48,18 +47,16 @@ const MOCK_CATALOG: CatalogResponse = {
   ],
 };
 
-/** GET /catalog — provider/dataset catalog (deterministic mock in mock mode). */
+/** GET /catalog — provider/dataset catalog (mock mode uses deterministic mock). */
 export async function fetchCatalog(signal?: AbortSignal): Promise<CatalogResponse> {
   if (!isRealBuilderEnabled()) return MOCK_CATALOG;
   return builderApi.catalog(signal);
 }
 
 /**
- * POST /providers/{provider}/test wrapper (#492). Generic Provider probe calls
- * any first Dataset without required parameters, so "connection success" is
- * unreliable and was removed from Add Data user flow (#S-provider-probe). Builder
- * contract is maintained, so the wrapper itself is kept (for direct diagnostics).
- * Mock mode always returns connected.
+ * POST /providers/{provider}/test wrapper (#492). Generic Provider probe calls arbitrary first
+ * Dataset without required params, unreliable for "connection success" and removed from Add Data user flow (#S-provider-probe).
+ * Builder contract maintained so wrapper kept for direct diagnostics. Mock mode always returns connected.
  */
 export async function testProvider(provider: string, signal?: AbortSignal): Promise<ProviderTestResponse> {
   if (!isRealBuilderEnabled()) {
@@ -69,14 +66,10 @@ export async function testProvider(provider: string, signal?: AbortSignal): Prom
 }
 
 /**
- * Extracts only "effective credential configuration status" per provider from
- * GET /providers summary (#S-add-data). Add Data credential prerequisite reuses
- * this value as the authoritative source — `configured` is an effective value
- * reflecting user credential > server default > none (ADR 0012), and Studio does
- * not independently infer credential existence. Mock mode treats as always
- * connected/configured (like testProvider above) to avoid blocking remaining
- * mock flow without network — prerequisite UX itself is verified via component
- * test that directly injects `providerConfigured` prop to `ConfigureStep`.
+ * GET /providers extracts only per-provider "effective credential configured" from summary (#S-add-data).
+ * Add Data credential prerequisite reuses this as authoritative source — configured reflects user credential > server default > none
+ * (ADR 0012), Studio doesn't independently infer credential existence. Mock mode treats as always connected/configured like testProvider above
+ * to not block mock flow without network — prerequisite UX itself verified by component test injecting providerConfigured prop directly to ConfigureStep.
  */
 export async function fetchProviderConfigured(signal?: AbortSignal): Promise<Record<string, boolean>> {
   if (!isRealBuilderEnabled()) return { datago: true };
@@ -85,10 +78,8 @@ export async function fetchProviderConfigured(signal?: AbortSignal): Promise<Rec
 }
 
 /**
- * File source upload for kind="file" (#498). Mock mode does not read actual file
- * content; instead creates deterministic upload_id and returns immediately (browser
- * principle: file content is not held as separate canonical copy — so this also
- * does not read content).
+ * kind="file" source upload (#498). Mock mode doesn't read actual file content, generates deterministic upload_id
+ * immediately (browser principle: file content not stored separately in canonical — not read here either).
  */
 export async function uploadSourceFile(
   file: File,

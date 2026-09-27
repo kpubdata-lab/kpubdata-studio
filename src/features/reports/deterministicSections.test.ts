@@ -37,8 +37,8 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
     const evidence = await fetchReportEvidence("population", "population-2026-08-13");
     const quality = buildDeterministicSections(evidence).find((b) => b.section === "quality")!;
 
-    // "PASS로 간주하지 않습니다"라는 명시적 부정 문구는 있어도 되지만, PASS를 대표 상태처럼
-    // 단독으로 내세우지는 않는다.
+    // "Not considered PASS" explicit negation allowed, but PASS not singled out as representative state.
+    // Must keep unavailable.
     expect(quality.markdown).not.toMatch(/summary.*PASS \d/i);
     expect(quality.markdown).toContain("PASS로 간주하지 않습니다");
     expect(quality.markdown).toContain("unavailable");

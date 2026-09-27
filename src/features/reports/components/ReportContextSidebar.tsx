@@ -1,10 +1,10 @@
 /**
- * Report Context sidebar (`/reports/:reportId`, #258 IA 개편).
+ * Report Context sidebar (`/reports/:reportId`, #258 IA redesign).
  *
- * 실제로 이 Report에 존재하는 값만 보여준다 — Prototype SSOT의 "Quality summary ON / Schema
- * drift ON / Lineage ON / Analysis ideas ON" 같은 데모용 토글은 대응하는 기능이 없으므로
- * 옮기지 않는다. Evidence 상태 판정/재확인 로직은 기존 `EvidenceStatusBanner`를 그대로
- * 재사용한다(새로 만들지 않음).
+ * Shows only values actually present in this Report — Prototype SSOT demo toggles like
+ * "Quality summary ON / Schema drift ON / Lineage ON / Analysis ideas ON" have no corresponding
+ * feature, so not migrated. Evidence status judgment/recheck logic reuses existing
+ * `EvidenceStatusBanner` (not rebuilt).
  */
 import { useTranslation } from "react-i18next";
 import { formatDateTime } from "@/features/datasets/model";

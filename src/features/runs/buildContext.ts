@@ -1,7 +1,7 @@
 /**
- * Builds 화면의 URL 문맥(run/dataset/source/stage) 정규화 (#379로 BuildsPage에서 분리).
+ * Normalize Builds screen URL context (run/dataset/source/stage) (#379 split from BuildsPage).
  *
- * Builder 응답이 loaded인 표면만 근거로 삼는다 — 아직 모르는 값을 추측해 URL에 쓰지 않는다.
+ * Use only loaded surfaces from Builder response — never guess unknown values to URL.
  */
 import { parse as parseYaml } from "yaml";
 
@@ -22,7 +22,7 @@ export function buildStatusFilters(t: (key: string) => string): { value: RunStat
 }
 
 
-/** Builder 응답이 loaded인 surface만 사용해 Builds의 Kubi context query를 정규화한다. */
+/** Normalize Builds Kubi context query using only loaded surfaces from Builder response. */
 export function normalizeBuildContextSearch(
   searchParams: URLSearchParams,
   specState: AsyncState<BuildSpecSnapshotResponse>,
@@ -49,9 +49,9 @@ export function normalizeBuildContextSearch(
     const requestedStageAvailable =
       (requestedStage === "bronze" || requestedStage === "silver" || requestedStage === "gold") &&
       Boolean(selectedSourceEntry && selectedSourceEntry[requestedStage].status !== "not_run");
-    // 실패가 정확히 하나일 때만 그 failedStage를 안전한 문맥으로 쓰되, 선택된 source가
-    // 있으면 반드시 그 source의 실패여야 한다 — 다른 source의 stage를 현재 source에
-    // 붙여 불가능한 source/stage 조합(unverified evidence)을 만들지 않는다.
+    // Use failedStage as safe context only if exactly one failure exists; if source selected,
+    // must be that source's failure — don't attach different source's stage to current source
+    // creating impossible source/stage combo (unverified evidence).
     const failureFallback =
       failureEvidence.length === 1 &&
       (!selectedSource || failureEvidence[0].sourceKey === selectedSource)
@@ -72,7 +72,7 @@ export function normalizeBuildContextSearch(
 
 
 
-/** BuildSpec snapshot YAML에서 dataset_id만 안전하게 뽑는다. 파싱 실패는 조용히 null로 처리한다(추측 금지). */
+/** Safely extract only dataset_id from BuildSpec snapshot YAML. Parse failure silently returns null (no guessing). */
 export function extractDatasetId(specYaml: string): string | null {
   try {
     const parsed = parseYaml(specYaml) as unknown;
@@ -87,11 +87,11 @@ export function extractDatasetId(specYaml: string): string | null {
 }
 
 /**
- * Builder job status를 그대로 화면 상태로 쓴다.
+ * Use Builder job status as-is for screen state.
  *
- * 예전에는 cancelling을 running으로 합쳐서 보여줬지만, "취소 중"과 "실행 중"은 사용자가 취소
- * 요청을 보냈는지 여부가 다른 별개 상태다 — Builder가 보낸 상태를 다른 상태로 재분류하지
- * 않는다(#255 후속 보완). BuildRunStatus/StatusBadge가 cancelling을 직접 지원한다.
+ * Previously collapsed cancelling into running, but "cancelling" and "running" are distinct
+ * states — whether user sent cancel request differs. Don't reclassify Builder's status to
+ * different state (#255 follow-up). BuildRunStatus/StatusBadge directly supports cancelling.
  */
 export function mapLiveStatus(status: "queued" | "running" | "cancelling" | "succeeded" | "failed" | "cancelled"): BuildRunStatus {
   return status;
