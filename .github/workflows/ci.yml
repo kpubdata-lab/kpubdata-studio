@@ -60,6 +60,15 @@ jobs:
       - name: i18n extraction gate
         run: npm run i18n:check
 
+      # 문구를 바꾸면서 테스트의 단정을 같이 옮기지 않는 것을 막는다 (#429).
+      # 이 브랜치가 제거한 로케일 값을 아직 단정하는 테스트가 있으면 실패한다 —
+      # 어떤 문자열이 라벨인지 추측하지 않으므로 오탐이 없다.
+      # checkout 이 depth 1 이므로 비교 기준을 여기서 따로 가져온다.
+      - name: Stale UI literal gate
+        run: |
+          git fetch --no-tags --depth=1 origin main || true
+          npm run check:stale-ui
+
       - name: Test (Vitest)
         run: npm test
 

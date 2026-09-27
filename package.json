@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "test:e2e:real": "node scripts/run-real-e2e.mjs",
     "i18n:coverage": "node scripts/i18n-coverage.mjs",
-    "i18n:check": "node scripts/i18n-coverage.mjs --check"
+    "i18n:check": "node scripts/i18n-coverage.mjs --check",
+    "check:stale-ui": "node scripts/check-stale-ui-literals.mjs --base origin/main"
   },
   "dependencies": {
     "i18next": "^26.4.2",
