@@ -1,4 +1,4 @@
-/** 마법사 1단계 — 데이터셋 기본 정보 (#379). */
+/** wizard 1step — dataset default information (#379). */
 import { useTranslation } from "react-i18next";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 

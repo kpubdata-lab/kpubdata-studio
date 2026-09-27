@@ -1,9 +1,9 @@
 /**
- * 빌드 실행(run) API 진입점.
+ * Build run API entry point.
  *
- * 실연동 모드(`VITE_USE_REAL_BUILDER=true`)면 Builder `/build`를 호출하고, 아니면
- * 결정적 mock 실행 결과를 반환한다. Builder의 /build는 현재 동기식이므로 비동기 job
- * 폴링은 Builder 측 job 엔드포인트가 생기면 확장한다(#39).
+ * In real integration mode (`VITE_USE_REAL_BUILDER=true`), calls Builder `/build`;
+ * otherwise returns deterministic mock results. Builder's /build is currently
+ * synchronous; async job polling will expand when Builder provides job endpoints (#39).
  */
 import { i18n } from "@/shared/i18n";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
@@ -15,11 +15,11 @@ import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/share
 const MOCK_TIME = "1970-01-01T00:00:00.000Z";
 
 /**
- * BuildSpec으로부터 경로 안전한 run_id를 생성한다.
+ * Generate path-safe run_id from BuildSpec.
  *
- * Builder는 run_id를 산출물 디렉터리 이름으로 사용하므로 안전한 세그먼트
- * (영숫자/하이픈)만 남긴다. dataset id와 타임스탬프를 결합해 사람이 식별 가능하면서도
- * 충돌하지 않는 값을 만든다.
+ * Builder uses run_id as output directory name, so only safe segments
+ * (alphanumeric/hyphen) are kept. Combines dataset id and timestamp for
+ * human-identifiable collision-free values.
  */
 export function generateRunId(datasetId: string): string {
   const slug = datasetId
@@ -32,13 +32,13 @@ export function generateRunId(datasetId: string): string {
 }
 
 /**
- * 새 빌드 실행을 시작하고 실행 결과를 반환한다.
+ * Start a new build execution and return execution results.
  *
- * @param spec - 실행할 빌드 스펙.
- * @param signal - 취소용 AbortSignal(선택).
- * @returns 생성된 빌드 실행 정보.
+ * @param spec - BuildSpec to execute.
+ * @param signal - Optional AbortSignal for cancellation.
+ * @returns Generated build execution info.
  */
-/** Builder 잡 상태를 Studio 실행 상태로 매핑한다 (builder 1.16.0 #480). */
+/** Map Builder job status to Studio execution status (builder 1.16.0 #480). */
 export type BuilderJobStatus =
   | "queued"
   | "running"
@@ -48,10 +48,13 @@ export type BuilderJobStatus =
   | "cancelled";
 
 /**
- * 실행이 어떤 Builder 표면을 타는지(그리고 그 run_id)를 호출부(useBuildJob)에 알린다.
+ * Indicates which Builder surface the execution uses (and its run_id) to caller
+ * (useBuildJob).
  *
- * - `async`: POST /builds + polling. 사용자 취소는 POST /builds/{run_id}/cancel로 전달해야 한다.
- * - `sync`: POST /build (file source, ADR 0014). server-side 협조적 취소 경로가 없다.
+ * - `async`: POST /builds + polling. User cancel must be sent via
+ *   POST /builds/{run_id}/cancel.
+ * - `sync`: POST /build (file source, ADR 0014). No server-side cooperative
+ *   cancellation path.
  */
 export interface BuildExecutionHandle {
   runId: string;
@@ -59,10 +62,11 @@ export interface BuildExecutionHandle {
 }
 
 /**
- * BuildSpec에 file source가 하나라도 포함되면 true.
+ * Returns true if BuildSpec contains any file source.
  *
- * ADR 0014: file source의 async build(POST /builds)는 현재 지원 범위 밖이다 — file이
- * 섞인 spec은 전체를 sync POST /build로 실행해야 한다. "첫 source만" 보지 않고 전체를 본다.
+ * ADR 0014: async build (POST /builds) with file source is currently out of scope
+ * — any spec with files must run entirely via sync POST /build. Checks all sources,
+ * not just the first.
  */
 export function specHasFileSource(spec: BuildSpec): boolean {
   return spec.sources.some((source) => source.kind === "file");
@@ -82,31 +86,32 @@ export async function executeBuild(
       startedAt: MOCK_TIME,
       finishedAt: MOCK_TIME,
     };
-    // mock 모드에서도 편집 흐름을 실제와 같은 경로로 검증할 수 있도록 스펙을 보관한다.
+    // In mock mode, save spec so edit flow can be validated with same path as real mode.
     saveBuildSpec(mockRun.id, spec);
     return mockRun;
   }
 
-  // 실연동 모드에서는 실제 실행 시각을 기록한다(이력/상세 화면에서 잘못된 1970 값 방지).
+  // In real integration mode, record actual execution time (avoid incorrect 1970 values
+  // in history/detail screens).
   const runId = generateRunId(spec.datasetId);
   const startedAt = new Date().toISOString();
 
-  // file source가 포함된 spec은 async(POST /builds)가 아니라 sync(POST /build)로
-  // 실행한다(ADR 0014). public_api/url만 있으면 기존 async job 표면을 그대로 쓴다.
+  // Specs with file sources run via sync (POST /build), not async (POST /builds).
+  // (ADR 0014). public_api/url only uses existing async job surface.
   let result: BuildRun;
   if (specHasFileSource(spec)) {
     onHandle?.({ runId, mode: "sync" });
     result = await runSyncBuild(spec, runId, startedAt, signal);
   } else {
-    // async 표면에서는 POST /builds가 성공해 authoritative run_id를 확보한 **다음에만**
-    // handle을 노출한다(F03). 그래야 submit-in-flight 구간의 Cancel이 아직 서버에
-    // 존재하지 않는 run_id로 협조적 취소를 쏘는 race를 막을 수 있다.
+    // In async mode, expose handle only after POST /builds succeeds and obtains
+    // authoritative run_id (F03). This prevents race where submit-in-flight Cancel
+    // sends cooperative cancel to non-existent run_id on server.
     result = await runAsyncBuild(spec, runId, startedAt, signal, onJobStatus, onHandle);
   }
 
-  // Builder는 spec을 영속화하지 않으므로(#120), 이후 편집 화면이 기존 스펙을 복원할 수
-  // 있도록 Studio가 실행 시점의 스펙을 run_id에 묶어 보관한다. 저장 실패는 무시되며
-  // 빌드 결과에는 영향을 주지 않는다.
+  // Builder does not persist spec (#120), so Studio saves the spec bound to
+  // run_id for edit screen restoration. Save failures are ignored and do not
+  // affect build results.
   saveBuildSpec(result.id, spec);
 
   return result;
@@ -114,7 +119,7 @@ export async function executeBuild(
 
 export const POLL_INTERVAL_MS = 800;
 
-/** terminal(#245): 이 상태에 도달하면 더 이상 polling하지 않는다. */
+/** Terminal (#245): polling stops when reaching this status. */
 export function isTerminalBuilderStatus(status: BuilderJobStatus): boolean {
   return status === "succeeded" || status === "failed" || status === "cancelled";
 }
@@ -138,12 +143,11 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 }
 
 /**
- * 이미 조회한 `initialJob`에서 시작해 terminal 상태(succeeded/failed/cancelled)까지
- * `GET /builds/{run_id}`를 polling한다 (#245 polling state machine 재사용).
+ * Starting from already-fetched `initialJob`, poll `GET /builds/{run_id}` until
+ * terminal state (succeeded/failed/cancelled) (#245 polling state machine reuse).
  *
- * 새로 제출한 build(runAsyncBuild)와, 이미 존재하는 run을 선택해 지켜보는 경우
- * (Builds/Runs master-detail, #255) 양쪽에서 이 하나의 loop을 공유한다 — 두 번째
- * polling state machine을 새로 만들지 않는다.
+ * Shared by both newly submitted build (runAsyncBuild) and watching existing runs
+ * (Builds/Runs master-detail, #255) — no need for second polling state machine.
  */
 export async function pollBuildJobUntilTerminal(
   runId: string,
@@ -169,19 +173,21 @@ async function runAsyncBuild(
   onHandle: ((handle: BuildExecutionHandle) => void) | undefined,
 ): Promise<BuildRun> {
   const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal);
-  // 서버가 반환한 run_id가 정본이다. 이 시점부터만 협조적 취소(POST
-  // /builds/{run_id}/cancel)를 걸 수 있다 — submit 이전 Cancel은 호출부가 pending
-  // intent로 보관했다가 여기서 노출되는 handle을 통해 정확히 1회 반영한다(F03).
+  // Server-returned run_id is authoritative. Only from here can cooperative cancel
+  // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
+  // intent and applied exactly once via handle exposed here (F03).
   onHandle?.({ runId: submitted.run_id, mode: "async" });
   onJobStatus?.(submitted.status);
 
-  // 제출 직후 이미 terminal인 경우(동일 run_id 재제출 등) 폴링 없이 바로 판정한다.
+  // If terminal immediately after submit (same run_id resubmit, etc.), decide
+  // without polling.
   const job = await pollBuildJobUntilTerminal(submitted.run_id, submitted, signal, (polled) =>
     onJobStatus?.(polled.status),
   );
 
   const finishedAt = job.updated_at;
-  // run_id는 서버 응답이 정본이다(제출값과 동일이지만 응답 기준으로 통일).
+  // run_id is authoritative from server response (same as submitted but unified from
+  // response).
   const finalRunId = job.run_id;
   if (job.status === "cancelled") {
     return { id: finalRunId, spec, status: "cancelled", startedAt, finishedAt };
@@ -197,9 +203,10 @@ async function runAsyncBuild(
     };
   }
   const response = job.response;
-  // 성공 잡의 최종 build 응답이 부분 실패(status: "failed", 502와 동일한 wire)일 수
-  // 있다 — terminal failure와 partial-result를 구분하고, 사유 우선순위는 동기 /build
-  // 502와 동일하게 최상위 error → outcomes[].error → 기본 문구(#75)를 따른다.
+  // Successful job's final build response can be partial failure
+  // (status: "failed", same wire as 502) — distinguish terminal failure from
+  // partial-result, with priority: topmost error → outcomes[].error → default
+  // message (#75), same as sync /build 502.
   if (response && response.status !== "ok") {
     const outcomeReason = response.outcomes.find((outcome) => outcome.error)?.error;
     const reason =
@@ -217,12 +224,12 @@ async function runAsyncBuild(
 }
 
 /**
- * file source가 포함된 spec을 동기 `POST /build`로 실행한다(ADR 0014).
+ * Execute spec with file sources via synchronous `POST /build` (ADR 0014).
  *
- * async job 표면(POST /builds + polling)을 타지 않으므로 job status 콜백/취소
- * endpoint는 관여하지 않는다. 성공/부분 실패 판정은 async 최종 build 응답과 동일한
- * 규칙(최상위 error → outcomes[].error → 기본 문구, #75)을 따라 UI가 async 결과와
- * 똑같이 소비할 수 있는 BuildRun을 돌려준다.
+ * Skips async job surface (POST /builds + polling), so job status callbacks/cancel
+ * endpoints are not involved. Success/partial-failure judgment follows same rules
+ * as async final build response (topmost error → outcomes[].error → default message,
+ * #75) so UI can consume BuildRun identically to async result.
  */
 async function runSyncBuild(
   spec: BuildSpec,
@@ -244,11 +251,11 @@ async function runSyncBuild(
 }
 
 /**
- * Builder `GET /builds`의 BuildSummary.status(canonical 어휘: ok/failed/cancelled)를
- * Studio BuildRunStatus로 매핑한다.
+ * Map Builder `GET /builds` BuildSummary.status (canonical vocab: ok/failed/cancelled)
+ * to Studio BuildRunStatus.
  *
- * 취소된 run은 `cancelled`로 오며 절대 failed로 붕괴시키지 않는다(#S04). Builder 어휘
- * 밖의 값은 조용히 성공으로 넘기지 않고 fail-closed(failed)로 둔다.
+ * Cancelled runs come as `cancelled` and never collapse to failed (#S04). Values
+ * outside Builder vocab fail-closed (failed), not silently as success.
  */
 function mapBuildSummaryStatus(status: BuildSummary["status"]): BuildRunStatus {
   switch (status) {
@@ -263,7 +270,7 @@ function mapBuildSummaryStatus(status: BuildSummary["status"]): BuildRunStatus {
   }
 }
 
-/** 데모 카탈로그 항목을 목록/이력 UI용 BuildSpec으로 변환한다. */
+/** Convert demo catalog entry to BuildSpec for list/history UI. */
 function mockSpec(dataset: DemoDataset): BuildSpec {
   return {
     datasetId: dataset.slug,
@@ -284,7 +291,7 @@ function mockSpec(dataset: DemoDataset): BuildSpec {
   };
 }
 
-/** mock 모드에서 보여줄 결정적 빌드 이력(실제 builder 데이터셋 스펙 기반). */
+/** Deterministic build history for mock mode (based on real builder dataset specs). */
 export function mockBuilds(): BuildRun[] {
   return DEMO_DATASETS.map((dataset) => ({
     id: dataset.buildId,
@@ -296,16 +303,18 @@ export function mockBuilds(): BuildRun[] {
 }
 
 /**
- * 빌드 실행 이력 목록을 조회한다 (#12, #95, #153).
+ * List build execution history (#12, #95, #153).
  *
- * mock 모드(`VITE_USE_REAL_BUILDER` 미설정)에서는 이력 표/검색/정렬 UI를 개발·검증할 수
- * 있도록 결정적 mock 목록을 반환한다.
+ * In mock mode (`VITE_USE_REAL_BUILDER` unset), returns deterministic mock list
+ * for developing/verifying list/search/sort UI.
  *
- * 실연동 모드에서는 Builder `GET /builds`를 호출하고 응답을 BuildListItem[]으로 매핑한다(#153, builder #250).
- * Builder 응답에 spec/title이 없으므로 title은 null이 되고, UI는 run ID를 대신 표시한다.
+ * In real integration mode, calls Builder `GET /builds` and maps response to
+ * BuildListItem[] (#153, builder #250). Builder response lacks spec/title, so title
+ * becomes null; UI shows run ID instead.
  *
- * @param limit - 선택적 limit 파라미터. Builder의 기본값(50)을 사용하려면 생략한다.
- * @returns 빌드 실행 목록(mock 모드: 결정적 mock, 실연동 모드: Builder 응답 매핑).
+ * @param limit - Optional limit parameter. Omit to use Builder default (50).
+ * @returns Build execution list (mock mode: deterministic mock, real integration
+ *          mode: Builder response mapped).
  */
 export async function listBuilds(limit?: number): Promise<BuildListItem[]> {
   if (!isRealBuilderEnabled()) {
@@ -321,10 +330,10 @@ export async function listBuilds(limit?: number): Promise<BuildListItem[]> {
   const response = await builderApi.listBuilds(limit);
   return response.builds.map((summary) => ({
     id: summary.run_id,
-    title: null, // Builder GET /builds는 title을 제공하지 않음
+     title: null, // Builder GET /builds does not provide title
     status: mapBuildSummaryStatus(summary.status),
-    startedAt: summary.started_at ?? null, // 누락 또는 null을 명시적 null로 정규화
-    finishedAt: summary.finished_at ?? null, // 누락 또는 null을 명시적 null로 정규화
+     startedAt: summary.started_at ?? null, // Normalize missing or null to explicit null
+     finishedAt: summary.finished_at ?? null, // Normalize missing or null to explicit null
   }));
 }
 

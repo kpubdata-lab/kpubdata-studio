@@ -58,7 +58,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       expect(summary).toContain("1건은 PASS");
       expect(summary).toContain("1건은 FAIL");
       expect(summary).not.toContain("0건은 WARN");
-      // 실제 규칙별 서술: pm10 결측률 PASS, temperature 필수 컬럼 FAIL
+      // Actual per-rule descriptions: pm10 missing-rate PASS, temperature required-column FAIL
       expect(summary).toContain("pm10");
       expect(summary).toContain("1.0%");
       expect(summary).toContain("temperature");
@@ -118,7 +118,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       const summary = buildOutputSummary(evidence);
 
       expect(summary).toContain("Output 확인 불가");
-      // "확인할 수 없" 표현이 한 번만 등장한다(중복 경고 금지, #258 IA 개편 §4).
+      // "cannot verify" appears once only (no duplicate warnings, #258 IA redesign §4).
       const occurrences = summary.split("확인").length - 1;
       expect(occurrences).toBeLessThanOrEqual(2);
     });

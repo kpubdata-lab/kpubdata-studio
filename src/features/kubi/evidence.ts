@@ -1,12 +1,12 @@
 /**
  * Kubi evidence grounding (#256).
  *
- * 현재 `KubiContext`에 대해 Builder의 실제 API(`/catalog`, `/datasets/*`, `/builds/*`)만으로
- * safe evidence 번들을 구성한다. 원본 credential/service key가 evidence에 들어올 경우를
- * 대비해 `redactSecrets`(#206, 기존 assistant 모듈 재사용)를 마지막 방어선으로 통과시킨다.
+ * For the current `KubiContext`, construct a safe evidence bundle using only Builder's actual APIs
+ * (`/catalog`, `/datasets/*`, `/builds/*`). As a last-line defense against raw credentials/service
+ * keys appearing in evidence, pass through `redactSecrets` (#206, reusing the existing assistant module).
  *
- * 일부 evidence 조회가 실패해도 전체를 실패시키지 않는다 — `partial`/`unavailable`로 어떤
- * 부분을 확인하지 못했는지 그대로 드러내고, Kubi가 "모든 걸 확인한 것처럼" 답하지 않게 한다.
+ * Even if some evidence queries fail, do not fail the entire process — use `partial`/`unavailable`
+ * to clearly show what sections could not be verified, so Kubi doesn't answer as if "everything was confirmed."
  */
 import {
   getBuildQuality,
@@ -31,7 +31,7 @@ async function settle<T>(promise: Promise<T>): Promise<{ ok: true; value: T } | 
   }
 }
 
-/** Builder canonical spec snapshot에서 명시적인 dataset_id만 읽는다. */
+/** Read only explicit dataset_id from Builder canonical spec snapshot. */
 function datasetIdFromSpecSnapshot(spec: string): string | null {
   try {
     const parsed = parseYaml(spec) as unknown;
@@ -44,12 +44,12 @@ function datasetIdFromSpecSnapshot(spec: string): string | null {
 }
 
 /**
- * 현재 context에 대한 evidence를 조회한다.
+ * Load evidence for the current context.
  *
- * @param context - evidence를 구성할 대상 문맥(요청 시작 시점 값으로 고정해서 넘겨야 한다).
- * @param signal - 취소 signal.
- * @returns secret이 제거된 evidence 번들, 응답 hallucination 검사를 위한 알려진 id 집합,
- *   그리고 LLM egress 엔트로피 오탐에서만 면제할 "Builder가 존재를 확인한" run id 집합.
+ * @param context - Context to compose evidence for (must be fixed at request start time).
+ * @param signal - Abort signal.
+ * @returns Evidence bundle with secrets removed, set of known IDs for response hallucination checks,
+ *   and set of run IDs "confirmed to exist by Builder" that are exempt from egress entropy false positives.
  */
 export async function loadKubiEvidence(
   context: KubiContext,
@@ -79,21 +79,21 @@ export async function loadKubiEvidence(
     sourceKeys: new Set(),
   };
 
-  // knownRefs.runIds 와 safeRunIds 는 역할이 다르지만(전자는 crossCheck 의 hallucination
-  // 대조, 후자는 LLM egress/redaction 엔트로피 오탐 면제) provenance 계약은 같다: 둘 다
-  // "이번 evidence 로딩에서 Builder 응답으로 실제 존재가 확인된 run id" 만 담는다. route/
-  // context.runId 는 evidence.context / deepLink / Builder 조회 target 으로만 쓰고, 존재가
-  // 확인되기 전에는 어느 trust set 에도 넣지 않는다. 두 Set 이 다시 어긋나지 않도록 확인된
-  // run 은 반드시 이 helper 를 통해 등록한다.
+  // knownRefs.runIds and safeRunIds have different roles (former for crossCheck hallucination detection,
+  // latter for LLM egress/redaction entropy false positive exemption), but provenance contract is the same:
+  // both contain only run IDs "confirmed to exist" via Builder response in this evidence loading session.
+  // route/context.runId is used only as evidence.context / deepLink / Builder query target; before existence
+  // is confirmed, they are not added to either trust set. To keep both Sets in sync, confirmed runs must always
+  // be registered through this helper.
   const safeRunIds = new Set<string>();
 
-  // safeRunIds 와 provenance 계약은 같지만(엔트로피 오탐에서만 면제하는 exact 값) 대상이
-  // 다르다: 여기에는 Builder `/quality` 응답 필드로부터 Studio 가 deterministic 하게 만든
-  // evidence identifier(qualityResultRefId / schema drift key)만 담는다. `datago.air_quality::
-  // completeness::min_rows::_` 같은 canonical id 는 Shannon 엔트로피가 4.0 을 넘어(길이·문자
-  // 다양성), safeRunIds 만 넘기면 redactSecrets 가 valid quality id 를 `[REDACTED]` 로
-  // 오탐한다. 형태(`quality:` prefix 등)가 아니라 "이번 로딩에서 실제로 생성한 exact 문자열"
-  // 로만 면제한다. 사용자 질문/모델 출력에서 온 값은 절대 넣지 않는다.
+  // safeRunIds and provenance contract are the same (entropy false positives only excluded for exact value),
+  // but targets differ: this set contains only evidence identifiers (qualityResultRefId / schema drift key)
+  // that Studio deterministically derives from Builder `/quality` response fields. A canonical ID like
+  // `datago.air_quality::completeness::min_rows::_` exceeds Shannon entropy threshold (4.0+) due to path
+  // and character diversity, so if only safeRunIds is passed, redactSecrets would false-positively mark valid
+  // quality IDs as `[REDACTED]`. Exemption is based on "exact characters actually created during this loading,"
+  // not just form/pattern (e.g., `quality:` prefix). Never add values from user questions or model output.
   const safeEvidenceIds = new Set<string>();
 
   function confirmRunId(id: string | null | undefined): void {
@@ -135,8 +135,8 @@ export async function loadKubiEvidence(
         updatedAt: dataset.updated_at,
         totalRowCount: dataset.total_row_count,
       };
-      // getDataset 성공 응답의 latest_run_id — Builder 가 확인한 값이다(schema 상 string 이나
-      // 방어적으로 falsy 를 거른다).
+      // getDataset success response's latest_run_id — confirmed by Builder (schema declares string but
+      // defensively filter out falsy values).
       confirmRunId(dataset.latest_run_id);
       if (dataset.latest_run_id) {
         knownRefs.datasetRunMemberships.add(datasetRunMembershipRef(dataset.dataset_id, dataset.latest_run_id));
@@ -155,7 +155,7 @@ export async function loadKubiEvidence(
         startedAt: run.started_at,
         finishedAt: run.finished_at,
       }));
-      // listDatasetRuns 성공 응답의 run_id — Builder 가 직접 반환한 실제 run 이다.
+      // listDatasetRuns success response's run_id — directly returned by Builder, these are actual runs.
       for (const run of runsResult.value.runs) {
         confirmRunId(run.run_id);
         if (datasetResult.ok && datasetResult.value.dataset_id === context.datasetId) {
@@ -168,15 +168,15 @@ export async function loadKubiEvidence(
   }
 
   if (runId) {
-    // runId 가 route/context 에서 왔다면(dataset.latest_run_id 로 이미 confirm 된 경우가 아니면)
-    // 아직 존재가 확인되지 않았다. deepLink 계산과 Builder 조회 target 으로는 쓰되, knownRefs/
-    // safeRunIds 에는 넣지 않는다 — 아래 getBuildQuality / listBuildStages 는 nonexistent run 에
-    // 404 를 주므로(Builder OpenAPI SSOT), 그 요청이 정상 응답할 때만 confirmRunId 로 등록한다.
+     // If runId came from route/context (not already confirmed via dataset.latest_run_id), existence is
+     // not yet confirmed. Used for deepLink calculation and Builder query target, but not added to knownRefs/
+     // safeRunIds until below — getBuildQuality / listBuildStages respond with 404 for nonexistent runs
+     // (Builder OpenAPI SSOT), so confirmRunId is called only when those requests return successfully.
     evidence.deepLinks.buildDetail = `/builds/${encodeURIComponent(runId)}`;
 
-    // 오래된 run이 recent run-list 범위 밖이어도 Builder canonical spec snapshot은 해당
-    // run이 실행된 dataset_id를 직접 제공한다. 다른 membership 근거와 독립적으로 조회하고,
-    // 실패/파싱 불가는 이 근거만 제외한다.
+    // Even if a run is older than the recent run-list window, Builder canonical spec snapshot directly
+    // provides the dataset_id for each run. Query independently of other membership references, and
+    // exclude this evidence source only if failure or parsing is impossible.
     const specSnapshotPromise = settle(getBuildSpecSnapshot(runId, signal));
 
     const storedSpec = loadBuildSpec(runId);
@@ -197,7 +197,7 @@ export async function loadKubiEvidence(
 
     const qualityResult = await settle(getBuildQuality(runId, signal));
     if (qualityResult.ok) {
-      // GET /builds/{run_id}/quality 는 nonexistent run 에 404 를 준다 — 200 이면 실제 run 이다.
+       // GET /builds/{run_id}/quality returns 404 for nonexistent run — if 200, this is an actual run.
       confirmRunId(runId);
       const quality = qualityResult.value;
       const results = Object.values(quality.quality_results).flat();
@@ -242,32 +242,31 @@ export async function loadKubiEvidence(
       }
     }
 
-    // stage evidence는 source/stage 둘 다 문맥에 있을 때만 의미가 있다. source가 없으면
-    // stage 목록에서 첫 source를 추론하지 않는다 — 존재하지 않는 근거를 만들지 않기 위함이다.
+     // Stage evidence is meaningful only when both source and stage exist in context. Do not infer the first
+     // source from stage list if source is missing — principle: do not create evidence for what we cannot verify.
     if (context.stage) {
       const stagesResult = await settle(listBuildStages(runId, signal));
       if (stagesResult.ok) {
-        // GET /builds/{run_id}/stages 도 nonexistent run 에 404 를 준다 — 200 이면 실제 run 이다.
+        // GET /builds/{run_id}/stages also returns 404 for nonexistent run — if 200, this is an actual run.
         confirmRunId(runId);
-        // stage 목록의 모든 source_key는 이 run의 실제 canonical source다 — Generated SQL의
-        // source 검증에 쓸 수 있게 전부 모은다(quality evidence가 없어도 검증 가능).
+       // Every source_key in the stage list is an actual canonical source for this run — all are collected
+       // so generated SQL source validation works even if quality evidence is missing.
         const sources = stagesResult.value.sources;
         for (const source of sources) knownRefs.sourceKeys.add(source.source_key);
-        // 어느 소스의 stage를 볼지: (1) 화면에서 선택된 context.source가 이 run의 실제
-        // source면 그것을, (2) 선택이 없고 이 run의 source가 정확히 1개면 그 유일 소스를,
-        // (3) 그 외(복수 source인데 선택 없음/선택이 이 run에 없음)면 임의 선택하지 않고
-        // fail-closed로 stage를 unavailable 처리한다(P5 canonical source policy와 동일).
+         // Which source's stage to view: (1) if context.source selected on screen matches an actual source
+         // in this run, use it; (2) if no selection and this run has exactly 1 source, use that unique source;
+         // (3) otherwise (multiple sources but no selection / selection not in this run), fail-closed by not
+         // selecting anything (consistent with P5 canonical source policy).
         const chosenSource = context.source
           ? sources.find((source) => source.source_key === context.source)
           : sources.length === 1
             ? sources[0]
             : undefined;
         if (chosenSource) {
-          // stage evidence 는 status/available/row_count 메타데이터만 쓰고 sample row 는
-          // 읽지 않는다. 하지만 Builder `/builds/{run}/stages/{stage}` 는 limit=0 을
-          // "positive integer up to 1000" 위반으로 400 을 준다(OpenAPI SSOT) — 실
-          // Builder 에서 stage evidence 가 항상 unavailable 로 빠지던 원인. 최소 sample(1)
-          // 로 요청해 메타데이터만 취한다.
+           // Stage evidence uses only status/available/row_count metadata, not sample rows. Why: Builder's
+           // `/builds/{run}/stages/{stage}` requires limit to be a positive integer up to 1000, returning
+           // 400 for limit=0 (OpenAPI SSOT) — this was the real cause of stage evidence always failing in
+           // Studio. Request minimum sample (1) to get metadata only.
           const detailResult = await settle(
             getBuildStageDetail(runId, context.stage, chosenSource.source_key, 1, signal),
           );
@@ -278,9 +277,9 @@ export async function loadKubiEvidence(
             knownRefs.sourceKeys.add(chosenSource.source_key);
             knownRefs.stageIds.add(refId);
             safeEvidenceIds.add(refId);
-            // Generated SQL이 컬럼명/타입을 추측하지 않도록, Builder가 이미 반환한 stage
-            // schema만 canonical하게 노출한다. silver는 {name,dtype}까지, gold는 이름만
-            // (contract상 dtype이 없다), bronze는 없다. sample row는 여전히 읽지 않는다.
+             // So generated SQL cannot guess column names/types, expose only the stage schema already
+             // returned by Builder canonically: silver includes {name,dtype}; gold includes name only
+             // (dtype not in contract); bronze has neither. Do not read sample rows.
             let columns: string[] | undefined;
             let schema: { name: string; dtype: string }[] | undefined;
             if (detail.stage === "silver" && detail.schema.length > 0) {
@@ -314,12 +313,12 @@ export async function loadKubiEvidence(
   evidence.unavailable = unavailable;
   evidence.partial = unavailable.length > 0;
 
-  // 방어적 마지막 관문: Builder 응답에 예상치 못한 credential성 필드가 섞여 있어도 여기서 걸러낸다.
-  // 엔트로피 오탐 면제는 provenance 가 확인된 exact 값 — safeRunIds(Builder 가 존재를 확인한
-  // run id) + safeEvidenceIds(Builder `/quality` 응답에서 deterministic 하게 만든 evidence
-  // identifier) — 로만 한다. 아직 확인되지 않은 route context.runId 나 임의 문자열은 어느
-  // 집합에도 없으므로 evidence 에서 그대로 새어 나가지 않는다. secret-named field masking 은
-  // 이 면제보다 항상 먼저 적용된다(scrub.ts).
+  // Final defensive gate: if Builder response accidentally includes a credential-like field not caught
+  // earlier, filter it here too. Entropy false positive exemption uses provenance-confirmed exact values —
+  // safeRunIds (run IDs Builder confirmed exist) + safeEvidenceIds (evidence identifiers deterministically
+  // derived from Builder `/quality` response) — only. Route context.runId and arbitrary character strings
+  // not yet confirmed are in neither set, so evidence won't leak. Secret-name field masking applies
+  // before this exemption (scrub.ts).
   const safeValues = new Set<string>([...safeRunIds, ...safeEvidenceIds]);
   const redacted = redactSecrets(evidence, safeValues) as KubiEvidence;
   return { evidence: redacted, knownRefs, safeRunIds, safeEvidenceIds };

@@ -1,6 +1,6 @@
 /**
- * Ask KPubData 프롬프트 조립 단위 테스트 (#256 review — Builder #504 contract: SQL은 logical relation
- * "dataset"만 조회해야 한다).
+ * Unit tests for Ask KPubData prompt assembly (#256 review — Builder #504 contract: SQL must query
+ * the logical relation "dataset" only).
  */
 import { describe, expect, it } from "vitest";
 import { buildKubiMessages } from "./prompt";
@@ -34,15 +34,15 @@ describe("buildKubiMessages (#256 프롬프트)", () => {
 
   it("states the exact-column-name + TRY_CAST authoring invariants in the response contract", () => {
     const [systemMessage] = buildKubiMessages("질문", baseEvidence());
-    // 컬럼명 추측 금지 + schema evidence 참조
+    // Disallow guessing column names; refer to schema evidence.
     expect(systemMessage.content).toContain("evidence.stage.schema");
     expect(systemMessage.content).toContain("evidence.stage.columns");
     expect(systemMessage.content).toContain("추측");
-    // String 컬럼 numeric aggregation은 strict CAST가 아니라 TRY_CAST
+    // For numeric aggregations on string columns use TRY_CAST, not strict CAST.
     expect(systemMessage.content).toContain("TRY_CAST");
-    // provider sentinel 때문에 전체 쿼리가 실패하지 않도록
+    // Use a provider sentinel so the entire query won't fail due to provider issues.
     expect(systemMessage.content).toContain("sentinel");
-    // 특정 데이터셋/컬럼에 하드코딩되어 있지 않다(AirKorea·pm10Value 전용 프롬프트 금지).
+    // Do not hardcode prompts for specific datasets/columns (e.g., no AirKorea or pm10Value).
     expect(systemMessage.content).not.toContain("AirKorea");
     expect(systemMessage.content).not.toContain("pm10Value");
   });
@@ -61,7 +61,8 @@ describe("buildKubiMessages (#256 프롬프트)", () => {
       },
     });
     const messages = buildKubiMessages("측정소별 PM10 평균 SQL 만들어줘", evidence);
-    // schema evidence는 structuredContent로만 전달되고 프롬프트 지시문에 문자열로 박히지 않는다.
+    // Stage schema evidence is passed as structuredContent only and must not be embedded
+  // verbatim into the prompt text.
     expect(messages[1].structuredContent).toEqual(evidence);
     expect(messages[0].content).not.toContain("pm10Value");
     expect(messages[1].content).not.toContain("pm10Value");

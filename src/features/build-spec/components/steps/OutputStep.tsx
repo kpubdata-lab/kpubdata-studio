@@ -1,4 +1,4 @@
-/** 마법사 5단계 — 출력 형식과 경로 (#379). */
+/** Wizard step 5 — output format and path (#379). */
 import { useTranslation } from "react-i18next";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 

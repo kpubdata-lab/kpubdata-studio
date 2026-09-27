@@ -1,9 +1,9 @@
 /**
- * New Build 마법사 단계 컴포넌트 테스트 (#379).
+ * New Build wizard step component test (#379).
  *
- * 페이지에서 떼어낸 뒤 각 단계가 제 것을 그대로 그리는지 잠근다. 특히 ReviewStep 의
- * 실행 버튼은 페이지에서 `disabled={!valid || running || !spec}` 이던 조건을 `canRun`
- * 하나로 옮겼으므로, 세 조건이 각각 버튼을 막는지 직접 확인한다.
+ * Isolate from page and lock each step rendering correctly. Especially ReviewStep run button
+ * moved from page's `disabled={!valid || running || !spec}` to single `canRun`, so verify
+ * each of three conditions blocks button separately.
  */
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -20,7 +20,7 @@ import { initialValues, type BuildFormValues, type CatalogState, type PreviewSta
 import type { BuildJob } from "@/features/runs/useBuildJob";
 import type { CatalogDataset } from "@/shared/lib/builderApi";
 
-/** register/errors 를 진짜 폼에서 받아 단계 컴포넌트에 넘긴다. */
+/** Get register/errors from real form and pass to step component. */
 function FormHarness({ render: renderStep }: { render: (form: ReturnType<typeof useForm<BuildFormValues>>) => React.ReactNode }) {
   const form = useForm<BuildFormValues>({ defaultValues: initialValues });
   return <form>{renderStep(form)}</form>;

@@ -24,7 +24,7 @@ describe("fetchReportEvidence (#258)", () => {
 
     expect(evidence.schemas["datago__air"]?.origin).toBe("silver");
     expect(evidence.schemas["datago__air"]?.columns.length).toBeGreaterThan(0);
-    // kma__weather는 mock에서 silver failed, gold not_run이라 schema를 얻을 수 없다.
+    // kma__weather: in mock, silver failed/gold not_run so schema unavailable.
     expect(evidence.schemas["kma__weather"]?.origin).toBe("unavailable");
     expect(evidence.schemas["kma__weather"]?.reason).toBeTruthy();
   });

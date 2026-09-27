@@ -64,8 +64,8 @@ function Definition({ label, children }: { label: string; children: ReactNode })
   return <div><dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm text-foreground">{children}</dd></div>;
 }
 
-/** Bronze/Silver/Gold의 일반적인 stage 역할(이 데이터셋의 실제 이력을 서술하는 것이 아니다). */
-/** 라벨이 아니라 키만 담는다 — 모듈 상수에 문장을 넣으면 언어가 import 시점에 굳는다(#350). */
+/** General role of Bronze/Silver/Gold stages (not describing this dataset's actual history). */
+/** Store keys only, not labels — putting sentences in module constants freezes language at import time (#350). */
 const STAGE_EXPLAINER_KEY: Record<DatasetStage, string> = {
   bronze: "datasetDetail.stageBronze",
   silver: "datasetDetail.stageSilver",
@@ -128,7 +128,7 @@ export function DatasetDetailPage() {
   const validRequestedStage = DATASET_STAGES.includes(requestedStage as DatasetStage) ? requestedStage as DatasetStage : undefined;
   const selectedStage = validRequestedStage ?? (sourceStageEntry ? highestCompletedStage(sourceStageEntry) : "bronze");
 
-  // 잘못된 stage 파라미터는 URL에서 제거해 UI fallback 상태와 URL을 일치시킨다.
+  // Remove invalid stage parameters from URL to align UI fallback state with URL.
   useEffect(() => {
     if (requestedStage && !validRequestedStage) {
       const next = new URLSearchParams(searchParams);
@@ -161,13 +161,13 @@ export function DatasetDetailPage() {
     setSearchParams(next);
   }
 
-  // AI 탭은 Kubi(KubiContent)가 route의 ?run=&source=&stage=로만 문맥을 판단한다(추측 금지 원칙,
-  // context.ts 참고) — 그래서 여기서 화면에 이미 계산되어 보이는 selectedRunId/selectedSource/
-  // selectedStage를 URL에 명시적으로 반영해줘야, 처음 AI 탭을 열었을 때도 Kubi RUN context bar가
-  // 실제로는 알고 있는 latest run을 "—"로 보여주거나 Generated SQL/Result Preview가 비어 보이지
-  // 않는다(UI audit #5). source까지 실어야 multi-source run에서 stage evidence가 fail-closed로
-  // 빠지지 않는다(#319 후속). 탭 바(button onClick)와 Overview 탭의 Kubi discoverability CTA
-  // 모두 이 helper 하나를 공유해 같은 규칙을 두 번 구현하지 않는다.
+  // AI tab context is determined by Kubi (KubiContent) using only route's ?run=&source=&stage=
+  // (no-guess principle, context.ts reference) — so we must explicitly reflect selectedRunId/selectedSource/
+  // selectedStage computed in this screen to the URL. Otherwise, on first AI tab open, Kubi RUN context bar
+  // shows the latest run it knows about as "—" or Generated SQL/Result Preview appears empty (UI audit #5).
+  // Must include source to prevent stage evidence from being fail-closed in multi-source runs (#319 follow-up).
+  // Both tab bar (button onClick) and Overview tab's Kubi discoverability CTA share this helper to avoid
+  // implementing the same rule twice.
   function goToTab(tab: DetailTab) {
     updateContext(
       tab === "ai"
@@ -183,11 +183,11 @@ export function DatasetDetailPage() {
   const selectedQualityResults = qualityResultsForSource(qualityState.data, selectedSource);
   const selectedDrift = qualityState.data?.schema_drift[selectedSource] ?? [];
 
-  // AI 탭에 직접 진입/새로고침해도 tab click 경로(goToTab("ai"))와 동일한 canonical Kubi
-  // context를 만든다. Kubi(KubiContent)는 route의 ?run=&source=&stage=만 문맥으로 읽으므로
-  // (context.ts), 화면이 확정한 선택을 URL에 되반영하지 않으면 AI 탭이 dataset 수준
-  // evidence만 받는다(#319 후속, QualityPage와 동일 패턴). replace로만 갱신하고, 이미
-  // 유효하게 선택된 값·invalid 상태는 건드리지 않아 update loop를 만들지 않는다.
+  // Entering/refreshing directly on AI tab creates same canonical Kubi context as tab click path (goToTab("ai")).
+  // Kubi (KubiContent) reads context only from route's ?run=&source=&stage= (context.ts), so if this screen
+  // doesn't reflect confirmed selections back to URL, AI tab receives only dataset-level evidence (#319 follow-up,
+  // same pattern as QualityPage). Update only via replace, never touch already-valid values or invalid state
+  // to avoid creating update loops.
   useEffect(() => {
     if (selectedTab !== "ai" || core.status !== "loaded" || invalidRun || invalidSource) return;
     const next = new URLSearchParams(searchParams);
@@ -223,12 +223,11 @@ export function DatasetDetailPage() {
     setSearchParams,
   ]);
 
-  // Run 전체 상태("ok"/"failed"/"cancelled")와 선택된 source·stage 상태("completed"/"failed"/
-  // "not_run"/"unavailable")는 서로 다른 vocabulary를 쓰는 별개 scope다 — 한 run에 여러 source가
-  // 있으면 선택된 source의 stage는 completed/PASS인데 run 전체는 다른 source의 실패로 failed일 수
-  // 있다. 이는 모순이 아니라 두 canonical source가 서로 다른 것을 나타내는 것이므로, 값을 숨기거나
-  // 억지로 맞추는 대신 두 상태가 갈릴 수 있는 이유를 실제 데이터(다른 source의 stage 실패)로
-  // 설명한다.
+  // Overall run state ("ok"/"failed"/"cancelled") and selected source·stage state ("completed"/"failed"/
+  // "not_run"/"unavailable") use different vocabularies and are separate scopes — when a run has multiple
+  // sources, the selected source's stage can be completed/PASS while the overall run is failed due to different
+  // source's failure. This isn't contradiction; it reflects that two canonical sources differ. Rather than hiding
+  // or forcing values to match, explain why states can diverge using actual data (different source's stage failure).
   const otherFailingSources = useMemo(
     () =>
       sourceEntries
@@ -339,15 +338,16 @@ function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selected
 }
 
 /**
- * Data Passport — "이 dataset이 무엇이고 어디서 왔으며 신뢰 가능한지"를 한눈에 보여주는
- * trust summary(#Phase2 UI polish). 새 backend 데이터를 요구하지 않는다 — 이미 이 페이지가
- * fetch한 값만 재사용한다. 값이 없는 필드는 지어내지 않고 "확인 불가"/"제공되지 않음" 등으로
- * 명확히 표기하거나 생략한다(License는 이 스키마 어디에도 실제 dataset 속성으로 존재하지
- * 않아 — Publish 화면에서 사용자가 입력하는 값일 뿐이므로 — 아예 생략한다).
+ * Data Passport — "what is this dataset, where did it come from, and can it be trusted?"
+ * at a glance with trust summary (#Phase2 UI polish). Doesn't require new backend data —
+ * reuse only values already fetched on this page. Don't fabricate missing fields; clearly
+ * mark as "verification unavailable" / "not provided" or omit (License doesn't exist as actual
+ * dataset property anywhere in this schema; omit entirely since it's only user-provided value
+ * on Publish screen).
  *
- * "Run 상태(전체)"와 "선택된 Source·Stage 상태"는 서로 다른 vocabulary(run 전체 집계 vs
- * source/stage 단위)라 값이 갈릴 수 있다(:174-178의 runFailedButSelectedStageOk 참고) — 두
- * 필드를 하나로 합치지 않고 라벨을 분리해 그 scope 차이를 다시 흐리지 않는다.
+ * "Run state (overall)" and "selected Source·Stage state" use different vocabularies (run-level
+ * aggregate vs source/stage unit) so values can diverge (see :174-178 runFailedButSelectedStageOk
+ * reference) — keep fields separate with distinct labels rather than merging to preserve scope difference.
  */
 function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selectedStage, sourceStages, columnCount, artifactSummary, validation, onSelectTab }: { dataset: DatasetDetailResponse; selectedRun?: DatasetRunSummary; runStatus?: string; selectedSource: string; selectedStage: DatasetStage; sourceStages?: RunStagesResponse["sources"][number]; columnCount: number | null; artifactSummary: string; validation: ReturnType<typeof summarizeQuality>; onSelectTab: (tab: DetailTab) => void }) {
   const { t } = useTranslation();

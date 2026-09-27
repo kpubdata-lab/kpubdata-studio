@@ -1,8 +1,8 @@
 /**
- * 마법사 0단계 — 템플릿 선택 (#379).
+ * Wizard step 0 — template selection (#379).
  *
- * 카탈로그가 아직 loading/error 인 동안은 가용성을 판정할 수 없으므로 원본 grid 를
- * 그대로 보여준다 — "대부분 disabled" 처럼 보이는 깜빡임을 만들지 않는다.
+ * While catalog is still loading/error, can't determine availability, so show original grid as-is —
+ * don't flicker "mostly disabled" appearance.
  */
 import { useTranslation } from "react-i18next";
 

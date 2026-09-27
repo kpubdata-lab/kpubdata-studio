@@ -1,4 +1,4 @@
-/** 마법사 2단계 — 데이터 소스 선택 (#379). */
+/** wizard 2step — data source select (#379). */
 import { useTranslation } from "react-i18next";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 

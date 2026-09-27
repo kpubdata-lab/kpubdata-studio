@@ -1,9 +1,9 @@
 /**
- * Reports 목록/생성 화면 (`/reports`, #258).
+ * Reports list/create screen (`/reports`, #258).
  *
- * 저장된 Report Draft 목록을 관리(열기/이름변경/복제/삭제)하고, 기준 dataset/run을 골라
- * Builder evidence 기반 deterministic Report를 새로 만든다. 실제 편집/블록 구성은
- * `/reports/:reportId`(`ReportEditorPage`)에서 이어진다.
+ * Manage saved Report Draft list (open/rename/duplicate/delete), select reference dataset/run,
+ * create deterministic Report based on Builder evidence. Actual editing/block composition
+ * continues at `/reports/:reportId` (`ReportEditorPage`).
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";

@@ -1,8 +1,8 @@
 /**
- * 검증 결과 페이지 (/validate, 레거시 딥링크).
+ * Validation result page (/validate, legacy deeplink).
  *
- * 검증은 New Build 마법사에 통합되어 있지만, 이 페이지에서 어시스턴트(ST-A5)를
- * 통해 검증 오류 설명과 수정 제안을 받을 수 있다.
+ * Validation integrated into New Build wizard, but this page offers
+ * assistant (ST-A5) to explain validation errors and suggest fixes.
  */
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, PageHeader } from "@/shared/ui";

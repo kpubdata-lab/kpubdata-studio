@@ -13,8 +13,8 @@ function renderGate(path = "/builds?run=abc") {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        {/* /login은 별도 route로 분리한다. 이렇게 하지 않으면 LoginGate가
-            리다이렉트 후에도 계속 마운트된 채 남아 무한 리다이렉트가 발생한다. */}
+        {/* Separate /login as its own route. Without this, LoginGate stays mounted after redirect,
+            causing infinite redirect. */}
         <Route path="/login" element={<LocationDisplay />} />
         <Route
           path="*"

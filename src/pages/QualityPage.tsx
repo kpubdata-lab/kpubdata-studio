@@ -1,10 +1,10 @@
 /**
- * Quality Center 화면 (`/quality`, #254).
+ * Quality Center page (`/quality`, #254).
  *
- * Builder가 반환한 실제 evaluated quality 결과(PASS/WARN/FAIL/availability/evaluated_checks)만
- * 표시한다. Studio는 점수를 새로 만들거나 PASS/WARN/FAIL을 재판정하지 않는다(#246 원칙).
- * Dataset/Run/Source는 #253의 Dataset Detail과 동일한 API·URL 패턴(?run=&source=&stage=)을
- * 재사용해 두 화면 사이에서 문맥이 끊기지 않도록 한다.
+ * Displays only actual evaluated quality results returned by Builder
+ * (PASS/WARN/FAIL/availability/evaluated_checks). Studio doesn't create new scores or
+ * re-judge PASS/WARN/FAIL (#246 principle). Dataset/Run/Source reuse the same API·URL
+ * pattern (#253, Dataset Detail: ?run=&source=&stage=) to keep context across screens.
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -56,7 +56,7 @@ interface AsyncState<T> {
 const selectClassName =
   "h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-/** 행 수 필드(affected_rows/evaluated_rows)를 N/A 없이 0으로 바꾸지 않고 그대로 보여준다. */
+/** Row count field (affected_rows/evaluated_rows) shown as-is, not converted to 0 without N/A. */
 function formatRowCount(value: number | null, t: (k: string) => string): string {
   return value === null ? "N/A" : `${value.toLocaleString("ko-KR")}${t("quality.rowsUnit")}`;
 }
@@ -123,7 +123,8 @@ export function QualityPage() {
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) setRunsState({ status: "error", error: cause instanceof Error ? cause.message : i18n.t("quality.errors.runs") });
       });
-    // Trend(history) 조회는 current-run quality와 독립적으로 실패/성공한다 — 서로의 상태를 지우지 않는다.
+     // Trend (history) fetch succeeds/fails independently from current-run quality — states
+     // don't clear each other.
     getDatasetQualityHistory(selectedDatasetId, 30, controller.signal)
       .then((data) => setHistoryState({ status: "loaded", data }))
       .catch((cause: unknown) => {
@@ -137,11 +138,12 @@ export function QualityPage() {
   const selectedRunId = requestedRunId || selectedDataset?.latest_run_id || "";
   const selectedRun = runsState.data?.find((run) => run.run_id === selectedRunId);
 
-  // Kubi(KubiContent)는 route의 `?dataset=&run=&source=&stage=`만 문맥으로 읽는다(context.ts,
-  // 추측 금지 원칙). 화면에는 fallback으로 이미 dataset/run이 계산되어 보이지만 URL에 없으면
-  // KubiContext에는 전달되지 않아 "어떤 dataset/run인지 알려달라"는 답이 나온다(#319 후속).
-  // 그래서 fallback으로 확정된 선택을 URL에 되반영해 UI 선택과 KubiContext SSOT를 일치시킨다.
-  // replace로만 갱신해 history를 더럽히지 않고, 유효하지 않은 dataset/run일 때는 건드리지 않는다.
+   // Kubi (KubiContent) reads context only from the route's `?dataset=&run=&source=&stage=`
+   // (context.ts, no-guess principle). Screen shows fallback with calculated dataset/run,
+   // but if URL lacks them, KubiContext doesn't receive them and returns "tell me which
+   // dataset/run" (#319 follow-up). So reflect the fallback-confirmed selection back to
+   // URL to sync UI selection and KubiContext SSOT. Update via replace only to not pollute
+   // history; skip for invalid dataset/run.
   useEffect(() => {
     if (datasetsState.status !== "loaded" || invalidDataset || invalidRun) return;
     const next = new URLSearchParams(searchParams);
@@ -192,7 +194,7 @@ export function QualityPage() {
   const sourceEntries = stagesState.data?.sources ?? [];
   const requestedSource = searchParams.get("source") ?? "";
   const invalidSource = Boolean(requestedSource && stagesState.status === "loaded" && !sourceEntries.some((source) => source.source_key === requestedSource));
-  const selectedSource = requestedSource; // "" == 전체 소스(명시적으로 유효한 선택)
+   const selectedSource = requestedSource; // "" == all sources (explicitly valid selection)
   const selectedSourceEntry = sourceEntries.find((source) => source.source_key === selectedSource);
 
   const requestedStage = searchParams.get("stage");
@@ -207,9 +209,10 @@ export function QualityPage() {
     setSearchParams(next);
   }
 
-  // Ask KPubData 를 열기 전에, 화면에 선택되어 보이는 dataset/run/source/stage를 URL에 확정 반영한다 —
-  // KubiContext는 route만 읽으므로(context.ts) 이 동기화가 없으면 drawer가 catalog 수준
-  // evidence만 받는다(#319 후속). 헤더 버튼과 이슈별 "이 문제 설명 보기"가 이 helper를 공유한다.
+  // Before opening Ask KPubData, sync the dataset/run/source/stage shown on screen to
+  // the URL — KubiContext reads route only (context.ts), so without this sync the drawer
+  // only receives catalog-level evidence (#319 follow-up). Header button and per-issue
+  // "Explain this issue" share this helper.
   function syncKubiContext() {
     updateContext({
       dataset: selectedDatasetId || null,
@@ -236,8 +239,8 @@ export function QualityPage() {
   const issues = useMemo(() => warnOrFailResults(scopedResults), [scopedResults]);
 
   const scopeLabel = selectedSource || t("quality.allSources");
-  // Rule Pass Rate / Recent Issues / Schema Drift가 "어떤 Dataset/Run/Source/Stage" 기준인지
-  // 항상 함께 드러내도록 하나의 문맥 문자열로 합성한다(#254 리뷰 §3, §7).
+   // Composite context string showing "which Dataset/Run/Source/Stage" for Rule Pass Rate /
+   // Recent Issues / Schema Drift to always be clear (#254 review §3, §7).
   const contextLabel = [
     selectedDataset ? `Dataset: ${selectedDataset.title}` : null,
     selectedRunId ? `Run: ${selectedRunId}` : null,
@@ -245,8 +248,9 @@ export function QualityPage() {
     selectedStage ? `Stage: ${selectedStage}` : null,
   ].filter(Boolean).join(" · ");
 
-  // source별로 실제 평가된 결과가 있는지(0건인 source도 숨기지 않고) 드러낸다 — "일부 source만
-  // 검사 완료"를 첫 source 값으로 뭉개지 않기 위함(#254 리뷰 §1, §8).
+   // Show which sources have actual evaluated results (don't hide zero-count sources) —
+   // avoid collapsing "some sources only evaluation complete" into the first source value
+   // (#254 review §1, §8).
   const knownSourceKeys = useMemo(() => {
     const fromStages = sourceEntries.map((source) => source.source_key);
     const fromQuality = Object.keys(qualityState.data?.quality_results ?? {});
@@ -430,7 +434,8 @@ export function QualityPage() {
   );
 }
 
-/** "전체 소스" 조회 시 일부 source만 검사 완료된 상태를 첫 source로 뭉개지 않고 드러낸다(#254 리뷰 §1, §8). */
+/** When querying all sources, don't collapse "some sources only evaluation complete" into
+    the first source value (#254 review §1, §8). */
 function SourceBreakdown({ rows }: { rows: { sourceKey: string; summary: ReturnType<typeof summarizeChecksPassed> }[] }) {
   const { t } = useTranslation();
   return (

@@ -1,7 +1,7 @@
 /**
- * builderApi 재시도 정책 테스트 (#117).
+ * builderApi retry policy test (#117).
  *
- * 비멱등 POST /build는 5xx에도 재시도하지 않아야 하며, 멱등 GET은 재시도한다.
+ * Non-idempotent POST /build must not retry on 5xx; idempotent GET은 재시도한다.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -33,12 +33,12 @@ describe("builderApi retry policy", () => {
       status: 500,
     });
 
-    // 최초 1회만 호출되어야 한다 (재시도 없음).
+    // should be called only once initially (no retry).
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("retries idempotent GET /version on 5xx", async () => {
-    // 실제 백오프 대기(500ms)를 기다리지 않도록 fake timer로 시간을 직접 진행시킨다.
+    // advance time directly with fake timer to avoid actual backoff wait (500ms).
     vi.useFakeTimers();
     try {
       const fetchMock = vi
@@ -49,7 +49,7 @@ describe("builderApi retry policy", () => {
         );
 
       const pending = builderApi.version();
-      // 첫 번째 재시도 전 백오프(500ms)를 즉시 소리을 통과시킨다.
+      // immediately pass the backoff (500ms) before first retry.
       await vi.advanceTimersByTimeAsync(500);
       const result = await pending;
 
@@ -73,7 +73,7 @@ describe("apiFetch auth header injection (#186)", () => {
   });
 
   function requestInitOf(fetchMock: ReturnType<typeof vi.spyOn>) {
-    // fetch(url, init) — 두 번째 인자가 RequestInit.
+    // fetch(url, init) — second argument is RequestInit.
     return fetchMock.mock.calls[0][1] as RequestInit;
   }
 
@@ -86,7 +86,7 @@ describe("apiFetch auth header injection (#186)", () => {
 
     const headers = requestInitOf(fetchMock).headers as Record<string, string>;
     expect(headers.Authorization).toBeUndefined();
-    // 미로그인/mock 모드에서 빈 헤더가 나가지 않는다.
+    // empty header should not be sent in unauthenticated/mock mode.
     expect(headers["Content-Type"]).toBe("application/json");
   });
 
@@ -189,7 +189,7 @@ describe("auth error callback on 401 (#189, S4)", () => {
   });
 
   it("retries the request once with the refreshed token when the callback recovers (#189)", async () => {
-    // 토큰이 요청 도중 만료된 상황: 첫 시도는 401, 재인증 후 두 번째 시도는 성공.
+    // Token expires during request: first attempt gets 401, second attempt succeeds after re-auth.
     let token = "expired-token";
     setAuthTokenProvider(() => token);
     setAuthErrorCallback(() => {
@@ -219,13 +219,13 @@ describe("auth error callback on 401 (#189, S4)", () => {
       .mockResolvedValue(jsonResponse(401, { error: "unauthorized" }));
 
     await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
-    // 재인증이 계속 "성공"을 보고해도 재시도는 1회로 제한된다(루프 방지).
+    // Even if re-auth keeps reporting "success", retry is limited to 1 (loop prevention).
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("does not retry when the callback does not report a recovered session", async () => {
     setAuthTokenProvider(() => "token");
-    // 기존 계약(void 반환)을 그대로 쓰는 콜백은 재시도를 유발하지 않는다.
+    // Callbacks using old contract (void return) do not trigger retry.
     const cb = vi.fn();
     setAuthErrorCallback(cb);
     const fetchMock = vi

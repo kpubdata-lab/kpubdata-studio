@@ -1,7 +1,7 @@
 /**
- * 공통 UI 컴포넌트 배럴(barrel) 모듈.
+ * common UI component barrel module.
  *
- * 페이지/기능 모듈은 `@/shared/ui`에서 디자인 시스템 컴포넌트를 가져온다.
+ * page/feature modules import design system components from `@/shared/ui`.
  */
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./Button";
 export { LinkButton, type LinkButtonProps } from "./LinkButton";

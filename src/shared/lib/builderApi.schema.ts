@@ -1,7 +1,7 @@
 /**
- * Builder API 응답 Zod 스키마 (#158, #103, #159)
+ * Builder API response Zod schema (#158, #103, #159)
  *
- * Builder HTTP API 응답의 런타임 타입 검증을 위한 Zod 스키마입니다.
+ * Runtime type validation of Builder HTTP API responses을 위한 Zod 스키마입니다.
  * Builder SSOT(contract/builder-api.yaml)와 정합하도록 작성되었습니다.
  *
  * 사용 방법:
@@ -13,7 +13,7 @@
 import { z } from "zod";
 
 /**
- * GET /version 응답 스키마
+ * GET /version response schema
  */
 export const versionResponseSchema = z.object({
   service: z.string(),
@@ -21,7 +21,7 @@ export const versionResponseSchema = z.object({
 });
 
 /**
- * POST /validate 응답 스키마 (검증 성공)
+ * POST /validate response schema (validation succeeded)
  */
 export const validateValidSchema = z.object({
   status: z.literal("valid"),
@@ -30,7 +30,7 @@ export const validateValidSchema = z.object({
 });
 
 /**
- * POST /validate 응답 스키마 (검증 실패 - 문제 목록)
+ * POST /validate response schema (validation failed - list of issues)
  */
 export const validateInvalidSchema = z.object({
   status: z.literal("invalid"),
@@ -38,7 +38,7 @@ export const validateInvalidSchema = z.object({
 });
 
 /**
- * POST /validate 응답 스키마 (스펙 로딩 오류)
+ * POST /validate response schema (spec loading error)
  */
 export const validateErrorSchema = z.object({
   status: z.literal("error"),
@@ -46,7 +46,7 @@ export const validateErrorSchema = z.object({
 });
 
 /**
- * POST /validate 통합 응답 스키마
+ * POST /validate unified response schema
  */
 export const validateResponseSchema = z.discriminatedUnion("status", [
   validateValidSchema,
@@ -55,7 +55,7 @@ export const validateResponseSchema = z.discriminatedUnion("status", [
 ]);
 
 /**
- * 빌드 아웃컴 (BuildOutcome) 스키마
+ * Build outcome (BuildOutcome) schema
  */
 export const buildOutcomeSchema = z.object({
   source_key: z.string(),
@@ -65,7 +65,7 @@ export const buildOutcomeSchema = z.object({
 });
 
 /**
- * POST /build 응답 스키마 (빌드 성공)
+ * POST /build response schema (build succeeded)
  */
 export const buildOkSchema = z.object({
   status: z.literal("ok"),
@@ -76,7 +76,7 @@ export const buildOkSchema = z.object({
 });
 
 /**
- * POST /build 응답 스키마 (빌드 실패 - 하나 이상 소스 실패)
+ * POST /build response schema (build failed - one or more sources failed)
  */
 export const buildFailedSchema = z.object({
   status: z.literal("failed"),
@@ -88,7 +88,7 @@ export const buildFailedSchema = z.object({
 });
 
 /**
- * POST /build 통합 응답 스키마
+ * POST /build unified response schema
  */
 export const buildResponseSchema = z.discriminatedUnion("status", [
   buildOkSchema,
@@ -96,7 +96,7 @@ export const buildResponseSchema = z.discriminatedUnion("status", [
 ]);
 
 /**
- * 비동기 build job 스냅샷 — GET /builds/{run_id} / POST /builds 응답 (#245, builder 1.16.0 #480).
+ * Async build job snapshot — GET /builds/{run_id} / POST /builds response (#245, builder 1.16.0 #480).
  *
  * `cancelling`/`cancelled`는 builder #481 cooperative cancellation 착지 전 예약
  * vocabulary다(현재 전이를 일으키는 endpoint는 없음). `response`는 성공한 잡의
@@ -115,14 +115,14 @@ export const buildJobSchema = z.object({
 export type BuildJob = z.infer<typeof buildJobSchema>;
 
 /**
- * GET /artifacts/{run_id} 응답 스키마
+ * GET /artifacts/{run_id} response schema
  */
 export const artifactsResponseSchema = z.object({
   run_id: z.string(),
   files: z.array(z.string()),
 });
 
-/** GET /builds/{run_id}/manifest 응답. Builder 계약은 확장 필드를 허용하므로 보존한다. */
+/** GET /builds/{run_id}/manifest response. Builder contract allows extension fields, so preserve them. */
 export const buildManifestResponseSchema = z.object({
   build_id: z.string(),
   started_at: z.string(),
@@ -140,7 +140,7 @@ export const buildManifestResponseSchema = z.object({
 }).loose();
 
 /**
- * Preview 컬럼 스키마 항목
+ * Preview column schema item
  */
 export const previewColumnSchema = z.object({
   name: z.string(),
@@ -149,18 +149,18 @@ export const previewColumnSchema = z.object({
   unique_count: z.number(),
 });
 
-// previewSourceSchema/previewResponseSchema는 tableStatisticsSchema·qualityCheckResultSchema에
-// 의존하므로(#497), 그 두 스키마가 실제로 선언된 뒤(Quality 섹션 이후)에 정의한다 — const는
-// TDZ가 있어 선언 전 참조가 런타임 오류가 된다.
+// previewSourceSchema/previewResponseSchema depend on tableStatisticsSchema and qualityCheckResultSchema
+// (see line 152 comment), so define them after those schemas are declared (after Quality section) — const has
+// TDZ so references before declaration become runtime errors.
 
 /**
  * ============================================
- * 오류 응답 스키마 (#159)
+ * Error response schema (#159)
  * ============================================
  */
 
 /**
- * 400 - 스펙 로딩 실패 (SpecLoadError)
+ * 400 - Spec loading failed (SpecLoadError)
  */
 export const specLoadErrorSchema = z.object({
   status: z.literal("error"),
@@ -168,23 +168,23 @@ export const specLoadErrorSchema = z.object({
 });
 
 /**
- * 400 - 요청 본문 누락/형식 오류
+ * 400 - Request body missing/format error
  */
 export const badRequestSchema = z.object({
   error: z.string(),
 });
 
 /**
- * 404 - 리소스 없음
+ * 404 - Resource not found
  */
 export const notFoundSchema = z.object({
   error: z.string(),
 });
 
 /**
- * 502 - 소스 fetch/stage 실패 (일부 성공, 최소 하나 실패)
+ * 502 - Source fetch/stage failed (some succeeded, at least one failed)
  *
- * 참고: outcomes 배열에는 성공/실패 소스가 섞여 있으며,
+ * Note: outcomes array mixes successful/failed sources 있으며,
  * 하나라도 실패한 소스가 있으면 전체 상태는 "failed"가 됩니다.
  */
 export const buildPartialFailureSchema = z.object({
@@ -196,23 +196,23 @@ export const buildPartialFailureSchema = z.object({
 });
 
 /**
- * 통합 오류 응답 스키마
+ * Unified Error response schema
  *
- * Builder API의 다양한 오류 응답 형태를 검증합니다.
+ * validates various error response forms of Builder API.
  * discriminatedUnion 대신 일반적인 z.union() 사용.
  */
 export const errorResponseSchema = z.union([
-  // 400 - 스펙 로딩 실패 (이미 validateResponseSchema에 있음)
+  // 400 - Spec loading failed (already in validateResponseSchema)
   validateErrorSchema,
-  // 400 - 요청 본문 오류
+  // 400 - Request body error
   badRequestSchema,
-  // 404 - 리소스 없음
+  // 404 - Resource not found
   notFoundSchema,
-  // 502 - 빌드 부분 실패 (이미 buildResponseSchema의 failed에 있음)
+  // 502 - Build partially failed (already in buildResponseSchema.failed)
   buildPartialFailureSchema,
 ]);
 
-// 타입 추출 (TypeScript 타입과 일치하도록 Zod 스키마에서 추출)
+// Type extraction (extracted from Zod schema to match TypeScript types)
 export type VersionResponse = z.infer<typeof versionResponseSchema>;
 export type ValidateValid = z.infer<typeof validateValidSchema>;
 export type ValidateInvalid = z.infer<typeof validateInvalidSchema>;
@@ -230,14 +230,14 @@ export type PreviewTransformSummary = z.infer<typeof previewTransformSummarySche
 export type PreviewSource = z.infer<typeof previewSourceSchema>;
 export type PreviewResponse = z.infer<typeof previewResponseSchema>;
 
-// 오류 응답 타입 (#159)
+// Error response type (#159)
 export type SpecLoadError = z.infer<typeof specLoadErrorSchema>;
 export type BadRequest = z.infer<typeof badRequestSchema>;
 export type NotFound = z.infer<typeof notFoundSchema>;
 export type BuildPartialFailure = z.infer<typeof buildPartialFailureSchema>;
 
 /**
- * GET /catalog 탐색 metadata의 목록 질의 capability (#490).
+ * GET /catalog search metadata list query capability (#490).
  */
 export const catalogQuerySupportSchema = z.object({
   pagination: z.enum(["offset", "index", "cursor", "none"]),
@@ -248,10 +248,10 @@ export const catalogQuerySupportSchema = z.object({
 });
 
 /**
- * GET /catalog 응답 스키마 (#416, BL2; #490으로 탐색용 metadata 확장)
+ * GET /catalog response schema (#416, BL2; #Extended search metadata with #490)
  */
 /**
- * GET /catalog 탐색 metadata의 안전한(secret-free) 요청 파라미터 설명 (#S-add-data).
+ * GET /catalog search metadata safe (secret-free) request parameter description (#S-add-data).
  * Builder가 raw_metadata에서 allowlist로 추려 직렬화한다 — serviceKey 등 시크릿
  * 파라미터는 포함되지 않는다. 없는 dataset은 빈 배열.
  */
@@ -263,9 +263,9 @@ export const catalogRequestParameterSchema = z.object({
 });
 
 /**
- * 공공데이터포털처럼 API Key 발급과 Dataset별 활용신청이 별개일 수 있는 경우의
- * 안내 (#S-add-data). Builder가 raw_metadata.application을 그대로 전달한 것으로,
- * 없으면 null(활용신청이 필요 없다는 뜻이 아니라 알려진 바 없음). Studio는 신청
+ * For cases where API Key issuance and per-dataset access requests are separate (like Public Data Portal)
+ * guidance (#S-add-data). Builder가 raw_metadata.application을 그대로 전달한 것으로,
+ * null if missing(활용신청이 필요 없다는 뜻이 아니라 알려진 바 없음). Studio는 신청
  * 완료/승인 여부를 이 필드로 추측하지 않는다 — Preview 성공이 최종 확인이다.
  */
 export const catalogApplicationSchema = z.object({
@@ -283,11 +283,11 @@ export const catalogDatasetSchema = z.object({
   operations: z.array(z.enum(["list", "get", "schema", "raw", "download"])),
   query_support: catalogQuerySupportSchema.nullable(),
   requires_service_key: z.boolean(),
-  // 하위 호환: 이 필드를 아직 내려주지 않는 Builder(구버전)에서도 파싱이 깨지지
-  // 않도록 optional로 둔다(소비 측은 `?? []`). 최신 Builder는 항상 배열을 준다.
+  // Backward compat: parsing does not break on old Builder versions that don't send this field yet
+  // (consumer uses `?? []`). Latest Builder always sends an array.
   request_parameters: z.array(catalogRequestParameterSchema).optional(),
-  // 하위 호환: 이 필드를 아직 내려주지 않는 Builder(구버전)에서는 undefined다
-  // (소비 측은 `?? null`). 최신 Builder는 항상 값(객체 또는 null)을 준다.
+  // Backward compat: this field is undefined on old Builder versions that don't send it yet
+  // (consumer uses `?? null`). Latest Builder always sends a value (object or null).
   application: catalogApplicationSchema.nullable().optional(),
 });
 
@@ -313,7 +313,7 @@ export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
  * ============================================
  */
 
-/** GET /providers — 런타임 Provider 목록과 현재 principal의 configured 상태(#492).
+/** GET /providers — runtime Provider list and current principal's configured status(#492).
  *  credential 원문은 포함하지 않는다(서버가 부울만 내려준다). */
 export const providerSummarySchema = z.object({
   provider: z.string(),
@@ -325,7 +325,7 @@ export const providersResponseSchema = z.object({
   providers: z.array(providerSummarySchema),
 });
 
-/** POST /providers/{provider}/test, GET /providers/{provider}/status 공통 응답. */
+/** POST /providers/{provider}/test, GET /providers/{provider}/status common response. */
 export const providerTestResponseSchema = z.object({
   provider: z.string(),
   status: z.enum(["connected", "failed", "not_configured"]),
@@ -337,11 +337,11 @@ export const providerTestResponseSchema = z.object({
 });
 
 /**
- * GET /providers/{provider}/credential — 현재 principal이 저장한 credential의 메타데이터만
+ * GET /providers/{provider}/credential — metadata only of credential saved by current principal
  * 반환한다(ADR 0012). raw secret은 어떤 필드에도 들어 있지 않다. `configured`는 이 사용자가
  * 직접 저장한 credential이 있는지이며, GET /providers 요약의 `configured`(effective provider
  * configuration: user credential > server default > 없음)와는 의미가 다르다.
- * `masked`/`updated_at`은 저장된 credential이 없으면 null이다.
+ * `masked`/`updated_at`은 저장된 credential이 null if missing이다.
  */
 export const providerCredentialResponseSchema = z.object({
   configured: z.boolean(),
@@ -349,7 +349,7 @@ export const providerCredentialResponseSchema = z.object({
   updated_at: z.string().nullable(),
 }).strict();
 
-/** kind="file" source 업로드 메타데이터(secret-free, content는 포함하지 않음). */
+/** kind="file" source upload metadata (secret-free, no content). */
 export const uploadMetadataSchema = z.object({
   upload_id: z.string().regex(/^upl_[a-f0-9]{32}$/),
   format: z.enum(["csv", "json", "jsonl", "parquet"]),
@@ -406,10 +406,10 @@ export const datasetDetailResponseSchema = datasetSummarySchema.extend({
 
 export const datasetsResponseSchema = z.object({
   datasets: z.array(datasetSummarySchema),
-  // `total`은 Builder 1.22.0에서 추가된 additive 필드다(canonical grouping +
-  // ownership 이후, pagination 이전의 distinct dataset 수). 1.21.0 이하 Builder는
-  // 이 필드를 보내지 않으므로 optional로 둔다 — 없으면 Studio는 "확인 불가"로
-  // 표시하고, items.length/limit을 total로 대신 쓰지 않는다.
+  // `total` is an additive field added in Builder 1.22.0 (canonical grouping +
+  // distinct dataset count after ownership, before pagination). Builder 1.21.0 and earlier
+  // don't send this field, so it's optional — if missing, Studio displays "unknown" and
+  // doesn't use items.length/limit as total.
   total: z.number().int().nonnegative().optional(),
 });
 
@@ -527,7 +527,7 @@ export const qualityCheckResultSchema = z.object({
 }).strict();
 
 /**
- * Preview↔Silver 셀 단위 변경 하나 (#497). diff_available=true인 source의 diffs에만 등장한다.
+ * One cell-level change between Preview and Silver (#497). appears only in diffs for sources where diff_available=true.
  */
 export const previewDiffItemSchema = z.object({
   row: z.number().int().nonnegative(),
@@ -538,7 +538,7 @@ export const previewDiffItemSchema = z.object({
 });
 
 /**
- * 비교 가능한 sample 범위에서 계산한 변경 요약 (#497).
+ * Change summary calculated from comparable sample range (#497).
  */
 export const previewTransformSummarySchema = z.object({
   changed_cells: z.number().int().nonnegative(),
@@ -546,7 +546,7 @@ export const previewTransformSummarySchema = z.object({
 });
 
 /**
- * Preview 소스별 미리보기 항목 (#497로 statistics/quality_results/diff 필드 확장).
+ * Preview source-specific preview item (extended with statistics/quality_results/diff via #497 필드 확장).
  */
 export const previewSourceSchema = z.object({
   source_key: z.string(),
@@ -557,7 +557,7 @@ export const previewSourceSchema = z.object({
   total_rows: z.number(),
   statistics: tableStatisticsSchema,
   quality_results: z.array(qualityCheckResultSchema),
-  /** 변환 전 Bronze 원본 sample. diff_available=false여도 최선 노력으로 채워질 수 있다. */
+  /** Bronze original sample before transformation. Can be populated as best effort even if diff_available=false. */
   source_sample: z.array(z.record(z.string(), z.unknown())),
   sample_mode: z.enum(["first", "random"]),
   diff_available: z.boolean(),
@@ -567,7 +567,7 @@ export const previewSourceSchema = z.object({
 });
 
 /**
- * POST /preview 응답 스키마
+ * POST /preview response schema
  */
 export const previewResponseSchema = z.object({
   dataset_id: z.string(),
@@ -608,7 +608,7 @@ export const datasetQualityHistoryResponseSchema = z.object({
 });
 
 /**
- * GET /quality/summary — 최근 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
+ * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
  * Home의 "QUALITY WARN (24H)" KPI가 임의 숫자 합성 없이 authoritative 값을 읽는다.
  * per-run quality_results/dataset/owner는 포함하지 않는다.
  */
@@ -708,7 +708,7 @@ export const queryResponseSchema = z.object({
   execution_ms: z.number().int().nonnegative(),
 });
 
-/** Builder `/query` 오류 응답: 다른 엔드포인트와 달리 클라이언트 분기용 `code`를 포함한다. */
+/** Builder `/query` error response: includes client-branch `code` unlike other endpoints. */
 export const queryErrorCodeSchema = z.enum([
   "forbidden",
   "artifact_unavailable",
@@ -751,7 +751,7 @@ export type DatasetQualityHistoryResponse = z.infer<typeof datasetQualityHistory
 export type QualitySummaryResponse = z.infer<typeof qualitySummaryResponseSchema>;
 
 /**
- * Monitoring (#516) — Builder 실제 wire 계약(GET /monitoring/summary,
+ * Monitoring (#516) — Builder actual wire contract (GET /monitoring/summary,
  * GET /monitoring/builds) 그대로. availability 어휘는 quality(#486)와 공유하는
  * available/partial/unavailable이고, 측정된 적 없는 값은 0으로 위장하지 않고
  * null로 내려온다(#516 원칙).
@@ -783,7 +783,7 @@ export const monitoringArtifactStoreSchema = z.object({
   last_write_at: z.string().nullable(),
 });
 
-/** GET /monitoring/summary 응답. aggregate status는 healthy/degraded 2값(#516). */
+/** GET /monitoring/summary response. Aggregate status is 2-value: healthy/degraded(#516). */
 export const monitoringSummaryResponseSchema = z.object({
   generated_at: z.string(),
   status: z.enum(["healthy", "degraded"]),
@@ -803,7 +803,7 @@ export const monitoringBucketSchema = z.object({
 });
 
 /**
- * recent run의 status는 BuildIndex 내부 값을 그대로 내려준다(builder는
+ * recent run status passes BuildIndex internal value as-is (builder sends as
  * str로 직렬화) — ok/failed/cancelled 외 실행 중 상태도 올 수 있어 좁은
  * enum 대신 string으로 받고 표시 매핑은 UI가 담당한다.
  */
@@ -814,7 +814,7 @@ export const monitoringRecentRunSchema = z.object({
   finished_at: z.string().nullable(),
 });
 
-/** GET /monitoring/builds?window=24h&bucket=hour 응답 (#516). */
+/** GET /monitoring/builds?window=24h&bucket=hour response (#516). */
 export const monitoringBuildsResponseSchema = z.object({
   window: z.string(),
   bucket: z.string(),
@@ -849,7 +849,7 @@ export type PublishBlockedResponse = z.infer<typeof publishBlockedResponseSchema
  * ============================================
  */
 
-/** GET /builds/{run_id}/spec 응답. run이 실제 실행에 사용한 canonical(redaction된) YAML과 digest. */
+/** GET /builds/{run_id}/spec response. Canonical (redacted) YAML and digest that the run used. */
 export const buildSpecSnapshotResponseSchema = z.object({
   run_id: z.string(),
   spec: z.string(),
@@ -872,10 +872,10 @@ export const buildEventNameSchema = z.enum([
 
 export const buildEventStatusSchema = z.enum(["ok", "warn", "fail"]);
 
-/** medallion stage(bronze/silver/gold) + export 실행 단계. RunStagesResponse의 3-stage와는 별개 vocabulary다. */
+/** Medallion stage (bronze/silver/gold) + export execution stage. Separate vocabulary from RunStagesResponse 3-stage. */
 export const buildEventStageNameSchema = z.enum(["bronze", "silver", "gold", "export"]);
 
-/** 단일 structured run event(#496). raw log/stack trace/자유 object를 담지 않는 bounded 필드만 있다. */
+/** Single structured run event (#496). Bounded fields only — no raw logs/stack traces/free-form objects. */
 export const buildEventSchema = z.object({
   seq: z.number().int(),
   timestamp: z.string(),

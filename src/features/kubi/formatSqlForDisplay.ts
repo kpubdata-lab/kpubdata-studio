@@ -1,6 +1,6 @@
 /**
- * SQL 실행 원본과 분리된, Drawer 표시 전용 최소 formatter.
- * 문자열/주석/괄호 깊이를 추적해 top-level clause 앞에서만 줄을 나눈다.
+ * Minimal formatter for Drawer display, separate from SQL execution source.
+ * Track string/comment/paren depth to break lines only before top-level clauses.
  */
 const SINGLE_CLAUSES = new Set(["FROM", "WHERE", "HAVING", "LIMIT", "OFFSET", "UNION"]);
 const JOIN_MODIFIERS = new Set(["LEFT", "RIGHT", "FULL", "INNER", "CROSS", "NATURAL"]);
@@ -99,7 +99,7 @@ function formatSql(rawSql: string): string {
   return formatted;
 }
 
-/** Formatter 실패 시 raw SQL을 그대로 보여 주며 원본 문자열은 수정하지 않는다. */
+/** On formatter failure, show raw SQL as-is without modifying original text. */
 export function formatSqlForDisplay(rawSql: string): string {
   try {
     return formatSql(rawSql);

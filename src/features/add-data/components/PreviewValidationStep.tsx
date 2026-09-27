@@ -1,11 +1,11 @@
 /**
- * Add Data 3단계 — Preview & Validate (#250, #497).
+ * Add Data Step 3 — Preview & Validate (#250, #497).
  *
- * Builder `/preview`가 반환한 소스별 원본 응답(`PreviewResponse.previews[]`)을 그대로
- * 보여준다 — PASS/WARN/FAIL이나 diff는 Studio가 재계산하지 않고 Builder 값을 그대로
- * 쓴다(`features/quality/model.ts` 재사용). previews가 여러 개면(#250 §3 — YAML로
- * sources를 여러 개 붙여넣은 경우 등) 첫 항목만 보여주고 나머지를 버리지 않는다 — source별
- * 탭으로 전부 보여주고, 상태가 서로 다르면(mixed) 그 사실을 명시한다.
+ * Display raw per-source responses from Builder `/preview` (`PreviewResponse.previews[]`) as-is —
+ * PASS/WARN/FAIL and diff are not recalculated by Studio, using Builder values directly
+ * (reuse `features/quality/model.ts`). If multiple previews exist (#250 §3 — e.g., user pasted
+ * multiple sources via YAML), show all via per-source tabs, not just first; if status varies
+ * (mixed), explicitly state this fact.
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,11 +42,11 @@ export interface PreviewValidationStepProps {
   onChangeSampleMode: (mode: PreviewSampleMode) => void;
   onChangeColumns: (columns: PreviewColumnView) => void;
   onRefresh: () => void;
-  /**
-   * 직전 Preview 실행 이후 Dataset/params 등 설정이 바뀌었는지 여부(AddDataPage의 stale
-   * signature와 동일 값). true면 화면에 남아 있는 sample/검증 결과가 현재 설정과 다르다는
-   * 사실을 알린다 — Build는 ReviewBuildStep의 기존 stale guard가 계속 차단한다.
-   */
+   /**
+    * Whether Dataset/params etc. changed since last Preview run (same value as AddDataPage's stale
+    * signature). If true, informs user that on-screen sample/validation results differ from current settings —
+    * Build remains blocked by ReviewBuildStep's existing stale guard.
+    */
   isStale?: boolean;
   view: "sample" | "diff";
   onChangeView: (view: "sample" | "diff") => void;
@@ -79,7 +79,7 @@ export function PreviewValidationStep({
   const previews = preview.status === "loaded" ? preview.response.previews : [];
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // preview 응답이 새로 도착하면(다시 조회) 첫 번째 source부터 다시 보여준다.
+   // When new preview response arrives (re-fetched), show first source again.
   useEffect(() => {
     setActiveIndex(0);
   }, [preview]);

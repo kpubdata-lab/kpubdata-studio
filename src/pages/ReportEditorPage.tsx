@@ -1,18 +1,18 @@
 /**
- * Report 편집 화면 (`/reports/:reportId`, #258).
+ * Report editor page (`/reports/:reportId`, #258).
  *
- * 저장된 Report Draft 하나를 열어 문서(1~6 Builder evidence 요약, 7 Kubi 분석, 8 사용자 메모)를
- * 읽고 편집하고, 기준 evidence를 새로고침하거나 Kubi 참고 노트를 승인해 반영하고,
- * Markdown/HTML/Print로 내보낸다.
+ * Opens one saved Report Draft to read, edit, and export as Markdown/HTML/Print the
+ * document (sections 1–6: Builder evidence summary, 7: Kubi analysis, 8: user notes).
+ * Also refreshes baseline evidence or approves Kubi reference notes for reflection.
  *
- * IA(#258 IA 개편, Prototype SSOT `report-layout` 반영): desktop에서는 왼쪽에 실제 보고서
- * 문서, 오른쪽에 이 Report에 실제로 존재하는 값만 보여주는 Report Context sidebar를 둔
- * 2단 구조다. 좁은 viewport에서는 sidebar가 문서 아래로 collapse한다(`grid-cols-1` →
- * `lg:grid-cols-[minmax(0,1fr)_320px]`).
+ * IA (#258 IA redesign, Prototype SSOT `report-layout`): on desktop, left side shows
+ * the actual report document and right side shows a Report Context sidebar displaying
+ * only values that exist in this Report — 2-column layout. On narrow viewports, the
+ * sidebar collapses below the document (`grid-cols-1` → `lg:grid-cols-[minmax(0,1fr)_320px]`).
  *
- * 모든 편집 동작은 즉시 저장한다(autosave) — 그래야 "Evidence 새로고침" 같은 동작이
- * 저장되지 않은 사용자 편집을 잃어버릴 걱정 없이 deterministic 블록만 안전하게 교체할 수
- * 있다(#258 §9의 최소 안전 모델).
+ * All edit actions save immediately (autosave) — so actions like "Refresh Evidence"
+ * can safely replace deterministic blocks without losing unsaved user edits
+ * (#258 §9 minimal safety model).
  */
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
@@ -64,9 +64,10 @@ export function ReportEditorPage() {
   const [titleDraft, setTitleDraft] = useState("");
   const [pendingKubiNoteCount, setPendingKubiNoteCount] = useState(0);
 
-  // legacy summary(#258 legacy summary 수정): `summary`가 추가되기 전에 저장된 BUILDER_EVIDENCE
-  // 블록은 이 값이 없다. 저장된 draft 자체를 임의로 migration하지 않고, 화면 표현만 현재
-  // evidence 기준으로 보강한다 — evidence 재조회에 실패하면 null로 남아 기존처럼 표만 보인다.
+   // legacy summary (#258 legacy summary fix): BUILDER_EVIDENCE blocks saved before
+   // `summary` was added lack this field. Rather than arbitrarily migrating the saved
+   // draft itself, we enrich only the display — if evidence re-fetch fails, this stays
+   // null and we show the table as before.
   const [legacySummaries, setLegacySummaries] = useState<Record<BuilderEvidenceSection, string> | null>(null);
 
   useEffect(() => {
@@ -105,10 +106,12 @@ export function ReportEditorPage() {
     const controller = new AbortController();
     runStalenessCheck(report, controller.signal);
     return () => controller.abort();
-    // report.id가 바뀔 때만 재확인하면 충분하다(같은 report 객체 참조 변경마다 재확인할 필요는 없음).
-    // report/runStalenessCheck 자체는 매 렌더 새 참조가 될 수 있어 의도적으로 의존성에서 제외한다.
-    // 이 재확인은 판정만 할 뿐 baseRunId를 절대 바꾸지 않는다(#258 §8 불변식) — STALE이어도
-    // "최신 Run으로 새 Report 만들기"를 사용자가 명시적으로 눌러야만 별도 Report가 새로 생긴다.
+     // Check again only when report.id changes (no need to re-check when the same
+     // report object reference updates). report/runStalenessCheck themselves may get
+     // new references each render, so intentionally omit from dependencies. This check
+     // only judges staleness, never changes baseRunId (#258 §8 invariant) — even if
+     // STALE, a separate Report is created only when user explicitly clicks "Create
+     // from Latest Run".
   }, [loadedReportId]);
 
   useEffect(() => {
@@ -126,13 +129,15 @@ export function ReportEditorPage() {
         if (controller.signal.aborted) return;
         setLegacySummaries(buildSectionSummaries(evidence));
       })
-      .catch(() => {
-        // evidence 재조회 실패 — 저장된 draft(표만 있는 legacy 표시)를 그대로 유지한다.
-        // summary 생성 실패 때문에 Report 전체를 깨지 않는다(#258 legacy summary §1).
-      });
+       .catch(() => {
+         // Failed to re-fetch evidence — keep the saved draft as-is (legacy table without
+         // summary). Don't break the entire Report due to summary generation failure
+         // (#258 legacy summary §1).
+       });
     return () => controller.abort();
-    // report.id가 바뀔 때만 다시 계산한다 — 위 staleness 재확인과 동일한 이유로 report 객체
-    // 참조 자체는 의존성에서 제외한다(예: 제목만 바꿔도 재조회가 다시 일어나지 않게).
+     // Recalculate only when report.id changes — same reason as staleness check above:
+     // exclude report object reference itself from dependencies (e.g., changing title
+     // doesn't trigger re-fetch).
   }, [loadedReportId]);
 
   function persist(next: ReportDraft) {
@@ -206,8 +211,9 @@ export function ReportEditorPage() {
       const evidence = await fetchReportEvidence(report.datasetId, report.baseRunId);
       const nextEvidenceBlocks = buildDeterministicSections(evidence);
       const evidenceRefs = buildEvidenceRefs(evidence);
-      // deterministic(BUILDER_EVIDENCE) 블록만 새로 만든 것으로 교체하고, Kubi/사용자 블록은 그대로 둔다
-      // (#258 §9 — 자동 생성 영역과 사용자 작성 영역을 분리해 사용자 편집을 보존).
+       // Only replace deterministic (BUILDER_EVIDENCE) blocks with newly generated ones;
+       // keep Kubi/user blocks as-is (#258 §9 — separate auto-generated and user-authored
+       // areas to preserve user edits).
       const keptBlocks = report.blocks.filter((block) => block.provenance !== "BUILDER_EVIDENCE");
       const nextReport: ReportDraft = {
         ...report,
@@ -283,8 +289,9 @@ export function ReportEditorPage() {
   );
   const userBlocks = report.blocks.filter((block): block is UserContentBlock => block.provenance === "USER_CONTENT");
 
-  // legacy summary 보강: 저장된 블록의 summary는 그대로 두고, 화면에 보여줄 값만 현재
-  // evidence 기준 summary로 채운다(저장을 강제하지 않는다 — #258 legacy summary §1).
+   // legacy summary enrichment: keep the saved block's summary as-is, fill only the
+   // display value using current evidence summary (#258 legacy summary §1 — don't
+   // force save).
   const displayEvidenceBlocks = evidenceBlocks.map((block) => {
     if (block.summary) return block;
     const fallback = legacySummaries?.[block.section];
@@ -306,9 +313,9 @@ export function ReportEditorPage() {
         <PageHeader eyebrow="Reports" title={t("reportEditor.editTitle")} description={`${report.datasetId} · ${report.baseRunId}`} />
       </div>
 
-      {/* Prototype SSOT(`docs/prototype/kpubdata_ui_prototype_v1.html`)의 `.report-layout`과
-          동일한 원칙: desktop은 문서(가변폭) + Report Context(고정폭) 2단, 좁은 viewport에서는
-          `grid-cols-1`로 collapse해 sidebar가 문서 아래로 내려온다. */}
+       {/* Prototype SSOT (`docs/prototype/kpubdata_ui_prototype_v1.html`) `.report-layout` same
+           principle: desktop is document (fluid width) + Report Context (fixed width) 2-col,
+           narrow viewport collapses to `grid-cols-1` so sidebar moves below document. */}
       <div
         className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start"
         data-testid="report-layout-grid"
@@ -351,12 +358,13 @@ export function ReportEditorPage() {
             {refreshError ? <ErrorState className="mt-2 py-4" message={refreshError} /> : null}
           </Card>
 
-          {/* 1~6. Builder evidence 기반 보고서 본문 — 문장 요약이 먼저 보이고, 표는 상세 근거로 접힌다. */}
+          {/* Sections 1–6. Report body based on Builder evidence — text summary appears first,
+           tables collapse as detailed evidence. */}
           {displayEvidenceBlocks.map((block) => (
             <BlockView key={block.id} block={block} />
           ))}
 
-          {/* 7. Kubi 분석 */}
+           {/* Section 7. Kubi analysis */}
           <div className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-foreground">{t("reportEditor.kubiSection")}</h2>
             {kubiBlocks.length === 0 ? (
@@ -387,7 +395,7 @@ export function ReportEditorPage() {
             </div>
           </div>
 
-          {/* 8. 사용자 메모 */}
+           {/* Section 8. User notes */}
           <div className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-foreground">{t("reportEditor.notesSection")}</h2>
             {userBlocks.map((block) =>
@@ -420,12 +428,13 @@ export function ReportEditorPage() {
           </div>
         </div>
 
-        {/* desktop에서는 App Shell header(`Layout.tsx`의 `sticky top-0` 헤더, 대략 4~4.5rem 높이)
-            아래에 이 sidebar도 같이 sticky로 고정한다(#258 sticky sidebar 수정) — 문서를
-            스크롤해도 Report Context가 계속 보이게 한다. sidebar가 viewport보다 길어질 수
-            있으므로 자체 높이를 viewport로 제한하고 내부 스크롤을 허용해, sticky 때문에 아래쪽
-            내용(Kubi 카드 등)이 영영 보이지 않는 상태가 되지 않게 한다. 좁은 viewport(`lg` 미만)
-            에서는 문서 아래로 collapse하는 기존 1단 레이아웃 그대로이므로 sticky를 걸지 않는다. */}
+        {/* On desktop, this sidebar also pins sticky below the App Shell header
+            (`Layout.tsx`'s `sticky top-0` header, ~4–4.5rem height) (#258 sticky sidebar
+            fix) — so Report Context remains visible while scrolling the document. Since
+            the sidebar can exceed viewport height, constrain its own height to viewport
+            and allow internal scrolling so bottom content (Kubi cards, etc.) doesn't stay
+            hidden under sticky overflow. On narrow viewports (`lg` and below), the existing
+            1-column layout collapses sidebar below the document, so no sticky needed. */}
         <div
           className="print:hidden lg:sticky lg:top-20 lg:max-h-[calc(100vh-5.5rem)] lg:self-start lg:overflow-y-auto"
           data-testid="report-context-sidebar-wrapper"

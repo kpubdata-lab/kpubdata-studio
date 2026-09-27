@@ -1,8 +1,8 @@
 /**
- * source 별 Bronze → Silver → Gold → Output 파이프라인 표시 (#379로 BuildsPage에서 분리).
+ * Per-source Bronze → Silver → Gold → Output pipeline display (#379 split from BuildsPage).
  *
- * Builder 가 준 stage 상태를 그대로 보여준다 — 도달하지 않은 stage 를 실패로 칠하거나
- * 여러 source 를 하나로 뭉개지 않는다.
+ * Display stage state as given by Builder — don't color unreached stages as failed or
+ * collapse multiple sources into one.
  */
 import { useTranslation } from "react-i18next";
 

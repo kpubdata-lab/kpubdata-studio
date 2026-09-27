@@ -1,13 +1,13 @@
 /**
- * Studio 환경 설정 페이지 (/settings).
+ * Studio settings page (/settings).
  *
- * 네 개의 분리된 영역으로 구성한다(#301):
- * 1. 계정 — 로그인 상태/로그아웃(실연동) 또는 mock 안내
- * 2. 연결 — Builder API 엔드포인트와 계약 버전 호환성 점검(#29)
- * 3. 데이터 Provider 자격 증명 — GET /providers 요약(부울만, 원문 없음) + /provider CTA
- * 4. Kubi BYOK — LLM 키는 Provider credential과 완전히 분리된 정책/영역(#256)
+ * Organized into four separate areas (#301):
+ * 1. Account — login status/logout (real integration) or mock guidance
+ * 2. Connection — Builder API endpoint and contract version compatibility check (#29)
+ * 3. Data Provider credentials — GET /providers summary (boolean only, no plaintext) + /provider CTA
+ * 4. Kubi BYOK — LLM key is completely separate policy/area from Provider credential (#256)
  *
- * 구현되지 않은 team/project backend를 있는 것처럼 표시하지 않는다(#292 회귀 금지).
+ * Do not show unimplemented team/project backend as if it exists (#292 regression prevention).
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -44,7 +44,8 @@ export function SettingsPage() {
   const { email, clear } = useAuthStore();
   const oidcStatus = useAuthStore((state) => state.oidcStatus);
 
-  // OIDC 세션은 Keycloak에서 로그아웃해야 IdP 세션까지 종료된다. 그 외에는 메모리 세션만 폐기.
+  // OIDC session must be logged out from Keycloak to end IdP session. Otherwise only
+  // clear in-memory session.
   const handleLogout = () => {
     if (oidcStatus === "authenticated") {
       void keycloakLogout();
@@ -219,7 +220,7 @@ function ProviderCredentialSection({
   state: ProvidersState;
 }) {
   const { t } = useTranslation();
-  // 요약은 서버가 계산한 configured 부울만 다룬다 — 원문 키 조회 자체를 하지 않는다.
+  // Summary handles only configured bool computed by server — doesn't query raw keys themselves.
   const requiringCredential =
     state.status === "ok" ? state.providers.filter((p) => p.requires_credential) : [];
   const configuredCount = requiringCredential.filter((p) => p.configured).length;
@@ -287,8 +288,8 @@ function ProviderConfiguredBadge({ provider, configured }: { provider: string; c
 }
 
 function KubiByokSection() {
-  // Kubi LLM 키는 Provider credential과 다른 BYOK 정책을 따른다(#256/#301 분리):
-  // 기본 메모리 전용, 브라우저 저장은 명시적 opt-in + 경고.
+  // Kubi LLM key follows different BYOK policy than Provider credential (#256/#301 split):
+  // default memory-only, browser persistence is explicit opt-in + warning.
   const { t } = useTranslation();
   const { isConfigured, model, persistToStorage, resolvedBaseUrl, isDefaultBaseUrl } =
     useAssistConfig();

@@ -1,22 +1,20 @@
 /**
- * "7. Kubi 분석" 섹션 전용 패널 (#258 Kubi Report UX 수정).
+ * "7. Kubi Analysis" section panel (#258 Kubi Report UX redesign).
  *
- * 지금까지는 `KubiContent compact` 전체 — API Key/Model/Base URL 설정, 데모 질문, 자유
- * 채팅까지 — 를 한 번에 펼쳐서 보여줬다. 이건 Reports 안에 Kubi 앱 전체를 그대로 삽입한
- * 모습이라 목적이 불분명하다. 이 패널은 그 대신 "현재 Report용 AI 해석 생성"만 기본으로
- * 보여주고, BYOK 설정/자유 채팅은 각각 [AI 설정]/[직접 질문하기]를 눌렀을 때만 펼친다.
+ * Previously showed entire `KubiContent compact` — API Key/Model/Base URL setup, demo questions,
+ * free chat — expanded all at once. That looked like embedding entire Kubi app inside Reports with
+ * unclear intent. This panel instead shows "Generate AI interpretation for current Report" as default,
+ * with BYOK setup/free chat revealed only on [AI Settings]/[Ask directly] click.
  *
- * 새 provider/LLM/evidence pipeline이나 새 action contract를 만들지 않는다 — `useKubiSession`
- * (#256)을 그대로 재사용하고, preset은 그 위에 얹는 단순 질문 template일 뿐이다. 생성된
- * 답변을 Report에 반영하는 것도 기존 `KubiInterpretationBlock` 모양 그대로다(`kubiBlocks.ts`의
- * `reportNoteToBlock`과 같은 필드 구성) — 다만 이 패널은 이미 Report 편집 화면 안에 있으므로
- * reportInbox 큐를 거치지 않고 생성 → 미리보기 → 승인을 한 화면에서 끝낸다. 승인 전에는
- * Report에 아무것도 저장하지 않는다(`onApprove`를 호출하기 전까지는 로컬 미리보기일 뿐).
+ * No new provider/LLM/evidence pipeline or action contract — reuse `useKubiSession`(#256) as-is;
+ * preset is just a simple question template on top. Applying generated answer to Report uses same
+ * `KubiInterpretationBlock` shape (`reportNoteToBlock` field structure in `kubiBlocks.ts`) — but
+ * since this panel lives inside Report editor already, bypass reportInbox queue: generate → preview
+ * → approve all on one screen. Nothing saved to Report until `onApprove` called (local preview only).
  *
- * context(datasetId/baseRunId)는 Report가 고정한 값이다. `useKubiSession`은 URL의
- * pathname+search에서 context를 읽으므로(`features/kubi/context.ts`), 이 패널이 mount되어
- * 있는 동안 URL이 항상 Report 기준 `?dataset=&run=`을 가리키도록 보정한다 — 최신 run으로
- * 자동 전환하지 않는다(#258 §8/§6과 동일 불변식).
+ * Context (datasetId/baseRunId) is fixed by Report. `useKubiSession` reads context from URL
+ * pathname+search (`features/kubi/context.ts`), so while this panel is mounted, always normalize
+ * URL to Report's `?dataset=&run=` — no auto-switch to latest run (#258 §8/§6 same invariant).
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,12 +34,11 @@ interface Preset {
   question: string;
 }
 
-/** 종합 분석은 Primary CTA, 나머지 넷은 quick action이다(#258 §2-1). 새 action contract가
- * 아니라 `useKubiSession.ask/askDemo`에 그대로 넘길 질문 template일 뿐이다. */
+/** Comprehensive analysis is primary CTA, other four are quick actions (#258 §2-1).
+ * Not a new action contract — just question template passed straight to `useKubiSession.ask/askDemo`. */
 /**
- * preset의 label은 버튼 문구고 question은 Kubi에 그대로 보내는 사용자 질문이다 —
- * 둘 다 화면 언어를 따른다. 영어로 보면서 한국어 질문이 나가면 답변도 한국어로 온다.
- * 상수로 고정하면 언어 전환이 반영되지 않으므로 호출 시점에 만든다.
+ * Preset label is button text; question is user query sent to Kubi as-is — both follow screen language.
+ * English UI + Korean question = Korean response. Constant would ignore language switch, so create at call time.
  */
 const COMPREHENSIVE_PRESET_ID = "comprehensive";
 const QUICK_PRESET_IDS = ["quality", "pipeline", "ideas", "caveats"] as const;
@@ -63,7 +60,7 @@ function newBlockId(): string {
   return `kubi-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-/** turn.context가 이 Report의 기준 dataset/run과 같은지(참고 분석과 정본 분석을 구분). */
+/** Whether turn.context matches this Report's reference dataset/run (distinguish reference vs canonical analysis). */
 function turnMatchesReport(turn: KubiTurn, report: Pick<ReportDraft, "datasetId" | "baseRunId">): boolean {
   return turn.context.datasetId === report.datasetId && turn.context.runId === report.baseRunId;
 }
@@ -86,8 +83,8 @@ export function KubiReportPanel({
   const [showChat, setShowChat] = useState(false);
   const [activeQuestion, setActiveQuestion] = useState<string | null>(null);
 
-  // Report가 고정한 dataset/run을 URL에 계속 반영한다 — 최신 run으로 자동 전환하지 않는다
-  // (#258 §8 불변식). 이미 일치하면 아무것도 하지 않는다(불필요한 history 갱신 방지).
+  // Keep Report's fixed dataset/run reflected in URL — do not auto-switch to latest run
+  // (#258 §8 invariant). If already matching, do nothing (avoid unnecessary history updates).
   useEffect(() => {
     if (session.liveContext.datasetId === report.datasetId && session.liveContext.runId === report.baseRunId) {
       return;
@@ -108,8 +105,8 @@ export function KubiReportPanel({
     void session.ask(question);
   }
 
-  // 이 Report 기준(context)으로 마지막에 생성을 요청한 turn만 미리보기로 보여준다. 다른
-  // 화면/context에서 만든 turn과 섞지 않는다.
+  // Show only the last-requested turn matching this Report's context in preview. Do not mix
+  // turns created in other screens/contexts.
   const activeTurn = activeQuestion
     ? [...session.turns]
         .reverse()

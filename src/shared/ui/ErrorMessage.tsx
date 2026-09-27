@@ -1,26 +1,26 @@
 /**
- * 공통 ErrorMessage 컴포넌트.
+ * Common ErrorMessage component.
  *
- * 폼 필드 오류나 요약 오류를 role="alert"로 노출해 보조기기가 즉시 안내하도록 한다
- * (접근성, 제안 §12).
+ * Expose form field or summary error as role="alert" for assistive tech immediate
+ * guidance (accessibility, proposal §12).
  */
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
 export interface ErrorMessageProps {
-  /** aria-describedby로 연결하기 위한 id */
+  /** id for connecting via aria-describedby */
   id?: string;
-  /** 오류 메시지 본문 */
+  /** error message body */
   children?: ReactNode;
-  /** 추가 className */
+  /** additional className */
   className?: string;
 }
 
 /**
- * 오류 메시지를 role="alert"로 렌더링한다. children이 없으면 아무것도 렌더링하지 않는다.
+ * Render error message as role="alert". Render nothing if no children.
  *
  * @param props - id/children/className.
- * @returns 오류 메시지 엘리먼트 또는 null.
+ * @returns Error message element or null.
  */
 export function ErrorMessage({ id, children, className }: ErrorMessageProps) {
   if (!children) return null;

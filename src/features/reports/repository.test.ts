@@ -52,7 +52,7 @@ describe("reports repository (#258 §11)", () => {
     expect(reloaded?.datasetId).toBe("air-quality");
     expect(reloaded?.baseRunId).toBe("air-2026-08-13");
 
-    // evidence를 다시 채워 저장해도(예: refresh) baseRunId 자체는 호출부가 바꾸지 않는 한 유지된다.
+    // Even if evidence refilled and saved (e.g., refresh), baseRunId itself persists unless caller changes it.
     saveReport({ ...reloaded!, evidenceFetchedAt: "2026-08-15T00:00:00Z" });
     expect(getReport(report.id)?.baseRunId).toBe("air-2026-08-13");
   });
@@ -73,7 +73,7 @@ describe("reports repository (#258 §11)", () => {
     expect(outcome?.report.id).not.toBe(report.id);
     expect(outcome?.report.blocks).toHaveLength(1);
 
-    // 복제본을 수정해도 원본에는 영향이 없어야 한다(참조 공유 없음).
+    // Modifying clone must not affect original (no shared refs).
     const clonedId = outcome!.report.id;
     const cloned = getReport(clonedId)!;
     saveReport({ ...cloned, blocks: [] });
@@ -98,16 +98,16 @@ describe("reports repository (#258 §11)", () => {
     const reloaded1 = getReport(report.id)!;
     const reloaded2 = getReport(report.id)!;
 
-    // 탭 1이 먼저 저장해 revision을 올린다.
+    // Tab 1 saves first, increments revision.
     const first = saveReport({ ...reloaded1, title: "탭1이 저장" });
     expect(first.ok).toBe(true);
 
-    // 탭 2는 옛 revision을 들고 있다가 저장을 시도한다.
+    // Tab 2 holds old revision, attempts save.
     const second = saveReport({ ...reloaded2, title: "탭2가 저장" });
     expect(second.ok).toBe(false);
     if (!second.ok) expect(second.conflict).toBe(true);
 
-    // 탭 1의 내용이 보존되어 있어야 한다(덮어써지지 않음).
+    // Tab 1 content preserved (not overwritten).
     expect(getReport(report.id)?.title).toBe("탭1이 저장");
   });
 

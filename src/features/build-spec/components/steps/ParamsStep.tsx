@@ -1,4 +1,4 @@
-/** 마법사 3단계 — 요청 파라미터 (#379). */
+/** Wizard step 3 — request parameter (#379). */
 import { useTranslation } from "react-i18next";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 
@@ -30,7 +30,7 @@ export function ParamsStep({ register, errors }: ParamsStepProps) {
             {...field}
             {...register("sourceParams", {
               required: i18n.t("newBuild.errors.paramsRequired"),
-              // JSON 문법/객체 여부를 단계 이동(trigger) 시점에 바로 막고 필드에 표시한다.
+              // Block JSON syntax/object check at step move (trigger) point; display in field.
               validate: (value) => parseSourceParams(value).error ?? true,
             })}
           />

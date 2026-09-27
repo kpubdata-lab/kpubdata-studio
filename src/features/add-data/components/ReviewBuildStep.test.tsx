@@ -1,10 +1,13 @@
 /**
- * URL source secret redaction — Review UI regression tests (PR #283 리뷰 대응, Epic #246).
+ * URL source secret redaction — Review UI regression tests (PR #283 review,
+ * Epic #246).
  *
- * `draft.url.endpoint`에 `api_key`/`serviceKey`/`token` 등 secret query parameter가
- * 있을 때, Review DOM(Source/Query summary, "실제 제출될 canonical BuildSpec" preview)에
- * 원문이 노출되지 않는지 검증한다. 동시에 실제 Build 제출값(`onBuild`가 받는 in-memory
- * `spec`)은 이 컴포넌트의 표시용 redaction과 무관하게 원문 그대로 유지됨을 확인한다.
+ * When `draft.url.endpoint` contains secret query parameters like `api_key`,
+ * `serviceKey`, `token`, verify that Review DOM (Source/Query summary,
+ * "actual canonical BuildSpec to submit" preview) doesn't expose originals.
+ * Simultaneously confirm actual Build submission value (in-memory `spec`
+ * that `onBuild` receives) keeps original endpoint regardless of display
+ * redaction by this component.
  */
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
@@ -56,47 +59,47 @@ function renderReview(draft: AddDataDraft) {
 }
 
 describe("ReviewBuildStep — URL source secret redaction (#283)", () => {
-  it("?api_key=<secret>의 원문이 Review DOM에 없다", () => {
+  it("Original ?api_key=<secret> not in Review DOM", () => {
     const secret = "A7vK2mQ9xP4rT8yW3nC6dF1hJ5sL0zB";
     renderReview(urlDraft(`https://api.example.org/data?api_key=${secret}`));
     expect(document.body.textContent ?? "").not.toContain(secret);
     expect(screen.getAllByText(/REDACTED/).length).toBeGreaterThan(0);
   });
 
-  it("?serviceKey=<secret>의 원문이 Review DOM에 없다", () => {
+  it("Original ?serviceKey=<secret> not in Review DOM", () => {
     const secret = "9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e";
     renderReview(urlDraft(`https://api.data.go.kr/openapi?serviceKey=${secret}`));
     expect(document.body.textContent ?? "").not.toContain(secret);
   });
 
-  it("?token=<secret>의 원문이 Review DOM에 없다", () => {
+  it("Original ?token=<secret> not in Review DOM", () => {
     const secret = "eyJhbGciOiJIUzI1NiJ9.abcdefghijklmnopqrstuvwxyz012345";
     renderReview(urlDraft(`https://api.example.org/v1/data?token=${secret}`));
     expect(document.body.textContent ?? "").not.toContain(secret);
   });
 
-  it("key 이름이 평범해도 고엔트로피 값이면 Review DOM에서 가려진다", () => {
+  it("High-entropy value hidden in Review DOM regardless of key name", () => {
     const secret = "Zx8pQ2vR7mK4nL9wT1yB6cU3sD0fH5jA8gE2rN7iM4x";
     renderReview(urlDraft(`https://api.example.org/v1/data?auth=${secret}`));
     expect(document.body.textContent ?? "").not.toContain(secret);
   });
 
-  it("일반 비민감 query parameter는 Review DOM에 그대로 남는다", () => {
+  it("Non-sensitive query parameters remain as-is in Review DOM", () => {
     renderReview(urlDraft("https://api.example.org/data?region=seoul&year=2024"));
     expect(document.body.textContent ?? "").toContain("region=seoul");
     expect(document.body.textContent ?? "").toContain("year=2024");
   });
 
-  it("표시용 redaction은 실제 in-memory submission spec(endpoint 원문)을 바꾸지 않는다", () => {
+  it("Display redaction doesn't change actual in-memory submission spec (endpoint original)", () => {
     const secret = "A7vK2mQ9xP4rT8yW3nC6dF1hJ5sL0zB";
     const draft = urlDraft(`https://api.example.org/data?api_key=${secret}&region=seoul`);
     const { specResult } = renderReview(draft);
 
-    // Review DOM에서는 가려지지만
+    // Hidden in Review DOM
     expect(document.body.textContent ?? "").not.toContain(secret);
 
-    // AddDataPage의 onBuild가 실제로 job.start에 넘기는 값(specResult.spec)은
-    // 이 컴포넌트의 렌더링과 무관하게 원문 endpoint를 그대로 갖고 있어야 한다.
+    // But AddDataPage's onBuild receives specResult.spec with original endpoint,
+    // independent of this component's rendering and redaction.
     expect(specResult.spec?.sources[0]).toMatchObject({
       kind: "url",
       endpoint: `https://api.example.org/data?api_key=${secret}&region=seoul`,
@@ -126,46 +129,46 @@ describe("ReviewBuildStep — sync build client-side interruption wording (MAJOR
     );
   }
 
-  it("client-side abort는 '취소' 확정 문구 대신 '요청을 중단' 문구만 보여준다", () => {
+  it("Client-side abort shows only 'request stopped' not 'cancelled' confirmation", () => {
     renderWithJob({ jobStatus: "idle", jobInterrupted: true });
     expect(screen.getByText(/요청을 중단했습니다\. 서버 빌드 결과는 확인되지 않았습니다\./)).toBeInTheDocument();
     expect(screen.queryByText("실행이 취소되었습니다.")).not.toBeInTheDocument();
   });
 
-  it("실제 async cancelled terminal에서만 '실행이 취소되었습니다.'를 보여준다", () => {
+  it("Shows 'cancelled' message only on actual async cancelled terminal", () => {
     renderWithJob({ jobStatus: "cancelled" });
     expect(screen.getByText("실행이 취소되었습니다.")).toBeInTheDocument();
     expect(screen.queryByText(/요청을 중단했습니다/)).not.toBeInTheDocument();
   });
 });
 
-describe("ReviewBuildStep — public_api sourceParams secret redaction (#283 후속 리뷰 §1)", () => {
-  it("serviceKey 원문이 Review DOM에 없다", () => {
+describe("ReviewBuildStep — public_api sourceParams secret redaction (#283 follow-up §1)", () => {
+  it("Original serviceKey not in Review DOM", () => {
     const secret = "A7vK2mQ9xP4rT8yW3nC6dF1hJ5sL0zB";
     renderReview(publicApiDraft(JSON.stringify({ page: 1, serviceKey: secret })));
     expect(document.body.textContent ?? "").not.toContain(secret);
   });
 
-  it("api_key 원문이 Review DOM에 없고 region은 유지된다", () => {
+  it("Original api_key not in Review DOM, region preserved", () => {
     const secret = "9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e";
     renderReview(publicApiDraft(JSON.stringify({ api_key: secret, region: "seoul" })));
     expect(document.body.textContent ?? "").not.toContain(secret);
     expect(document.body.textContent ?? "").toContain("seoul");
   });
 
-  it("고엔트로피 값도 key 이름과 무관하게 Review DOM에서 가려진다", () => {
+  it("High-entropy value hidden in Review DOM regardless of key name", () => {
     const secret = "Zx8pQ2vR7mK4nL9wT1yB6cU3sD0fH5jA8gE2rN7iM4x";
     renderReview(publicApiDraft(JSON.stringify({ auth: secret })));
     expect(document.body.textContent ?? "").not.toContain(secret);
   });
 
-  it("비민감 파라미터는 Review DOM에 그대로 남는다", () => {
+  it("Non-sensitive parameters remain as-is in Review DOM", () => {
     renderReview(publicApiDraft(JSON.stringify({ region: "seoul", year: 2024 })));
     expect(document.body.textContent ?? "").toContain("seoul");
     expect(document.body.textContent ?? "").toContain("2024");
   });
 
-  it("표시용 redaction은 실제 in-memory submission spec(params 원문)을 바꾸지 않는다", () => {
+  it("Display redaction doesn't change actual in-memory submission spec (params original)", () => {
     const secret = "A7vK2mQ9xP4rT8yW3nC6dF1hJ5sL0zB";
     const draft = publicApiDraft(JSON.stringify({ serviceKey: secret, region: "seoul" }));
     const { specResult } = renderReview(draft);

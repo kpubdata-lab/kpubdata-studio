@@ -1,12 +1,12 @@
 /**
- * Home 대시보드 KPI wiring 테스트.
+ * Home dashboard KPI wiring test.
  *
- * 검증 대상:
- * - DATASETS → GET /datasets의 authoritative `total` (Builder 1.22.0)
- * - QUALITY WARN (24H) → GET /quality/summary의 `warn_runs`
- * - 각 aggregate 경계가 독립적이다 — 하나가 실패해도 나머지 KPI와 Recent Builds는 유지된다
- * - Recent Builds는 KPI 요청 지연/실패와 무관하게 자기 상태로 렌더된다
- * - `total`을 안 보내는 (구버전) Builder에서는 DATASETS만 "확인 불가"
+ * Validation targets:
+ * - DATASETS → authoritative `total` from GET /datasets (Builder 1.22.0)
+ * - QUALITY WARN (24H) → `warn_runs` from GET /quality/summary
+ * - Each aggregate boundary is independent — one failure doesn't affect other KPIs and Recent Builds
+ * - Recent Builds renders in its own state regardless of KPI request delay/failure
+ * - For older Builder versions (not sending `total`), only DATASETS is marked "verification unavailable"
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
@@ -59,7 +59,7 @@ const QUALITY_SUMMARY = {
   fail_runs: 1,
 };
 
-/** 기본: 모든 boundary가 정상. 개별 테스트가 필요한 것만 override한다. */
+/** basic: all boundaries are normal. Override only what needs individual test. */
 function baseHandlers(overrides: {
   builds?: () => Response | Promise<Response>;
   datasets?: () => Response | Promise<Response>;
@@ -112,7 +112,7 @@ function CurrentPath() {
   return <output data-testid="current-path">{useLocation().pathname}</output>;
 }
 
-/** KPI 라벨이 들어 있는 카드(라벨 span의 부모)를 돌려준다. */
+/** Returns card containing KPI label (parent of label span). */
 function kpiCard(label: string) {
   return screen.getByText(label).parentElement as HTMLElement;
 }
@@ -159,7 +159,7 @@ describe("HomePage 대시보드 KPI", () => {
 
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
     expect(await within(kpiCard("SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
-    // 5xx는 apiFetch가 지수 백오프로 재시도하므로 catch까지 시간이 걸린다.
+    // 5xx retries with exponential backoff in apiFetch, so catch takes time.
     expect(
       await within(kpiCard("DATASETS")).findByText("확인 불가", undefined),
     ).toBeInTheDocument();
@@ -403,9 +403,9 @@ describe("HomePage 최근 품질 상태", () => {
 });
 
 /**
- * 신규 사용자 판정: 빈 build 목록만으로는 부족하다. real 모드에서는 Builder
- * GET /datasets의 authoritative `total`이 0으로 확인돼야 신규 사용자로 확정한다.
- * total을 확인할 수 없으면(구버전 Builder / 404·5xx) 기존 대시보드를 보여준다.
+ * New user determination: empty build list alone is insufficient. In real mode, confirm as new
+ * user only when authoritative `total` from Builder GET /datasets is verified as 0.
+ * If total cannot be verified (old Builder / 404·5xx), show existing dashboard.
  */
 describe("HomePage 신규 사용자 판정", () => {
   const NEW_USER_HEADING = "공공데이터를 찾아 신뢰할 수 있는 데이터셋으로 만드세요";
@@ -479,7 +479,7 @@ describe("HomePage 전체 작업 흐름 (설명형, 클릭 카드 아님)", () =
     expect(screen.getByText("품질 확인 · 활용")).toBeInTheDocument();
     expect(screen.getByText("Quality · Ask KPubData · Export · Publish")).toBeInTheDocument();
 
-    // 클릭 가능한 카드가 아니다 — STEP 카드 자체가 링크/버튼이 아니어야 한다.
+    // Not a clickable card — STEP card itself should not be link/button.
     expect(screen.queryByRole("link", { name: /데이터 찾기/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /데이터 찾기/ })).not.toBeInTheDocument();
   });

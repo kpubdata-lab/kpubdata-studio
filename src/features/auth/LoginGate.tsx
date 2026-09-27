@@ -1,4 +1,4 @@
-/** 보호된 Studio route를 /login 단일 진입점으로 연결한다. */
+/** Wire protected Studio routes to /login single entry point. */
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { isDevAuthBypassEnabled } from "@/shared/config/env";

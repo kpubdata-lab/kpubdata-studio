@@ -1,7 +1,7 @@
 /**
- * 빌드 데이터 로딩 훅.
+ * Build data loading hook.
  *
- * buildId로 빌드 정보를 가져오고 로딩/에러 상태를 관리한다.
+ * Fetch build info by buildId and manage loading/error state.
  */
 import { i18n } from "@/shared/i18n";
 import { useEffect, useState } from "react";
@@ -15,10 +15,10 @@ export interface UseBuildResult {
 }
 
 /**
- * buildId로 빌드 정보를 로드하는 훅.
+ * Hook to load build info by buildId.
  *
- * @param buildId - 조회할 빌드 ID.
- * @returns 빌드 데이터와 로딩 상태.
+ * @param buildId - build ID to query.
+ * @returns build data and loading state.
  */
 export function useBuild(buildId: string): UseBuildResult {
   const [state, setState] = useState<{

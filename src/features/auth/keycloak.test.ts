@@ -1,7 +1,7 @@
 /**
- * keycloak.ts (OIDC 싱글턴) 테스트.
+ * keycloak.ts (OIDC singleton) test.
  *
- * keycloak-js SDK 경계는 mock한다 — 실제 네트워크로 Keycloak을 호출하지 않는다.
+ * Mock keycloak-js SDK boundary — don't actually call Keycloak over network.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 

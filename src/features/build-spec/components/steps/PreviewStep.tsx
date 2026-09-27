@@ -1,4 +1,4 @@
-/** 마법사 4단계 — 미리보기 (#379). */
+/** wizard 4step — preview (#379). */
 import { useTranslation } from "react-i18next";
 
 import { Button, EmptyState } from "@/shared/ui";

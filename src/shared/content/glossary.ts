@@ -1,8 +1,9 @@
 /**
- * 용어 사전 — 화면 곳곳의 `TermHelp` 툴팁이 쓰는 설명 문구.
+ * Glossary — provides explanation strings used by `TermHelp` tooltips throughout the UI.
  *
- * 문구 자체는 `glossary.*` 키로 i18n에 있다(#350). 여기서는 **어떤 용어가 있는지**만
- * 선언한다 — 모듈 상수로 문구를 들고 있으면 언어 전환이 반영되지 않는다.
+ * The strings themselves are in i18n under the `glossary.*` key (#350). This file
+ * only declares **which terms exist** — if we stored strings as module constants,
+ * language switching would not be reflected.
  */
 import { i18n } from "@/shared/i18n";
 
@@ -29,7 +30,7 @@ export const GLOSSARY_TERMS = [
 
 export type GlossaryKey = (typeof GLOSSARY_TERMS)[number];
 
-/** 용어 설명 문구를 현재 언어로 돌려준다. */
+/** Returns the explanation string for a term in the current language. */
 export function glossaryDescription(term: GlossaryKey): string {
   return i18n.t(`glossary.${term}`);
 }

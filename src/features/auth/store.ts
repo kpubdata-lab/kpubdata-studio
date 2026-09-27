@@ -1,22 +1,22 @@
 /**
- * 인증 상태 관리 (S3/#188, #263에서 generic 세션으로 확장).
+ * Authentication state management (expanded to a generic session in S3/#188, #263).
  *
- * 토큰은 메모리(zustand store)에만 보관한다 — persist 미들웨어 사용 금지.
- * localStorage/sessionStorage에 토큰을 쓰면 XSS 한 번으로 탈취된다.
- * 새로고침 시 세션 복원은 Keycloak silent SSO(`initKeycloak`)가 담당한다.
+ * Tokens are stored only in memory (the zustand store) — do not use persistence middleware.
+ * Writing tokens to localStorage/sessionStorage allows a single XSS to steal them.
+ * Session restoration on refresh is handled by Keycloak silent SSO (`initKeycloak`).
  *
- * mock/email 로그인(setSession)과 OIDC 세션(setOidcIdentity)이 이 store 하나를 공유해
- * topbar avatar(#191)/Settings/LoginGate(#190)가 어느 provider로 로그인했는지 신경 쓰지
- * 않고 동일하게 동작한다.
+ * Mock/email login (`setSession`) and OIDC session (`setOidcIdentity`) share this store
+ * so UI elements like the topbar avatar (#191) and Settings/LoginGate (#190) behave the
+ * same regardless of which provider authenticated the user.
  */
 import { create } from "zustand";
 import type { AuthProviderId, AuthSession } from "./types";
 
 /**
- * OIDC(Keycloak) 부트스트랩 상태.
+ * OIDC (Keycloak) bootstrap status.
  *
- * mock/데모나 dev bypass 환경에서는 "disabled"로 남는다 — 이 경우 LoginGate는 기존
- * 정책(mock 토큰 유무)을 그대로 따른다.
+ * Remains "disabled" in mock/demo or dev bypass environments — in that case LoginGate
+ * follows existing mock-token policies.
  */
 export type OidcStatus =
   | "disabled"
@@ -27,32 +27,32 @@ export type OidcStatus =
 
 interface AuthState {
   /**
-   * Builder로 보낼 Bearer 토큰 (mock 세션 토큰). null이면 미로그인.
+   * Bearer token sent to the Builder (mock session token). Null means unauthenticated.
    *
-   * OIDC(Keycloak) 세션의 access token은 여기 저장하지 않는다 — keycloak-js 메모리
-   * 세션이 authoritative source이고, store 사본은 refresh 후 stale이 되기 때문이다.
-   * Builder 요청은 `keycloak.ts`의 `getFreshToken()`을 통해 최신 토큰을 받는다.
+   * The OIDC (Keycloak) access token is not stored here — the keycloak-js in-memory
+   * session is the authoritative source and any store copy becomes stale after refresh.
+   * Builder requests obtain the latest token via `getFreshToken()` in `keycloak.ts`.
    */
   token: string | null;
-  /** 로그인된 사용자 이메일 (UI 표시용, S6/#191). */
+  /** Logged-in user's email (for UI display, S6/#191). */
   email: string | null;
-  /** 표시용 이름. provider가 이름을 주지 않으면 null(#263). */
+  /** Display name. Null if the provider does not provide a name (#263). */
   name: string | null;
   userId: string | null;
-  /** 이 세션을 만든 provider. 미로그인이면 null(#263). */
+  /** The provider that created this session. Null when not logged in (#263). */
   providerId: AuthProviderId | null;
-  /** OIDC 부트스트랩 상태. mock/데모에서는 "disabled". */
+  /** OIDC bootstrap status. In mock/demo this is "disabled". */
   oidcStatus: OidcStatus;
-  /** generic {@link AuthProvider}(mock/#263)가 반환한 세션을 그대로 저장한다. */
+  /** Store the generic {@link AuthProvider} (mock/#263) session as-is. */
   setSession: (session: AuthSession) => void;
   /**
-   * Keycloak 세션에서 확인한 사용자 신원(표시용)만 저장한다. raw access token은
-   * store에 넣지 않는다(위 `token` 주석 참고).
+   * Store only the display identity found in the Keycloak session. Do not store the raw access token
+   * in the store (see the `token` comment above).
    */
   setOidcIdentity: (identity: { email: string | null; name: string | null; userId: string | null }) => void;
-  /** OIDC 부트스트랩 상태 전이. */
+  /** Transition the OIDC bootstrap status. */
   setOidcStatus: (status: OidcStatus) => void;
-  /** 로그아웃 — 세션 전체를 폐기(OIDC 부트스트랩 상태는 호출부가 별도로 관리). */
+  /** Logout — fully clear the session (OIDC bootstrap status is managed separately by callers). */
   clear: () => void;
 }
 

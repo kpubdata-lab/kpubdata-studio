@@ -1,8 +1,8 @@
 /**
- * New Build 마법사의 시작 템플릿 (#379로 NewBuildPage에서 분리).
+ * New Build wizard starting templates (#379 separated from NewBuildPage).
  *
- * 템플릿은 catalog 에 실제로 있는 provider/dataset 일 때만 고를 수 있다 — 없는 조합을
- * 눌러 두고 다음 단계에서 실패하게 두지 않는다.
+ * Templates can only be selected when the provider/dataset actually exists in catalog —
+ * we don't let users pick nonexistent combinations and fail in the next step.
  */
 import {
   catalogDataset,

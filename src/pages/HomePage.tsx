@@ -1,16 +1,17 @@
 /**
- * Studio 홈 대시보드 화면 - 신규 사용자/기존 사용자 상태 분기.
+ * Studio home dashboard screen — branches by new user / existing user state.
  *
- * Issue #248: Home을 신규 사용자·기존 사용자 상태로 구현한다.
+ * Issue #248: Implement Home with new user and existing user state branching.
  *
- * 신규 사용자 여부는 dataset/build 존재 여부로 판단한다.
- * - 신규 사용자: 환영 메시지, Kubi 자연어 hero(topbar KubiSearchInput과 동일한 seed 흐름 재사용),
- *   공공데이터 탐색, 데이터 바로 가져오기
- * - 기존 사용자: 실제 KPI (DATASETS, BUILD SUCCESS, VALIDATION WARN, RUNNING), 최근 데이터셋, 최근 Build stage 요약, 품질 경고/실패 Build
+ * New user detection is based on dataset/build existence:
+ * - New user: Welcome message, Kubi natural language hero (reuses topbar KubiSearchInput seed flow),
+ *   public data search, direct data import
+ * - Existing user: Actual KPIs (DATASETS, BUILD SUCCESS, VALIDATION WARN, RUNNING), recent datasets,
+ *   recent Build stage summarization, quality warnings/failed Builds
  *
- * Phase2 UI polish: "예시 데이터셋을 곧 만나보실 수 있습니다" placeholder 섹션은 제거했다 —
- * 실제 예시 데이터셋이 없는 상태에서 서비스가 미완성인 인상을 줬다. 같은 CTA는 이미
- * "공공데이터 탐색 → /discover" 카드가 담당한다.
+ * Phase 2 UI polish: Removed "example datasets coming soon" placeholder section — it gave the
+ * impression of incomplete service without actual example datasets. The same CTA is now handled
+ * by the "public data search → /discover" card.
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -50,28 +51,28 @@ interface DashboardStats {
 }
 
 /**
- * 각 KPI aggregate는 독립적인 API 경계다 — 하나가 실패해도 나머지 KPI 값과
- * Recent Builds는 영향받지 않는다. "loading"은 skeleton, "unavailable"은
- * "확인 불가"(임의 숫자 합성 없음)로 렌더된다.
+ * Each KPI aggregate is an independent API boundary — if one fails, other KPI values and
+ * Recent Builds remain unaffected. "loading" renders as skeleton, "unavailable" renders as
+ * "verification unavailable" (no fabricated numbers).
  */
 type KpiPhase = "loading" | "ready" | "unavailable";
 
 interface KpiPhases {
-  /** DATASETS — GET /datasets의 authoritative `total` (Builder 1.22.0). */
+  /** DATASETS — authoritative `total` from GET /datasets (Builder 1.22.0). */
   datasets: KpiPhase;
-  /** SUCCEEDED (24H) + RUNNING — GET /monitoring/* 공유 경계. */
+  /** SUCCEEDED (24H) + RUNNING — GET /monitoring/* shared boundary. */
   monitoring: KpiPhase;
   /** QUALITY WARN (24H) — GET /quality/summary (Builder 1.22.0). */
   quality: KpiPhase;
 }
 
 /**
- * DATASETS KPI + 신규 사용자 판정을 위한 authoritative dataset total만 독립적으로
- * 조회한다 — monitoring/quality 경계는 건드리지 않는다.
+ * Query only authoritative dataset total for DATASETS KPI + new user detection independently —
+ * don't touch monitoring/quality boundaries.
  *
- * 1.21.0 이하 Builder는 `total`을 보내지 않으므로 그때는 items.length/limit로
- * 대체하지 않고 "확인 불가"(kpi.datasets="unavailable", datasetCount=null)로 둔다.
- * 호출부는 이 상태를 "dataset 없음"으로 오해하지 않는다.
+ * Builder 1.21.0 and below don't send `total`, so when that happens, don't substitute with
+ * items.length/limit; instead mark as "verification unavailable" (kpi.datasets="unavailable",
+ * datasetCount=null). Callers won't misinterpret this state as "no datasets".
  */
 function loadDatasetTotal(
   isActive: () => boolean,
@@ -93,10 +94,11 @@ function loadDatasetTotal(
 }
 
 /**
- * 실연동 모드에서 Home KPI 3개 경계를 각각 독립적으로 로드한다.
+ * In real mode, load all 3 Home KPI boundaries independently.
  *
- * 세 요청은 서로를, 그리고 이미 커밋된 Recent Builds를 절대 block하지 않는다.
- * 한 aggregate가 실패/미지원이면 해당 KPI만 "확인 불가"가 되고 값을 지어내지 않는다.
+ * The three requests never block each other or already-committed Recent Builds.
+ * If one aggregate fails/is unsupported, only that KPI becomes "verification unavailable"
+ * without fabricating values.
  */
 function loadRealKpis(
   isActive: () => boolean,
@@ -106,7 +108,7 @@ function loadRealKpis(
   // (1) DATASETS — dataset total.
   loadDatasetTotal(isActive, setStats, setKpi);
 
-  // (2) SUCCEEDED (24H) + RUNNING — monitoring. 각 endpoint 실패는 그 값만 null로.
+   // (2) SUCCEEDED (24H) + RUNNING — monitoring. Each endpoint failure only nulls its value.
   void Promise.all([
     builderApi.getMonitoringBuilds().catch(() => null),
     builderApi.getMonitoringSummary().catch(() => null),
@@ -119,13 +121,13 @@ function loadRealKpis(
     setStats((prev) => ({
       ...prev,
       buildSuccess: monitoredSuccess,
-      // GET /builds의 real 계약은 terminal summary만 제공하므로 active 수로 해석하지 않는다.
+      // GET /builds contract provides only terminal summary, so don't interpret as active count.
       running: summary?.queue.running ?? null,
     }));
     setKpi((prev) => ({ ...prev, monitoring: "ready" }));
   });
 
-  // (3) QUALITY WARN (24H) — quality summary. 미지원(1.21.0 이하 → 404)/실패면 "확인 불가".
+   // (3) QUALITY WARN (24H) — quality summary. Unsupported (Builder 1.21.0 below → 404) / failure → "verification unavailable".
   builderApi
     .getQualitySummary()
     .then((res) => {
@@ -144,13 +146,12 @@ function loadRealKpis(
 }
 
 /**
- * 신규 사용자 여부를 판단한다.
+ * Determine whether user is new.
  *
- * 신규 사용자는 "빌드도 dataset도 없음"이 실제로 확인됐을 때만 확정한다. 빈 build
- * 목록만으로는 부족하다 — dataset은 있는데 아직 build를 돌리지 않은 사용자를 신규로
- * 오판할 수 있기 때문이다. real 모드에서는 Builder GET /datasets의 authoritative
- * `total`(1.22.0)을 함께 확인하고, total이 unavailable(구버전 Builder / 404·5xx)이면
- * 신규로 추측하지 않고 기존 대시보드를 보여준다(DATASETS만 "확인 불가").
+ * New user is confirmed only when "no builds AND no datasets" is actually verified. Empty build
+ * list alone is insufficient — can't distinguish from users who have datasets but haven't run builds yet.
+ * In real mode, also check authoritative `total` from Builder GET /datasets (1.22.0); if total is
+ * unavailable (old Builder / 404·5xx), don't guess new; show existing dashboard (DATASETS only "verification unavailable").
  */
 export function HomePage() {
   const realBuilder = isRealBuilderEnabled();
@@ -176,22 +177,22 @@ export function HomePage() {
   useEffect(() => {
     let active = true;
 
-    // real Builder의 aggregate는 Recent Builds와 독립적인 API 경계다. /builds의
-    // 성공 여부나 빈 목록 여부와 무관하게 즉시 시작한다.
+    // Real Builder's aggregate is an independent API boundary from Recent Builds. Starts immediately
+    // regardless of whether /builds succeeds or returns empty list.
     if (realBuilder) {
       loadRealKpis(() => active, setStats, setKpi);
     }
 
-    // Recent Builds는 KPI 요청과 완전히 독립이다 — 받는 즉시 커밋하고, 실패하면
-    // KPI와 무관하게 그 섹션만 에러 상태로 둔다.
+     // Recent Builds is completely independent from KPI requests — commit immediately on receive,
+     // and on failure, mark only that section as error regardless of KPI state.
     listBuilds()
       .then((list) => {
         if (!active) return;
         setBuilds(list);
         setBuildsState("success");
 
-        // real 모드 aggregate는 effect 시작 시 이미 독립적으로 요청했다. 빈 build는
-        // 신규 사용자 판정의 한 근거일 뿐, monitoring/quality를 unavailable로 만들지 않는다.
+         // Real mode aggregate was already independently requested at effect start. Empty build is
+         // only one criterion for new user detection; doesn't make monitoring/quality unavailable.
         if (list.length === 0) {
           if (!realBuilder) {
             setKpi({ datasets: "unavailable", monitoring: "unavailable", quality: "unavailable" });
@@ -203,8 +204,8 @@ export function HomePage() {
           return;
         }
 
-        // mock/demo: 기존 demo 의미 유지 — mock 목록에서 직접 계산한다. 여기는
-        // 애초에 mock 모드이므로 real 실패를 mock 숫자로 대체하는 경로가 아니다.
+         // Mock/demo: keep existing demo meaning — compute directly from mock list. Already in mock
+         // mode, so no path to substitute real failures with mock numbers.
         const succeeded = list.filter((b) => b.status === "succeeded").length;
         const running = list.filter(
           (b) => b.status === "running" || b.status === "queued",
@@ -215,8 +216,8 @@ export function HomePage() {
       .catch(() => {
         if (!active) return;
         setBuildsState("error");
-        // real aggregate는 /builds 오류와 독립적으로 계속 진행한다. mock/demo의
-        // 기존 동작만 유지해, 근거 없는 KPI를 표시하지 않는다.
+       // Real aggregate continues independently from /builds error. Mock/demo keeps existing
+       // behavior to avoid displaying KPI without grounds.
         if (!realBuilder) {
           setKpi({ datasets: "unavailable", monitoring: "unavailable", quality: "unavailable" });
         }
@@ -250,9 +251,9 @@ export function HomePage() {
       return () => controller.abort();
     }
 
-    // Quality 결과는 manifest에서 조회한다(GET /builds/{run_id}/quality). manifest가 있는
-    // 것은 성공적으로 완료된 Run뿐이므로, queued/running/취소된 Run에 getBuildQuality를
-    // 호출하면 항상 404다 — canonical 대상인 succeeded Run만 조회한다.
+       // Quality results are queried from manifest (GET /builds/{run_id}/quality). Only successfully
+       // completed Runs have manifest, so calling getBuildQuality on queued/running/cancelled Runs
+       // always returns 404 — query only canonical succeeded Runs.
     const qualityRuns = recentBuilds.filter((run) => run.status === "succeeded");
     if (qualityRuns.length === 0) {
       setRecentQuality({ phase: "ready", alerts: [], incomplete: false });
@@ -280,10 +281,9 @@ export function HomePage() {
     return () => controller.abort();
   }, [buildsState, realBuilder, recentBuilds]);
 
-  // real 모드: 빌드 0개 + dataset total 조회 성공(kpi.datasets="ready") + total===0
-  // 이 모두 충족될 때만 신규 사용자로 확정한다. total이 unavailable이면 빈 build만으로
-  // 추측하지 않는다. mock/demo 모드에는 dataset aggregate 권위가 없으므로 기존
-  // build 기반 판정을 그대로 유지한다.
+  // Real mode: confirm new user only when ALL conditions met: 0 builds + dataset total query
+  // success (kpi.datasets="ready") + total===0. If total is unavailable, don't guess with only
+  // empty build. Mock/demo mode has no dataset aggregate authority, so keep existing build-based decision.
   const datasetsConfirmedEmpty = kpi.datasets === "ready" && stats.datasetCount === 0;
   const isNew =
     buildsState === "success" &&
@@ -378,14 +378,14 @@ function qualityAlertsForRun(
     }));
 }
 
-/** STEP 번호만 상수다 — 라벨은 언어 전환에 따라와야 하므로 렌더 시점에 해석한다. */
+/** STEP number only is constant — labels follow language switching, so interpret at render time. */
 const WORKFLOW_STEP_NUMBERS = ["1", "2", "3", "4"] as const;
 
 /**
- * Home의 전체 작업 흐름 설명. 클릭 가능한 액션 카드가 아니라 workflow 개요이므로
- * hover/button 느낌(그림자 강조, cursor-pointer)과 카드 자체 navigation을 두지
- * 않는다 — 각 STEP에서 실제로 할 일은 아래 "공공데이터 탐색"/"데이터 직접
- * 가져오기" 카드와 사이드바에서 진행한다.
+ * Overall task flow description for Home. Not a clickable action card but workflow overview, so
+ * don't add hover/button feel (shadow emphasis, cursor-pointer) or card-level navigation —
+ * actual work in each STEP happens below in "search public data"/"import data directly" cards
+ * and sidebar.
  */
 function WorkflowStrip() {
   const { t } = useTranslation();
@@ -414,16 +414,16 @@ function WorkflowStrip() {
 }
 
 /**
- * Home의 Kubi 자연어 hero (#Phase2 UI polish, #S-kubi-suggest).
+ * Home's Kubi natural language hero (#Phase2 UI polish, #S-kubi-suggest).
  *
- * 본격적인 Kubi 작업 시작점이므로 drawer가 아니라 `/kubi` 전용 페이지로 이동한다.
- * 새 assistant system을 만들지 않고 기존 seed 메커니즘(`useKubiStore().seedQuestion`)만
- * 재사용한다 — `/kubi`가 mount되면 `useKubiSession`이 pendingSeed를 소비해 답변을
- * 생성한다. 질문 내용은 URL query에 싣지 않는다(seed store로만 전달).
+ * Full Kubi task starts at `/kubi` page (not drawer). Reuse only existing seed mechanism
+ * (`useKubiStore().seedQuestion`), don't create new assistant system — when `/kubi` mounts,
+ * `useKubiSession` consumes pendingSeed to generate answer. Don't put question in URL query
+ * (pass via seed store only).
  *
- * `ask()`(useKubiSession.ts)는 seed를 받는 즉시 실행하고 API Key 미설정 시 `no_key`
- * 에러 turn을 만든다. 원치 않는 에러 turn을 피하려고 seed는 `isConfigured`일 때만
- * 남기고, 아니면 seed 없이 `/kubi`로 이동해 그 화면의 API Key 설정 안내를 보여준다.
+ * `ask()` (useKubiSession.ts) runs immediately on seed receive and creates `no_key` error turn
+ * if API Key not configured. To avoid unwanted error turn, only keep seed when `isConfigured`,
+ * otherwise navigate to `/kubi` without seed and show API Key configuration guide on that screen.
  */
 function KubiHero() {
   const { t } = useTranslation();
@@ -527,11 +527,11 @@ function ExistingUserHome({
 }
 
 /**
- * KPI 4칸. 각 칸은 자기 aggregate 경계의 phase만 본다 — 한 aggregate가 실패해도
- * 다른 칸은 정상 값을 유지하고, 전체를 한꺼번에 에러로 덮지 않는다. null 값은
- * KpiCard가 "확인 불가"로 렌더한다(임의 숫자 합성 없음).
+ * 4 KPI columns. Each looks only at its own aggregate boundary's phase — if one fails,
+ * other columns keep normal values without covering entire row in error. Null values
+ * render as "verification unavailable" in KpiCard (no fabricated numbers).
  */
-/** 날짜 표기는 화면 언어를 따른다. */
+/** Date display follows screen language. */
 function dateLocale(): string {
   return i18n.language?.startsWith("en") ? "en-US" : "ko-KR";
 }
@@ -691,8 +691,8 @@ function QualitySection({ state }: { state: RecentQualityState }) {
             <ul className="border-t border-border">
               {state.alerts.map((alert, index) => (
                 <li key={`${alert.runId}:${alert.detail}:${index}`} className="border-b border-border last:border-0">
-                  {/* WARN/FAIL 항목에서 해당 Run의 Quality context(/builds/:runId, ?run= canonical
-                      form과 동일)로 바로 이동한다 — BuildsPage와 Recent Builds가 이미 쓰는 경로다. */}
+                  {/* In WARN/FAIL items, link to that Run's Quality context (/builds/:runId, same as ?run=
+                      canonical form) — same path already used by BuildsPage and Recent Builds. */}
                   <Link to={`/builds/${encodeURIComponent(alert.runId)}`} className="block px-6 py-3 hover:bg-muted focus-visible:bg-muted focus-visible:outline-none">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="truncate font-medium">{alert.runTitle}</span>

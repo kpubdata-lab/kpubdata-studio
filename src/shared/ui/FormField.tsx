@@ -1,11 +1,12 @@
 /**
- * 공통 FormField 컴포넌트.
+ * Common FormField component.
  *
- * label + help 텍스트 + error 메시지를 일관되게 배치하고, 접근성을 위해 control에
- * 연결할 id와 aria-describedby를 계산해 render-prop으로 넘긴다(제안 §8/§12.3).
+ * Consistently layout label + help text + error message, connected for accessibility
+ * via computing id and aria-describedby values to pass to control via render-prop
+ * (proposal §8/§12.3).
  *
- * 사용 예:
- *   <FormField id="datasetId" label="데이터셋 ID" help="예: kma-daily-observations"
+ * Usage example:
+ *   <FormField id="datasetId" label="Dataset ID" help="E.g. kma-daily-observations"
  *              error={errors.datasetId?.message}>
  *     {(field) => <TextInput {...register("datasetId")} {...field} />}
  *   </FormField>
@@ -16,36 +17,36 @@ import { cn } from "./cn";
 import { ErrorMessage } from "./ErrorMessage";
 
 export interface FormFieldRenderProps {
-  /** control의 id (label htmlFor와 연결됨) */
+  /** id of control (connected to label htmlFor) */
   id: string;
-  /** help/error id를 합친 aria-describedby 값(없으면 undefined) */
+  /** combined aria-describedby value from help/error id (undefined if none) */
   "aria-describedby": string | undefined;
-  /** 오류 여부 */
+  /** whether there is an error */
   invalid: boolean;
 }
 
 export interface FormFieldProps {
-  /** control과 label을 연결할 기본 id */
+  /** default id to connect control and label */
   id: string;
-  /** 필드 라벨(한국어) */
+  /** field label (Korean) */
   label: string;
-  /** 입력 형식 등 보조 설명 */
+  /** auxiliary description like input format */
   help?: ReactNode;
-  /** 검증 오류 메시지 */
+  /** validation error message */
   error?: ReactNode;
-  /** 필수 표시(*) 여부 */
+  /** whether to show required marker (*) */
   required?: boolean;
-  /** 계산된 접근성 속성을 받아 control을 렌더링하는 함수 */
+  /** function that receives computed accessibility props and renders control */
   children: (field: FormFieldRenderProps) => ReactNode;
-  /** 추가 className */
+  /** additional className */
   className?: string;
 }
 
 /**
- * 라벨/도움말/오류와 접근성 속성이 연결된 폼 필드 래퍼를 렌더링한다.
+ * Render form field wrapper with connected label/help/error and accessibility props.
  *
  * @param props - id/label/help/error/required/children.
- * @returns 폼 필드 엘리먼트.
+ * @returns Form field element.
  */
 export function FormField({
   id,
@@ -67,7 +68,7 @@ export function FormField({
         {label}
         {required ? (
           <>
-            {/* 시각적 별표는 보조기기에서 숨기고, 스크린리더에는 '(필수)'를 읽어준다. */}
+            {/* visual asterisk hidden from assistive tech; screen reader reads '(required)'. */}
             <span aria-hidden="true" className="ml-0.5 text-red-600">
               *
             </span>

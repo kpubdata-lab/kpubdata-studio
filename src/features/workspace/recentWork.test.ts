@@ -1,5 +1,5 @@
 /**
- * Recent Work 조합 helper(#260) 테스트.
+ * Recent Work composite helper (#260) tests.
  */
 import { describe, expect, it } from "vitest";
 import { toRecentWorkItems } from "./recentWork";

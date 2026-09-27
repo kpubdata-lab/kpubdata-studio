@@ -2,10 +2,10 @@ import { expect, test } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
 
 /**
- * Ask KPubData 시나리오 (#268 시나리오 6, mock demo).
+ * Ask KPubData scenario (#268 scenario 6, mock demo).
  *
- * - Ask KPubData 화면 진입·BYOK 미설정 onboarding 표시
- * - 데모 질문(결정적 mock evidence) 송신 → 답변 turn 렌더링
+ * - Ask KPubData screen entry·show BYOK not configured onboarding
+ * - Send demo question (deterministic mock evidence) → render answer turn
  */
 test.beforeEach(async ({ page }) => {
   await prepareCleanPage(page);
@@ -35,7 +35,7 @@ test("데모 질문이 결정적 mock 답변 turn를 만든다", async ({ page }
   await expect(demoButton).toBeVisible();
   await demoButton.click();
 
-  // 데모 질문("이 데이터셋 품질 어때?")이 질문 turn로 남는다(#256 결정적 데모).
+  // Demo question ("What's the quality of this dataset?") appears as question turn (#256 deterministic demo).
   await expect(page.getByText("이 데이터셋 품질 어때?").first()).toBeVisible({
     timeout: 10_000,
   });

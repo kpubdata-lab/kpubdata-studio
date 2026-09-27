@@ -1,9 +1,10 @@
 /**
- * Studio의 공통 앱 셸과 내비게이션 레이아웃을 정의하는 파일.
+ * Define Studio common app shell and navigation layout.
  *
- * 좌측 grouped 사이드바, 상단 헤더(Kubi 검색·Kubi 버튼·avatar), 테마 전환, 모바일 오버레이,
- * 전역 Kubi drawer mount를 한곳에서 관리하며 실제 라우트 콘텐츠는 `Outlet`을 통해 주입한다.
- * 메뉴 구성은 `kpubdata_ui_prototype_v1.html` IA(WORKSPACE/DATA/AI/SYSTEM)를 따른다(#247).
+ * Manages left grouped sidebar, top header (Kubi search, Kubi button, avatar),
+ * theme switching, mobile overlay, and global Kubi drawer mount in one place;
+ * actual route content is injected via `Outlet`. Menu structure follows
+ * `kpubdata_ui_prototype_v1.html` IA (WORKSPACE/DATA/AI/SYSTEM) (#247).
  */
 import { useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,14 +19,15 @@ const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/hori
 const sidebarSymbolUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/sidebar_dark.svg", import.meta.url).href;
 
 /**
- * 현재 라우트에 맞는 헤더 CTA(라벨/이동 경로)를 고른다(제안 §6.4).
+ * Pick header CTA (label/destination) matching current route (#6.4).
  *
- * 새 빌드 작성 화면에서는 중복되는 '새 빌드 만들기' 대신 '빌드 목록'으로 안내하고,
- * 그 외 화면에서는 새 빌드 작성으로 유도한다. 새 IA의 Discover/Add Data/Quality 등 신규
- * placeholder 화면은 이 조건들과 겹치지 않으므로 그대로 기본값(새 빌드 만들기)을 받는다(#247).
+ * On new build page, guide to "build list" instead of duplicate "new build";
+ * on other pages, lead to new build. New IA's Discover/Add Data/Quality
+ * placeholder screens don't overlap these conditions, so use default (new build)
+ * (#247).
  *
- * @param pathname - 현재 경로.
- * @returns 헤더 CTA의 라벨과 이동 경로.
+ * @param pathname - Current route.
+ * @returns Header CTA label and destination.
  */
 function headerCtaFor(
   pathname: string,
@@ -38,26 +40,26 @@ function headerCtaFor(
 }
 
 interface NavItem {
-  /** 이동 경로 */
+  /** Route destination */
   to: string;
-  /** 사이드바에 표시할 라벨 */
+  /** Label shown in sidebar */
   label: string;
-  /** 링크 title(hover 설명) */
+  /** Link title (hover description) */
   description: string;
-  /** collapsed 상태에서도 메뉴를 식별할 수 있게 항상 표시하는 아이콘 */
+  /** Icon always shown to identify menu even in collapsed state */
   icon: ReactNode;
-  /** index 라우트처럼 정확히 일치할 때만 active로 표시할지 여부 */
+  /** Exact match for active (like index routes) */
   end?: boolean;
 }
 
 interface SidebarIconProps {
-  /** 테스트와 디버깅에서 아이콘을 식별할 이름 */
+  /** Icon identifier for testing and debugging */
   name: string;
-  /** 아이콘을 그리는 SVG 요소 */
+  /** SVG element that draws the icon */
   children: ReactNode;
 }
 
-/** 새 아이콘 의존성 없이 사이드바에서 공통으로 쓰는 선형 SVG 아이콘이다. */
+/** Common linear SVG icon for sidebar without new icon dependencies. */
 function SidebarIcon({ name, children }: SidebarIconProps) {
   return (
     <span
@@ -81,14 +83,15 @@ function SidebarIcon({ name, children }: SidebarIconProps) {
 }
 
 interface NavGroup {
-  /** 그룹 헤더 라벨(대문자 표기, 프로토타입 IA와 동일) */
+  /** Group header label (uppercase, same as prototype IA) */
   label: string;
   items: NavItem[];
 }
 
-// 최종 IA(WORKSPACE/DATA/AI/SYSTEM)를 그대로 반영한 grouped nav model이다(#247).
-// New Build Wizard(`/builds/new`)는 메뉴에서 제거됐지만 route와 헤더 CTA에서는 계속 쓰인다 —
-// Add Data Workbench(#250)가 이를 흡수하기 전까지는 유일한 실제 빌드 생성 흐름이기 때문이다.
+// Final IA (WORKSPACE/DATA/AI/SYSTEM) reflected directly in grouped nav model (#247).
+// New Build Wizard (`/builds/new`) removed from menu but continues in route and header
+// CTA — it's the only actual build creation flow until Add Data Workbench (#250)
+// absorbs it.
 function buildNavGroups(t: (key: string) => string): NavGroup[] {
   return [
   {
@@ -235,10 +238,10 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
 }
 
 /**
- * 현재 테마 모드에 대응하는 DOM 테마 값.
+ * DOM theme value matching current theme mode.
  *
- * @param theme - UI 스토어에 저장된 현재 테마 모드.
- * @returns DOM `data-theme` 속성에 기록할 최종 테마 값.
+ * @param theme - Current theme mode stored in UI store.
+ * @returns Final theme value to record in DOM `data-theme` attribute.
  */
 function getResolvedTheme(theme: ReturnType<typeof useUIStore.getState>["theme"]):
   | "light"
@@ -253,10 +256,10 @@ function getResolvedTheme(theme: ReturnType<typeof useUIStore.getState>["theme"]
 }
 
 /**
- * 사이드바 링크의 활성/비활성 상태에 맞는 공통 Tailwind 클래스를 만든다.
+ * Create common Tailwind classes matching sidebar link active/inactive state.
  *
- * @param isActive - 현재 라우트와 링크가 일치하는지 여부.
- * @returns 시각 상태가 반영된 클래스 문자열.
+ * @param isActive - Whether current route matches link.
+ * @returns Class string with visual state applied.
  */
 function navigationClassName({ isActive }: { isActive: boolean }) {
   return [
@@ -269,22 +272,24 @@ function navigationClassName({ isActive }: { isActive: boolean }) {
 }
 
 /**
- * 로그인된 이메일에서 avatar에 표시할 이니셜 한 글자를 뽑는다.
+ * Extract single initial for avatar from logged-in email.
  *
- * 로그인 전이거나 이메일이 없으면 물음표를 보여줘 "아직 로그인하지 않음"을 드러낸다.
- * 실제 avatar 메뉴/프로필 화면은 #263(Email/Password Auth)에서 이 상태를 이어받는다.
+ * Before login or when email is missing, show "?" to indicate "not yet signed in".
+ * Actual avatar menu/profile screen will inherit this state in #263
+ * (Email/Password Auth).
  *
- * @param email - 로그인된 사용자 이메일(없으면 `null`).
- * @returns avatar에 표시할 한 글자.
+ * @param email - Logged-in user email (null if missing).
+ * @returns Single character to display in avatar.
  */
 function avatarInitial(email: string | null): string {
   return email ? email.charAt(0).toUpperCase() : "?";
 }
 
 /**
- * Studio 모든 페이지에 공통으로 적용되는 앱 셸 컴포넌트.
+ * App shell component applied to all Studio pages.
  *
- * @returns 사이드바, 헤더, 본문 슬롯, 전역 Kubi drawer를 포함한 전체 레이아웃.
+ * @returns Complete layout including sidebar, header, content slot, and global
+ *          Kubi drawer.
  */
 export function Layout() {
   const { t } = useTranslation();
@@ -311,9 +316,10 @@ export function Layout() {
     closeMobileSidebar();
   }, [closeMobileSidebar]);
 
-  // 모바일 사이드바가 열려 있을 때 ESC로 닫을 수 있게 한다(접근성, 제안 §12.2).
-  // 데스크톱 collapse는 오버레이가 아니므로 ESC 대상이 아니다 — 이 핸들러는 모바일 상태만 본다.
-  // Kubi drawer의 ESC 처리는 drawer 자신이 열려 있을 때만 담당한다(KubiDrawer 참고).
+  // Allow closing mobile sidebar with ESC (a11y, proposal §12.2).
+  // Desktop collapse is not an overlay, so not an ESC target — this handler checks
+  // mobile state only. Kubi drawer's ESC handling is its own responsibility when open
+  // (see KubiDrawer).
   useEffect(() => {
     if (!isMobileSidebarOpen) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -359,8 +365,8 @@ export function Layout() {
                   />
                 </Link>
               </div>
-              {/* tagline은 Topbar가 workspace/product context를 담당하므로 Sidebar에서는
-                  제품명/로고만 유지한다(중복 제거). */}
+             {/* Tagline belongs in Topbar (workspace/product context), so Sidebar keeps
+                  only product name/logo (no duplication). */}
             </div>
             <button
               aria-label={t("layout.closeSidebar")}
@@ -370,8 +376,9 @@ export function Layout() {
             >
               ✕
             </button>
-            {/* 데스크톱 전용 접기/펼치기 토글 — 모바일 닫기 버튼과 반대로 lg 이상에서만 노출되어
-                항상 접근 가능하다(#247). collapsed 상태에서도 이 버튼 자체는 숨지 않는다. */}
+             {/* Desktop-only expand/collapse toggle — unlike mobile close button, only
+                 exposed on lg+ to stay always accessible (#247). This button itself
+                 never hides even when collapsed. */}
             <button
               aria-label={isDesktopSidebarCollapsed ? t("layout.expandSidebar") : t("layout.collapseSidebar")}
               className="hidden shrink-0 rounded-lg border border-sidebar-border p-1.5 text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-active-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar lg:inline-flex"
@@ -475,12 +482,12 @@ export function Layout() {
                 </div>
               </div>
 
-              {/* min-w-0가 여기 있으면 이 그룹의 최소너비 보호가 사라져 flex-shrink 계산에서
-                  이 그룹이 자기 컨텐츠(Kubi 버튼/avatar)보다 더 작게 줄어들 수 있다 — 그 안의
-                  버튼들은 title처럼 truncate로 줄어들 수 있는 요소가 아니라 overflow로 그대로
-                  삐져나와 왼쪽 subtitle과 겹쳤다(390px 폭, UI audit #6-A). min-w-0를 빼서 이
-                  그룹이 자기 컨텐츠의 min-content보다 작아지지 않게 하고, truncate가 적용된
-                  title 쪽(왼쪽 그룹)이 필요한 만큼 대신 줄어들게 한다. */}
+               {/* Without min-w-0 here, this group loses its minimum-width protection,
+                   shrinking smaller than its content (Kubi button/avatar) in
+                   flex-shrink calculation — those non-truncate buttons overflow and
+                   collide with left subtitle (390px width, UI audit #6-A). Removing
+                   min-w-0 prevents this group from shrinking below its min-content,
+                   letting the left group's truncated title shrink instead. */}
               <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
                 <KubiSearchInput />
 
@@ -504,7 +511,8 @@ export function Layout() {
                   {headerCta.label}
                 </Link>
 
-                {/* avatar 진입점 — #263에서 실제 프로필/로그아웃 메뉴로 확장될 구조(#247). */}
+                 {/* Avatar entry point — will expand to actual profile/logout menu in #263
+                      (#247). */}
                 <Link
                   aria-label={email ? t("layout.accountSettings", { email }) : t("layout.signInNeededAria")}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-sm font-semibold text-foreground hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"

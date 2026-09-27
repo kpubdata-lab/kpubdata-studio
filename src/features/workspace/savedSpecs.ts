@@ -1,13 +1,14 @@
 /**
- * Saved BuildSpec 로컬 저장소 (#260).
+ * Saved BuildSpec local storage (#260).
  *
- * `reports/repository.ts`(#258)와 같은 저장 계층을 그대로 재사용한다 — 저장 실패를 조용히
- * 삼키지 않고 명시적 `SaveResult`로 알리며, 개수 상한 초과 시 오래된 항목을 자동 삭제하는
- * 대신 저장 자체를 거부한다(사용자가 직접 저장한 자산이므로), 낙관적 동시성(revision)으로
- * 여러 탭에서의 충돌을 감지한다.
+ * Reuses the same storage layer as `reports/repository.ts` (#258) — doesn't swallow
+ * save failures silently but signals them explicitly via `SaveResult`, rejects saves
+ * (rather than auto-deleting old items) when exceeding count ceiling since these are
+ * user-owned assets, and uses optimistic concurrency (revision) to detect conflicts
+ * across multiple tabs.
  *
- * 저장 전 `redactSecrets()`(#206, assistant/scrub.ts)를 적용해 API Key/토큰으로 보이는
- * 값이 로컬 저장소에 평문으로 남지 않게 한다.
+ * Applies `redactSecrets()` (#206, assistant/scrub.ts) before saving to ensure API
+ * keys/tokens don't remain as plaintext in local storage.
  */
 import { i18n } from "@/shared/i18n";
 import { redactSecrets } from "@/features/assistant/scrub";
@@ -23,7 +24,8 @@ import {
 const STORE_KEY = "kpubdata-studio:saved-build-specs";
 export const STORE_VERSION = 1;
 
-/** 저장 가능한 최대 Saved BuildSpec 수. 넘으면 가장 오래 수정되지 않은 것부터 저장을 거부한다(자동 삭제하지 않음). */
+/** Maximum number of savable Saved BuildSpecs. If exceeded, refuse save for the least
+    recently modified one (don't auto-delete). */
 export const SAVED_SPEC_LIMIT = 30;
 
 interface StoreEnvelope {
@@ -47,7 +49,8 @@ function isStorageAvailable(): boolean {
   }
 }
 
-/** 저장된 봉투를 읽는다. 없거나 버전이 다르거나 손상되면 빈 봉투를 반환한다(손상 값은 정리). */
+/** Read saved envelope. Return empty envelope if missing, version mismatch, or corrupt
+    (corrupt value gets cleaned up). */
 function readEnvelope(): StoreEnvelope {
   if (!isStorageAvailable()) return emptyEnvelope();
   try {
@@ -71,8 +74,9 @@ function readEnvelope(): StoreEnvelope {
 }
 
 /**
- * 봉투를 저장한다. 성공/실패를 그대로 알린다 — quota 초과·storage 미지원·직렬화 실패를
- * 구분해 이유를 돌려주고, 실패했는데도 저장된 것처럼 보이게 하지 않는다.
+ * Save envelope. Report success/failure directly — distinguish quota exceeded, storage
+ * unsupported, serialization failure, and return the reason without appearing to save
+ * when actually failed.
  */
 function writeEnvelope(envelope: StoreEnvelope): SaveResult {
   if (!isStorageAvailable()) {
@@ -110,12 +114,12 @@ function firstSourceProvider(spec: BuildSpec): string {
 }
 
 function outputPath(spec: BuildSpec): string {
-  // metadata는 JsonValue 사전(#250)이므로 string으로 좁혀서만 읽는다(표시용 요약).
+   // metadata is a JsonValue dict (#250), so read narrowed to string only (for summary display).
   const value = spec.metadata.outputPath;
   return typeof value === "string" ? value : "";
 }
 
-/** 저장된 Saved BuildSpec 목록을 최근 수정 순으로 요약해 반환한다. */
+/** List saved Saved BuildSpec summaries sorted by recent modification. */
 export function listSavedSpecSummaries(): SavedBuildSpecSummary[] {
   const envelope = readEnvelope();
   return Object.values(envelope.specs)
@@ -130,17 +134,17 @@ export function listSavedSpecSummaries(): SavedBuildSpecSummary[] {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-/** id로 Saved BuildSpec 전체를 불러온다. 없으면 null. */
+/** Load entire Saved BuildSpec by id. Return null if not found. */
 export function getSavedSpec(id: string): SavedBuildSpec | null {
   if (!id) return null;
   return readEnvelope().specs[id] ?? null;
 }
 
 /**
- * Saved BuildSpec을 저장한다(생성/수정 공용). 이미 저장된 revision보다 낮은 revision으로
- * 저장을 시도하면(다른 탭에서 먼저 저장한 경우) 기본적으로 거부한다 — "먼저 저장한 내용을
- * 보존하고 사용자에게 알린다"는 최소 안전 모델을 따른다. `force: true`를 넘기면 그래도
- * 덮어쓴다(사용자가 명시적으로 선택했을 때만 호출부가 사용).
+ * Save a Saved BuildSpec (create/update shared). If save is attempted with revision
+ * lower than already saved (another tab saved first), deny by default — follows the
+ * minimal safety model "preserve saved-first content and notify user". Pass
+ * `force: true` to override (call sites use only when user explicitly chose).
  */
 export function saveSpec(entry: SavedBuildSpec, options: { force?: boolean } = {}): SaveResult {
   const envelope = readEnvelope();
@@ -182,7 +186,8 @@ export interface CreateSavedSpecInput {
   validation: SavedSpecValidation;
 }
 
-/** 새 Saved BuildSpec을 만들어 저장한다. 저장 실패 시 entry는 반환하되 저장은 되지 않았음을 result로 알린다. */
+/** Create and save a new Saved BuildSpec. On save failure, entry returned but result signals
+    no save occurred. */
 export function createSavedSpec(input: CreateSavedSpecInput): { entry: SavedBuildSpec; result: SaveResult } {
   const now = new Date().toISOString();
   const entry: SavedBuildSpec = {
@@ -197,13 +202,13 @@ export function createSavedSpec(input: CreateSavedSpecInput): { entry: SavedBuil
   };
   const result = saveSpec(entry, { force: true });
   if (!result.ok) return { entry, result };
-  // saveSpec은 저장 시각을 새로 찍으므로, 저장된 정본을 그대로 돌려준다 —
-  // 생성 시각과 저장 시각이 어긋나면 caller가 updatedAt를 신뢰할 수 없다.
+   // saveSpec stamps the save time, so return the stored original — if creation and
+   // save timestamps diverge, caller can't trust updatedAt.
   const stored = getSavedSpec(entry.id);
   return { entry: stored ?? { ...entry, revision: result.revision }, result };
 }
 
-/** 이름만 바꿔 저장한다. */
+/** Rename only. */
 export function renameSavedSpec(id: string, name: string): SaveResult {
   const entry = getSavedSpec(id);
   if (!entry) return { ok: false, reason: i18n.t("workspace.storage.notFound") };
@@ -211,9 +216,9 @@ export function renameSavedSpec(id: string, name: string): SaveResult {
 }
 
 /**
- * 기존 Saved BuildSpec을 복제해 새 id로 저장한다. 새 이름("(복제본)")과 새 생성/수정
- * 시각을 부여하고, 검증 결과는 이 복사본에 대해 아직 확인되지 않았으므로 초기화한다
- * (원본을 검증했다고 복사본도 검증된 것으로 표시하지 않는다).
+ * Duplicate an existing Saved BuildSpec to a new id. Assign new name ("(copy of)")
+ * and new creation/modification timestamps; reset validation results (don't mark copy
+ * as validated just because original was).
  */
 export function duplicateSavedSpec(id: string, nameOverride?: string): { entry: SavedBuildSpec; result: SaveResult } | null {
   const source = getSavedSpec(id);
@@ -232,7 +237,7 @@ export function duplicateSavedSpec(id: string, nameOverride?: string): { entry: 
   return { entry: result.ok ? { ...cloned, revision: result.revision } : cloned, result };
 }
 
-/** id의 Saved BuildSpec을 삭제한다. 존재하지 않았거나 저장소 사용 불가 시 false. */
+/** Delete Saved BuildSpec by id. Return false if not found or storage unavailable. */
 export function deleteSavedSpec(id: string): boolean {
   if (!isStorageAvailable()) return false;
   const envelope = readEnvelope();
@@ -242,8 +247,8 @@ export function deleteSavedSpec(id: string): boolean {
 }
 
 /**
- * 현재 소유자(로그인 사용자 또는 anonymous)의 Saved BuildSpec을 전부 삭제한다 (#293).
- * 다른 소유자 버킷은 건드리지 않는다.
+ * Delete all Saved BuildSpecs for the current owner (logged-in user or anonymous)
+ * (#293). Other owner buckets untouched.
  */
 export function clearAllSavedSpecs(): boolean {
   if (!isStorageAvailable()) return false;
@@ -255,7 +260,7 @@ export function clearAllSavedSpecs(): boolean {
   }
 }
 
-/** 저장된 Saved BuildSpec이 있는지 확인한다(빈 상태 안내용). */
+/** Check if any Saved BuildSpec exists (for empty state guidance). */
 export function hasAnySavedSpec(): boolean {
   return Object.keys(readEnvelope().specs).length > 0;
 }

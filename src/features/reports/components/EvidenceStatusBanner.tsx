@@ -1,8 +1,8 @@
 /**
- * 저장된 Report의 기준 evidence 상태(CURRENT/STALE/ORPHAN/UNAVAILABLE)를 알린다 (#258 §8).
+ * Notifies saved Report's reference evidence status (CURRENT/STALE/ORPHAN/UNAVAILABLE) (#258 §8).
  *
- * 어떤 상태여도 저장된 Report 내용을 지우거나 자동으로 최신 run으로 바꾸지 않는다 —
- * 이 배너는 상태를 알리고, STALE일 때만 "새 Report 만들기" 진입점을 보여준다.
+ * Regardless of status, never delete saved Report content or auto-swap to latest run — this
+ * banner announces status; only when STALE does it show "Create new Report" entry point.
  */
 import { useTranslation } from "react-i18next";
 import { Card } from "@/shared/ui";

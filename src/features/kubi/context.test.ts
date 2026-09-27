@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { contextsMatch, resolveKubiContext } from "./context";
 
 /**
- * KubiContext SSOT resolver (#256 + #319 후속).
+ * KubiContext SSOT resolver (#256 + #319 follow-up).
  *
- * Ask KPubData 는 route(`?dataset=&run=&source=&stage=`)만 문맥으로 읽는다. QualityPage/Dataset Detail 이
- * 선택한 source 를 `?source=` 로 실어 보내면 resolver 가 `source` 로 넘겨야 multi-source run 에서
- * stage evidence 를 올바른 소스로 조회하고, source 를 바꿨을 때 이전 turn 이 stale 처리된다.
+ * Ask KPubData reads route (`?dataset=&run=&source=&stage=`) as context alone. QualityPage/Dataset Detail
+ * sends selected source via `?source=`, resolver must pass as `source` so multi-source run queries
+ * stage evidence from correct source, and stale-marks prior turn when source changes.
  */
 describe("resolveKubiContext — source_key", () => {
   it("carries ?source= into context.source on the quality route", () => {

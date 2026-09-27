@@ -1,8 +1,8 @@
 /**
- * 마법사 6단계 — 검증·실행 (#379).
+ * Wizard step 6 — validation and execution (#379).
  *
- * 실행 버튼은 `canRun` 하나로 막는다. 페이지가 "검증 통과 + 실행 중 아님 + 스펙 있음"을
- * 이미 판정해서 넘겨주므로, 이 컴포넌트가 조건을 다시 조립하다가 어긋날 여지를 없앤다.
+ * Run button gated by single `canRun`. Page already determined "passed validation + not running + spec exists"
+ * and passes it, so component can't reassemble conditions and diverge.
  */
 import { useTranslation } from "react-i18next";
 

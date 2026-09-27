@@ -1,7 +1,7 @@
 /**
- * Builder `/catalog` provider 코드의 표시명.
+ * display name of Builder `/catalog` provider code.
  *
- * NewBuildPage(#29)와 Discover(#249)가 같은 provider 목록을 서로 다른 화면에서
+ * NewBuildPage (#29) and Discover (#249) 같은 provider 목록을 서로 다른 화면에서
  * 보여주므로, 라벨 매핑을 여기 하나로 모아 중복 정의를 피한다.
  *
  * 문구는 `provider.labels.*` 키로 i18n에 있다(#350) — 기관명은 공식 영문명을 쓴다.
@@ -22,7 +22,7 @@ export const PROVIDER_CODES = [
   "sgis",
 ] as const;
 
-/** 알려진 provider 코드는 현재 언어 라벨로, 모르는 코드는 원문 그대로 보여준다. */
+/** show known provider codes in current language label, unknown codes as-is. */
 export function providerLabel(provider: string): string {
   return (PROVIDER_CODES as readonly string[]).includes(provider)
     ? i18n.t(`provider.labels.${provider}`)

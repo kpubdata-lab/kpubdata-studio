@@ -1,10 +1,9 @@
 /**
- * Workspace 화면 (`/workspace`, #260).
+ * Workspace screen (`/workspace`, #260).
  *
- * Recent Work(Dataset/Build는 Builder 조회, Report/Saved BuildSpec은 Studio local)와
- * Saved BuildSpecs(로컬 저장 spec 작업대) 두 섹션으로 구성된다. 기존 `features/workspace`의
- * 개인/팀 워크스페이스 전환(static `WORKSPACES`) 개념과는 다르다 — 그 데모용 더미 데이터는
- * 이 이슈에서 제거했다(SettingsPage 참고).
+ * Two sections: Recent Work (Dataset/Build from Builder, Report/Saved BuildSpec from Studio local)
+ * and Saved BuildSpecs (local saved spec workbench). Different from legacy `features/workspace`'s
+ * personal/team workspace toggle (static `WORKSPACES`) — demo dummy data removed in this issue (see SettingsPage).
  */
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
@@ -40,7 +39,7 @@ const KIND_LABEL: Record<RecentWorkKind, string> = {
   savedSpec: "Saved BuildSpec",
 };
 
-/** 라벨은 키만 들고 렌더 시점에 번역한다 — 모듈 상수에 문장을 넣으면 언어가 굳는다(#350). */
+/** Labels hold keys only, translated at render time — placing sentences in module constants freezes language (#350). */
 const VALIDATION_META: Record<SavedSpecValidationStatus, { labelKey: string; className: string }> = {
   validated_pass: {
     labelKey: "workspace.validatedPass",
@@ -209,8 +208,8 @@ export function WorkspacePage() {
           />
         ) : null}
 
-        {/* recentWorkItems를 loading 상태보다 먼저 확인한다 — Builder 조회가 아직 안 끝났거나
-            실패해도, 이미 로드된 로컬(Report/Saved BuildSpec) 항목은 바로 보여준다(item 17). */}
+         {/* Check recentWorkItems before loading state — even if Builder query not done or failed,
+             already-loaded local items (Report/Saved BuildSpec) display immediately (item 17). */}
         {recentWorkItems.length > 0 ? (
           <Card className="overflow-hidden p-0">
             <ul>
