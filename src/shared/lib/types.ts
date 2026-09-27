@@ -1,7 +1,7 @@
 /**
  * define domain types and state models shared globally in Studio.
  *
- * spec, execution results exchanged between Builder and Studio, 게시 상태를 일관된 타입으로 표현한다.
+ * spec, execution results exchanged between Builder and Studio, and publication state in one consistent set of types.
  */
 /** status value indicating which stage draft being edited is in */
 export type DraftStatus = "new" | "dirty" | "validated" | "invalid";
@@ -41,10 +41,11 @@ export interface BuildSpec {
   metadata: Record<string, JsonValue>;
   /**
    * preserve canonical top-level fields not directly modeled by Studio form/YAML editor
-   * as-is(#250). Builder BuildSpec은 `publish`/`splits`/`pii`/`license`/`quality`/
-   * `composition` 등 Studio가 아직 편집 UI를 제공하지 않는 필드를 허용하며,
-   * `additionalProperties: true`다. 이 값이 있으면 GUI가 손대지 않는 한 round-trip
-   * 중 유실되지 않도록 `toBuilderSpec`이 이 값을 먼저 펼치고 알려진 필드로 덮어쓴다.
+   * as-is (#250). A Builder BuildSpec allows fields Studio does not yet edit
+   * — `publish`/`splits`/`pii`/`license`/`quality`/`composition` — with
+   * `additionalProperties: true`. When present, `toBuilderSpec` spreads
+   * this first and overwrites with known fields so nothing is lost in the
+   * round-trip as long as the GUI does not touch it.
    */
   extra?: Record<string, JsonValue>;
 }
@@ -67,7 +68,7 @@ export interface SchemaContract {
 export interface SourceRef {
   /**
    * source kind (#498, #250). If omitted, Builder interprets as "public_api"
-   * ((backward compat — existing spec/테스트가 kind 없이도 그대로 동작).
+   * ((backward compat — existing specs/tests work without kind).
    */
   kind?: SourceKind;
   /** provider adapter name. Required for kind="public_api". */
@@ -150,10 +151,11 @@ export interface ManifestBuildEnvironment {
 /**
  * type aligned 1:1 with wire form of manifest JSON that Builder writes to disk (#98).
  *
- * Builder `manifest/writer.py`의 직렬화 payload를 그대로 따른다(snake_case). 기존의
- * camelCase·단일 합계(recordCount)·SourceRef[] 형태는 실제 Builder 출력과 달라 매핑이
- * 깨졌었다. 이 타입은 Builder가 반환하는 풍부한 정보(provenance/schema/환경/지문)를
- * UI가 그대로 활용할 수 있게 한다.
+ * Follows Builder `manifest/writer.py`'s serialization payload verbatim
+ * (snake_case). The previous camelCase/single-total (recordCount)/SourceRef[]
+ * shape differed from real Builder output and broke mapping. This type
+ * lets the UI use the rich information Builder returns (provenance/schema/
+ * environment/fingerprint) as-is.
  */
 export interface BuildManifest {
   /** manifest serialization format version (semver, Builder MANIFEST_SCHEMA_VERSION) */
@@ -214,9 +216,9 @@ export interface BuildRun {
 /**
  * minimal representation type for build history list(#153).
  *
- * Builder GET /builds doesn't provide spec/title, so을 null로 가지고
- * UI에서는 run ID를 대신 표시한다. 실제 BuildSpec이 필요한 상세 화면으로 진입하면
- * 그때 개별 조회로 전체 스펙을 가져온다.
+ * Builder GET /builds provides no spec/title, so those are null and the UI
+ * shows the run ID instead. Entering a detail screen that needs the real
+ * BuildSpec fetches the full spec individually at that point.
  */
 export interface BuildListItem {
   /** unique ID of execution history item */

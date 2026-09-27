@@ -1,12 +1,14 @@
 /**
- * generateBuildSpec 4중 게이트 테스트 (#396, ST-A7 #210).
+ * generateBuildSpec four-gate tests (#396, ST-A7 #210).
  *
- * 이 함수는 어시스턴트의 환각 차단 장치다 — LLM 이 지어낸 provider/dataset 이
- * 실제 빌드로 새어나가지 않는다는 보장이 전부 여기 들어 있다. 그래서 테스트는
- * "YAML 을 잘 뽑는가"가 아니라 **막아야 할 것을 막는가**를 본다.
+ * This function is the assistant's hallucination blocker — the guarantee
+ * that an LLM-invented provider/dataset never leaks into a real build lives
+ * entirely here. So the tests ask not "does it emit good YAML" but
+ * **"does it block what must be blocked"**.
  *
- * 메시지 문구는 단언하지 않는다(로케일로 빠져 있고 언제든 바뀐다) — 대신
- * status·spec·호출 횟수처럼 계약에 해당하는 것만 본다.
+ * Message wording is never asserted (it lives in locales and can change
+ * anytime) — instead only contract-level things are checked: status, spec,
+ * call counts.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -43,14 +45,15 @@ const VALID_SPEC = [
 
 interface FakeProvider {
   provider: AssistProvider;
-  /** 호출마다 LLM 에 실제로 보낸 메시지 목록. */
+  /** Messages actually sent to the LLM per call. */
   calls: AssistMessage[][];
 }
 
 /**
- * 큐에 담긴 출력을 한 번에 하나씩 돌려주는 가짜 provider.
- * 큐가 바닥나면 마지막 값을 계속 돌려준다 — 재시도 상한을 검증할 때
- * "출력이 모자라서" 멈춘 것과 "상한에 걸려서" 멈춘 것을 구분하기 위해서다.
+ * Fake provider returning queued outputs one at a time.
+ * When the queue empties it keeps returning the last value — so
+ * retry-limit tests can distinguish "stopped for lack of output" from
+ * "stopped at the limit".
  */
 function fakeProvider(outputs: string[], restoreText?: (text: string) => string): FakeProvider {
   const calls: AssistMessage[][] = [];
@@ -170,7 +173,7 @@ describe("generateBuildSpec — 정상 경로", () => {
     const result = await generateBuildSpec(provider, "대기오염", { catalog: CATALOG, validateFn });
 
     expect(result.spec).toBe(restored);
-    // Builder 에도 복원된 스펙이 가야 한다 — placeholder 를 검증해봐야 의미가 없다.
+    // The restored spec must reach Builder too — validating a placeholder is meaningless.
     expect(validateFn).toHaveBeenCalledWith(restored, undefined);
   });
 });
@@ -228,7 +231,7 @@ describe("generateBuildSpec — ② 카탈로그 대조 게이트 (환각 차단
 
     expect(result.spec).toBeNull();
     expect(result.status).toBe("partial");
-    // Builder 에 한 번도 보내지 않는다 — 지어낸 이름을 검증 요청으로 흘리지 않는다.
+    // Never sent to Builder — an invented name must not leak into a validation request.
     expect(validateFn).not.toHaveBeenCalled();
     expect(result.remaining_problems.join(" ")).toContain("존재하지않는포털");
   });
@@ -257,7 +260,7 @@ describe("generateBuildSpec — ② 카탈로그 대조 게이트 (환각 차단
     });
 
     expect(result).toMatchObject({ spec: VALID_SPEC, status: "ok", attempts: 2 });
-    // 두 번째 요청에는 직전 문제 목록이 실려 나간다 — 같은 실수를 반복하지 않도록.
+    // The second request carries the previous problem list — to avoid repeating the same mistake.
     const second = calls[1].map((message) => message.content).join("\n");
     expect(second).toContain("없는포털");
   });
@@ -320,8 +323,8 @@ describe("generateBuildSpec — ③ Builder /validate 게이트", () => {
   it("Error 가 아닌 값으로 거부돼도 error 로 끝나고 문제 하나를 남긴다", async () => {
     realBuilder();
     const { provider } = fakeProvider([VALID_SPEC]);
-    // 사용자가 지정한 임의 서버가 문자열/객체를 던질 수 있다 — message 를 읽으려다
-    // undefined 를 사용자에게 보여주지 않는지 본다.
+    // A user-configured arbitrary server can throw a string or object —
+    // checks that reading .message never shows undefined to the user.
     const validateFn = vi.fn().mockRejectedValue("문자열 거부");
 
     const result = await generateBuildSpec(provider, "아무거나", { catalog: CATALOG, validateFn });
