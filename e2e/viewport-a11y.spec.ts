@@ -52,7 +52,7 @@ test("390x844에서 topbar subtitle이 Kubi/avatar 버튼과 겹치지 않는다
   await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
 
   const subtitle = page.locator("header h1");
-  const kubiButton = page.getByRole("button", { name: "Kubi 열기" });
+  const kubiButton = page.getByRole("button", { name: "Ask KPubData 열기" });
   await expect(subtitle).toBeVisible();
   await expect(kubiButton).toBeVisible();
 

@@ -127,11 +127,11 @@ export function summarizeChecksPassed(results: QualityCheckResult[]): ChecksPass
 }
 
 /**
- * Quality Center header의 "Kubi 분석" 버튼이 seed할 질문을 현재 Quality 상태에 맞춰 고른다.
+ * Quality Center header의 "이 문제 설명 보기" 버튼이 seed할 질문을 현재 Quality 상태에 맞춰 고른다.
  *
  * 이전에는 상태와 무관하게 "WARN/FAIL의 원인과 조치"를 고정 seed해서, 모든 check가 PASS인
  * Run에서도 존재하지 않는 WARN/FAIL을 전제한 질문이 들어갔다(real Builder E2E에서 확인).
- * per-issue "Kubi 분석" 버튼은 이미 이슈 문맥을 담으므로 이 함수는 header 버튼에만 쓴다.
+ * per-issue "이 문제 설명 보기" 버튼은 이미 이슈 문맥을 담으므로 이 함수는 header 버튼에만 쓴다.
  */
 export function qualityKubiSeedQuestion(summary: ChecksPassedSummary): string {
   if (summary.evaluated === 0) {

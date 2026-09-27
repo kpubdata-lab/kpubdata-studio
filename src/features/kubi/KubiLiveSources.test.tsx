@@ -54,7 +54,7 @@ describe("Kubi live Builder-confirmed source picker", () => {
   it("shows a multi-source picker before the first question, without quality evidence", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
     render(<Harness />);
-    const picker = await screen.findByLabelText("Kubi 분석 Source");
+    const picker = await screen.findByLabelText("분석 Source");
     expect(useKubiStore.getState().turns).toHaveLength(0);
     expect(picker).toHaveTextContent("provider.a");
     expect(picker).toHaveTextContent("provider.b");
@@ -76,20 +76,20 @@ describe("Kubi live Builder-confirmed source picker", () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockRejectedValue(new Error("network"));
     render(<Harness />);
     await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
-    expect(screen.queryByLabelText("Kubi 분석 Source")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("분석 Source")).not.toBeInTheDocument();
   });
 
   it("keeps single-source behavior without presenting an unnecessary picker", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.only"]));
     render(<Harness />);
     await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
-    expect(screen.queryByLabelText("Kubi 분석 Source")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("분석 Source")).not.toBeInTheDocument();
   });
 
   it("writes a selected confirmed source into URL context", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
     render(<Harness initialPath="/kubi?run=run-a&stage=gold" />);
-    fireEvent.change(await screen.findByLabelText("Kubi 분석 Source"), { target: { value: "provider.b" } });
+    fireEvent.change(await screen.findByLabelText("분석 Source"), { target: { value: "provider.b" } });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/kubi?run=run-a&source=provider.b"));
   });
 
@@ -97,7 +97,7 @@ describe("Kubi live Builder-confirmed source picker", () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
     render(<Harness initialPath="/kubi?run=run-a&stage=gold" />);
     expect(await screen.findByText("이 Run에는 source가 여러 개 있습니다. 분석할 source를 먼저 선택하세요.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Kubi 분석 Source")).toHaveValue("");
+    expect(screen.getByLabelText("분석 Source")).toHaveValue("");
   });
 
   it("disables the Stage select on a multi-source Run until a source is chosen (A4)", async () => {
@@ -109,24 +109,24 @@ describe("Kubi live Builder-confirmed source picker", () => {
     // findBy*는 "요소가 생겼는가"만 기다리고 **속성이 정해졌는가는 기다리지 않는다**.
     // 이 select는 먼저 enabled로 렌더된 뒤 run stage가 도착하면 disabled가 되므로,
     // 느린 러너에서는 그 사이에 단언이 떨어진다(Node 20 레인 실패). 조건 자체를 기다린다.
-    await waitFor(() => expect(screen.getByLabelText("Kubi 분석 Stage")).toBeDisabled());
+    await waitFor(() => expect(screen.getByLabelText("분석 Stage")).toBeDisabled());
     // disabled 상태여도 안내는 유지된다.
     expect(screen.getByText("이 Run에는 source가 여러 개 있습니다. 분석할 source를 먼저 선택하세요.")).toBeInTheDocument();
 
-    fireEvent.change(await screen.findByLabelText("Kubi 분석 Source"), { target: { value: "provider.b" } });
-    await waitFor(() => expect(screen.getByLabelText("Kubi 분석 Stage")).toBeEnabled());
+    fireEvent.change(await screen.findByLabelText("분석 Source"), { target: { value: "provider.b" } });
+    await waitFor(() => expect(screen.getByLabelText("분석 Stage")).toBeEnabled());
   });
 
   it("keeps the Stage select usable on a single-source Run even without an explicit source (A4)", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.only"]));
     render(<Harness initialPath="/kubi?run=run-a" />);
     await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
-    expect(screen.getByLabelText("Kubi 분석 Stage")).toBeEnabled();
+    expect(screen.getByLabelText("분석 Stage")).toBeEnabled();
   });
 
   it("disables the Stage select when there is no Run in context (A4)", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a"]));
     render(<Harness initialPath="/kubi" />);
-    expect(await screen.findByLabelText("Kubi 분석 Stage")).toBeDisabled();
+    expect(await screen.findByLabelText("분석 Stage")).toBeDisabled();
   });
 });

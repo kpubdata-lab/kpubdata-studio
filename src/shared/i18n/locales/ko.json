@@ -9,7 +9,7 @@
     "themeSelect": "테마 선택",
     "toggleSidebar": "사이드바 열기/닫기",
     "tagline": "공공데이터를 데이터셋으로 만드는 워크스페이스",
-    "openKubi": "Kubi 열기",
+    "openKubi": "Ask KPubData 열기",
     "accountSettings": "{{email}} 설정으로 이동",
     "signInNeededAria": "로그인이 필요합니다 — 설정으로 이동",
     "signInNeeded": "로그인이 필요합니다"
@@ -33,9 +33,9 @@
     "downloadMarkdown": "Markdown 다운로드",
     "downloadHtml": "HTML 다운로드",
     "print": "인쇄(Browser Print)",
-    "kubiSection": "7. Kubi 분석",
+    "kubiSection": "7. Ask KPubData 분석",
     "noKubiTitle": "아직 추가된 AI 분석이 없습니다",
-    "noKubiDesc": "Kubi에서 현재 Dataset/Run을 분석한 뒤 검토하여 보고서에 추가할 수 있습니다.",
+    "noKubiDesc": "Ask KPubData 로 현재 Dataset/Run을 분석한 뒤 검토하여 보고서에 추가할 수 있습니다.",
     "notesSection": "8. 사용자 메모",
     "addBlock": "+ 사용자 작성 블록 추가"
   },
@@ -51,7 +51,7 @@
     "datasets": "데이터셋 카탈로그",
     "builds": "빌드 / 실행",
     "quality": "품질",
-    "kubi": "Kubi",
+    "kubi": "Ask KPubData",
     "reports": "리포트",
     "provider": "Provider / API 연결",
     "monitoring": "모니터링",
@@ -65,7 +65,7 @@
     "datasets": "빌드된 데이터셋 검색",
     "builds": "빌드와 실행 이력",
     "quality": "빌드·데이터셋 품질 결과",
-    "kubi": "Context-aware AI 어시스턴트",
+    "kubi": "맥락을 아는 도우미",
     "reports": "분석 리포트 생성·열람",
     "provider": "API Key·자격 증명 등록",
     "monitoring": "실행·시스템 모니터링",
@@ -376,17 +376,17 @@
         "artifacts": "결과물",
         "builds": "Builds",
         "quality": "Quality",
-        "kubi": "Kubi",
+        "kubi": "Ask KPubData",
         "reports": "Reports",
         "provider": "Provider",
         "monitoring": "Monitoring",
         "settings": "Settings"
       },
-      "stageAria": "Kubi 분석 Stage",
-      "sourceAria": "Kubi 분석 Source"
+      "stageAria": "분석 Stage",
+      "sourceAria": "분석 Source"
     },
     "byok": {
-      "title": "Kubi를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
+      "title": "Ask KPubData 를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
       "desc": "키는 기본적으로 이 브라우저 메모리에만 보관되며, 새로고침하면 사라집니다. Studio는 공용 키를 제공하지 않습니다.",
       "modelLabel": "Model (선택)",
       "baseUrlLabel": "Base URL (선택)",
@@ -477,7 +477,7 @@
       "demoQuestion": "이 데이터셋 품질 어때?"
     },
     "input": {
-      "aria": "Kubi에게 질문하기",
+      "aria": "Ask KPubData 에 질문하기",
       "placeholder": "질문을 입력하세요…",
       "placeholderDemo": "질문을 입력하세요… (데모 · mock 데이터)",
       "placeholderNoKey": "먼저 API Key를 설정하세요",
@@ -531,14 +531,14 @@
     "actions": {
       "missingParent": "경로 \"{{path}}\"의 상위 필드가 없습니다.",
       "specNotFound": "run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없습니다. Builder는 spec을 영속화하지 않으므로, 이 run을 Studio에서 실행/편집한 적이 있어야 patch를 적용할 수 있습니다.",
-      "secretsRedacted": "저장된 BuildSpec에서 시크릿 값이 제거되어 있어(로컬 보관 정책) Kubi가 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 다시 입력하세요.",
+      "secretsRedacted": "저장된 BuildSpec에서 시크릿 값이 제거되어 있어(로컬 보관 정책) patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 다시 입력하세요.",
       "pathNotAllowed": "허용되지 않은 경로 \"{{path}}\"입니다. title/description/metadata/sources[].params/sources[].alias/exports[].options만 patch할 수 있습니다.",
-      "credentialPath": "경로 \"{{path}}\"는 credential성 필드로 보여 Kubi가 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 직접 변경하세요.",
+      "credentialPath": "경로 \"{{path}}\"는 credential성 필드로 보여 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 직접 변경하세요.",
       "redactionMarker": "patch 결과에 redaction marker가 남아 있어 적용할 수 없습니다. 해당 credential을 실제 값으로 다시 입력하세요.",
       "patchFailed": "patch를 적용할 수 없습니다.",
       "unresolvedPlaceholder": "해결되지 않은 시크릿 플레이스홀더가 포함되어 있습니다.",
-      "paramsCredential": "Kubi가 생성한 sourceParams에는 credential 값을 포함할 수 없습니다.",
-      "paramsNotObject": "Kubi가 생성한 sourceParams는 JSON 객체여야 합니다.",
+      "paramsCredential": "생성된 sourceParams에는 credential 값을 포함할 수 없습니다.",
+      "paramsNotObject": "생성된 sourceParams는 JSON 객체여야 합니다.",
       "describe": {
         "openProvider": "Provider \"{{provider}}\" 화면 열기",
         "openBuild": "Build \"{{runId}}\" 상세 열기",
@@ -569,10 +569,10 @@
       "draftSaved": "New Build 초안에 저장했습니다."
     },
     "runAnalysis": {
-      "title": "Kubi Run 분석",
+      "title": "Run 분석",
       "close": "닫기",
-      "needsKey": "Kubi를 사용하려면 API Key 설정이 필요합니다.",
-      "openSettings": "Kubi 설정 열기",
+      "needsKey": "Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.",
+      "openSettings": "Ask KPubData 설정 열기",
       "preparing": "분석 준비 중…",
       "thinking": "생각 중…",
       "cancel": "취소",
@@ -606,11 +606,11 @@
       "sqlSourceUnknown": "evidence에 없는 source \"{{source}}\"를 참조해 실행 대상에서 제외했습니다."
     },
     "drawer": {
-      "collapseLabel": "Kubi 기본 너비로 보기",
-      "expandLabel": "Kubi 확장하기",
+      "collapseLabel": "Ask KPubData 기본 너비로 보기",
+      "expandLabel": "Ask KPubData 확장하기",
       "collapse": "기본",
       "expand": "확장",
-      "close": "Kubi 닫기"
+      "close": "Ask KPubData 닫기"
     },
     "parse": {
       "empty": "LLM이 빈 응답을 반환했습니다.",
@@ -618,8 +618,8 @@
       "shapeMismatch": "LLM 응답 형식이 예상과 다릅니다: {{issues}}"
     },
     "search": {
-      "label": "Kubi에게 자연어로 데이터 물어보기",
-      "placeholder": "Kubi에게 데이터에 대해 물어보세요…"
+      "label": "Ask KPubData 에 자연어로 데이터 물어보기",
+      "placeholder": "Ask KPubData 에 데이터에 대해 물어보세요…"
     },
     "content": {
       "approve": "승인"
@@ -664,7 +664,7 @@
     "header": {
       "desc": "점수 대신 실제 검증 통과 여부(PASS/WARN/FAIL)와 규칙별 이슈를 보여줍니다."
     },
-    "kubiAnalyze": "Kubi 분석",
+    "kubiAnalyze": "이 문제 설명 보기",
     "selectors": {
       "dataset": "Dataset 선택",
       "run": "Run 선택",
@@ -807,7 +807,7 @@
       "title": "데이터 제공 기관 연결",
       "desc": "공공데이터 제공 기관과 연결하고 자격 증명(credential)을 관리합니다.",
       "settings": "설정으로 이동",
-      "note": "공공데이터 API Key와 Provider 자격 증명은 이곳에서 연결합니다. Kubi AI 요청에 사용하는 API Key와는 별개입니다.",
+      "note": "공공데이터 API Key와 Provider 자격 증명은 이곳에서 연결합니다. Ask KPubData 요청에 사용하는 API Key와는 별개입니다.",
       "cta": "데이터 추가를 계속하려면 API 연결을 완료하세요.",
       "emptyTitle": "등록된 Provider가 없습니다",
       "emptyDesc": "데이터 제공 기관을 추가하고 연결하세요.",
@@ -875,17 +875,17 @@
       "3": "Preview · Build",
       "3d": "데이터를 미리 확인·검증한 뒤 Build",
       "4": "품질 확인 · 활용",
-      "4d": "Quality · Kubi · Export · Publish",
+      "4d": "Quality · Ask KPubData · Export · Publish",
       "heading": "전체 작업 흐름",
       "note": "아래는 진행 순서를 보여주는 설명입니다 — 각 단계는 사이드바 메뉴와 화면 안내를 따라 진행하세요."
     },
     "kubi": {
-      "title": "어디서 시작할지 모르겠다면 Kubi에게 물어보세요",
-      "desc": "원하는 데이터나 분석 목적을 입력하면 Kubi에서 시작 방법을 함께 찾아볼 수 있습니다.",
+      "title": "어디서 시작할지 모르겠다면 Ask KPubData",
+      "desc": "원하는 데이터나 분석 목적을 입력하면 Ask KPubData 가 시작 방법을 함께 찾아줍니다.",
       "placeholder": "예: 서울 대기오염 데이터로 뭘 할 수 있어?",
-      "cta": "Kubi에서 시작하기 →",
-      "noKey": "아직 API Key가 설정되지 않았습니다. Kubi 화면에서 설정 방법을 안내합니다.",
-      "try": "Kubi에게 자연어로 데이터 물어보기"
+      "cta": "Ask KPubData 로 시작하기 →",
+      "noKey": "아직 API Key가 설정되지 않았습니다. Ask KPubData 화면에서 설정 방법을 안내합니다.",
+      "try": "Ask KPubData 에 자연어로 데이터 물어보기"
     },
     "dashboard": {
       "eyebrow": "대시보드",
@@ -1110,7 +1110,7 @@
     "page": {
       "eyebrow": "설정",
       "title": "환경 설정",
-      "desc": "계정, Builder 연결, 데이터 Provider 자격 증명, Kubi BYOK를 관리합니다."
+      "desc": "계정, Builder 연결, 데이터 Provider 자격 증명, Ask KPubData BYOK를 관리합니다."
     },
     "conn": {
       "title": "연결 상태",
@@ -1147,14 +1147,14 @@
       "notConfigured": "미구성"
     },
     "byok": {
-      "title": "Kubi · BYOK LLM 키",
-      "configure": "Kubi에서 설정",
-      "desc": "Kubi 어시스턴트의 LLM 키는 데이터 Provider 자격 증명과 별도로 사용자가 직접 관리합니다(Bring Your Own Key). 키는 기본적으로 메모리에만 보관되며 새로고침 시 사라집니다.",
+      "title": "Ask KPubData · BYOK LLM 키",
+      "configure": "Ask KPubData 에서 설정",
+      "desc": "Ask KPubData 의 LLM 키는 데이터 Provider 자격 증명과 별도로 사용자가 직접 관리합니다(Bring Your Own Key). 키는 기본적으로 메모리에만 보관되며 새로고침 시 사라집니다.",
       "keySet": "키 설정됨",
       "keyUnset": "키 미설정",
       "customBaseUrl": "사용자 지정 Base URL",
       "persistOn": "브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요.",
-      "persistOff": "브라우저 저장: 꺼짐(메모리 전용). Kubi 화면에서 명시적으로 켤 수 있습니다."
+      "persistOff": "브라우저 저장: 꺼짐(메모리 전용). Ask KPubData 화면에서 명시적으로 켤 수 있습니다."
     }
   },
   "auth": {
@@ -1293,7 +1293,7 @@
     "runFailedTitle": "Run 상태는 failed이지만 선택한 source의 {{stage}} stage는 completed입니다.",
     "runFailedBody": "이 run에 포함된 다른 source({{sources}})에서 stage 실패가 있어 run 전체 상태가 failed로 집계되었습니다. 모순이 아니라 run과 source/stage의 상태 범위가 다릅니다.",
     "unpublished": "미게시",
-    "kubiHint": "Kubi가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다",
+    "kubiHint": "Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다",
     "runStatusAll": "Run 상태(전체)",
     "unavailable": "확인 불가",
     "selectedStageStatus": "선택된 Source·Stage 상태",
@@ -1357,7 +1357,7 @@
     "page": {
       "eyebrow": "리포트",
       "title": "리포트",
-      "desc": "Builder evidence를 기준으로 Report를 만들고, Kubi 해석을 참고 블록으로 덧붙여 편집·저장·내보냅니다.",
+      "desc": "Builder evidence를 기준으로 Report를 만들고, Ask KPubData 해석을 참고 블록으로 덧붙여 편집·저장·내보냅니다.",
       "newTitle": "새 Report 만들기",
       "newDesc": "선택한 dataset/run이 이 Report의 기준으로 고정됩니다. 새 Run이 생겨도 이 Report는 자동으로 바뀌지 않습니다.",
       "createCta": "Report 만들기",
@@ -1365,12 +1365,12 @@
       "savedTitle": "저장된 Report",
       "savedEmpty": "저장된 Report가 없습니다",
       "savedEmptyDesc": "위에서 dataset/run을 선택해 첫 Report를 만들어보세요.",
-      "kubiPending": "Kubi 참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"Kubi 참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
+      "kubiPending": "참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
       "deleteConfirm": "이 Report를 삭제하시겠습니까? 되돌릴 수 없습니다.",
       "titleTemplate": "{{dataset}} · {{run}} 보고서",
       "untitled": "제목 없음",
       "lastModified": "최근 수정 {{time}}",
-      "pendingNotes": "Kubi 참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"Kubi 참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
+      "pendingNotes": "참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
       "delete": "삭제",
       "createdTitle": "{{dataset}} · {{run}} 보고서"
     },
@@ -1512,7 +1512,7 @@
         "evidenceStatusShort": "evidence 상태"
       },
       "provenance": {
-        "kubi": "[AI 작성 - Kubi]",
+        "kubi": "[AI 작성 - Ask KPubData]",
         "user": "[사용자 작성]"
       },
       "tag": {
@@ -1520,7 +1520,7 @@
         "user": "사용자 작성"
       },
       "detailHeading": "상세 근거",
-      "kubiHeading": "Kubi 참고 분석",
+      "kubiHeading": "Ask KPubData 참고 분석",
       "kubiOtherRun": "참고 분석 - 현재 Report와 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
       "kubiOtherRunHtml": "참고 분석 - 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
       "reasonLabel": "판단 근거"
@@ -1539,7 +1539,7 @@
         "output": "6. Output"
       },
       "showDetail": "상세 근거 보기",
-      "kubiTitle": "Kubi 분석 · AI 작성",
+      "kubiTitle": "Ask KPubData 분석 · AI 작성",
       "remove": "제거",
       "edit": "편집",
       "delete": "삭제",
@@ -1578,7 +1578,7 @@
       "chatTitle": "직접 질문하기 · 현재 Report 기준({{dataset}} · {{run}})",
       "close": "닫기",
       "intro": "현재 Report의 Dataset/Run과 Builder Evidence를 기준으로 보고서에 추가할 AI 해석을 생성할 수 있습니다.",
-      "needsKey": "Kubi 분석에는 개인 LLM API Key가 필요합니다.",
+      "needsKey": "Ask KPubData 분석에는 개인 LLM API Key가 필요합니다.",
       "openAiSettings": "AI 설정 열기",
       "generateDemo": "데모 보고서 분석 생성",
       "askDirectly": "직접 질문하기",
@@ -1621,9 +1621,9 @@
       "untitled": "제목 없음"
     },
     "kubiInbox": {
-      "title": "대기 중인 Kubi 노트",
-      "emptyTitle": "대기 중인 Kubi 노트가 없습니다",
-      "emptyDesc": "Kubi 대화에서 '보고서에 추가' action을 승인하면 여기에 쌓입니다.",
+      "title": "대기 중인 참고 노트",
+      "emptyTitle": "대기 중인 참고 노트가 없습니다",
+      "emptyDesc": "Ask KPubData 대화에서 '보고서에 추가' action을 승인하면 여기에 쌓입니다.",
       "noContext": "문맥 없음",
       "sameContext": "현재 Report와 같은 dataset/run 기준",
       "otherContext": "현재 Report와 다른 dataset/run 기준 · 참고 분석으로 추가됨",
@@ -1646,15 +1646,15 @@
     "contextSidebar": {
       "evidenceFetchedAt": "Evidence 조회 시각",
       "evaluatedRules": "평가된 규칙 수",
-      "kubiBlocks": "Kubi 분석 블록",
-      "pendingNotes": "대기 중인 Kubi 노트",
+      "kubiBlocks": "Ask KPubData 분석 블록",
+      "pendingNotes": "대기 중인 참고 노트",
       "countUnit": "{{count}}개",
       "noteUnit": "{{count}}건",
       "none": "없음"
     },
     "provenance": {
       "builder": "Builder Evidence",
-      "kubi": "AI 작성 · Kubi",
+      "kubi": "AI 작성 · Ask KPubData",
       "user": "사용자 작성"
     }
   },
@@ -1707,9 +1707,9 @@
     "gold": "특정 사용 목적에 맞게 가공한 최종 데이터 단계입니다.",
     "quality": "Builder가 실제로 평가한 데이터 품질 규칙의 결과입니다.",
     "schemaDrift": "이전과 비교해 컬럼 추가·삭제·타입 변경 등 데이터 구조가 달라진 상태입니다.",
-    "evidence": "Kubi 또는 Report가 참고한 Builder의 Dataset·Run·Quality 등의 근거입니다.",
-    "context": "Kubi가 현재 질문을 해석할 때 사용하는 Dataset·Run·Source·Stage 범위입니다.",
-    "generatedSql": "Kubi가 선택한 Silver 또는 Gold schema를 바탕으로 생성한 조회 SQL입니다.",
+    "evidence": "Ask KPubData 또는 Report가 참고한 Builder의 Dataset·Run·Quality 등의 근거입니다.",
+    "context": "Ask KPubData 가 현재 질문을 해석할 때 사용하는 Dataset·Run·Source·Stage 범위입니다.",
+    "generatedSql": "Ask KPubData 가 선택한 Silver 또는 Gold schema를 바탕으로 생성한 조회 SQL입니다.",
     "artifact": "Build 실행으로 생성된 데이터 파일 또는 결과물입니다.",
     "manifest": "Run과 생성된 산출물에 대한 메타데이터 기록입니다.",
     "readiness": "Publish 전에 필요한 조건을 Builder가 확인한 결과입니다.",
@@ -1924,7 +1924,7 @@
       "AddData": "Add Data",
       "DatasetCatalog": "Dataset Catalog",
       "Discover": "Discover",
-      "Kubi": "Kubi",
+      "Kubi": "Ask KPubData",
       "Monitoring": "Monitoring",
       "Provider": "Provider",
       "Quality": "Quality",
@@ -1965,12 +1965,12 @@
         "copy": "최근 Quality 경고를 확인하고 필요한 조치를 이어갈 수 있습니다."
       },
       "kubi-helper": {
-        "title": "막히면 Kubi에게 물어보세요",
-        "copy": "Kubi는 현재 화면의 Dataset·Run·Stage와 Builder Evidence를 바탕으로 분석을 돕습니다."
+        "title": "막히면 Ask KPubData",
+        "copy": "Ask KPubData 는 현재 화면의 Dataset·Run·Stage와 Builder Evidence를 바탕으로 분석을 돕습니다."
       },
       "sidebar": {
         "title": "작업 공간 둘러보기",
-        "copy": "왼쪽 메뉴에서 데이터 탐색, Build·Quality 확인, Kubi와 Provider 설정으로 이동할 수 있습니다."
+        "copy": "왼쪽 메뉴에서 데이터 탐색, Build·Quality 확인, Ask KPubData 와 Provider 설정으로 이동할 수 있습니다."
       },
       "start-actions": {
         "title": "여기서 시작하세요",

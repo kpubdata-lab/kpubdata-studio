@@ -207,9 +207,9 @@ export function QualityPage() {
     setSearchParams(next);
   }
 
-  // Kubi를 열기 전에, 화면에 선택되어 보이는 dataset/run/source/stage를 URL에 확정 반영한다 —
+  // Ask KPubData 를 열기 전에, 화면에 선택되어 보이는 dataset/run/source/stage를 URL에 확정 반영한다 —
   // KubiContext는 route만 읽으므로(context.ts) 이 동기화가 없으면 drawer가 catalog 수준
-  // evidence만 받는다(#319 후속). 헤더 버튼과 이슈별 "Kubi 분석"이 이 helper를 공유한다.
+  // evidence만 받는다(#319 후속). 헤더 버튼과 이슈별 "이 문제 설명 보기"가 이 helper를 공유한다.
   function syncKubiContext() {
     updateContext({
       dataset: selectedDatasetId || null,

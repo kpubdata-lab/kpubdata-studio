@@ -48,7 +48,7 @@ test("Kubi 질문 입력이 라벨/aria로 접근 가능하다", async ({ page }
   collectPageErrors(page, errors);
 
   await page.goto("/kubi");
-  const input = page.getByLabel("Kubi에게 질문하기").first();
+  const input = page.getByLabel("Ask KPubData 에 질문하기").first();
   await expect(input).toBeVisible();
 
   await expectNoPageErrors(errors);
