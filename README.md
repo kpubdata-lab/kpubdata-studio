@@ -74,7 +74,32 @@ npm install
 npm run dev
 ```
 
-`npm run dev`는 Vite 개발 서버를 실행합니다. 그 후 브라우저에서 [http://localhost:5173](http://localhost:5173)을 엽니다.
+`npm run dev`는 Vite 개발 서버를 **데모 모드**(mock 데이터)로 실행합니다. 브라우저에서 [http://localhost:5173](http://localhost:5173)을 엽니다.
+
+### Builder 연동 개발
+
+Builder API와 실 연동하려면:
+
+```bash
+# Builder + Studio 동시 기동 (데모 모드)
+./scripts/dev-with-builder.sh
+
+# Builder + Studio 동시 기동 (실 API 연동)
+./scripts/dev-with-builder.sh --real
+```
+
+또는 수동으로:
+
+```bash
+# 터미널 1: Builder (DEV_MODE — 인증 bypass)
+cd ../kpubdata-builder
+KPUBDATA_BUILDER_DEV_MODE=true uv run kpubdata-builder serve
+
+# 터미널 2: Studio (실 연동 모드)
+cd ../kpubdata-studio
+cp .env.development.real .env.development.local
+npm run dev
+```
 
 ## 주요 기능 소개
 
