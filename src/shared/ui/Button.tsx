@@ -1,7 +1,7 @@
 /**
  * 공통 Button 컴포넌트.
  *
- * 페이지마다 반복되던 Tailwind 버튼 스타일을 variant/size/loading 상태로 통일한다.
+ * unified repeated Tailwind button styles across pages by variant/size/loading state다.
  * 접근성을 위해 focus-visible 링과 disabled/loading 시 상호작용 차단을 기본 제공한다.
  */
 import type { ButtonHTMLAttributes, ReactNode } from "react";
@@ -10,20 +10,20 @@ import { buttonClassName, type ButtonSize, type ButtonVariant } from "./buttonSt
 export type { ButtonSize, ButtonVariant };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** 시각적 강조 수준을 결정하는 변형 */
+  /** variant that determines visual emphasis level */
   variant?: ButtonVariant;
-  /** 버튼 크기 */
+  /** button size */
   size?: ButtonSize;
-  /** 로딩 상태. true이면 스피너를 표시하고 클릭을 막는다. */
+  /** loading state. If true, show spinner and prevent clicks. */
   loading?: boolean;
-  /** 라벨 앞에 표시할 아이콘 등 */
+  /** icon etc to show before label */
   leadingIcon?: ReactNode;
 }
 
 /**
- * 일관된 스타일과 상태를 가진 버튼을 렌더링한다.
+ * render button with consistent styling and state.
  *
- * @param props - 표준 button 속성에 variant/size/loading/leadingIcon을 더한 값.
+ * @param props - standard button props plus variant/size/loading/leadingIcon을 더한 값.
  * @returns 버튼 엘리먼트.
  */
 export function Button({

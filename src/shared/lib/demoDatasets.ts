@@ -1,13 +1,13 @@
 /**
- * 데모(mock) 모드에서 사용하는 결정적 데이터셋 카탈로그.
+ * deterministic dataset catalog used in demo (mock) mode.
  *
- * 정적 데모(GitHub Pages)에서 빌드 목록·상세·manifest 뷰어가 비어 보이지 않도록,
- * 실제 `kpubdata-builder`의 데이터셋 빌드 스펙(`scripts/configs/*.yaml`)과 Builder가
- * 기록하는 manifest 와이어 형태를 그대로 본떠 만든 시드 데이터다.
+ * static demo (GitHub Pages) build list/detail/manifest viewer doesn't look empty by using seed data
+ * modeled after actual kpubdata-builder dataset build specs (`scripts/configs/*.yaml`) and manifest
+ * wire form that Builder records.
  *
- * 여기서 만든 데이터는 실서비스 값이 아니라 데모 표시용이며, `VITE_USE_REAL_BUILDER=true`
- * 실연동 모드에서는 사용하지 않는다(Builder 실데이터로 대체). Builder의 실제 컬럼명/출처/
- * HuggingFace 레이아웃을 반영하므로 UI가 실제와 유사한 모습으로 동작한다.
+ * This data is for demo display only, not production values, and isn't used when
+ * `VITE_USE_REAL_BUILDER=true` (replaced with Builder's actual data). Since it reflects Builder's
+ * actual column names/provenance/HuggingFace layout, the UI looks similar to the real thing.
  */
 import type {
   BuildRunStatus,
@@ -15,41 +15,41 @@ import type {
   ManifestFieldSummary,
 } from "@/shared/lib/types";
 
-/** 데모 카탈로그의 단일 데이터셋 정의. */
+/** single dataset definition in demo catalog. */
 export interface DemoDataset {
-  /** 경로 안전한 데이터셋 슬러그(빌드 ID prefix로도 사용). */
+  /** path-safe dataset slug (also used as build ID prefix). */
   slug: string;
-  /** 빌드 실행 ID(목록/상세/manifest 조회 키). */
+  /** build execution ID (key for list/detail/manifest queries). */
   buildId: string;
-  /** 사람이 읽는 제목. */
+  /** human-readable title. */
   title: string;
-  /** 빌드 목적 설명. */
+  /** build purpose description. */
   description: string;
-  /** provider 내부 dataset 식별자(underscore, 예: air_quality). */
+  /** provider-internal dataset identifier (underscore, e.g., air_quality). */
   providerDataset: string;
-  /** data.go.kr 원본 오픈API 주소. */
+  /** data.go.kr original OpenAPI address. */
   sourceUrl: string;
-  /** provider 요청 파라미터 스냅샷. */
+  /** snapshot of provider request parameters. */
   params: Record<string, string>;
-  /** 산출물 export 형식 목록. */
+  /** list of artifact export formats. */
   exports: ExportTarget[];
-  /** HuggingFace Hub 리포지토리 경로. */
+  /** HuggingFace Hub repository path. */
   hfRepo: string;
-  /** 현재 실행 상태. */
+  /** current execution state. */
   status: BuildRunStatus;
-  /** 실행 시작 시각(ISO). */
+  /** execution start time (ISO). */
   startedAt: string;
-  /** 실행 종료 시각(ISO). running/queued면 미정. */
+  /** execution end time (ISO). Undefined if running/queued. */
   finishedAt?: string;
-  /** 수집한 레코드 수. */
+  /** number of collected records. */
   recordCount: number;
-  /** 결과 표 컬럼 스키마(Builder column_mapping 기반). */
+  /** result table column schema (based on Builder column_mapping). */
   fields: ManifestFieldSummary[];
-  /** 실패 상태일 때의 에러 메시지. */
+  /** error message when in failed state. */
   errors?: string[];
 }
 
-/** DUR 계열 데이터셋의 공통 오픈API 주소(DURPrdlstInfoService03). */
+/** common OpenAPI address for DUR family datasets (DURPrdlstInfoService03). */
 const DUR_SOURCE_URL = "https://www.data.go.kr/data/15075057/openapi.do";
 
 function str(name: string, nullable = true): ManifestFieldSummary {
@@ -61,10 +61,10 @@ function f64(name: string): ManifestFieldSummary {
 }
 
 /**
- * 데모 데이터셋 카탈로그.
+ * demo dataset catalog.
  *
- * 실제 builder 스펙(대기오염정보, DUR 품목/병용금기/임부금기/노인주의/용량주의)을 본떠
- * 다양한 상태(성공/실행 중/실패/대기)를 포함하도록 구성한다.
+ * modeled after actual builder specs (air quality, DUR items/interactions/pregnancy/elderly/dosage)
+ * includes various states (succeeded/running/failed/queued).
  */
 export const DEMO_DATASETS: DemoDataset[] = [
   {
@@ -221,10 +221,10 @@ export const DEMO_DATASETS: DemoDataset[] = [
 ];
 
 /**
- * 빌드 ID로 데모 데이터셋을 찾는다. 정확 일치 후 슬러그 prefix 매칭을 시도한다.
+ * find demo dataset by build ID. Try exact match first, then slug prefix match.
  *
- * @param buildId - 조회할 빌드 실행 ID.
- * @returns 매칭되는 데모 데이터셋(없으면 첫 항목).
+ * @param buildId - build execution ID to query.
+ * @returns matching demo dataset (first item if none found).
  */
 export function findDemoDataset(buildId: string): DemoDataset {
   const exact = DEMO_DATASETS.find((d) => d.buildId === buildId);

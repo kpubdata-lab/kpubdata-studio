@@ -1,13 +1,13 @@
 /**
- * 공통 StatusBadge 컴포넌트.
+ * common StatusBadge component.
  *
- * draft/run/publish 흐름의 모든 상태값을 한국어 라벨 + 일관된 색상으로 표시한다.
+ * display all status values in draft/run/publish flow with Korean label + consistent color다.
  * 색상만으로 의미를 전달하지 않도록 항상 텍스트 라벨을 함께 노출한다(접근성).
  */
 import { cn } from "./cn";
 import { useTranslation } from "react-i18next";
 
-/** Studio 전반에서 배지로 표시 가능한 모든 상태값의 합집합 */
+/** union of all status values displayable as badge across Studio */
 export type StatusValue =
   | "new"
   | "draft"
@@ -24,9 +24,9 @@ export type StatusValue =
   | "published";
 
 interface StatusMeta {
-  /** 라벨 i18n 키(`status.*`). 상수에 문구를 박으면 언어 전환이 반영되지 않는다(#350). */
+  /** label i18n key (`status.*`). Hardcoding text in constant doesn't reflect language switch(#350). */
   labelKey: string;
-  /** Tailwind 색상 클래스 */
+  /** Tailwind color class */
   className: string;
 }
 
@@ -46,7 +46,7 @@ const STATUS_META: Record<StatusValue, StatusMeta> = {
   published: { labelKey: "published", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
 };
 
-/** 알 수 없는 상태값에 사용할 중립 배지 스타일 */
+/** neutral badge style for unknown status values */
 const FALLBACK_META: StatusMeta = {
   labelKey: "",
   className: "bg-muted text-muted-foreground",
@@ -54,29 +54,29 @@ const FALLBACK_META: StatusMeta = {
 
 export interface StatusBadgeProps {
   /**
-   * 표시할 상태값.
+   * status value to display.
    *
-   * 알려진 `StatusValue`면 해당 라벨/색상으로, 그 외 임의 문자열이면 원본 라벨을 가진
+   * if known `StatusValue`, use its label/color; else arbitrary string gets neutral label
    * 중립 배지로 안전하게 표시한다(매핑 누락 시 크래시 방지).
    */
   status: StatusValue | (string & {});
-  /** 추가 className */
+  /** additional className */
   className?: string;
 }
 
 /**
- * 상태값에 대응하는 라벨(현재 언어)과 색상을 가진 배지를 렌더링한다.
+ * render badge with label (in current language) and color for status value.
  *
- * 알 수 없는 상태값은 원본 문자열을 라벨로 사용하는 중립 배지로 폴백한다.
+ * unknown status value uses original string as label with neutral badge지로 폴백한다.
  *
- * @param props - status와 추가 className.
+ * @param props - status와 additional className.
  * @returns 상태 배지 엘리먼트.
  */
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const { t } = useTranslation();
   const known = STATUS_META[status as StatusValue] as StatusMeta | undefined;
   const meta = known ?? FALLBACK_META;
-  // 알 수 없는 상태값은 번역하지 않고 원문을 그대로 보여준다(매핑 누락 시 크래시 방지).
+  // show unknown status as-is without translation (prevents crash on missing mapping).
   const label = known ? t(`status.${known.labelKey}`) : status;
   const isLive = status === "running" || status === "publishing" || status === "cancelling";
 

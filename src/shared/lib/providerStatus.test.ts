@@ -48,7 +48,7 @@ describe("describeCredentialReadiness", () => {
     expect(r).toMatchObject({ tone: "neutral", label: "인증 불필요" });
   });
 
-  it("사용자 저장 credential이 있으면 'API Key 등록됨' + Preview 안내", () => {
+  it("사용자 저장 credential이 있으면 'API Key 등록됨' + Preview guidance", () => {
     const r = describeCredentialReadiness({
       requiresCredential: true,
       summaryConfigured: true,
@@ -64,7 +64,7 @@ describe("describeCredentialReadiness", () => {
     expect(r.tone).toBe("success");
     expect(r.label).toBe("연결 준비됨");
     expect(r.detail).toMatch(/Builder 기본 자격 증명/);
-    // 사용자 등록 API Key와 동일하게 표현하지 않는다.
+    // do not represent same as user-registered API Key.
     expect(r.label).not.toBe("API Key 등록됨");
   });
 

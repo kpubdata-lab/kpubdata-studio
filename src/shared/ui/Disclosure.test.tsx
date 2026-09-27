@@ -1,5 +1,5 @@
 /**
- * Disclosure(#255 §3) — Run Events/BuildSpec snapshot 같은 secondary evidence를 기본
+ * Disclosure (#255 §3) — for secondary evidence like Run Events/BuildSpec snapshot본
  * collapsed로 두되, 실제 button + aria-expanded로 keyboard 조작 가능한지 확인한다.
  */
 import { describe, expect, it } from "vitest";

@@ -1,7 +1,7 @@
 /**
- * 공통 Stepper 컴포넌트.
+ * common Stepper component.
  *
- * New Build Wizard처럼 다단계 흐름의 진행 상태를 표시한다. 각 단계는
+ * display progress of multi-step flow like New Build Wizard. Each step is
  * upcoming/current/complete/error 상태를 가지며, 현재 단계에 aria-current="step"을
  * 부여해 보조기기에서 위치를 알 수 있게 한다(접근성, 제안 §12).
  */
@@ -10,22 +10,22 @@ import { cn } from "./cn";
 export type StepState = "upcoming" | "current" | "complete" | "error";
 
 export interface StepItem {
-  /** 단계 식별자 */
+  /** stage identifier */
   id: string;
-  /** 단계 라벨(한국어) */
+  /** step label (Korean) */
   label: string;
 }
 
 export interface StepperProps {
-  /** 표시할 단계 목록(순서대로) */
+  /** list of stages to display (in order) */
   steps: StepItem[];
-  /** 현재 활성 단계의 0-기반 인덱스 */
+  /** 0-based index of current active stage */
   current: number;
-  /** 오류가 발생한 단계 인덱스 집합(선택) */
+  /** set of stage indices where error occurred (optional) */
   errorSteps?: number[];
-  /** 단계 클릭으로 이동 허용 시 핸들러(완료된 단계만 이동 가능) */
+  /** handler to allow navigation on step click (completed steps only) */
   onStepClick?: (index: number) => void;
-  /** 추가 className */
+  /** additional className */
   className?: string;
 }
 
@@ -44,7 +44,7 @@ const STATE_CIRCLE: Record<StepState, string> = {
 };
 
 /**
- * 다단계 흐름의 진행 상태를 가로 스텝 표시기로 렌더링한다.
+ * render horizontal step indicator for multi-step flow progress.
  *
  * @param props - steps/current/errorSteps/onStepClick.
  * @returns 스텝퍼 엘리먼트.
@@ -56,8 +56,8 @@ export function Stepper({
   onStepClick,
   className,
 }: StepperProps) {
-  // current가 범위를 벗어나면(예: 마지막 단계 이후의 terminal 값) 마지막 단계로 고정해
-  // 어떤 단계도 current로 표시되지 않아 aria-current가 사라지는 문제를 막는다(#74).
+  // if current is out of bounds (e.g., terminal value after last stage), clamp to last stage
+  // prevent issue where no stage is marked current and aria-current disappears(#74).
   const clampedCurrent = steps.length === 0 ? 0 : Math.min(Math.max(current, 0), steps.length - 1);
   return (
     <ol className={cn("flex w-full items-center gap-2 overflow-x-auto", className)}>

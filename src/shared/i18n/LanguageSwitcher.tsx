@@ -1,7 +1,7 @@
 /**
- * 언어 전환 토글 — 한국어/English.
+ * Language switch toggle — Korean/English.
  *
- * 현재 언어를 버튼 라벨로 보여주고 클릭 시 지원 언어를 순회한다.
+ * Shows current language in button label and cycles through supported languages on click.
  * 선택은 i18next 감지 캐시(localStorage)에 저장되어 재방문 시 유지된다.
  */
 import { useTranslation } from "react-i18next";
