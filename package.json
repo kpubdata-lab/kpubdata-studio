@@ -21,7 +21,8 @@
     "i18n:coverage": "node scripts/i18n-coverage.mjs",
     "i18n:check": "node scripts/i18n-coverage.mjs --check",
     "check:stale-ui": "node scripts/check-stale-ui-literals.mjs --base origin/main",
-    "i18n:keys": "node scripts/check-i18n-keys.mjs"
+    "i18n:keys": "node scripts/check-i18n-keys.mjs",
+    "check:required-checks": "node scripts/check-required-checks.mjs"
   },
   "dependencies": {
     "i18next": "^26.4.2",

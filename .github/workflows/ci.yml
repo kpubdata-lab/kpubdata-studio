@@ -155,3 +155,34 @@ jobs:
 
       - name: Test with coverage
         run: npm run test:coverage
+
+  # One gate, so that editing the matrix is not also editing branch protection (#416).
+  #
+  # Requiring `Lint, type check, test, build (20)` is what blocked every PR after #413
+  # removed Node 20 from the matrix: the context stopped being produced, and GitHub
+  # waits for an absent check for ever. It is not a failure, so nothing reports it —
+  # the PR simply never becomes mergeable, and the way past it is `--admin`, which
+  # bypasses every other check too. A rule that blocks everything protects nothing.
+  #
+  # Depending on the matrix instead of naming its entries means a new Node version
+  # is covered the moment it is added, and a removed one takes nothing with it.
+  gate:
+    name: CI gate
+    runs-on: ubuntu-latest
+    needs: [quality, e2e, coverage]
+    # `always()` so a failed job still reaches this step. Without it the gate is
+    # skipped when something upstream fails, and a skipped required check is the same
+    # absence this job exists to remove.
+    if: always()
+    steps:
+      - name: Every job this gate covers must have succeeded
+        run: |
+          results="${{ join(needs.*.result, ' ') }}"
+          echo "upstream results: ${results}"
+          for result in ${results}; do
+            if [ "${result}" != "success" ]; then
+              echo "::error::CI gate failed — upstream results were: ${results}"
+              exit 1
+            fi
+          done
+          echo "every upstream job succeeded"
