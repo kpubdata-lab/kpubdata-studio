@@ -32,7 +32,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
+// Overridable so the gate's own test can point it at a fixture repository. Without
+// that the test ran against this repository and asserted nothing — it passed for the
+// wrong reason, which is the failure mode this whole script exists to prevent.
+const REPO = process.env.STALE_UI_REPO_ROOT ?? join(dirname(fileURLToPath(import.meta.url)), "..");
 const LOCALES = ["en", "ko"].map(
   (l) => `src/shared/i18n/locales/${l}.json`,
 );
@@ -73,13 +76,23 @@ function localeValuesAt(ref) {
 const baseArg = process.argv.indexOf("--base");
 const base = baseArg === -1 ? "origin/main" : process.argv[baseArg + 1];
 
-let before;
-try {
-  before = localeValuesAt(base);
-} catch {
+function refExists(ref) {
+  try {
+    git(`rev-parse --verify --quiet ${ref}^{commit}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Checked up front rather than inferred from an empty result. localeValuesAt skips a
+// file that did not exist at the ref, which is correct, but it made a missing ref look
+// identical to "nothing was removed" — and the gate passed without comparing anything.
+if (!refExists(base)) {
   console.log(`기준 ref ${base} 를 찾을 수 없어 건너뛴다`);
   process.exit(0);
 }
+const before = localeValuesAt(base);
 const after = localeValuesAt(null);
 
 const removed = [...before].filter((v) => !after.has(v) && v.length >= MIN_LENGTH);

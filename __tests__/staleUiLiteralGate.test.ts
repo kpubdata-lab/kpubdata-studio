@@ -35,6 +35,7 @@ function runGate(base: string): { code: number; out: string } {
   try {
     const out = execFileSync("node", [SCRIPT, "--base", base], {
       cwd: repo,
+      env: { ...process.env, STALE_UI_REPO_ROOT: repo },
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
     });
