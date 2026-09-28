@@ -1,0 +1,223 @@
+# Release under branch protection (kpubdata#586, kpubdata-builder#718).
+#
+#   workflow_dispatch, mode=prepare         opens a release pull request
+#   workflow_dispatch, mode=release         gates what is declared now, then tags
+#   pull_request closed on `release/*`      the same, for the pull request path
+#
+# This repository does not choose its own version. ADR 0004 makes Builder and Studio
+# one application at one version, so `prepare` reads Builder's newest release tag and
+# writes exactly that. There is no bump input, which means there is no way for the two
+# to drift — not a rule anyone has to remember, but a number that cannot be typed.
+# Builder releases on Wednesday and Studio on Thursday for that reason.
+#
+# `mode=release` publishes the version already declared. The first release is that:
+# package.json says 0.4.0 and the CHANGELOG heads with `## v0.4`, so raising it would
+# leave that version unreleased for ever.
+#
+# A tag pushed with GITHUB_TOKEN does not trigger workflows, so anything that has to
+# follow the tag happens in the same job rather than waiting for an event.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "prepare = follow Builder's latest release; release = tag what is declared now"
+        required: true
+        type: choice
+        options:
+          - prepare
+          - release
+        default: prepare
+
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Open the release pull request
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'prepare'
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Builder's newest release, read over the public API. No cross-repository token:
+      # the repository is public, and needing a secret here would be a reason for this
+      # step to be skipped.
+      - name: Read the version Builder released
+        id: upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release view --repo yeongseon/kpubdata-builder --json tagName -q .tagName)
+          if [ -z "${tag}" ]; then
+            echo "::error::kpubdata-builder has no release to follow. Release it first (Wednesday)."
+            exit 1
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "following ${tag}"
+
+      - name: Nothing to do when it already matches
+        id: current
+        run: |
+          current=$(node -p "require('./package.json').version")
+          echo "version=${current}" >> "$GITHUB_OUTPUT"
+          if [ "${current}" = "${{ steps.upstream.outputs.version }}" ]; then
+            echo "::error::package.json is already ${current}. Use mode=release to tag it."
+            exit 1
+          fi
+
+      - name: Write the version
+        uses: yeongseon/kpubdata/.github/actions/set-version@main
+        with:
+          version: ${{ steps.upstream.outputs.version }}
+
+      - name: Show what changed
+        run: git --no-pager diff --stat
+
+      - name: Open the pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.upstream.outputs.tag }}
+          FROM: ${{ steps.current.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "release/${TAG}"
+          git add -A
+          git commit -m "chore: release ${TAG}"
+          git push origin "release/${TAG}"
+          printf '%s\n' \
+            "\`${FROM}\` → \`${TAG}\` (kpubdata-builder#718)." \
+            "" \
+            "번호를 고른 게 아니라 **builder 의 최신 릴리스를 따라간 것**이다(ADR 0004)." \
+            "병합되면 게이트가 돌고, 통과한 뒤에 태그와 릴리스가 이어진다." \
+            > /tmp/release-body.md
+          gh pr create --base main --head "release/${TAG}" \
+            --title "chore: release ${TAG}" --body-file /tmp/release-body.md
+
+  release:
+    name: Gate, tag and release
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'release') ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.merged == true &&
+       startsWith(github.event.pull_request.head.ref, 'release/'))
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      # On the pull request path, the merge commit itself — not `main`, which by then
+      # may be whatever merged next. On a dispatch it is main's head, pinned right away
+      # so the tag cannot land on something that merged while the gates ran.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.ref }}
+          fetch-depth: 0
+
+      - name: Pin the commit being released
+        id: commit
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Read the version being released
+        id: tag
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${version}" >> "$GITHUB_OUTPUT"
+          echo "releasing v${version}"
+
+      - name: The branch name and the file must agree
+        if: github.event_name == 'pull_request'
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if [ "${BRANCH}" != "release/${TAG}" ]; then
+            echo "::error::branch is ${BRANCH} but package.json says release/${TAG}"
+            exit 1
+          fi
+
+      # Before the gates, not after. kpubdata#586 is about a release that failed with
+      # a tag already created; half an hour of tests to then say "tag exists" is the
+      # same waste one step earlier.
+      - name: The tag must not exist yet
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "::error::${TAG} already exists. Nothing to release, or the version was not raised."
+            exit 1
+          fi
+          echo "${TAG} is free"
+
+      # The version this build talks to, stated rather than assumed. #411 asks the
+      # release to say which Builder API it supports, and the contract version is the
+      # thing that answers it — not the package version, which says what is installed.
+      - name: Read the Builder API contract version
+        id: contract
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          api=$(gh api repos/yeongseon/kpubdata-builder/contents/contract/builder-api.yaml \
+                  --jq '.content' | base64 -d \
+                | sed -n 's/^  version: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' | head -1)
+          echo "api=${api:-unknown}" >> "$GITHUB_OUTPUT"
+          echo "builder API contract ${api:-unknown}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Everything that has to be true before a tag exists. A failure here leaves no
+      # tag, no release and nothing to clean up.
+      - name: Run quality gates
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run i18n:check
+          npm run i18n:keys
+          python3 scripts/check_korean_ts_comments.py src e2e
+          npm test
+          npm run build
+
+      - name: Package the built site
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: tar -czf "kpubdata-studio-${TAG}.tar.gz" -C dist .
+
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          API: ${{ steps.contract.outputs.api }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          printf '%s\n' \
+            "Builder API contract: **${API}** (\`contract/builder-api.yaml\`)." \
+            "" \
+            "Studio and Builder ship as one application at one version (kpubdata ADR 0004)," \
+            "so this release pairs with \`kpubdata-builder ${TAG}\`." \
+            > /tmp/notes.md
+          gh release create "${TAG}" --title "${TAG}" --generate-notes \
+            --notes-file /tmp/notes.md \
+            --target "${{ steps.commit.outputs.sha }}" \
+            "kpubdata-studio-${TAG}.tar.gz"
