@@ -19,7 +19,7 @@ describe("Layout header CTA (#49)", () => {
       useUIStore.setState({
         theme: "light",
         isMobileSidebarOpen: false,
-        isKubiDrawerOpen: false,
+        isAssistantDrawerOpen: false,
       }),
     );
   });

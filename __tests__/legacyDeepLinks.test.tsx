@@ -26,7 +26,7 @@ describe("router 딥링크 회귀 (#247)", () => {
       useUIStore.setState({
         theme: "light",
         isMobileSidebarOpen: false,
-        isKubiDrawerOpen: false,
+        isAssistantDrawerOpen: false,
       }),
     );
   });
@@ -85,7 +85,7 @@ describe("라우트 코드 분할 (#378)", () => {
       useUIStore.setState({
         theme: "light",
         isMobileSidebarOpen: false,
-        isKubiDrawerOpen: false,
+        isAssistantDrawerOpen: false,
       }),
     );
   });

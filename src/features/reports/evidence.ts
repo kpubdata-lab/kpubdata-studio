@@ -1,7 +1,7 @@
 /**
  * Report reference Builder evidence lookup (#258).
  *
- * Follows same pattern as `features/kubi/evidence.ts`(#256) — calls multiple Builder endpoints
+ * Follows same pattern as `features/assistant/evidence.ts`(#256) — calls multiple Builder endpoints
  * in parallel/sequence; if one fails, rest proceed ("partial failure allowed", #258 §5). No new
  * Builder endpoint created; reuses `features/datasets/api` (#256/#253/#254 already vetted client).
  *

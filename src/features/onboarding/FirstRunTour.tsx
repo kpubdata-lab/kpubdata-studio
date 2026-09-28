@@ -14,7 +14,7 @@ const emptyWorkspaceSteps = [
   { target: "sidebar" },
   { target: "workflow" },
   { target: "start-actions" },
-  { target: "kubi-helper" },
+  { target: "assistant-helper" },
 ] as const;
 
 const dashboardSteps = [

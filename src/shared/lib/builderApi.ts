@@ -685,7 +685,7 @@ export const builderApi = {
    /**
     * POST /query — Execute read-only SQL on server-resolved Silver/Gold table (#504, 1.7.0).
     *
-    * Builder rejects Bronze (Studio also preemptively blocks at UI layer, `features/kubi/query.ts`).
+    * Builder rejects Bronze (Studio also preemptively blocks at UI layer, `features/assistant/query.ts`).
     * SQL should only be called when user explicitly chooses to execute; do not retry automatically
     * (429/504 already signal saturation/timeout, so retry worsens situation).
     */

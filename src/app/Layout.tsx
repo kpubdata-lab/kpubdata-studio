@@ -1,8 +1,8 @@
 /**
  * Define Studio common app shell and navigation layout.
  *
- * Manages left grouped sidebar, top header (Kubi search, Kubi button, avatar),
- * theme switching, mobile overlay, and global Kubi drawer mount in one place;
+ * Manages left grouped sidebar, top header (Assistant search, Assistant button, avatar),
+ * theme switching, mobile overlay, and global Assistant drawer mount in one place;
  * actual route content is injected via `Outlet`. Menu structure follows
  * `kpubdata_ui_prototype_v1.html` IA (WORKSPACE/DATA/AI/SYSTEM) (#247).
  */
@@ -11,8 +11,8 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
 import { useAuthStore } from "@/features/auth/store";
-import { KubiDrawer } from "@/features/kubi/KubiDrawer";
-import { KubiSearchInput } from "@/features/kubi/KubiSearchInput";
+import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
+import { AssistantSearchInput } from "@/features/assistant/AssistantSearchInput";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 
 const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
@@ -187,10 +187,10 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
     items: [
       {
         to: "/kubi",
-        label: t("nav.kubi"),
-        description: t("navDescription.kubi"),
+        label: t("nav.assistant"),
+        description: t("navDescription.assistant"),
         icon: (
-          <SidebarIcon name="kubi">
+          <SidebarIcon name="assistant">
             <rect width="14" height="12" x="5" y="7" rx="3" />
             <path d="M12 3v4M9 12h.01M15 12h.01M9 16h6" />
           </SidebarIcon>
@@ -289,7 +289,7 @@ function avatarInitial(email: string | null): string {
  * App shell component applied to all Studio pages.
  *
  * @returns Complete layout including sidebar, header, content slot, and global
- *          Kubi drawer.
+ *          Assistant drawer.
  */
 export function Layout() {
   const { t } = useTranslation();
@@ -297,7 +297,7 @@ export function Layout() {
   const closeMobileSidebar = useUIStore((state) => state.closeMobileSidebar);
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
   const isDesktopSidebarCollapsed = useUIStore((state) => state.isDesktopSidebarCollapsed);
-  const openKubiDrawer = useUIStore((state) => state.openKubiDrawer);
+  const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
   const setTheme = useUIStore((state) => state.setTheme);
   const theme = useUIStore((state) => state.theme);
   const toggleMobileSidebar = useUIStore((state) => state.toggleMobileSidebar);
@@ -318,8 +318,8 @@ export function Layout() {
 
   // Allow closing mobile sidebar with ESC (a11y, proposal §12.2).
   // Desktop collapse is not an overlay, so not an ESC target — this handler checks
-  // mobile state only. Kubi drawer's ESC handling is its own responsibility when open
-  // (see KubiDrawer).
+  // mobile state only. Assistant drawer's ESC handling is its own responsibility when open
+  // (see AssistantDrawer).
   useEffect(() => {
     if (!isMobileSidebarOpen) return;
     function onKeyDown(event: KeyboardEvent) {
@@ -483,23 +483,23 @@ export function Layout() {
               </div>
 
                {/* Without min-w-0 here, this group loses its minimum-width protection,
-                   shrinking smaller than its content (Kubi button/avatar) in
+                   shrinking smaller than its content (Assistant button/avatar) in
                    flex-shrink calculation — those non-truncate buttons overflow and
                    collide with left subtitle (390px width, UI audit #6-A). Removing
                    min-w-0 prevents this group from shrinking below its min-content,
                    letting the left group's truncated title shrink instead. */}
               <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
-                <KubiSearchInput />
+                <AssistantSearchInput />
 
                 <button
                   aria-haspopup="dialog"
-                  aria-label={t("layout.openKubi")}
+                  aria-label={t("layout.openAssistant")}
                   className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  onClick={openKubiDrawer}
+                  onClick={openAssistantDrawer}
                   type="button"
                 >
                   <span aria-hidden="true">✨</span>
-                  <span className="hidden sm:inline">Kubi</span>
+                  <span className="hidden sm:inline">Assistant</span>
                 </button>
 
                 <LanguageSwitcher />
@@ -529,7 +529,7 @@ export function Layout() {
         </div>
       </div>
 
-      <KubiDrawer />
+      <AssistantDrawer />
     </div>
   );
 }

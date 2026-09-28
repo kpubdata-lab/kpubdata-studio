@@ -9,7 +9,7 @@
     "selectTheme": "테마 선택",
     "toggleSidebar": "사이드바 열기/닫기",
     "tagline": "공공데이터를 데이터셋으로 만드는 워크스페이스",
-    "openKubi": "Ask KPubData 열기",
+    "openAssistant": "Ask KPubData 열기",
     "goToSettingsFor": "{{email}} 설정으로 이동",
     "loginRequiredSettings": "로그인이 필요합니다 — 설정으로 이동",
     "loginRequired": "로그인이 필요합니다"
@@ -33,9 +33,9 @@
     "downloadMarkdown": "Markdown 다운로드",
     "downloadHtml": "HTML 다운로드",
     "print": "인쇄(Browser Print)",
-    "kubiSection": "7. Ask KPubData 분석",
-    "noKubiTitle": "아직 추가된 AI 분석이 없습니다",
-    "noKubiDesc": "Ask KPubData 로 현재 Dataset/Run을 분석한 뒤 검토하여 보고서에 추가할 수 있습니다.",
+    "assistantSection": "7. Ask KPubData 분석",
+    "noAssistantTitle": "아직 추가된 AI 분석이 없습니다",
+    "noAssistantDesc": "Ask KPubData 로 현재 Dataset/Run을 분석한 뒤 검토하여 보고서에 추가할 수 있습니다.",
     "notesSection": "8. 사용자 메모",
     "addBlock": "+ 사용자 작성 블록 추가"
   },
@@ -51,7 +51,7 @@
     "datasets": "데이터셋 카탈로그",
     "builds": "빌드 / 실행",
     "quality": "품질",
-    "kubi": "Ask KPubData",
+    "assistant": "Ask KPubData",
     "reports": "리포트",
     "provider": "Provider / API 연결",
     "monitoring": "모니터링",
@@ -65,7 +65,7 @@
     "datasets": "빌드된 데이터셋 검색",
     "builds": "빌드와 실행 이력",
     "quality": "빌드·데이터셋 품질 결과",
-    "kubi": "맥락을 아는 도우미",
+    "assistant": "맥락을 아는 도우미",
     "reports": "분석 리포트 생성·열람",
     "provider": "API Key·자격 증명 등록",
     "monitoring": "실행·시스템 모니터링",
@@ -346,7 +346,59 @@
       "specTitle": "생성될 스펙 (Generated spec)"
     }
   },
-  "kubi": {
+  "assistant": {
+    "action": {
+      "buildSpec": "BuildSpec 변경 제안",
+      "reportNote": "Report에 추가될 노트",
+      "evidence": "연결된 Evidence",
+      "approve": "승인",
+      "open": "열기",
+      "reject": "거부",
+      "apply": "적용",
+      "applying": "적용 중…",
+      "rejected": "거부됨",
+      "staleCantRun": "이전 화면 기준 — 실행할 수 없습니다"
+    },
+    "actions": {
+      "missingParent": "경로 \"{{path}}\"의 상위 필드가 없습니다.",
+      "specNotFound": "run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없습니다. Builder는 spec을 영속화하지 않으므로, 이 run을 Studio에서 실행/편집한 적이 있어야 patch를 적용할 수 있습니다.",
+      "secretsRedacted": "저장된 BuildSpec에서 시크릿 값이 제거되어 있어(로컬 보관 정책) patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 다시 입력하세요.",
+      "pathNotAllowed": "허용되지 않은 경로 \"{{path}}\"입니다. title/description/metadata/sources[].params/sources[].alias/exports[].options만 patch할 수 있습니다.",
+      "credentialPath": "경로 \"{{path}}\"는 credential성 필드로 보여 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 직접 변경하세요.",
+      "redactionMarker": "patch 결과에 redaction marker가 남아 있어 적용할 수 없습니다. 해당 credential을 실제 값으로 다시 입력하세요.",
+      "patchFailed": "patch를 적용할 수 없습니다.",
+      "unresolvedPlaceholder": "해결되지 않은 시크릿 플레이스홀더가 포함되어 있습니다.",
+      "paramsCredential": "생성된 sourceParams에는 credential 값을 포함할 수 없습니다.",
+      "paramsNotObject": "생성된 sourceParams는 JSON 객체여야 합니다.",
+      "describe": {
+        "openProvider": "Provider \"{{provider}}\" 화면 열기",
+        "openBuild": "Build \"{{runId}}\" 상세 열기",
+        "openQuality": "Quality Center에서 \"{{datasetId}}\" 보기",
+        "patchSpec": "run \"{{runId}}\"의 BuildSpec에 {{count}}건 변경 제안",
+        "createDraft": "New Build 초안 만들기: {{title}}",
+        "addReportBlock": "Report 참고 노트로 추가"
+      }
+    },
+    "baseUrl": {
+      "invalid": "올바른 URL 형식이 아닙니다.",
+      "httpsOnly": "API Key 노출을 막기 위해 HTTPS 주소만 허용됩니다."
+    },
+    "byok": {
+      "title": "Ask KPubData 를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
+      "desc": "키는 기본적으로 이 브라우저 메모리에만 보관되며, 새로고침하면 사라집니다. Studio는 공용 키를 제공하지 않습니다.",
+      "modelLabel": "Model (선택)",
+      "baseUrlLabel": "Base URL (선택)",
+      "baseUrlWarning": "기본 Provider 주소가 아닙니다. 이 주소로 API Key가 전송됩니다:",
+      "saveSession": "저장(이 세션 동안만)",
+      "clearStored": "브라우저 저장 해제",
+      "saveBrowser": "이 브라우저에 저장(위험 — 경고 표시됨)"
+    },
+    "config": {
+      "persistWarning": "LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있습니다. 신뢰하지 않는 확장 프로그램이 있다면 저장하지 마세요."
+    },
+    "content": {
+      "approve": "승인"
+    },
     "context": {
       "current": "현재 Context",
       "stageAll": "Run 전체",
@@ -376,7 +428,7 @@
         "artifacts": "결과물",
         "builds": "Builds",
         "quality": "Quality",
-        "kubi": "Ask KPubData",
+        "assistant": "Ask KPubData",
         "reports": "Reports",
         "provider": "Provider",
         "monitoring": "Monitoring",
@@ -385,34 +437,105 @@
       "stageAria": "분석 Stage",
       "sourceAria": "분석 Source"
     },
-    "byok": {
-      "title": "Ask KPubData 를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
-      "desc": "키는 기본적으로 이 브라우저 메모리에만 보관되며, 새로고침하면 사라집니다. Studio는 공용 키를 제공하지 않습니다.",
-      "modelLabel": "Model (선택)",
-      "baseUrlLabel": "Base URL (선택)",
-      "baseUrlWarning": "기본 Provider 주소가 아닙니다. 이 주소로 API Key가 전송됩니다:",
-      "saveSession": "저장(이 세션 동안만)",
-      "clearStored": "브라우저 저장 해제",
-      "saveBrowser": "이 브라우저에 저장(위험 — 경고 표시됨)"
+    "crossCheck": {
+      "openProviderUnknown": "OPEN_PROVIDER: catalog에 없는 provider \"{{provider}}\"",
+      "openBuildUnknown": "OPEN_BUILD: evidence에 없는 run \"{{runId}}\"",
+      "openQualityUnknownDataset": "OPEN_QUALITY: evidence에 없는 dataset \"{{datasetId}}\"",
+      "openQualityUnknownRun": "OPEN_QUALITY: evidence에 없는 run \"{{runId}}\"",
+      "openQualityMismatch": "OPEN_QUALITY: run \"{{runId}}\"의 dataset \"{{datasetId}}\" 소속을 Builder evidence에서 확인할 수 없음",
+      "patchUnknownRun": "PATCH_BUILDSPEC: evidence에 없는 run \"{{runId}}\"",
+      "patchSpecMissing": "PATCH_BUILDSPEC: run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없어 안전하게 diff를 만들 수 없습니다",
+      "draftUnknownProvider": "CREATE_BUILD_DRAFT: catalog에 없는 provider \"{{provider}}\"",
+      "draftUnknownDataset": "CREATE_BUILD_DRAFT: \"{{provider}}\" catalog에 없는 dataset \"{{dataset}}\"",
+      "stageNone": "없음",
+      "sqlStageMismatch": "현재 화면 stage({{current}})와 제안된 SQL의 stage({{proposed}})가 일치하지 않아 실행 대상에서 제외했습니다.",
+      "sqlSourceDropped": "제안된 source \"{{source}}\"를 evidence에서 확인할 수 없어 제거했습니다. 단일 소스 run이라 Builder가 자동으로 소스를 선택합니다.",
+      "sqlSourceUnknown": "evidence에 없는 source \"{{source}}\"를 참조해 실행 대상에서 제외했습니다."
     },
-    "turnStatus": {
-      "noKey": "API Key가 설정되어 있지 않습니다. 위에서 먼저 설정하세요.",
-      "cancelled": "요청이 취소되었습니다.",
-      "staleContext": "이 답변은 이전 화면 기준입니다.",
-      "retry": "다시 시도"
+    "demo": {
+      "disclaimer": "[DEMO] mock 데이터 기반 예시 응답입니다 — 실제 분석 결과가 아닙니다.",
+      "datasetStatus": "데이터셋 \"{{title}}\"({{datasetId}})의 최신 상태는 \"{{status}}\"입니다.",
+      "qualityReason": "[DEMO] Quality Center에서 이 run의 실제 rule 결과를 확인할 수 있습니다.",
+      "demoNote": "[DEMO] \"{{title}}\" 데모 분석 — mock 데이터 기반이며 실제 분석이 아닙니다.",
+      "reportReason": "[DEMO] 이 데모 응답을 참고 노트로 Report에 남길 수 있습니다.",
+      "noDataset": "현재 선택된 Dataset이 없어 일반 안내만 제공합니다. Dataset을 선택하면 더 구체적인 데모를 볼 수 있습니다.",
+      "noQuality": "평가된 Quality 결과가 없습니다.",
+      "qualitySummary": "Quality 결과 요약: {{summary}}.",
+      "sqlNote": "Generated SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Builder 호출 없음).",
+      "stageHint": "위 Stage 선택에서 Silver 또는 Gold를 고르면 Generated SQL·Result Preview 데모도 함께 볼 수 있습니다."
     },
-    "queryError": {
-      "unsafe_query": "SQL 구문 오류 또는 허용되지 않은 쿼리입니다.",
-      "forbidden": "이 dataset/run에 대한 접근 권한이 없습니다.",
-      "artifact_unavailable": "요청한 stage 산출물을 아직 사용할 수 없습니다.",
-      "invalid_context": "dataset/run/stage 문맥이 올바르지 않습니다.",
-      "invalid_request": "요청 형식이 올바르지 않습니다.",
-      "query_busy": "Query 처리 용량이 가득 찼습니다. 잠시 후 다시 시도하세요.",
-      "query_timeout": "Query 실행이 시간 초과되었습니다.",
-      "query_execution_failed": "Query 실행 중 오류가 발생했습니다.",
-      "network": "Builder에 연결하지 못했습니다.",
-      "mock_mode": "mock 모드에서는 Query를 실행할 수 없습니다.",
-      "unknown": "알 수 없는 오류가 발생했습니다."
+    "drawer": {
+      "collapseLabel": "Ask KPubData 기본 너비로 보기",
+      "expandLabel": "Ask KPubData 확장하기",
+      "collapse": "기본",
+      "expand": "확장",
+      "close": "Ask KPubData 닫기",
+      "label": "Ask KPubData"
+    },
+    "empty": {
+      "demoTitle": "API Key 없이 먼저 데모로 보기",
+      "demoDesc": "mock 데이터 기반 예시 응답입니다 — 실제 분석 결과가 아닙니다. dev/mock 모드에서만 제공됩니다.",
+      "demoSend": "데모 질문 보내보기",
+      "welcomeTitle": "처음이신가요?",
+      "welcomeDesc": "예시 질문으로 시작하거나 직접 질문할 수 있습니다.",
+      "demoQuestion": "이 데이터셋 품질 어때?"
+    },
+    "evidence": {
+      "count": "근거 {{count}}개",
+      "countRejected": "근거 {{count}}개 · 제외된 근거 {{rejected}}개",
+      "detailUnavailable": "상세 근거를 현재 evidence에서 확인할 수 없습니다.",
+      "openOriginal": "원본 화면 열기",
+      "rejectedCount": "⚠ 제외된 근거 {{count}}개",
+      "unavailable": "확인하지 못한 근거: {{items}}"
+    },
+    "generate": {
+      "unknownProvider": "sources[{{index}}].provider: 카탈로그에 없는 provider '{{provider}}'입니다.",
+      "unknownDataset": "sources[{{index}}].dataset: provider '{{provider}}'에 없는 dataset '{{dataset}}'입니다.",
+      "yamlParse": "YAML을 파싱하지 못했습니다.",
+      "mockDisabled": "mock 모드에서는 생성 기능이 비활성화됩니다 (ST-A8, #211)",
+      "noValidate": "Builder /validate 연결이 없어 BuildSpec 생성을 중단했습니다.",
+      "noCatalog": "카탈로그를 조회할 수 없어 BuildSpec 생성을 중단했습니다.",
+      "emptyOutput": "빈 출력이 반환되었습니다.",
+      "restoreFailed": "시크릿 복원에 실패했습니다.",
+      "validateRequestFailed": "Builder 검증 요청에 실패했습니다.",
+      "validationFailed": "검증 실패"
+    },
+    "input": {
+      "aria": "Ask KPubData 에 질문하기",
+      "placeholder": "질문을 입력하세요…",
+      "placeholderDemo": "질문을 입력하세요… (데모 · mock 데이터)",
+      "placeholderNoKey": "먼저 API Key를 설정하세요",
+      "send": "전송",
+      "suggested": "추천 질문",
+      "currentDataset": "현재 Dataset",
+      "openDataset": "{{id}} 열기",
+      "relatedDatasets": "관련 데이터셋",
+      "relatedHintNoQ": "질문을 보내 evidence를 불러오면 같은 provider의 다른 데이터셋 후보를 확인할 수 있습니다.",
+      "relatedHintNoDs": "Dataset을 선택하면 실제 catalog와 대조한 관련 데이터셋 후보를 확인할 수 있습니다."
+    },
+    "page": {
+      "desc": "현재 화면·Dataset·Build·Quality 문맥을 사용해 Evidence 기반 답변과 다음 Action까지 연결합니다.",
+      "eyebrow": "도우미",
+      "title": "Ask KPubData"
+    },
+    "parse": {
+      "empty": "LLM이 빈 응답을 반환했습니다.",
+      "notJson": "LLM 응답을 JSON으로 해석할 수 없습니다.",
+      "shapeMismatch": "LLM 응답 형식이 예상과 다릅니다: {{issues}}"
+    },
+    "phases": {
+      "collecting": "Evidence 확인",
+      "generating": "답변 생성",
+      "validating": "근거 검증",
+      "inProgress": " 중"
+    },
+    "provider": {
+      "auth": "LLM API 인증에 실패했습니다. API Key를 다시 확인하세요.",
+      "rateLimit": "LLM API 요청 한도를 초과했습니다(rate limit). 잠시 후 다시 시도하세요.",
+      "serverError": "LLM 서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도하세요.",
+      "callFailed": "LLM API 호출에 실패했습니다.",
+      "callFailedStatus": "LLM API 호출에 실패했습니다. (status {{status}})",
+      "unsafeBaseUrl": "LLM base URL이 안전하지 않습니다: {{reason}}"
     },
     "query": {
       "running": "Query 실행 중…",
@@ -431,63 +554,18 @@
       "stageMismatch": "현재 화면 stage({{current}})와 Generated SQL의 stage({{proposed}})가 다릅니다.",
       "stageNone": "없음"
     },
-    "action": {
-      "buildSpec": "BuildSpec 변경 제안",
-      "reportNote": "Report에 추가될 노트",
-      "evidence": "연결된 Evidence",
-      "approve": "승인",
-      "open": "열기",
-      "reject": "거부",
-      "apply": "적용",
-      "applying": "적용 중…",
-      "rejected": "거부됨",
-      "staleCantRun": "이전 화면 기준 — 실행할 수 없습니다"
-    },
-    "evidence": {
-      "count": "근거 {{count}}개",
-      "countRejected": "근거 {{count}}개 · 제외된 근거 {{rejected}}개",
-      "detailUnavailable": "상세 근거를 현재 evidence에서 확인할 수 없습니다.",
-      "openOriginal": "원본 화면 열기",
-      "rejectedCount": "⚠ 제외된 근거 {{count}}개",
-      "unavailable": "확인하지 못한 근거: {{items}}"
-    },
-    "phases": {
-      "collecting": "Evidence 확인",
-      "generating": "답변 생성",
-      "validating": "근거 검증",
-      "inProgress": " 중"
-    },
-    "turn": {
-      "ok": "성공",
-      "error": "실패",
-      "running": "진행 중",
-      "stale": "이전 화면",
-      "collapse": "대화 접기",
-      "demoBadge": "DEMO · mock 데이터(실제 분석 아님)",
-      "staleBadge": "이전 화면 기준",
-      "cancel": "취소",
-      "history": "이전 대화 {{count}}개"
-    },
-    "empty": {
-      "demoTitle": "API Key 없이 먼저 데모로 보기",
-      "demoDesc": "mock 데이터 기반 예시 응답입니다 — 실제 분석 결과가 아닙니다. dev/mock 모드에서만 제공됩니다.",
-      "demoSend": "데모 질문 보내보기",
-      "welcomeTitle": "처음이신가요?",
-      "welcomeDesc": "예시 질문으로 시작하거나 직접 질문할 수 있습니다.",
-      "demoQuestion": "이 데이터셋 품질 어때?"
-    },
-    "input": {
-      "aria": "Ask KPubData 에 질문하기",
-      "placeholder": "질문을 입력하세요…",
-      "placeholderDemo": "질문을 입력하세요… (데모 · mock 데이터)",
-      "placeholderNoKey": "먼저 API Key를 설정하세요",
-      "send": "전송",
-      "suggested": "추천 질문",
-      "currentDataset": "현재 Dataset",
-      "openDataset": "{{id}} 열기",
-      "relatedDatasets": "관련 데이터셋",
-      "relatedHintNoQ": "질문을 보내 evidence를 불러오면 같은 provider의 다른 데이터셋 후보를 확인할 수 있습니다.",
-      "relatedHintNoDs": "Dataset을 선택하면 실제 catalog와 대조한 관련 데이터셋 후보를 확인할 수 있습니다."
+    "queryError": {
+      "unsafe_query": "SQL 구문 오류 또는 허용되지 않은 쿼리입니다.",
+      "forbidden": "이 dataset/run에 대한 접근 권한이 없습니다.",
+      "artifact_unavailable": "요청한 stage 산출물을 아직 사용할 수 없습니다.",
+      "invalid_context": "dataset/run/stage 문맥이 올바르지 않습니다.",
+      "invalid_request": "요청 형식이 올바르지 않습니다.",
+      "query_busy": "Query 처리 용량이 가득 찼습니다. 잠시 후 다시 시도하세요.",
+      "query_timeout": "Query 실행이 시간 초과되었습니다.",
+      "query_execution_failed": "Query 실행 중 오류가 발생했습니다.",
+      "network": "Builder에 연결하지 못했습니다.",
+      "mock_mode": "mock 모드에서는 Query를 실행할 수 없습니다.",
+      "unknown": "알 수 없는 오류가 발생했습니다."
     },
     "questions": {
       "q01": "어떤 공공데이터부터 찾아볼 수 있어?",
@@ -528,25 +606,22 @@
       "q36": "이걸 바탕으로 다음 단계를 추천해줘.",
       "q37": "관련해서 더 확인할 데이터가 있어?"
     },
-    "actions": {
-      "missingParent": "경로 \"{{path}}\"의 상위 필드가 없습니다.",
-      "specNotFound": "run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없습니다. Builder는 spec을 영속화하지 않으므로, 이 run을 Studio에서 실행/편집한 적이 있어야 patch를 적용할 수 있습니다.",
-      "secretsRedacted": "저장된 BuildSpec에서 시크릿 값이 제거되어 있어(로컬 보관 정책) patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 다시 입력하세요.",
-      "pathNotAllowed": "허용되지 않은 경로 \"{{path}}\"입니다. title/description/metadata/sources[].params/sources[].alias/exports[].options만 patch할 수 있습니다.",
-      "credentialPath": "경로 \"{{path}}\"는 credential성 필드로 보여 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 직접 변경하세요.",
-      "redactionMarker": "patch 결과에 redaction marker가 남아 있어 적용할 수 없습니다. 해당 credential을 실제 값으로 다시 입력하세요.",
-      "patchFailed": "patch를 적용할 수 없습니다.",
-      "unresolvedPlaceholder": "해결되지 않은 시크릿 플레이스홀더가 포함되어 있습니다.",
-      "paramsCredential": "생성된 sourceParams에는 credential 값을 포함할 수 없습니다.",
-      "paramsNotObject": "생성된 sourceParams는 JSON 객체여야 합니다.",
-      "describe": {
-        "openProvider": "Provider \"{{provider}}\" 화면 열기",
-        "openBuild": "Build \"{{runId}}\" 상세 열기",
-        "openQuality": "Quality Center에서 \"{{datasetId}}\" 보기",
-        "patchSpec": "run \"{{runId}}\"의 BuildSpec에 {{count}}건 변경 제안",
-        "createDraft": "New Build 초안 만들기: {{title}}",
-        "addReportBlock": "Report 참고 노트로 추가"
-      }
+    "runAnalysis": {
+      "title": "Run 분석",
+      "close": "닫기",
+      "needsKey": "Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.",
+      "openSettings": "Ask KPubData 설정 열기",
+      "preparing": "분석 준비 중…",
+      "thinking": "생각 중…",
+      "cancel": "취소",
+      "askMore": "더 질문하기"
+    },
+    "scrub": {
+      "unknownPlaceholder": "알 수 없는 시크릿 플레이스홀더가 포함되어 있습니다."
+    },
+    "search": {
+      "label": "Ask KPubData 에 자연어로 데이터 물어보기",
+      "placeholder": "Ask KPubData 에 데이터에 대해 물어보세요…"
     },
     "session": {
       "actionRejected": "사용자가 이 action을 거부했습니다.",
@@ -568,67 +643,22 @@
       "patchFailed": "BuildSpec patch 적용에 실패했습니다.",
       "draftSaved": "New Build 초안에 저장했습니다."
     },
-    "runAnalysis": {
-      "title": "Run 분석",
-      "close": "닫기",
-      "needsKey": "Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.",
-      "openSettings": "Ask KPubData 설정 열기",
-      "preparing": "분석 준비 중…",
-      "thinking": "생각 중…",
+    "turn": {
+      "ok": "성공",
+      "error": "실패",
+      "running": "진행 중",
+      "stale": "이전 화면",
+      "collapse": "대화 접기",
+      "demoBadge": "DEMO · mock 데이터(실제 분석 아님)",
+      "staleBadge": "이전 화면 기준",
       "cancel": "취소",
-      "askMore": "더 질문하기"
+      "history": "이전 대화 {{count}}개"
     },
-    "demo": {
-      "disclaimer": "[DEMO] mock 데이터 기반 예시 응답입니다 — 실제 분석 결과가 아닙니다.",
-      "datasetStatus": "데이터셋 \"{{title}}\"({{datasetId}})의 최신 상태는 \"{{status}}\"입니다.",
-      "qualityReason": "[DEMO] Quality Center에서 이 run의 실제 rule 결과를 확인할 수 있습니다.",
-      "demoNote": "[DEMO] \"{{title}}\" 데모 분석 — mock 데이터 기반이며 실제 분석이 아닙니다.",
-      "reportReason": "[DEMO] 이 데모 응답을 참고 노트로 Report에 남길 수 있습니다.",
-      "noDataset": "현재 선택된 Dataset이 없어 일반 안내만 제공합니다. Dataset을 선택하면 더 구체적인 데모를 볼 수 있습니다.",
-      "noQuality": "평가된 Quality 결과가 없습니다.",
-      "qualitySummary": "Quality 결과 요약: {{summary}}.",
-      "sqlNote": "Generated SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Builder 호출 없음).",
-      "stageHint": "위 Stage 선택에서 Silver 또는 Gold를 고르면 Generated SQL·Result Preview 데모도 함께 볼 수 있습니다."
-    },
-    "crossCheck": {
-      "openProviderUnknown": "OPEN_PROVIDER: catalog에 없는 provider \"{{provider}}\"",
-      "openBuildUnknown": "OPEN_BUILD: evidence에 없는 run \"{{runId}}\"",
-      "openQualityUnknownDataset": "OPEN_QUALITY: evidence에 없는 dataset \"{{datasetId}}\"",
-      "openQualityUnknownRun": "OPEN_QUALITY: evidence에 없는 run \"{{runId}}\"",
-      "openQualityMismatch": "OPEN_QUALITY: run \"{{runId}}\"의 dataset \"{{datasetId}}\" 소속을 Builder evidence에서 확인할 수 없음",
-      "patchUnknownRun": "PATCH_BUILDSPEC: evidence에 없는 run \"{{runId}}\"",
-      "patchSpecMissing": "PATCH_BUILDSPEC: run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없어 안전하게 diff를 만들 수 없습니다",
-      "draftUnknownProvider": "CREATE_BUILD_DRAFT: catalog에 없는 provider \"{{provider}}\"",
-      "draftUnknownDataset": "CREATE_BUILD_DRAFT: \"{{provider}}\" catalog에 없는 dataset \"{{dataset}}\"",
-      "stageNone": "없음",
-      "sqlStageMismatch": "현재 화면 stage({{current}})와 제안된 SQL의 stage({{proposed}})가 일치하지 않아 실행 대상에서 제외했습니다.",
-      "sqlSourceDropped": "제안된 source \"{{source}}\"를 evidence에서 확인할 수 없어 제거했습니다. 단일 소스 run이라 Builder가 자동으로 소스를 선택합니다.",
-      "sqlSourceUnknown": "evidence에 없는 source \"{{source}}\"를 참조해 실행 대상에서 제외했습니다."
-    },
-    "drawer": {
-      "collapseLabel": "Ask KPubData 기본 너비로 보기",
-      "expandLabel": "Ask KPubData 확장하기",
-      "collapse": "기본",
-      "expand": "확장",
-      "close": "Ask KPubData 닫기",
-      "label": "Ask KPubData"
-    },
-    "parse": {
-      "empty": "LLM이 빈 응답을 반환했습니다.",
-      "notJson": "LLM 응답을 JSON으로 해석할 수 없습니다.",
-      "shapeMismatch": "LLM 응답 형식이 예상과 다릅니다: {{issues}}"
-    },
-    "search": {
-      "label": "Ask KPubData 에 자연어로 데이터 물어보기",
-      "placeholder": "Ask KPubData 에 데이터에 대해 물어보세요…"
-    },
-    "content": {
-      "approve": "승인"
-    },
-    "page": {
-      "desc": "현재 화면·Dataset·Build·Quality 문맥을 사용해 Evidence 기반 답변과 다음 Action까지 연결합니다.",
-      "eyebrow": "도우미",
-      "title": "Ask KPubData"
+    "turnStatus": {
+      "noKey": "API Key가 설정되어 있지 않습니다. 위에서 먼저 설정하세요.",
+      "cancelled": "요청이 취소되었습니다.",
+      "staleContext": "이 답변은 이전 화면 기준입니다.",
+      "retry": "다시 시도"
     }
   },
   "quality": {
@@ -667,7 +697,7 @@
     "header": {
       "desc": "점수 대신 실제 검증 통과 여부(PASS/WARN/FAIL)와 규칙별 이슈를 보여줍니다."
     },
-    "kubiAnalyze": "이 문제 설명 보기",
+    "assistantAnalyze": "이 문제 설명 보기",
     "selectors": {
       "dataset": "Dataset 선택",
       "run": "Run 선택",
@@ -692,7 +722,7 @@
       "scopeBase": "{{scope}} 기준",
       "schemaSub": "규칙 평가 {{evaluated}}건 · Drift {{drift}}건"
     },
-    "kubiQuestion": "\"{{category}} · {{rule}}\" 규칙이 {{status}}인 이유와 조치 방법을 분석해줘.",
+    "assistantQuestion": "\"{{category}} · {{rule}}\" 규칙이 {{status}}인 이유와 조치 방법을 분석해줘.",
     "perSource": {
       "title": "Source별 검사 현황",
       "desc": "\"전체 소스\" 합계가 일부 source만 검사된 결과를 가리지 않도록 source별로 보여줍니다.",
@@ -882,7 +912,7 @@
       "heading": "전체 작업 흐름",
       "note": "아래는 진행 순서를 보여주는 설명입니다 — 각 단계는 사이드바 메뉴와 화면 안내를 따라 진행하세요."
     },
-    "kubi": {
+    "assistant": {
       "title": "어디서 시작할지 모르겠다면 Ask KPubData",
       "desc": "원하는 데이터나 분석 목적을 입력하면 Ask KPubData 가 시작 방법을 함께 찾아줍니다.",
       "placeholder": "예: 서울 대기오염 데이터로 뭘 할 수 있어?",
@@ -1162,7 +1192,7 @@
     "runFailedTitle": "Run 상태는 failed이지만 선택한 source의 {{stage}} stage는 completed입니다.",
     "runFailedBody": "이 run에 포함된 다른 source({{sources}})에서 stage 실패가 있어 run 전체 상태가 failed로 집계되었습니다. 모순이 아니라 run과 source/stage의 상태 범위가 다릅니다.",
     "unpublished": "미게시",
-    "kubiHint": "Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다",
+    "assistantHint": "Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다",
     "runStatusAll": "Run 상태(전체)",
     "unavailable": "확인 불가",
     "selectedStageStatus": "선택된 Source·Stage 상태",
@@ -1372,7 +1402,7 @@
       "savedTitle": "저장된 Report",
       "savedEmpty": "저장된 Report가 없습니다",
       "savedEmptyDesc": "위에서 dataset/run을 선택해 첫 Report를 만들어보세요.",
-      "kubiPending": "참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
+      "assistantPending": "참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
       "deleteConfirm": "이 Report를 삭제하시겠습니까? 되돌릴 수 없습니다.",
       "titleTemplate": "{{dataset}} · {{run}} 보고서",
       "untitled": "제목 없음",
@@ -1519,7 +1549,7 @@
         "evidenceStatusShort": "evidence 상태"
       },
       "provenance": {
-        "kubi": "[AI 작성 - Ask KPubData]",
+        "assistant": "[AI 작성 - Ask KPubData]",
         "user": "[사용자 작성]"
       },
       "tag": {
@@ -1527,9 +1557,9 @@
         "user": "사용자 작성"
       },
       "detailHeading": "상세 근거",
-      "kubiHeading": "Ask KPubData 참고 분석",
-      "kubiOtherRun": "참고 분석 - 현재 Report와 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
-      "kubiOtherRunHtml": "참고 분석 - 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
+      "assistantHeading": "Ask KPubData 참고 분석",
+      "assistantOtherRun": "참고 분석 - 현재 Report와 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
+      "assistantOtherRunHtml": "참고 분석 - 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
       "reasonLabel": "판단 근거"
     },
     "block": {
@@ -1546,7 +1576,7 @@
         "output": "6. Output"
       },
       "showDetail": "상세 근거 보기",
-      "kubiTitle": "Ask KPubData 분석 · AI 작성",
+      "assistantTitle": "Ask KPubData 분석 · AI 작성",
       "remove": "제거",
       "edit": "편집",
       "delete": "삭제",
@@ -1556,7 +1586,7 @@
       "reason": "판단 근거: {{reason}}",
       "linkedEvidence": "연결된 Evidence: {{refs}}"
     },
-    "kubiPanel": {
+    "assistantPanel": {
       "preset": {
         "comprehensive": {
           "label": "보고서용 AI 분석 생성",
@@ -1627,7 +1657,7 @@
       "save": "저장",
       "untitled": "제목 없음"
     },
-    "kubiInbox": {
+    "assistantInbox": {
       "title": "대기 중인 참고 노트",
       "emptyTitle": "대기 중인 참고 노트가 없습니다",
       "emptyDesc": "Ask KPubData 대화에서 '보고서에 추가' action을 승인하면 여기에 쌓입니다.",
@@ -1653,7 +1683,7 @@
     "contextSidebar": {
       "evidenceFetchedAt": "Evidence 조회 시각",
       "evaluatedRules": "평가된 규칙 수",
-      "kubiBlocks": "Ask KPubData 분석 블록",
+      "assistantBlocks": "Ask KPubData 분석 블록",
       "pendingNotes": "대기 중인 참고 노트",
       "countUnit": "{{count}}개",
       "noteUnit": "{{count}}건",
@@ -1661,7 +1691,7 @@
     },
     "provenance": {
       "builder": "Builder Evidence",
-      "kubi": "AI 작성 · Ask KPubData",
+      "assistant": "AI 작성 · Ask KPubData",
       "user": "사용자 작성"
     }
   },
@@ -1867,38 +1897,6 @@
       "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다."
     }
   },
-  "assistant": {
-    "generate": {
-      "unknownProvider": "sources[{{index}}].provider: 카탈로그에 없는 provider '{{provider}}'입니다.",
-      "unknownDataset": "sources[{{index}}].dataset: provider '{{provider}}'에 없는 dataset '{{dataset}}'입니다.",
-      "yamlParse": "YAML을 파싱하지 못했습니다.",
-      "mockDisabled": "mock 모드에서는 생성 기능이 비활성화됩니다 (ST-A8, #211)",
-      "noValidate": "Builder /validate 연결이 없어 BuildSpec 생성을 중단했습니다.",
-      "noCatalog": "카탈로그를 조회할 수 없어 BuildSpec 생성을 중단했습니다.",
-      "emptyOutput": "빈 출력이 반환되었습니다.",
-      "restoreFailed": "시크릿 복원에 실패했습니다.",
-      "validateRequestFailed": "Builder 검증 요청에 실패했습니다.",
-      "validationFailed": "검증 실패"
-    },
-    "provider": {
-      "auth": "LLM API 인증에 실패했습니다. API Key를 다시 확인하세요.",
-      "rateLimit": "LLM API 요청 한도를 초과했습니다(rate limit). 잠시 후 다시 시도하세요.",
-      "serverError": "LLM 서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도하세요.",
-      "callFailed": "LLM API 호출에 실패했습니다.",
-      "callFailedStatus": "LLM API 호출에 실패했습니다. (status {{status}})",
-      "unsafeBaseUrl": "LLM base URL이 안전하지 않습니다: {{reason}}"
-    },
-    "scrub": {
-      "unknownPlaceholder": "알 수 없는 시크릿 플레이스홀더가 포함되어 있습니다."
-    },
-    "baseUrl": {
-      "invalid": "올바른 URL 형식이 아닙니다.",
-      "httpsOnly": "API Key 노출을 막기 위해 HTTPS 주소만 허용됩니다."
-    },
-    "config": {
-      "persistWarning": "LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있습니다. 신뢰하지 않는 확장 프로그램이 있다면 저장하지 마세요."
-    }
-  },
   "status": {
     "new": "새 초안",
     "draft": "초안",
@@ -1931,7 +1929,7 @@
       "AddData": "Add Data",
       "DatasetCatalog": "Dataset Catalog",
       "Discover": "Discover",
-      "Kubi": "Ask KPubData",
+      "Assistant": "Ask KPubData",
       "Monitoring": "Monitoring",
       "Provider": "Provider",
       "Quality": "Quality",
@@ -1971,7 +1969,7 @@
         "title": "품질 결과 확인",
         "copy": "최근 Quality 경고를 확인하고 필요한 조치를 이어갈 수 있습니다."
       },
-      "kubi-helper": {
+      "assistant-helper": {
         "title": "막히면 Ask KPubData",
         "copy": "Ask KPubData 는 현재 화면의 Dataset·Run·Stage와 Builder Evidence를 바탕으로 분석을 돕습니다."
       },

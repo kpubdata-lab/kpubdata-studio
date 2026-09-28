@@ -18,7 +18,7 @@ import {
 } from "@/features/datasets/model";
 import { QualityBadge } from "@/features/quality/QualityBadge";
 import { qualityResultsForSource, summarizeQuality } from "@/features/quality/model";
-import { KubiContent } from "@/features/kubi/KubiContent";
+import { AssistantContent } from "@/features/assistant/AssistantContent";
 import type {
   BuildQualityResponse,
   DatasetDetailResponse,
@@ -161,12 +161,12 @@ export function DatasetDetailPage() {
     setSearchParams(next);
   }
 
-  // AI tab context is determined by Kubi (KubiContent) using only route's ?run=&source=&stage=
+  // AI tab context is determined by Assistant (AssistantContent) using only route's ?run=&source=&stage=
   // (no-guess principle, context.ts reference) — so we must explicitly reflect selectedRunId/selectedSource/
-  // selectedStage computed in this screen to the URL. Otherwise, on first AI tab open, Kubi RUN context bar
+  // selectedStage computed in this screen to the URL. Otherwise, on first AI tab open, Assistant RUN context bar
   // shows the latest run it knows about as "—" or Generated SQL/Result Preview appears empty (UI audit #5).
   // Must include source to prevent stage evidence from being fail-closed in multi-source runs (#319 follow-up).
-  // Both tab bar (button onClick) and Overview tab's Kubi discoverability CTA share this helper to avoid
+  // Both tab bar (button onClick) and Overview tab's Assistant discoverability CTA share this helper to avoid
   // implementing the same rule twice.
   function goToTab(tab: DetailTab) {
     updateContext(
@@ -183,8 +183,8 @@ export function DatasetDetailPage() {
   const selectedQualityResults = qualityResultsForSource(qualityState.data, selectedSource);
   const selectedDrift = qualityState.data?.schema_drift[selectedSource] ?? [];
 
-  // Entering/refreshing directly on AI tab creates same canonical Kubi context as tab click path (goToTab("ai")).
-  // Kubi (KubiContent) reads context only from route's ?run=&source=&stage= (context.ts), so if this screen
+  // Entering/refreshing directly on AI tab creates same canonical Assistant context as tab click path (goToTab("ai")).
+  // Assistant (AssistantContent) reads context only from route's ?run=&source=&stage= (context.ts), so if this screen
   // doesn't reflect confirmed selections back to URL, AI tab receives only dataset-level evidence (#319 follow-up,
   // same pattern as QualityPage). Update only via replace, never touch already-valid values or invalid state
   // to avoid creating update loops.
@@ -316,7 +316,7 @@ export function DatasetDetailPage() {
         {selectedTab === "preview" ? <PreviewTab state={stageDetailState} qualityState={qualityState} qualityStatus={validation} qualityResults={selectedQualityResults} onOpenQuality={() => updateContext({ tab: "quality" })} /> : null}
         {selectedTab === "quality" ? <QualityTab state={qualityState} status={validation} results={selectedQualityResults} drift={selectedDrift} datasetId={datasetId} runId={selectedRunId} source={selectedSource} stage={selectedStage} /> : null}
         {selectedTab === "builds" ? <BuildsTab runs={core.runs} selectedRunId={selectedRunId} /> : null}
-        {selectedTab === "ai" ? <KubiContent compact /> : null}
+        {selectedTab === "ai" ? <AssistantContent compact /> : null}
       </section>
     </main>
   );
@@ -356,7 +356,7 @@ function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selecte
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Data Passport</h3>
         <button type="button" className="text-xs font-medium text-accent-subtle-foreground underline" onClick={() => onSelectTab("ai")}>
-          {t("datasetDetail.kubiHint")}
+          {t("datasetDetail.assistantHint")}
         </button>
       </div>
       <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

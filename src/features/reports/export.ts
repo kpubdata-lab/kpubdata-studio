@@ -5,7 +5,7 @@
  * PDF/DOCX not created or advertised — Browser Print opens browser print dialog, not "Generate PDF".
  *
  * Exported files always include title/dataset/base run/createdAt/evidenceFetchedAt/provenance
- * distinction/stale-orphan warning. Kubi/user content only passes through safe renderer in
+ * distinction/stale-orphan warning. Assistant/user content only passes through safe renderer in
  * `markdown.ts` to HTML — raw source never inserted.
  */
 import { i18n } from "@/shared/i18n";
@@ -51,7 +51,7 @@ function metadataLines(report: ReportDraft, staleness: EvidenceRunStatus | null)
 
 function provenanceLabel(kind: "BUILDER_EVIDENCE" | "KUBI_INTERPRETATION" | "USER_CONTENT"): string {
   if (kind === "BUILDER_EVIDENCE") return "[Builder Evidence]";
-  return kind === "KUBI_INTERPRETATION" ? t("provenance.kubi") : t("provenance.user");
+  return kind === "KUBI_INTERPRETATION" ? t("provenance.assistant") : t("provenance.user");
 }
 
 /** Create Markdown file content. */
@@ -72,10 +72,10 @@ export function generateMarkdownExport(report: ReportDraft, staleness: EvidenceR
       }
       parts.push(block.markdown);
     } else if (block.provenance === "KUBI_INTERPRETATION") {
-      parts.push(`## ${t("kubiHeading")} ${provenanceLabel("KUBI_INTERPRETATION")}`);
+      parts.push(`## ${t("assistantHeading")} ${provenanceLabel("KUBI_INTERPRETATION")}`);
       if (!block.isSameContext) {
         parts.push(
-          `> ${t("kubiOtherRun", { dataset: block.sourceContext.datasetId ?? "N/A", run: block.sourceContext.runId ?? "N/A" })}`,
+          `> ${t("assistantOtherRun", { dataset: block.sourceContext.datasetId ?? "N/A", run: block.sourceContext.runId ?? "N/A" })}`,
         );
       }
       parts.push(
@@ -101,7 +101,7 @@ const HTML_DOC_STYLE = `
   .meta { background: #f6f7f9; border: 1px solid #e2e4e8; border-radius: 8px; padding: 1rem; font-size: .85rem; }
   .tag { display: inline-block; font-size: .7rem; font-weight: 600; padding: .1rem .5rem; border-radius: 999px; margin-left: .4rem; }
   .tag-evidence { background: #e6f4ea; color: #1e6b3b; }
-  .tag-kubi { background: #eef0ff; color: #3730a3; }
+  .tag-assistant { background: #eef0ff; color: #3730a3; }
   .tag-user { background: #fff4e5; color: #92400e; }
   .warn { color: #92400e; background: #fff4e5; border: 1px solid #f3d9a8; border-radius: 6px; padding: .5rem .75rem; font-size: .85rem; }
 `;
@@ -126,9 +126,9 @@ export function generateHtmlExport(report: ReportDraft, staleness: EvidenceRunSt
       }
       if (block.provenance === "KUBI_INTERPRETATION") {
         const contextNote = !block.isSameContext
-          ? `<p class="warn">${escapeHtml(t("kubiOtherRunHtml", { dataset: block.sourceContext.datasetId ?? "N/A", run: block.sourceContext.runId ?? "N/A" }))}</p>`
+          ? `<p class="warn">${escapeHtml(t("assistantOtherRunHtml", { dataset: block.sourceContext.datasetId ?? "N/A", run: block.sourceContext.runId ?? "N/A" }))}</p>`
           : "";
-        return `<h2>${escapeHtml(t("kubiHeading"))}<span class="tag tag-kubi">${escapeHtml(t("tag.ai"))}</span></h2>${contextNote}<p><small>${escapeHtml(t("meta.createdAt"))}: ${escapeHtml(block.generatedAt)}${block.provider ? ` / provider: ${escapeHtml(block.provider)}` : ""}${block.model ? ` / model: ${escapeHtml(block.model)}` : ""}</small></p>${renderMarkdownToHtml(block.note)}<p><em>${escapeHtml(t("reasonLabel"))}: ${escapeHtml(block.reason)}</em></p>`;
+        return `<h2>${escapeHtml(t("assistantHeading"))}<span class="tag tag-assistant">${escapeHtml(t("tag.ai"))}</span></h2>${contextNote}<p><small>${escapeHtml(t("meta.createdAt"))}: ${escapeHtml(block.generatedAt)}${block.provider ? ` / provider: ${escapeHtml(block.provider)}` : ""}${block.model ? ` / model: ${escapeHtml(block.model)}` : ""}</small></p>${renderMarkdownToHtml(block.note)}<p><em>${escapeHtml(t("reasonLabel"))}: ${escapeHtml(block.reason)}</em></p>`;
       }
       return `<h2>${escapeHtml(block.heading)}<span class="tag tag-user">${escapeHtml(t("tag.user"))}</span></h2>${renderMarkdownToHtml(block.markdown)}`;
     })

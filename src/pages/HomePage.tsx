@@ -4,7 +4,7 @@
  * Issue #248: Implement Home with new user and existing user state branching.
  *
  * New user detection is based on dataset/build existence:
- * - New user: Welcome message, Kubi natural language hero (reuses topbar KubiSearchInput seed flow),
+ * - New user: Welcome message, Assistant natural language hero (reuses topbar AssistantSearchInput seed flow),
  *   public data search, direct data import
  * - Existing user: Actual KPIs (DATASETS, BUILD SUCCESS, VALIDATION WARN, RUNNING), recent datasets,
  *   recent Build stage summarization, quality warnings/failed Builds
@@ -26,8 +26,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAssistConfig } from "@/features/assistant/config";
 import { listBuilds } from "@/features/runs/api";
-import { getSuggestedQuestions } from "@/features/kubi/suggestedQuestions";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { getSuggestedQuestions } from "@/features/assistant/suggestedQuestions";
+import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { FirstRunTour, resetFirstRunTour } from "@/features/onboarding/FirstRunTour";
 import { useAuthStore } from "@/features/auth/store";
 import { builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -342,7 +342,7 @@ function EmptyWorkspaceHome({ userId }: { userId: string | null }) {
           </LinkButton>
         </Card>
       </section>
-      <div data-tour="kubi-helper"><KubiHero /></div>
+      <div data-tour="assistant-helper"><AssistantHero /></div>
       {userId ? <FirstRunTour userId={userId} /> : null}
     </>
   );
@@ -414,22 +414,22 @@ function WorkflowStrip() {
 }
 
 /**
- * Home's Kubi natural language hero (#Phase2 UI polish, #S-kubi-suggest).
+ * Home's Assistant natural language hero (#Phase2 UI polish, #S-assistant-suggest).
  *
- * Full Kubi task starts at `/kubi` page (not drawer). Reuse only existing seed mechanism
- * (`useKubiStore().seedQuestion`), don't create new assistant system — when `/kubi` mounts,
- * `useKubiSession` consumes pendingSeed to generate answer. Don't put question in URL query
+ * Full Assistant task starts at `/kubi` page (not drawer). Reuse only existing seed mechanism
+ * (`useAssistantStore().seedQuestion`), don't create new assistant system — when `/kubi` mounts,
+ * `useAssistantSession` consumes pendingSeed to generate answer. Don't put question in URL query
  * (pass via seed store only).
  *
- * `ask()` (useKubiSession.ts) runs immediately on seed receive and creates `no_key` error turn
+ * `ask()` (useAssistantSession.ts) runs immediately on seed receive and creates `no_key` error turn
  * if API Key not configured. To avoid unwanted error turn, only keep seed when `isConfigured`,
  * otherwise navigate to `/kubi` without seed and show API Key configuration guide on that screen.
  */
-function KubiHero() {
+function AssistantHero() {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const seedQuestion = useKubiStore((state) => state.seedQuestion);
+  const seedQuestion = useAssistantStore((state) => state.seedQuestion);
   const { isConfigured } = useAssistConfig();
   const startQuestions = getSuggestedQuestions({ context: { page: "home" }, turns: [] });
 
@@ -447,23 +447,23 @@ function KubiHero() {
 
   return (
     <Card className="p-6">
-      <h2 className="text-base font-semibold tracking-tight">{t("home.kubi.title")}</h2>
+      <h2 className="text-base font-semibold tracking-tight">{t("home.assistant.title")}</h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        {t("home.kubi.desc")}
+        {t("home.assistant.desc")}
       </p>
       <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleSubmit}>
-        <label className="sr-only" htmlFor="home-kubi-hero">
-          {t("home.kubi.try")}
+        <label className="sr-only" htmlFor="home-assistant-hero">
+          {t("home.assistant.try")}
         </label>
         <input
           className="h-11 flex-1 rounded-lg border border-input bg-card px-4 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          id="home-kubi-hero"
+          id="home-assistant-hero"
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={t("home.kubi.placeholder")}
+          placeholder={t("home.assistant.placeholder")}
           type="search"
           value={query}
         />
-        <Button type="submit">{t("home.kubi.cta")}</Button>
+        <Button type="submit">{t("home.assistant.cta")}</Button>
       </form>
       <div className="mt-4 flex flex-wrap gap-1.5">
         {startQuestions.map((question) => (
@@ -479,7 +479,7 @@ function KubiHero() {
       </div>
       {!isConfigured ? (
         <p className="mt-3 text-xs text-muted-foreground">
-          {t("home.kubi.noKey")}
+          {t("home.assistant.noKey")}
         </p>
       ) : null}
     </Card>

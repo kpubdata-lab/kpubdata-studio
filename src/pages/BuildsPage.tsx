@@ -79,7 +79,7 @@ export function BuildsPage() {
   const clearSelection = useCallback(() => {
     const next = new URLSearchParams(searchParams);
     next.delete("run");
-    // dataset/stage are Kubi context values derived from selected Run (#255 §2) — clearing
+    // dataset/stage are Assistant context values derived from selected Run (#255 §2) — clearing
     // run selection also clears them to prevent previous run context leaking to next screen.
     next.delete("dataset");
     next.delete("stage");
@@ -138,8 +138,8 @@ export function BuildsPage() {
   const eventsPollingEnabled = live.kind === "job" && !isTerminalBuilderStatus(live.job.status);
   const eventsState = useRunEvents(selectedRunId, eventsPollingEnabled);
 
-  // Kubi Run context (#256) reuses the `?run=&dataset=&stage=` query convention read by existing
-  // route resolver (features/kubi/context.ts) without a new context store (same as Quality/Dataset Detail).
+  // Assistant Run context (#256) reuses the `?run=&dataset=&stage=` query convention read by existing
+  // route resolver (features/assistant/context.ts) without a new context store (same as Quality/Dataset Detail).
   // Only reflect values actually confirmed in this screen — don't parse failure messages to guess stage;
   // only treat failedStage as safe context when exactly one source fails (#255 §2).
   useEffect(() => {

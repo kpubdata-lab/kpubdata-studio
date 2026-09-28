@@ -37,7 +37,7 @@ const CONTENT_NOT_UI = [
   /^features\/add-data\/api\.ts$/,
   /^features\/discover\/api\.ts$/,
   /^features\/preview\/api\/index\.ts$/,
-  /^features\/kubi\/(demo|prompt)\.ts$/,
+  /^features\/assistant\/(demo|prompt)\.ts$/,
   /^features\/assistant\/(columnMeaning|AssistantChat)\.tsx?$/,
   /^features\/build-spec\/templates\.ts$/,
   /^pages\/ProviderPage\.tsx$/,

@@ -1,7 +1,7 @@
 /**
  * Minimal safe Markdown parser/renderer (#258).
  *
- * Kubi responses and user input are untrusted (#258 §13). The repo has no
+ * Assistant responses and user input are untrusted (#258 §13). The repo has no
  * markdown/HTML-sanitize library (package.json checked), and the issue
  * guidance says to reuse existing code before adding large dependencies —
  * so a tiny subset parser (part of GFM) is hand-rolled instead; unsupported

@@ -34,7 +34,7 @@ function renderSettings() {
       <Routes>
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/provider" element={<div>PROVIDER_PAGE</div>} />
-        <Route path="/kubi" element={<div>KUBI_PAGE</div>} />
+        <Route path="/kubi" element={<div>ASSISTANT_PAGE</div>} />
         <Route path="/login" element={<div>LOGIN_PAGE</div>} />
       </Routes>
     </MemoryRouter>,
@@ -59,7 +59,7 @@ describe("SettingsPage 통합 (#301)", () => {
 
     expect(screen.getByTestId("settings-account")).toBeInTheDocument();
     expect(screen.getByTestId("settings-provider-credentials")).toBeInTheDocument();
-    expect(screen.getByTestId("settings-kubi-byok")).toBeInTheDocument();
+    expect(screen.getByTestId("settings-assistant-byok")).toBeInTheDocument();
     expect(
       screen
         .getAllByText("데이터 Provider 자격 증명", { exact: false })

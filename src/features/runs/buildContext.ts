@@ -22,7 +22,7 @@ export function buildStatusFilters(t: (key: string) => string): { value: RunStat
 }
 
 
-/** Normalize Builds Kubi context query using only loaded surfaces from Builder response. */
+/** Normalize Builds Assistant context query using only loaded surfaces from Builder response. */
 export function normalizeBuildContextSearch(
   searchParams: URLSearchParams,
   specState: AsyncState<BuildSpecSnapshotResponse>,

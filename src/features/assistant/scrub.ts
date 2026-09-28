@@ -26,7 +26,7 @@ const MIN_LENGTH_FOR_ENTROPY = 24;
  * Callers not passing this arg skip exact-value exemption (backward compat).
  *
  * Existing consumers (paramsRedaction/urlRedaction/savedSpecs/general assistant) not passing this arg
- * maintain identical scrub behavior to main. Only Kubi path passes actual Builder/evidence-generated run id set,
+ * maintain identical scrub behavior to main. Only Assistant path passes actual Builder/evidence-generated run id set,
  * preventing canonical run id from marked [REDACTED].
  *
  * Important: exemption applies only to "exact strings confirmed as actual resource identity this execution",
@@ -113,7 +113,7 @@ function requestId(): string {
 export interface SecretScrubberOptions {
   /**
    * Exact value set this scrubber exempts from generic entropy check.
-   * secret-named field / explicitly trusted marker / Kubi-verified run id.
+   * secret-named field / explicitly trusted marker / Assistant-verified run id.
    * Does not affect secret-named field / explicit credential assignment scrubbing.
    * If not passed, empty set — same behavior as main.
    */
