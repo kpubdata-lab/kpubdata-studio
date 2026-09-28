@@ -1,6 +1,12 @@
 # 변경 이력
 
-## v0.4
+## [Unreleased]
+
+### Changed
+
+- Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004); nothing a user sees in Studio changes.
+
+## v0.4.0 — 2026-09-28
 
 ### 추가됨
 - **인증 S1-S10**: apiFetch 인증 주입(#186), Google GIS 로그인(#187), 토큰 보관(#188), 만료 처리(#189), 로그인 게이트(#190), Settings 상태(#191), 계약 동기화(#192), 에러 메시지(#193), 오리진 정합(#194), 테스트(#195)

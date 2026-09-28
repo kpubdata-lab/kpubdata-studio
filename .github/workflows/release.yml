@@ -82,6 +82,14 @@ jobs:
         with:
           version: ${{ steps.upstream.outputs.version }}
 
+      # Studio's version follows Builder's, but its CHANGELOG is its own. A release that
+      # changed nothing here still needs a line saying so under `[Unreleased]`.
+      - name: Date the CHANGELOG section
+        uses: yeongseon/kpubdata/.github/actions/release-notes@main
+        with:
+          command: promote
+          version: ${{ steps.upstream.outputs.version }}
+
       - name: Show what changed
         run: git --no-pager diff --stat
 
@@ -167,6 +175,16 @@ jobs:
           fi
           echo "${TAG} is free"
 
+      # The notes are the CHANGELOG section, not a list of pull request titles. Taken
+      # before the gates so a missing or empty section stops the release while there
+      # is still nothing to clean up.
+      - name: Release notes from the CHANGELOG
+        id: notes
+        uses: yeongseon/kpubdata/.github/actions/release-notes@main
+        with:
+          command: extract
+          version: ${{ steps.tag.outputs.tag }}
+
       # The version this build talks to, stated rather than assumed. #411 asks the
       # release to say which Builder API it supports, and the contract version is the
       # thing that answers it — not the package version, which says what is installed.
@@ -217,7 +235,8 @@ jobs:
             "Studio and Builder ship as one application at one version (kpubdata ADR 0004)," \
             "so this release pairs with \`kpubdata-builder ${TAG}\`." \
             > /tmp/notes.md
-          gh release create "${TAG}" --title "${TAG}" --generate-notes \
+          { echo; cat "${{ steps.notes.outputs.file }}"; } >> /tmp/notes.md
+          gh release create "${TAG}" --title "${TAG}" \
             --notes-file /tmp/notes.md \
             --target "${{ steps.commit.outputs.sha }}" \
             "kpubdata-studio-${TAG}.tar.gz"
