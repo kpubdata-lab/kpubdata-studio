@@ -60,6 +60,12 @@ jobs:
       - name: i18n extraction gate
         run: npm run i18n:check
 
+      # A key that no locale file has renders as the key itself, so the user reads
+      # "layout.homeLink" where a label should be — nothing else in the build fails
+      # on it (#448). Runs before the suite: it takes a second and names the file.
+      - name: i18n key gate (#448)
+        run: npm run i18n:keys
+
       # ADR 0003 (kpubdata) puts comments in English. The debt is at ZERO
       # (#427): any Korean comment now fails the build outright.
       - name: Korean comment gate (#427)

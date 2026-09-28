@@ -182,11 +182,11 @@ export function ReviewBuildStep({
           <p className="text-sm font-semibold">Build plan</p>
           <dl className="divide-y divide-border text-sm">
             {[
-              ["Source / Provider", sourceSummary(draft)],
-              ["Dataset", draft.title || draft.datasetId || "—"],
-              ["Query / Config", querySummary(draft)],
+              [t("addData.review.planSource"), sourceSummary(draft)],
+              [t("addData.review.planDataset"), draft.title || draft.datasetId || "—"],
+              [t("addData.review.planQuery"), querySummary(draft)],
               [
-                "Preview",
+                t("addData.review.planPreview"),
                 previewSources.length > 0
                   ? previewSources.length > 1
                     ? t("addData.review.planPreviewMulti", {

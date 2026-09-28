@@ -352,7 +352,7 @@ export function Layout() {
           <div className="flex items-start justify-between gap-3 pb-5">
             <div>
               <div className="flex items-center gap-2">
-                <Link aria-label={t("layout.homeLink")} className="flex min-w-0 items-center" to="/">
+                <Link aria-label={t("layout.studioHome")} className="flex min-w-0 items-center" to="/">
                   <img
                     alt="KPubData Studio"
                     className={["w-[156px] max-w-full", isDesktopSidebarCollapsed ? "lg:hidden" : ""].join(" ")}
@@ -447,7 +447,7 @@ export function Layout() {
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">{t("layout.theme")}</p>
               <select
-                aria-label={t("layout.themeSelect")}
+                aria-label={t("layout.selectTheme")}
                 className="rounded-lg border border-sidebar-border bg-sidebar px-2.5 py-1.5 text-sm text-sidebar-foreground"
                 onChange={(event) => setTheme(event.target.value as "system" | "light" | "dark")}
                 value={theme}
@@ -514,9 +514,9 @@ export function Layout() {
                  {/* Avatar entry point — will expand to actual profile/logout menu in #263
                       (#247). */}
                 <Link
-                  aria-label={email ? t("layout.accountSettings", { email }) : t("layout.signInNeededAria")}
+                  aria-label={email ? t("layout.goToSettingsFor", { email }) : t("layout.loginRequiredSettings")}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-sm font-semibold text-foreground hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  title={email ?? t("layout.signInNeeded")}
+                  title={email ?? t("layout.loginRequired")}
                   to="/settings"
                 >
                   {avatarInitial(email)}
