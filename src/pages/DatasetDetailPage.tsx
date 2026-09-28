@@ -1,7 +1,6 @@
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   getBuildQuality,
@@ -28,7 +27,6 @@ import type {
   StageDetailResponse,
 } from "@/shared/lib/builderApi";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton, StageLegend } from "@/shared/ui";
-import { i18n } from "@/shared/i18n";
 
 type DetailTab = "overview" | "schema" | "preview" | "quality" | "builds" | "ai";
 

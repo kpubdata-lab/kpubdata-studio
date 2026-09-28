@@ -1,7 +1,6 @@
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getBuild } from "@/features/runs/api/getBuild";
 import {
@@ -16,7 +15,6 @@ import { usePublishJob } from "@/features/publish/usePublishJob";
 import { formatDateTime } from "@/features/datasets/model";
 import type { BuildRunStatus } from "@/shared/lib/types";
 import { Button, Card, PageHeader, Skeleton, StatusBadge } from "@/shared/ui";
-import { i18n } from "@/shared/i18n";
 
 type ReadinessState =
   | { status: "loading" }

@@ -8,7 +8,6 @@
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { listDatasets } from "@/features/datasets/api";
 import { listBuilds } from "@/features/runs/api";
@@ -26,7 +25,6 @@ import type { SavedBuildSpecSummary, SavedSpecValidationStatus } from "@/feature
 import type { DatasetSummary } from "@/shared/lib/builderApi";
 import type { BuildListItem } from "@/shared/lib/types";
 import { Button, Card, EmptyState, ErrorState, PageHeader } from "@/shared/ui";
-import { i18n } from "@/shared/i18n";
 
 interface AsyncState<T> {
   status: "loading" | "loaded" | "error";

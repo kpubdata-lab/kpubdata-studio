@@ -16,7 +16,6 @@
  */
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { buildDeterministicSections } from "@/features/reports/deterministicSections";
 import { buildEvidenceRefs, fetchReportEvidence } from "@/features/reports/evidence";
