@@ -44,7 +44,7 @@
 - ✅ Provider Connection/Credential(#259, #300) + Settings 통합(#301)
 - ✅ Dataset Detail publish 흐름(#270, #296) — 계약 1.17.0 pin
 - ✅ 사용자별 로컬 저장 격리(#293), Evidence 기반 Reports(#258)
-- ✅ Playwright E2E 34개(route smoke·happy path·실패 빌드·Kubi·viewport/a11y, #268)
+- ✅ Playwright E2E 34개(route smoke·happy path·실패 빌드·Assistant·viewport/a11y, #268)
 
 ## v1.0 기준
 

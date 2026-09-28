@@ -5,7 +5,7 @@
  * 1. Account — login status/logout (real integration) or mock guidance
  * 2. Connection — Builder API endpoint and contract version compatibility check (#29)
  * 3. Data Provider credentials — GET /providers summary (boolean only, no plaintext) + /provider CTA
- * 4. Kubi BYOK — LLM key is completely separate policy/area from Provider credential (#256)
+ * 4. Assistant BYOK — LLM key is completely separate policy/area from Provider credential (#256)
  *
  * Do not show unimplemented team/project backend as if it exists (#292 regression prevention).
  */
@@ -149,7 +149,7 @@ export function SettingsPage() {
 
       <ProviderCredentialSection realEnabled={realEnabled} state={providers} />
 
-      <KubiByokSection />
+      <AssistantByokSection />
 
       <Card variant="dashed">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -287,15 +287,15 @@ function ProviderConfiguredBadge({ provider, configured }: { provider: string; c
   );
 }
 
-function KubiByokSection() {
-  // Kubi LLM key follows different BYOK policy than Provider credential (#256/#301 split):
+function AssistantByokSection() {
+  // Assistant LLM key follows different BYOK policy than Provider credential (#256/#301 split):
   // default memory-only, browser persistence is explicit opt-in + warning.
   const { t } = useTranslation();
   const { isConfigured, model, persistToStorage, resolvedBaseUrl, isDefaultBaseUrl } =
     useAssistConfig();
 
   return (
-    <Card data-testid="settings-kubi-byok">
+    <Card data-testid="settings-assistant-byok">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("settings.byok.title")}

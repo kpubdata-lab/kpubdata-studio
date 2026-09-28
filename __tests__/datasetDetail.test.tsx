@@ -20,7 +20,7 @@ function renderDetail(initialEntry = "/datasets/air-quality") {
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
-  act(() => useUIStore.setState({ isKubiDrawerOpen: false }));
+  act(() => useUIStore.setState({ isAssistantDrawerOpen: false }));
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -202,7 +202,7 @@ describe("Dataset Detail P0 (#253)", () => {
     // 프로토타입처럼 AI 탭 자체가 Ask KPubData 전체 화면(context bar/질문/답변)이어야 한다 — drawer를 대신 여는 launcher card가 아니다.
     expect(within(panel).getByText("air-quality")).toBeInTheDocument();
     expect(within(panel).getByText(/BYOK/)).toBeInTheDocument();
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
+    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
   });
 
   it("AI tab demo (no API key, mock mode): Generated SQL and Result Preview render deterministically, clearly labeled as demo (#256 review)", async () => {

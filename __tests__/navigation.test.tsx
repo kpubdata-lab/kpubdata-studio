@@ -20,7 +20,7 @@ describe("grouped sidebar navigation (#247)", () => {
         theme: "light",
         isMobileSidebarOpen: false,
         isDesktopSidebarCollapsed: false,
-        isKubiDrawerOpen: false,
+        isAssistantDrawerOpen: false,
       }),
     );
   });

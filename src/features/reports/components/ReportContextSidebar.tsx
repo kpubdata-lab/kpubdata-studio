@@ -28,16 +28,16 @@ export function ReportContextSidebar({
   stalenessLoading,
   onRecheck,
   onCreateFromLatest,
-  kubiBlockCount,
-  pendingKubiNoteCount,
+  assistantBlockCount,
+  pendingAssistantNoteCount,
 }: {
   report: ReportDraft;
   staleness: EvidenceStalenessResult | null;
   stalenessLoading: boolean;
   onRecheck: () => void;
   onCreateFromLatest?: () => void;
-  kubiBlockCount: number;
-  pendingKubiNoteCount: number;
+  assistantBlockCount: number;
+  pendingAssistantNoteCount: number;
 }) {
   const { t } = useTranslation();
   const qualityBlock = report.blocks.find(
@@ -83,12 +83,12 @@ export function ReportContextSidebar({
       ) : null}
 
       <Card>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kubi</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assistant</p>
         <div className="mt-2 divide-y divide-border">
-          <Row label={t("reports.contextSidebar.kubiBlocks")} value={t("reports.contextSidebar.countUnit", { count: kubiBlockCount })} />
+          <Row label={t("reports.contextSidebar.assistantBlocks")} value={t("reports.contextSidebar.countUnit", { count: assistantBlockCount })} />
           <Row
             label={t("reports.contextSidebar.pendingNotes")}
-            value={pendingKubiNoteCount > 0 ? t("reports.contextSidebar.noteUnit", { count: pendingKubiNoteCount }) : t("reports.contextSidebar.none")}
+            value={pendingAssistantNoteCount > 0 ? t("reports.contextSidebar.noteUnit", { count: pendingAssistantNoteCount }) : t("reports.contextSidebar.none")}
           />
         </div>
       </Card>

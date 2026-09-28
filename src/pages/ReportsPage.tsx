@@ -10,7 +10,7 @@ import { i18n } from "@/shared/i18n";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listDatasetRuns, listDatasets } from "@/features/datasets/api";
-import { listKubiReportNotes } from "@/features/kubi/reportInbox";
+import { listAssistantReportNotes } from "@/features/assistant/reportInbox";
 import { buildDeterministicSections } from "@/features/reports/deterministicSections";
 import { buildEvidenceRefs, fetchReportEvidence } from "@/features/reports/evidence";
 import {
@@ -52,7 +52,7 @@ export function ReportsPage() {
 
   function refresh() {
     setSummaries(listReportSummaries());
-    setPendingNoteCount(listKubiReportNotes().length);
+    setPendingNoteCount(listAssistantReportNotes().length);
   }
 
   useEffect(() => {

@@ -86,14 +86,14 @@ export function BlockView({
   reportEvidenceRefs,
   onEditUserContent,
   onDeleteUserContent,
-  onRemoveKubiBlock,
+  onRemoveAssistantBlock,
 }: {
   block: ReportBlock;
   /** KUBI_INTERPRETATION block passed only when its dataset/run context matches this Report (#258 §7). */
   reportEvidenceRefs?: ReportEvidenceRef[];
   onEditUserContent?: (id: string) => void;
   onDeleteUserContent?: (id: string) => void;
-  onRemoveKubiBlock?: (id: string) => void;
+  onRemoveAssistantBlock?: (id: string) => void;
 }) {
   const { t } = useTranslation();
   if (block.provenance === "BUILDER_EVIDENCE") {
@@ -102,15 +102,15 @@ export function BlockView({
 
   if (block.provenance === "KUBI_INTERPRETATION") {
     return (
-      <Card className="space-y-2 border-indigo-200 dark:border-indigo-900/60" data-testid="block-kubi">
+      <Card className="space-y-2 border-indigo-200 dark:border-indigo-900/60" data-testid="block-assistant">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">{t("reports.block.kubiTitle")}</h3>
+          <h3 className="text-sm font-semibold">{t("reports.block.assistantTitle")}</h3>
           <div className="flex items-center gap-2">
             <ProvenanceBadge provenance="KUBI_INTERPRETATION" />
-            {onRemoveKubiBlock ? (
+            {onRemoveAssistantBlock ? (
               <button
                 type="button"
-                onClick={() => onRemoveKubiBlock(block.id)}
+                onClick={() => onRemoveAssistantBlock(block.id)}
                 className="text-xs text-muted-foreground underline hover:text-foreground"
               >
                 {t("reports.block.remove")}

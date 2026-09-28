@@ -3,7 +3,7 @@
  *
  * Explores Builder's original provider/dataset catalog (`GET /catalog`) with exact search and filters,
  * then passes selected items to Add Data Workbench (`/add`, #250). Distinct from:
- * - Natural language search (Kubi, #256)
+ * - Natural language search (Assistant, #256)
  * - Already-built dataset list (Dataset Catalog, `/datasets`, #253)
  * Does not mix `/catalog` (original) and `/datasets` (build results).
  */

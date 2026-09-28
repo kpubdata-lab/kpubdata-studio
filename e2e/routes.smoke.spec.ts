@@ -43,7 +43,7 @@ test("Settings에 Provider 자격 증명과 Ask KPubData BYOK가 분리된 영�
 
   await page.goto("/settings");
   await expect(page.getByTestId("settings-provider-credentials")).toBeVisible();
-  await expect(page.getByTestId("settings-kubi-byok")).toBeVisible();
+  await expect(page.getByTestId("settings-assistant-byok")).toBeVisible();
 
   await expectNoPageErrors(errors);
 });

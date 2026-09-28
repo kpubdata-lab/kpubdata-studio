@@ -10,7 +10,7 @@ import { checkLlmBaseUrl, redactApiKey, DEFAULT_LLM_BASE_URL } from "./baseUrl";
 
 export interface AssistExchangeOptions {
   /**
-   * Exact value set exempt from generic entropy false-positives only (currently Kubi-verified run ids from evidence).
+   * Exact value set exempt from generic entropy false-positives only (currently Assistant-verified run ids from evidence).
    * Passed through to LLM egress scrubber (prepareMessages → scrubText/scrub) so canonical run id
    * not marked as [REDACTED]. If not passed, same behavior as before.
    */

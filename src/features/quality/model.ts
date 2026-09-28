@@ -138,7 +138,7 @@ export function summarizeChecksPassed(results: QualityCheckResult[]): ChecksPass
  * E2E). Per-issue "Explain this issue" button already has issue context, so this
  * function is for header button only.
  */
-export function qualityKubiSeedQuestion(summary: ChecksPassedSummary): string {
+export function qualityAssistantSeedQuestion(summary: ChecksPassedSummary): string {
   if (summary.evaluated === 0) {
     return i18n.t("quality.model.seed.none");
   }

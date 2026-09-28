@@ -28,13 +28,13 @@ import {
   isMissingCategory,
   isSchemaCategory,
   overallQualityState,
-  qualityKubiSeedQuestion,
+  qualityAssistantSeedQuestion,
   summarizeByCategory,
   summarizeChecksPassed,
   warnOrFailResults,
   type CategorySummary,
 } from "@/features/quality/model";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import type {
   BuildQualityResponse,
@@ -81,8 +81,8 @@ function MetricCard({ label, value, sub }: { label: string; value: ReactNode; su
 export function QualityPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const openKubiDrawer = useUIStore((state) => state.openKubiDrawer);
-  const seedKubiQuestion = useKubiStore((state) => state.seedQuestion);
+  const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
+  const seedAssistantQuestion = useAssistantStore((state) => state.seedQuestion);
 
   const [datasetsState, setDatasetsState] = useState<AsyncState<DatasetSummary[]>>({ status: "loading" });
   const [runsState, setRunsState] = useState<AsyncState<DatasetRunSummary[]>>({ status: "idle" });
@@ -138,11 +138,11 @@ export function QualityPage() {
   const selectedRunId = requestedRunId || selectedDataset?.latest_run_id || "";
   const selectedRun = runsState.data?.find((run) => run.run_id === selectedRunId);
 
-   // Kubi (KubiContent) reads context only from the route's `?dataset=&run=&source=&stage=`
+   // Assistant (AssistantContent) reads context only from the route's `?dataset=&run=&source=&stage=`
    // (context.ts, no-guess principle). Screen shows fallback with calculated dataset/run,
-   // but if URL lacks them, KubiContext doesn't receive them and returns "tell me which
+   // but if URL lacks them, AssistantContext doesn't receive them and returns "tell me which
    // dataset/run" (#319 follow-up). So reflect the fallback-confirmed selection back to
-   // URL to sync UI selection and KubiContext SSOT. Update via replace only to not pollute
+   // URL to sync UI selection and AssistantContext SSOT. Update via replace only to not pollute
    // history; skip for invalid dataset/run.
   useEffect(() => {
     if (datasetsState.status !== "loaded" || invalidDataset || invalidRun) return;
@@ -210,10 +210,10 @@ export function QualityPage() {
   }
 
   // Before opening Ask KPubData, sync the dataset/run/source/stage shown on screen to
-  // the URL — KubiContext reads route only (context.ts), so without this sync the drawer
+  // the URL — AssistantContext reads route only (context.ts), so without this sync the drawer
   // only receives catalog-level evidence (#319 follow-up). Header button and per-issue
   // "Explain this issue" share this helper.
-  function syncKubiContext() {
+  function syncAssistantContext() {
     updateContext({
       dataset: selectedDatasetId || null,
       run: selectedRunId || null,
@@ -336,12 +336,12 @@ export function QualityPage() {
           <Button
             variant="secondary"
             onClick={() => {
-              syncKubiContext();
-              seedKubiQuestion(qualityKubiSeedQuestion(checksPassed));
-              openKubiDrawer();
+              syncAssistantContext();
+              seedAssistantQuestion(qualityAssistantSeedQuestion(checksPassed));
+              openAssistantDrawer();
             }}
           >
-            {t("quality.kubiAnalyze")}
+            {t("quality.assistantAnalyze")}
           </Button>
         }
       />
@@ -420,10 +420,10 @@ export function QualityPage() {
             evaluatedTotal={scopedResults.length}
             contextLabel={contextLabel}
             selectedRun={selectedRun}
-            onKubi={(issue) => {
-              syncKubiContext();
-              seedKubiQuestion(t("quality.kubiQuestion", { category: issue.category, rule: issue.rule, status: issue.status.toUpperCase() }));
-              openKubiDrawer();
+            onAssistant={(issue) => {
+              syncAssistantContext();
+              seedAssistantQuestion(t("quality.assistantQuestion", { category: issue.category, rule: issue.rule, status: issue.status.toUpperCase() }));
+              openAssistantDrawer();
             }}
           />
 
@@ -532,7 +532,7 @@ function RulePassRate({ groups, contextLabel }: { groups: { category: string; re
   );
 }
 
-function RecentIssues({ issues, evaluatedTotal, contextLabel, selectedRun, onKubi }: { issues: QualityCheckResult[]; evaluatedTotal: number; contextLabel: string; selectedRun?: DatasetRunSummary; onKubi: (issue: QualityCheckResult) => void }) {
+function RecentIssues({ issues, evaluatedTotal, contextLabel, selectedRun, onAssistant }: { issues: QualityCheckResult[]; evaluatedTotal: number; contextLabel: string; selectedRun?: DatasetRunSummary; onAssistant: (issue: QualityCheckResult) => void }) {
   const { t } = useTranslation();
   const runTimestamp = formatDateTime(selectedRun?.finished_at ?? selectedRun?.started_at);
   return (
@@ -566,7 +566,7 @@ function RecentIssues({ issues, evaluatedTotal, contextLabel, selectedRun, onKub
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       {selectedRun ? <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(selectedRun.run_id)}`}>{t("quality.rules.viewBuild")}</Link> : null}
-                      <Button variant="ghost" size="sm" onClick={() => onKubi(result)}>{t("quality.kubiAnalyze")}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => onAssistant(result)}>{t("quality.assistantAnalyze")}</Button>
                     </div>
                   </td>
                 </tr>

@@ -3,10 +3,10 @@ import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
-import { START_QUESTIONS } from "@/features/kubi/suggestedQuestions";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { START_QUESTIONS } from "@/features/assistant/suggestedQuestions";
+import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { HomePage } from "@/pages/HomePage";
-import { KubiPage } from "@/pages/KubiPage";
+import { AssistantPage } from "@/pages/AssistantPage";
 import { builderApi } from "@/shared/lib/builderApi";
 import { API_BASE } from "@/shared/config/env";
 import { useUIStore } from "@/shared/hooks/useUIStore";
@@ -194,23 +194,23 @@ describe("HomePage", () => {
 
 const HERO_HEADING = "어디서 시작할지 모르겠다면 Ask KPubData";
 
-/** Home과 /kubi를 함께 마운트해 Home hero의 이동 대상을 관측한다. */
-function renderHomeWithKubiRoute() {
+/** Home과 /assistant를 함께 마운트해 Home hero의 이동 대상을 관측한다. */
+function renderHomeWithAssistantRoute() {
   return render(
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/kubi" element={<div>KUBI ROUTE STUB</div>} />
+        <Route path="/kubi" element={<div>ASSISTANT ROUTE STUB</div>} />
       </Routes>
     </MemoryRouter>,
   );
 }
 
-describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
+describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-assistant-suggest)", () => {
   beforeEach(() => {
-    useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
+    useAssistantStore.setState({ turns: [], onboarded: false, pendingSeed: null });
     useAssistConfig.getState().clear();
-    act(() => useUIStore.setState({ isKubiDrawerOpen: false }));
+    act(() => useUIStore.setState({ isAssistantDrawerOpen: false }));
   });
 
   afterEach(() => {
@@ -242,39 +242,39 @@ describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
   it("configured: submitting a question seeds it and navigates to /kubi (not the drawer)", async () => {
     useEmptyBuildsRealMode();
     configureKey();
-    renderHomeWithKubiRoute();
+    renderHomeWithAssistantRoute();
     const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
     fireEvent.change(input, { target: { value: "서울 대기오염 데이터로 뭘 할 수 있어?" } });
     fireEvent.submit(input.closest("form")!);
 
-    expect(await screen.findByText("KUBI ROUTE STUB")).toBeInTheDocument();
-    expect(useKubiStore.getState().pendingSeed).toBe("서울 대기오염 데이터로 뭘 할 수 있어?");
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
+    expect(await screen.findByText("ASSISTANT ROUTE STUB")).toBeInTheDocument();
+    expect(useAssistantStore.getState().pendingSeed).toBe("서울 대기오염 데이터로 뭘 할 수 있어?");
+    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
   });
 
   it("not configured: navigates to /kubi without seeding a question or creating a no_key turn", async () => {
     useEmptyBuildsRealMode();
-    renderHomeWithKubiRoute();
+    renderHomeWithAssistantRoute();
     const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
     fireEvent.change(input, { target: { value: "서울 대기오염 데이터로 뭘 할 수 있어?" } });
     fireEvent.submit(input.closest("form")!);
 
-    expect(await screen.findByText("KUBI ROUTE STUB")).toBeInTheDocument();
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
-    expect(useKubiStore.getState().pendingSeed).toBeNull();
-    expect(useKubiStore.getState().turns).toHaveLength(0);
+    expect(await screen.findByText("ASSISTANT ROUTE STUB")).toBeInTheDocument();
+    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
+    expect(useAssistantStore.getState().pendingSeed).toBeNull();
+    expect(useAssistantStore.getState().turns).toHaveLength(0);
   });
 
   it("configured: clicking a suggested-question chip seeds it and navigates to /kubi", async () => {
     useEmptyBuildsRealMode();
     configureKey();
-    renderHomeWithKubiRoute();
+    renderHomeWithAssistantRoute();
     const chip = await screen.findByRole("button", { name: START_QUESTIONS[0] });
     fireEvent.click(chip);
 
-    expect(await screen.findByText("KUBI ROUTE STUB")).toBeInTheDocument();
-    expect(useKubiStore.getState().pendingSeed).toBe(START_QUESTIONS[0]);
-    expect(useUIStore.getState().isKubiDrawerOpen).toBe(false);
+    expect(await screen.findByText("ASSISTANT ROUTE STUB")).toBeInTheDocument();
+    expect(useAssistantStore.getState().pendingSeed).toBe(START_QUESTIONS[0]);
+    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
   });
 
   it("hero chips no longer surface Quality/Build-failure/SQL questions with no context", async () => {
@@ -293,21 +293,21 @@ describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
   it("empty/whitespace query: does not seed a question or create a turn", async () => {
     useEmptyBuildsRealMode();
     configureKey();
-    renderHomeWithKubiRoute();
+    renderHomeWithAssistantRoute();
     const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
     fireEvent.change(input, { target: { value: "   " } });
     fireEvent.submit(input.closest("form")!);
 
-    expect(useKubiStore.getState().pendingSeed).toBeNull();
-    expect(useKubiStore.getState().turns).toHaveLength(0);
+    expect(useAssistantStore.getState().pendingSeed).toBeNull();
+    expect(useAssistantStore.getState().turns).toHaveLength(0);
   });
 
   it("seeded question renders as a user turn once the Ask KPubData page mounts", async () => {
     useEmptyBuildsRealMode();
-    useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: "서울 대기오염 데이터로 뭘 할 수 있어?" });
+    useAssistantStore.setState({ turns: [], onboarded: false, pendingSeed: "서울 대기오염 데이터로 뭘 할 수 있어?" });
     render(
       <MemoryRouter initialEntries={["/kubi"]}>
-        <KubiPage />
+        <AssistantPage />
       </MemoryRouter>,
     );
     // BYOK 미설정이라 no_key 에러 turn이 되지만, 질문 자체는 user turn으로 표시된다(네트워크 없음).

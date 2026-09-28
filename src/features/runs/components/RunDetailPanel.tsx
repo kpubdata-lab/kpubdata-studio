@@ -30,14 +30,14 @@ import type { AsyncState } from "@/features/runs/asyncState";
 import { extractDatasetId, mapLiveStatus, normalizeBuildContextSearch } from "@/features/runs/buildContext";
 import { useStageDetails } from "@/features/runs/stageDetails";
 import { EventTimeline } from "@/features/runs/components/EventTimeline";
-import { KubiRunAnalysis } from "@/features/runs/components/KubiRunAnalysis";
+import { AssistantRunAnalysis } from "@/features/runs/components/AssistantRunAnalysis";
 import {
   MultiSourceOutcomeBadge,
   SourcePipelineRow,
 } from "@/features/runs/components/SourcePipeline";
 import type { RunEventsState } from "@/features/runs/useRunEvents";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
-import { useKubiStore } from "@/features/kubi/useKubiSession";
+import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { useAssistConfig } from "@/features/assistant/config";
 import type {
@@ -76,24 +76,24 @@ export function RunDetailPanel({
   live: ReturnType<typeof useSelectedRunPolling>;
 }) {
   const { t } = useTranslation();
-  const openKubiDrawer = useUIStore((state) => state.openKubiDrawer);
-  const seedKubiQuestion = useKubiStore((state) => state.seedQuestion);
+  const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
+  const seedAssistantQuestion = useAssistantStore((state) => state.seedQuestion);
   const { isConfigured } = useAssistConfig();
   const [searchParams] = useSearchParams();
 
-  // "Analyze this Run" no longer auto-opens the global Kubi drawer (#255
+  // "Analyze this Run" no longer auto-opens the global Assistant drawer (#255
   // §2) — instead it expands an inline card right under this Run summary.
   // Switching runs closes the card so the previous run's analysis never
   // looks valid in the new run's context (same principle as the #256
   // stale-context guard).
-  const [showKubiAnalysis, setShowKubiAnalysis] = useState(false);
+  const [showAssistantAnalysis, setShowAssistantAnalysis] = useState(false);
   // "This analysis click was accepted but not yet seeded" state. Held
   // until the URL context becomes canonical. One click = one flag set = one
   // seed. Discarded when the run changes.
   const [analyzePending, setAnalyzePending] = useState(false);
 
   useEffect(() => {
-    setShowKubiAnalysis(false);
+    setShowAssistantAnalysis(false);
     setAnalyzePending(false);
   }, [runId]);
 
@@ -120,14 +120,14 @@ export function RunDetailPanel({
   // the same click (this effect is the sole seeder). The next "Analyze this
   // Run" click sets the flag again, so re-analysis and retry-after-error
   // still work — dedup is "once per click", not "once per run lifetime".
-  // (Seeding runs via useKubiSession's existing pending-seed consumption
-  // effect when KubiRunAnalysis mounts, calling ask() — that path and its
+  // (Seeding runs via useAssistantSession's existing pending-seed consumption
+  // effect when AssistantRunAnalysis mounts, calling ask() — that path and its
   // atomic consumeSeed are unchanged.)
   useEffect(() => {
     if (!analyzePending || !isConfigured || !contextCanonical) return;
     setAnalyzePending(false);
-    seedKubiQuestion(analyzeQuestion);
-  }, [analyzePending, isConfigured, contextCanonical, analyzeQuestion, seedKubiQuestion]);
+    seedAssistantQuestion(analyzeQuestion);
+  }, [analyzePending, isConfigured, contextCanonical, analyzeQuestion, seedAssistantQuestion]);
 
   const sources = stagesState.status === "loaded" ? stagesState.data.sources : [];
   const outcome = stagesState.status === "loaded" ? summarizeMultiSourceOutcome(sources) : "unavailable";
@@ -217,11 +217,11 @@ export function RunDetailPanel({
             className="ml-auto"
             onClick={() => {
               // The click opens the inline card immediately.
-              setShowKubiAnalysis(true);
+              setShowAssistantAnalysis(true);
               // Without an API Key, do not seed — the pending seed is always
-              // consumed by useKubiSession's ordinary ask(), and ask() raises
+              // consumed by useAssistantSession's ordinary ask(), and ask() raises
               // a no_key error when not isConfigured (#286 follow-up). The
-              // inline card still opens so KubiRunAnalysis can show the
+              // inline card still opens so AssistantRunAnalysis can show the
               // no-key notice.
               if (!isConfigured) return;
               // The click only records "the intent to analyze". The actual
@@ -238,13 +238,13 @@ export function RunDetailPanel({
         </div>
       </Card>
 
-      {showKubiAnalysis ? (
-        <KubiRunAnalysis
+      {showAssistantAnalysis ? (
+        <AssistantRunAnalysis
           onClose={() => {
             setAnalyzePending(false);
-            setShowKubiAnalysis(false);
+            setShowAssistantAnalysis(false);
           }}
-          onAskMore={openKubiDrawer}
+          onAskMore={openAssistantDrawer}
         />
       ) : null}
 

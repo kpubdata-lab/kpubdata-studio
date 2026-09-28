@@ -2,8 +2,8 @@
  * Report editor page (`/reports/:reportId`, #258).
  *
  * Opens one saved Report Draft to read, edit, and export as Markdown/HTML/Print the
- * document (sections 1–6: Builder evidence summary, 7: Kubi analysis, 8: user notes).
- * Also refreshes baseline evidence or approves Kubi reference notes for reflection.
+ * document (sections 1–6: Builder evidence summary, 7: Assistant analysis, 8: user notes).
+ * Also refreshes baseline evidence or approves Assistant reference notes for reflection.
  *
  * IA (#258 IA redesign, Prototype SSOT `report-layout`): on desktop, left side shows
  * the actual report document and right side shows a Report Context sidebar displaying
@@ -26,16 +26,16 @@ import { checkReportEvidenceStatus, type EvidenceStalenessResult } from "@/featu
 import type {
   BuilderEvidenceBlock,
   BuilderEvidenceSection,
-  KubiInterpretationBlock,
+  AssistantInterpretationBlock,
   ReportDraft,
   UserContentBlock,
 } from "@/features/reports/types";
 import { BlockView } from "@/features/reports/components/BlockView";
-import { KubiInboxPanel } from "@/features/reports/components/KubiInboxPanel";
-import { KubiReportPanel } from "@/features/reports/components/KubiReportPanel";
+import { AssistantInboxPanel } from "@/features/reports/components/AssistantInboxPanel";
+import { AssistantReportPanel } from "@/features/reports/components/AssistantReportPanel";
 import { ReportContextSidebar } from "@/features/reports/components/ReportContextSidebar";
 import { UserContentEditor } from "@/features/reports/components/UserContentEditor";
-import { listKubiReportNotes } from "@/features/kubi/reportInbox";
+import { listAssistantReportNotes } from "@/features/assistant/reportInbox";
 import { Button, Card, EmptyState, ErrorState, PageHeader, TextInput } from "@/shared/ui";
 
 function newBlockId(): string {
@@ -62,7 +62,7 @@ export function ReportEditorPage() {
   const [editingUserBlockId, setEditingUserBlockId] = useState<string | null>(null);
 
   const [titleDraft, setTitleDraft] = useState("");
-  const [pendingKubiNoteCount, setPendingKubiNoteCount] = useState(0);
+  const [pendingAssistantNoteCount, setPendingAssistantNoteCount] = useState(0);
 
    // legacy summary (#258 legacy summary fix): BUILDER_EVIDENCE blocks saved before
    // `summary` was added lack this field. Rather than arbitrarily migrating the saved
@@ -80,13 +80,13 @@ export function ReportEditorPage() {
     setTitleDraft(loaded?.title ?? "");
   }, [reportId]);
 
-  const refreshPendingKubiNoteCount = useCallback(() => {
-    setPendingKubiNoteCount(listKubiReportNotes().length);
+  const refreshPendingAssistantNoteCount = useCallback(() => {
+    setPendingAssistantNoteCount(listAssistantReportNotes().length);
   }, []);
 
   useEffect(() => {
-    refreshPendingKubiNoteCount();
-  }, [refreshPendingKubiNoteCount]);
+    refreshPendingAssistantNoteCount();
+  }, [refreshPendingAssistantNoteCount]);
 
   const runStalenessCheck = useCallback((current: ReportDraft, signal?: AbortSignal) => {
     setStalenessLoading(true);
@@ -193,12 +193,12 @@ export function ReportEditorPage() {
     persist({ ...report, blocks: report.blocks.filter((block) => block.id !== id) });
   }
 
-  function handleRemoveKubiBlock(id: string) {
+  function handleRemoveAssistantBlock(id: string) {
     if (!report) return;
     persist({ ...report, blocks: report.blocks.filter((block) => block.id !== id) });
   }
 
-  function handleApproveKubiBlock(block: KubiInterpretationBlock) {
+  function handleApproveAssistantBlock(block: AssistantInterpretationBlock) {
     if (!report) return;
     persist({ ...report, blocks: [...report.blocks, block] });
   }
@@ -212,7 +212,7 @@ export function ReportEditorPage() {
       const nextEvidenceBlocks = buildDeterministicSections(evidence);
       const evidenceRefs = buildEvidenceRefs(evidence);
        // Only replace deterministic (BUILDER_EVIDENCE) blocks with newly generated ones;
-       // keep Kubi/user blocks as-is (#258 §9 — separate auto-generated and user-authored
+       // keep Assistant/user blocks as-is (#258 §9 — separate auto-generated and user-authored
        // areas to preserve user edits).
       const keptBlocks = report.blocks.filter((block) => block.provenance !== "BUILDER_EVIDENCE");
       const nextReport: ReportDraft = {
@@ -284,8 +284,8 @@ export function ReportEditorPage() {
   const evidenceBlocks = report.blocks.filter(
     (block): block is BuilderEvidenceBlock => block.provenance === "BUILDER_EVIDENCE",
   );
-  const kubiBlocks = report.blocks.filter(
-    (block): block is KubiInterpretationBlock => block.provenance === "KUBI_INTERPRETATION",
+  const assistantBlocks = report.blocks.filter(
+    (block): block is AssistantInterpretationBlock => block.provenance === "KUBI_INTERPRETATION",
   );
   const userBlocks = report.blocks.filter((block): block is UserContentBlock => block.provenance === "USER_CONTENT");
 
@@ -364,33 +364,33 @@ export function ReportEditorPage() {
             <BlockView key={block.id} block={block} />
           ))}
 
-           {/* Section 7. Kubi analysis */}
+           {/* Section 7. Assistant analysis */}
           <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold text-foreground">{t("reportEditor.kubiSection")}</h2>
-            {kubiBlocks.length === 0 ? (
+            <h2 className="text-sm font-semibold text-foreground">{t("reportEditor.assistantSection")}</h2>
+            {assistantBlocks.length === 0 ? (
               <EmptyState
                 className="py-8"
-                title={t("reportEditor.noKubiTitle")}
-                description={t("reportEditor.noKubiDesc")}
+                title={t("reportEditor.noAssistantTitle")}
+                description={t("reportEditor.noAssistantDesc")}
               />
             ) : (
-              kubiBlocks.map((block) => (
+              assistantBlocks.map((block) => (
                 <BlockView
                   key={block.id}
                   block={block}
                   reportEvidenceRefs={block.isSameContext ? report.evidenceRefs : undefined}
-                  onRemoveKubiBlock={handleRemoveKubiBlock}
+                  onRemoveAssistantBlock={handleRemoveAssistantBlock}
                 />
               ))
             )}
             <div className="print:hidden">
-              <KubiReportPanel report={report} onApprove={handleApproveKubiBlock} />
+              <AssistantReportPanel report={report} onApprove={handleApproveAssistantBlock} />
             </div>
             <div className="print:hidden">
-              <KubiInboxPanel
+              <AssistantInboxPanel
                 report={report}
-                onApprove={handleApproveKubiBlock}
-                onNotesChanged={refreshPendingKubiNoteCount}
+                onApprove={handleApproveAssistantBlock}
+                onNotesChanged={refreshPendingAssistantNoteCount}
               />
             </div>
           </div>
@@ -432,7 +432,7 @@ export function ReportEditorPage() {
             (`Layout.tsx`'s `sticky top-0` header, ~4–4.5rem height) (#258 sticky sidebar
             fix) — so Report Context remains visible while scrolling the document. Since
             the sidebar can exceed viewport height, constrain its own height to viewport
-            and allow internal scrolling so bottom content (Kubi cards, etc.) doesn't stay
+            and allow internal scrolling so bottom content (Assistant cards, etc.) doesn't stay
             hidden under sticky overflow. On narrow viewports (`lg` and below), the existing
             1-column layout collapses sidebar below the document, so no sticky needed. */}
         <div
@@ -445,8 +445,8 @@ export function ReportEditorPage() {
             stalenessLoading={stalenessLoading}
             onRecheck={() => runStalenessCheck(report)}
             onCreateFromLatest={staleness?.status === "stale" ? handleCreateFromLatest : undefined}
-            kubiBlockCount={kubiBlocks.length}
-            pendingKubiNoteCount={pendingKubiNoteCount}
+            assistantBlockCount={assistantBlocks.length}
+            pendingAssistantNoteCount={pendingAssistantNoteCount}
           />
         </div>
       </div>

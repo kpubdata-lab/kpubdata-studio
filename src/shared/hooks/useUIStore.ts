@@ -1,7 +1,7 @@
 /**
  * UI global state store reused throughout the app shell.
  *
- * Mobile sidebar overlay open state, desktop sidebar collapsed state, global Kubi drawer
+ * Mobile sidebar overlay open state, desktop sidebar collapsed state, global Assistant drawer
  * open state, and visual state like theme selection that must persist across page
  * navigation. Mobile overlay and desktop collapse are separate layout concepts, so
  * state is kept separate — mobile overlay opened on mobile should not affect desktop
@@ -23,8 +23,8 @@ interface UIState {
   isMobileSidebarOpen: boolean;
   /** Whether sidebar is collapsed in desktop layout (can be persisted, #247) */
   isDesktopSidebarCollapsed: boolean;
-  /** Whether the global Kubi drawer is open (#247) (#247) */
-  isKubiDrawerOpen: boolean;
+  /** Whether the global Assistant drawer is open (#247) (#247) */
+  isAssistantDrawerOpen: boolean;
   /** The theme mode selected by the user */
   theme: ThemeMode;
   /** Action to toggle mobile sidebar overlay open/closed state */
@@ -35,12 +35,12 @@ interface UIState {
   closeMobileSidebar: () => void;
   /** Action to toggle desktop sidebar collapsed/expanded state */
   toggleDesktopSidebarCollapsed: () => void;
-  /** Action to open Kubi drawer */
-  openKubiDrawer: () => void;
-  /** Action to close Kubi drawer */
-  closeKubiDrawer: () => void;
-  /** Action to toggle Kubi drawer open/closed state */
-  toggleKubiDrawer: () => void;
+  /** Action to open Assistant drawer */
+  openAssistantDrawer: () => void;
+  /** Action to close Assistant drawer */
+  closeAssistantDrawer: () => void;
+  /** Action to toggle Assistant drawer open/closed state */
+  toggleAssistantDrawer: () => void;
   /** Action to update theme mode to a new value */
   setTheme: (theme: ThemeMode) => void;
 }
@@ -55,7 +55,7 @@ export const useUIStore = create<UIState>()(
     (set) => ({
       isMobileSidebarOpen: false,
       isDesktopSidebarCollapsed: false,
-      isKubiDrawerOpen: false,
+      isAssistantDrawerOpen: false,
       theme: "system",
       toggleMobileSidebar: () =>
         set((state) => ({ isMobileSidebarOpen: !state.isMobileSidebarOpen })),
@@ -63,9 +63,9 @@ export const useUIStore = create<UIState>()(
       closeMobileSidebar: () => set({ isMobileSidebarOpen: false }),
       toggleDesktopSidebarCollapsed: () =>
         set((state) => ({ isDesktopSidebarCollapsed: !state.isDesktopSidebarCollapsed })),
-      openKubiDrawer: () => set({ isKubiDrawerOpen: true }),
-      closeKubiDrawer: () => set({ isKubiDrawerOpen: false }),
-      toggleKubiDrawer: () => set((state) => ({ isKubiDrawerOpen: !state.isKubiDrawerOpen })),
+      openAssistantDrawer: () => set({ isAssistantDrawerOpen: true }),
+      closeAssistantDrawer: () => set({ isAssistantDrawerOpen: false }),
+      toggleAssistantDrawer: () => set((state) => ({ isAssistantDrawerOpen: !state.isAssistantDrawerOpen })),
       setTheme: (theme) => set({ theme }),
     }),
     {

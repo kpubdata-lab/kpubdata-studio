@@ -16,7 +16,7 @@ import { Skeleton } from "@/shared/ui";
  * Per-route code splitting (#378).
  *
  * If all pages were statically imported, loading just the first screen would fetch
- * Monitoring·Reports·Kubi too (single chunk 1.14 MB). Switching each page to dynamic
+ * Monitoring·Reports·Assistant too (single chunk 1.14 MB). Switching each page to dynamic
  * import makes routes chunk boundaries.
  *
  * Pages use named export, so wrapped in `lazy`'s required default form.
@@ -51,8 +51,8 @@ const DiscoverPage = lazy(() =>
 const HomePage = lazy(() =>
   import("@/pages/HomePage").then((m) => ({ default: m.HomePage })),
 );
-const KubiPage = lazy(() =>
-  import("@/pages/KubiPage").then((m) => ({ default: m.KubiPage })),
+const AssistantPage = lazy(() =>
+  import("@/pages/AssistantPage").then((m) => ({ default: m.AssistantPage })),
 );
 const LoginPage = lazy(() =>
   import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })),
@@ -220,11 +220,15 @@ export const router = createBrowserRouter([
         path: "builds/:buildId/publish",
         element: withFeatureBoundary("router.features.publish", <BuildPublishPage />),
       },
-       // New IA AI group (actual feature implementation in #256). Global Kubi drawer
-       // mounted separately at Layout level in `src/features/kubi/KubiDrawer.tsx`.
+       // New IA AI group (actual feature implementation in #256). Global Assistant drawer
+       // mounted separately at Layout level in `src/features/assistant/AssistantDrawer.tsx`.
       {
+        // The URL stays `/kubi` while the code is called `assistant` (#446). The
+        // rename was a rename; changing the address bar would break every bookmark
+        // and every link someone already shared, which is a product change and not
+        // this one. #449 carries it, with a redirect so neither URL 404s.
         path: "kubi",
-        element: withFeatureBoundary("router.features.Kubi", <KubiPage />),
+        element: withFeatureBoundary("router.features.Assistant", <AssistantPage />),
       },
       {
         path: "reports",

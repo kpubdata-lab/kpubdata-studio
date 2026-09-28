@@ -3,7 +3,7 @@
  *
  * Only the logic for searching/filtering the Builder `/catalog` response
  * (per-provider dataset lists). Literal substring matching over
- * dataset/title/provider names — not natural-language search (Kubi, #256) —
+ * dataset/title/provider names — not natural-language search (Assistant, #256) —
  * the same interpretation as DatasetCatalogPage's "exact search".
  */
 import type { CatalogDataset, CatalogResponse } from "@/shared/lib/builderApi";

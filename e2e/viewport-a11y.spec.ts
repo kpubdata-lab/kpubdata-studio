@@ -52,19 +52,19 @@ test("390x844에서 topbar subtitle이 Ask KPubData/avatar 버튼과 겹치지 �
   await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
 
   const subtitle = page.locator("header h1");
-  const kubiButton = page.getByRole("button", { name: "Ask KPubData 열기" });
+  const assistantButton = page.getByRole("button", { name: "Ask KPubData 열기" });
   await expect(subtitle).toBeVisible();
-  await expect(kubiButton).toBeVisible();
+  await expect(assistantButton).toBeVisible();
 
   const subtitleBox = await subtitle.boundingBox();
-  const kubiBox = await kubiButton.boundingBox();
+  const assistantBox = await assistantButton.boundingBox();
   expect(subtitleBox).not.toBeNull();
-  expect(kubiBox).not.toBeNull();
+  expect(assistantBox).not.toBeNull();
    // Two rectangles must not overlap — one must completely end to left of other (horizontal) or above
    // (vertical, if wrapped) to be "non-overlapping".
-  if (subtitleBox && kubiBox) {
-    const overlapsHorizontally = subtitleBox.x < kubiBox.x + kubiBox.width && kubiBox.x < subtitleBox.x + subtitleBox.width;
-    const overlapsVertically = subtitleBox.y < kubiBox.y + kubiBox.height && kubiBox.y < subtitleBox.y + subtitleBox.height;
+  if (subtitleBox && assistantBox) {
+    const overlapsHorizontally = subtitleBox.x < assistantBox.x + assistantBox.width && assistantBox.x < subtitleBox.x + subtitleBox.width;
+    const overlapsVertically = subtitleBox.y < assistantBox.y + assistantBox.height && assistantBox.y < subtitleBox.y + subtitleBox.height;
     expect(overlapsHorizontally && overlapsVertically, "subtitle과 Ask KPubData 버튼이 겹칩니다").toBe(false);
   }
 

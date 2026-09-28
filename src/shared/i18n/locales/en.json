@@ -9,7 +9,7 @@
     "selectTheme": "Select theme",
     "toggleSidebar": "Toggle sidebar",
     "tagline": "A workspace for turning public data into datasets",
-    "openKubi": "Open Ask KPubData",
+    "openAssistant": "Open Ask KPubData",
     "goToSettingsFor": "Go to settings for {{email}}",
     "loginRequiredSettings": "Login required — go to settings",
     "loginRequired": "Login required"
@@ -33,9 +33,9 @@
     "downloadMarkdown": "Download Markdown",
     "downloadHtml": "Download HTML",
     "print": "Print (browser)",
-    "kubiSection": "7. Ask KPubData analysis",
-    "noKubiTitle": "No AI analysis added yet",
-    "noKubiDesc": "Ask KPubData to analyse the current dataset/run, review it, then add it here.",
+    "assistantSection": "7. Ask KPubData analysis",
+    "noAssistantTitle": "No AI analysis added yet",
+    "noAssistantDesc": "Ask KPubData to analyse the current dataset/run, review it, then add it here.",
     "notesSection": "8. Notes",
     "addBlock": "+ Add a note block"
   },
@@ -51,7 +51,7 @@
     "datasets": "Dataset Catalog",
     "builds": "Builds / Runs",
     "quality": "Quality",
-    "kubi": "Ask KPubData",
+    "assistant": "Ask KPubData",
     "reports": "Reports",
     "provider": "Provider / API",
     "monitoring": "Monitoring",
@@ -65,7 +65,7 @@
     "datasets": "Search built datasets",
     "builds": "Build and run history",
     "quality": "Build and dataset quality results",
-    "kubi": "Context-aware assistant",
+    "assistant": "Context-aware assistant",
     "reports": "Create and view analysis reports",
     "provider": "API keys and credentials",
     "monitoring": "Run and system monitoring",
@@ -346,7 +346,59 @@
       "specTitle": "Generated spec"
     }
   },
-  "kubi": {
+  "assistant": {
+    "action": {
+      "buildSpec": "BuildSpec change proposal",
+      "reportNote": "Note to add to Report",
+      "evidence": "Linked Evidence",
+      "approve": "Approve",
+      "open": "Open",
+      "reject": "Reject",
+      "apply": "Apply",
+      "applying": "Applying…",
+      "rejected": "Rejected",
+      "staleCantRun": "Based on a previous screen — cannot run"
+    },
+    "actions": {
+      "missingParent": "The parent field for path \"{{path}}\" does not exist.",
+      "specNotFound": "The original BuildSpec for run \"{{runId}}\" is not in this browser. Builder does not persist specs, so a patch can only be applied to a run you have executed or edited in Studio.",
+      "secretsRedacted": "The stored BuildSpec has its secrets stripped (local storage policy), so it cannot be patched. Re-enter serviceKey/apiKey/token values in the provider settings screen.",
+      "pathNotAllowed": "Path \"{{path}}\" is not allowed. Only title, description, metadata, sources[].params, sources[].alias and exports[].options can be patched.",
+      "credentialPath": "Path \"{{path}}\" looks like a credential field and cannot be patched. Change serviceKey/apiKey/token values in the provider settings screen.",
+      "redactionMarker": "The patch result still contains a redaction marker and cannot be applied. Re-enter that credential with its real value.",
+      "patchFailed": "The patch could not be applied.",
+      "unresolvedPlaceholder": "It still contains an unresolved secret placeholder.",
+      "paramsCredential": "Generated sourceParams must not contain credential values.",
+      "paramsNotObject": "Generated sourceParams must be a JSON object.",
+      "describe": {
+        "openProvider": "Open the \"{{provider}}\" provider screen",
+        "openBuild": "Open build \"{{runId}}\" details",
+        "openQuality": "View \"{{datasetId}}\" in Quality Center",
+        "patchSpec": "Propose {{count}} change(s) to the BuildSpec of run \"{{runId}}\"",
+        "createDraft": "Create a new build draft: {{title}}",
+        "addReportBlock": "Add as a report reference note"
+      }
+    },
+    "baseUrl": {
+      "invalid": "That is not a valid URL.",
+      "httpsOnly": "Only HTTPS addresses are allowed, to keep the API key from leaking."
+    },
+    "byok": {
+      "title": "An LLM API key is required to use Ask KPubData (BYOK)",
+      "desc": "Keys are kept only in this browser's memory by default and disappear on refresh. Studio does not provide a shared key.",
+      "modelLabel": "Model (optional)",
+      "baseUrlLabel": "Base URL (optional)",
+      "baseUrlWarning": "This is not the default provider address. Your API key will be sent to:",
+      "saveSession": "Save (this session only)",
+      "clearStored": "Clear browser storage",
+      "saveBrowser": "Save in this browser (risky — warning shown)"
+    },
+    "config": {
+      "persistWarning": "The LLM API key is stored in this browser in plain text. An XSS attack could steal it. Do not store it if you have untrusted extensions installed."
+    },
+    "content": {
+      "approve": "Approve"
+    },
     "context": {
       "current": "Current Context",
       "stageAll": "Whole Run",
@@ -376,7 +428,7 @@
         "artifacts": "Artifacts",
         "builds": "Builds",
         "quality": "Quality",
-        "kubi": "Ask KPubData",
+        "assistant": "Ask KPubData",
         "reports": "Reports",
         "provider": "Provider",
         "monitoring": "Monitoring",
@@ -385,34 +437,105 @@
       "stageAria": "Analysis stage",
       "sourceAria": "Analysis source"
     },
-    "byok": {
-      "title": "An LLM API key is required to use Ask KPubData (BYOK)",
-      "desc": "Keys are kept only in this browser's memory by default and disappear on refresh. Studio does not provide a shared key.",
-      "modelLabel": "Model (optional)",
-      "baseUrlLabel": "Base URL (optional)",
-      "baseUrlWarning": "This is not the default provider address. Your API key will be sent to:",
-      "saveSession": "Save (this session only)",
-      "clearStored": "Clear browser storage",
-      "saveBrowser": "Save in this browser (risky — warning shown)"
+    "crossCheck": {
+      "openProviderUnknown": "OPEN_PROVIDER: provider \"{{provider}}\" is not in the catalog",
+      "openBuildUnknown": "OPEN_BUILD: run \"{{runId}}\" is not in the evidence",
+      "openQualityUnknownDataset": "OPEN_QUALITY: dataset \"{{datasetId}}\" is not in the evidence",
+      "openQualityUnknownRun": "OPEN_QUALITY: run \"{{runId}}\" is not in the evidence",
+      "openQualityMismatch": "OPEN_QUALITY: Builder evidence does not confirm that run \"{{runId}}\" belongs to dataset \"{{datasetId}}\"",
+      "patchUnknownRun": "PATCH_BUILDSPEC: run \"{{runId}}\" is not in the evidence",
+      "patchSpecMissing": "PATCH_BUILDSPEC: the original BuildSpec for run \"{{runId}}\" is not in this browser, so a safe diff cannot be built",
+      "draftUnknownProvider": "CREATE_BUILD_DRAFT: provider \"{{provider}}\" is not in the catalog",
+      "draftUnknownDataset": "CREATE_BUILD_DRAFT: dataset \"{{dataset}}\" is not in the \"{{provider}}\" catalog",
+      "stageNone": "none",
+      "sqlStageMismatch": "Excluded from execution: the current screen stage ({{current}}) does not match the proposed SQL stage ({{proposed}}).",
+      "sqlSourceDropped": "Removed source \"{{source}}\" because the evidence does not confirm it. This is a single-source run, so Builder picks the source automatically.",
+      "sqlSourceUnknown": "Excluded from execution: it references source \"{{source}}\", which is not in the evidence."
     },
-    "turnStatus": {
-      "noKey": "No API key configured. Set one above first.",
-      "cancelled": "The request was cancelled.",
-      "staleContext": "This answer is based on a previous screen.",
-      "retry": "Retry"
+    "demo": {
+      "disclaimer": "[DEMO] This is a sample answer over mock data — not a real analysis.",
+      "datasetStatus": "The latest status of dataset \"{{title}}\" ({{datasetId}}) is \"{{status}}\".",
+      "qualityReason": "[DEMO] You can see this run's real rule results in Quality Center.",
+      "demoNote": "[DEMO] Demo analysis of \"{{title}}\" — over mock data, not a real analysis.",
+      "reportReason": "[DEMO] You can keep this demo answer in a report as a reference note.",
+      "noDataset": "No dataset is selected, so this is general guidance only. Pick a dataset for a more specific demo.",
+      "noQuality": "No quality results were evaluated.",
+      "qualitySummary": "Quality summary: {{summary}}.",
+      "sqlNote": "Generated SQL is a demo preview query — running it shows mock results (no real Builder call).",
+      "stageHint": "Pick Silver or Gold in the stage selector above to also see the Generated SQL and result preview demo."
     },
-    "queryError": {
-      "unsafe_query": "SQL syntax error or disallowed query.",
-      "forbidden": "No access to this dataset/run.",
-      "artifact_unavailable": "The requested stage artifact is not available yet.",
-      "invalid_context": "Invalid dataset/run/stage context.",
-      "invalid_request": "Invalid request format.",
-      "query_busy": "Query capacity is full. Please try again shortly.",
-      "query_timeout": "Query execution timed out.",
-      "query_execution_failed": "Query execution failed.",
-      "network": "Could not connect to Builder.",
-      "mock_mode": "Queries cannot run in mock mode.",
-      "unknown": "An unknown error occurred."
+    "drawer": {
+      "collapseLabel": "Show Ask KPubData at default width",
+      "expandLabel": "Expand Ask KPubData",
+      "collapse": "Default",
+      "expand": "Expand",
+      "close": "Close Ask KPubData",
+      "label": "Ask KPubData"
+    },
+    "empty": {
+      "demoTitle": "Try the demo first without an API key",
+      "demoDesc": "Example response based on mock data — not a real analysis. Only available in dev/mock mode.",
+      "demoSend": "Send a demo question",
+      "welcomeTitle": "First time here?",
+      "welcomeDesc": "Start with a suggested question or ask your own.",
+      "demoQuestion": "How is this dataset's quality?"
+    },
+    "evidence": {
+      "count": "{{count}} evidence items",
+      "countRejected": "{{count}} evidence · {{rejected}} excluded",
+      "detailUnavailable": "Detailed evidence is not available from the current evidence.",
+      "openOriginal": "Open original screen",
+      "rejectedCount": "⚠ {{count}} excluded evidence items",
+      "unavailable": "Evidence not confirmed: {{items}}"
+    },
+    "generate": {
+      "unknownProvider": "sources[{{index}}].provider: provider '{{provider}}' is not in the catalog.",
+      "unknownDataset": "sources[{{index}}].dataset: dataset '{{dataset}}' does not exist on provider '{{provider}}'.",
+      "yamlParse": "The YAML could not be parsed.",
+      "mockDisabled": "Generation is disabled in mock mode (ST-A8, #211)",
+      "noValidate": "BuildSpec generation stopped: no connection to Builder /validate.",
+      "noCatalog": "BuildSpec generation stopped: the catalog could not be read.",
+      "emptyOutput": "The output was empty.",
+      "restoreFailed": "The secret could not be restored.",
+      "validateRequestFailed": "The Builder validation request failed.",
+      "validationFailed": "Validation failed"
+    },
+    "input": {
+      "aria": "Ask KPubData",
+      "placeholder": "Type a question…",
+      "placeholderDemo": "Type a question… (demo · mock data)",
+      "placeholderNoKey": "Set an API key first",
+      "send": "Send",
+      "suggested": "Suggested questions",
+      "currentDataset": "Current Dataset",
+      "openDataset": "Open {{id}}",
+      "relatedDatasets": "Related datasets",
+      "relatedHintNoQ": "Send a question to load evidence and see other dataset candidates from the same provider.",
+      "relatedHintNoDs": "Select a dataset to see related dataset candidates verified against the actual catalog."
+    },
+    "page": {
+      "desc": "Uses the current screen, dataset, build and quality context to give evidence-based answers and the next action.",
+      "eyebrow": "Assistant",
+      "title": "Ask KPubData"
+    },
+    "parse": {
+      "empty": "The LLM returned an empty response.",
+      "notJson": "The LLM response could not be parsed as JSON.",
+      "shapeMismatch": "The LLM response shape was not what we expected: {{issues}}"
+    },
+    "phases": {
+      "collecting": "Checking evidence",
+      "generating": "Generating answer",
+      "validating": "Validating evidence",
+      "inProgress": ""
+    },
+    "provider": {
+      "auth": "LLM API authentication failed. Check the API key.",
+      "rateLimit": "LLM API rate limit exceeded. Try again in a moment.",
+      "serverError": "The LLM server hit a temporary error. Try again in a moment.",
+      "callFailed": "The LLM API call failed.",
+      "callFailedStatus": "The LLM API call failed. (status {{status}})",
+      "unsafeBaseUrl": "The LLM base URL is not safe: {{reason}}"
     },
     "query": {
       "running": "Running query…",
@@ -431,63 +554,18 @@
       "stageMismatch": "The current screen stage ({{current}}) differs from the Generated SQL stage ({{proposed}}).",
       "stageNone": "none"
     },
-    "action": {
-      "buildSpec": "BuildSpec change proposal",
-      "reportNote": "Note to add to Report",
-      "evidence": "Linked Evidence",
-      "approve": "Approve",
-      "open": "Open",
-      "reject": "Reject",
-      "apply": "Apply",
-      "applying": "Applying…",
-      "rejected": "Rejected",
-      "staleCantRun": "Based on a previous screen — cannot run"
-    },
-    "evidence": {
-      "count": "{{count}} evidence items",
-      "countRejected": "{{count}} evidence · {{rejected}} excluded",
-      "detailUnavailable": "Detailed evidence is not available from the current evidence.",
-      "openOriginal": "Open original screen",
-      "rejectedCount": "⚠ {{count}} excluded evidence items",
-      "unavailable": "Evidence not confirmed: {{items}}"
-    },
-    "phases": {
-      "collecting": "Checking evidence",
-      "generating": "Generating answer",
-      "validating": "Validating evidence",
-      "inProgress": ""
-    },
-    "turn": {
-      "ok": "Success",
-      "error": "Failed",
-      "running": "In progress",
-      "stale": "Previous screen",
-      "collapse": "Collapse conversation",
-      "demoBadge": "DEMO · mock data (not a real analysis)",
-      "staleBadge": "Previous screen",
-      "cancel": "Cancel",
-      "history": "{{count}} earlier conversations"
-    },
-    "empty": {
-      "demoTitle": "Try the demo first without an API key",
-      "demoDesc": "Example response based on mock data — not a real analysis. Only available in dev/mock mode.",
-      "demoSend": "Send a demo question",
-      "welcomeTitle": "First time here?",
-      "welcomeDesc": "Start with a suggested question or ask your own.",
-      "demoQuestion": "How is this dataset's quality?"
-    },
-    "input": {
-      "aria": "Ask KPubData",
-      "placeholder": "Type a question…",
-      "placeholderDemo": "Type a question… (demo · mock data)",
-      "placeholderNoKey": "Set an API key first",
-      "send": "Send",
-      "suggested": "Suggested questions",
-      "currentDataset": "Current Dataset",
-      "openDataset": "Open {{id}}",
-      "relatedDatasets": "Related datasets",
-      "relatedHintNoQ": "Send a question to load evidence and see other dataset candidates from the same provider.",
-      "relatedHintNoDs": "Select a dataset to see related dataset candidates verified against the actual catalog."
+    "queryError": {
+      "unsafe_query": "SQL syntax error or disallowed query.",
+      "forbidden": "No access to this dataset/run.",
+      "artifact_unavailable": "The requested stage artifact is not available yet.",
+      "invalid_context": "Invalid dataset/run/stage context.",
+      "invalid_request": "Invalid request format.",
+      "query_busy": "Query capacity is full. Please try again shortly.",
+      "query_timeout": "Query execution timed out.",
+      "query_execution_failed": "Query execution failed.",
+      "network": "Could not connect to Builder.",
+      "mock_mode": "Queries cannot run in mock mode.",
+      "unknown": "An unknown error occurred."
     },
     "questions": {
       "q01": "What public data can I explore?",
@@ -528,25 +606,22 @@
       "q36": "이걸 바탕으로 다음 단계를 추천해줘.",
       "q37": "관련해서 더 확인할 데이터가 있어?"
     },
-    "actions": {
-      "missingParent": "The parent field for path \"{{path}}\" does not exist.",
-      "specNotFound": "The original BuildSpec for run \"{{runId}}\" is not in this browser. Builder does not persist specs, so a patch can only be applied to a run you have executed or edited in Studio.",
-      "secretsRedacted": "The stored BuildSpec has its secrets stripped (local storage policy), so it cannot be patched. Re-enter serviceKey/apiKey/token values in the provider settings screen.",
-      "pathNotAllowed": "Path \"{{path}}\" is not allowed. Only title, description, metadata, sources[].params, sources[].alias and exports[].options can be patched.",
-      "credentialPath": "Path \"{{path}}\" looks like a credential field and cannot be patched. Change serviceKey/apiKey/token values in the provider settings screen.",
-      "redactionMarker": "The patch result still contains a redaction marker and cannot be applied. Re-enter that credential with its real value.",
-      "patchFailed": "The patch could not be applied.",
-      "unresolvedPlaceholder": "It still contains an unresolved secret placeholder.",
-      "paramsCredential": "Generated sourceParams must not contain credential values.",
-      "paramsNotObject": "Generated sourceParams must be a JSON object.",
-      "describe": {
-        "openProvider": "Open the \"{{provider}}\" provider screen",
-        "openBuild": "Open build \"{{runId}}\" details",
-        "openQuality": "View \"{{datasetId}}\" in Quality Center",
-        "patchSpec": "Propose {{count}} change(s) to the BuildSpec of run \"{{runId}}\"",
-        "createDraft": "Create a new build draft: {{title}}",
-        "addReportBlock": "Add as a report reference note"
-      }
+    "runAnalysis": {
+      "title": "Run analysis",
+      "close": "Close",
+      "needsKey": "Set an API key to use Ask KPubData.",
+      "openSettings": "Open Ask KPubData settings",
+      "preparing": "Preparing the analysis…",
+      "thinking": "Thinking…",
+      "cancel": "Cancel",
+      "askMore": "Ask more"
+    },
+    "scrub": {
+      "unknownPlaceholder": "It contains an unknown secret placeholder."
+    },
+    "search": {
+      "label": "Ask KPubData about your data in plain language",
+      "placeholder": "Ask KPubData about the data…"
     },
     "session": {
       "actionRejected": "The user rejected this action.",
@@ -568,67 +643,22 @@
       "patchFailed": "The BuildSpec patch could not be applied.",
       "draftSaved": "Saved to a new build draft."
     },
-    "runAnalysis": {
-      "title": "Run analysis",
-      "close": "Close",
-      "needsKey": "Set an API key to use Ask KPubData.",
-      "openSettings": "Open Ask KPubData settings",
-      "preparing": "Preparing the analysis…",
-      "thinking": "Thinking…",
+    "turn": {
+      "ok": "Success",
+      "error": "Failed",
+      "running": "In progress",
+      "stale": "Previous screen",
+      "collapse": "Collapse conversation",
+      "demoBadge": "DEMO · mock data (not a real analysis)",
+      "staleBadge": "Previous screen",
       "cancel": "Cancel",
-      "askMore": "Ask more"
+      "history": "{{count}} earlier conversations"
     },
-    "demo": {
-      "disclaimer": "[DEMO] This is a sample answer over mock data — not a real analysis.",
-      "datasetStatus": "The latest status of dataset \"{{title}}\" ({{datasetId}}) is \"{{status}}\".",
-      "qualityReason": "[DEMO] You can see this run's real rule results in Quality Center.",
-      "demoNote": "[DEMO] Demo analysis of \"{{title}}\" — over mock data, not a real analysis.",
-      "reportReason": "[DEMO] You can keep this demo answer in a report as a reference note.",
-      "noDataset": "No dataset is selected, so this is general guidance only. Pick a dataset for a more specific demo.",
-      "noQuality": "No quality results were evaluated.",
-      "qualitySummary": "Quality summary: {{summary}}.",
-      "sqlNote": "Generated SQL is a demo preview query — running it shows mock results (no real Builder call).",
-      "stageHint": "Pick Silver or Gold in the stage selector above to also see the Generated SQL and result preview demo."
-    },
-    "crossCheck": {
-      "openProviderUnknown": "OPEN_PROVIDER: provider \"{{provider}}\" is not in the catalog",
-      "openBuildUnknown": "OPEN_BUILD: run \"{{runId}}\" is not in the evidence",
-      "openQualityUnknownDataset": "OPEN_QUALITY: dataset \"{{datasetId}}\" is not in the evidence",
-      "openQualityUnknownRun": "OPEN_QUALITY: run \"{{runId}}\" is not in the evidence",
-      "openQualityMismatch": "OPEN_QUALITY: Builder evidence does not confirm that run \"{{runId}}\" belongs to dataset \"{{datasetId}}\"",
-      "patchUnknownRun": "PATCH_BUILDSPEC: run \"{{runId}}\" is not in the evidence",
-      "patchSpecMissing": "PATCH_BUILDSPEC: the original BuildSpec for run \"{{runId}}\" is not in this browser, so a safe diff cannot be built",
-      "draftUnknownProvider": "CREATE_BUILD_DRAFT: provider \"{{provider}}\" is not in the catalog",
-      "draftUnknownDataset": "CREATE_BUILD_DRAFT: dataset \"{{dataset}}\" is not in the \"{{provider}}\" catalog",
-      "stageNone": "none",
-      "sqlStageMismatch": "Excluded from execution: the current screen stage ({{current}}) does not match the proposed SQL stage ({{proposed}}).",
-      "sqlSourceDropped": "Removed source \"{{source}}\" because the evidence does not confirm it. This is a single-source run, so Builder picks the source automatically.",
-      "sqlSourceUnknown": "Excluded from execution: it references source \"{{source}}\", which is not in the evidence."
-    },
-    "drawer": {
-      "collapseLabel": "Show Ask KPubData at default width",
-      "expandLabel": "Expand Ask KPubData",
-      "collapse": "Default",
-      "expand": "Expand",
-      "close": "Close Ask KPubData",
-      "label": "Ask KPubData"
-    },
-    "parse": {
-      "empty": "The LLM returned an empty response.",
-      "notJson": "The LLM response could not be parsed as JSON.",
-      "shapeMismatch": "The LLM response shape was not what we expected: {{issues}}"
-    },
-    "search": {
-      "label": "Ask KPubData about your data in plain language",
-      "placeholder": "Ask KPubData about the data…"
-    },
-    "content": {
-      "approve": "Approve"
-    },
-    "page": {
-      "desc": "Uses the current screen, dataset, build and quality context to give evidence-based answers and the next action.",
-      "eyebrow": "Assistant",
-      "title": "Ask KPubData"
+    "turnStatus": {
+      "noKey": "No API key configured. Set one above first.",
+      "cancelled": "The request was cancelled.",
+      "staleContext": "This answer is based on a previous screen.",
+      "retry": "Retry"
     }
   },
   "quality": {
@@ -667,7 +697,7 @@
     "header": {
       "desc": "Shows actual validation outcomes (PASS/WARN/FAIL) and per-rule issues instead of scores."
     },
-    "kubiAnalyze": "Explain this issue",
+    "assistantAnalyze": "Explain this issue",
     "selectors": {
       "dataset": "Select dataset",
       "run": "Select run",
@@ -692,7 +722,7 @@
       "scopeBase": "within {{scope}}",
       "schemaSub": "{{evaluated}} rules evaluated · {{drift}} drift"
     },
-    "kubiQuestion": "Analyze why the \"{{category}} · {{rule}}\" rule is {{status}} and how to fix it.",
+    "assistantQuestion": "Analyze why the \"{{category}} · {{rule}}\" rule is {{status}} and how to fix it.",
     "perSource": {
       "title": "Per-source checks",
       "desc": "Shown per source so the \"All sources\" total does not mask partially evaluated sources.",
@@ -882,7 +912,7 @@
       "heading": "Overall Workflow",
       "note": "Below is the recommended order — follow the sidebar and on-screen guidance for each step."
     },
-    "kubi": {
+    "assistant": {
       "title": "Not sure where to start? Ask KPubData",
       "desc": "Describe the data or analysis you want and Ask KPubData will help you get started.",
       "placeholder": "e.g., What can I do with Seoul air quality data?",
@@ -1162,7 +1192,7 @@
     "runFailedTitle": "The run is failed, but the {{stage}} stage of the selected source completed.",
     "runFailedBody": "Another source in this run ({{sources}}) had a stage failure, so the run as a whole is reported as failed. This is not a contradiction — run status and source/stage status cover different scopes.",
     "unpublished": "Not published",
-    "kubiHint": "Ask KPubData can propose BuildSpec changes for this dataset",
+    "assistantHint": "Ask KPubData can propose BuildSpec changes for this dataset",
     "runStatusAll": "Run status (overall)",
     "unavailable": "Unavailable",
     "selectedStageStatus": "Selected source · stage status",
@@ -1372,7 +1402,7 @@
       "savedTitle": "Saved Reports",
       "savedEmpty": "No saved reports",
       "savedEmptyDesc": "Select a dataset/run above to create your first report.",
-      "kubiPending": "{{count}} reference notes pending. Open the report to add or dismiss them from the \"reference queue\".",
+      "assistantPending": "{{count}} reference notes pending. Open the report to add or dismiss them from the \"reference queue\".",
       "deleteConfirm": "Delete this report? This cannot be undone.",
       "titleTemplate": "{{dataset}} · {{run}} Report",
       "untitled": "Untitled",
@@ -1519,7 +1549,7 @@
         "evidenceStatusShort": "evidence status"
       },
       "provenance": {
-        "kubi": "[AI-written - Ask KPubData]",
+        "assistant": "[AI-written - Ask KPubData]",
         "user": "[User-written]"
       },
       "tag": {
@@ -1527,9 +1557,9 @@
         "user": "User-written"
       },
       "detailHeading": "Supporting detail",
-      "kubiHeading": "Ask KPubData reference analysis",
-      "kubiOtherRun": "Reference analysis - based on a run other than this report's (dataset: {{dataset}}, run: {{run}})",
-      "kubiOtherRunHtml": "Reference analysis - based on another run (dataset: {{dataset}}, run: {{run}})",
+      "assistantHeading": "Ask KPubData reference analysis",
+      "assistantOtherRun": "Reference analysis - based on a run other than this report's (dataset: {{dataset}}, run: {{run}})",
+      "assistantOtherRunHtml": "Reference analysis - based on another run (dataset: {{dataset}}, run: {{run}})",
       "reasonLabel": "Rationale"
     },
     "block": {
@@ -1546,7 +1576,7 @@
         "output": "6. Output"
       },
       "showDetail": "Show supporting detail",
-      "kubiTitle": "Ask KPubData analysis · AI-written",
+      "assistantTitle": "Ask KPubData analysis · AI-written",
       "remove": "Remove",
       "edit": "Edit",
       "delete": "Delete",
@@ -1556,7 +1586,7 @@
       "reason": "Rationale: {{reason}}",
       "linkedEvidence": "Linked evidence: {{refs}}"
     },
-    "kubiPanel": {
+    "assistantPanel": {
       "preset": {
         "comprehensive": {
           "label": "Generate AI analysis for the report",
@@ -1627,7 +1657,7 @@
       "save": "Save",
       "untitled": "Untitled"
     },
-    "kubiInbox": {
+    "assistantInbox": {
       "title": "Pending notes",
       "emptyTitle": "No pending notes",
       "emptyDesc": "Approving the 'Add to report' action in an Ask KPubData conversation collects notes here.",
@@ -1653,7 +1683,7 @@
     "contextSidebar": {
       "evidenceFetchedAt": "Evidence fetched at",
       "evaluatedRules": "Rules evaluated",
-      "kubiBlocks": "Ask KPubData analysis blocks",
+      "assistantBlocks": "Ask KPubData analysis blocks",
       "pendingNotes": "Pending notes",
       "countUnit": "{{count}}",
       "noteUnit": "{{count}}",
@@ -1661,7 +1691,7 @@
     },
     "provenance": {
       "builder": "Builder Evidence",
-      "kubi": "AI-written · Ask KPubData",
+      "assistant": "AI-written · Ask KPubData",
       "user": "User-written"
     }
   },
@@ -1867,38 +1897,6 @@
       "mismatch": "The run or target in Builder's response does not match the request."
     }
   },
-  "assistant": {
-    "generate": {
-      "unknownProvider": "sources[{{index}}].provider: provider '{{provider}}' is not in the catalog.",
-      "unknownDataset": "sources[{{index}}].dataset: dataset '{{dataset}}' does not exist on provider '{{provider}}'.",
-      "yamlParse": "The YAML could not be parsed.",
-      "mockDisabled": "Generation is disabled in mock mode (ST-A8, #211)",
-      "noValidate": "BuildSpec generation stopped: no connection to Builder /validate.",
-      "noCatalog": "BuildSpec generation stopped: the catalog could not be read.",
-      "emptyOutput": "The output was empty.",
-      "restoreFailed": "The secret could not be restored.",
-      "validateRequestFailed": "The Builder validation request failed.",
-      "validationFailed": "Validation failed"
-    },
-    "provider": {
-      "auth": "LLM API authentication failed. Check the API key.",
-      "rateLimit": "LLM API rate limit exceeded. Try again in a moment.",
-      "serverError": "The LLM server hit a temporary error. Try again in a moment.",
-      "callFailed": "The LLM API call failed.",
-      "callFailedStatus": "The LLM API call failed. (status {{status}})",
-      "unsafeBaseUrl": "The LLM base URL is not safe: {{reason}}"
-    },
-    "scrub": {
-      "unknownPlaceholder": "It contains an unknown secret placeholder."
-    },
-    "baseUrl": {
-      "invalid": "That is not a valid URL.",
-      "httpsOnly": "Only HTTPS addresses are allowed, to keep the API key from leaking."
-    },
-    "config": {
-      "persistWarning": "The LLM API key is stored in this browser in plain text. An XSS attack could steal it. Do not store it if you have untrusted extensions installed."
-    }
-  },
   "status": {
     "new": "New draft",
     "draft": "Draft",
@@ -1931,7 +1929,7 @@
       "AddData": "Add Data",
       "DatasetCatalog": "Dataset Catalog",
       "Discover": "Discover",
-      "Kubi": "Ask KPubData",
+      "Assistant": "Ask KPubData",
       "Monitoring": "Monitoring",
       "Provider": "Provider",
       "Quality": "Quality",
@@ -1971,7 +1969,7 @@
         "title": "Check quality results",
         "copy": "Review recent quality warnings and follow up where needed."
       },
-      "kubi-helper": {
+      "assistant-helper": {
         "title": "Stuck? Ask KPubData",
         "copy": "Ask KPubData helps you analyze using the dataset, run and stage on the current screen along with Builder evidence."
       },
