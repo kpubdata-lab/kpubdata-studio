@@ -80,6 +80,17 @@ jobs:
           git fetch --no-tags --depth=1 origin main || true
           npm run check:stale-ui
 
+      # TEMPORARY (#454): the fix is for a race that only showed on Node 24, so the
+      # one test is run twenty times there before this is trusted. Removed before merge
+      # — a permanent repeat would spend twenty runs on every pull request for ever.
+      - name: Flake check — newBuildDraft twenty times (#454)
+        if: matrix.node-version == '24'
+        run: |
+          for i in $(seq 1 20); do
+            echo "=== run $i ==="
+            npx vitest run __tests__/newBuildDraft.test.tsx --reporter=dot || exit 1
+          done
+
       - name: Test (Vitest)
         run: npm test
 

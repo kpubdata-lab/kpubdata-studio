@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NewBuildPage } from "@/pages/NewBuildPage";
@@ -123,6 +123,11 @@ describe("New Build draft persistence (#10)", () => {
     // 파라미터 단계로 이동하면 필드에 raw secret이 아니라 marker가 보인다.
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
     await screen.findByRole("heading", { name: "데이터 소스" });
+    // 데이터셋 select의 option은 비동기 카탈로그에서 온다. 카탈로그가 오기 전에는
+    // 복원된 draft 값과 맞는 option이 없어 select 값이 ""이고, goNext의 required
+    // 검증이 실패해 클릭이 조용히 삼켜진다 — heading만 기다리면 Node 24에서 그
+    // 틈이 벌어졌다(#454). 다른 테스트들은 여기서 값을 직접 넣어 이 틈을 지나간다.
+    await waitFor(() => expect(screen.getByLabelText(/데이터셋/)).toHaveValue("air"));
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
     await screen.findByRole("heading", { name: "파라미터" });
     const fieldValue = (screen.getByLabelText(/요청 파라미터/) as HTMLTextAreaElement).value;
