@@ -129,7 +129,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("C1 — Builds Kubi seed vs. context back-fill race", () => {
+describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
   it("closing the inline card discards a pending analysis before context becomes canonical", async () => {
     vi.spyOn(runsApi, "listBuilds").mockResolvedValue([listItem]);
     vi.spyOn(datasetsApi, "getBuildQuality").mockResolvedValue(quality);
@@ -168,7 +168,7 @@ describe("C1 — Builds Kubi seed vs. context back-fill race", () => {
     fireEvent.click(analyzeButton);
 
     // 카드는 즉시 열린다.
-    expect(await screen.findByRole("heading", { name: "Kubi Run 분석" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Run 분석" })).toBeInTheDocument();
     // 아직 context가 canonical하지 않으므로 seed하지 않는다 — turn이 생기지 않는다.
     expect(useKubiStore.getState().turns).toHaveLength(0);
     expect(screen.getByText("분석 준비 중…")).toBeInTheDocument();
@@ -214,7 +214,7 @@ describe("C1 — Builds Kubi seed vs. context back-fill race", () => {
     await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
     fireEvent.click(analyzeButton);
 
-    expect(await screen.findByRole("heading", { name: "Kubi Run 분석" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Run 분석" })).toBeInTheDocument();
     expect(useKubiStore.getState().turns).toHaveLength(0);
 
     // stages 도착 → normalizeBuildContextSearch가 ?stage=silver&source=datago__air 추가.
@@ -245,7 +245,7 @@ describe("C1 — Builds Kubi seed vs. context back-fill race", () => {
     renderBuilds();
 
     fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
-    expect(await screen.findByRole("heading", { name: "Kubi Run 분석" }));
+    expect(await screen.findByRole("heading", { name: "Run 분석" }));
     expect(useKubiStore.getState().turns).toHaveLength(0);
 
     // 다른 run 선택 → 이전 pending analyze 의도가 폐기돼야 한다.
@@ -354,7 +354,7 @@ describe("C1 — Builds Kubi seed vs. context back-fill race", () => {
     renderBuilds();
 
     fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
-    expect(await screen.findByRole("heading", { name: "Kubi Run 분석" }));
+    expect(await screen.findByRole("heading", { name: "Run 분석" }));
     expect(useKubiStore.getState().turns).toHaveLength(0);
 
     // run 변경 → 이전 pending 폐기. B의 context가 canonical해져도 클릭 없이 자동 분석하지 않는다.

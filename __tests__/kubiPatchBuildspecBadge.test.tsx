@@ -60,8 +60,8 @@ function renderKubiPage() {
 }
 
 function ask(question: string) {
-  fireEvent.change(screen.getByLabelText("Kubi에게 질문하기"), { target: { value: question } });
-  fireEvent.submit(screen.getByLabelText("Kubi에게 질문하기").closest("form")!);
+  fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: question } });
+  fireEvent.submit(screen.getByLabelText("Ask KPubData 에 질문하기").closest("form")!);
 }
 
 beforeEach(() => {
@@ -74,7 +74,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Kubi PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
+describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
   it("shows the 'BuildSpec 변경 제안' badge only on the PATCH_BUILDSPEC action card", async () => {
     saveBuildSpec("air-2026-08-14", SPEC);
     configureKey();
@@ -88,7 +88,7 @@ describe("Kubi PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
             type: "PATCH_BUILDSPEC",
             runId: "air-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "kubi-updated" }],
-            reason: "Kubi 분석 참고",
+            reason: "이 문제 설명 보기 참고",
           },
           { type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "실패 원인을 확인하세요" },
           { type: "ADD_REPORT_BLOCK", note: "참고 노트", reason: "품질 이슈 참고용" },
@@ -128,7 +128,7 @@ describe("Kubi PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
             type: "PATCH_BUILDSPEC",
             runId: "air-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "kubi-updated" }],
-            reason: "Kubi 분석 참고",
+            reason: "이 문제 설명 보기 참고",
           },
         ],
       }),

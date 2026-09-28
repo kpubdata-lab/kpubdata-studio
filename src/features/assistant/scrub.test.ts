@@ -243,7 +243,7 @@ describe("P6 safeRunIds — provenance 기반 exact-value 면제 (#284)", () => 
   });
 
   it("safeRunIds 를 넘기지 않으면 main 과 동일하게 canonical run id 도 스크럽한다", () => {
-    // Confirms behavior preservation for existing non-Kubi consumers (paramsRedaction/urlRedaction/savedSpecs).
+    // Confirms behavior preservation for existing non-Ask KPubData consumers (paramsRedaction/urlRedaction/savedSpecs).
     expect(looksLikeSecret(RUN_ID)).toBe(true);
     expect(redactSecrets({ note: RUN_ID })).toEqual({ note: "[REDACTED]" });
   });

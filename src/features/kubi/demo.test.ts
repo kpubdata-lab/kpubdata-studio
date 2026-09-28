@@ -1,5 +1,5 @@
 /**
- * Unit tests for Kubi mock/dev demo (#256 review — Kubi demo in mock mode).
+ * Unit tests for Ask KPubData mock/dev demo (#256 review — Ask KPubData demo in mock mode).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildKubiDemoResponse, isKubiDemoAvailable, runKubiDemoQuery } from "./demo";

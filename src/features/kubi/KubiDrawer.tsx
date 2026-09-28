@@ -82,14 +82,14 @@ export function KubiDrawer() {
       />
       <aside
         ref={dialogRef}
-        aria-label="Kubi AI Assistant"
+        aria-label={t("kubi.drawer.label")}
         aria-modal="true"
         role="dialog"
         className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col overflow-hidden border-l border-border bg-card shadow-xl transition-[width] sm:w-[min(34rem,100vw)] ${expanded ? "lg:w-[min(60vw,60rem)]" : ""}`}
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            ✨ Kubi AI Assistant
+            ✨ {t("kubi.drawer.label")}
           </p>
           <div className="flex gap-1.5">
             <button aria-label={expanded ? t("kubi.drawer.collapseLabel") : t("kubi.drawer.expandLabel")} aria-pressed={expanded} className="hidden rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-muted lg:block" onClick={() => setExpanded((value) => !value)} type="button">

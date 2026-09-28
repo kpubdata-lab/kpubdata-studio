@@ -1,7 +1,7 @@
 /**
  * KubiRunAnalysis (#255 §2) — the Builds/Runs "Analyze this Run" inline card.
  *
- * No new Kubi engine — `useKubiSession` is reused as-is, so these tests
+ * No new Ask KPubData engine — `useKubiSession` is reused as-is, so these tests
  * mock that hook and check the card shows exactly the right thing per turn
  * state: BYOK unset, loading-prep, in progress, answer arrived, error, and
  * stale-turn exclusion (#256 stale-context guard).
@@ -64,13 +64,13 @@ function session(overrides: Partial<UseKubiSessionResult> = {}): UseKubiSessionR
 }
 
 describe("KubiRunAnalysis", () => {
-  it("asks the user to configure an API key when Kubi isn't configured and no demo is available", () => {
+  it("asks the user to configure an API key when Ask KPubData isn't configured and no demo is available", () => {
     useKubiSessionMock.mockReturnValue(session({ turns: [] }));
     useAssistConfigMock.mockReturnValue({ isConfigured: false });
 
     render(<KubiRunAnalysis onClose={vi.fn()} onAskMore={vi.fn()} />);
 
-    expect(screen.getByText("Kubi를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
+    expect(screen.getByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
     expect(screen.queryByText(/분석 준비 중/)).not.toBeInTheDocument();
   });
 
@@ -84,7 +84,7 @@ describe("KubiRunAnalysis", () => {
 
     render(<KubiRunAnalysis onClose={vi.fn()} onAskMore={vi.fn()} />);
 
-    expect(screen.getByText("Kubi를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
+    expect(screen.getByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
     expect(screen.queryByText(/분석 준비 중/)).not.toBeInTheDocument();
     // In the no-key state, "Ask more" is not shown.
     expect(screen.queryByRole("button", { name: "더 질문하기" })).not.toBeInTheDocument();
@@ -97,7 +97,7 @@ describe("KubiRunAnalysis", () => {
 
     render(<KubiRunAnalysis onClose={vi.fn()} onAskMore={vi.fn()} />);
 
-    expect(screen.getByText("Kubi를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
+    expect(screen.getByText("Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.")).toBeInTheDocument();
     expect(screen.queryByText("API Key가 설정되어 있지 않습니다. 위에서 먼저 설정하세요.")).not.toBeInTheDocument();
   });
 

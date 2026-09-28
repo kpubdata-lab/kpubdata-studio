@@ -63,8 +63,8 @@ async function askForReportBlock() {
       <KubiPage />
     </MemoryRouter>,
   );
-  fireEvent.change(screen.getByLabelText("Kubi에게 질문하기"), { target: { value: "가격 결측 요약해줘" } });
-  fireEvent.submit(screen.getByLabelText("Kubi에게 질문하기").closest("form")!);
+  fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: "가격 결측 요약해줘" } });
+  fireEvent.submit(screen.getByLabelText("Ask KPubData 에 질문하기").closest("form")!);
   // ask()는 fire-and-forget(submit 핸들러가 await하지 않는다) — 승인 버튼이 뜰 때까지 기다린다.
   await screen.findByRole("button", { name: "승인" });
 }

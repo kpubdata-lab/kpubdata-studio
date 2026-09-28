@@ -2,22 +2,22 @@ import { expect, test } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
 
 /**
- * Kubi scenario (#268 scenario 6, mock demo).
+ * Ask KPubData scenario (#268 scenario 6, mock demo).
  *
- * - Kubi screen entry·show BYOK not configured onboarding
+ * - Ask KPubData screen entry·show BYOK not configured onboarding
  * - Send demo question (deterministic mock evidence) → render answer turn
  */
 test.beforeEach(async ({ page }) => {
   await prepareCleanPage(page);
 });
 
-test("Kubi가 BYOK onboarding과 데모 질문 진입점을 표시한다", async ({ page }) => {
+test("Ask KPubData가 BYOK onboarding과 데모 질문 진입점을 표시한다", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   await page.goto("/kubi");
   await expect(
-    page.getByRole("heading", { name: /Kubi/i }).first(),
+    page.getByRole("heading", { name: /Ask KPubData/i }).first(),
   ).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText("API Key").first()).toBeVisible();
 
@@ -29,7 +29,7 @@ test("데모 질문이 결정적 mock 답변 turn를 만든다", async ({ page }
   collectPageErrors(page, errors);
 
   await page.goto("/kubi");
-  await expect(page.getByRole("heading", { name: /Kubi/i }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Ask KPubData/i }).first()).toBeVisible();
 
   const demoButton = page.getByRole("button", { name: /데모 질문/ }).first();
   await expect(demoButton).toBeVisible();
@@ -43,12 +43,12 @@ test("데모 질문이 결정적 mock 답변 turn를 만든다", async ({ page }
   await expectNoPageErrors(errors);
 });
 
-test("Kubi 질문 입력이 라벨/aria로 접근 가능하다", async ({ page }) => {
+test("Ask KPubData 질문 입력이 라벨/aria로 접근 가능하다", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   await page.goto("/kubi");
-  const input = page.getByLabel("Kubi에게 질문하기").first();
+  const input = page.getByLabel("Ask KPubData 에 질문하기").first();
   await expect(input).toBeVisible();
 
   await expectNoPageErrors(errors);

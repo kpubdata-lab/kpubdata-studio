@@ -35,7 +35,7 @@ test("핵심 route가 제목을 렌더링하고 console error가 없다", async 
   await expectNoPageErrors(errors);
 });
 
-test("Settings에 Provider 자격 증명과 Kubi BYOK가 분리된 영역으로 존재한다 (#301 회귀)", async ({
+test("Settings에 Provider 자격 증명과 Ask KPubData BYOK가 분리된 영역으로 존재한다 (#301 회귀)", async ({
   page,
 }) => {
   const errors: string[] = [];

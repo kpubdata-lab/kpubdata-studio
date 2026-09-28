@@ -65,6 +65,15 @@ jobs:
       - name: Korean comment gate (#427)
         run: python3 scripts/check_korean_ts_comments.py src e2e
 
+      # Renaming a UI string without moving the assertions that name it (#429). The
+      # values this branch removed from the locales are computed exactly, so there is
+      # no guess about which literals are labels and no false positives.
+      # checkout is depth 1, so the comparison base is fetched here.
+      - name: Stale UI literal gate
+        run: |
+          git fetch --no-tags --depth=1 origin main || true
+          npm run check:stale-ui
+
       - name: Test (Vitest)
         run: npm test
 

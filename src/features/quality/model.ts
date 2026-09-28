@@ -130,12 +130,12 @@ export function summarizeChecksPassed(results: QualityCheckResult[]): ChecksPass
 }
 
 /**
- * Pick question for Quality Center header's "Kubi Analysis" button, tailored to
+ * Pick question for Quality Center header's "Explain this issue" button, tailored to
  * current Quality state.
  *
  * Previously, fixed "cause/remedy of WARN/FAIL" seed regardless of state, sending
  * nonsensical questions for Runs where all checks pass (confirmed in real Builder
- * E2E). Per-issue "Kubi Analysis" button already has issue context, so this
+ * E2E). Per-issue "Explain this issue" button already has issue context, so this
  * function is for header button only.
  */
 export function qualityKubiSeedQuestion(summary: ChecksPassedSummary): string {

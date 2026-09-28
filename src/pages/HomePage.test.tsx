@@ -477,7 +477,7 @@ describe("HomePage 전체 작업 흐름 (설명형, 클릭 카드 아님)", () =
     expect(screen.getByText("Preview · Build")).toBeInTheDocument();
     expect(screen.getByText("데이터를 미리 확인·검증한 뒤 Build")).toBeInTheDocument();
     expect(screen.getByText("품질 확인 · 활용")).toBeInTheDocument();
-    expect(screen.getByText("Quality · Kubi · Export · Publish")).toBeInTheDocument();
+    expect(screen.getByText("Quality · Ask KPubData · Export · Publish")).toBeInTheDocument();
 
     // Not a clickable card — STEP card itself should not be link/button.
     expect(screen.queryByRole("link", { name: /데이터 찾기/ })).not.toBeInTheDocument();

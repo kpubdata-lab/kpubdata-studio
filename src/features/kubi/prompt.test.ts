@@ -1,5 +1,5 @@
 /**
- * Unit tests for Kubi prompt assembly (#256 review — Builder #504 contract: SQL must query
+ * Unit tests for Ask KPubData prompt assembly (#256 review — Builder #504 contract: SQL must query
  * the logical relation "dataset" only).
  */
 import { describe, expect, it } from "vitest";

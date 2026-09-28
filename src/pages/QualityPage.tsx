@@ -209,10 +209,10 @@ export function QualityPage() {
     setSearchParams(next);
   }
 
-   // Before opening Kubi, sync the dataset/run/source/stage shown on screen to the URL —
-   // KubiContext reads route only (context.ts), so without this sync the drawer only
-   // receives catalog-level evidence (#319 follow-up). Header button and per-issue "Kubi
-   // analysis" share this helper.
+  // Before opening Ask KPubData, sync the dataset/run/source/stage shown on screen to
+  // the URL — KubiContext reads route only (context.ts), so without this sync the drawer
+  // only receives catalog-level evidence (#319 follow-up). Header button and per-issue
+  // "Explain this issue" share this helper.
   function syncKubiContext() {
     updateContext({
       dataset: selectedDatasetId || null,

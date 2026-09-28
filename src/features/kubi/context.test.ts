@@ -4,7 +4,7 @@ import { contextsMatch, resolveKubiContext } from "./context";
 /**
  * KubiContext SSOT resolver (#256 + #319 follow-up).
  *
- * Kubi reads route (`?dataset=&run=&source=&stage=`) as context alone. QualityPage/Dataset Detail
+ * Ask KPubData reads route (`?dataset=&run=&source=&stage=`) as context alone. QualityPage/Dataset Detail
  * sends selected source via `?source=`, resolver must pass as `source` so multi-source run queries
  * stage evidence from correct source, and stale-marks prior turn when source changes.
  */

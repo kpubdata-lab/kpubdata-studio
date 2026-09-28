@@ -1,5 +1,5 @@
 /**
- * Kubi "관련 데이터셋" 사이드 패널 (#256 이슈 체크리스트 — "관련 데이터셋 후보는 실제 `/catalog`
+ * Ask KPubData "관련 데이터셋" 사이드 패널 (#256 이슈 체크리스트 — "관련 데이터셋 후보는 실제 `/catalog`
  * evidence와 대조").
  *
  * 순수 함수 로직은 `src/features/kubi/relatedDatasets.test.ts`가 담당한다. 여기서는 실제
@@ -55,8 +55,8 @@ async function askAbout(datasetId: string) {
       <KubiPage />
     </MemoryRouter>,
   );
-  fireEvent.change(screen.getByLabelText("Kubi에게 질문하기"), { target: { value: "이 데이터셋 상태 알려줘" } });
-  fireEvent.submit(screen.getByLabelText("Kubi에게 질문하기").closest("form")!);
+  fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: "이 데이터셋 상태 알려줘" } });
+  fireEvent.submit(screen.getByLabelText("Ask KPubData 에 질문하기").closest("form")!);
   await screen.findByText("현재 데이터셋 상태를 요약했습니다.");
 }
 
@@ -69,7 +69,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Kubi 관련 데이터셋 패널 (#256 이슈 체크리스트)", () => {
+describe("Ask KPubData 관련 데이터셋 패널 (#256 이슈 체크리스트)", () => {
   it("shows a plain explanation instead of guessing when the dataset's provider has no catalog overlap", async () => {
     // 전역 MSW catalog fixture는 provider "datago"만 제공하고, air-quality mock dataset의
     // provider("data.go.kr"/"kma")와 이름이 겹치지 않는다 — 이 경우 후보를 지어내지 않는다.

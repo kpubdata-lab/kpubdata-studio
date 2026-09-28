@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { escapeHtml, isSafeHref, renderMarkdownToHtml, renderMarkdownToReact } from "./markdown";
 
-describe("markdown safety (#258 §13) — untrusted Kubi/사용자 입력을 다룬다", () => {
+describe("markdown safety (#258 §13) — untrusted Ask KPubData/사용자 입력을 다룬다", () => {
   it("<script> 태그는 실행 가능한 형태로 만들지 않고 escape된 텍스트로 남는다", () => {
     const html = renderMarkdownToHtml('<script>alert("xss")</script>');
     expect(html).not.toContain("<script>");

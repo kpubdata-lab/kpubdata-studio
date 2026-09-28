@@ -369,7 +369,7 @@ describe("useKubiSession — Generated SQL execution via Builder /query (#256, b
   });
 });
 
-describe("useKubiSession — askDemo (#256 review, mock mode Kubi 데모)", () => {
+describe("useKubiSession — askDemo (#256 review, mock mode Ask KPubData 데모)", () => {
   it("works without any API key configured and never calls the LLM provider", async () => {
     vi.mocked(createProvider).mockClear();
     const { result } = renderHook(() => useKubiSession(), {
@@ -495,7 +495,7 @@ describe("useKubiSession — PATCH_BUILDSPEC diff + validate path (#256 리뷰 �
             type: "PATCH_BUILDSPEC",
             runId: "air-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "kubi-updated" }],
-            reason: "Kubi 분석 참고",
+            reason: "이 문제 설명 보기 참고",
           },
         ],
       }),
