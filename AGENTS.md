@@ -68,6 +68,11 @@ carry most of the weight:
 - **A rule without a gate is a wish.** When you add a rule, add the command that
   checks it, wire it into CI, and write the test that shows it failing. Without the
   third, nobody knows the gate works.
+- **An absent check is not a failure — it is a stop.** A required status check no
+  workflow produces leaves every pull request BLOCKED for ever, because GitHub waits
+  for it rather than reporting it. The way past is `--admin`, which skips every other
+  check too. Require the one aggregate `CI gate` job, never a matrix-suffixed name,
+  and run `scripts/check_required_checks.py` (in kpubdata) after touching a matrix.
 
 Existing debt is frozen with a **ratchet** — the baseline holds today's per-file
 count and the check fails only when a count grows. Fixing everything first means
@@ -115,6 +120,27 @@ What an agent does not do:
 - Never force-push to `main`. Never delete `main`.
 - Do not rename or delete a branch you did not create.
 - If a git operation is not obviously safe, **ask instead of guessing.**
+
+## Releases
+
+Cadence and order live in [kpubdata's compatibility.md §5.1](https://github.com/yeongseon/kpubdata/blob/main/docs/compatibility.md#release-cadence);
+who may do what lives in POLICY 14. This section keeps only what applies to an
+agent.
+
+- **Release week is a freeze.** From the Monday of the month's last week until
+  kpubdata-studio is released on Thursday, open only release pull requests against
+  `main`: version, CHANGELOG, dependency pin, compatibility documents, or a fix for
+  a failing release gate. Other work waits on its branch.
+- **Prepare, do not release.** An agent may tidy the CHANGELOG's Unreleased section,
+  run a release workflow with `dry_run`, and draft the version and pin pull requests.
+  Pushing a tag, creating a GitHub Release, approving the PyPI environment and
+  changing what a release contains are a person's (POLICY 14).
+- **Propose the bump from the CHANGELOG, with the reason.** In 0.x, a breaking change
+  or a new feature is minor; fixes alone are patch.
+- **Builder and Studio share one version** (ADR 0004). They ship as one application,
+  so a release that only changed one of them still raises both. Skipping a repository
+  because it has no changes applies to kpubdata alone.
+- **Target Release is a month (`2026-10`), not a version.**
 
 ## Build order
 
