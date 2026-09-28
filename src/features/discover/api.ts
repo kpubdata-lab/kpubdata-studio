@@ -1,22 +1,25 @@
 /**
- * Discover(#249) API 계층.
+ * Discover (#249) API layer.
  *
- * Builder `GET /catalog`(원천 provider/dataset 카탈로그)를 조회한다 — 이미 빌드된
- * 데이터셋 목록(`GET /datasets`, `features/datasets/api`)과는 다른 소스이니 섞지 않는다.
+ * Fetches Builder `GET /catalog` (the source provider/dataset catalogue) — a
+ * different source from the already-built datasets list (`GET /datasets`,
+ * `features/datasets/api`); never blend the two.
  *
- * mock/real 분기는 `features/datasets/api`가 이미 확립한 패턴을 그대로 따른다:
- * `builderApi.catalog()` 자체는 mock 분기가 없으므로(#246 원칙 — mock/demo와 real Builder
- * 동작을 명확히 구분), 이 계층에서 `isRealBuilderEnabled()`로 나눈다.
+ * The mock/real branch follows the pattern `features/datasets/api` already
+ * established: `builderApi.catalog()` itself has no mock branch (#246
+ * principle — clearly separate mock/demo from real Builder), so this layer
+ * splits on `isRealBuilderEnabled()`.
  */
 import { builderApi, isRealBuilderEnabled, type CatalogResponse } from "@/shared/lib/builderApi";
 
 /**
- * mock 모드에서 쓰는 결정적 fixture.
+ * Deterministic fixture used in mock mode.
  *
- * requires_service_key가 true/false 둘 다 있어야 배지/필터를 시연할 수 있고, provider가
- * 2개 이상이어야 provider 필터가 의미를 갖는다. Builder #490 rich metadata(description/
- * tags/source_url 등)가 catalog 스키마에 포함됨에 따라(#250) fixture도 스키마 전체를
- * 채운다 — P0 화면은 표시하지 않아도 계약과 드리프트되지 않는다.
+ * Both requires_service_key true/false must be present to exercise the
+ * badge/filter, and 2+ providers make the provider filter meaningful. As
+ * Builder #490 rich metadata (description/tags/source_url etc.) entered the
+ * catalog schema (#250), the fixture fills the entire schema too — P0
+ * screens may not display it, but it cannot drift from the contract.
  */
 function dataset(
   name: string,
@@ -62,7 +65,7 @@ const MOCK_CATALOG: CatalogResponse = {
   ],
 };
 
-/** GET /catalog — provider/dataset 원천 카탈로그를 조회한다(#249). */
+/** GET /catalog — fetches the source provider/dataset catalogue (#249). */
 export async function loadCatalog(signal?: AbortSignal): Promise<CatalogResponse> {
   if (isRealBuilderEnabled()) return builderApi.catalog(signal);
   return MOCK_CATALOG;

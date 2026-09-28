@@ -1,5 +1,5 @@
 /**
- * Builds master 패널 — run 목록·검색·상태 필터 (#379로 BuildsPage에서 분리).
+ * Builds master panel — run list, search, status filter (split from BuildsPage in #379).
  */
 import { useTranslation } from "react-i18next";
 

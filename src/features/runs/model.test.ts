@@ -1,9 +1,10 @@
 /**
- * Builds/Runs master-detail(#255) 모델 헬퍼 테스트.
+ * Builds/Runs master-detail (#255) model-helper tests.
  *
- * Builder 실제 계약값(StageStatusValue: completed/failed/not_run/unavailable, BuildJob
- * status: queued/running/cancelling/succeeded/failed/cancelled)만 사용하고, Studio가
- * "partial" 같은 run 전체 상태를 지어내지 않는지 확인한다.
+ * Verifies only real Builder contract values are used (StageStatusValue:
+ * completed/failed/not_run/unavailable; BuildJob status:
+ * queued/running/cancelling/succeeded/failed/cancelled) and that Studio
+ * never invents whole-run states like "partial".
  */
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/shared/lib/builderApi";
@@ -106,7 +107,7 @@ describe("computeBuildKpi", () => {
     // so the UI shows N/A instead of a fake 0.
     const kpi = computeBuildKpi([listItem({ status: "succeeded" })], 50, false);
     expect(kpi.runningAvailable).toBe(false);
-    expect(kpi.running).toBe(0); // 계산값 자체는 0이지만, UI는 runningAvailable로 N/A 표시를 결정해야 한다.
+    expect(kpi.running).toBe(0); // The computed value is 0, but the UI must decide N/A display via runningAvailable.
   });
 });
 
@@ -150,7 +151,7 @@ describe("stage helpers — never collapse run status into stage status", () => 
   it("collectFailureEvidence pairs the failed stage with the last completed stage per source", () => {
     const sources = [
       stageEntry({ source_key: "air", bronze: { status: "completed", available: true }, silver: { status: "failed", available: false }, gold: { status: "not_run", available: false } }),
-      stageEntry({ source_key: "population" }), // 모두 completed — 실패 없음
+      stageEntry({ source_key: "population" }), // All completed — no failures
     ];
     expect(collectFailureEvidence(sources)).toEqual([
       { sourceKey: "air", failedStage: "silver", lastCompletedStage: "bronze" },

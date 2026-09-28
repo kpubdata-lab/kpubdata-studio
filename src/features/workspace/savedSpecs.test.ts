@@ -1,8 +1,9 @@
 /**
- * Saved BuildSpec 로컬 저장소(#260) 테스트.
+ * Saved BuildSpec local store (#260) tests.
  *
- * reports/repository.ts와 동일한 보장을 확인한다: 명시적 실패 반환, 상한 도달 시 거부
- * (자동삭제 없음), 낙관적 동시성, 손상된 저장값 복구, secret redaction.
+ * Verifies the same guarantees as reports/repository.ts: explicit failure
+ * returns, rejection at the cap (no auto-delete), optimistic concurrency,
+ * corrupted-value recovery, secret redaction.
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { BuildSpec } from "@/shared/lib/types";
@@ -94,7 +95,7 @@ describe("secret redaction on save", () => {
 
     const stored = getSavedSpec(entry.id);
     expect(stored?.spec.sources[0].params.serviceKey).toBe("[REDACTED]");
-    // localStorage에 원문이 남지 않았는지 raw 문자열까지 확인한다.
+    // Checks the raw string too — no plaintext remains in localStorage.
     expect(localStorage.getItem(STORE_KEY)).not.toMatch(/aVeryLongLookingSecretApiKeyValue/);
   });
 });
@@ -119,7 +120,7 @@ describe("SAVED_SPEC_LIMIT — rejects new saves instead of auto-evicting old on
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toContain(String(SAVED_SPEC_LIMIT));
 
-    // 거부됐을 뿐 기존 항목이 자동 삭제되지는 않았다.
+    // Merely rejected — existing entries were not auto-deleted.
     expect(listSavedSpecSummaries()).toHaveLength(SAVED_SPEC_LIMIT);
   });
 
@@ -143,14 +144,14 @@ describe("SAVED_SPEC_LIMIT — rejects new saves instead of auto-evicting old on
 describe("optimistic concurrency (revision)", () => {
   it("rejects a save with a stale revision unless force is passed", () => {
     const { entry } = createSavedSpec({ name: "원본", spec: makeSpec(), validation: { status: "not_validated", errors: [] } });
-    // 다른 탭이 먼저 저장해 revision이 올라간 상황을 흉내낸다.
+    // Simulates another tab saving first, bumping the revision.
     saveSpec({ ...entry, name: "다른 탭에서 저장" }, { force: true });
 
     const staleAttempt = saveSpec({ ...entry, name: "오래된 값으로 저장 시도" });
     expect(staleAttempt.ok).toBe(false);
     if (!staleAttempt.ok) expect(staleAttempt.conflict).toBe(true);
 
-    // 먼저 저장한 내용이 보존된다.
+    // The first save's content is preserved.
     expect(getSavedSpec(entry.id)?.name).toBe("다른 탭에서 저장");
   });
 
@@ -192,7 +193,7 @@ describe("duplicateSavedSpec", () => {
     expect(outcome!.entry.name).toBe("원본 (복제본)");
     expect(outcome!.entry.validation).toEqual({ status: "not_validated", errors: [] });
 
-    // 원본은 그대로 남아 있다(복제가 원본을 건드리지 않음).
+    // The original is untouched (the clone does not mutate it).
     expect(getSavedSpec(source.id)?.name).toBe("원본");
     expect(getSavedSpec(source.id)?.validation.status).toBe("validated_pass");
     expect(listSavedSpecSummaries()).toHaveLength(2);
@@ -221,7 +222,7 @@ describe("corrupted storage recovery", () => {
   it("falls back to an empty store instead of throwing when the raw value is invalid JSON", () => {
     localStorage.setItem(STORE_KEY, "{not valid json");
     expect(listSavedSpecSummaries()).toEqual([]);
-    // 손상된 값을 정리했으니 이후 저장은 정상 동작한다.
+    // Corrupted value cleaned up, so subsequent saves work.
     const result = createSavedSpec({ name: "복구 후 저장", spec: makeSpec(), validation: { status: "not_validated", errors: [] } });
     expect(result.result.ok).toBe(true);
   });
@@ -236,8 +237,9 @@ describe("reload persistence", () => {
   it("survives a simulated reload (re-reading from localStorage without any in-memory cache)", () => {
     const { entry } = createSavedSpec({ name: "새로고침 확인", spec: makeSpec(), validation: { status: "validated_pass", errors: [] } });
 
-    // savedSpecs.ts는 모듈 레벨 캐시가 없다 — 매 호출이 localStorage를 다시 읽으므로
-    // 이 조회 자체가 "새로고침 후에도 복구되는지"를 검증한다.
+    // savedSpecs.ts has no module-level cache — every call re-reads
+    // localStorage, so this very lookup verifies "recovered even after
+    // refresh".
     const reloaded = getSavedSpec(entry.id);
     expect(reloaded).not.toBeNull();
     expect(reloaded?.name).toBe("새로고침 확인");

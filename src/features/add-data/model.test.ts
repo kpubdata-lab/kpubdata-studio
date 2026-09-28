@@ -259,7 +259,7 @@ describe("redactBuildSpecForDisplay (#283 리뷰 대응, Epic #246)", () => {
     const displaySpec = redactBuildSpecForDisplay(original);
 
     expect((displaySpec.sources[0].endpoint ?? "")).not.toContain(secret);
-    // 원본 spec 객체는 변형되지 않는다(다른 곳에서 실제 제출에 계속 쓰인다).
+    // The original spec object is not mutated (it keeps being used for the real submission elsewhere).
     expect(original.sources[0].endpoint).toContain(secret);
   });
 
@@ -291,9 +291,9 @@ describe("redactBuildSpecForDisplay (#283 리뷰 대응, Epic #246)", () => {
     const displaySpec = redactBuildSpecForDisplay(original);
 
     expect(JSON.stringify(displaySpec.sources[0].params)).not.toContain(secret);
-    // 비민감 값은 Builder canonical JSON 타입을 그대로 유지한다.
+    // Non-sensitive values keep Builder's canonical JSON types as-is.
     expect(displaySpec.sources[0].params.page).toBe(1);
-    // 원본 spec 객체는 변형되지 않는다(다른 곳에서 실제 제출에 계속 쓰인다).
+    // The original spec object is not mutated (it keeps being used for the real submission elsewhere).
     expect(original.sources[0].params.serviceKey).toBe(secret);
   });
 
@@ -342,7 +342,7 @@ describe("buildSpecFromDraft — restored sentinel 재입력 복구 (#283 후속
         sourceParams: JSON.stringify({ serviceKey: PARAMS_REDACTED_SENTINEL, page: 1 }),
       },
     });
-    // 복원 직후에는 GUI 필드에도 sentinel이 그대로 남아 있으므로 여전히 fail-closed.
+    // Right after restore, the sentinel is still in the GUI fields too — still fail-closed.
     expect(buildSpecFromDraft(restoredDraft).error).toMatch(/다시 입력/);
 
     const reenteredDraft: AddDataDraft = {
@@ -376,10 +376,10 @@ describe("buildSpecFromDraft — restored sentinel 재입력 복구 (#283 후속
       sourceKind: "public_api",
       publicApi: { provider: "datago", dataset: "apt_trade", sourceParams: JSON.stringify({ page: 1 }) },
     });
-    // primary source 자체에는 sentinel이 없지만 trailing source에 남아 있어 계속 막힌다.
+    // The primary source itself has no sentinel, but it remains in the trailing source and keeps blocking.
     expect(buildSpecFromDraft(draft).error).toMatch(/다시 입력/);
 
-    // YAML Apply로 trailing source의 sentinel을 실제 값으로 교체하면 복구된다.
+    // Replacing the trailing source's sentinel with the real value via YAML Apply recovers it.
     const fixedSpec: BuildSpec = {
       ...base,
       sources: [base.sources[0], { ...base.sources[1], endpoint: "https://example.test/secondary.json?token=real-value" }],

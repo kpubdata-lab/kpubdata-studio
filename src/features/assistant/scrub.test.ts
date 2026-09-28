@@ -1,10 +1,10 @@
 /**
- * 시크릿 스크러빙 회귀 테스트 (#226).
+ * Secret-scrubbing regression tests (#226).
  *
- * 4결함 검증:
- * (a) 배열 순회 — BuildSpec.sources 가 배열
- * (c) restoreSecrets 왕복 — 배열 포함 복원
- * (d) Shannon 엔트로피 — 긴 base64 키 탐지
+ * Verifies four defect classes:
+ * (a) array traversal — BuildSpec.sources is an array
+ * (c) restoreSecrets round-trip — restore including arrays
+ * (d) Shannon entropy — detecting long base64 keys
  */
 import { describe, expect, it } from "vitest";
 
@@ -108,8 +108,8 @@ describe("looksLikeSecret — Shannon 엔트로피 (#226 결함 d)", () => {
   });
 
   it("200자 고엔트로피 base64 문자열을 잡아낸다 (현재 unique/length로는 32%라 놓침)", () => {
-    // base64 고유 문자 ≤ 64개, 길이 192 → unique/length*100 ≈ 33% < 60 (현재)
-    // Shannon 엔트로피는 문자 빈도 분포를 반영해 높게 계산
+    // base64 distinct chars ≤ 64 over length 192 → unique/length*100 ≈ 33% < 60 (current);
+    // Shannon entropy accounts for character-frequency distribution and computes high
     const longB64 =
       "dGhpcy1pcy1hLXZlcnktbG9uZy1iYXNlNjQtc3RyaW5nLXdoaWNoLXNo" +
       "b3VsZC1ub3QtYmUtY2F1Z2h0LWJ5LXRoZS1jdXJyZW50LWhldXJpc3Rp" +
@@ -136,22 +136,23 @@ describe("redactSecrets — 화면용 비가역 마스킹 (#277)", () => {
 });
 
 /**
- * P6: exact-value allowlist 로 canonical run id false-positive 만 면제 (#284).
+ * P6: exact-value allowlist exempts only canonical run-id false positives (#284).
  *
- * 원칙 — 형태가 아니라 provenance 로 판단한다. 실제 Builder/evidence 에서 확인된 exact
- * run id 만 generic 엔트로피 휴리스틱에서 면제하고, 똑같이 생긴 임의 문자열/crafted
- * 시크릿은 그대로 스크럽한다. secret-named field / 명시적 credential 대입은 allowlist
- * 보다 항상 우선한다.
+ * Principle — judge by provenance, not shape. Only exact run ids actually
+ * confirmed in Builder/evidence are exempt from the generic entropy
+ * heuristic; arbitrary lookalike strings and crafted secrets are still
+ * scrubbed. Secret-named fields and explicit credential assignments always
+ * take priority over the allowlist.
  */
 describe("P6 safeRunIds — provenance 기반 exact-value 면제 (#284)", () => {
   const RUN_ID = "datago-air-quality-1788004513062";
-  // safeRunIds 에는 "실제 확인된" run id 만 들어간다(사용자 자유 텍스트에서 추론하지 않음).
+  // safeRunIds holds only run ids "actually confirmed" (never inferred from free user text).
   const safeRunIds = new Set([RUN_ID]);
 
   it("A. known run id: 자유 텍스트에서 exact run id 를 보존한다", () => {
     const scrubber = createSecretScrubber("p6-a", { safeRunIds });
     expect(scrubber.scrubText(`Run ${RUN_ID}의 상태를 분석해줘`)).toContain(RUN_ID);
-    // `runId=<id>` 처럼 붙어 있어도(prompt context line 형태) 보존.
+    // Preserved even when attached like `runId=<id>` (prompt context-line shape).
     expect(scrubber.scrubText(`현재 문맥: page=quality, runId=${RUN_ID}, stage=silver`)).toContain(
       `runId=${RUN_ID}`,
     );
@@ -220,7 +221,7 @@ describe("P6 safeRunIds — provenance 기반 exact-value 면제 (#284)", () => 
   });
 
   it("F. safe set 에 없는 run-id 처럼 생긴 문자열은 면제하지 않는다(exact match 만)", () => {
-    const lookalike = "other-dataset-private-1788004513063"; // entropy ≥ 4, safe set 밖
+    const lookalike = "other-dataset-private-1788004513063"; // entropy ≥ 4, outside the safe set
     expect(looksLikeSecret(lookalike, safeRunIds)).toBe(true);
 
     const scrubber = createSecretScrubber("p6-f", { safeRunIds });
@@ -242,19 +243,22 @@ describe("P6 safeRunIds — provenance 기반 exact-value 면제 (#284)", () => 
   });
 
   it("safeRunIds 를 넘기지 않으면 main 과 동일하게 canonical run id 도 스크럽한다", () => {
-    // 기존 non-Ask KPubData consumer(paramsRedaction/urlRedaction/savedSpecs)의 동작 보존 확인.
+    // Confirms behavior preservation for existing non-Ask KPubData consumers (paramsRedaction/urlRedaction/savedSpecs).
     expect(looksLikeSecret(RUN_ID)).toBe(true);
     expect(redactSecrets({ note: RUN_ID })).toEqual({ note: "[REDACTED]" });
   });
 });
 
 /**
- * safe evidence id — deterministic quality evidence identifier 도 exact-value 면제 대상 (#319 후속).
+ * Safe evidence id — deterministic quality-evidence identifiers are also exact-value exempt (#319 follow-up).
  *
- * `qualityResultRefId` 가 만드는 canonical id(`provider.dataset::category::rule::column`)는
- * Shannon 엔트로피가 4.0 을 넘어(길이·문자 다양성) safe set 없이는 `[REDACTED]` 로 오탐된다.
- * run id 와 provenance 계약이 같으므로(이번 로딩에서 실제 생성된 exact 문자열) 같은 인자로
- * 면제하되, secret-named field / 명시적 credential 대입 / lookalike 는 여전히 스크럽해야 한다.
+ * The canonical id built by `qualityResultRefId`
+ * (`provider.dataset::category::rule::column`) exceeds Shannon entropy 4.0
+ * (length and character variety), so without a safe set it is a `[REDACTED]`
+ * false positive. It shares the run-id provenance contract (an exact string
+ * actually produced during this load), so it is exempted by the same
+ * argument — while secret-named fields, explicit credential assignments and
+ * lookalikes must still be scrubbed.
  */
 describe("safe evidence id — canonical quality identifier 면제 (#319)", () => {
   const QUALITY_ID = "datago.air_quality::completeness::min_rows::_";
@@ -304,16 +308,18 @@ describe("safe evidence id — canonical quality identifier 면제 (#319)", () =
 });
 
 /**
- * P6 보완 — safe run id 에 인접(adjacency)한 시크릿 조각 스크럽 (#284).
+ * P6 supplement — scrubbing secret fragments adjacent to safe run ids (#284).
  *
- * `<secret>/<safeRunId>` 처럼 safe id 앞뒤에 비영숫자 경계가 있으면 safe id 는 보존되지만,
- * 그 과정에서 safe id 를 잘라내며 남은 시크릿 조각이 24자 미만이 되어 엔트로피 검사를
- * 빠져나가면 안 된다. safe id 만 보존하고, 주변 비-safe 조각은 전부 기존 스크럽 로직을 받는다.
+ * With a non-alphanumeric boundary around a safe id (e.g.
+ * `<secret>/<safeRunId>`), the safe id is preserved — but carving it out can
+ * leave a secret fragment under 24 chars that escapes the entropy check.
+ * Only the safe id is preserved; surrounding non-safe fragments all go
+ * through the existing scrub logic.
  */
 describe("P6 adjacency — safe run id 옆에 붙은 시크릿 조각도 스크럽 (#284)", () => {
   const RUN_ID = "datago-air-quality-1788004513062";
   const safeRunIds = new Set([RUN_ID]);
-  const HIGH_ENTROPY = "xJ7kL9mN2pQ4rT6vW8yB3cD5eF7gH9j"; // 31자, entropy ≥ 4
+  const HIGH_ENTROPY = "xJ7kL9mN2pQ4rT6vW8yB3cD5eF7gH9j"; // 31 chars, entropy ≥ 4
 
   const SEPARATORS: [name: string, char: string][] = [
     ["slash", "/"],
@@ -344,10 +350,10 @@ describe("P6 adjacency — safe run id 옆에 붙은 시크릿 조각도 스크�
   );
 
   it("safe id 가 긴 고엔트로피 토큰을 둘로 쪼개도 양쪽 조각이 모두 스크럽된다", () => {
-    // safe id 를 빼면 각 조각은 24자 미만이라, 조각 단위 엔트로피 검사만으로는 놓친다.
+    // Each fragment is under 24 chars once the safe id is removed — per-fragment entropy checks alone would miss them.
     const scrubber = createSecretScrubber("p6-adj-split", { safeRunIds });
-    const head = "xJ7kL9mN2pQ4"; // 12자
-    const tail = "rT6vW8yB3cD5eF7gH9j"; // 19자
+    const head = "xJ7kL9mN2pQ4"; // 12 chars
+    const tail = "rT6vW8yB3cD5eF7gH9j"; // 19 chars
     const out = scrubber.scrubText(`${head}/${RUN_ID}/${tail}`);
     expect(out).toContain(RUN_ID);
     expect(out).not.toContain(head);
@@ -359,7 +365,7 @@ describe("P6 adjacency — safe run id 옆에 붙은 시크릿 조각도 스크�
     const scrubber = createSecretScrubber("p6-adj-assign", { safeRunIds });
     const out = scrubber.scrubText(`serviceKey=${HIGH_ENTROPY}/${RUN_ID}`);
     expect(out).not.toContain(HIGH_ENTROPY);
-    // assignment 는 `[^\s,}\]]+` 를 통째로 잡으므로 이 형태에서는 run id 도 함께 마스킹된다(fail-closed).
+    // The assignment captures `[^\s,}\]]+` wholesale, so in this shape the run id is masked too (fail-closed).
     expect(hasSecretPlaceholder(out)).toBe(true);
   });
 

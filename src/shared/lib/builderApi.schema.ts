@@ -1,13 +1,13 @@
 /**
  * Builder API response Zod schema (#158, #103, #159)
  *
- * Runtime type validation of Builder HTTP API responses을 위한 Zod 스키마입니다.
- * Builder SSOT(contract/builder-api.yaml)와 정합하도록 작성되었습니다.
+ * Zod schemas for runtime type validation of Builder HTTP API responses.
+ * Written to stay consistent with the Builder SSOT (contract/builder-api.yaml).
  *
- * 사용 방법:
- * - apiFetch()에서 응답 파싱 후 zod.parse()로 런타임 검증
- * - TypeScript 타입 안정성 보장 + 런타임 데이터 정합성 검증
- * - 오류 응답도 스키마로 검증하여 사용자에게 명시적인 피드백 제공 (#159)
+ * Usage:
+ * - Runtime-validate responses with zod.parse() after parsing in apiFetch()
+ * - TypeScript type safety + runtime data consistency
+ * - Error responses are also schema-validated for explicit user feedback (#159)
  */
 
 import { z } from "zod";
@@ -98,9 +98,9 @@ export const buildResponseSchema = z.discriminatedUnion("status", [
 /**
  * Async build job snapshot — GET /builds/{run_id} / POST /builds response (#245, builder 1.16.0 #480).
  *
- * `cancelling`/`cancelled`는 builder #481 cooperative cancellation 착지 전 예약
- * vocabulary다(현재 전이를 일으키는 endpoint는 없음). `response`는 성공한 잡의
- * 최종 build 응답 본문이다.
+ * `cancelling`/`cancelled` are reserved vocabulary ahead of builder #481
+ * cooperative cancellation (no endpoint currently causes the transition).
+ * `response` is the final build response body of a successful job.
  */
 export const buildJobSchema = z.object({
   run_id: z.string(),
@@ -184,8 +184,8 @@ export const notFoundSchema = z.object({
 /**
  * 502 - Source fetch/stage failed (some succeeded, at least one failed)
  *
- * Note: outcomes array mixes successful/failed sources 있으며,
- * 하나라도 실패한 소스가 있으면 전체 상태는 "failed"가 됩니다.
+ * Note: the outcomes array mixes successful/failed sources; if even one
+ * source failed, the overall status is "failed".
  */
 export const buildPartialFailureSchema = z.object({
   status: z.literal("failed"),
@@ -199,7 +199,7 @@ export const buildPartialFailureSchema = z.object({
  * Unified Error response schema
  *
  * validates various error response forms of Builder API.
- * discriminatedUnion 대신 일반적인 z.union() 사용.
+ * Ordinary z.union() instead of discriminatedUnion.
  */
 export const errorResponseSchema = z.union([
   // 400 - Spec loading failed (already in validateResponseSchema)
@@ -252,8 +252,9 @@ export const catalogQuerySupportSchema = z.object({
  */
 /**
  * GET /catalog search metadata safe (secret-free) request parameter description (#S-add-data).
- * Builder가 raw_metadata에서 allowlist로 추려 직렬화한다 — serviceKey 등 시크릿
- * 파라미터는 포함되지 않는다. 없는 dataset은 빈 배열.
+ * Serialized by Builder from an allowlist over raw_metadata — secret
+ * parameters such as serviceKey are excluded. Unknown datasets get an empty
+ * array.
  */
 export const catalogRequestParameterSchema = z.object({
   name: z.string(),
@@ -264,9 +265,10 @@ export const catalogRequestParameterSchema = z.object({
 
 /**
  * For cases where API Key issuance and per-dataset access requests are separate (like Public Data Portal)
- * guidance (#S-add-data). Builder가 raw_metadata.application을 그대로 전달한 것으로,
- * null if missing(활용신청이 필요 없다는 뜻이 아니라 알려진 바 없음). Studio는 신청
- * 완료/승인 여부를 이 필드로 추측하지 않는다 — Preview 성공이 최종 확인이다.
+ * guidance (#S-add-data). Passed through by Builder from
+ * raw_metadata.application — null if missing (meaning unknown, NOT "no
+ * activation request needed"). Studio never guesses application/approval
+ * status from this field — a successful Preview is the final confirmation.
  */
 export const catalogApplicationSchema = z.object({
   required: z.boolean(),
@@ -314,7 +316,7 @@ export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
  */
 
 /** GET /providers — runtime Provider list and current principal's configured status(#492).
- *  credential 원문은 포함하지 않는다(서버가 부울만 내려준다). */
+ *  Contains no credential plaintext (the server sends only booleans). */
 export const providerSummarySchema = z.object({
   provider: z.string(),
   requires_credential: z.boolean(),
@@ -338,10 +340,11 @@ export const providerTestResponseSchema = z.object({
 
 /**
  * GET /providers/{provider}/credential — metadata only of credential saved by current principal
- * 반환한다(ADR 0012). raw secret은 어떤 필드에도 들어 있지 않다. `configured`는 이 사용자가
- * 직접 저장한 credential이 있는지이며, GET /providers 요약의 `configured`(effective provider
- * configuration: user credential > server default > 없음)와는 의미가 다르다.
- * `masked`/`updated_at`은 저장된 credential이 null if missing이다.
+ * returns (ADR 0012). No raw secret in any field. `configured` means this
+ * user personally saved a credential — distinct from the GET /providers
+ * summary's `configured` (effective provider configuration: user credential
+ * > server default > none). `masked`/`updated_at` are null if a saved
+ * credential is missing.
  */
 export const providerCredentialResponseSchema = z.object({
   configured: z.boolean(),
@@ -546,7 +549,7 @@ export const previewTransformSummarySchema = z.object({
 });
 
 /**
- * Preview source-specific preview item (extended with statistics/quality_results/diff via #497 필드 확장).
+ * Preview source-specific preview item (extended with statistics/quality_results/diff via the #497 field expansion).
  */
 export const previewSourceSchema = z.object({
   source_key: z.string(),
@@ -608,9 +611,10 @@ export const datasetQualityHistoryResponseSchema = z.object({
 });
 
 /**
- * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 후속).
- * Home의 "QUALITY WARN (24H)" KPI가 임의 숫자 합성 없이 authoritative 값을 읽는다.
- * per-run quality_results/dataset/owner는 포함하지 않는다.
+ * GET /quality/summary — recent 24h cross-run quality aggregate (Builder 1.22.0, #486 follow-up).
+ * The Home "QUALITY WARN (24H)" KPI reads this
+ * authoritative value with no synthesized numbers. Contains no per-run
+ * quality_results/dataset/owner.
  */
 export const qualitySummaryResponseSchema = z.object({
   window: z.literal("24h"),
@@ -752,9 +756,9 @@ export type QualitySummaryResponse = z.infer<typeof qualitySummaryResponseSchema
 
 /**
  * Monitoring (#516) — Builder actual wire contract (GET /monitoring/summary,
- * GET /monitoring/builds) 그대로. availability 어휘는 quality(#486)와 공유하는
- * available/partial/unavailable이고, 측정된 적 없는 값은 0으로 위장하지 않고
- * null로 내려온다(#516 원칙).
+ * verbatim. The availability vocabulary is the same
+ * available/partial/unavailable shared with quality (#486); never-measured
+ * values come back as null, never disguised as 0 (#516 principle).
  */
 const monitoringAvailabilitySchema = z.enum(["available", "partial", "unavailable"]);
 
@@ -804,8 +808,9 @@ export const monitoringBucketSchema = z.object({
 
 /**
  * recent run status passes BuildIndex internal value as-is (builder sends as
- * str로 직렬화) — ok/failed/cancelled 외 실행 중 상태도 올 수 있어 좁은
- * enum 대신 string으로 받고 표시 매핑은 UI가 담당한다.
+ * serialized as str) — in-flight statuses beyond ok/failed/cancelled can
+ * appear, so a plain string is accepted instead of a narrow enum; display
+ * mapping is the UI's job.
  */
 export const monitoringRecentRunSchema = z.object({
   run_id: z.string(),

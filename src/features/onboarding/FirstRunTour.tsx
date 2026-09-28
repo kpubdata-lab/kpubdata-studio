@@ -29,7 +29,7 @@ function hasCompletedTour(userId: string) {
 }
 
 export function resetFirstRunTour(userId?: unknown) {
-  try { localStorage.removeItem(ONBOARDING_STORAGE_KEY); } catch { /* storage를 사용할 수 없어도 수동 재생은 가능하다. */ }
+  try { localStorage.removeItem(ONBOARDING_STORAGE_KEY); } catch { /* Manual replay still works even when storage is unavailable. */ }
   window.dispatchEvent(new CustomEvent("kpubdata:onboarding:replay", { detail: userId }));
 }
 
@@ -92,7 +92,7 @@ export function FirstRunTour({
   }, [open, step, steps]);
 
   function close() {
-    try { localStorage.setItem(ONBOARDING_STORAGE_KEY, "complete"); } catch { /* 비필수 저장소 */ }
+    try { localStorage.setItem(ONBOARDING_STORAGE_KEY, "complete"); } catch { /* Optional storage */ }
     try { localStorage.setItem(onboardingStorageKey(userId), "complete"); } catch { /* storage unavailable */ }
     setOpen(false);
   }

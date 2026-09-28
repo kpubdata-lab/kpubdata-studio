@@ -22,11 +22,12 @@ type ReadinessState =
   | { status: "error"; message: string };
 
 /**
- * 게시 화면의 Run 문맥(Dataset identity + Build 완료 상태)은 URL의 `?dataset=` 존재
- * 여부가 아니라 **exact run_id**로만 해석한다 — Builds/Runs·Artifacts·Dataset Detail·
- * 딥링크 어느 경로로 들어와도 동일하게 표시되도록 한다. canonical 경로는
- * `getBuild(runId)`(= `/builds/{run_id}/spec` snapshot + authoritative status)이며,
- * latest run으로 대체하지 않는다.
+ * The publish screen's Run context (Dataset identity + Build completion
+ * state) is resolved only from the **exact run_id**, never from the presence
+ * of `?dataset=` in the URL — so it renders identically whether entered via
+ * Builds/Runs, Artifacts, Dataset Detail or a deep link. The canonical path
+ * is `getBuild(runId)` (= `/builds/{run_id}/spec` snapshot + authoritative
+ * status); it never substitutes the latest run.
  */
 interface RunContext {
   datasetTitle: string;
@@ -40,7 +41,7 @@ type RunContextState =
   | { status: "loaded"; data: RunContext }
   | { status: "error"; message: string };
 
-/** 라벨이 아니라 키만 담는다 — 모듈 상수에 문장을 넣으면 언어가 굳는다(#350). */
+/** Keys only, not labels — sentences in module constants would freeze the language (#350). */
 const BUILD_STATUS_KEY: Record<BuildRunStatus, string> = {
   queued: "buildPublish.statusQueued",
   running: "buildPublish.statusRunning",
@@ -53,20 +54,21 @@ const BUILD_STATUS_KEY: Record<BuildRunStatus, string> = {
 const inputClassName =
   "h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-/** publish 대상 credential 과 관련된 blocker code.
+/** Blocker codes related to the credential used for publishing.
  *
- * ``credential_unavailable`` 은 "어디에도 credential 이 없다",
- * ``credential_required`` 는 "이 배포는 서버 것을 빌려주지 않는다" 다
- * (kpubdata-builder #665). 둘 다 같은 안내가 필요하지만 후자는 사용자가 직접
- * 할 수 있는 조치가 더 있다. */
+ * ``credential_unavailable`` means "no credential anywhere";
+ * ``credential_required`` means "this deployment does not lend the server's"
+ * (kpubdata-builder #665). Both need the same guidance, but the latter has
+ * more direct user actions. */
 const CREDENTIAL_BLOCKER_CODES = new Set(["credential_unavailable", "credential_required"]);
 
 export function BuildPublishPage() {
   const { t } = useTranslation();
   const { buildId: runId = "" } = useParams();
   const [searchParams] = useSearchParams();
-  // `?dataset=`은 있으면 보조 표시 힌트로만 쓴다 — 없다고 실제 존재하는 Run을
-  // "확인되지 않음"으로 만들지 않는다(canonical 해석은 runId 기반).
+  // `?dataset=` is only a supplementary display hint when present — its
+  // absence never marks an actually-existing Run as "unverified" (canonical
+  // resolution is runId-based).
   const datasetHint = searchParams.get("dataset") ?? "";
   const [runContext, setRunContext] = useState<RunContextState>({ status: "loading" });
   const [readiness, setReadiness] = useState<ReadinessState>({ status: "loading" });
@@ -84,7 +86,7 @@ export function BuildPublishPage() {
     let active = true;
     setRunContext({ status: "loading" });
     // canonical: getBuild(runId) = BuildSpec snapshot(dataset identity) + authoritative status.
-    // dataset URL 파라미터도, listDatasetRuns 윈도우도 필요로 하지 않는다.
+    // Needs neither the dataset URL parameter nor the listDatasetRuns window.
     getBuild(runId)
       .then((run) => {
         if (!active) return;
@@ -210,17 +212,19 @@ export function BuildPublishPage() {
                 ? t("buildPublish.readyLabel")
                 : readiness.data.blockers.length > 0
                   ? t("buildPublish.blockedLabel")
-                  // ready: false인데 blockers가 비어 있으면("빈 카드") "blocker가 있다"고
-                  // 잘못 단정하지 않는다 — Builder가 사유를 제공하지 않은 것과 실제 blocker가
-                  // 있는 것은 다른 상태다(UI audit #4).
+                  // ready:false with empty blockers ("empty card") must not
+                  // be mis-asserted as "has a blocker" — Builder not
+                  // supplying a reason is a different state from a real
+                  // blocker existing (UI audit #4).
                   : t("buildPublish.notReadyNoReason")}
             </p>
             {readiness.data.blockers.length > 0 ? <IssueList title="Blockers" issues={readiness.data.blockers} tone="error" /> : null}
             {readiness.data.warnings.length > 0 ? <IssueList title="Warnings" issues={readiness.data.warnings} tone="warning" /> : null}
             {readiness.data.blockers.some((issue) => CREDENTIAL_BLOCKER_CODES.has(issue.code)) ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialNote")}</p> : null}
-            {/* credential_required 는 "어디에도 없다"(credential_unavailable)와 다르다 —
-                이 배포가 서버 토큰을 빌려주지 않는다는 뜻이라, 사용자가 직접 할 수 있는
-                조치가 있다. 그 조치를 알려주지 않으면 서버 문제로 읽힌다. */}
+                        {/* credential_required differs from "nowhere"
+                (credential_unavailable) — it means more direct user actions
+                exist. The two codes carry different guidance; the same
+                guidance is never reused. */}
             {readiness.data.blockers.some((issue) => issue.code === "credential_required") ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialRequiredNote")}</p> : null}
           </div>
         ) : null}

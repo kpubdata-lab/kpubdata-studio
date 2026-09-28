@@ -23,8 +23,13 @@ KPubData 패밀리 소개:
 ### 1단계: 필수 도구 설치
 1. **Git**: 코드의 버전을 관리하는 도구입니다. ([다운로드](https://git-scm.com))
    - 설치 확인: 터미널에 `git --version` 입력
-2. **Node.js 20+**: 웹 서버를 실행하는 엔진입니다. ([다운로드](https://nodejs.org))
+2. **Node.js 22.13 이상** (또는 24 이상): 웹 서버를 실행하는 엔진입니다.
+   ([다운로드](https://nodejs.org))
    - 설치 확인: 터미널에 `node --version` 입력
+   - **20 은 안 됩니다.** vitest 의 jsdom 경로가 `webidl.util.markAsUncloneable` 을
+     호출하고 그것이 Node 22 부터 있어서, 20 에서는 테스트 워커가 아예 시작되지
+     않습니다 (#400)
+   - 22 를 쓴다면 **22.13 이상**이어야 합니다. 일부 의존성이 그 아래를 거부합니다
 3. **GitHub 계정**: 코드를 올릴 저장소 계정이 필요합니다.
    - [SSH 키 설정](https://docs.github.com/ko/authentication/connecting-to-github-with-ssh)을 해두면 매번 로그인할 필요가 없어 편리합니다.
 

@@ -1,8 +1,8 @@
 /**
- * 스키마 계약 초안 생성 회귀 테스트 (VAL-4, #227).
+ * Schema-contract draft generation regression tests (VAL-4, #227).
  *
- * LLM 없이 /preview 컬럼 스키마에서 required/dtypes/키 후보를 결정적으로
- * 도출하는지 검증한다.
+ * Verifies required/dtypes/key candidates are deterministically derived from
+ * the /preview column schema without an LLM.
  */
 import { describe, expect, it } from "vitest";
 

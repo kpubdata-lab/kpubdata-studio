@@ -1,6 +1,6 @@
 /**
- * Build Statistics 탭 (#264, #303) — bucket 합산 총계와 시간대별 차트.
- * builder는 총계를 내려주지 않는다(#516) — bucket 합으로 화면에서 계산한다.
+ * Build Statistics tab (#264, #303) — bucket-summed totals and a time-bucket chart.
+ * builder sends no totals (#516) — the screen computes them from bucket sums.
  */
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, Skeleton } from "@/shared/ui";

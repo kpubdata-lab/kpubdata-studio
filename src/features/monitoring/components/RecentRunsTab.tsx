@@ -1,5 +1,5 @@
 /**
- * Recent Runs 탭 (#264, #303) — 최근 빌드 실행 이력과 Builds 상세 링크.
+ * Recent Runs tab (#264, #303) — recent build history with links to Builds detail.
  */
 import { useTranslation } from "react-i18next";
 import { Card, EmptyState, Skeleton, LinkButton } from "@/shared/ui";

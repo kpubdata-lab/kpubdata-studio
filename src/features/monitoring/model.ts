@@ -1,8 +1,8 @@
 /**
- * Monitoring 도메인 공용 모델 (#264, #303).
+ * Shared Monitoring-domain models (#264, #303).
  *
- * 페이지와 탭 컴포넌트가 공유하는 상태 어휘와 순수 헬퍼. wire 스키마 타입은
- * `@/shared/lib/builderApi.schema`가 정본이다.
+ * State vocabulary and pure helpers shared by the page and tab components.
+ * The wire-schema types' canon is `@/shared/lib/builderApi.schema`.
  */
 import { i18n } from "@/shared/i18n";
 import type {
@@ -15,13 +15,13 @@ export type MonitoringTab = "system" | "builds" | "recent-runs";
 
 export type MonitoringLoadingState = "idle" | "loading" | "success" | "error";
 
-/** /monitoring/summary + /monitoring/builds 병렬 조회 결과를 묶은 화면 모델 (#302). */
+/** Screen model bundling the parallel /monitoring/summary + /monitoring/builds lookups (#302). */
 export interface MonitoringData {
   summary: MonitoringSummaryResponse;
   builds: MonitoringBuildsResponse;
 }
 
-/** BuildIndex 내부 상태 값(ok/failed/cancelled 등)을 표시 라벨로 매핑한다. */
+/** Maps BuildIndex internal status values (ok/failed/cancelled etc.) to display labels. */
 export function runStatusLabel(status: string): { label: string; className: string } {
   switch (status) {
     case "ok":
@@ -55,7 +55,7 @@ export function runStatusLabel(status: string): { label: string; className: stri
   }
 }
 
-/** started/finished 타임스탬프로 소요 시간(초)을 계산한다 — builder는 duration을 내려주지 않는다. */
+/** Computes elapsed seconds from started/finished timestamps — builder sends no duration. */
 export function runDurationSeconds(run: MonitoringRecentRun): number | null {
   if (run.started_at === null || run.finished_at === null) return null;
   const duration =
