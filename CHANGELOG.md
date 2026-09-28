@@ -1,4 +1,4 @@
-# 변경 이력
+# Changelog
 
 ## [Unreleased]
 
@@ -8,60 +8,60 @@
 
 ## v0.4.0 — 2026-09-28
 
-### 추가됨
-- **인증 S1-S10**: apiFetch 인증 주입(#186), Google GIS 로그인(#187), 토큰 보관(#188), 만료 처리(#189), 로그인 게이트(#190), Settings 상태(#191), 계약 동기화(#192), 에러 메시지(#193), 오리진 정합(#194), 테스트(#195)
-- **BuildSpec 어시스턴트 ST-A1-A10**: AssistProvider + BYOK(#205), 시크릿 스크러빙(#206), 채팅 UI(#207), validate 설명(#208), 카탈로그 조회(#209), 생성+리페어(#210), mock 모드(#211), 테스트(#212), 프라이버시 고지(#213)
-- **MSW E2E 테스트 하네스** (#160, #104)
-- **zod 스키마 런타임 검증** (#158, #103)
-- **API_CONTRACT_VERSION 1.2.0 동기화**
-- **계약 적합성 테스트** (contractConformance.test.ts)
-- **SpecDiff 컴포넌트**
+### Added
+- **Authentication S1-S10**: apiFetch auth injection (#186), Google GIS sign-in (#187), token storage (#188), expiry handling (#189), sign-in gate (#190), Settings status (#191), contract sync (#192), error messages (#193), origin alignment (#194), tests (#195)
+- **BuildSpec assistant ST-A1-A10**: AssistProvider + BYOK (#205), secret scrubbing (#206), chat UI (#207), validate explanations (#208), catalog lookup (#209), generation + repair (#210), mock mode (#211), tests (#212), privacy notice (#213)
+- **MSW E2E test harness** (#160, #104)
+- **zod schema runtime validation** (#158, #103)
+- **API_CONTRACT_VERSION 1.2.0 sync**
+- **Contract conformance tests** (contractConformance.test.ts)
+- **SpecDiff component**
 
-### 변경됨
-- **BuildsPage 분할 (#379)**: 1,188줄 한 파일이 목록·필터·상세·품질·파이프라인을 모두 들고 있었다. `features/add-data` 구조를 그대로 따라 `features/runs/` 아래로 옮긴다 — 패널은 `components/`(KpiRow·RunListPanel·RunDetailPanel·SourcePipeline), 로직은 `buildContext.ts`(URL 문맥 정규화)·`stageDetails.ts`(stage detail 조회)·`asyncState.ts`(표면별 비동기 상태). 페이지는 **251줄 화면 조립만** 남는다. 동작 변경 없음 — 청크 크기(30.56 kB)와 테스트 1341건이 그대로다
-- **NewBuildPage 스펙 조립 로직 분리 (#379)**: 폼 ↔ BuildSpec 변환·단계 필드 구성·catalog 조회 헬퍼를 `features/build-spec/newBuildModel.ts` 로, 시작 템플릿을 `templates.ts` + `components/TemplateButton.tsx` 로 옮겼다. 페이지는 1,032줄 → 786줄. "무엇이 스펙이 되는가"를 JSX 를 읽지 않고 확인할 수 있다. 단계별 컴포넌트 분리는 후속
-- **i18n UI 문자열 전환 마무리 (#350)**: 마지막 사용자 노출 문자열 4건(`publish/api` 게시 오류 2건, `useAssistantSession` 초안 저장 실패·action 거부)을 키로 옮겼다. 이제 `src/` 에 남은 한글은 주석·mock/demo 데이터·LLM 프롬프트·예시 파라미터값뿐이며 화면 chrome 은 0건이다
-- **페이지 3종 i18n 전환 (#350)**: `WorkspacePage`·`DatasetDetailPage`·`BuildPublishPage` 의 하드코딩 한글 UI 문자열을 키로 옮겼다(`workspace`/`datasetDetail`/`buildPublish`, ko/en 각 129키 신규 — 총 1590키 대칭). 모듈 상수 라벨 테이블 3건(`VALIDATION_META`·`STAGE_EXPLAINER`·`BUILD_STATUS_LABEL`)도 문자열 대신 **키 표**로 바꿔 렌더 시점에 번역한다 — import 시점에 언어가 굳던 결함이다
-- **App Shell·Report 편집기 i18n 전환 (#350)**: `Layout.tsx`(사이드바/헤더 aria-label·테마·tagline 등)와 `ReportEditorPage.tsx` 의 하드코딩 한글을 키로 옮겼다(`layout`/`reportEditor`, ko/en 각 37키 신규). Shell 은 모든 화면에 걸리는 부분이라 여기 남은 문자열은 어느 화면에서든 언어 전환을 깨뜨렸다
-- **라우트 코드 분할 (#378)**: `router.tsx` 가 페이지 23개를 모두 정적 import 해서 첫 화면 하나를 열 때 Monitoring·Reports·Assistant 까지 전부 내려받았다(단일 청크 1.23 MB / gzip 359 kB). 각 페이지를 `React.lazy` + 동적 import 로 바꾸고 `withFeatureBoundary` 안쪽에 `Suspense` 를 두어 라우트를 청크 경계로 삼는다 — 청크 로드 실패도 해당 feature 폴백으로 잡혀 셸이 빈 화면이 되지 않는다. 결과: 49개 청크, 진입 청크 424 kB / gzip 132 kB (gzip 기준 63% 감소), Vite 의 500 kB 경고 해소
-- **Add Data 3단계 i18n 전환 (#350)**: `ConfigureStep`·`PreviewValidationStep`·`ReviewBuildStep` 의 하드코딩 한글 UI 문자열을 전부 키로 옮겼다(`addData.configure`/`addData.preview`/`addData.review`, ko/en 각 89키 신규). 전환 중 발견한 **모듈 상수 i18n 결함 2건**도 함께 고쳤다 — `CREDENTIAL_PREREQUISITE_MESSAGE` 와 `PREVIEW_SOURCE_STATE_LABEL` 은 모듈 최상위에서 평가돼 import 시점 언어에 문구가 굳어 있었고, 각각 `credentialPrerequisiteMessage()` / `previewSourceStateLabel()` 로 바꿔 렌더 시점에 해석한다
-- **E2E(Playwright)를 CI 에 편입 (#377)**: 지금까지 `npm run test:e2e` 는 사람이 손으로 돌릴 때만 실행돼, 회귀를 잡아줄 수 있는 38개 스펙(6파일)이 사실상 놀고 있었다. 전용 `e2e` 잡이 chromium 하나만 설치해(두 project 모두 chromium) mock 모드 vite dev 서버 위에서 스펙을 돌리고, 실패 시 trace 를 아티팩트로 남긴다. 실 Builder 가 필요한 `@real-builder` 스펙은 `playwright.config.ts` 의 grep 이 이미 제외한다
-- **느린 폴링 테스트를 가짜 타이머로 압축 (#376)**: `asyncBuildJob.test.ts` 는 terminal 까지 `POLL_INTERVAL_MS`(800ms) 를 케이스마다 실제로 기다렸고(16.9s), `assistantSession.test.tsx` 는 real 모드 evidence 조회가 스텁보다 먼저 일어나 builderApi 의 지수 백오프(500ms+1000ms)를 요청마다 통째로 기다렸다(15.3s). 전자는 `vi.advanceTimersByTimeAsync` 로 대기만 건너뛰고(`waitFor` 는 vitest 가짜 타이머를 인식하지 못해 `settle()` 헬퍼로 대체), 후자는 스텁을 먼저 깔아 결정적으로 만들었다 — 두 파일 16.9s+15.3s → 0.11s+1.66s, 전체 스위트 112.5s → 79.4s
-- **커버리지 게이트 (#380)**: `vitest.config.ts` 의 `coverage.thresholds` 로 현재 수준을 회귀 방지선으로 고정한다(statements 84 / branches 75 / functions 85 / lines 86 — 실측 86.54/77.12/87.93/88.65 에서 각 2%p 아래). 계측 대상은 `src/` 애플리케이션 코드만이고 진입점·타입 선언·테스트 파일은 제외한다. `npm run test:coverage` 와 CI 의 전용 `coverage` 잡이 게이트를 담당한다 — Node 20/22 로 두 번 도는 quality 잡에 계측을 얹지 않아 비용은 1배다
-- **패키지 메타데이터/툴체인 경고 정리 (#375)**: `package.json` 의 `version` 을 `0.1.0` → `0.4.0` 으로 올려 이 문서의 v0.4 절과 맞추고, `"type": "module"` 을 추가해 Vite 의 `configLoader: 'native'` 경고를 없앤다. `vite.config.ts`/`vitest.config.ts` 의 `path.resolve(__dirname, …)`(CJS 전역)은 `fileURLToPath(new URL("./src", import.meta.url))` 로 바꿔 ESM 그대로 동작하게 했다. 상시로 떠 있던 eslint 경고 2건(`e2e/helpers.ts` 미사용 `test` import, `HomePage.tsx` 미사용 `t`)도 제거 — 경고가 0이어야 새 경고가 묻히지 않는다
-- **Home 워크플로 STEP 라벨이 언어 전환을 따라감 (#375)**: `WORKFLOW_STEPS` 가 모듈 최상위에서 `i18n.t()` 로 평가돼 import 시점 언어에 고정돼 있었다. 번호만 상수로 남기고 라벨은 렌더 시점에 해석한다
-- API_CONTRACT.md drift 표 갱신 — 모든 오퍼레이션 정합 (#219)
-- WORK_PLAN.md를 .github/로 이동 (#222)
+### Changed
+- **Split BuildsPage (#379)**: one 1,188-line file held the list, filters, detail, quality and pipeline. Following the `features/add-data` structure, it moves under `features/runs/` — panels in `components/` (KpiRow·RunListPanel·RunDetailPanel·SourcePipeline), logic in `buildContext.ts` (URL context normalisation)·`stageDetails.ts` (stage detail lookup)·`asyncState.ts` (per-surface async state). The page keeps **only 251 lines of screen assembly**. No behaviour change — the chunk size (30.56 kB) and the 1341 tests are unchanged
+- **Split out NewBuildPage's spec assembly logic (#379)**: moves the form ↔ BuildSpec conversion, step field configuration and catalog lookup helpers to `features/build-spec/newBuildModel.ts`, and the starter templates to `templates.ts` + `components/TemplateButton.tsx`. The page goes from 1,032 lines → 786 lines. "What becomes the spec" can be checked without reading JSX. Splitting into per-step components is follow-up work
+- **Finish the i18n UI string migration (#350)**: moves the last 4 user-visible strings (2 publish errors in `publish/api`; the draft-save failure and action rejection in `useAssistantSession`) to keys. The Korean left in `src/` is now only comments, mock/demo data, LLM prompts and example parameter values, and screen chrome has 0
+- **i18n migration of 3 pages (#350)**: moves the hardcoded Korean UI strings in `WorkspacePage`·`DatasetDetailPage`·`BuildPublishPage` to keys (`workspace`/`datasetDetail`/`buildPublish`, 129 new keys each for ko/en — 1590 keys symmetric in total). The 3 module-constant label tables (`VALIDATION_META`·`STAGE_EXPLAINER`·`BUILD_STATUS_LABEL`) also become **key tables** instead of strings and are translated at render time — a defect where the language froze at import time
+- **i18n migration of the App Shell and Report editor (#350)**: moves the hardcoded Korean in `Layout.tsx` (sidebar/header aria-label, theme, tagline, etc.) and `ReportEditorPage.tsx` to keys (`layout`/`reportEditor`, 37 new keys each for ko/en). The Shell spans every screen, so any string left here broke language switching on every screen
+- **Route code splitting (#378)**: `router.tsx` statically imported all 23 pages, so opening a single first screen downloaded Monitoring, Reports and Assistant too (single chunk 1.23 MB / gzip 359 kB). Each page becomes `React.lazy` + dynamic import, with `Suspense` placed inside `withFeatureBoundary` so routes become chunk boundaries — a chunk load failure is also caught by that feature's fallback, so the shell does not go blank. Result: 49 chunks, entry chunk 424 kB / gzip 132 kB (63% reduction by gzip), Vite's 500 kB warning resolved
+- **i18n migration of the 3 Add Data steps (#350)**: moves all hardcoded Korean UI strings in `ConfigureStep`·`PreviewValidationStep`·`ReviewBuildStep` to keys (`addData.configure`/`addData.preview`/`addData.review`, 89 new keys each for ko/en). Also fixes **2 module-constant i18n defects** found during the migration — `CREDENTIAL_PREREQUISITE_MESSAGE` and `PREVIEW_SOURCE_STATE_LABEL` were evaluated at module top level, freezing their text in the import-time language; they become `credentialPrerequisiteMessage()` / `previewSourceStateLabel()` respectively and resolve at render time
+- **Add E2E (Playwright) to CI (#377)**: until now `npm run test:e2e` ran only when a person ran it by hand, so 38 specs (6 files) that could catch regressions were effectively idle. A dedicated `e2e` job installs only chromium (both projects are chromium), runs the specs on a mock-mode vite dev server, and keeps the trace as an artifact on failure. `@real-builder` specs, which need a real Builder, are already excluded by the grep in `playwright.config.ts`
+- **Compress slow polling tests with fake timers (#376)**: `asyncBuildJob.test.ts` actually waited `POLL_INTERVAL_MS` (800ms) per case until terminal (16.9s), and in `assistantSession.test.tsx` the real-mode evidence lookup happened before the stub, so each request waited through builderApi's full exponential backoff (500ms+1000ms) (15.3s). The former skips only the wait with `vi.advanceTimersByTimeAsync` (`waitFor` does not recognise vitest fake timers, so it is replaced by a `settle()` helper); the latter lays down the stub first to make it deterministic — the two files 16.9s+15.3s → 0.11s+1.66s, full suite 112.5s → 79.4s
+- **Coverage gate (#380)**: `coverage.thresholds` in `vitest.config.ts` pins the current level as a regression floor (statements 84 / branches 75 / functions 85 / lines 86 — 2 points below each of the measured 86.54/77.12/87.93/88.65). Only application code in `src/` is instrumented; entry points, type declarations and test files are excluded. `npm run test:coverage` and CI's dedicated `coverage` job own the gate — instrumentation is not added to the quality job, which runs twice on Node 20/22, so the cost is 1x
+- **Clean up package metadata/toolchain warnings (#375)**: raises `version` in `package.json` from `0.1.0` → `0.4.0` to match this document's v0.4 section, and adds `"type": "module"` to remove Vite's `configLoader: 'native'` warning. `path.resolve(__dirname, …)` (a CJS global) in `vite.config.ts`/`vitest.config.ts` becomes `fileURLToPath(new URL("./src", import.meta.url))` so it works as plain ESM. Also removes the 2 standing eslint warnings (unused `test` import in `e2e/helpers.ts`, unused `t` in `HomePage.tsx`) — warnings must be 0 so that new warnings are not buried
+- **Home workflow STEP labels follow language switching (#375)**: `WORKFLOW_STEPS` was evaluated with `i18n.t()` at module top level and fixed to the import-time language. Only the numbers stay constant; the labels resolve at render time
+- Update the API_CONTRACT.md drift table — all operations aligned (#219)
+- Move WORK_PLAN.md to .github/ (#222)
 
 ## v0.3
 
-빌드 화면 실장, 검증/미리보기.
+Build screens implemented, validation/preview.
 
-- Build Detail 화면 (manifest 요약, 파일 목록)
-- Build Edit 마법사 (Stepper, React Hook Form)
-- Build Run 페이지
-- Build Publish 페이지
-- Artifacts 뷰어
-- 빌드 목록 페이지
-- Spec 매핑 계층 (camelCase → snake_case)
+- Build Detail screen (manifest summary, file list)
+- Build Edit wizard (Stepper, React Hook Form)
+- Build Run page
+- Build Publish page
+- Artifacts viewer
+- Build list page
+- Spec mapping layer (camelCase → snake_case)
 
 ## v0.2
 
-아티팩트, 미리보기.
+Artifacts, preview.
 
-- 아티팩트 미리보기
-- 데이터셋 검증 화면
-- 검증 결과 표시
-- 빌드 결과물 뷰어
+- Artifact preview
+- Dataset validation screen
+- Validation result display
+- Build output viewer
 
 ## v0.1
 
-초기 구조.
+Initial structure.
 
-- Vite + React SPA 셸
-- React Router 주요 경로
-- feature-based 폴더 구조
-- Builder API 클라이언트 (apiFetch, ApiError, 재시도)
-- Vitest 테스트 환경
-- 주요 페이지 골격 (Home, Builds, NewBuild)
-- 도메인 타입 정의
+- Vite + React SPA shell
+- React Router main routes
+- feature-based folder structure
+- Builder API client (apiFetch, ApiError, retry)
+- Vitest test environment
+- Main page skeletons (Home, Builds, NewBuild)
+- Domain type definitions
