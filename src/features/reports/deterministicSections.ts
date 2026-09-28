@@ -1,9 +1,9 @@
 /**
- * Deterministic Report section 생성 (#258 §4, §5).
+ * Deterministic Report section generation (#258 §4, §5).
  *
- * `ReportEvidenceBundle`(Builder에서 그대로 가져온 값)만 입력으로 받아 코드가 그대로
- * BUILDER_EVIDENCE 블록을 구성한다 — LLM은 이 단계에 전혀 관여하지 않는다. 값이 없거나
- * 조회에 실패한 항목은 "N/A"/"확인할 수 없음"으로 표시하며 0/PASS/정상으로 바꾸지 않는다.
+ * Takes only `ReportEvidenceBundle` (values from Builder as-is) as input; code directly constructs
+ * BUILDER_EVIDENCE blocks — LLM never involved in this stage. Missing or failed-to-fetch items
+ * display "N/A"/"cannot verify" without converting to 0/PASS/normal.
  */
 import { formatDateTime, sourceLabel } from "@/features/datasets/model";
 import {
@@ -11,12 +11,21 @@ import {
   flattenSchemaDrift,
   formatQualityValue,
 } from "@/features/quality/model";
+import { i18n } from "@/shared/i18n";
 import type { ReportEvidenceBundle } from "./evidence";
 import { buildSectionSummaries, computeQualityCounts } from "./narrativeSummary";
 import type { BuilderEvidenceBlock, BuilderEvidenceSection } from "./types";
 
+/** All sentence keys in this file live under this namespace (#350). */
+const t = (key: string, params?: Record<string, unknown>): string =>
+  i18n.t(`reports.sections.${key}`, params ?? {});
+
+/** Numeric separators follow screen language. */
+function numberLocale(): string {
+  return i18n.language?.startsWith("en") ? "en-US" : "ko-KR";
+}
+
 const NA = "N/A";
-const UNAVAILABLE = "확인할 수 없음";
 
 function newBlockId(section: BuilderEvidenceSection): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return `evidence-${section}-${crypto.randomUUID()}`;
@@ -58,7 +67,7 @@ function buildOverview(evidence: ReportEvidenceBundle, now: string, summary: str
     return makeBlock(
       "overview",
       "1. Overview",
-      `Dataset 정보를 불러오지 못했습니다: ${evidence.dataset.reason}`,
+      t("overview.loadFailed", { reason: evidence.dataset.reason }),
       "unavailable",
       evidence.dataset.reason,
       now,
@@ -67,25 +76,28 @@ function buildOverview(evidence: ReportEvidenceBundle, now: string, summary: str
   }
   const dataset = evidence.dataset.value;
   const rows: string[][] = [
-    ["Dataset", `${dataset.title} (\`${dataset.dataset_id}\`)`],
-    ["Provider(s)", [...new Set(dataset.sources.map((s) => s.provider))].join(", ") || NA],
-    ["Sources", dataset.sources.map((s) => sourceLabel(s)).join(", ") || NA],
-    ["기준 Run", `\`${evidence.runId}\``],
-    ["Run 상태", evidence.run.ok ? evidence.run.value.status : UNAVAILABLE],
+    [t("overview.rowDataset"), `${dataset.title} (\`${dataset.dataset_id}\`)`],
+    [t("overview.rowProviders"), [...new Set(dataset.sources.map((s) => s.provider))].join(", ") || NA],
+    [t("overview.rowSources"), dataset.sources.map((s) => sourceLabel(s)).join(", ") || NA],
+    [t("overview.rowRun"), `\`${evidence.runId}\``],
+    [t("overview.rowRunStatus"), evidence.run.ok ? evidence.run.value.status : t("unavailable")],
     [
-      "Run 시작 / 종료",
+      t("overview.rowRunTimes"),
       evidence.run.ok
         ? `${formatDateTime(evidence.run.value.started_at)} → ${formatDateTime(evidence.run.value.finished_at)}`
-        : UNAVAILABLE,
+        : t("unavailable"),
     ],
-    ["BuildSpec digest", evidence.run.ok ? (evidence.run.value.spec_digest ?? NA) : UNAVAILABLE],
-    ["Dataset 최종 갱신", formatDateTime(dataset.updated_at)],
+    [
+      t("overview.rowSpecDigest"),
+      evidence.run.ok ? (evidence.run.value.spec_digest ?? NA) : t("unavailable"),
+    ],
+    [t("overview.rowUpdatedAt"), formatDateTime(dataset.updated_at)],
   ];
   const status = evidence.run.ok ? "ok" : "partial";
   return makeBlock(
     "overview",
     "1. Overview",
-    mdTable(["항목", "값"], rows),
+    mdTable([t("overview.colItem"), t("overview.colValue")], rows),
     status,
     evidence.run.ok ? undefined : evidence.run.reason,
     now,
@@ -102,7 +114,7 @@ function buildPipeline(evidence: ReportEvidenceBundle, now: string, summary: str
       source.gold.status,
     ]);
     if (rows.length === 0) {
-      return makeBlock("pipeline", "2. Pipeline", `이 run에 대한 source가 없습니다.`, "ok", undefined, now, summary);
+      return makeBlock("pipeline", "2. Pipeline", t("pipeline.noSources"), "ok", undefined, now, summary);
     }
     return makeBlock(
       "pipeline",
@@ -115,7 +127,7 @@ function buildPipeline(evidence: ReportEvidenceBundle, now: string, summary: str
     );
   }
 
-  // stage 상세 조회는 실패했지만 dataset 요약에 stage map이 남아있으면 그걸로 대체한다(부분 실패 허용).
+  // Stage detail fetch failed but stage map remains in dataset summary; use that (partial failure allowed).
   if (evidence.dataset.ok) {
     const rows = Object.entries(evidence.dataset.value.stages).map(([sourceKey, stage]) => [
       `\`${sourceKey}\``,
@@ -126,7 +138,7 @@ function buildPipeline(evidence: ReportEvidenceBundle, now: string, summary: str
     return makeBlock(
       "pipeline",
       "2. Pipeline",
-      `run 단위 stage 상세 조회에 실패해 dataset 요약 기준으로 표시합니다(${evidence.stages.reason}).\n\n${mdTable(["Source", "Bronze", "Silver", "Gold"], rows)}`,
+      `${t("pipeline.fallbackNote", { reason: evidence.stages.reason })}\n\n${mdTable(["Source", "Bronze", "Silver", "Gold"], rows)}`,
       "partial",
       evidence.stages.reason,
       now,
@@ -137,7 +149,7 @@ function buildPipeline(evidence: ReportEvidenceBundle, now: string, summary: str
   return makeBlock(
     "pipeline",
     "2. Pipeline",
-    `Pipeline 상태를 불러오지 못했습니다: ${evidence.stages.reason}`,
+    t("pipeline.loadFailed", { reason: evidence.stages.reason }),
     "unavailable",
     evidence.stages.reason,
     now,
@@ -152,7 +164,7 @@ function buildQuality(evidence: ReportEvidenceBundle, now: string, summary: stri
       ...makeBlock(
         "quality",
         "3. Quality",
-        `Quality 결과를 불러오지 못했습니다: ${evidence.quality.reason}`,
+        t("quality.loadFailed", { reason: evidence.quality.reason }),
         "unavailable",
         evidence.quality.reason,
         now,
@@ -167,7 +179,7 @@ function buildQuality(evidence: ReportEvidenceBundle, now: string, summary: stri
       ...makeBlock(
         "quality",
         "3. Quality",
-        `이 run은 Quality 평가가 제공되지 않습니다(availability=unavailable). PASS로 간주하지 않습니다.`,
+        t("quality.notProvided"),
         "ok",
         undefined,
         now,
@@ -200,16 +212,19 @@ function buildQuality(evidence: ReportEvidenceBundle, now: string, summary: stri
 
   const driftLines =
     drift.length === 0
-      ? "schema drift가 관찰되지 않았습니다."
+      ? t("quality.noDrift")
       : drift.map((d) => `- \`${d.column ?? NA}\`: ${d.kind} — ${d.detail}`).join("\n");
 
   const parts = [summaryLine];
   if (resultRows.length > 0) {
-    parts.push(mdTable(["Source", "Category", "Rule", "Column", "결과", "실제값", "기준값"], resultRows));
+    parts.push(mdTable(
+      ["Source", "Category", "Rule", "Column", t("quality.colResult"), t("quality.colActual"), t("quality.colThreshold")],
+      resultRows,
+    ));
   } else {
-    parts.push("평가된 규칙이 없습니다(evaluated_checks=0).");
+    parts.push(t("quality.noneEvaluated"));
   }
-  parts.push(`**Schema drift**\n\n${driftLines}`);
+  parts.push(`**${t("quality.driftTitle")}**\n\n${driftLines}`);
 
   return {
     ...makeBlock("quality", "3. Quality", parts.join("\n\n"), "ok", undefined, now, summary),
@@ -223,7 +238,7 @@ function buildSchema(evidence: ReportEvidenceBundle, now: string, summary: strin
     return makeBlock(
       "schema",
       "4. Schema",
-      `Schema 정보를 불러올 source가 없습니다.`,
+      t("schema.noSources"),
       "unavailable",
       undefined,
       now,
@@ -235,13 +250,13 @@ function buildSchema(evidence: ReportEvidenceBundle, now: string, summary: strin
   const parts = entries.map(([sourceKey, schema]) => {
     if (schema.origin === "silver") {
       const rows = schema.columns.map((col) => [col.name, col.dtype, col.nullable ? "Y" : "N", String(col.unique_count)]);
-      return `**\`${sourceKey}\`** (silver)\n\n${mdTable(["Column", "Type", "Nullable", "Unique"], rows)}`;
+      return `**\`${sourceKey}\`** (silver)\n\n${mdTable([t("schema.colColumn"), t("schema.colType"), t("schema.colNullable"), t("schema.colUnique")], rows)}`;
     }
     if (schema.origin === "gold_names_only") {
       const rows = (schema.columnNamesOnly ?? []).map((name) => [name, NA, NA]);
-      return `**\`${sourceKey}\`** (gold — column 이름만 제공, dtype 없음)\n\n${mdTable(["Column", "Type", "Nullable"], rows)}`;
+      return `**\`${sourceKey}\`** ${t("schema.goldNamesOnly")}\n\n${mdTable([t("schema.colColumn"), t("schema.colType"), t("schema.colNullable")], rows)}`;
     }
-    return `**\`${sourceKey}\`**: ${UNAVAILABLE}${schema.reason ? ` (${schema.reason})` : ""}`;
+    return `**\`${sourceKey}\`**: ${t("unavailable")}${schema.reason ? ` (${schema.reason})` : ""}`;
   });
 
   const status: BuilderEvidenceBlock["evidenceStatus"] =
@@ -255,7 +270,7 @@ function buildDataSummary(evidence: ReportEvidenceBundle, now: string, summary: 
     return makeBlock(
       "data_summary",
       "5. Data Summary",
-      `Row count 정보를 불러오지 못했습니다: ${evidence.dataset.reason}`,
+      t("dataSummary.loadFailed", { reason: evidence.dataset.reason }),
       "unavailable",
       evidence.dataset.reason,
       now,
@@ -263,10 +278,16 @@ function buildDataSummary(evidence: ReportEvidenceBundle, now: string, summary: 
     );
   }
   const dataset = evidence.dataset.value;
-  const rows = Object.entries(dataset.row_counts).map(([sourceKey, count]) => [`\`${sourceKey}\``, count.toLocaleString("ko-KR")]);
+  const locale = numberLocale();
+  const rows = Object.entries(dataset.row_counts).map(([sourceKey, count]) => [
+    `\`${sourceKey}\``,
+    count.toLocaleString(locale),
+  ]);
   const body = [
-    `**Total row count**: ${dataset.total_row_count.toLocaleString("ko-KR")}`,
-    rows.length > 0 ? mdTable(["Source", "Row count"], rows) : "source별 row count 정보가 없습니다.",
+    `**${t("dataSummary.totalLabel")}**: ${dataset.total_row_count.toLocaleString(locale)}`,
+    rows.length > 0
+      ? mdTable(["Source", t("dataSummary.colRowCount")], rows)
+      : t("dataSummary.noBreakdown"),
   ].join("\n\n");
   return makeBlock("data_summary", "5. Data Summary", body, "ok", undefined, now, summary);
 }
@@ -276,7 +297,7 @@ function buildOutput(evidence: ReportEvidenceBundle, now: string, summary: strin
     return makeBlock(
       "output",
       "6. Output",
-      `Output/Artifact 정보를 확인할 수 없습니다: ${evidence.output.reason}`,
+      t("output.loadFailed", { reason: evidence.output.reason }),
       "unavailable",
       evidence.output.reason,
       now,
@@ -285,7 +306,7 @@ function buildOutput(evidence: ReportEvidenceBundle, now: string, summary: strin
   }
   const files = evidence.output.value.files;
   if (files.length === 0) {
-    return makeBlock("output", "6. Output", "이 run에 대해 보고된 output 파일이 없습니다.", "ok", undefined, now, summary);
+    return makeBlock("output", "6. Output", t("output.none"), "ok", undefined, now, summary);
   }
   return makeBlock(
     "output",
@@ -298,7 +319,7 @@ function buildOutput(evidence: ReportEvidenceBundle, now: string, summary: strin
   );
 }
 
-/** evidence bundle로부터 6개 deterministic BUILDER_EVIDENCE 블록을 생성한다. */
+/** Generate 6 deterministic BUILDER_EVIDENCE blocks from evidence bundle. */
 export function buildDeterministicSections(evidence: ReportEvidenceBundle): BuilderEvidenceBlock[] {
   const now = new Date().toISOString();
   const summaries = buildSectionSummaries(evidence);

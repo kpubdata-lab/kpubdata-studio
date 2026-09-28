@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { QualityState, ValidationStatus } from "./model";
 
 const STATUS_CLASS: Record<ValidationStatus, string> = {
@@ -16,11 +17,13 @@ export function QualityBadge({ status }: { status: ValidationStatus }) {
 }
 
 /**
- * Quality Center(#254)에서 쓰는 5상태 배지.
+ * Five-state badge used by Quality Center (#254).
  *
- * `QualityBadge`(PASS/WARN/FAIL/N/A)는 #253에서 이미 검증된 단일-source 스코프 표시용이라
- * 그대로 두고, NOT_EVALUATED(평가 없음)와 UNAVAILABLE(availability=unavailable)을 N/A 하나로
- * 뭉개지 않아야 하는 화면(#254 §4)을 위해 별도 배지를 추가한다. 색상뿐 아니라 문구로도 구분한다.
+ * `QualityBadge` (PASS/WARN/FAIL/N/A) is already validated in #253 for
+ * single-source scope display, so it stays; this separate badge is for
+ * screens (#254 §4) that must not collapse NOT_EVALUATED (never evaluated)
+ * and UNAVAILABLE (availability=unavailable) into one N/A. Distinguished by
+ * wording as well as color.
  */
 const STATE_CLASS: Record<QualityState, string> = {
   FAIL: STATUS_CLASS.FAIL,
@@ -34,14 +37,17 @@ const STATE_LABEL: Record<QualityState, string> = {
   FAIL: "FAIL",
   WARN: "WARN",
   PASS: "PASS",
-  NOT_EVALUATED: "평가 없음",
-  UNAVAILABLE: "결과 없음(unavailable)",
+  NOT_EVALUATED: "quality.badge.notEvaluated",
+  UNAVAILABLE: "quality.badge.unavailable",
 };
 
 export function QualityStateBadge({ state }: { state: QualityState }) {
+  const { t } = useTranslation();
+  // PASS/WARN/FAIL stay as Builder vocabulary; only the descriptive label is translated.
+  const label = STATE_LABEL[state].startsWith("quality.badge.") ? t(STATE_LABEL[state]) : STATE_LABEL[state];
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATE_CLASS[state]}`}>
-      {STATE_LABEL[state]}
+      {label}
     </span>
   );
 }

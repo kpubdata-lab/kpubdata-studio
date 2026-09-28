@@ -1,19 +1,19 @@
 /**
- * 공통 Select 컴포넌트.
+ * Common Select component.
  *
- * Provider/Dataset/데이터 단위 등 선택 입력을 통일한다. react-hook-form ref 주입을
- * 위해 forwardRef로 구현한다. 옵션은 children(<option>)으로 전달한다.
+ * Unify selection input for Provider/Dataset/data unit etc. Implemented with forwardRef
+ * to allow react-hook-form ref injection. Options passed via children (<option>).
  */
 import { forwardRef, type SelectHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  /** 검증 오류 상태. true이면 빨간 테두리와 aria-invalid를 적용한다. */
+  /** validation error state. If true, applies red border and aria-invalid. */
   invalid?: boolean;
 }
 
 /**
- * 스타일과 오류 상태를 갖춘 select 컨트롤.
+ * select control with styling and error state.
  */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { invalid, className, children, ...rest },

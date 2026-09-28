@@ -192,7 +192,7 @@ describe("HomePage", () => {
   });
 });
 
-const HERO_HEADING = "어디서 시작할지 모르겠다면 Kubi에게 물어보세요";
+const HERO_HEADING = "어디서 시작할지 모르겠다면 Ask KPubData";
 
 /** Home과 /kubi를 함께 마운트해 Home hero의 이동 대상을 관측한다. */
 function renderHomeWithKubiRoute() {
@@ -206,7 +206,7 @@ function renderHomeWithKubiRoute() {
   );
 }
 
-describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
+describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
   beforeEach(() => {
     useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: null });
     useAssistConfig.getState().clear();
@@ -218,7 +218,7 @@ describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
     localStorage.clear();
   });
 
-  it("shows the Kubi hero only for a new user (no builds/datasets), not on the existing-user dashboard", async () => {
+  it("shows the Ask KPubData hero only for a new user (no builds/datasets), not on the existing-user dashboard", async () => {
     // 기존 사용자(데모 빌드 이력 존재) — ExistingUserHome에는 Hero가 중복 노출되지 않는다.
     render(
       <MemoryRouter>
@@ -229,7 +229,7 @@ describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
     expect(screen.queryByRole("heading", { name: HERO_HEADING })).not.toBeInTheDocument();
   });
 
-  it("shows exactly one Kubi hero for a new user (empty builds/datasets)", async () => {
+  it("shows exactly one Ask KPubData hero for a new user (empty builds/datasets)", async () => {
     useEmptyBuildsRealMode();
     render(
       <MemoryRouter>
@@ -243,7 +243,7 @@ describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
     useEmptyBuildsRealMode();
     configureKey();
     renderHomeWithKubiRoute();
-    const input = await screen.findByLabelText("Kubi에게 자연어로 데이터 물어보기");
+    const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
     fireEvent.change(input, { target: { value: "서울 대기오염 데이터로 뭘 할 수 있어?" } });
     fireEvent.submit(input.closest("form")!);
 
@@ -255,7 +255,7 @@ describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
   it("not configured: navigates to /kubi without seeding a question or creating a no_key turn", async () => {
     useEmptyBuildsRealMode();
     renderHomeWithKubiRoute();
-    const input = await screen.findByLabelText("Kubi에게 자연어로 데이터 물어보기");
+    const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
     fireEvent.change(input, { target: { value: "서울 대기오염 데이터로 뭘 할 수 있어?" } });
     fireEvent.submit(input.closest("form")!);
 
@@ -294,7 +294,7 @@ describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
     useEmptyBuildsRealMode();
     configureKey();
     renderHomeWithKubiRoute();
-    const input = await screen.findByLabelText("Kubi에게 자연어로 데이터 물어보기");
+    const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
     fireEvent.change(input, { target: { value: "   " } });
     fireEvent.submit(input.closest("form")!);
 
@@ -302,7 +302,7 @@ describe("Home Kubi Hero (#Phase2 UI polish, #S-kubi-suggest)", () => {
     expect(useKubiStore.getState().turns).toHaveLength(0);
   });
 
-  it("seeded question renders as a user turn once the Kubi page mounts", async () => {
+  it("seeded question renders as a user turn once the Ask KPubData page mounts", async () => {
     useEmptyBuildsRealMode();
     useKubiStore.setState({ turns: [], onboarded: false, pendingSeed: "서울 대기오염 데이터로 뭘 할 수 있어?" });
     render(

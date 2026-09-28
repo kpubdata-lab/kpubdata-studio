@@ -1,15 +1,15 @@
 /**
- * Mock/demo {@link AuthProvider} 구현체 (#263).
+ * Mock/demo {@link AuthProvider} implementation (#263).
  *
- * 실제 IdP 연결은 Builder #515 결정 이후로 미룬다 — 이 provider는 Login/Signup UI와
- * generic AuthProvider 경계를 시연하기 위한 결정적 mock일 뿐, 실제 자격 증명을 검증하지
- * 않는다. Builder에는 어떤 요청도 보내지 않고(password 원문 전송 금지, #263), 이 provider가
- * 만든 mock 토큰은 `apiFetch` 인증 헤더 provider에도 연결되지 않는다 — 실제 Builder 호출에
- * 이 토큰이 실리는 일은 없다(Builder bearer 토큰 연결은 #515 이후 real provider의 몫).
+ * Real IdP integration deferred post-Builder #515 — this provider is just a deterministic mock
+ * to demonstrate Login/Signup UI and generic AuthProvider boundary, doesn't validate real credentials.
+ * Never sends requests to Builder (forbid plaintext password, #263); mock token created here doesn't
+ * wire to `apiFetch` auth header provider — this token never reaches actual Builder calls (Bearer
+ * token wiring is Builder's responsibility post-#515 with real provider).
  *
- * password는 함수 인자로만 잠깐 존재했다가 버려진다 — store/localStorage/sessionStorage/
- * 로그 어디에도 저장하지 않는다.
+ * Password exists only as function argument then discarded — never stored in store/localStorage/sessionStorage/logs.
  */
+import { i18n } from "@/shared/i18n";
 import { AuthError, type AuthProvider, type AuthSession, type SignInInput, type SignUpInput } from "./types";
 
 function fabricateMockToken(): string {
@@ -17,9 +17,9 @@ function fabricateMockToken(): string {
 }
 
 /**
- * mock 모드에서 "실패 메시지" UI 경로를 시연하기 위한 결정적 규칙일 뿐이다 — 실제
- * 자격 증명 검증이 아니며, 이 provider는 password를 어디에도 저장하거나 대조하지 않는다.
- * (짧은 비밀번호로 로그인을 시도하면 실패 상태를 확인할 수 있다.)
+ * Deterministic rule just to demo "failure message" UI path in mock mode — not real credential
+ * validation; this provider never stores or checks password anywhere.
+ * (Try short password to see failure state.)
  */
 function looksLikeDemoValidPassword(password: string): boolean {
   return password.length >= 4;
@@ -30,7 +30,7 @@ export const mockAuthProvider: AuthProvider = {
 
   async signIn({ email, password }: SignInInput): Promise<AuthSession> {
     if (!looksLikeDemoValidPassword(password)) {
-      throw new AuthError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      throw new AuthError(i18n.t("auth.mock.badCredentials"));
     }
     return {
       token: fabricateMockToken(),
@@ -50,6 +50,6 @@ export const mockAuthProvider: AuthProvider = {
   },
 
   async signOut(): Promise<void> {
-    // mock 모드에는 폐기할 서버 세션이 없다 — 호출부(useAuthStore.clear())가 메모리 상태를 지운다.
+    // Mock mode has no server session to discard — caller (useAuthStore.clear()) clears memory state.
   },
 };

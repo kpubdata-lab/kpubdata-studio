@@ -1,8 +1,8 @@
 /**
- * `/query` 결과 row 값 표시 regression test (#256 리뷰 §1).
+ * Regression test for `/query` result row display (#256 review §1).
  *
- * array/object 값이 `String(value)`를 거쳐 "[object Object]"로 뭉개지지 않고, 실제 JSON
- * 내용이 보이는지 확인한다. null/primitive는 기존 표시 방식을 그대로 유지해야 한다.
+ * Verify that array/object values don't get mangled by `String(value)` into "[object Object]",
+ * but show actual JSON content. null/primitive must retain their previous display format.
  */
 import { describe, expect, it } from "vitest";
 import { evidenceDetail, evidenceDetailEntries, evidenceHref, formatQueryValue } from "./KubiContent";

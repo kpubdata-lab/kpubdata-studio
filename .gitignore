@@ -16,6 +16,8 @@
 # production
 /build
 /dist
+# Vite 프로젝트지만 tsconfig incremental 산출물이 여기로 떨어진다 (#404)
+.next/
 # mkdocs 빌드 산출물(배포 시 CI에서 생성)
 /site
 
@@ -29,8 +31,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (secrets must not be committed)
+.env
+.env.local
+.env.*.local
+# Development defaults are safe to commit (no secrets)
+!.env.development
+!.env.development.real
 
 # vercel
 .vercel

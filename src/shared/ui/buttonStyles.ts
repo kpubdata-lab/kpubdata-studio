@@ -1,9 +1,9 @@
 /**
- * Button과 LinkButton이 공유하는 시각 스타일 정의.
+ * Visual style definition shared by Button and LinkButton.
  *
- * 버튼과 "버튼처럼 보이는 링크"가 동일한 variant/size 룩을 갖도록 클래스 합성 로직을
- * 한곳에 모은다. 이렇게 분리하면 `<button>` 안에 `<a>`를 중첩하지 않고도(상호작용 요소
- * 중첩 회피) 링크를 버튼 스타일로 렌더링할 수 있다.
+ * button and "link-looking button" share same variant/size look by combining
+ * class logic in one place. This separation allows rendering links with button
+ * styling without nesting `<a>` inside `<button>` (avoiding interaction nesting).
  */
 import { cn, type ClassValue } from "./cn";
 
@@ -27,12 +27,12 @@ const SIZE_CLASS: Record<ButtonSize, string> = {
 };
 
 /**
- * variant/size에 맞는 버튼 스타일 className을 만든다.
+ * Generate button style className matching variant/size.
  *
- * @param variant - 강조 수준.
- * @param size - 크기.
- * @param extra - 추가로 합성할 클래스 값들.
- * @returns 합쳐진 className 문자열.
+ * @param variant - emphasis level.
+ * @param size - button size.
+ * @param extra - additional class values to compose.
+ * @returns combined className string.
  */
 export function buttonClassName(
   variant: ButtonVariant = "primary",

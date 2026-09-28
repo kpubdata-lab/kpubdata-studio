@@ -1,59 +1,57 @@
 /**
- * 단일 Report 블록을 provenance에 맞게 읽기 전용으로 렌더링한다 (#258 §10, IA 개편).
+ * Renders a single Report block as read-only aligned with its provenance (#258 §10, IA redesign).
  *
- * BUILDER_EVIDENCE 블록은 항상 read-only다(사용자가 실제 값을 몰래 바꿔치기할 수 없게 —
- * #258 §3, §10). 수정하고 싶으면 evidence를 새로고침해 재생성하거나, 별도 USER_CONTENT
- * 블록으로 자기 설명을 덧붙인다.
+ * BUILDER_EVIDENCE blocks are always read-only (to prevent users from secretly swapping values —
+ * #258 §3, §10). To modify, refresh evidence and regenerate, or add user explanation via a separate
+ * USER_CONTENT block.
  *
- * IA 개편(표만 나열하는 조회 화면 금지): `summary`(deterministic 문장 요약)를 먼저 보여주고,
- * 기존 `markdown`(표/상세 근거)는 `<details>`로 접어 필요할 때만 펼친다. 표 자체는 지우지
- * 않는다 — 위치만 옮긴다.
+ * IA redesign (no list-only view): show `summary` (deterministic narrative) first; existing
+ * `markdown` (table/detail evidence) goes in `<details>` collapsible. Table itself is preserved —
+ * only position changes.
  */
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { i18n } from "@/shared/i18n";
 import { Card } from "@/shared/ui";
 import { renderMarkdownToReact } from "../markdown";
 import type { BuilderEvidenceBlock, BuilderEvidenceSection, ReportBlock, ReportEvidenceRef } from "../types";
 import { ProvenanceBadge } from "./ProvenanceBadge";
 
-const EVIDENCE_STATUS_LABEL: Record<string, string> = {
-  ok: "",
-  partial: "일부만 확인됨",
-  unavailable: "확인할 수 없음",
-};
+/** Language is fixed at module load time if constant; resolve at call time to reflect switches. */
+function evidenceStatusLabel(status: string): string {
+  return status === "ok" ? "" : i18n.t(`reports.block.status.${status}`);
+}
 
-const SECTION_LABEL: Record<BuilderEvidenceSection, string> = {
-  overview: "1. 데이터 개요",
-  pipeline: "2. 처리 흐름",
-  quality: "3. 품질 진단",
-  schema: "4. 데이터 구조",
-  data_summary: "5. 데이터 규모",
-  output: "6. Output",
-};
+function sectionLabel(section: BuilderEvidenceSection): string {
+  return i18n.t(`reports.block.section.${section}`);
+}
 
 /**
- * NewBuildPage(#97)의 `<details className="group">` disclosure 패턴을 재사용하되, 열림 상태를
- * React state로 직접 제어한다 — 브라우저 기본 toggle 동작에만 기대면 테스트 환경/스크린리더
- * 조합에 따라 동작이 갈릴 수 있어, `summary` 클릭에서 기본 동작을 막고 state로만 연다/닫는다.
+ * Reuse `<details className="group">` disclosure pattern from NewBuildPage(#97), but control
+ * open state via React state — relying only on browser default toggle risks varying behavior
+ * across test environments/screen reader combinations. Prevent default on summary click and
+ * control open/close by state only.
  */
 function BuilderEvidenceBlockCard({ block }: { block: BuilderEvidenceBlock }) {
+  const { t } = useTranslation();
   const [detailOpen, setDetailOpen] = useState(false);
 
-  // Output이 확인 불가할 때는 summary가 이미 사유를 전부 담고 있어, 표를 펼쳐도 같은 문장을
-  // 반복할 뿐이다 — 이때만 상세 근거 disclosure를 만들지 않는다(#258 IA 개편 §4).
+  // When output cannot be verified, summary already contains full reason; expanding table repeats
+  // same text — omit detail disclosure only then (#258 IA redesign §4).
   const hasDetail = !(block.section === "output" && block.evidenceStatus === "unavailable");
-  // summary가 이미 evidenceStatus 사유를 문장으로 담고 있는 섹션이 많아, output에서는 배지성
-  // 경고 문구를 중복 표시하지 않는다.
+  // Many sections where summary already contains evidenceStatus reason as text; output does not
+  // duplicate badge warning.
   const showStatusBanner = block.evidenceStatus !== "ok" && block.section !== "output";
 
   return (
     <Card className="space-y-3" data-testid={`block-${block.section}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{SECTION_LABEL[block.section]}</h3>
+        <h3 className="text-sm font-semibold">{sectionLabel(block.section)}</h3>
         <ProvenanceBadge provenance="BUILDER_EVIDENCE" />
       </div>
       {showStatusBanner ? (
         <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-          {EVIDENCE_STATUS_LABEL[block.evidenceStatus]}
+          {evidenceStatusLabel(block.evidenceStatus)}
           {block.unavailableReason ? `: ${block.unavailableReason}` : ""}
         </p>
       ) : null}
@@ -69,7 +67,7 @@ function BuilderEvidenceBlockCard({ block }: { block: BuilderEvidenceBlock }) {
               setDetailOpen((prev) => !prev);
             }}
           >
-            상세 근거 보기
+            {t("reports.block.showDetail")}
             <span className="text-sm transition group-open:rotate-180" aria-hidden="true">
               ⌄
             </span>
@@ -91,12 +89,13 @@ export function BlockView({
   onRemoveKubiBlock,
 }: {
   block: ReportBlock;
-  /** KUBI_INTERPRETATION 블록이 현재 Report와 같은 dataset/run 기준일 때만 넘긴다(#258 §7). */
+  /** KUBI_INTERPRETATION block passed only when its dataset/run context matches this Report (#258 §7). */
   reportEvidenceRefs?: ReportEvidenceRef[];
   onEditUserContent?: (id: string) => void;
   onDeleteUserContent?: (id: string) => void;
   onRemoveKubiBlock?: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   if (block.provenance === "BUILDER_EVIDENCE") {
     return <BuilderEvidenceBlockCard block={block} />;
   }
@@ -105,7 +104,7 @@ export function BlockView({
     return (
       <Card className="space-y-2 border-indigo-200 dark:border-indigo-900/60" data-testid="block-kubi">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Kubi 분석 · AI 작성</h3>
+          <h3 className="text-sm font-semibold">{t("reports.block.kubiTitle")}</h3>
           <div className="flex items-center gap-2">
             <ProvenanceBadge provenance="KUBI_INTERPRETATION" />
             {onRemoveKubiBlock ? (
@@ -114,30 +113,41 @@ export function BlockView({
                 onClick={() => onRemoveKubiBlock(block.id)}
                 className="text-xs text-muted-foreground underline hover:text-foreground"
               >
-                제거
+                {t("reports.block.remove")}
               </button>
             ) : null}
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          기준 Dataset: {block.sourceContext.datasetId ?? "N/A"} · 기준 Run: {block.sourceContext.runId ?? "N/A"}
+          {t("reports.block.context", {
+            dataset: block.sourceContext.datasetId ?? "N/A",
+            run: block.sourceContext.runId ?? "N/A",
+          })}
           {block.sourceContext.stage ? ` · Stage: ${block.sourceContext.stage}` : ""}
         </p>
         {!block.isSameContext ? (
           <p className="rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
-            참고 분석 · 현재 Report의 기준 dataset/run과 다릅니다(자동으로 합치지 않음).
+            {t("reports.block.otherContext")}
           </p>
         ) : null}
         <p className="text-xs text-muted-foreground">
-          생성 시각 {new Date(block.generatedAt).toLocaleString("ko-KR")}
+          {t("reports.block.generatedAt", {
+            at: new Date(block.generatedAt).toLocaleString(
+              i18n.language?.startsWith("en") ? "en-US" : "ko-KR",
+            ),
+          })}
           {block.provider ? ` · provider ${block.provider}` : ""}
           {block.model ? ` · model ${block.model}` : ""}
         </p>
         <div className="space-y-2 text-sm text-foreground">{renderMarkdownToReact(block.note)}</div>
-        <p className="text-xs italic text-muted-foreground">판단 근거: {block.reason}</p>
+        <p className="text-xs italic text-muted-foreground">
+          {t("reports.block.reason", { reason: block.reason })}
+        </p>
         {block.isSameContext && reportEvidenceRefs && reportEvidenceRefs.length > 0 ? (
           <p className="text-xs text-muted-foreground">
-            연결된 Evidence: {reportEvidenceRefs.map((ref) => ref.label).join(", ")}
+            {t("reports.block.linkedEvidence", {
+              refs: reportEvidenceRefs.map((ref) => ref.label).join(", "),
+            })}
           </p>
         ) : null}
       </Card>
@@ -156,7 +166,7 @@ export function BlockView({
               onClick={() => onEditUserContent(block.id)}
               className="text-xs text-muted-foreground underline hover:text-foreground"
             >
-              편집
+              {t("reports.block.edit")}
             </button>
           ) : null}
           {onDeleteUserContent ? (
@@ -165,7 +175,7 @@ export function BlockView({
               onClick={() => onDeleteUserContent(block.id)}
               className="text-xs text-muted-foreground underline hover:text-foreground"
             >
-              삭제
+              {t("reports.block.delete")}
             </button>
           ) : null}
         </div>

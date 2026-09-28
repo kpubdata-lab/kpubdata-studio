@@ -1,16 +1,22 @@
 /**
- * 자연어 → BuildSpec 생성 + 리페어 루프 (ST-A7, #210).
+ * Natural language → BuildSpec generation + repair loop (ST-A7, #210).
  *
- * 4중 게이트 환각 차단:
- * ① zod 파싱 → ② 카탈로그 대조 → ③ Builder /validate → ④ 사용자 승인
- * 각 게이트 실패 시 최대 2회 재생성. 상한 초과 시 부분 결과 반환.
- * 승인 전 /build 호출 금지.
+ * 4-gate hallucination guard: ① zod parse → ② /catalog type check → ③ Builder validation → ④ success.
+ * Repair loop: if parse/validation fails, feed error back to LLM up to MAX_REPAIR_ATTEMPTS, then give up.
  */
 import type { AssistProvider, AssistMessage } from "./provider";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { CatalogResponse, ValidateResponse } from "@/shared/lib/builderApi";
 import { parse } from "yaml";
 import { z } from "zod";
+import { i18n } from "@/shared/i18n";
+
+/**
+ * Only user-visible problem messages translated (#350). System prompt and retry instructions sent to LLM
+ * not translated — assistant output language/quality is a separate decision.
+ */
+const t = (key: string, params?: Record<string, unknown>): string =>
+  i18n.t(`assistant.generate.${key}`, params ?? {});
 
 export interface GenerationResult {
   spec: string | null;
@@ -53,10 +59,10 @@ function catalogProblems(
   spec.sources.forEach((source, index) => {
     const datasets = providers.get(source.provider);
     if (!datasets) {
-      problems.push(`sources[${index}].provider: 카탈로그에 없는 provider '${source.provider}'입니다.`);
+      problems.push(t("unknownProvider", { index, provider: source.provider }));
     } else if (!datasets.has(source.dataset)) {
       problems.push(
-        `sources[${index}].dataset: provider '${source.provider}'에 없는 dataset '${source.dataset}'입니다.`,
+        t("unknownDataset", { index, provider: source.provider, dataset: source.dataset }),
       );
     }
   });
@@ -73,7 +79,7 @@ function parseGeneratedSpec(spec: string) {
         {
           code: "custom",
           path: [],
-          message: error instanceof Error ? error.message : "YAML을 파싱하지 못했습니다.",
+          message: error instanceof Error ? error.message : t("yamlParse"),
         },
       ]),
     };
@@ -95,7 +101,7 @@ export async function generateBuildSpec(
       spec: null,
       status: "error",
       attempts: 0,
-      remaining_problems: ["mock 모드에서는 생성 기능이 비활성화됩니다 (ST-A8, #211)"],
+      remaining_problems: [t("mockDisabled")],
     };
   }
 
@@ -104,7 +110,7 @@ export async function generateBuildSpec(
       spec: null,
       status: "error",
       attempts: 0,
-      remaining_problems: ["Builder /validate 연결이 없어 BuildSpec 생성을 중단했습니다."],
+      remaining_problems: [t("noValidate")],
     };
   }
 
@@ -115,7 +121,7 @@ export async function generateBuildSpec(
       spec: null,
       status: "error",
       attempts: 0,
-      remaining_problems: ["카탈로그를 조회할 수 없어 BuildSpec 생성을 중단했습니다."],
+      remaining_problems: [t("noCatalog")],
     };
   }
 
@@ -123,6 +129,7 @@ export async function generateBuildSpec(
     .map((provider) => `${provider.name}: ${provider.datasets.map((dataset) => dataset.name).join(", ")}`)
     .join("\n");
 
+  // i18n-ignore: LLM system prompt — assistant output language decided separately (#350).
   const systemPrompt = `당신은 한국 공공데이터 BuildSpec 생성기입니다.
 사용자의 자연어 요청을 BuildSpec YAML로 변환하세요.
 사용 가능한 provider/dataset:\n${catalogContext}\n
@@ -140,10 +147,12 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
     if (lastProblems.length > 0) {
       messages.push({
         role: "assistant",
+        // i18n-ignore: Conversation scaffolding fed to model — not shown on screen.
         content: "이전 출력에 오류가 있었습니다. 수정하겠습니다.",
       });
       messages.push({
         role: "user",
+        // i18n-ignore: Retry instructions fed to model — not shown on screen.
         content: `오류:\n${lastProblems.join("\n")}\n\n이 오류를 수정한 YAML을 다시 출력하세요.`,
       });
     }
@@ -154,11 +163,11 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
       rawOutput += chunk;
     }
 
-    // ① YAML parse + 최소 BuildSpec source 구조 검증
+    // ① YAML parse + minimal BuildSpec source structure validation
     const spec = extractYaml(rawOutput);
 
     if (!spec) {
-      lastProblems = ["빈 출력이 반환되었습니다."];
+      lastProblems = [t("emptyOutput")];
       continue;
     }
 
@@ -170,7 +179,7 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
       continue;
     }
 
-    // ② typed /catalog 대조
+    // ② typed /catalog matching
     const groundingProblems = catalogProblems(parsed.data, options.catalog);
     if (groundingProblems.length > 0) {
       lastProblems = groundingProblems;
@@ -186,12 +195,12 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
         status: "error",
         attempts,
         remaining_problems: [
-          error instanceof Error ? error.message : "시크릿 복원에 실패했습니다.",
+          error instanceof Error ? error.message : t("restoreFailed"),
         ],
       };
     }
 
-    // ③ Builder 검증
+    // ③ Builder validation
     let validation: ValidateResponse;
     try {
       validation = await options.validateFn(restoredSpec, options.signal);
@@ -202,7 +211,7 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
         status: "error",
         attempts,
         remaining_problems: [
-          error instanceof Error ? error.message : "Builder 검증 요청에 실패했습니다.",
+          error instanceof Error ? error.message : t("validateRequestFailed"),
         ],
       };
     }
@@ -210,7 +219,7 @@ YAML만 출력하세요. 설명은 출력하지 마세요.`;
       return { spec: restoredSpec, status: "ok", attempts, remaining_problems: [] };
     }
     if (validation.status === "invalid") {
-      lastProblems = validation.problems.length > 0 ? validation.problems : ["검증 실패"];
+      lastProblems = validation.problems.length > 0 ? validation.problems : [t("validationFailed")];
       continue;
     }
     return {

@@ -1,10 +1,10 @@
 /**
- * Configure 단계 — credential prerequisite / readiness(#S-add-data,
- * #S-provider-probe)와 Dataset 필수 요청 파라미터 UX 회귀 테스트.
+ * Configure step — credential prerequisite / readiness (#S-add-data,
+ * #S-provider-probe) and required request parameter UX regression tests.
  *
- * generic Provider probe("Provider 연결 확인" 버튼)는 신뢰할 수 없어 제거됐다 —
- * Add Data는 authoritative prerequisite(requires credential AND configured=false)만
- * 쓰고, 실제 사용 가능 여부는 Preview가 확인한다.
+ * The generic provider probe ("check provider connection" button) was removed as unreliable —
+ * Add Data uses only authoritative prerequisite (requires credential AND
+ * configured=false), and actual data availability is verified by Preview.
  */
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -76,38 +76,38 @@ function renderStep(overrides: {
   );
 }
 
-describe("ConfigureStep — generic Provider probe 제거", () => {
-  it("'Provider 연결 확인' 같은 generic live probe 버튼을 더 이상 보여주지 않는다", () => {
+describe("ConfigureStep — remove generic provider probe", () => {
+  it("No longer shows generic live probe button like 'Provider 연결 확인'", () => {
     renderStep({ providerConfigured: { datago: true } });
     expect(screen.queryByRole("button", { name: "Provider 연결 확인" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /연결 테스트/ })).not.toBeInTheDocument();
   });
 
-  it("provider가 configured면 인증 정보 준비 상태와 Preview 안내만 보여준다", () => {
+  it("If provider is configured, shows auth ready status and Preview guide only", () => {
     renderStep({ providerConfigured: { datago: true } });
     expect(screen.getByText("인증 정보 준비됨")).toBeInTheDocument();
     expect(screen.getByText(/실제 데이터 인출 가능 여부는\s*다음 단계 Preview에서 확인/)).toBeInTheDocument();
   });
 
-  it("configured 여부를 아직 모르면(null) 준비됨도 막힘도 보여주지 않는다", () => {
+  it("If configured status unknown (null), shows neither ready nor blocked", () => {
     renderStep({ providerConfigured: null });
     expect(screen.queryByText("인증 정보 준비됨")).not.toBeInTheDocument();
     expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
   });
 });
 
-describe("ConfigureStep — 필수 요청 파라미터 UX", () => {
-  it("선택 Dataset metadata의 필수 파라미터를 예시와 함께 보여준다", () => {
+describe("ConfigureStep — required request parameter UX", () => {
+  it("Shows selected dataset metadata required params with examples", () => {
     renderStep({});
     expect(screen.getByText("이 Dataset의 요청 파라미터")).toBeInTheDocument();
     expect(screen.getByText("sidoName")).toBeInTheDocument();
     expect(screen.getByText("조회할 시·도", { exact: false })).toBeInTheDocument();
     expect(screen.getAllByText(/예: 서울/).length).toBeGreaterThan(0);
-    // 구체 예시가 generic 예시를 대체한다.
+    // Concrete example replaces generic example.
     expect(screen.getByText('예: {"sidoName":"서울"}')).toBeInTheDocument();
   });
 
-  it("metadata가 없는 Dataset은 중립 예시만 보여주고 필수 안내는 없다", () => {
+  it("Dataset without metadata shows neutral example only, no required guide", () => {
     renderStep({
       draft: { publicApi: { provider: "datago", dataset: "free_form", sourceParams: "{}" } },
     });
@@ -115,7 +115,7 @@ describe("ConfigureStep — 필수 요청 파라미터 UX", () => {
     expect(screen.getByText('예: {"region": "seoul"}')).toBeInTheDocument();
   });
 
-  it("예시값 적용 버튼을 누르면 example 값을 채우고, 이미 입력된 값은 덮어쓰지 않는다", () => {
+  it("Clicking example value button fills example values, doesn't overwrite existing input", () => {
     const updateDraft = vi.fn();
     renderStep({
       draft: { publicApi: { provider: "datago", dataset: "air_quality", sourceParams: '{"numOfRows":"10"}' } },
@@ -128,10 +128,10 @@ describe("ConfigureStep — 필수 요청 파라미터 UX", () => {
     const patch = updateDraft.mock.calls[0][0] as { publicApi: { sourceParams: string } };
     const merged = JSON.parse(patch.publicApi.sourceParams) as Record<string, string>;
     expect(merged.sidoName).toBe("서울");
-    expect(merged.numOfRows).toBe("10"); // 기존 입력값을 덮어쓰지 않는다.
+    expect(merged.numOfRows).toBe("10"); // Do not overwrite existing input value.
   });
 
-  it("example이 없는 Dataset은 예시값 적용 버튼을 보여주지 않는다", () => {
+  it("Dataset without example doesn't show example value apply button", () => {
     renderStep({
       draft: { publicApi: { provider: "datago", dataset: "free_form", sourceParams: "{}" } },
     });
@@ -139,8 +139,8 @@ describe("ConfigureStep — 필수 요청 파라미터 UX", () => {
   });
 });
 
-describe("ConfigureStep — API 연결 credential prerequisite", () => {
-  it("credential이 필요한 Dataset인데 provider가 미설정이면 진행을 막고 안내한다", () => {
+describe("ConfigureStep — API connection credential prerequisite", () => {
+  it("If credential required but provider not configured, blocks and guides", () => {
     const onConnectProvider = vi.fn();
     renderStep({ providerConfigured: { datago: false }, onConnectProvider });
 
@@ -151,19 +151,19 @@ describe("ConfigureStep — API 연결 credential prerequisite", () => {
     expect(onConnectProvider).toHaveBeenCalledWith("datago");
   });
 
-  it("provider가 이미 configured면 막지 않는다", () => {
+  it("If provider already configured, does not block", () => {
     renderStep({ providerConfigured: { datago: true } });
     expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
   });
 
-  it("configured 여부를 아직 알 수 없으면(null) 추측해서 막지 않는다", () => {
+  it("If configured status still unknown (null), does not guess and block", () => {
     renderStep({ providerConfigured: null });
     expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
   });
 });
 
-describe("ConfigureStep — Dataset 활용신청 안내", () => {
-  it("application.required면 활용신청 안내와 공식 페이지 링크를 보여준다", () => {
+describe("ConfigureStep — dataset usage application guide", () => {
+  it("Shows usage application guide and official page link if application.required", () => {
     renderStep({});
     expect(screen.getByText("데이터 활용신청을 확인해주세요")).toBeInTheDocument();
     const link = screen.getByRole("link", { name: /공식 페이지에서 확인/ });
@@ -171,7 +171,7 @@ describe("ConfigureStep — Dataset 활용신청 안내", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 
-  it("application metadata가 없는 Dataset은 활용신청 안내를 보여주지 않는다", () => {
+  it("Dataset without application metadata doesn't show usage application guide", () => {
     renderStep({
       draft: { publicApi: { provider: "datago", dataset: "free_form", sourceParams: "{}" } },
     });

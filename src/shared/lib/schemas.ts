@@ -1,11 +1,12 @@
 /**
- * Studio에서 사용하는 zod 기반 입력/도메인 스키마 모음.
+ * collection of zod-based input/domain schemas used by Studio.
  *
- * 폼 입력과 API 페이로드가 공유 타입 규약을 어기지 않도록 런타임 검증 규칙을 제공한다.
+ * runtime validation rules ensuring form inputs and API payloads don't violate shared type contracts.
  */
+import { i18n } from "@/shared/i18n";
 import { z } from "zod";
 
-/** 지원하는 export 형식 목록을 제한하는 enum 스키마 */
+/** enum schema limiting list of supported export formats */
 export const exportFormatSchema = z.enum([
   "markdown",
   "jsonl",
@@ -30,31 +31,33 @@ export const recordSchema = z.record(z.string(), z.string());
 
 export const jsonRecordSchema = z.record(z.string(), jsonValueSchema);
 
-/** export 옵션은 문자열 키에 임의 값(unknown)을 허용한다 (ExportTarget.options 규약과 정렬) */
+/** export options allow arbitrary values (unknown) for string keys (aligned with ExportTarget.options contract) */
 export const exportOptionsSchema = z.record(z.string(), jsonValueSchema);
 
-/** 소스 스키마 계약 (VAL-1). Builder sources[].schema 와 1:1. */
+/** source schema contract (VAL-1). 1:1 mapping with Builder sources[].schema. */
 export const schemaContractSchema = z.object({
   required: z.array(z.string()),
   dtypes: z.record(z.string(), z.string()),
   casts: z.record(z.string(), z.string()),
 });
 
-/** kind="public_api"(기본)/file/url 구분(#498). */
+/** kind="public_api" (default) / file / url distinction(#498). */
 export const sourceKindSchema = z.enum(["public_api", "file", "url"]);
 
-/** kind="file"/"url" source가 실제로 지원하는 포맷(Builder #498 계약 기준). */
+/** Formats actually supported by kind="file"/"url" source (per Builder #498 contract). */
 export const sourceFormatSchema = z.enum(["csv", "json", "jsonl", "parquet"]);
 
-/** `POST /uploads`가 발급하는 upload_id 형식(Builder #498: `upl_` + hex 32자). */
-export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, "올바른 upload_id 형식이 아닙니다.");
+/** upload_id format issued by `POST /uploads` (Builder #498: `upl_` + 32 hex chars). */
+export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, i18n.t("schemas.uploadIdFormat"));
 
 /**
- * 단일 원본 데이터 참조가 가져야 할 필드를 검증하는 스키마 (#250, #498).
+ * schema validating fields that single source data reference must have (#250, #498).
  *
- * kind별 필수 필드는 discriminated union 대신 `superRefine`으로 강제한다 — Builder
- * 계약(SourceRef) 자체가 OpenAPI object schema로 조건부 필수를 표현하지 않고
- * `additionalProperties: true` 위에서 loader/validator가 강제하는 것과 같은 패턴이다.
+ * required fields by kind are enforced via `superRefine` instead of a
+ * discriminated union — the same pattern as the Builder contract
+ * (SourceRef) itself, which expresses no conditional requirements in its
+ * OpenAPI object schema and lets the loader/validator enforce them over
+ * `additionalProperties: true`.
  */
 export const sourceRefSchema = z
   .object({
@@ -81,30 +84,30 @@ export const sourceRefSchema = z
       }
     } else if (kind === "file") {
       if (!source.uploadId) {
-        ctx.addIssue({ code: "custom", path: ["uploadId"], message: "업로드한 파일이 필요합니다." });
+        ctx.addIssue({ code: "custom", path: ["uploadId"], message: i18n.t("schemas.uploadRequired") });
       }
       if (!source.format) {
-        ctx.addIssue({ code: "custom", path: ["format"], message: "파일 포맷을 선택해주세요." });
+        ctx.addIssue({ code: "custom", path: ["format"], message: i18n.t("schemas.formatRequired") });
       }
     } else if (kind === "url") {
       if (!source.endpoint) {
-        ctx.addIssue({ code: "custom", path: ["endpoint"], message: "Endpoint를 입력해주세요." });
+        ctx.addIssue({ code: "custom", path: ["endpoint"], message: i18n.t("schemas.endpointRequired") });
       } else if (!/^https:\/\//i.test(source.endpoint)) {
-        ctx.addIssue({ code: "custom", path: ["endpoint"], message: "https:// 로 시작하는 URL만 허용됩니다." });
+        ctx.addIssue({ code: "custom", path: ["endpoint"], message: i18n.t("schemas.httpsOnly") });
       }
       if (source.format && !["csv", "json", "jsonl"].includes(source.format)) {
-        ctx.addIssue({ code: "custom", path: ["format"], message: "URL 소스는 csv/json/jsonl 포맷만 지원합니다." });
+        ctx.addIssue({ code: "custom", path: ["format"], message: i18n.t("schemas.urlFormats") });
       }
     }
   });
 
-/** 결과물 export 대상 정의를 검증하는 스키마 */
+/** schema validating export target definition */
 export const exportTargetSchema = z.object({
   format: z.string().min(1, "Export format is required."),
   options: exportOptionsSchema.optional(),
 });
 
-/** 새 빌드 작성 화면에서 생성하는 전체 스펙 구조를 검증하는 스키마 */
+/** schema validating entire spec structure generated from new build screen */
 export const buildSpecSchema = z.object({
   datasetId: z.string().min(1, "Dataset ID is required."),
   title: z.string().min(1, "Title is required."),
@@ -112,16 +115,17 @@ export const buildSpecSchema = z.object({
   sources: z.array(sourceRefSchema).min(1, "At least one source is required."),
   exports: z.array(exportTargetSchema).min(1, "Select at least one export format."),
   metadata: jsonRecordSchema,
-  // Studio가 편집 UI를 제공하지 않는 canonical 최상위 필드(publish/splits/pii/...)를
-  // round-trip 중 유실하지 않도록 보존하는 bucket (#250). specMapping.ts 참고.
+  // canonical top-level fields not provided UI editing in Studio (publish/splits/pii/...)
+  // bucket preserving through round-trip without loss (#250). see specMapping.ts.
   extra: jsonRecordSchema.optional(),
 });
 
 /**
- * New Build Wizard 폼 입력값(localStorage 초안으로 저장되는 실제 형태)을 검증하는 스키마.
+ * schema validating New Build Wizard form input values (actual form persisted as localStorage draft).
  *
- * 저장된 초안(#84)을 복원할 때 형태가 깨졌거나 오래된 버전인 경우를 안전하게 걸러내기 위해
- * 사용한다. 빌드 실행용 스펙(`buildSpecSchema`)이 아니라 폼 입력 형태를 기술한다.
+ * used to safely filter broken or outdated shapes when restoring a saved
+ * draft (#84). Describes the form-input shape, not the executable build
+ * spec (`buildSpecSchema`).
  */
 export const buildFormValuesSchema = z.object({
   datasetId: z.string(),
@@ -134,12 +138,12 @@ export const buildFormValuesSchema = z.object({
   exportFormats: z.array(z.string()),
 });
 
-/** `buildFormValuesSchema`를 통과한 폼 입력 타입 추론 결과 */
+/** inferred form input type from passing buildFormValuesSchema */
 export type BuildFormValuesInput = z.infer<typeof buildFormValuesSchema>;
 
-/** `buildSpecSchema`를 통과한 입력 타입 추론 결과 */
+/** inferred input type from passing buildSpecSchema */
 export type BuildSpecInput = z.infer<typeof buildSpecSchema>;
-/** `exportTargetSchema`를 통과한 입력 타입 추론 결과 */
+/** inferred input type from passing exportTargetSchema */
 export type ExportTargetInput = z.infer<typeof exportTargetSchema>;
-/** `sourceRefSchema`를 통과한 입력 타입 추론 결과 */
+/** inferred input type from passing sourceRefSchema */
 export type SourceRefInput = z.infer<typeof sourceRefSchema>;

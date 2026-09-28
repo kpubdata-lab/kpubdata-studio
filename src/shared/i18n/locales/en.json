@@ -1,4 +1,44 @@
 {
+  "layout": {
+    "closeNav": "Close navigation",
+    "studioHome": "KPubData Studio home",
+    "closeSidebar": "Close sidebar",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "theme": "Theme",
+    "selectTheme": "Select theme",
+    "toggleSidebar": "Toggle sidebar",
+    "tagline": "A workspace for turning public data into datasets",
+    "openKubi": "Open Ask KPubData",
+    "goToSettingsFor": "Go to settings for {{email}}",
+    "loginRequiredSettings": "Login required — go to settings",
+    "loginRequired": "Login required"
+  },
+  "reportEditor": {
+    "untitled": "Untitled",
+    "deleteBlockConfirm": "Delete this block?",
+    "refreshError": "Could not refresh the evidence.",
+    "newReportTitle": "{{dataset}} · {{run}} report",
+    "createError": "Could not create the report.",
+    "loading": "Loading…",
+    "notFoundTitle": "Report not found",
+    "notFoundHeading": "This report is not in this browser",
+    "notFoundDesc": "It may have been deleted, or created in another browser or on another device — reports live in local storage and do not sync.",
+    "backToList": "Back to reports",
+    "editTitle": "Edit report",
+    "titleLabel": "Title",
+    "savedRevision": "Saved · revision {{revision}}",
+    "lastSaved": " · last saved {{time}}",
+    "refreshEvidence": "Refresh evidence",
+    "downloadMarkdown": "Download Markdown",
+    "downloadHtml": "Download HTML",
+    "print": "Print (browser)",
+    "kubiSection": "7. Ask KPubData analysis",
+    "noKubiTitle": "No AI analysis added yet",
+    "noKubiDesc": "Ask KPubData to analyse the current dataset/run, review it, then add it here.",
+    "notesSection": "8. Notes",
+    "addBlock": "+ Add a note block"
+  },
   "nav": {
     "groupWorkspace": "WORKSPACE",
     "groupData": "DATA",
@@ -11,7 +51,7 @@
     "datasets": "Dataset Catalog",
     "builds": "Builds / Runs",
     "quality": "Quality",
-    "kubi": "Kubi",
+    "kubi": "Ask KPubData",
     "reports": "Reports",
     "provider": "Provider / API",
     "monitoring": "Monitoring",
@@ -25,7 +65,7 @@
     "datasets": "Search built datasets",
     "builds": "Build and run history",
     "quality": "Build and dataset quality results",
-    "kubi": "Context-aware AI assistant",
+    "kubi": "Context-aware assistant",
     "reports": "Create and view analysis reports",
     "provider": "API keys and credentials",
     "monitoring": "Run and system monitoring",
@@ -37,22 +77,8 @@
     "viewArtifacts": "View Artifacts"
   },
   "languageSwitcher": {
-    "toggle": "Switch language"
-  },
-  "layout": {
-    "closeNav": "Close navigation",
-    "studioHome": "KPubData Studio home",
-    "closeSidebar": "Close sidebar",
-    "expandSidebar": "Expand sidebar",
-    "collapseSidebar": "Collapse sidebar",
-    "theme": "Theme",
-    "selectTheme": "Select theme",
-    "toggleSidebar": "Toggle sidebar",
-    "tagline": "A workspace for turning public data into datasets",
-    "openKubi": "Open Kubi",
-    "goToSettingsFor": "Go to settings for {{email}}",
-    "loginRequiredSettings": "Login required — go to settings",
-    "loginRequired": "Login required"
+    "toggle": "Switch language",
+    "switchTo": "Switch to {{language}}"
   },
   "builds": {
     "statusFilter": {
@@ -71,7 +97,8 @@
       "loadListFallback": "Failed to load builds."
     },
     "page": {
-      "title": "Build History"
+      "title": "Build History",
+      "desc": "A <b>build</b> is the job that collects and processes data; a <b>run</b> is one recorded execution of that build."
     },
     "run": {
       "notFoundTitle": "Run not found: {{id}}",
@@ -330,10 +357,36 @@
       "hintMultiSource": "This run has multiple sources. Select which source to analyze first.",
       "hintNoStage": "Analyzing the whole run. Select Silver or Gold to generate SQL.",
       "hintBronze": "Generated SQL cannot run on Bronze. Select Silver or Gold.",
-      "hintSqlReady": "Ask questions and generate SQL on the {{stage}} schema"
+      "hintSqlReady": "Ask questions and generate SQL on the {{stage}} schema",
+      "page": {
+        "home": "Home",
+        "discover": "Discover",
+        "workspace": "Workspace",
+        "add-data": "Add Data",
+        "dataset-detail": "Dataset details",
+        "dataset-catalog": "Dataset Catalog",
+        "build-new": "New build",
+        "build-run": "Build run",
+        "build-artifacts": "Build artifacts",
+        "build-publish": "Publish build",
+        "build-edit": "Edit build",
+        "build-detail": "Build details",
+        "validate": "Validate",
+        "preview": "Preview",
+        "artifacts": "Artifacts",
+        "builds": "Builds",
+        "quality": "Quality",
+        "kubi": "Ask KPubData",
+        "reports": "Reports",
+        "provider": "Provider",
+        "monitoring": "Monitoring",
+        "settings": "Settings"
+      },
+      "stageAria": "Analysis stage",
+      "sourceAria": "Analysis source"
     },
     "byok": {
-      "title": "An LLM API key is required to use Kubi (BYOK)",
+      "title": "An LLM API key is required to use Ask KPubData (BYOK)",
       "desc": "Keys are kept only in this browser's memory by default and disappear on refresh. Studio does not provide a shared key.",
       "modelLabel": "Model (optional)",
       "baseUrlLabel": "Base URL (optional)",
@@ -369,7 +422,14 @@
       "copySql": "Copy Generated SQL",
       "copy": "Copy",
       "run": "Run",
-      "runningEllipsis": "Running…"
+      "runningEllipsis": "Running…",
+      "bronzeNotAllowed": "SQL cannot run in a Bronze context. Only Silver or Gold can run it.",
+      "needsDatasetRun": "Both a dataset and a run must be selected to run it.",
+      "cancelled": "The request was cancelled.",
+      "unknownError": "An unknown error occurred while running the query.",
+      "mockUnsupported": "Query execution is not supported in mock mode. Set VITE_USE_REAL_BUILDER=true to connect to a real Builder.",
+      "stageMismatch": "The current screen stage ({{current}}) differs from the Generated SQL stage ({{proposed}}).",
+      "stageNone": "none"
     },
     "action": {
       "buildSpec": "BuildSpec change proposal",
@@ -417,7 +477,7 @@
       "demoQuestion": "How is this dataset's quality?"
     },
     "input": {
-      "aria": "Ask Kubi",
+      "aria": "Ask KPubData",
       "placeholder": "Type a question…",
       "placeholderDemo": "Type a question… (demo · mock data)",
       "placeholderNoKey": "Set an API key first",
@@ -467,9 +527,117 @@
       "q35": "방금 답변을 좀 더 자세히 설명해줘.",
       "q36": "이걸 바탕으로 다음 단계를 추천해줘.",
       "q37": "관련해서 더 확인할 데이터가 있어?"
+    },
+    "actions": {
+      "missingParent": "The parent field for path \"{{path}}\" does not exist.",
+      "specNotFound": "The original BuildSpec for run \"{{runId}}\" is not in this browser. Builder does not persist specs, so a patch can only be applied to a run you have executed or edited in Studio.",
+      "secretsRedacted": "The stored BuildSpec has its secrets stripped (local storage policy), so it cannot be patched. Re-enter serviceKey/apiKey/token values in the provider settings screen.",
+      "pathNotAllowed": "Path \"{{path}}\" is not allowed. Only title, description, metadata, sources[].params, sources[].alias and exports[].options can be patched.",
+      "credentialPath": "Path \"{{path}}\" looks like a credential field and cannot be patched. Change serviceKey/apiKey/token values in the provider settings screen.",
+      "redactionMarker": "The patch result still contains a redaction marker and cannot be applied. Re-enter that credential with its real value.",
+      "patchFailed": "The patch could not be applied.",
+      "unresolvedPlaceholder": "It still contains an unresolved secret placeholder.",
+      "paramsCredential": "Generated sourceParams must not contain credential values.",
+      "paramsNotObject": "Generated sourceParams must be a JSON object.",
+      "describe": {
+        "openProvider": "Open the \"{{provider}}\" provider screen",
+        "openBuild": "Open build \"{{runId}}\" details",
+        "openQuality": "View \"{{datasetId}}\" in Quality Center",
+        "patchSpec": "Propose {{count}} change(s) to the BuildSpec of run \"{{runId}}\"",
+        "createDraft": "Create a new build draft: {{title}}",
+        "addReportBlock": "Add as a report reference note"
+      }
+    },
+    "session": {
+      "actionRejected": "The user rejected this action.",
+      "draftSaveFailed": "Could not save the draft.",
+      "unsafeBaseUrl": "That base URL is not safe.",
+      "excludedMalformed": "Excluded as malformed: {{ref}}",
+      "excludedRefs": "Excluded evidence: {{refs}}",
+      "excludedActions": "Excluded actions: {{actions}}",
+      "llmFailed": "The LLM call failed.",
+      "demoEvidenceFailed": "Could not load the demo evidence.",
+      "contextChangedSql": "The screen context changed, so this SQL can no longer run.",
+      "contextChangedAction": "The screen context changed, so this action can no longer run.",
+      "contextChangedApply": "The screen context changed, so this action can no longer be applied.",
+      "opened": "Opened the screen.",
+      "addedToReport": "Added as a report reference note.",
+      "actionFailed": "The action could not be applied.",
+      "patchApplied": "Applied to the BuildSpec and it passed Builder /validate.",
+      "patchAppliedInvalid": "Applied to the BuildSpec but Builder /validate failed: {{errors}}",
+      "patchFailed": "The BuildSpec patch could not be applied.",
+      "draftSaved": "Saved to a new build draft."
+    },
+    "runAnalysis": {
+      "title": "Run analysis",
+      "close": "Close",
+      "needsKey": "Set an API key to use Ask KPubData.",
+      "openSettings": "Open Ask KPubData settings",
+      "preparing": "Preparing the analysis…",
+      "thinking": "Thinking…",
+      "cancel": "Cancel",
+      "askMore": "Ask more"
+    },
+    "demo": {
+      "disclaimer": "[DEMO] This is a sample answer over mock data — not a real analysis.",
+      "datasetStatus": "The latest status of dataset \"{{title}}\" ({{datasetId}}) is \"{{status}}\".",
+      "qualityReason": "[DEMO] You can see this run's real rule results in Quality Center.",
+      "demoNote": "[DEMO] Demo analysis of \"{{title}}\" — over mock data, not a real analysis.",
+      "reportReason": "[DEMO] You can keep this demo answer in a report as a reference note.",
+      "noDataset": "No dataset is selected, so this is general guidance only. Pick a dataset for a more specific demo.",
+      "noQuality": "No quality results were evaluated.",
+      "qualitySummary": "Quality summary: {{summary}}.",
+      "sqlNote": "Generated SQL is a demo preview query — running it shows mock results (no real Builder call).",
+      "stageHint": "Pick Silver or Gold in the stage selector above to also see the Generated SQL and result preview demo."
+    },
+    "crossCheck": {
+      "openProviderUnknown": "OPEN_PROVIDER: provider \"{{provider}}\" is not in the catalog",
+      "openBuildUnknown": "OPEN_BUILD: run \"{{runId}}\" is not in the evidence",
+      "openQualityUnknownDataset": "OPEN_QUALITY: dataset \"{{datasetId}}\" is not in the evidence",
+      "openQualityUnknownRun": "OPEN_QUALITY: run \"{{runId}}\" is not in the evidence",
+      "openQualityMismatch": "OPEN_QUALITY: Builder evidence does not confirm that run \"{{runId}}\" belongs to dataset \"{{datasetId}}\"",
+      "patchUnknownRun": "PATCH_BUILDSPEC: run \"{{runId}}\" is not in the evidence",
+      "patchSpecMissing": "PATCH_BUILDSPEC: the original BuildSpec for run \"{{runId}}\" is not in this browser, so a safe diff cannot be built",
+      "draftUnknownProvider": "CREATE_BUILD_DRAFT: provider \"{{provider}}\" is not in the catalog",
+      "draftUnknownDataset": "CREATE_BUILD_DRAFT: dataset \"{{dataset}}\" is not in the \"{{provider}}\" catalog",
+      "stageNone": "none",
+      "sqlStageMismatch": "Excluded from execution: the current screen stage ({{current}}) does not match the proposed SQL stage ({{proposed}}).",
+      "sqlSourceDropped": "Removed source \"{{source}}\" because the evidence does not confirm it. This is a single-source run, so Builder picks the source automatically.",
+      "sqlSourceUnknown": "Excluded from execution: it references source \"{{source}}\", which is not in the evidence."
+    },
+    "drawer": {
+      "collapseLabel": "Show Ask KPubData at default width",
+      "expandLabel": "Expand Ask KPubData",
+      "collapse": "Default",
+      "expand": "Expand",
+      "close": "Close Ask KPubData",
+      "label": "Ask KPubData"
+    },
+    "parse": {
+      "empty": "The LLM returned an empty response.",
+      "notJson": "The LLM response could not be parsed as JSON.",
+      "shapeMismatch": "The LLM response shape was not what we expected: {{issues}}"
+    },
+    "search": {
+      "label": "Ask KPubData about your data in plain language",
+      "placeholder": "Ask KPubData about the data…"
+    },
+    "content": {
+      "approve": "Approve"
+    },
+    "page": {
+      "desc": "Uses the current screen, dataset, build and quality context to give evidence-based answers and the next action.",
+      "eyebrow": "Assistant",
+      "title": "Ask KPubData"
     }
   },
   "quality": {
+    "previewSourceState": {
+      "ok": "OK",
+      "failed": "Fetch failed",
+      "zeroRows": "0 rows",
+      "notEvaluated": "Not evaluated"
+    },
     "rows": "{{count}} rows",
     "noRules": "No evaluated rules",
     "errors": {
@@ -499,7 +667,7 @@
     "header": {
       "desc": "Shows actual validation outcomes (PASS/WARN/FAIL) and per-rule issues instead of scores."
     },
-    "kubiAnalyze": "Analyze with Kubi",
+    "kubiAnalyze": "Explain this issue",
     "selectors": {
       "dataset": "Select dataset",
       "run": "Select run",
@@ -558,12 +726,77 @@
       "context": "Current context: {{context}} · Shown separately from general quality rules.",
       "empty": "No baseline or not checked — no schema drift observed (not treated as PASS)."
     },
-    "rowsUnit": " rows"
+    "rowsUnit": " rows",
+    "model": {
+      "rows": "{{count}} rows",
+      "seed": {
+        "none": "This run has no evaluated quality checks. Describe the current state and, based on the evidence, tell me what to consider when setting up quality rules.",
+        "issues": "Based on the evidence, analyze what is causing the current quality WARN/FAIL results and what to fix first.",
+        "allPass": "Based on the evidence, summarize the current quality results, why every check passed, and what else is worth checking."
+      },
+      "previewState": {
+        "ok": "OK",
+        "failed": "Lookup failed",
+        "zero_rows": "0 rows",
+        "not_evaluated": "Not evaluated"
+      }
+    },
+    "badge": {
+      "notEvaluated": "Not evaluated",
+      "unavailable": "No result (unavailable)"
+    }
   },
   "provider": {
     "status": {
       "needsCred": "This provider requires credentials.",
-      "noCred": "This provider can be used without credentials."
+      "noCred": "This provider can be used without credentials.",
+      "permission": {
+        "title": "Check credentials or API access approval",
+        "detail": "The stored credentials reached the API but access was denied. A provider can grant access per dataset or API, so confirm whether the dataset you picked actually works in its preview."
+      },
+      "failure": {
+        "auth": {
+          "title": "Check the credentials",
+          "detail": "Confirm the stored credentials are still valid, then test again."
+        },
+        "network": {
+          "title": "Network connection error",
+          "detail": "Builder could not reach the provider. Check the network."
+        },
+        "timeout": {
+          "title": "Connection timed out",
+          "detail": "The provider did not respond in time. Try again in a moment."
+        },
+        "provider": {
+          "title": "Provider responded with an error",
+          "detail": "The provider could not process the connection check."
+        },
+        "unknown": {
+          "title": "Connection status could not be determined",
+          "detail": "Builder received an unclassified error while checking the API."
+        }
+      },
+      "scopeNote": "This is a provider-level connection check. Whether the dataset you picked actually works is confirmed in the preview step.",
+      "readiness": {
+        "previewNote": "Whether the dataset API actually works is confirmed in the Add Data preview.",
+        "noAuthLabel": "No credentials needed",
+        "noAuthDetail": "This provider can be used without credentials.",
+        "userKeyLabel": "API key registered",
+        "userKeyDetail": "Credentials for this provider are in place.",
+        "serverDefaultLabel": "Ready to connect",
+        "serverDefaultDetail": "This provider currently uses Builder's default credentials.",
+        "missingKeyLabel": "No API key",
+        "missingKeyDetail": "Datasets from this provider may require an API key."
+      },
+      "probe": {
+        "connected": "Connected",
+        "notConfigured": "Not configured",
+        "notConfiguredTitle": "Credentials required",
+        "notConfiguredDetail": "This provider requires credentials. Connect it in provider settings.",
+        "unknown": "Needs a connection check",
+        "needsCheck": "Needs a check",
+        "failed": "Connection error"
+      }
     },
     "errors": {
       "loadProvider": "Could not load provider information",
@@ -577,12 +810,13 @@
       "title": "Data Provider Connections",
       "desc": "Connect public data providers and manage credentials.",
       "settings": "Go to Settings",
-      "note": "Public data API keys and provider credentials are connected here. They are separate from the API key used for Kubi AI requests.",
+      "note": "Public data API keys and provider credentials are connected here. They are separate from the API key used for Ask KPubData requests.",
       "cta": "Complete API connection to continue adding data.",
       "emptyTitle": "No registered providers",
       "emptyDesc": "Add and connect data providers.",
       "selectTitle": "Select a provider",
-      "selectDesc": "Select a provider from the list to see details."
+      "selectDesc": "Select a provider from the list to see details.",
+      "headerTitle": "Providers"
     },
     "detail": {
       "connStatus": "Connection Status",
@@ -605,6 +839,18 @@
       "backToData": "Back to data settings",
       "defaultCredNote": "This provider currently uses Builder default credentials. Registering a separate user credential takes priority for calls to this provider.",
       "needsCredNote": "Credentials must be registered to use this provider."
+    },
+    "labels": {
+      "bok": "Bank of Korea ECOS",
+      "datago": "Public Data Portal (data.go.kr)",
+      "kosis": "Statistics Korea KOSIS",
+      "krx": "Korea Exchange (KRX)",
+      "law": "Korea Law Information Center",
+      "localdata": "LocalData",
+      "lofin": "LOFIN local finance",
+      "semas": "SEMAS",
+      "seoul": "Seoul Open Data Plaza",
+      "sgis": "SGIS statistical geographic information"
     }
   },
   "home": {
@@ -632,26 +878,118 @@
       "3": "Preview · Build",
       "3d": "Preview and validate, then build",
       "4": "Quality & Use",
-      "4d": "Quality · Kubi · Export · Publish",
+      "4d": "Quality · Ask KPubData · Export · Publish",
       "heading": "Overall Workflow",
       "note": "Below is the recommended order — follow the sidebar and on-screen guidance for each step."
     },
     "kubi": {
-      "title": "Not sure where to start? Ask Kubi",
-      "desc": "Describe the data or analysis you want and Kubi will help you get started.",
+      "title": "Not sure where to start? Ask KPubData",
+      "desc": "Describe the data or analysis you want and Ask KPubData will help you get started.",
       "placeholder": "e.g., What can I do with Seoul air quality data?",
-      "cta": "Start with Kubi →",
-      "noKey": "No API key configured yet. See the Kubi screen for setup instructions.",
-      "try": "Ask Kubi about data in natural language"
+      "cta": "Start with Ask KPubData →",
+      "noKey": "No API key configured yet. See the Ask KPubData screen for setup instructions.",
+      "try": "Ask KPubData about data in natural language"
     },
     "dashboard": {
       "eyebrow": "Dashboard",
       "title": "See your work at a glance",
       "desc": "Monitor recent datasets, build status, and quality alerts",
       "guide": "User Guide"
+    },
+    "kpi": {
+      "datasets": "How many build datasets you can currently reach.",
+      "succeeded": "Build runs that finished successfully in the last 24 hours.",
+      "qualityWarn": "Runs with at least one WARN in a quality check in the last 24 hours.",
+      "running": "Build jobs running right now.",
+      "definitionLabel": "{{label}} definition",
+      "unavailable": "Unavailable"
+    },
+    "recent": {
+      "eyebrow": "Recent builds",
+      "title": "Recent runs",
+      "errorTitle": "Could not load the build list",
+      "errorDesc": "Please try again later",
+      "emptyTitle": "No builds yet",
+      "emptyDesc": "Create your first build",
+      "emptyCta": "New build",
+      "view": "View"
+    },
+    "quality": {
+      "eyebrow": "Quality",
+      "title": "Recent quality status",
+      "unavailableTitle": "Some quality information is unavailable",
+      "unavailableDesc": "Builder did not provide quality results for the recent runs. A failed build is not treated as a quality FAIL.",
+      "emptyTitle": "No quality warnings in the builds checked recently",
+      "emptyDesc": "None of the recent quality results available right now need a closer look.",
+      "needsCheck": "Needs a quality check",
+      "incomplete": "Quality results for some runs could not be checked.",
+      "center": "Open Quality Center"
     }
   },
   "addData": {
+    "review": {
+      "notSelected": "Not selected",
+      "stageAborted": "Aborted",
+      "stageRunning": "Running",
+      "title": "Review · build",
+      "datasetLabel": "Dataset",
+      "previewLabel": "Preview settings",
+      "previewMulti": "Sample from {{count}} sources{{mixed}}",
+      "previewSingle": "Sample of {{total}} rows",
+      "notRun": "Not run",
+      "validationLabel": "Validation",
+      "passed": "Passed",
+      "failedLabel": "Failed",
+      "noQuality": "No quality result",
+      "mixedShort": "Mixed — sources differ",
+      "outputLabel": "Output",
+      "staleWarning": "The source or settings changed after the preview ran, so the earlier preview and validation results cannot be reused. Run them again in the Preview & Validate step.",
+      "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}} sources{{mixed}}",
+      "planPreviewSingle": "{{limit}} rows({{mode}}) · sample of {{total}} rows",
+      "perSourceTitle": "Preview/validation per source",
+      "specTitle": "The canonical BuildSpec that will be submitted",
+      "specUnavailable": "The spec cannot be built yet.",
+      "specNote": "After the build starts, the same settings and validation results carry into the run detail. Secret query parameters on a URL source and secret parameter values on a Public API source are masked in this display only — the submitted values are unchanged.",
+      "startBuild": "Start build",
+      "cancel": "Cancel",
+      "buildSucceeded": "Build succeeded (run {{runId}})",
+      "buildCancelled": "The run was cancelled.",
+      "interrupted": "The request was interrupted. The server-side build result is unknown."
+    },
+    "preview": {
+      "title": "Preview · validation",
+      "desc": "Calls the dataset API with the current credentials and parameters so you can see real data.",
+      "refresh": "Refresh preview",
+      "idleTitle": "Preview the real data",
+      "idleDesc": "Press “Refresh preview” to call the dataset API with the current settings and show sample rows and validation results.",
+      "errorTitle": "The preview request failed",
+      "stale": "Settings changed. The results below are from the previous settings — run the preview again.",
+      "mixed": "Mixed result — sources differ. Open each tab to check them individually.",
+      "sampleTitle": "Sample data",
+      "sampleDesc": "A quick look at part of the data.",
+      "rowCountLabel": "Rows shown",
+      "sampleModeLabel": "Sampling",
+      "columnScopeLabel": "Column scope",
+      "keyColumns": "Key columns",
+      "allColumns": "All columns",
+      "backToPreview": "Back to preview",
+      "showDiff": "Changes vs. source",
+      "sourceFailedTitle": "Fetching the source failed",
+      "unknownError": "The cause is unknown.",
+      "zeroRowsTitle": "No data matches these conditions",
+      "zeroRowsDesc": "A valid zero-row response — not a fetch failure.",
+      "diffTruncated": "The list is capped at 1000 entries. In total {{cells}} cells and {{rows}} rows changed.",
+      "diffSummary": "{{cells}} cells · {{rows}} rows changed",
+      "diffBefore": "Before",
+      "diffAfter": "After",
+      "diffTransform": "Transform",
+      "diffUnavailable": "Diff is not available",
+      "diffUnavailableDesc": "The rows in source_sample and the transformed result cannot be guaranteed to line up, so no diff was computed (diff_available=false).",
+      "sampleFooter": "Showing {{shown}} of {{total}} rows · {{columns}} columns",
+      "validationTitle": "Validation",
+      "notEvaluated": "Not evaluated / N/A — no quality check ran in this preview.",
+      "qualityLink": "Open Quality"
+    },
     "configure": {
       "title": "Import Settings",
       "apiPrepTitle": "API Setup",
@@ -679,216 +1017,209 @@
       "formatSelect": "Select a format…",
       "encodingLabel": "Encoding",
       "fileLabel": "File",
-      "selectFormatFirst": "Please select a format first.",
-      "uploading": "Uploading...",
-      "uploadDone": "Upload complete: {{name}} ({{bytes}} bytes)",
+      "formatFirst": "Choose a format first.",
+      "uploading": "Uploading…",
+      "uploadDone": "Uploaded: {{name}} ({{bytes}} bytes)",
       "urlTitle": "URL / REST API",
-      "endpointHelp": "Only https:// GET is supported (P0).",
+      "endpointHelp": "https:// GET only (P0).",
       "methodLabel": "Method",
       "authLabel": "Auth",
       "authNone": "None (Auth=None)",
       "urlFormatLabel": "Format (optional)",
-      "urlFormatHelp": "If omitted, inferred from the response Content-Type.",
-      "urlFormatInfer": "Infer (omit)",
-      "summaryTitle": "Selected Dataset Summary",
-      "noTitle": "(No title)",
-      "summaryPublicApi": "Select a provider and dataset to auto-fill the Dataset ID/title/description.",
-      "summaryFile": "Upload a file to auto-fill the Dataset ID/title from the filename.",
-      "summaryUrl": "Enter an endpoint to auto-fill the Dataset ID/title.",
-      "advancedTitle": "Advanced · Dataset metadata (edit auto-generated values)",
+      "urlFormatHelp": "Left blank, the response Content-Type decides.",
+      "urlFormatInfer": "Infer (leave blank)",
+      "summaryTitle": "Selected dataset",
+      "noTitle": "(untitled)",
+      "autoFillPublicApi": "Pick a provider and dataset and the ID, title and description fill in automatically.",
+      "autoFillFile": "Upload a file and the dataset ID and title come from its name.",
+      "autoFillUrl": "Enter an endpoint and the dataset ID and title fill in automatically.",
+      "advancedTitle": "Advanced · dataset metadata (edit the generated values)",
       "datasetIdLabel": "Dataset ID",
       "titleLabel": "Title",
       "descriptionLabel": "Description",
       "outputTitle": "Output",
-      "exportFormatsLegend": "Output formats (at least 1)",
+      "exportLegend": "Output formats (at least one)",
       "outputPathLabel": "Output path (optional)",
       "canonicalTitle": "Canonical BuildSpec (GUI ↔ YAML)",
       "applyYaml": "Apply YAML"
     },
-    "preview": {
-      "title": "Preview · Validate",
-      "subtitle": "Calls the Dataset API with the current credentials and request parameters to check real data.",
-      "refresh": "Refresh preview",
-      "idleTitle": "Real data preview",
-      "idleDesc": "Press 'Refresh preview' to call the Dataset API with the current settings and show sample rows and validation results.",
-      "errorTitle": "Preview request failed",
-      "staleNotice": "Settings have changed. The results below reflect the previous settings — please run Preview again with the current settings.",
-      "mixedNotice": "Mixed results — states differ per source. Click each tab to inspect individual sources.",
-      "sampleTitle": "Sample data",
-      "sampleDesc": "Quickly check a subset of the full data.",
-      "rowsLabel": "Rows shown",
-      "sampleModeLabel": "Sampling mode",
-      "columnsLabel": "Column range",
-      "columnsKey": "Key columns",
-      "columnsAll": "All columns",
-      "backToPreview": "Back to Preview",
-      "compareOriginal": "Compare to original",
-      "sourceFailedTitle": "Source retrieval failed",
-      "unknownError": "An unknown error occurred.",
-      "noDataTitle": "No matching data",
-      "noDataDesc": "This is a valid empty (0-row) response — different from a source retrieval failure.",
-      "diffTruncated": "The displayed items were truncated to a maximum of 1000. Total changes: {{cells}} cells · {{rows}} rows.",
-      "diffSummary": "Changed {{cells}} cells · {{rows}} rows",
-      "diffColOriginal": "Original",
-      "diffColCurrent": "Current value",
-      "diffColTransform": "Transform",
-      "diffUnavailableTitle": "Diff unavailable",
-      "diffUnavailableDesc": "Diff was not computed because the rows of source_sample and the transformed result cannot be guaranteed to match (diff_available=false).",
-      "sampleFooter": "Showing {{shown}} of {{total}} rows · {{columns}} columns",
-      "validationTitle": "Validation",
-      "notEvaluated": "Not evaluated / N/A — no quality checks were evaluated in this preview.",
-      "viewQuality": "View detailed Quality"
+    "steps": {
+      "source": "Choose data",
+      "configure": "Configure import",
+      "preview": "Preview · validate",
+      "review": "Review · build"
     },
-    "review": {
-      "notSelected": "Not selected",
-      "stageStopped": "Stopped",
-      "stageRunning": "Running",
-      "title": "Review · Build",
-      "cardDataset": "Dataset",
-      "cardPreview": "Preview settings",
-      "previewSourcesSummary": "{{count}} source samples{{mixed}}",
-      "previewRowsSummary": "Sample of {{total}} rows",
-      "notRun": "Not run",
-      "cardValidation": "Validation",
-      "validationPassed": "Passed",
-      "validationFailed": "Failed",
-      "noQuality": "No quality results",
-      "mixedShort": "Mixed — states differ per source",
-      "cardOutput": "Output",
-      "staleNotice": "The source/settings changed after the Preview run, so the previous Preview·Validation results cannot be reused. Please run again in the Preview & Validate step.",
-      "buildPlan": "Build plan",
-      "planSource": "Source / Provider",
-      "planDataset": "Dataset",
-      "planQuery": "Query / Config",
-      "planPreview": "Preview",
-      "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}} sources{{mixed}}",
-      "planPreviewSingle": "{{limit}} rows({{mode}}) · sample of {{total}} rows",
-      "planValidation": "Validation",
-      "planOutput": "Output",
-      "perSourceTitle": "Per-source Preview/Validation",
-      "pipeline": "Pipeline",
-      "canonicalTitle": "Canonical BuildSpec to be submitted",
-      "specUnavailable": "The spec cannot be built yet.",
-      "canonicalNote": "After starting the build, the same settings and validation results carry over to the Run detail. Secret query parameters of URL sources and secret parameter values of Public API sources are masked in the display only, and do not affect the actual submission.",
-      "startBuild": "Start build",
-      "cancel": "Cancel",
-      "buildSuccess": "Build succeeded (run {{runId}})",
-      "cancelled": "Execution was cancelled.",
-      "interrupted": "The request was interrupted. The server build result was not confirmed."
-    }
+    "errors": {
+      "catalog": "Could not load the Builder catalog.",
+      "upload": "File upload failed.",
+      "yamlSyntax": "YAML syntax error: {{message}}",
+      "yamlApply": "Could not apply the YAML.",
+      "spec": "Build spec error",
+      "preview": "The preview request failed.",
+      "validate": "The validation request failed."
+    },
+    "page": {
+      "title": "Add data",
+      "desc": "Set up what to import, check and validate the real data in preview, then start the build."
+    },
+    "draft": {
+      "prompt": "There is a saved draft. Continue editing it?",
+      "restore": "Restore",
+      "discard": "Discard"
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next",
+      "saved": "Saved ✓",
+      "saveDraft": "Save draft"
+    },
+    "model": {
+      "sourceRequired": "Choose a source first.",
+      "exportRequired": "Choose at least one output format.",
+      "metadataRequired": "Enter a dataset id, title and description.",
+      "providerDatasetRequired": "Choose a provider and a dataset.",
+      "paramsRedacted": "Parameter values containing secrets were stripped from the saved draft. Enter the query/config again.",
+      "uploadRequired": "Upload a file first.",
+      "endpointRequired": "Enter an endpoint.",
+      "urlRedacted": "A URL containing a secret was stripped from the saved draft. Enter the endpoint again.",
+      "urlUserInfo": "The URL must not contain user info (for example user:pass@host). Do not put credentials in the endpoint.",
+      "specBuildFailed": "The build spec could not be generated.",
+      "unresolvedPlaceholder": "The saved draft has a secret placeholder that cannot be restored. Enter the original credential again.",
+      "specInvalid": "The build spec is not valid.",
+      "httpsOnly": "Only URLs starting with https:// are supported."
+    },
+    "identity": {
+      "fromCatalog": "Dataset {{provider}}/{{name}}.",
+      "fromFile": "Dataset created from the uploaded file \"{{filename}}\".",
+      "fromUrl": "Dataset fetched from https://{{host}}."
+    },
+    "source": {
+      "title": "Choose data",
+      "desc": "Choose where the data comes from. The next steps show only the inputs that source needs.",
+      "kind": {
+        "publicApi": "Pick a provider and set up its credentials and query.",
+        "file": "Upload a CSV, JSON, JSONL or Parquet file.",
+        "url": "Enter an HTTPS GET endpoint yourself (P0: no auth)."
+      }
+    },
+    "credential": {
+      "title": "An API connection is required",
+      "body": "This dataset uses a provider that needs an API key.\nRegister the credential under Provider / API connections first, then continue.",
+      "cta": "Connect the API"
+    },
+    "requiredParams": "Enter the required request parameter(s): {{params}}."
   },
   "datasetDetail": {
-    "stageExplainerBronze": "Raw-preserving ingestion stage",
-    "stageExplainerSilver": "Normalize · transform · validate stage",
-    "stageExplainerGold": "Final processing stage for analysis and distribution",
-    "loadDatasetFailed": "Failed to load the dataset.",
-    "loadStageStatusFailed": "Failed to load stage status.",
-    "loadQualityFailed": "Failed to load quality results.",
-    "loadStageDetailFailed": "Failed to load stage detail.",
-    "loadingDataset": "Loading dataset information.",
-    "datasetDetailTitle": "Dataset detail",
-    "loadDatasetFailedTitle": "Failed to load the dataset",
-    "runInaccessibleTitle": "The selected run is inaccessible.",
-    "runInaccessibleBody": "The run `{{run}}` in the URL is not in this dataset's accessible execution history. It was not automatically switched to the latest run.",
-    "viewLatestRun": "View latest run",
+    "stagesErrorMsg": "Could not load stage status.",
+    "qualityErrorMsg": "Could not load quality results.",
+    "stageDetailErrorMsg": "Could not load the stage detail.",
+    "schemaSilverNote": "Shows only the persisted schema selected and the changes Builder reported.",
+    "schemaGoldNote": "The gold response provides column names only; dtypes are not inferred.",
+    "changeCol": "Change",
+    "previewNoneDesc": "The {{stage}} stage does not provide a persisted sample.",
+    "previewNote": "A portion of the Silver sample Builder stored.",
+    "fetchFailed": "Quality fetch failed",
+    "noEvaluated": "Nothing was evaluated.",
+    "viewQualityDetail": "Open Quality",
+    "viewInQualityCenter": "Open in Quality Center",
+    "qualityNote": "With nothing evaluated the result is N/A; no score is computed.",
+    "noDrift": "No schema drift observed.",
+    "noQualityTitle": "No quality results were evaluated",
+    "noQualityDesc": "N/A is not PASS.",
+    "runsNote": "The accessible run history for this dataset.",
+    "view": "View",
+    "notGoldStage": "not the gold stage",
+    "outputNone": "None",
+    "outputNotProvided": "Not provided by this stage response",
+    "viewQuality": "View quality",
+    "stageBronze": "Raw collection, preserved as received",
+    "stageSilver": "Normalised, transformed and validated",
+    "stageGold": "Final shaping for analysis and publication",
+    "loadError": "Could not load the dataset.",
+    "stagesError": "Could not load stage information.",
+    "qualityError": "Could not load quality information.",
+    "stageDetailError": "Could not load the stage detail.",
+    "loadingDesc": "Loading dataset information.",
+    "fallbackTitle": "Dataset detail",
+    "loadErrorTitle": "Could not load the dataset",
+    "invalidRunTitle": "That run is not accessible.",
+    "invalidRunBody": "The run `{{run}}` in the URL is not in this dataset's accessible history. It was not silently switched to the latest run.",
+    "viewLatest": "View latest run",
     "sourceLoading": "loading source",
-    "stageStatusTitle": "{{stage}} stage status of the selected source ({{source}})",
-    "publishThisRun": "Publish this Run",
+    "stageStatusTitle": "{{stage}} stage status for the selected source ({{source}})",
+    "publishRun": "Publish this run",
     "runSelect": "Select run",
     "sourceSelect": "Select source",
     "stageSelect": "Select stage",
-    "sourceNotExist": "{{source}} (nonexistent source)",
-    "runStatusTooltip": "This is the result of the entire run (all sources), not the selected source/stage",
-    "runStatus": "Run status",
-    "sourceNotInRun": "The source `{{source}}` in the URL does not exist in the selected run.",
-    "runFailedStageOkTitle": "The run status is failed, but the {{stage}} stage of the selected source is completed.",
-    "runFailedStageOkBody": "Another source ({{sources}}) in this run had a stage failure, so the overall run status was aggregated as failed. This is not a contradiction — the status scopes of the run and the source/stage differ.",
-    "artifactUnpublished": "Unpublished",
-    "artifactNotGold": "not a gold stage",
-    "noSelectedSource": "No source selected",
-    "kubiSuggestCta": "Kubi can suggest a BuildSpec revision for this dataset",
-    "unknown": "Unknown",
-    "runStatusOverall": "Run status (overall)",
-    "selectedSourceStageStatus": "Selected Source·Stage status",
-    "notProvided": "Not provided",
-    "passportFooter": "Source: {{source}} · Lineage/Schema/Quality details are available in each tab.",
-    "schemaDriftSilverDesc": "Shows only the changes reported by Builder against the selected persisted schema.",
-    "colChanged": "Changed",
-    "schemaDriftGoldDesc": "The Gold response provides column names only and does not infer dtypes.",
-    "schemaNoneTitle": "No schema / not supported",
+    "missingSource": "{{source}} (source does not exist)",
+    "runStatusTitle": "The result for the whole run (every source), not the selected source/stage",
+    "runStatusLabel": "Run status",
+    "invalidSource": "The source `{{source}}` in the URL does not exist in the selected run.",
+    "runFailedTitle": "The run is failed, but the {{stage}} stage of the selected source completed.",
+    "runFailedBody": "Another source in this run ({{sources}}) had a stage failure, so the run as a whole is reported as failed. This is not a contradiction — run status and source/stage status cover different scopes.",
+    "unpublished": "Not published",
+    "kubiHint": "Ask KPubData can propose BuildSpec changes for this dataset",
+    "runStatusAll": "Run status (overall)",
+    "unavailable": "Unavailable",
+    "selectedStageStatus": "Selected source · stage status",
+    "schemaMissing": "Not provided",
+    "noSource": "no source selected",
+    "tabsHint": "Source: {{source}} · lineage, schema and quality details are in their own tabs.",
+    "schemaNone": "No schema / not supported",
     "schemaNoneDesc": "The {{stage}} stage response does not provide a schema.",
-    "previewNoneTitle": "No preview / not supported",
-    "previewNoneDesc": "The {{stage}} stage does not provide a persisted sample.",
-    "sampleDesc": "Check a portion of the Silver sample stored by Builder.",
-    "qualityFetchFailed": "Quality fetch failed",
-    "noEvaluatedResults": "No evaluated results.",
-    "viewQuality": "View detailed Quality",
-    "viewInQualityCenter": "View in Quality Center",
-    "validationNaNote": "If there are no evaluation results, it is N/A and no separate score is computed.",
-    "noSchemaDrift": "No schema drift observed.",
-    "noQualityResultsTitle": "No evaluated Quality results",
-    "noQualityResultsDesc": "N/A is not PASS.",
-    "recentBuildsDesc": "This dataset's accessible run history.",
-    "view": "View",
-    "outputNone": "None",
-    "outputNotProvidedStage": "Not provided in this stage response",
-    "validationSummaryNaNote": "If there are no evaluation results, it is N/A and no separate score is computed.",
-    "qualityNoDrift": "No schema drift observed.",
-    "qualityNoResultsTitle": "No evaluated Quality results",
-    "qualityNoResultsDesc": "N/A is not PASS."
+    "previewNone": "No preview / not supported"
   },
   "buildPublish": {
     "statusQueued": "Queued",
     "statusRunning": "Running",
     "statusCancelling": "Cancelling",
-    "statusSucceeded": "Completed",
+    "statusSucceeded": "Done",
     "statusFailed": "Failed",
     "statusCancelled": "Cancelled",
-    "noRunId": "No Run ID to publish.",
-    "runInfoFailed": "Unable to verify this Run's information.",
-    "readinessMismatch": "The Builder readiness response does not match the selected Run.",
+    "noRunId": "No run ID to publish.",
+    "runInfoError": "This run's information could not be read.",
+    "readinessMismatch": "The Builder readiness response does not match the selected run.",
     "checking": "Checking…",
-    "completeAt": "Completed · {{date}}",
-    "complete": "Completed",
-    "statusWithDate": "{{status}} · {{date}}",
-    "unconfirmed": "Unconfirmed",
+    "completedAt": "Done · {{time}}",
+    "completed": "Done",
+    "unconfirmed": "Not confirmed",
     "eyebrow": "Publish",
-    "pageTitle": "Publish {{name}}",
-    "pageDesc": "Publish to Hugging Face after checking the readiness of the Run selected by Builder.",
-    "selectedRun": "Selected Run",
-    "buildComplete": "Build completed",
-    "runContextNote": "This screen verifies the Dataset and Build completion status by the exact Run ID in the URL and does not switch to the latest Run.",
-    "runContextError": "Failed to load this Run's Dataset information. You can continue to check the publish readiness by Run ID below.",
-    "readinessDesc": "Builder determines Run·Gold·license·PII policy·server credentials.",
-    "recheck": "Recheck",
-    "readyToPublish": "Builder ready to publish",
-    "hasBlockers": "There are Builder blockers, so publishing is not possible.",
-    "notReadyNoReason": "Builder determined this Run is not ready to publish but did not provide a specific reason (blocker).",
-    "credentialNote": "This blocker refers to the Builder server's Hugging Face publish credential, not the source Provider credential. Studio does not enter or store the token.",
-    "publishSettings": "Publish settings",
-    "publishSettingsDesc": "Local input validation, separate from Readiness. Builder readiness does not validate the destination or visibility setting.",
-    "destinationHint": "An owner/dataset identifier allowed by Builder",
-    "privateDataset": "Private Dataset",
-    "privateDatasetStrong": "Private Dataset",
+    "title": "Publish {{name}}",
+    "desc": "Builder checks the selected run's readiness, then publishes to Hugging Face.",
+    "selectedRun": "Selected run",
+    "buildCompleted": "Build completed",
+    "exactRunNote": "This screen reads the dataset and completion state from the exact run ID in the URL — it never switches to the latest run.",
+    "datasetLoadWarn": "The dataset information for this run could not be loaded. Readiness is still checked below by run ID.",
+    "readinessNote": "Builder decides on the run, gold stage, license, PII policy and publish credential.",
+    "recheck": "Check again",
+    "readyLabel": "Builder is ready to publish",
+    "blockedLabel": "Builder reported blockers — publishing is not possible.",
+    "notReadyNoReason": "Builder judged this run not ready to publish but gave no specific blocker.",
+    "credentialNote": "This blocker refers to a publish target credential (Hugging Face / Kaggle), not a source provider credential. Depending on how the Builder is deployed it either uses the server credential or requires one you have stored yourself. Studio neither takes nor stores either.",
+    "settingsTitle": "Publish settings",
+    "settingsNote": "Local input validation, separate from readiness — Builder readiness does not check the destination or visibility.",
+    "destinationHint": "An owner/dataset identifier Builder accepts",
+    "privateLabel": "Private dataset",
     "privateDefault": "Default: private",
-    "finalConfirm": "Final confirmation",
-    "publishConfirmLabel": "Publish final confirmation",
-    "publicSetting": "Visibility",
-    "confirmNote": "Publishing is not marked complete until Builder's POST response succeeds.",
-    "runPublish": "Run publish",
+    "review": "Review",
+    "confirmTitle": "Confirm publish",
+    "visibility": "Visibility",
+    "confirmNote": "Nothing is shown as published until Builder's POST succeeds.",
+    "publishNow": "Publish",
     "editSettings": "Edit settings",
-    "stopWaiting": "Stop waiting for response",
-    "publishComplete": "Builder publish complete",
+    "stopWaiting": "Stop waiting",
+    "publishedTitle": "Builder published it",
     "publishFailed": "Publish failed",
     "noAutoRetry": "Do not retry automatically.",
     "abortedTitle": "Stopped waiting for the response.",
-    "abortedDesc": "Only the browser request was interrupted; the remote publish job was not cancelled. The publish result is unconfirmed."
+    "abortedBody": "Only the browser request was stopped — the remote publish was not cancelled. Its outcome is unknown.",
+    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Store your own with the Builder to publish."
   },
   "settings": {
     "page": {
       "eyebrow": "Settings",
       "title": "Preferences",
-      "desc": "Manage account, Builder connection, data provider credentials, and Kubi BYOK."
+      "desc": "Manage account, Builder connection, data provider credentials, and Ask KPubData BYOK."
     },
     "conn": {
       "title": "Connection Status",
@@ -913,6 +1244,26 @@
       "notLoggedIn": "Not signed in. Real integration mode requires sign-in for Builder calls.",
       "login": "Sign in",
       "mockNote": "In mock mode, login state is for UI demonstration only. Account/permission backend is"
+    },
+    "providers": {
+      "title": "Data provider credentials",
+      "manage": "Manage in provider settings",
+      "mockNote": "In mock mode the provider page demonstrates the flow. Real credentials are held safely on the server by Builder in real-integration mode.",
+      "loading": "Checking provider configuration…",
+      "summary": "{{configured}} of {{total}} providers that need credentials are configured.",
+      "listLabel": "provider configuration status",
+      "configured": "Configured",
+      "notConfigured": "Not configured"
+    },
+    "byok": {
+      "title": "Ask KPubData · BYOK LLM key",
+      "configure": "Configure in Ask KPubData",
+      "desc": "The LLM key for Ask KPubData is yours to manage, separately from data provider credentials (bring your own key). By default it lives in memory only and is gone after a refresh.",
+      "keySet": "Key set",
+      "keyUnset": "No key",
+      "customBaseUrl": "Custom base URL",
+      "persistOn": "Browser storage is on — the LLM API key is stored in this browser in plain text. An XSS attack could steal it, so turn it off on machines you do not trust.",
+      "persistOff": "Browser storage: off (memory only). You can turn it on explicitly from the Ask KPubData screen."
     }
   },
   "auth": {
@@ -937,9 +1288,53 @@
       "or": "or",
       "emailLogin": "Sign in with KPubData account",
       "loginFail": "Sign-in failed. Please try again shortly."
+    },
+    "oidc": {
+      "errorTitle": "The OIDC configuration has a problem.",
+      "errorDesc": "This environment is connected to a real Builder, but the OIDC settings (<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>) are not valid. Contact your administrator.",
+      "missingTitle": "OIDC authentication is not configured yet.",
+      "missingDesc": "This environment is connected to a real Builder, but the OIDC IdP (Keycloak) used for human sign-in is not wired up yet. Contact your administrator or try again once it is in place.",
+      "disabled": "OIDC is not enabled."
+    },
+    "signup": {
+      "title": "Create a KPubData account",
+      "desc": "Sign-up, email verification and password policy are handled on Keycloak's secure screens.",
+      "cta": "Sign up or sign in with Keycloak",
+      "notReady": "Once authentication is configured you can create an account here.",
+      "backToLogin": "Back to sign in"
+    },
+    "mock": {
+      "badCredentials": "That email or password is not correct."
     }
   },
   "workspace": {
+    "validatedPass": "Validated",
+    "validatedFail": "Validation failed",
+    "notValidated": "Needs validation",
+    "datasetsError": "Could not load the dataset list.",
+    "buildsError": "Could not load the build list.",
+    "datasetsErrorTitle": "Could not load the dataset list",
+    "buildsErrorTitle": "Could not load the build list",
+    "untitled": "Untitled",
+    "deleteConfirm": "Delete this saved BuildSpec? This cannot be undone.",
+    "deleteAllConfirm": "Delete every saved BuildSpec for the signed-in user? This cannot be undone.",
+    "title": "Workspace",
+    "desc": "Recent work and saved BuildSpecs in one place.",
+    "localOnlyBadge": "Stored in this browser only",
+    "localOnlyDesc": "Saved BuildSpecs live in this browser, not on the Builder server. They do not appear on other devices or browsers, clearing browser data can remove them, and they are neither shared with teammates nor backed up automatically.",
+    "thisBrowser": "This browser",
+    "loading": "Loading…",
+    "noWorkTitle": "Nothing here yet",
+    "noWorkDesc": "Explore some data or create your first build.",
+    "exploreCta": "Explore data",
+    "deleteAll": "Delete all",
+    "noSpecsDesc": "Write a spec in New Build and save it — it shows up here.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noProvider": "no provider",
+    "noOutput": "no output",
+    "lastSaved": "· last saved {{time}}",
+    "duplicate": "Duplicate",
     "recentTitle": "Recent Work",
     "savedSpecs": "Saved BuildSpecs",
     "noRecent": "No recent work",
@@ -950,66 +1345,22 @@
     "edit": "Edit",
     "run": "Run",
     "newBuild": "New Build",
-    "validatedPass": "Validated",
-    "validatedFail": "Validation failed",
-    "notValidated": "Needs validation",
-    "loadDatasetsFailed": "Failed to load the dataset list.",
-    "loadBuildsFailed": "Failed to load the build list.",
-    "unnamed": "Untitled",
-    "confirmDeleteSpec": "Delete this Saved BuildSpec? This cannot be undone.",
-    "confirmClearAll": "Delete all Saved BuildSpecs for the current logged-in user? This cannot be undone.",
-    "pageTitle": "Workbench",
-    "pageDesc": "Manage Recent Work and saved BuildSpecs in one place.",
-    "localOnlyTitle": "Stored only in this browser",
-    "localOnlyDesc": "Saved BuildSpecs are stored only in the browser you are currently using, not on the Builder server. They are not visible on other devices or browsers, and may disappear if you clear browser data. They are not automatically shared with teammates or backed up to a server.",
-    "loadDatasetsFailedTitle": "Failed to load the dataset list",
-    "loadBuildsFailedTitle": "Failed to load the build list",
-    "sourceThisBrowser": "This browser",
-    "loading": "Loading…",
-    "noWorkTitle": "No work yet",
-    "noWorkDesc": "Explore data or create your first build.",
-    "exploreData": "Explore data",
-    "clearAll": "Delete all",
-    "noSpecsDesc": "Write a spec in New Build and save it to see it here.",
-    "save": "Save",
-     "cancel": "Cancel",
-     "noProvider": "no provider",
-     "noOutput": "no output",
-     "noSpecsEmptyTitle": "No saved BuildSpecs",
-     "renameAction": "Rename",
-     "lastSaved": "· Last saved {{date}}",
-     "duplicate": "Duplicate"
-   },
-  "reportEditor": {
-    "untitled": "Untitled",
-    "confirmDeleteBlock": "Delete this block?",
-    "refreshEvidenceFailed": "Failed to refresh Evidence.",
-    "newReportTitle": "{{title}} · {{runId}} report",
-    "createReportFailed": "Failed to create a new Report.",
-    "loading": "Loading…",
-    "notFoundTitle": "Report not found",
-    "notFoundHere": "This Report is not in this browser",
-    "notFoundHereDesc": "It may have been deleted or created on another browser/device (local storage does not sync across devices).",
-    "toReportList": "To report list",
-    "editReport": "Edit Report",
-    "title": "Title",
-    "saved": "Saved · revision {{revision}}",
-    "lastSavedAt": " · Last saved {{time}}",
-    "refreshEvidence": "Refresh Evidence",
-    "downloadMarkdown": "Download Markdown",
-    "downloadHtml": "Download HTML",
-    "print": "Print (Browser Print)",
-    "kubiAnalysis": "7. Kubi Analysis",
-    "noAiAnalysis": "No AI analysis added yet",
-    "noAiAnalysisDesc": "You can analyze the current Dataset/Run in Kubi, then review and add it to the report.",
-    "userNotes": "8. User Notes",
-    "addUserBlock": "+ Add a user-written block"
+    "storage": {
+      "noStorage": "Local storage is not available in this browser (private mode, for example).",
+      "serializeFailed": "The buildspec could not be converted into its stored form.",
+      "quotaExceeded": "Storage is full. Delete older saved BuildSpecs and try again.",
+      "saveFailed": "The buildspec could not be saved.",
+      "staleWrite": "Another tab or window saved this buildspec first. Reload the latest content before saving.",
+      "limitExceeded": "You have more than the {{limit}} buildspecs that can be stored. Delete ones you no longer need first.",
+      "notFound": "The buildspec could not be found.",
+      "copyOf": "{{name}} (copy)"
+    }
   },
   "reports": {
     "page": {
       "eyebrow": "Reports",
       "title": "Reports",
-      "desc": "Create reports from Builder evidence, attach Kubi analysis as reference blocks, then edit, save, and export.",
+      "desc": "Create reports from Builder evidence, attach Ask KPubData analysis as reference blocks, then edit, save, and export.",
       "newTitle": "Create New Report",
       "newDesc": "The selected dataset/run is fixed as this report's baseline. New runs do not automatically update it.",
       "createCta": "Create Report",
@@ -1017,11 +1368,14 @@
       "savedTitle": "Saved Reports",
       "savedEmpty": "No saved reports",
       "savedEmptyDesc": "Select a dataset/run above to create your first report.",
-      "kubiPending": "{{count}} Kubi reference notes pending. Open the report to add or dismiss them from the \"Kubi reference queue\".",
+      "kubiPending": "{{count}} reference notes pending. Open the report to add or dismiss them from the \"reference queue\".",
       "deleteConfirm": "Delete this report? This cannot be undone.",
       "titleTemplate": "{{dataset}} · {{run}} Report",
       "untitled": "Untitled",
-      "lastModified": "Last modified {{time}}"
+      "lastModified": "Last modified {{time}}",
+      "pendingNotes": "You have {{count}} pending note(s). Open the report and add or dismiss them in the \"Pending notes\" queue.",
+      "delete": "Delete",
+      "createdTitle": "{{dataset}} · {{run}} report"
     },
     "errors": {
       "datasets": "Failed to load datasets.",
@@ -1034,6 +1388,277 @@
       "rename": "Rename",
       "duplicate": "Duplicate",
       "delete": "Delete"
+    },
+    "narrative": {
+      "unavailable": "could not be determined.",
+      "stage": {
+        "notRun": "not run",
+        "unavailable": "unknown"
+      },
+      "overview": {
+        "loadFailed": "Could not load `{{datasetId}}`, so this overview cannot be summarized ({{reason}}).",
+        "basis": "This report is based on build `{{runId}}` of `{{title}}`.",
+        "providers": "The data comes from sources on the {{providers}} provider(s).",
+        "runStatus": "That run finished with status {{status}}.",
+        "runStatusUnknown": "The final status of that run could not be determined."
+      },
+      "pipeline": {
+        "flow": "**{{sourceKey}}**\n\nSource → Bronze {{bronze}} → Silver {{silver}} → Gold {{gold}}",
+        "allCompleted": "`{{sourceKey}}` completed Bronze → Silver → Gold successfully.",
+        "failedAndSkipped": "`{{sourceKey}}` failed at the {{failedStage}} stage, so the {{skippedStage}} stage never ran.",
+        "failed": "`{{sourceKey}}` failed at the {{stage}} stage.",
+        "notRun": "`{{sourceKey}}` has not run the {{stage}} stage yet.",
+        "stageUnknown": "The {{stage}} stage status for `{{sourceKey}}` could not be determined.",
+        "unknown": "The processing status of `{{sourceKey}}` could not be determined.",
+        "noSources": "Pipeline information could not be determined."
+      },
+      "quality": {
+        "loadFailed": "Could not load quality results, so they cannot be summarized ({{reason}}).",
+        "notProvided": "This run provides no quality evaluation (availability=unavailable). It is not treated as PASS.",
+        "noneEvaluated": "No quality rules were evaluated for this run (evaluated_checks=0).",
+        "header": "{{total}} quality checks were evaluated for this run: {{breakdown}}.",
+        "countPass": "{{count}} PASS",
+        "countWarn": "{{count}} WARN",
+        "countFail": "{{count}} FAIL",
+        "targetColumn": "the target column",
+        "missingRatioPass": "The null ratio of {{column}} in {{source}} was {{actual}}, within the {{threshold}} threshold, so it was {{verb}}.",
+        "missingRatioFail": "The null ratio of {{column}} in {{source}} was {{actual}}, over the {{threshold}} threshold, so it was {{verb}}.",
+        "requiredColumnPass": "Required column {{column}} was present in {{source}}, so it was {{verb}}.",
+        "requiredColumnFail": "Required column {{column}} was missing from {{source}}, so it was {{verb}}.{{detail}}",
+        "minRowsPass": "{{source}} had {{actual}} rows, at or above the {{threshold}} threshold, so it was {{verb}}.",
+        "minRowsFail": "{{source}} had {{actual}} rows, below the {{threshold}} threshold, so it was {{verb}}.",
+        "duplicatePass": "The duplicate ratio of {{source}} was {{actual}}, within the {{threshold}} threshold, so it was {{verb}}.",
+        "duplicateFail": "The duplicate ratio of {{source}} was {{actual}}, over the {{threshold}} threshold, so it was {{verb}}.",
+        "unknownRule": "`{{rule}}`{{column}} on {{source}} was {{verb}} (actual {{actual}}, threshold {{threshold}}).{{detail}}",
+        "drift": "Schema drift: {{findings}}"
+      },
+      "schema": {
+        "silver": "The Silver result for {{source}} contains the columns {{columns}}.",
+        "goldNamesOnly": "The Silver schema for {{source}} is unavailable, so only the Gold column names are known: {{columns}}.",
+        "unknown": "The schema for {{source}} at that stage could not be determined.{{reason}}",
+        "noSources": "There is no source to read schema information from, so it could not be determined."
+      },
+      "dataSummary": {
+        "unavailable": "Row counts could not be determined. ({{reason}})",
+        "total": "The known sources hold {{total}} rows in total.",
+        "noBreakdown": "The per-source breakdown could not be determined.",
+        "sourceRows": "`{{key}}` {{count}}",
+        "composedOf": "They break down as {{bySource}}."
+      },
+      "output": {
+        "unavailableTitle": "Output unavailable",
+        "none": "No output files were reported for this run.",
+        "list": "This run produced {{count}} output file(s): {{files}}."
+      }
+    },
+    "sections": {
+      "unavailable": "unavailable",
+      "overview": {
+        "loadFailed": "Could not load dataset information: {{reason}}",
+        "colItem": "Item",
+        "colValue": "Value",
+        "rowDataset": "Dataset",
+        "rowProviders": "Provider(s)",
+        "rowSources": "Sources",
+        "rowRun": "Run",
+        "rowRunStatus": "Run status",
+        "rowRunTimes": "Run started / finished",
+        "rowSpecDigest": "BuildSpec digest",
+        "rowUpdatedAt": "Dataset last updated"
+      },
+      "pipeline": {
+        "noSources": "This run has no sources.",
+        "fallbackNote": "Per-run stage details could not be loaded, so this falls back to the dataset summary ({{reason}}).",
+        "loadFailed": "Could not load pipeline status: {{reason}}"
+      },
+      "quality": {
+        "loadFailed": "Could not load quality results: {{reason}}",
+        "notProvided": "This run provides no quality evaluation (availability=unavailable). It is not treated as PASS.",
+        "colResult": "Result",
+        "colActual": "Actual",
+        "colThreshold": "Threshold",
+        "noneEvaluated": "No rules were evaluated (evaluated_checks=0).",
+        "noDrift": "No schema drift was observed.",
+        "driftTitle": "Schema drift"
+      },
+      "schema": {
+        "noSources": "There is no source to read schema information from.",
+        "colColumn": "Column",
+        "colType": "Type",
+        "colNullable": "Nullable",
+        "colUnique": "Unique",
+        "goldNamesOnly": "(gold — column names only, no dtype)"
+      },
+      "dataSummary": {
+        "loadFailed": "Could not load row counts: {{reason}}",
+        "totalLabel": "Total row count",
+        "colRowCount": "Row count",
+        "noBreakdown": "No per-source row counts are available."
+      },
+      "output": {
+        "loadFailed": "Output/artifact information is unavailable: {{reason}}",
+        "none": "No output files were reported for this run."
+      }
+    },
+    "export": {
+      "status": {
+        "current": "CURRENT: base run confirmed, up to date",
+        "stale": "STALE: the base run is still valid but a newer run exists",
+        "orphan": "ORPHAN: the base run can no longer be found",
+        "unavailable": "UNAVAILABLE: evidence could not be re-checked"
+      },
+      "meta": {
+        "createdAt": "Created at",
+        "evidenceFetchedAt": "Evidence fetched at",
+        "exportedAt": "Exported at",
+        "evidenceStatus": "Evidence status",
+        "evidenceStatusShort": "evidence status"
+      },
+      "provenance": {
+        "kubi": "[AI-written - Ask KPubData]",
+        "user": "[User-written]"
+      },
+      "tag": {
+        "ai": "AI-written",
+        "user": "User-written"
+      },
+      "detailHeading": "Supporting detail",
+      "kubiHeading": "Ask KPubData reference analysis",
+      "kubiOtherRun": "Reference analysis - based on a run other than this report's (dataset: {{dataset}}, run: {{run}})",
+      "kubiOtherRunHtml": "Reference analysis - based on another run (dataset: {{dataset}}, run: {{run}})",
+      "reasonLabel": "Rationale"
+    },
+    "block": {
+      "status": {
+        "partial": "Partially confirmed",
+        "unavailable": "Unavailable"
+      },
+      "section": {
+        "overview": "1. Data overview",
+        "pipeline": "2. Pipeline",
+        "quality": "3. Quality",
+        "schema": "4. Data structure",
+        "data_summary": "5. Data volume",
+        "output": "6. Output"
+      },
+      "showDetail": "Show supporting detail",
+      "kubiTitle": "Ask KPubData analysis · AI-written",
+      "remove": "Remove",
+      "edit": "Edit",
+      "delete": "Delete",
+      "context": "Dataset: {{dataset}} · Run: {{run}}",
+      "otherContext": "Reference analysis · based on a different dataset/run than this report (not merged automatically).",
+      "generatedAt": "Generated {{at}}",
+      "reason": "Rationale: {{reason}}",
+      "linkedEvidence": "Linked evidence: {{refs}}"
+    },
+    "kubiPanel": {
+      "preset": {
+        "comprehensive": {
+          "label": "Generate AI analysis for the report",
+          "question": "Give me an overall analysis of the dataset and run this report is based on."
+        },
+        "quality": {
+          "label": "Interpret quality issues",
+          "question": "Interpret the quality issues found so far."
+        },
+        "pipeline": {
+          "label": "Analyze pipeline failure",
+          "question": "If this build's pipeline failed, analyze why."
+        },
+        "ideas": {
+          "label": "Ideas for using the data",
+          "question": "Suggest ideas for how this data could be used."
+        },
+        "caveats": {
+          "label": "Write caveats and limits",
+          "question": "Summarize the caveats and limitations of using this data."
+        }
+      },
+      "mockDisclaimer": "This is a mock response, not a real AI analysis.",
+      "reason": "AI analysis for the report",
+      "reasonDemo": "[DEMO] report analysis (mock response)",
+      "chatTitle": "Ask directly · based on this report ({{dataset}} · {{run}})",
+      "close": "Close",
+      "intro": "You can generate an AI interpretation to add to the report, based on this report's dataset/run and the Builder evidence.",
+      "needsKey": "Ask KPubData analysis needs your own LLM API key.",
+      "openAiSettings": "Open AI settings",
+      "generateDemo": "Generate demo report analysis",
+      "askDirectly": "Ask directly",
+      "aiSettings": "AI settings",
+      "generating": "Generating…",
+      "cancel": "Cancel",
+      "error": "Could not generate the analysis.",
+      "evidence": "Evidence",
+      "addToReport": "Add to report",
+      "regenerate": "Regenerate"
+    },
+    "storage": {
+      "noStorage": "Local storage is not available in this browser (private mode, for example).",
+      "serializeFailed": "The report could not be converted into its stored form.",
+      "quotaExceeded": "Storage is full. Delete older reports and try again.",
+      "saveFailed": "The report could not be saved.",
+      "staleWrite": "Another tab or window saved this report first. Reload the latest content before saving.",
+      "limitExceeded": "You have more than the {{limit}} reports that can be stored. Delete ones you no longer need first.",
+      "notFound": "The report could not be found.",
+      "copyOf": "{{name}} (copy)"
+    },
+    "evidenceBanner": {
+      "rechecking": "Re-checking the base evidence…",
+      "recheck": "Re-check",
+      "newFromLatest": "New report from the latest run",
+      "status": {
+        "current": "CURRENT — the base run is up to date.",
+        "stale": "STALE — the base run is still valid but a newer run exists.",
+        "orphan": "ORPHAN — the base run can no longer be found (deleted or inaccessible).",
+        "unavailable": "UNAVAILABLE — the evidence could not be re-checked."
+      }
+    },
+    "userEditor": {
+      "heading": "Title",
+      "headingPlaceholder": "e.g. Ideas for using this",
+      "body": "Body (Markdown)",
+      "bodyPlaceholder": "Write freely. **bold**, - lists and [links](https://...) are supported.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "untitled": "Untitled"
+    },
+    "kubiInbox": {
+      "title": "Pending notes",
+      "emptyTitle": "No pending notes",
+      "emptyDesc": "Approving the 'Add to report' action in an Ask KPubData conversation collects notes here.",
+      "noContext": "No context",
+      "sameContext": "Same dataset/run as this report",
+      "otherContext": "Different dataset/run than this report · added as a reference analysis",
+      "add": "Add to this report",
+      "dismiss": "Dismiss"
+    },
+    "evidence": {
+      "lookupFailed": "The lookup failed.",
+      "schemaBothFailed": "Both the silver and gold schema lookups failed.",
+      "schemaNotReached": "This source has not reached a stage that produces a schema.",
+      "mockNoOutput": "Mock/demo mode does not provide real output evidence for this run.",
+      "baseRunMissing": "The base run is not in this dataset's run list (deleted or inaccessible)."
+    },
+    "staleness": {
+      "lookupFailed": "The lookup failed.",
+      "runGone": "The base run is no longer in this dataset's run list (deleted or inaccessible).",
+      "runsReloadFailed": "The run list could not be reloaded: {{reason}}",
+      "newerRun": "A newer run (`{{runId}}`) exists."
+    },
+    "contextSidebar": {
+      "evidenceFetchedAt": "Evidence fetched at",
+      "evaluatedRules": "Rules evaluated",
+      "kubiBlocks": "Ask KPubData analysis blocks",
+      "pendingNotes": "Pending notes",
+      "countUnit": "{{count}}",
+      "noteUnit": "{{count}}",
+      "none": "None"
+    },
+    "provenance": {
+      "builder": "Builder Evidence",
+      "kubi": "AI-written · Ask KPubData",
+      "user": "User-written"
     }
   },
   "artifacts": {
@@ -1069,6 +1694,467 @@
     },
     "meta": {
       "note": "Some metadata fields (record count, schema, source, etc.) in this run's manifest are"
+    },
+    "mockNoDownload": "Mock mode does not simulate artifact downloads. Check them in real-integration mode."
+  },
+  "glossary": {
+    "dataset": "Data produced by a build and managed as a single unit in KPubData.",
+    "build": "The job that collects and processes data from the sources and settings you chose.",
+    "run": "One recorded execution of a build. A dataset can have many runs.",
+    "buildSpec": "The portable execution spec telling Builder which sources to fetch and how to process them.",
+    "provider": "An external data source or API that Builder can connect to.",
+    "credential": "Authentication such as an API key, needed to fetch data from a provider.",
+    "preview": "A look at part of the data and its validation results before running a build.",
+    "bronze": "The stage that keeps collected data as close to the original as possible.",
+    "silver": "The stage where bronze data is cleaned and standardized for analysis and quality checks.",
+    "gold": "The final stage, shaped for a particular use.",
+    "quality": "The results of the data quality rules Builder actually evaluated.",
+    "schemaDrift": "A change in data structure — columns added, removed or retyped — compared with before.",
+    "evidence": "The Builder dataset, run and quality facts an Ask KPubData answer or report is based on.",
+    "context": "The dataset, run, source and stage scope Ask KPubData uses to interpret your question.",
+    "generatedSql": "The query SQL Ask KPubData generated from the silver or gold schema you selected.",
+    "artifact": "A data file or other output produced by a build run.",
+    "manifest": "The metadata record of a run and the artifacts it produced.",
+    "readiness": "Builder's check of the conditions that must hold before publishing.",
+    "helpLabel": "{{term}} glossary help"
+  },
+  "legend": {
+    "stageLabel": "Data stage descriptions",
+    "qualityLabel": "Quality status descriptions",
+    "quality": {
+      "pass": "No problem found in the rules that were evaluated",
+      "warn": "A result exists but there is a quality issue worth checking",
+      "fail": "A quality rule was not met",
+      "na": "No value was evaluated or the rule does not apply. Not a PASS",
+      "unavailable": "Builder cannot provide a result. Different from FAIL"
+    }
+  },
+  "discover": {
+    "page": {
+      "title": "Discover data",
+      "desc": "Search providers and datasets in the Builder catalog, then start a build straight from what you pick."
+    },
+    "errors": {
+      "catalog": "Could not load the catalog.",
+      "catalogTitle": "Could not load the catalog"
+    },
+    "searchLabel": "Search dataset or agency",
+    "allProviders": "All providers ({{count}})",
+    "providerOption": "{{label}} ({{count}})",
+    "serviceKeyOnly": "Needs a service key only ({{count}})",
+    "resetFilters": "Reset filters",
+    "empty": {
+      "title": "The Builder catalog is empty",
+      "desc": "No provider or dataset is registered. Check the Builder configuration."
+    },
+    "noMatch": {
+      "title": "No dataset matches",
+      "desc": "Try a different search term or filter."
+    },
+    "serviceKeyBadge": "Service key required",
+    "startWith": "Start with this data",
+    "shownCount": "{{count}} shown"
+  },
+  "catalog": {
+    "page": {
+      "desc": "Find datasets with exact search and filters."
+    },
+    "errors": {
+      "list": "Could not load the dataset list.",
+      "listTitle": "Could not load the dataset list"
+    },
+    "searchLabel": "Search dataset / provider",
+    "searchPlaceholder": "Search dataset or agency",
+    "allProviders": "All providers",
+    "stageLabel": "Stage status",
+    "allStages": "All stages",
+    "allValidations": "All validations",
+    "noMatch": {
+      "title": "No dataset matches",
+      "desc": "Try a different search term or filter."
+    },
+    "openDetail": "Open details for {{title}}",
+    "qualityError": "Quality lookup failed",
+    "shownCount": "{{count}} shown",
+    "resetFilters": "Reset filters"
+  },
+  "monitoring": {
+    "error": {
+      "title": "Could not fetch the data",
+      "retry": "Please try again in a moment."
+    },
+    "api": {
+      "unavailable": "Unavailable",
+      "degraded": "Degraded",
+      "healthy": "Healthy",
+      "latencyUnavailable": "Latency: not measured",
+      "noSamples": "· no samples"
+    },
+    "measure": {
+      "unavailable": "Not measured",
+      "measuring": "Measuring"
+    },
+    "queue": {
+      "waiting": "Waiting",
+      "running": "Running",
+      "total": "Total"
+    },
+    "workers": {
+      "active": "Active",
+      "capacity": "Capacity",
+      "utilization": "Utilization"
+    },
+    "store": {
+      "available": "Healthy",
+      "partial": "Partially available",
+      "unavailable": "Unavailable",
+      "lastWrite": "Last write: {{at}}",
+      "lastWriteNone": "Last write: none"
+    },
+    "builds": {
+      "emptyTitle": "No build history",
+      "emptyDesc": "No build has run yet.",
+      "success": "Succeeded",
+      "failed": "Failed",
+      "cancelled": "Cancelled",
+      "excluded": "Some runs were excluded from the aggregate for permission reasons ({{count}} excluded).",
+      "noBucketTitle": "No data",
+      "noBucketDesc": "There is no data to chart build statistics over time.",
+      "bucketTitle": "Builds over time",
+      "bucketTooltip": "{{at}}: {{success}} succeeded, {{failed}} failed, {{cancelled}} cancelled"
+    },
+    "recent": {
+      "emptyTitle": "No recent runs",
+      "title": "Recent build runs",
+      "desc": "Check the status and outcome of recently executed builds.",
+      "seconds": "{{seconds}}s",
+      "errorTitle": "Could not fetch the data",
+      "errorRetry": "Please try again in a moment.",
+      "emptyDesc": "No build has run yet.",
+      "emptyCta": "New build",
+      "view": "View"
+    },
+    "runStatus": {
+      "succeeded": "Succeeded",
+      "failed": "Failed",
+      "running": "Running",
+      "cancelled": "Cancelled",
+      "queued": "Queued"
+    }
+  },
+  "publish": {
+    "errors": {
+      "incomplete": "Builder could not complete the publish request.",
+      "invalidRequest": "The publish request does not match the Builder contract.",
+      "destinationRequired": "Enter a Hugging Face destination.",
+      "destinationFormat": "The destination must be in owner/dataset form.",
+      "readinessNotFound": "The publish readiness for that run could not be found.",
+      "runNotFound": "That run could not be found.",
+      "notReady": "This run is not ready to publish.",
+      "unknown": "The publish request could not be completed.",
+      "inProgress": "The same publish job is already running.",
+      "retryBlocked": "The previous publish result could not be confirmed, so automatic retry is blocked. Ask a Builder operator to check the state.",
+      "visibilityConflict": "The same run and destination were already published with different visibility.",
+      "externalFailed": "The external publishing service could not finish the job. The outcome may be unclear, so it is not retried automatically.",
+      "readinessChanged": "Builder's re-check just before publishing found the readiness had changed. Check readiness again.",
+      "forbidden": "You do not have permission to publish this run.",
+      "notFound": "The selected run could not be found in Builder.",
+      "network": "No response from Builder. The remote publish result was not confirmed.",
+      "mismatch": "The run or target in Builder's response does not match the request."
+    }
+  },
+  "assistant": {
+    "generate": {
+      "unknownProvider": "sources[{{index}}].provider: provider '{{provider}}' is not in the catalog.",
+      "unknownDataset": "sources[{{index}}].dataset: dataset '{{dataset}}' does not exist on provider '{{provider}}'.",
+      "yamlParse": "The YAML could not be parsed.",
+      "mockDisabled": "Generation is disabled in mock mode (ST-A8, #211)",
+      "noValidate": "BuildSpec generation stopped: no connection to Builder /validate.",
+      "noCatalog": "BuildSpec generation stopped: the catalog could not be read.",
+      "emptyOutput": "The output was empty.",
+      "restoreFailed": "The secret could not be restored.",
+      "validateRequestFailed": "The Builder validation request failed.",
+      "validationFailed": "Validation failed"
+    },
+    "provider": {
+      "auth": "LLM API authentication failed. Check the API key.",
+      "rateLimit": "LLM API rate limit exceeded. Try again in a moment.",
+      "serverError": "The LLM server hit a temporary error. Try again in a moment.",
+      "callFailed": "The LLM API call failed.",
+      "callFailedStatus": "The LLM API call failed. (status {{status}})",
+      "unsafeBaseUrl": "The LLM base URL is not safe: {{reason}}"
+    },
+    "scrub": {
+      "unknownPlaceholder": "It contains an unknown secret placeholder."
+    },
+    "baseUrl": {
+      "invalid": "That is not a valid URL.",
+      "httpsOnly": "Only HTTPS addresses are allowed, to keep the API key from leaking."
+    },
+    "config": {
+      "persistWarning": "The LLM API key is stored in this browser in plain text. An XSS attack could steal it. Do not store it if you have untrusted extensions installed."
+    }
+  },
+  "status": {
+    "new": "New draft",
+    "draft": "Draft",
+    "dirty": "Modified",
+    "validated": "Validated",
+    "invalid": "Has errors",
+    "queued": "Queued",
+    "running": "Running",
+    "cancelling": "Cancelling",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "publishing": "Publishing",
+    "published": "Published"
+  },
+  "errorBoundary": {
+    "global": {
+      "title": "Something went wrong",
+      "desc": "An unexpected error stopped this screen from rendering. Reloading the page usually fixes it. If it keeps happening, try again in a moment.",
+      "reload": "Reload"
+    },
+    "feature": {
+      "title": "Something went wrong in {{feature}}",
+      "desc": "Only this area is temporarily unavailable. The sidebar and other menus still work. Try again in a moment.",
+      "retry": "Try again"
+    }
+  },
+  "router": {
+    "features": {
+      "AddData": "Add Data",
+      "DatasetCatalog": "Dataset Catalog",
+      "Discover": "Discover",
+      "Kubi": "Ask KPubData",
+      "Monitoring": "Monitoring",
+      "Provider": "Provider",
+      "Quality": "Quality",
+      "Reports": "Reports",
+      "Workspace": "Workspace",
+      "artifacts": "Artifacts",
+      "buildDetail": "Build details",
+      "buildEdit": "Edit build",
+      "buildRun": "Build run",
+      "builds": "Builds",
+      "datasetDetail": "Dataset details",
+      "home": "Home",
+      "newBuild": "New build",
+      "preview": "Preview",
+      "publish": "Publish",
+      "reportEditor": "Report editor",
+      "settings": "Settings",
+      "validate": "Validate"
+    },
+    "loading": "Loading the page…"
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "steps": {
+      "dashboard-builds": {
+        "title": "Check recent builds",
+        "copy": "Review recent runs and their progress, and open build details when you need more."
+      },
+      "dashboard-overview": {
+        "title": "Check your status",
+        "copy": "This dashboard shows your current datasets and build activity."
+      },
+      "dashboard-quality": {
+        "title": "Check quality results",
+        "copy": "Review recent quality warnings and follow up where needed."
+      },
+      "kubi-helper": {
+        "title": "Stuck? Ask KPubData",
+        "copy": "Ask KPubData helps you analyze using the dataset, run and stage on the current screen along with Builder evidence."
+      },
+      "sidebar": {
+        "title": "Tour your workspace",
+        "copy": "The left menu takes you to data discovery, builds and quality, Ask KPubData, and provider settings."
+      },
+      "start-actions": {
+        "title": "Start here",
+        "copy": "Use Discover to find data in the catalog, or Add Data to bring in an API, file or URL yourself."
+      },
+      "workflow": {
+        "title": "How data gets made",
+        "copy": "Find data, set up the import, check and validate the real rows in preview, then build. After that you can review quality results and use the data."
+      }
+    }
+  },
+  "buildRun": {
+    "eyebrow": "Run",
+    "title": "Run {{id}}",
+    "fallbackId": "build",
+    "desc": "Shows the same run status as the builds list and detail screens.",
+    "manageInDetail": "Manage in build details",
+    "status": "Status",
+    "unknownStatus": "Status unknown",
+    "liveUpdating": "Updating live…",
+    "liveFailed": "Live status update failed (temporary) — keeping the last confirmed status.",
+    "liveForbidden": "You do not have permission to read this run's live status — showing the last confirmed status instead.",
+    "detailHint": {
+      "title": "See stage-by-stage progress in build details",
+      "desc": "This screen shows only the canonical run status, the same as the builds list and detail. Stage progress (Bronze/Silver/Gold), the run event timeline and cooperative cancellation live in build details (/builds?run=...)."
+    },
+    "openDetail": "Open build details",
+    "openArtifacts": "View artifacts",
+    "editSpec": "Edit spec"
+  },
+  "monitoringPage": {
+    "title": "System monitoring",
+    "desc": "Watch run history and system resource status in real time.",
+    "forbiddenTitle": "No permission",
+    "forbiddenDesc": "Sign in to read monitoring data.",
+    "lastUpdate": "Last update: {{at}}",
+    "loading": "Loading data...",
+    "autoRefreshOn": "Auto refresh ON",
+    "autoRefreshOff": "Auto refresh OFF",
+    "refresh": "Refresh",
+    "degradedTitle": "System degraded",
+    "degradedDesc": "Some subsystems are partial or unavailable. Check the status badge on each card."
+  },
+  "assistantChat": {
+    "llmFailed": "The LLM call failed.",
+    "needsKey": "Enter an LLM API key in Settings to use the assistant. (BYOK)",
+    "title": "BuildSpec assistant",
+    "reset": "Clear conversation",
+    "hint": "Ask about spec errors, suggested fixes, or which data source to use.",
+    "placeholder": "Type your question…",
+    "cancel": "Cancel",
+    "send": "Send"
+  },
+  "datasets": {
+    "stage": {
+      "noStageInfo": "No stage information",
+      "mixedWithFailure": "Sources are at different stages and one failed",
+      "stageFailed": "Stage failed",
+      "mixed": "Sources are at different stages",
+      "goldDone": "Gold complete",
+      "silverDone": "Silver complete",
+      "bronzeDone": "Bronze complete",
+      "someNotRun": "Some stages have not run",
+      "noStage": "No stage available"
+    },
+    "errors": {
+      "datasetNotFound": "The requested dataset could not be found.",
+      "runsNotFound": "The run history for that dataset could not be found.",
+      "stagesNotFound": "The stage information for that run could not be found.",
+      "sourceStageNotFound": "The requested source or stage could not be found.",
+      "qualityNotFound": "The quality results for that run could not be found.",
+      "qualityHistoryNotFound": "The quality history for that dataset could not be found.",
+      "qualityLoadFailed": "Could not load the quality results."
+    }
+  },
+  "validatePage": {
+    "eyebrow": "Validate",
+    "title": "Validation results",
+    "desc": "Check what is required and ask the assistant for suggested fixes.",
+    "emptyTitle": "Validation happens inside the new build flow",
+    "emptyDesc": "Field-level errors and fix guidance appear in the Validate & run step of the New Build wizard.",
+    "cta": "New build"
+  },
+  "previewPage": {
+    "eyebrow": "Preview",
+    "title": "Data preview",
+    "desc": "See a sample of the data your current settings would fetch.",
+    "emptyTitle": "Preview happens inside the new build flow",
+    "emptyDesc": "Sample rows and the column schema appear in the Preview step of the New Build wizard.",
+    "cta": "New build"
+  },
+  "artifactsPage": {
+    "eyebrow": "Artifacts",
+    "title": "Generated artifacts",
+    "desc": "Artifacts are managed per build. Pick a build to see its files, manifest and downloads.",
+    "emptyTitle": "Choose a build",
+    "emptyDesc": "Open a build from the list, then check its files and manifest in the Artifacts tab.",
+    "cta": "Go to builds"
+  },
+  "buildArtifacts": {
+    "notProvided": "Not provided",
+    "noExports": "No export format",
+    "noSources": "No sources",
+    "partialManifest": "This run's manifest is missing some metadata fields (row counts, schema, provenance and so on). The file list (outputs) is still usable."
+  },
+  "schemas": {
+    "uploadIdFormat": "The upload_id format is not valid.",
+    "uploadRequired": "An uploaded file is required.",
+    "formatRequired": "Choose a file format.",
+    "endpointRequired": "Enter an endpoint.",
+    "httpsOnly": "Only URLs starting with https:// are allowed.",
+    "urlFormats": "URL sources support only csv, json and jsonl."
+  },
+  "preview": {
+    "unknownSourceError": "Unknown source error",
+    "allSourcesFailed": "Every preview source failed: {{failures}}",
+    "schemaDraft": {
+      "zeroRows": "With zero rows, required and key-candidate detection is meaningless",
+      "scopeNote": "Required and key-candidate detection reflects the rows fetched so far"
+    }
+  },
+  "runs": {
+    "errors": {
+      "missingId": "No build id was given.",
+      "notFound": "Build not found: {{buildId}}",
+      "notFoundNoSpec": "Build not found: {{buildId}}. This run has no BuildSpec snapshot (legacy) and no spec is stored locally.",
+      "statusUnknown": "Build status could not be determined: {{buildId}}. Neither the Builder history nor the manifest holds a final status for this run.",
+      "loadFailed": "Could not load the build.",
+      "pollFailed": "Could not refresh the run status.",
+      "eventsFailed": "Could not load the run event timeline."
+    },
+    "timeline": {
+      "wholeRun": "whole run",
+      "empty": "No events were recorded.",
+      "time": "Time",
+      "event": "Event / status",
+      "lastOk": "Last OK"
+    },
+    "build": {
+      "jobFailed": "The build job failed.",
+      "someSourcesFailed": "Some sources failed to build.",
+      "runFailed": "The build run failed."
+    },
+    "mock": {
+      "noSpecSnapshot": "Mock mode does not simulate a BuildSpec snapshot. Check it in real-integration mode.",
+      "noRunEvents": "Mock mode does not simulate structured run events. Check them in real-integration mode."
+    }
+  },
+  "specDiff": {
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed",
+    "noDiff": "The two specs are identical"
+  },
+  "buildSpec": {
+    "params": {
+      "finiteOnly": "Parameter JSON may only contain finite numbers and JSON values.",
+      "invalidJson": "The parameters are not valid JSON. Check the format.",
+      "mustBeObject": "Parameters must be a JSON object, for example {\"region\": \"seoul\"}"
+    },
+    "yaml": {
+      "parseFailed": "The YAML syntax could not be parsed.",
+      "invalidShape": "The BuildSpec shape is not valid: {{issues}}"
+    }
+  },
+  "errorState": {
+    "title": "Something went wrong",
+    "retry": "Try again"
+  },
+  "placeholder": {
+    "notReady": "This screen is not ready yet"
+  },
+  "helpTooltip": {
+    "label": "Help"
+  },
+  "formField": {
+    "required": "(required)"
+  },
+  "config": {
+    "oidc": {
+      "issuerInvalid": "VITE_OIDC_ISSUER is not a valid format: {{issuer}}"
     }
   }
 }

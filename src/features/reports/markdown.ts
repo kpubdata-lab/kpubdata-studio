@@ -1,24 +1,27 @@
 /**
- * 최소 안전 Markdown 파서/렌더러 (#258).
+ * Minimal safe Markdown parser/renderer (#258).
  *
- * Kubi 응답과 사용자 입력은 untrusted input으로 취급한다(#258 §13). 이 저장소에는 markdown
- * 렌더링/HTML sanitize 라이브러리가 없고(package.json 확인 완료), 이슈 지침상 새 대형
- * dependency를 들이기 전에 기존 코드를 재사용해야 하므로, 대신 아주 작은 subset(GFM의 일부)만
- * 지원하는 파서를 직접 둔다 — 지원하지 않는 문법은 그냥 이스케이프된 텍스트로 남는다.
+ * Kubi responses and user input are untrusted (#258 §13). The repo has no
+ * markdown/HTML-sanitize library (package.json checked), and the issue
+ * guidance says to reuse existing code before adding large dependencies —
+ * so a tiny subset parser (part of GFM) is hand-rolled instead; unsupported
+ * syntax just remains as escaped text.
  *
- * 안전성의 핵심 불변식: `<script>`/`javascript:`/on* 이벤트 속성 등 임의 HTML을 절대
- * 생성하지 않는다.
- * - React 렌더러(`renderMarkdownToReact`)는 `dangerouslySetInnerHTML`을 전혀 쓰지 않고
- *   React 엘리먼트만 만든다(React가 텍스트 노드를 자동 이스케이프).
- * - HTML 문자열 렌더러(`renderMarkdownToHtml`, 내보내기용)는 원문을 절대 그대로 넣지 않고
- *   `escapeHtml`을 통과한 텍스트만 우리가 만든 태그 사이에 넣는다.
- * - 링크는 `http(s)://`로 시작하는 href만 허용하고, 새 창으로 열 때 `rel="noopener
- *   noreferrer"`를 강제한다(#258 §13).
+ * Core safety invariant: never generate arbitrary HTML such as
+ * `<script>`/`javascript:`/on* event attributes.
+ * - The React renderer (`renderMarkdownToReact`) never uses
+ *   `dangerouslySetInnerHTML`; it only creates React elements (React
+ *   auto-escapes text nodes).
+ * - The HTML-string renderer (`renderMarkdownToHtml`, for export) never
+ *   interpolates raw text — only `escapeHtml`-passed text goes between tags
+ *   we produced.
+ * - Links allow only `http(s)://` hrefs, and new-window links force
+ *   `rel="noopener noreferrer"` (#258 §13).
  */
 import { Fragment, createElement, type ReactNode } from "react";
 
 // ---------------------------------------------------------------------------
-// 블록 파싱
+// Block parsing
 // ---------------------------------------------------------------------------
 
 type Block =
@@ -39,7 +42,7 @@ function isTableSeparatorRow(line: string): boolean {
   return cells.length > 0 && cells.every((cell) => /^:?-{2,}:?$/.test(cell));
 }
 
-/** 텍스트를 blank-line 단위 블록으로 나눈 뒤 각 블록을 분류한다. 알 수 없는 형태는 문단으로 취급한다. */
+/** Splits text into blank-line-separated blocks and classifies each; unknown shapes become paragraphs. */
 function parseBlocks(markdown: string): Block[] {
   const normalized = markdown.replace(/\r\n/g, "\n");
   const chunks = normalized.split(/\n{2,}/).map((chunk) => chunk.trim()).filter(Boolean);
@@ -88,7 +91,7 @@ function parseBlocks(markdown: string): Block[] {
 }
 
 // ---------------------------------------------------------------------------
-// 인라인 토큰(굵게/기울임/코드/링크)
+// Inline tokens (bold/italic/code/link)
 // ---------------------------------------------------------------------------
 
 type InlineToken =
@@ -98,7 +101,7 @@ type InlineToken =
   | { type: "code"; text: string }
   | { type: "link"; text: string; href: string };
 
-/** `http://`/`https://`로 시작하는 href만 안전하다고 판단한다. `javascript:` 등은 전부 거부. */
+/** Only hrefs starting with http:// or https:// count as safe; javascript: and friends are all rejected. */
 export function isSafeHref(href: string): boolean {
   return /^https?:\/\//i.test(href.trim());
 }
@@ -131,7 +134,7 @@ function tokenizeInline(text: string): InlineToken[] {
 }
 
 // ---------------------------------------------------------------------------
-// React 렌더러 — dangerouslySetInnerHTML을 쓰지 않는다.
+// React renderer — no dangerouslySetInnerHTML.
 // ---------------------------------------------------------------------------
 
 function renderInlineToReact(text: string, keyPrefix: string): ReactNode[] {
@@ -156,7 +159,7 @@ function renderInlineToReact(text: string, keyPrefix: string): ReactNode[] {
   });
 }
 
-/** Markdown 원문을 안전한 React 엘리먼트 트리로 렌더링한다(미리보기/편집기 표시용). */
+/** Renders Markdown source into a safe React element tree (preview/editor display). */
 export function renderMarkdownToReact(markdown: string): ReactNode {
   const blocks = parseBlocks(markdown);
   if (blocks.length === 0) return null;
@@ -168,7 +171,7 @@ export function renderMarkdownToReact(markdown: string): ReactNode {
       const key = `block-${index}`;
       switch (block.type) {
         case "heading": {
-          const tag = `h${block.level + 2}`; // 문서 내 상대 크기 — h1은 Report 제목이 쓴다.
+          const tag = `h${block.level + 2}`; // Relative size within the document — h1 is reserved for the Report title.
           return createElement(tag, { key, className: "font-semibold" }, renderInlineToReact(block.text, key));
         }
         case "paragraph":
@@ -228,7 +231,7 @@ export function renderMarkdownToReact(markdown: string): ReactNode {
 }
 
 // ---------------------------------------------------------------------------
-// HTML 문자열 렌더러 — export/print용. 원문은 escapeHtml을 거친 뒤에만 태그 안에 들어간다.
+// HTML-string renderer — export/print. Raw text enters tags only after escapeHtml.
 // ---------------------------------------------------------------------------
 
 export function escapeHtml(value: string): string {
@@ -253,14 +256,14 @@ function renderInlineToHtml(text: string): string {
         case "code":
           return `<code>${escapeHtml(token.text)}</code>`;
         case "link":
-          // href는 isSafeHref로 이미 http(s)만 허용됨. 속성 값 자체도 이스케이프한다.
+          // href is already http(s)-only via isSafeHref; the attribute value itself is escaped too.
           return `<a href="${escapeHtml(token.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(token.text)}</a>`;
       }
     })
     .join("");
 }
 
-/** Markdown 원문을 안전한 HTML 문자열로 렌더링한다(내보내기/인쇄용). */
+/** Renders Markdown source into a safe HTML string (export/print). */
 export function renderMarkdownToHtml(markdown: string): string {
   const blocks = parseBlocks(markdown);
   return blocks

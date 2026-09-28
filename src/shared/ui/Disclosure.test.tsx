@@ -1,6 +1,6 @@
 /**
- * Disclosure(#255 §3) — Run Events/BuildSpec snapshot 같은 secondary evidence를 기본
- * collapsed로 두되, 실제 button + aria-expanded로 keyboard 조작 가능한지 확인한다.
+ * Disclosure (#255 §3) — verifies secondary evidence like Run Events/BuildSpec snapshots stays
+ * collapsed but remains keyboard-operable via a real button + aria-expanded.
  */
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";

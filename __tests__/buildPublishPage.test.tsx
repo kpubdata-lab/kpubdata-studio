@@ -78,3 +78,54 @@ describe("BuildPublishPage readiness (audit #4)", () => {
     expect(screen.queryByText("Builder blocker가 있어 게시할 수 없습니다.")).not.toBeInTheDocument();
   });
 });
+
+
+describe("BuildPublishPage credential blockers (#399)", () => {
+  function readinessWith(code: string, message: string) {
+    // 실제 Builder 모드로 둔다. mock 모드에서는 알려진 mock run id 만 해석되어
+    // "선택한 Run을 Builder에서 찾을 수 없습니다"로 단락되고, readiness 카드가
+    // 아예 렌더되지 않는다.
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    return http.get(`${BUILDER_BASE}/builds/:runId/publish/readiness`, ({ params }) =>
+      HttpResponse.json({
+        run_id: String(params.runId),
+        target: "huggingface",
+        ready: false,
+        blockers: [{ code, message }],
+        warnings: [],
+      }),
+    );
+  }
+
+  it("credential_unavailable 에 credential 안내를 보여준다", async () => {
+    mswServer.use(readinessWith("credential_unavailable", "no credential is available"));
+
+    renderPublish("run-no-credential");
+
+    expect(await screen.findByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).toBeInTheDocument();
+  });
+
+  it("credential_required 에는 본인 credential 저장 안내까지 보여준다", async () => {
+    // credential_required 는 "어디에도 없다"가 아니라 "이 배포는 서버 것을 빌려주지
+    // 않는다"다 (kpubdata-builder #665). 사용자가 직접 할 수 있는 조치가 있으므로
+    // 그 조치를 알려주지 않으면 서버 문제로 읽힌다.
+    mswServer.use(
+      readinessWith("credential_required", "requires a credential stored for this principal"),
+    );
+
+    renderPublish("run-needs-own-credential");
+
+    expect(await screen.findByText(/서버 publish credential을 빌려주지 않습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).toBeInTheDocument();
+  });
+
+  it("credential 과 무관한 blocker 에는 credential 안내를 보여주지 않는다", async () => {
+    mswServer.use(readinessWith("run_not_completed", "still running"));
+
+    renderPublish("run-still-running");
+
+    expect(await screen.findByText("Builder blocker가 있어 게시할 수 없습니다.")).toBeInTheDocument();
+    expect(screen.queryByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/서버 publish credential을 빌려주지 않습니다/)).not.toBeInTheDocument();
+  });
+});

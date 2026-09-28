@@ -1,4 +1,44 @@
 {
+  "layout": {
+    "closeNav": "내비게이션 닫기",
+    "studioHome": "KPubData Studio 홈",
+    "closeSidebar": "사이드바 닫기",
+    "expandSidebar": "사이드바 펼치기",
+    "collapseSidebar": "사이드바 접기",
+    "theme": "테마",
+    "selectTheme": "테마 선택",
+    "toggleSidebar": "사이드바 열기/닫기",
+    "tagline": "공공데이터를 데이터셋으로 만드는 워크스페이스",
+    "openKubi": "Ask KPubData 열기",
+    "goToSettingsFor": "{{email}} 설정으로 이동",
+    "loginRequiredSettings": "로그인이 필요합니다 — 설정으로 이동",
+    "loginRequired": "로그인이 필요합니다"
+  },
+  "reportEditor": {
+    "untitled": "제목 없음",
+    "deleteBlockConfirm": "이 블록을 삭제하시겠습니까?",
+    "refreshError": "Evidence를 새로고침하지 못했습니다.",
+    "newReportTitle": "{{dataset}} · {{run}} 보고서",
+    "createError": "새 Report를 만들지 못했습니다.",
+    "loading": "불러오는 중…",
+    "notFoundTitle": "Report를 찾을 수 없습니다",
+    "notFoundHeading": "이 Report는 이 브라우저에 없습니다",
+    "notFoundDesc": "삭제되었거나 다른 브라우저/기기에서 만들어졌을 수 있습니다(로컬 저장소이므로 기기 간 동기화되지 않습니다).",
+    "backToList": "Report 목록으로",
+    "editTitle": "Report 편집",
+    "titleLabel": "제목",
+    "savedRevision": "저장됨 · revision {{revision}}",
+    "lastSaved": " · 마지막 저장 {{time}}",
+    "refreshEvidence": "Evidence 새로고침",
+    "downloadMarkdown": "Markdown 다운로드",
+    "downloadHtml": "HTML 다운로드",
+    "print": "인쇄(Browser Print)",
+    "kubiSection": "7. Ask KPubData 분석",
+    "noKubiTitle": "아직 추가된 AI 분석이 없습니다",
+    "noKubiDesc": "Ask KPubData 로 현재 Dataset/Run을 분석한 뒤 검토하여 보고서에 추가할 수 있습니다.",
+    "notesSection": "8. 사용자 메모",
+    "addBlock": "+ 사용자 작성 블록 추가"
+  },
   "nav": {
     "groupWorkspace": "WORKSPACE",
     "groupData": "DATA",
@@ -11,7 +51,7 @@
     "datasets": "데이터셋 카탈로그",
     "builds": "빌드 / 실행",
     "quality": "품질",
-    "kubi": "Kubi",
+    "kubi": "Ask KPubData",
     "reports": "리포트",
     "provider": "Provider / API 연결",
     "monitoring": "모니터링",
@@ -25,7 +65,7 @@
     "datasets": "빌드된 데이터셋 검색",
     "builds": "빌드와 실행 이력",
     "quality": "빌드·데이터셋 품질 결과",
-    "kubi": "Context-aware AI 어시스턴트",
+    "kubi": "맥락을 아는 도우미",
     "reports": "분석 리포트 생성·열람",
     "provider": "API Key·자격 증명 등록",
     "monitoring": "실행·시스템 모니터링",
@@ -37,22 +77,8 @@
     "viewArtifacts": "결과물 보기"
   },
   "languageSwitcher": {
-    "toggle": "언어 전환"
-  },
-  "layout": {
-    "closeNav": "내비게이션 닫기",
-    "studioHome": "KPubData Studio 홈",
-    "closeSidebar": "사이드바 닫기",
-    "expandSidebar": "사이드바 펼치기",
-    "collapseSidebar": "사이드바 접기",
-    "theme": "테마",
-    "selectTheme": "테마 선택",
-    "toggleSidebar": "사이드바 열기/닫기",
-    "tagline": "공공데이터를 데이터셋으로 만드는 워크스페이스",
-    "openKubi": "Kubi 열기",
-    "goToSettingsFor": "{{email}} 설정으로 이동",
-    "loginRequiredSettings": "로그인이 필요합니다 — 설정으로 이동",
-    "loginRequired": "로그인이 필요합니다"
+    "toggle": "언어 전환",
+    "switchTo": "{{language}}로 전환"
   },
   "builds": {
     "statusFilter": {
@@ -71,7 +97,8 @@
       "loadListFallback": "빌드 목록을 불러오지 못했습니다."
     },
     "page": {
-      "title": "빌드 실행 이력"
+      "title": "빌드 실행 이력",
+      "desc": "<b>Build</b>는 데이터를 수집·처리하는 작업이고 <b>Run</b>은 그 Build가 실제로 한 번 실행된 기록입니다."
     },
     "run": {
       "notFoundTitle": "Run을 찾을 수 없습니다: {{id}}",
@@ -330,10 +357,36 @@
       "hintMultiSource": "이 Run에는 source가 여러 개 있습니다. 분석할 source를 먼저 선택하세요.",
       "hintNoStage": "Run 전체를 분석 중입니다. SQL을 생성하려면 Silver 또는 Gold를 선택하세요.",
       "hintBronze": "Bronze에서는 Generated SQL을 실행할 수 없습니다. Silver 또는 Gold를 선택하세요.",
-      "hintSqlReady": "{{stage}} schema 기반 질문 및 SQL 생성 가능"
+      "hintSqlReady": "{{stage}} schema 기반 질문 및 SQL 생성 가능",
+      "page": {
+        "home": "Home",
+        "discover": "Discover",
+        "workspace": "Workspace",
+        "add-data": "Add Data",
+        "dataset-detail": "Dataset 상세",
+        "dataset-catalog": "Dataset Catalog",
+        "build-new": "새 빌드",
+        "build-run": "빌드 실행",
+        "build-artifacts": "빌드 결과물",
+        "build-publish": "빌드 게시",
+        "build-edit": "빌드 편집",
+        "build-detail": "빌드 상세",
+        "validate": "검증",
+        "preview": "미리보기",
+        "artifacts": "결과물",
+        "builds": "Builds",
+        "quality": "Quality",
+        "kubi": "Ask KPubData",
+        "reports": "Reports",
+        "provider": "Provider",
+        "monitoring": "Monitoring",
+        "settings": "Settings"
+      },
+      "stageAria": "분석 Stage",
+      "sourceAria": "분석 Source"
     },
     "byok": {
-      "title": "Kubi를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
+      "title": "Ask KPubData 를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
       "desc": "키는 기본적으로 이 브라우저 메모리에만 보관되며, 새로고침하면 사라집니다. Studio는 공용 키를 제공하지 않습니다.",
       "modelLabel": "Model (선택)",
       "baseUrlLabel": "Base URL (선택)",
@@ -369,7 +422,14 @@
       "copySql": "Generated SQL 복사",
       "copy": "복사",
       "run": "실행",
-      "runningEllipsis": "실행 중…"
+      "runningEllipsis": "실행 중…",
+      "bronzeNotAllowed": "Bronze 문맥에서는 SQL을 실행할 수 없습니다. Silver 또는 Gold에서만 실행할 수 있습니다.",
+      "needsDatasetRun": "실행하려면 dataset와 run이 모두 선택되어 있어야 합니다.",
+      "cancelled": "요청이 취소되었습니다.",
+      "unknownError": "Query 실행 중 알 수 없는 오류가 발생했습니다.",
+      "mockUnsupported": "mock 모드에서는 Query 실행을 지원하지 않습니다. VITE_USE_REAL_BUILDER=true로 실제 Builder에 연결하세요.",
+      "stageMismatch": "현재 화면 stage({{current}})와 Generated SQL의 stage({{proposed}})가 다릅니다.",
+      "stageNone": "없음"
     },
     "action": {
       "buildSpec": "BuildSpec 변경 제안",
@@ -417,7 +477,7 @@
       "demoQuestion": "이 데이터셋 품질 어때?"
     },
     "input": {
-      "aria": "Kubi에게 질문하기",
+      "aria": "Ask KPubData 에 질문하기",
       "placeholder": "질문을 입력하세요…",
       "placeholderDemo": "질문을 입력하세요… (데모 · mock 데이터)",
       "placeholderNoKey": "먼저 API Key를 설정하세요",
@@ -467,9 +527,117 @@
       "q35": "방금 답변을 좀 더 자세히 설명해줘.",
       "q36": "이걸 바탕으로 다음 단계를 추천해줘.",
       "q37": "관련해서 더 확인할 데이터가 있어?"
+    },
+    "actions": {
+      "missingParent": "경로 \"{{path}}\"의 상위 필드가 없습니다.",
+      "specNotFound": "run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없습니다. Builder는 spec을 영속화하지 않으므로, 이 run을 Studio에서 실행/편집한 적이 있어야 patch를 적용할 수 있습니다.",
+      "secretsRedacted": "저장된 BuildSpec에서 시크릿 값이 제거되어 있어(로컬 보관 정책) patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 다시 입력하세요.",
+      "pathNotAllowed": "허용되지 않은 경로 \"{{path}}\"입니다. title/description/metadata/sources[].params/sources[].alias/exports[].options만 patch할 수 있습니다.",
+      "credentialPath": "경로 \"{{path}}\"는 credential성 필드로 보여 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 직접 변경하세요.",
+      "redactionMarker": "patch 결과에 redaction marker가 남아 있어 적용할 수 없습니다. 해당 credential을 실제 값으로 다시 입력하세요.",
+      "patchFailed": "patch를 적용할 수 없습니다.",
+      "unresolvedPlaceholder": "해결되지 않은 시크릿 플레이스홀더가 포함되어 있습니다.",
+      "paramsCredential": "생성된 sourceParams에는 credential 값을 포함할 수 없습니다.",
+      "paramsNotObject": "생성된 sourceParams는 JSON 객체여야 합니다.",
+      "describe": {
+        "openProvider": "Provider \"{{provider}}\" 화면 열기",
+        "openBuild": "Build \"{{runId}}\" 상세 열기",
+        "openQuality": "Quality Center에서 \"{{datasetId}}\" 보기",
+        "patchSpec": "run \"{{runId}}\"의 BuildSpec에 {{count}}건 변경 제안",
+        "createDraft": "New Build 초안 만들기: {{title}}",
+        "addReportBlock": "Report 참고 노트로 추가"
+      }
+    },
+    "session": {
+      "actionRejected": "사용자가 이 action을 거부했습니다.",
+      "draftSaveFailed": "초안을 저장하지 못했습니다.",
+      "unsafeBaseUrl": "안전하지 않은 base URL입니다.",
+      "excludedMalformed": "형식 오류로 제외: {{ref}}",
+      "excludedRefs": "제외된 근거: {{refs}}",
+      "excludedActions": "제외된 action: {{actions}}",
+      "llmFailed": "LLM 호출에 실패했습니다.",
+      "demoEvidenceFailed": "데모 evidence 조회에 실패했습니다.",
+      "contextChangedSql": "화면 문맥이 바뀌어 이 SQL을 실행할 수 없습니다.",
+      "contextChangedAction": "화면 문맥이 바뀌어 이 action을 실행할 수 없습니다.",
+      "contextChangedApply": "화면 문맥이 바뀌어 이 action을 적용할 수 없습니다.",
+      "opened": "화면을 열었습니다.",
+      "addedToReport": "Report 참고 노트로 추가했습니다.",
+      "actionFailed": "action을 적용하지 못했습니다.",
+      "patchApplied": "BuildSpec에 적용했고 Builder /validate를 통과했습니다.",
+      "patchAppliedInvalid": "BuildSpec에 적용했지만 Builder /validate에 실패했습니다: {{errors}}",
+      "patchFailed": "BuildSpec patch 적용에 실패했습니다.",
+      "draftSaved": "New Build 초안에 저장했습니다."
+    },
+    "runAnalysis": {
+      "title": "Run 분석",
+      "close": "닫기",
+      "needsKey": "Ask KPubData 를 사용하려면 API Key 설정이 필요합니다.",
+      "openSettings": "Ask KPubData 설정 열기",
+      "preparing": "분석 준비 중…",
+      "thinking": "생각 중…",
+      "cancel": "취소",
+      "askMore": "더 질문하기"
+    },
+    "demo": {
+      "disclaimer": "[DEMO] mock 데이터 기반 예시 응답입니다 — 실제 분석 결과가 아닙니다.",
+      "datasetStatus": "데이터셋 \"{{title}}\"({{datasetId}})의 최신 상태는 \"{{status}}\"입니다.",
+      "qualityReason": "[DEMO] Quality Center에서 이 run의 실제 rule 결과를 확인할 수 있습니다.",
+      "demoNote": "[DEMO] \"{{title}}\" 데모 분석 — mock 데이터 기반이며 실제 분석이 아닙니다.",
+      "reportReason": "[DEMO] 이 데모 응답을 참고 노트로 Report에 남길 수 있습니다.",
+      "noDataset": "현재 선택된 Dataset이 없어 일반 안내만 제공합니다. Dataset을 선택하면 더 구체적인 데모를 볼 수 있습니다.",
+      "noQuality": "평가된 Quality 결과가 없습니다.",
+      "qualitySummary": "Quality 결과 요약: {{summary}}.",
+      "sqlNote": "Generated SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Builder 호출 없음).",
+      "stageHint": "위 Stage 선택에서 Silver 또는 Gold를 고르면 Generated SQL·Result Preview 데모도 함께 볼 수 있습니다."
+    },
+    "crossCheck": {
+      "openProviderUnknown": "OPEN_PROVIDER: catalog에 없는 provider \"{{provider}}\"",
+      "openBuildUnknown": "OPEN_BUILD: evidence에 없는 run \"{{runId}}\"",
+      "openQualityUnknownDataset": "OPEN_QUALITY: evidence에 없는 dataset \"{{datasetId}}\"",
+      "openQualityUnknownRun": "OPEN_QUALITY: evidence에 없는 run \"{{runId}}\"",
+      "openQualityMismatch": "OPEN_QUALITY: run \"{{runId}}\"의 dataset \"{{datasetId}}\" 소속을 Builder evidence에서 확인할 수 없음",
+      "patchUnknownRun": "PATCH_BUILDSPEC: evidence에 없는 run \"{{runId}}\"",
+      "patchSpecMissing": "PATCH_BUILDSPEC: run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없어 안전하게 diff를 만들 수 없습니다",
+      "draftUnknownProvider": "CREATE_BUILD_DRAFT: catalog에 없는 provider \"{{provider}}\"",
+      "draftUnknownDataset": "CREATE_BUILD_DRAFT: \"{{provider}}\" catalog에 없는 dataset \"{{dataset}}\"",
+      "stageNone": "없음",
+      "sqlStageMismatch": "현재 화면 stage({{current}})와 제안된 SQL의 stage({{proposed}})가 일치하지 않아 실행 대상에서 제외했습니다.",
+      "sqlSourceDropped": "제안된 source \"{{source}}\"를 evidence에서 확인할 수 없어 제거했습니다. 단일 소스 run이라 Builder가 자동으로 소스를 선택합니다.",
+      "sqlSourceUnknown": "evidence에 없는 source \"{{source}}\"를 참조해 실행 대상에서 제외했습니다."
+    },
+    "drawer": {
+      "collapseLabel": "Ask KPubData 기본 너비로 보기",
+      "expandLabel": "Ask KPubData 확장하기",
+      "collapse": "기본",
+      "expand": "확장",
+      "close": "Ask KPubData 닫기",
+      "label": "Ask KPubData"
+    },
+    "parse": {
+      "empty": "LLM이 빈 응답을 반환했습니다.",
+      "notJson": "LLM 응답을 JSON으로 해석할 수 없습니다.",
+      "shapeMismatch": "LLM 응답 형식이 예상과 다릅니다: {{issues}}"
+    },
+    "search": {
+      "label": "Ask KPubData 에 자연어로 데이터 물어보기",
+      "placeholder": "Ask KPubData 에 데이터에 대해 물어보세요…"
+    },
+    "content": {
+      "approve": "승인"
+    },
+    "page": {
+      "desc": "현재 화면·Dataset·Build·Quality 문맥을 사용해 Evidence 기반 답변과 다음 Action까지 연결합니다.",
+      "eyebrow": "도우미",
+      "title": "Ask KPubData"
     }
   },
   "quality": {
+    "previewSourceState": {
+      "ok": "정상",
+      "failed": "조회 실패",
+      "zeroRows": "0건",
+      "notEvaluated": "미평가"
+    },
     "rows": "{{count}}행",
     "noRules": "평가된 규칙 없음",
     "errors": {
@@ -499,7 +667,7 @@
     "header": {
       "desc": "점수 대신 실제 검증 통과 여부(PASS/WARN/FAIL)와 규칙별 이슈를 보여줍니다."
     },
-    "kubiAnalyze": "Kubi 분석",
+    "kubiAnalyze": "이 문제 설명 보기",
     "selectors": {
       "dataset": "Dataset 선택",
       "run": "Run 선택",
@@ -558,12 +726,77 @@
       "context": "현재 문맥: {{context}} · 일반 Quality rule과 별개로 표시합니다.",
       "empty": "비교 기준 없음 또는 검사하지 않음 — 관찰된 schema drift가 없습니다(PASS로 간주하지 않습니다)."
     },
-    "rowsUnit": "행"
+    "rowsUnit": "행",
+    "model": {
+      "rows": "{{count}}행",
+      "seed": {
+        "none": "현재 Run에는 평가된 Quality check가 없습니다. 현재 상태를 설명하고, Quality 규칙을 설정할 때 확인할 사항을 Evidence 기준으로 알려줘.",
+        "issues": "현재 Quality WARN/FAIL의 원인과 우선 조치 방법을 Evidence 기준으로 분석해줘.",
+        "allPass": "현재 Quality 결과를 Evidence 기준으로 요약하고, 모든 check가 PASS한 근거와 추가로 확인할 사항을 알려줘."
+      },
+      "previewState": {
+        "ok": "정상",
+        "failed": "조회 실패",
+        "zero_rows": "0건",
+        "not_evaluated": "미평가"
+      }
+    },
+    "badge": {
+      "notEvaluated": "평가 없음",
+      "unavailable": "결과 없음(unavailable)"
+    }
   },
   "provider": {
     "status": {
       "needsCred": "자격 증명이 필요한 제공 기관입니다.",
-      "noCred": "자격 증명 없이 사용할 수 있는 제공 기관입니다."
+      "noCred": "자격 증명 없이 사용할 수 있는 제공 기관입니다.",
+      "permission": {
+        "title": "인증 또는 API 활용신청 확인 필요",
+        "detail": "저장된 자격 증명으로 실제 API를 확인했지만 접근이 거부되었습니다. Provider는 Dataset/API별 사용 권한이 다를 수 있으므로 선택한 Dataset의 Preview에서 실제 사용 가능 여부를 확인하세요."
+      },
+      "failure": {
+        "auth": {
+          "title": "인증 정보 확인 필요",
+          "detail": "저장된 자격 증명이 유효한지 확인한 뒤 다시 테스트하세요."
+        },
+        "network": {
+          "title": "네트워크 연결 오류",
+          "detail": "Builder가 Provider에 연결하지 못했습니다. 네트워크 상태를 확인하세요."
+        },
+        "timeout": {
+          "title": "연결 시간 초과",
+          "detail": "Provider 응답이 제한 시간 안에 도착하지 않았습니다. 잠시 후 다시 시도하세요."
+        },
+        "provider": {
+          "title": "Provider 응답 오류",
+          "detail": "Provider가 실제 API 확인 요청을 처리하지 못했습니다."
+        },
+        "unknown": {
+          "title": "연결 상태를 확인할 수 없습니다",
+          "detail": "Builder가 실제 API 확인 중 분류되지 않은 오류를 받았습니다."
+        }
+      },
+      "scopeNote": "이 검사는 Provider 수준의 기본 연결 확인입니다. 선택한 Dataset의 실제 사용 가능 여부는 다음 단계 Preview에서 확인합니다.",
+      "readiness": {
+        "previewNote": "실제 Dataset API 사용 가능 여부는 Add Data의 Preview에서 확인합니다.",
+        "noAuthLabel": "인증 불필요",
+        "noAuthDetail": "이 제공 기관은 자격 증명 없이 사용할 수 있습니다.",
+        "userKeyLabel": "API Key 등록됨",
+        "userKeyDetail": "이 Provider의 인증 정보가 준비되어 있습니다.",
+        "serverDefaultLabel": "연결 준비됨",
+        "serverDefaultDetail": "이 제공 기관은 현재 Builder 기본 자격 증명으로 사용 중입니다.",
+        "missingKeyLabel": "API Key 미설정",
+        "missingKeyDetail": "이 Provider를 사용하는 Dataset은 API Key가 필요할 수 있습니다."
+      },
+      "probe": {
+        "connected": "연결됨",
+        "notConfigured": "미설정",
+        "notConfiguredTitle": "자격 증명 필요",
+        "notConfiguredDetail": "이 Provider는 자격 증명이 필요합니다. Provider 설정에서 연결하세요.",
+        "unknown": "연결 확인 필요",
+        "needsCheck": "확인 필요",
+        "failed": "연결 오류"
+      }
     },
     "errors": {
       "loadProvider": "Provider 정보를 불러올 수 없습니다",
@@ -577,12 +810,13 @@
       "title": "데이터 제공 기관 연결",
       "desc": "공공데이터 제공 기관과 연결하고 자격 증명(credential)을 관리합니다.",
       "settings": "설정으로 이동",
-      "note": "공공데이터 API Key와 Provider 자격 증명은 이곳에서 연결합니다. Kubi AI 요청에 사용하는 API Key와는 별개입니다.",
+      "note": "공공데이터 API Key와 Provider 자격 증명은 이곳에서 연결합니다. Ask KPubData 요청에 사용하는 API Key와는 별개입니다.",
       "cta": "데이터 추가를 계속하려면 API 연결을 완료하세요.",
       "emptyTitle": "등록된 Provider가 없습니다",
       "emptyDesc": "데이터 제공 기관을 추가하고 연결하세요.",
       "selectTitle": "Provider를 선택해주세요",
-      "selectDesc": "왼쪽 목록에서 Provider를 선택하면 상세 정보를 볼 수 있습니다."
+      "selectDesc": "왼쪽 목록에서 Provider를 선택하면 상세 정보를 볼 수 있습니다.",
+      "headerTitle": "제공 기관"
     },
     "detail": {
       "connStatus": "연결 상태",
@@ -605,6 +839,18 @@
       "backToData": "데이터 설정으로 돌아가기",
       "defaultCredNote": "이 제공 기관은 현재 Builder 기본 자격 증명으로 사용 중입니다. 별도 사용자 자격 증명을 등록하면 이 기관 호출에 우선 적용됩니다.",
       "needsCredNote": "이 제공 기관을 사용하려면 자격 증명을 등록해야 합니다."
+    },
+    "labels": {
+      "bok": "한국은행 ECOS (BOK)",
+      "datago": "공공데이터포털 (data.go.kr)",
+      "kosis": "통계청 KOSIS",
+      "krx": "한국거래소 (KRX)",
+      "law": "국가법령정보센터",
+      "localdata": "지역정보포털 (LocalData)",
+      "lofin": "지방재정365 (LOFIN)",
+      "semas": "소상공인시장진흥공단 (SEMAS)",
+      "seoul": "서울 열린데이터광장",
+      "sgis": "통계지리정보서비스 (SGIS)"
     }
   },
   "home": {
@@ -632,26 +878,118 @@
       "3": "Preview · Build",
       "3d": "데이터를 미리 확인·검증한 뒤 Build",
       "4": "품질 확인 · 활용",
-      "4d": "Quality · Kubi · Export · Publish",
+      "4d": "Quality · Ask KPubData · Export · Publish",
       "heading": "전체 작업 흐름",
       "note": "아래는 진행 순서를 보여주는 설명입니다 — 각 단계는 사이드바 메뉴와 화면 안내를 따라 진행하세요."
     },
     "kubi": {
-      "title": "어디서 시작할지 모르겠다면 Kubi에게 물어보세요",
-      "desc": "원하는 데이터나 분석 목적을 입력하면 Kubi에서 시작 방법을 함께 찾아볼 수 있습니다.",
+      "title": "어디서 시작할지 모르겠다면 Ask KPubData",
+      "desc": "원하는 데이터나 분석 목적을 입력하면 Ask KPubData 가 시작 방법을 함께 찾아줍니다.",
       "placeholder": "예: 서울 대기오염 데이터로 뭘 할 수 있어?",
-      "cta": "Kubi에서 시작하기 →",
-      "noKey": "아직 API Key가 설정되지 않았습니다. Kubi 화면에서 설정 방법을 안내합니다.",
-      "try": "Kubi에게 자연어로 데이터 물어보기"
+      "cta": "Ask KPubData 로 시작하기 →",
+      "noKey": "아직 API Key가 설정되지 않았습니다. Ask KPubData 화면에서 설정 방법을 안내합니다.",
+      "try": "Ask KPubData 에 자연어로 데이터 물어보기"
     },
     "dashboard": {
       "eyebrow": "대시보드",
       "title": "작업 현황을 한눈에 확인하세요",
       "desc": "최근 데이터셋, 빌드 상태, 품질 경고를 모니터링합니다",
       "guide": "사용 가이드"
+    },
+    "kpi": {
+      "datasets": "현재 접근할 수 있는 전체 빌드 Dataset 수입니다.",
+      "succeeded": "최근 24시간 동안 성공적으로 완료된 Build Run 수입니다.",
+      "qualityWarn": "최근 24시간 Quality 검사에서 WARN이 하나 이상 확인된 Run 수입니다.",
+      "running": "현재 실행 중인 Build 작업 수입니다.",
+      "definitionLabel": "{{label}} 정의",
+      "unavailable": "확인 불가"
+    },
+    "recent": {
+      "eyebrow": "최근 빌드",
+      "title": "최근 실행",
+      "errorTitle": "빌드 목록을 불러올 수 없습니다",
+      "errorDesc": "나중에 다시 시도해 주세요",
+      "emptyTitle": "아직 빌드가 없습니다",
+      "emptyDesc": "새 빌드를 만들어보세요",
+      "emptyCta": "새 빌드 만들기",
+      "view": "보기"
+    },
+    "quality": {
+      "eyebrow": "품질",
+      "title": "최근 품질 상태",
+      "unavailableTitle": "일부 품질 정보를 확인할 수 없습니다",
+      "unavailableDesc": "Builder에서 최근 Run의 Quality 결과를 제공하지 못했습니다. 실패한 Build를 Quality FAIL로 간주하지 않습니다.",
+      "emptyTitle": "최근 확인한 Build에서 품질 경고가 없습니다",
+      "emptyDesc": "현재 확인 가능한 최근 Quality 결과 중 추가 확인이 필요한 WARN/FAIL이 없습니다.",
+      "needsCheck": "품질 확인 필요",
+      "incomplete": "일부 Run의 Quality 결과는 확인하지 못했습니다.",
+      "center": "Quality Center 보기"
     }
   },
   "addData": {
+    "review": {
+      "notSelected": "선택되지 않음",
+      "stageAborted": "중단",
+      "stageRunning": "진행 중",
+      "title": "검토 · Build",
+      "datasetLabel": "데이터셋",
+      "previewLabel": "Preview 조건",
+      "previewMulti": "{{count}}개 source 표본{{mixed}}",
+      "previewSingle": "{{total}}건 중 표본",
+      "notRun": "미실행",
+      "validationLabel": "검증 결과",
+      "passed": "통과",
+      "failedLabel": "실패",
+      "noQuality": "품질 결과 없음",
+      "mixedShort": "Mixed — source별 상태가 다릅니다",
+      "outputLabel": "출력",
+      "staleWarning": "Preview 실행 이후 source/설정이 변경되어 이전 Preview·Validation 결과를 재사용할 수 없습니다. Preview & Validate 단계에서 다시 실행해주세요.",
+      "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}}개 source{{mixed}}",
+      "planPreviewSingle": "{{limit}} rows({{mode}}) · {{total}}건 중 표본",
+      "perSourceTitle": "Source별 Preview/Validation",
+      "specTitle": "실제 제출될 canonical BuildSpec",
+      "specUnavailable": "스펙을 아직 만들 수 없습니다.",
+      "specNote": "Build 시작 후 동일한 설정·검증 결과가 Run 상세에 그대로 이어집니다. URL source의 secret query parameter, Public API source의 secret 파라미터 값은 표시에서만 가려지며, 실제 제출값에는 영향을 주지 않습니다.",
+      "startBuild": "Build 시작",
+      "cancel": "취소",
+      "buildSucceeded": "빌드 성공 (run {{runId}})",
+      "buildCancelled": "실행이 취소되었습니다.",
+      "interrupted": "요청을 중단했습니다. 서버 빌드 결과는 확인되지 않았습니다."
+    },
+    "preview": {
+      "title": "Preview · 검증",
+      "desc": "현재 인증 정보와 요청 파라미터로 Dataset API를 호출해 실제 데이터를 확인합니다.",
+      "refresh": "Preview 새로고침",
+      "idleTitle": "실제 데이터 미리보기",
+      "idleDesc": "'Preview 새로고침'을 누르면 현재 설정으로 Dataset API를 호출하고, 샘플 행과 검증 결과를 표시합니다.",
+      "errorTitle": "Preview 요청에 실패했습니다",
+      "stale": "설정이 변경되었습니다. 아래 결과는 이전 설정 기준이며, 현재 설정으로 Preview를 다시 실행해주세요.",
+      "mixed": "Mixed 결과 — source별 상태가 다릅니다. 각 탭을 눌러 개별 소스를 확인하세요.",
+      "sampleTitle": "샘플 데이터",
+      "sampleDesc": "전체 데이터 중 일부만 빠르게 확인합니다.",
+      "rowCountLabel": "표시 행 수",
+      "sampleModeLabel": "샘플링 방식",
+      "columnScopeLabel": "컬럼 범위",
+      "keyColumns": "주요 columns",
+      "allColumns": "전체 columns",
+      "backToPreview": "Preview로 돌아가기",
+      "showDiff": "원본 대비 변경",
+      "sourceFailedTitle": "소스 조회에 실패했습니다",
+      "unknownError": "원인을 알 수 없는 오류입니다.",
+      "zeroRowsTitle": "조건에 맞는 데이터가 없습니다",
+      "zeroRowsDesc": "0건 정상 응답입니다 — source 조회 실패와는 다릅니다.",
+      "diffTruncated": "표시된 항목은 최대 1000개로 잘렸습니다. 전체 변경은 {{cells}}개 셀 · {{rows}}개 행입니다.",
+      "diffSummary": "변경 {{cells}}개 셀 · {{rows}}개 행",
+      "diffBefore": "원본",
+      "diffAfter": "현재 값",
+      "diffTransform": "변환",
+      "diffUnavailable": "Diff를 사용할 수 없습니다",
+      "diffUnavailableDesc": "source_sample과 변환 결과의 행이 일치한다고 보장할 수 없어 diff를 계산하지 않았습니다(diff_available=false).",
+      "sampleFooter": "{{total}}건 중 {{shown}}건 표시 · {{columns}}개 컬럼",
+      "validationTitle": "검증 결과 (Validation)",
+      "notEvaluated": "Not evaluated / N/A — 이 preview에서 평가된 quality check가 없습니다.",
+      "qualityLink": "상세 Quality 보기"
+    },
     "configure": {
       "title": "가져오기 설정",
       "apiPrepTitle": "API 사용 준비",
@@ -679,7 +1017,7 @@
       "formatSelect": "포맷 선택…",
       "encodingLabel": "인코딩 (Encoding)",
       "fileLabel": "파일",
-      "selectFormatFirst": "먼저 포맷을 선택해주세요.",
+      "formatFirst": "먼저 포맷을 선택해주세요.",
       "uploading": "업로드 중입니다...",
       "uploadDone": "업로드 완료: {{name}} ({{bytes}} bytes)",
       "urlTitle": "URL / REST API",
@@ -692,150 +1030,144 @@
       "urlFormatInfer": "추론(생략)",
       "summaryTitle": "선택한 Dataset 요약",
       "noTitle": "(제목 없음)",
-      "summaryPublicApi": "Provider와 Dataset을 선택하면 Dataset ID/제목/설명이 자동으로 채워집니다.",
-      "summaryFile": "파일을 업로드하면 파일명에서 Dataset ID/제목이 자동으로 채워집니다.",
-      "summaryUrl": "Endpoint를 입력하면 Dataset ID/제목이 자동으로 채워집니다.",
+      "autoFillPublicApi": "Provider와 Dataset을 선택하면 Dataset ID/제목/설명이 자동으로 채워집니다.",
+      "autoFillFile": "파일을 업로드하면 파일명에서 Dataset ID/제목이 자동으로 채워집니다.",
+      "autoFillUrl": "Endpoint를 입력하면 Dataset ID/제목이 자동으로 채워집니다.",
       "advancedTitle": "고급 설정 · Dataset metadata (자동 생성값 수정)",
       "datasetIdLabel": "데이터셋 ID",
       "titleLabel": "제목",
       "descriptionLabel": "설명",
       "outputTitle": "Output",
-      "exportFormatsLegend": "결과물 형식 (최소 1개)",
+      "exportLegend": "결과물 형식 (최소 1개)",
       "outputPathLabel": "출력 경로 (선택)",
       "canonicalTitle": "Canonical BuildSpec (GUI ↔ YAML)",
       "applyYaml": "YAML 적용"
     },
-    "preview": {
-      "title": "Preview · 검증",
-      "subtitle": "현재 인증 정보와 요청 파라미터로 Dataset API를 호출해 실제 데이터를 확인합니다.",
-      "refresh": "Preview 새로고침",
-      "idleTitle": "실제 데이터 미리보기",
-      "idleDesc": "'Preview 새로고침'을 누르면 현재 설정으로 Dataset API를 호출하고, 샘플 행과 검증 결과를 표시합니다.",
-      "errorTitle": "Preview 요청에 실패했습니다",
-      "staleNotice": "설정이 변경되었습니다. 아래 결과는 이전 설정 기준이며, 현재 설정으로 Preview를 다시 실행해주세요.",
-      "mixedNotice": "Mixed 결과 — source별 상태가 다릅니다. 각 탭을 눌러 개별 소스를 확인하세요.",
-      "sampleTitle": "샘플 데이터",
-      "sampleDesc": "전체 데이터 중 일부만 빠르게 확인합니다.",
-      "rowsLabel": "표시 행 수",
-      "sampleModeLabel": "샘플링 방식",
-      "columnsLabel": "컬럼 범위",
-      "columnsKey": "주요 columns",
-      "columnsAll": "전체 columns",
-      "backToPreview": "Preview로 돌아가기",
-      "compareOriginal": "원본 대비 변경",
-      "sourceFailedTitle": "소스 조회에 실패했습니다",
-      "unknownError": "원인을 알 수 없는 오류입니다.",
-      "noDataTitle": "조건에 맞는 데이터가 없습니다",
-      "noDataDesc": "0건 정상 응답입니다 — source 조회 실패와는 다릅니다.",
-      "diffTruncated": "표시된 항목은 최대 1000개로 잘렸습니다. 전체 변경은 {{cells}}개 셀 · {{rows}}개 행입니다.",
-      "diffSummary": "변경 {{cells}}개 셀 · {{rows}}개 행",
-      "diffColOriginal": "원본",
-      "diffColCurrent": "현재 값",
-      "diffColTransform": "변환",
-      "diffUnavailableTitle": "Diff를 사용할 수 없습니다",
-      "diffUnavailableDesc": "source_sample과 변환 결과의 행이 일치한다고 보장할 수 없어 diff를 계산하지 않았습니다(diff_available=false).",
-      "sampleFooter": "{{total}}건 중 {{shown}}건 표시 · {{columns}}개 컬럼",
-      "validationTitle": "검증 결과 (Validation)",
-      "notEvaluated": "Not evaluated / N/A — 이 preview에서 평가된 quality check가 없습니다.",
-      "viewQuality": "상세 Quality 보기"
+    "steps": {
+      "source": "데이터 선택",
+      "configure": "가져오기 설정",
+      "preview": "Preview · 검증",
+      "review": "검토 · Build"
     },
-    "review": {
-      "notSelected": "선택되지 않음",
-      "stageStopped": "중단",
-      "stageRunning": "진행 중",
-      "title": "검토 · Build",
-      "cardDataset": "데이터셋",
-      "cardPreview": "Preview 조건",
-      "previewSourcesSummary": "{{count}}개 source 표본{{mixed}}",
-      "previewRowsSummary": "{{total}}건 중 표본",
-      "notRun": "미실행",
-      "cardValidation": "검증 결과",
-      "validationPassed": "통과",
-      "validationFailed": "실패",
-      "noQuality": "품질 결과 없음",
-      "mixedShort": "Mixed — source별 상태가 다릅니다",
-      "cardOutput": "출력",
-      "staleNotice": "Preview 실행 이후 source/설정이 변경되어 이전 Preview·Validation 결과를 재사용할 수 없습니다. Preview & Validate 단계에서 다시 실행해주세요.",
-      "buildPlan": "Build plan",
-      "planSource": "Source / Provider",
-      "planDataset": "Dataset",
-      "planQuery": "Query / Config",
-      "planPreview": "Preview",
-      "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}}개 source{{mixed}}",
-      "planPreviewSingle": "{{limit}} rows({{mode}}) · {{total}}건 중 표본",
-      "planValidation": "Validation",
-      "planOutput": "Output",
-      "perSourceTitle": "Source별 Preview/Validation",
-      "pipeline": "Pipeline",
-      "canonicalTitle": "실제 제출될 canonical BuildSpec",
-      "specUnavailable": "스펙을 아직 만들 수 없습니다.",
-      "canonicalNote": "Build 시작 후 동일한 설정·검증 결과가 Run 상세에 그대로 이어집니다. URL source의 secret query parameter, Public API source의 secret 파라미터 값은 표시에서만 가려지며, 실제 제출값에는 영향을 주지 않습니다.",
-      "startBuild": "Build 시작",
-      "cancel": "취소",
-      "buildSuccess": "빌드 성공 (run {{runId}})",
-      "cancelled": "실행이 취소되었습니다.",
-      "interrupted": "요청을 중단했습니다. 서버 빌드 결과는 확인되지 않았습니다."
-    }
+    "errors": {
+      "catalog": "Builder catalog를 불러오지 못했습니다.",
+      "upload": "파일 업로드에 실패했습니다.",
+      "yamlSyntax": "YAML 구문 오류: {{message}}",
+      "yamlApply": "YAML을 적용하지 못했습니다.",
+      "spec": "빌드 스펙 오류",
+      "preview": "Preview 요청에 실패했습니다.",
+      "validate": "검증 요청에 실패했습니다."
+    },
+    "page": {
+      "title": "데이터 추가",
+      "desc": "가져오기에 필요한 설정을 준비하고, Preview에서 실제 데이터를 확인·검증한 뒤 Build를 시작합니다."
+    },
+    "draft": {
+      "prompt": "저장된 초안이 있습니다. 이어서 편집할까요?",
+      "restore": "불러오기",
+      "discard": "삭제"
+    },
+    "nav": {
+      "back": "이전",
+      "next": "다음",
+      "saved": "저장됨 ✓",
+      "saveDraft": "초안 저장"
+    },
+    "model": {
+      "sourceRequired": "Source를 먼저 선택해주세요.",
+      "exportRequired": "출력 형식을 최소 1개 선택해주세요.",
+      "metadataRequired": "데이터셋 ID/제목/설명을 입력해주세요.",
+      "providerDatasetRequired": "Provider와 Dataset을 선택해주세요.",
+      "paramsRedacted": "저장된 초안에서 시크릿이 포함된 파라미터 값이 제거되었습니다. Query/Config를 다시 입력해주세요.",
+      "uploadRequired": "먼저 파일을 업로드해주세요.",
+      "endpointRequired": "Endpoint를 입력해주세요.",
+      "urlRedacted": "저장된 초안에서 시크릿이 포함된 URL 값이 제거되었습니다. Endpoint를 다시 입력해주세요.",
+      "urlUserInfo": "URL에 사용자 정보(예: user:pass@host)를 포함할 수 없습니다. Endpoint에 자격 증명을 넣지 마세요.",
+      "specBuildFailed": "빌드 스펙을 생성하지 못했습니다.",
+      "unresolvedPlaceholder": "저장된 초안에 복원할 수 없는 secret placeholder가 있습니다. 원본 credential을 다시 입력해 주세요.",
+      "specInvalid": "빌드 스펙이 올바르지 않습니다.",
+      "httpsOnly": "https:// 로 시작하는 URL만 지원합니다."
+    },
+    "identity": {
+      "fromCatalog": "{{provider}}/{{name}} 데이터셋입니다.",
+      "fromFile": "업로드한 파일 \"{{filename}}\"에서 생성한 데이터셋입니다.",
+      "fromUrl": "https://{{host}} 에서 가져온 데이터셋입니다."
+    },
+    "source": {
+      "title": "데이터 선택",
+      "desc": "데이터를 어디서 가져올지 선택하세요. 이후 단계는 선택한 source에 맞는 입력만 보여줍니다.",
+      "kind": {
+        "publicApi": "Provider를 선택하고 인증·조회조건을 설정합니다.",
+        "file": "CSV/JSON/JSONL/Parquet 파일을 업로드합니다.",
+        "url": "HTTPS GET endpoint를 직접 입력합니다(P0: Auth 없음)."
+      }
+    },
+    "credential": {
+      "title": "API 연결이 필요합니다",
+      "body": "이 Dataset은 API Key가 필요한 Provider를 사용합니다.\n먼저 Provider / API 연결에서 자격 증명을 등록한 뒤 계속하세요.",
+      "cta": "API 연결하기"
+    },
+    "requiredParams": "{{params}} 필수 요청 파라미터를 입력해주세요."
   },
   "datasetDetail": {
-    "stageExplainerBronze": "원본 보존 수집 단계",
-    "stageExplainerSilver": "정규화·변환·검증 단계",
-    "stageExplainerGold": "분석·배포를 위한 최종 가공 단계",
-    "loadDatasetFailed": "데이터셋을 불러오지 못했습니다.",
-    "loadStageStatusFailed": "Stage 상태를 불러오지 못했습니다.",
-    "loadQualityFailed": "Quality 결과를 불러오지 못했습니다.",
-    "loadStageDetailFailed": "Stage 상세를 불러오지 못했습니다.",
-    "loadingDataset": "데이터셋 정보를 불러오는 중입니다.",
-    "datasetDetailTitle": "데이터셋 상세",
-    "loadDatasetFailedTitle": "데이터셋을 불러오지 못했습니다",
-    "runInaccessibleTitle": "선택한 run에 접근할 수 없습니다.",
-    "runInaccessibleBody": "URL의 run `{{run}}`은 이 데이터셋의 접근 가능한 실행 이력에 없습니다. latest run으로 자동 변경하지 않았습니다.",
-    "viewLatestRun": "latest run 보기",
+    "stagesErrorMsg": "Stage 상태를 불러오지 못했습니다.",
+    "qualityErrorMsg": "Quality 결과를 불러오지 못했습니다.",
+    "stageDetailErrorMsg": "Stage 상세를 불러오지 못했습니다.",
+    "schemaSilverNote": "선택한 persisted schema와 Builder가 보고한 변경만 표시합니다.",
+    "schemaGoldNote": "Gold 응답은 column 이름만 제공하며 dtype을 추론하지 않습니다.",
+    "changeCol": "변경",
+    "previewNoneDesc": "{{stage}} stage는 persisted sample을 제공하지 않습니다.",
+    "previewNote": "Builder가 저장한 Silver sample 일부를 확인합니다.",
+    "fetchFailed": "Quality 조회 실패",
+    "noEvaluated": "평가된 결과가 없습니다.",
+    "viewQualityDetail": "상세 Quality 보기",
+    "viewInQualityCenter": "Quality Center에서 보기",
+    "qualityNote": "평가 결과가 없으면 N/A이며 별도 점수를 계산하지 않습니다.",
+    "noDrift": "관찰된 schema drift가 없습니다.",
+    "noQualityTitle": "평가된 Quality 결과가 없습니다",
+    "noQualityDesc": "N/A는 PASS가 아닙니다.",
+    "runsNote": "이 데이터셋의 접근 가능한 run 이력입니다.",
+    "view": "보기",
+    "notGoldStage": "gold stage 아님",
+    "outputNone": "없음",
+    "outputNotProvided": "이 stage 응답에서 제공하지 않음",
+    "viewQuality": "Quality 보기",
+    "stageBronze": "원본 보존 수집 단계",
+    "stageSilver": "정규화·변환·검증 단계",
+    "stageGold": "분석·배포를 위한 최종 가공 단계",
+    "loadError": "데이터셋을 불러오지 못했습니다.",
+    "stagesError": "Stage 정보를 불러오지 못했습니다.",
+    "qualityError": "Quality 정보를 불러오지 못했습니다.",
+    "stageDetailError": "Stage 상세를 불러오지 못했습니다.",
+    "loadingDesc": "데이터셋 정보를 불러오는 중입니다.",
+    "fallbackTitle": "데이터셋 상세",
+    "loadErrorTitle": "데이터셋을 불러오지 못했습니다",
+    "invalidRunTitle": "선택한 run에 접근할 수 없습니다.",
+    "invalidRunBody": "URL의 run `{{run}}`은 이 데이터셋의 접근 가능한 실행 이력에 없습니다. latest run으로 자동 변경하지 않았습니다.",
+    "viewLatest": "latest run 보기",
     "sourceLoading": "source 불러오는 중",
     "stageStatusTitle": "선택된 source({{source}})의 {{stage}} stage 상태",
-    "publishThisRun": "이 Run 게시",
+    "publishRun": "이 Run 게시",
     "runSelect": "Run 선택",
     "sourceSelect": "Source 선택",
     "stageSelect": "Stage 선택",
-    "sourceNotExist": "{{source}} (존재하지 않는 source)",
-    "runStatusTooltip": "선택된 source/stage가 아니라 이 run 전체(모든 source)의 결과입니다",
-    "runStatus": "Run 상태",
-    "sourceNotInRun": "URL의 source `{{source}}`는 선택한 run에 존재하지 않습니다.",
-    "runFailedStageOkTitle": "Run 상태는 failed이지만 선택한 source의 {{stage}} stage는 completed입니다.",
-    "runFailedStageOkBody": "이 run에 포함된 다른 source({{sources}})에서 stage 실패가 있어 run 전체 상태가 failed로 집계되었습니다. 모순이 아니라 run과 source/stage의 상태 범위가 다릅니다.",
-    "artifactUnpublished": "미게시",
-    "artifactNotGold": "gold stage 아님",
-    "noSelectedSource": "선택된 source 없음",
-    "kubiSuggestCta": "Kubi가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다",
-    "unknown": "확인 불가",
-    "runStatusOverall": "Run 상태(전체)",
-    "selectedSourceStageStatus": "선택된 Source·Stage 상태",
-    "notProvided": "제공되지 않음",
-    "passportFooter": "Source: {{source}} · Lineage/Schema/Quality 상세는 각 탭에서 확인할 수 있습니다.",
-    "schemaDriftSilverDesc": "선택한 persisted schema와 Builder가 보고한 변경만 표시합니다.",
-    "colChanged": "변경",
-    "schemaDriftGoldDesc": "Gold 응답은 column 이름만 제공하며 dtype을 추론하지 않습니다.",
-    "schemaNoneTitle": "Schema 없음/지원되지 않음",
+    "missingSource": "{{source}} (존재하지 않는 source)",
+    "runStatusTitle": "선택된 source/stage가 아니라 이 run 전체(모든 source)의 결과입니다",
+    "runStatusLabel": "Run 상태",
+    "invalidSource": "URL의 source `{{source}}`는 선택한 run에 존재하지 않습니다.",
+    "runFailedTitle": "Run 상태는 failed이지만 선택한 source의 {{stage}} stage는 completed입니다.",
+    "runFailedBody": "이 run에 포함된 다른 source({{sources}})에서 stage 실패가 있어 run 전체 상태가 failed로 집계되었습니다. 모순이 아니라 run과 source/stage의 상태 범위가 다릅니다.",
+    "unpublished": "미게시",
+    "kubiHint": "Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다",
+    "runStatusAll": "Run 상태(전체)",
+    "unavailable": "확인 불가",
+    "selectedStageStatus": "선택된 Source·Stage 상태",
+    "schemaMissing": "제공되지 않음",
+    "noSource": "선택된 source 없음",
+    "tabsHint": "Source: {{source}} · Lineage/Schema/Quality 상세는 각 탭에서 확인할 수 있습니다.",
+    "schemaNone": "Schema 없음/지원되지 않음",
     "schemaNoneDesc": "{{stage}} stage 응답이 schema를 제공하지 않습니다.",
-    "previewNoneTitle": "미리보기 없음/지원되지 않음",
-    "previewNoneDesc": "{{stage}} stage는 persisted sample을 제공하지 않습니다.",
-    "sampleDesc": "Builder가 저장한 Silver sample 일부를 확인합니다.",
-    "qualityFetchFailed": "Quality 조회 실패",
-    "noEvaluatedResults": "평가된 결과가 없습니다.",
-    "viewQuality": "상세 Quality 보기",
-    "viewInQualityCenter": "Quality Center에서 보기",
-    "validationNaNote": "평가 결과가 없으면 N/A이며 별도 점수를 계산하지 않습니다.",
-    "noSchemaDrift": "관찰된 schema drift가 없습니다.",
-    "noQualityResultsTitle": "평가된 Quality 결과가 없습니다",
-    "noQualityResultsDesc": "N/A는 PASS가 아닙니다.",
-    "recentBuildsDesc": "이 데이터셋의 접근 가능한 run 이력입니다.",
-    "view": "보기",
-    "outputNone": "없음",
-    "outputNotProvidedStage": "이 stage 응답에서 제공하지 않음",
-    "validationSummaryNaNote": "평가 결과가 없으면 N/A이며 별도 점수를 계산하지 않습니다.",
-    "qualityNoDrift": "관찰된 schema drift가 없습니다.",
-    "qualityNoResultsTitle": "평가된 Quality 결과가 없습니다",
-    "qualityNoResultsDesc": "N/A는 PASS가 아닙니다."
+    "previewNone": "미리보기 없음/지원되지 않음"
   },
   "buildPublish": {
     "statusQueued": "대기 중",
@@ -845,50 +1177,49 @@
     "statusFailed": "실패",
     "statusCancelled": "취소됨",
     "noRunId": "게시할 Run ID가 없습니다.",
-    "runInfoFailed": "이 Run의 정보를 확인할 수 없습니다.",
+    "runInfoError": "이 Run의 정보를 확인할 수 없습니다.",
     "readinessMismatch": "Builder readiness 응답이 선택한 Run과 일치하지 않습니다.",
     "checking": "확인 중…",
-    "completeAt": "완료 · {{date}}",
-    "complete": "완료",
-    "statusWithDate": "{{status}} · {{date}}",
+    "completedAt": "완료 · {{time}}",
+    "completed": "완료",
     "unconfirmed": "확인되지 않음",
     "eyebrow": "게시",
-    "pageTitle": "{{name}} 게시",
-    "pageDesc": "Builder가 선택한 Run의 준비 상태를 확인한 뒤 Hugging Face에 게시합니다.",
+    "title": "{{name}} 게시",
+    "desc": "Builder가 선택한 Run의 준비 상태를 확인한 뒤 Hugging Face에 게시합니다.",
     "selectedRun": "선택한 Run",
-    "buildComplete": "Build 완료",
-    "runContextNote": "이 화면은 URL의 exact Run ID로 Dataset과 Build 완료 상태를 확인하며, latest Run으로 바꾸지 않습니다.",
-    "runContextError": "이 Run의 Dataset 정보를 불러오지 못했습니다. Run ID로 게시 준비 상태는 아래에서 계속 확인할 수 있습니다.",
-    "readinessDesc": "Run·Gold·license·PII policy·서버 credential을 Builder가 판정합니다.",
+    "buildCompleted": "Build 완료",
+    "exactRunNote": "이 화면은 URL의 exact Run ID로 Dataset과 Build 완료 상태를 확인하며, latest Run으로 바꾸지 않습니다.",
+    "datasetLoadWarn": "이 Run의 Dataset 정보를 불러오지 못했습니다. Run ID로 게시 준비 상태는 아래에서 계속 확인할 수 있습니다.",
+    "readinessNote": "Run·Gold·license·PII policy·publish credential을 Builder가 판정합니다.",
     "recheck": "다시 확인",
-    "readyToPublish": "Builder 게시 준비 완료",
-    "hasBlockers": "Builder blocker가 있어 게시할 수 없습니다.",
+    "readyLabel": "Builder 게시 준비 완료",
+    "blockedLabel": "Builder blocker가 있어 게시할 수 없습니다.",
     "notReadyNoReason": "Builder가 이 Run을 게시 준비되지 않음으로 판정했지만 구체적인 사유(blocker)를 제공하지 않았습니다.",
-    "credentialNote": "이 blocker는 source Provider credential이 아니라 Builder 서버의 Hugging Face publish credential을 뜻합니다. Studio는 token을 입력하거나 저장하지 않습니다.",
-    "publishSettings": "게시 설정",
-    "publishSettingsDesc": "Readiness와 별개인 로컬 입력 검증입니다. Builder readiness는 destination이나 공개 설정을 검증하지 않습니다.",
+    "credentialNote": "이 blocker는 source Provider credential이 아니라 publish 대상(Hugging Face/Kaggle) credential을 뜻합니다. Builder 배포 설정에 따라 서버 credential이 쓰이거나, 요청자 본인이 저장한 credential이 필요합니다. Studio는 어느 쪽도 입력받거나 저장하지 않습니다.",
+    "settingsTitle": "게시 설정",
+    "settingsNote": "Readiness와 별개인 로컬 입력 검증입니다. Builder readiness는 destination이나 공개 설정을 검증하지 않습니다.",
     "destinationHint": "Builder가 허용하는 owner/dataset 식별자",
-    "privateDataset": "비공개 Dataset",
-    "privateDatasetStrong": "비공개 Dataset",
+    "privateLabel": "비공개 Dataset",
     "privateDefault": "기본값: 비공개",
-    "finalConfirm": "최종 확인",
-    "publishConfirmLabel": "게시 최종 확인",
-    "publicSetting": "공개 설정",
+    "review": "최종 확인",
+    "confirmTitle": "게시 최종 확인",
+    "visibility": "공개 설정",
     "confirmNote": "Builder의 POST 응답이 성공하기 전에는 게시 완료로 표시하지 않습니다.",
-    "runPublish": "게시 실행",
+    "publishNow": "게시 실행",
     "editSettings": "설정 수정",
     "stopWaiting": "응답 기다리기 중단",
-    "publishComplete": "Builder 게시 완료",
+    "publishedTitle": "Builder 게시 완료",
     "publishFailed": "게시 실패",
     "noAutoRetry": "자동 재시도하지 마세요.",
     "abortedTitle": "응답 대기를 중단했습니다.",
-    "abortedDesc": "브라우저 요청만 중단했으며 원격 게시 작업을 취소한 것은 아닙니다. 게시 결과는 확인되지 않았습니다."
+    "abortedBody": "브라우저 요청만 중단했으며 원격 게시 작업을 취소한 것은 아닙니다. 게시 결과는 확인되지 않았습니다.",
+    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 Builder에 저장해야 게시할 수 있습니다."
   },
   "settings": {
     "page": {
       "eyebrow": "설정",
       "title": "환경 설정",
-      "desc": "계정, Builder 연결, 데이터 Provider 자격 증명, Kubi BYOK를 관리합니다."
+      "desc": "계정, Builder 연결, 데이터 Provider 자격 증명, Ask KPubData BYOK를 관리합니다."
     },
     "conn": {
       "title": "연결 상태",
@@ -913,6 +1244,26 @@
       "notLoggedIn": "로그인되지 않았습니다. 실연동 모드에서는 Builder 호출을 위해 로그인이 필요합니다.",
       "login": "로그인",
       "mockNote": "mock 모드에서는 로그인 상태가 UI 시연용으로만 동작합니다. 계정/권한 백엔드는"
+    },
+    "providers": {
+      "title": "데이터 Provider 자격 증명",
+      "manage": "Provider 설정에서 관리",
+      "mockNote": "mock 모드에서는 Provider 페이지에서 동작을 시연할 수 있습니다. 실제 자격 증명은 실연동 모드에서 Builder가 서버에 안전하게 보관합니다.",
+      "loading": "Provider 구성 상태를 조회하는 중입니다…",
+      "summary": "자격 증명이 필요한 Provider {{total}}개 중 {{configured}}개가 구성되었습니다.",
+      "listLabel": "provider 구성 상태",
+      "configured": "구성됨",
+      "notConfigured": "미구성"
+    },
+    "byok": {
+      "title": "Ask KPubData · BYOK LLM 키",
+      "configure": "Ask KPubData 에서 설정",
+      "desc": "Ask KPubData 의 LLM 키는 데이터 Provider 자격 증명과 별도로 사용자가 직접 관리합니다(Bring Your Own Key). 키는 기본적으로 메모리에만 보관되며 새로고침 시 사라집니다.",
+      "keySet": "키 설정됨",
+      "keyUnset": "키 미설정",
+      "customBaseUrl": "사용자 지정 Base URL",
+      "persistOn": "브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요.",
+      "persistOff": "브라우저 저장: 꺼짐(메모리 전용). Ask KPubData 화면에서 명시적으로 켤 수 있습니다."
     }
   },
   "auth": {
@@ -937,79 +1288,79 @@
       "or": "또는",
       "emailLogin": "KPubData 계정으로 로그인",
       "loginFail": "로그인에 실패했습니다. 잠시 후 다시 시도해주세요."
+    },
+    "oidc": {
+      "errorTitle": "OIDC 인증 설정에 문제가 있습니다.",
+      "errorDesc": "이 환경은 실제 Builder에 연결되어 있지만 OIDC 설정(<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>)이 올바르지 않습니다. 관리자에게 문의하세요.",
+      "missingTitle": "OIDC 인증이 아직 구성되지 않았습니다.",
+      "missingDesc": "이 환경은 실제 Builder에 연결되어 있지만, 사람 사용자 로그인을 위한 OIDC IdP(Keycloak) 연동이 아직 준비되지 않았습니다. 관리자에게 문의하거나 연동이 완료된 이후 다시 시도해주세요.",
+      "disabled": "OIDC가 활성화되지 않았습니다."
+    },
+    "signup": {
+      "title": "KPubData 계정 만들기",
+      "desc": "회원가입, 이메일 인증, 비밀번호 정책은 안전한 Keycloak 화면에서 처리합니다.",
+      "cta": "Keycloak에서 회원가입 또는 로그인",
+      "notReady": "인증 설정이 준비되면 여기서 계정을 만들 수 있습니다.",
+      "backToLogin": "로그인으로 돌아가기"
+    },
+    "mock": {
+      "badCredentials": "이메일 또는 비밀번호가 올바르지 않습니다."
     }
   },
   "workspace": {
-    "recentTitle": "최근 작업",
-    "savedSpecs": "저장한 BuildSpec",
-    "noRecent": "최근 작업이 없습니다",
-    "noSpecs": "저장한 BuildSpec이 없습니다",
-    "open": "열기",
-    "rename": "이름 변경",
-    "delete": "삭제",
-    "edit": "편집",
-    "run": "실행",
-    "newBuild": "새 빌드 만들기",
     "validatedPass": "검증 통과",
     "validatedFail": "검증 실패",
     "notValidated": "검증 필요",
-    "loadDatasetsFailed": "Dataset 목록을 불러오지 못했습니다.",
-    "loadBuildsFailed": "Build 목록을 불러오지 못했습니다.",
-    "unnamed": "이름 없음",
-    "confirmDeleteSpec": "이 Saved BuildSpec을 삭제하시겠습니까? 되돌릴 수 없습니다.",
-    "confirmClearAll": "현재 로그인 사용자의 Saved BuildSpec을 모두 삭제하시겠습니까? 되돌릴 수 없습니다.",
-    "pageTitle": "작업대",
-    "pageDesc": "최근 작업(Recent Work)과 저장한 BuildSpec을 한 곳에서 관리합니다.",
-    "localOnlyTitle": "이 브라우저에만 저장됩니다",
+    "datasetsError": "Dataset 목록을 불러오지 못했습니다.",
+    "buildsError": "Build 목록을 불러오지 못했습니다.",
+    "datasetsErrorTitle": "Dataset 목록을 불러오지 못했습니다",
+    "buildsErrorTitle": "Build 목록을 불러오지 못했습니다",
+    "untitled": "이름 없음",
+    "deleteConfirm": "이 Saved BuildSpec을 삭제하시겠습니까? 되돌릴 수 없습니다.",
+    "deleteAllConfirm": "현재 로그인 사용자의 Saved BuildSpec을 모두 삭제하시겠습니까? 되돌릴 수 없습니다.",
+    "title": "작업대",
+    "desc": "최근 작업(Recent Work)과 저장한 BuildSpec을 한 곳에서 관리합니다.",
+    "localOnlyBadge": "이 브라우저에만 저장됩니다",
     "localOnlyDesc": "Saved BuildSpec은 Builder 서버가 아니라 지금 사용 중인 이 브라우저에만 저장됩니다. 다른 기기·브라우저에서는 보이지 않고, 브라우저 데이터를 지우면 함께 사라질 수 있습니다. 팀원에게 자동으로 공유되거나 서버에 백업되지 않습니다.",
-    "loadDatasetsFailedTitle": "Dataset 목록을 불러오지 못했습니다",
-    "loadBuildsFailedTitle": "Build 목록을 불러오지 못했습니다",
-    "sourceThisBrowser": "이 브라우저",
+    "thisBrowser": "이 브라우저",
     "loading": "불러오는 중입니다…",
     "noWorkTitle": "아직 작업이 없습니다",
     "noWorkDesc": "데이터를 탐색하거나 첫 빌드를 만들어보세요.",
-    "exploreData": "데이터 탐색하기",
-    "clearAll": "전체 삭제",
+    "exploreCta": "데이터 탐색하기",
+    "deleteAll": "전체 삭제",
     "noSpecsDesc": "새 빌드 만들기에서 스펙을 작성한 뒤 저장하면 여기에 표시됩니다.",
     "save": "저장",
     "cancel": "취소",
     "noProvider": "provider 없음",
     "noOutput": "output 없음",
-    "noSpecsEmptyTitle": "저장된 BuildSpec이 없습니다",
-    "renameAction": "이름변경",
-    "lastSaved": "· 최근 저장 {{date}}",
-    "duplicate": "복제"
-  },
-  "reportEditor": {
-    "untitled": "제목 없음",
-    "confirmDeleteBlock": "이 블록을 삭제하시겠습니까?",
-    "refreshEvidenceFailed": "Evidence를 새로고침하지 못했습니다.",
-    "newReportTitle": "{{title}} · {{runId}} 보고서",
-    "createReportFailed": "새 Report를 만들지 못했습니다.",
-    "loading": "불러오는 중…",
-    "notFoundTitle": "Report를 찾을 수 없습니다",
-    "notFoundHere": "이 Report는 이 브라우저에 없습니다",
-    "notFoundHereDesc": "삭제되었거나 다른 브라우저/기기에서 만들어졌을 수 있습니다(로컬 저장소이므로 기기 간 동기화되지 않습니다).",
-    "toReportList": "Report 목록으로",
-    "editReport": "Report 편집",
-    "title": "제목",
-    "saved": "저장됨 · revision {{revision}}",
-    "lastSavedAt": " · 마지막 저장 {{time}}",
-    "refreshEvidence": "Evidence 새로고침",
-    "downloadMarkdown": "Markdown 다운로드",
-    "downloadHtml": "HTML 다운로드",
-    "print": "인쇄(Browser Print)",
-    "kubiAnalysis": "7. Kubi 분석",
-    "noAiAnalysis": "아직 추가된 AI 분석이 없습니다",
-    "noAiAnalysisDesc": "Kubi에서 현재 Dataset/Run을 분석한 뒤 검토하여 보고서에 추가할 수 있습니다.",
-    "userNotes": "8. 사용자 메모",
-    "addUserBlock": "+ 사용자 작성 블록 추가"
+    "lastSaved": "· 최근 저장 {{time}}",
+    "duplicate": "복제",
+    "recentTitle": "최근 작업",
+    "savedSpecs": "저장한 BuildSpec",
+    "noRecent": "최근 작업이 없습니다",
+    "noSpecs": "저장된 BuildSpec이 없습니다",
+    "open": "열기",
+    "rename": "이름변경",
+    "delete": "삭제",
+    "edit": "편집",
+    "run": "실행",
+    "newBuild": "새 빌드 만들기",
+    "storage": {
+      "noStorage": "이 브라우저에서 로컬 저장소를 사용할 수 없습니다(프라이빗 모드 등).",
+      "serializeFailed": "BuildSpec을 저장 형식으로 변환하지 못했습니다.",
+      "quotaExceeded": "저장 공간이 부족합니다. 사용하지 않는 Saved BuildSpec을 삭제한 뒤 다시 시도하세요.",
+      "saveFailed": "BuildSpec을 저장하지 못했습니다.",
+      "staleWrite": "다른 탭 또는 창에서 이 BuildSpec을 먼저 저장했습니다. 최신 내용을 다시 불러온 뒤 저장하세요.",
+      "limitExceeded": "저장 가능한 BuildSpec 수({{limit}}개)를 초과했습니다. 사용하지 않는 항목을 먼저 삭제하세요.",
+      "notFound": "Saved BuildSpec을 찾을 수 없습니다.",
+      "copyOf": "{{name}} (복제본)"
+    }
   },
   "reports": {
     "page": {
       "eyebrow": "리포트",
       "title": "리포트",
-      "desc": "Builder evidence를 기준으로 Report를 만들고, Kubi 해석을 참고 블록으로 덧붙여 편집·저장·내보냅니다.",
+      "desc": "Builder evidence를 기준으로 Report를 만들고, Ask KPubData 해석을 참고 블록으로 덧붙여 편집·저장·내보냅니다.",
       "newTitle": "새 Report 만들기",
       "newDesc": "선택한 dataset/run이 이 Report의 기준으로 고정됩니다. 새 Run이 생겨도 이 Report는 자동으로 바뀌지 않습니다.",
       "createCta": "Report 만들기",
@@ -1017,11 +1368,14 @@
       "savedTitle": "저장된 Report",
       "savedEmpty": "저장된 Report가 없습니다",
       "savedEmptyDesc": "위에서 dataset/run을 선택해 첫 Report를 만들어보세요.",
-      "kubiPending": "Kubi 참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"Kubi 참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
+      "kubiPending": "참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
       "deleteConfirm": "이 Report를 삭제하시겠습니까? 되돌릴 수 없습니다.",
       "titleTemplate": "{{dataset}} · {{run}} 보고서",
       "untitled": "제목 없음",
-      "lastModified": "최근 수정 {{time}}"
+      "lastModified": "최근 수정 {{time}}",
+      "pendingNotes": "참고 노트 {{count}}건이 대기 중입니다. Report를 열어 \"참고 노트 대기열\"에서 추가하거나 무시할 수 있습니다.",
+      "delete": "삭제",
+      "createdTitle": "{{dataset}} · {{run}} 보고서"
     },
     "errors": {
       "datasets": "데이터셋 목록을 불러오지 못했습니다.",
@@ -1034,6 +1388,277 @@
       "rename": "이름변경",
       "duplicate": "복제",
       "delete": "삭제"
+    },
+    "narrative": {
+      "unavailable": "확인할 수 없습니다.",
+      "stage": {
+        "notRun": "미실행",
+        "unavailable": "확인 불가"
+      },
+      "overview": {
+        "loadFailed": "`{{datasetId}}` 정보를 불러오지 못해 개요를 요약할 수 없습니다({{reason}}).",
+        "basis": "이 보고서는 `{{title}}`의 Build `{{runId}}`를 기준으로 작성되었습니다.",
+        "providers": "데이터는 {{providers}} Provider의 Source로 구성되어 있습니다.",
+        "runStatus": "해당 Run은 {{status}} 상태로 종료되었습니다.",
+        "runStatusUnknown": "해당 Run의 종료 상태는 확인할 수 없습니다."
+      },
+      "pipeline": {
+        "flow": "**{{sourceKey}}**\n\nSource → Bronze {{bronze}} → Silver {{silver}} → Gold {{gold}}",
+        "allCompleted": "`{{sourceKey}}`는 Bronze → Silver → Gold까지 모두 정상 처리되었습니다.",
+        "failedAndSkipped": "`{{sourceKey}}`는 {{failedStage}} 단계에서 실패하여 {{skippedStage}} 단계가 실행되지 않았습니다.",
+        "failed": "`{{sourceKey}}`는 {{stage}} 단계에서 실패했습니다.",
+        "notRun": "`{{sourceKey}}`는 {{stage}} 단계가 아직 실행되지 않았습니다.",
+        "stageUnknown": "`{{sourceKey}}`는 {{stage}} 단계 상태를 확인할 수 없습니다.",
+        "unknown": "`{{sourceKey}}`의 처리 상태를 확인할 수 없습니다.",
+        "noSources": "처리 흐름 정보를 확인할 수 없습니다."
+      },
+      "quality": {
+        "loadFailed": "Quality 결과를 불러오지 못해 요약할 수 없습니다({{reason}}).",
+        "notProvided": "이 run은 Quality 평가가 제공되지 않습니다(availability=unavailable). PASS로 간주하지 않습니다.",
+        "noneEvaluated": "기준 Run에서는 평가된 품질 규칙이 없습니다(evaluated_checks=0).",
+        "header": "기준 Run에서는 총 {{total}}건의 품질 검사가 평가되었습니다. 이 중 {{breakdown}}입니다.",
+        "countPass": "{{count}}건은 PASS",
+        "countWarn": "{{count}}건은 WARN",
+        "countFail": "{{count}}건은 FAIL",
+        "targetColumn": "대상 컬럼",
+        "missingRatioPass": "{{source}}의 {{column}} 결측률은 {{actual}}로 기준값 {{threshold}} 이내여서 {{verb}}했습니다.",
+        "missingRatioFail": "{{source}}의 {{column}} 결측률은 {{actual}}로 기준값 {{threshold}} 초과해 {{verb}}했습니다.",
+        "requiredColumnPass": "{{source}}에서 필수 컬럼 {{column}}이 확인되어 {{verb}}했습니다.",
+        "requiredColumnFail": "{{source}}에서는 필수 컬럼 {{column}}이 확인되지 않아 {{verb}}했습니다.{{detail}}",
+        "minRowsPass": "{{source}}의 행 수는 {{actual}}로 기준값 {{threshold}} 이상이어서 {{verb}}했습니다.",
+        "minRowsFail": "{{source}}의 행 수는 {{actual}}로 기준값 {{threshold}} 미달해 {{verb}}했습니다.",
+        "duplicatePass": "{{source}}의 중복률은 {{actual}}로 기준값 {{threshold}} 이내여서 {{verb}}했습니다.",
+        "duplicateFail": "{{source}}의 중복률은 {{actual}}로 기준값 {{threshold}} 초과해 {{verb}}했습니다.",
+        "unknownRule": "{{source}}의 `{{rule}}`{{column}} 결과는 {{verb}}입니다(실제값 {{actual}}, 기준값 {{threshold}}).{{detail}}",
+        "drift": "Schema drift: {{findings}}"
+      },
+      "schema": {
+        "silver": "{{source}} Silver 결과에서는 {{columns}} 컬럼이 확인되었습니다.",
+        "goldNamesOnly": "{{source}}는 Silver schema를 확인할 수 없어 Gold 결과의 컬럼 이름만 확인됩니다: {{columns}}.",
+        "unknown": "{{source}}는 해당 단계의 Schema를 확인할 수 없습니다.{{reason}}",
+        "noSources": "Schema 정보를 불러올 source가 없어 확인할 수 없습니다."
+      },
+      "dataSummary": {
+        "unavailable": "Row count 정보를 확인할 수 없습니다.({{reason}})",
+        "total": "확인 가능한 Source의 총 행 수는 {{total}}건입니다.",
+        "noBreakdown": "source별 세부 정보는 확인할 수 없습니다.",
+        "sourceRows": "`{{key}}` {{count}}건",
+        "composedOf": "{{bySource}}으로 구성됩니다."
+      },
+      "output": {
+        "unavailableTitle": "Output 확인 불가",
+        "none": "이 run에 대해 보고된 output 파일이 없습니다.",
+        "list": "이 run에는 총 {{count}}개의 output 파일이 있습니다: {{files}}."
+      }
+    },
+    "sections": {
+      "unavailable": "확인할 수 없음",
+      "overview": {
+        "loadFailed": "Dataset 정보를 불러오지 못했습니다: {{reason}}",
+        "colItem": "항목",
+        "colValue": "값",
+        "rowDataset": "Dataset",
+        "rowProviders": "Provider(s)",
+        "rowSources": "Sources",
+        "rowRun": "기준 Run",
+        "rowRunStatus": "Run 상태",
+        "rowRunTimes": "Run 시작 / 종료",
+        "rowSpecDigest": "BuildSpec digest",
+        "rowUpdatedAt": "Dataset 최종 갱신"
+      },
+      "pipeline": {
+        "noSources": "이 run에 대한 source가 없습니다.",
+        "fallbackNote": "run 단위 stage 상세 조회에 실패해 dataset 요약 기준으로 표시합니다({{reason}}).",
+        "loadFailed": "Pipeline 상태를 불러오지 못했습니다: {{reason}}"
+      },
+      "quality": {
+        "loadFailed": "Quality 결과를 불러오지 못했습니다: {{reason}}",
+        "notProvided": "이 run은 Quality 평가가 제공되지 않습니다(availability=unavailable). PASS로 간주하지 않습니다.",
+        "colResult": "결과",
+        "colActual": "실제값",
+        "colThreshold": "기준값",
+        "noneEvaluated": "평가된 규칙이 없습니다(evaluated_checks=0).",
+        "noDrift": "schema drift가 관찰되지 않았습니다.",
+        "driftTitle": "Schema drift"
+      },
+      "schema": {
+        "noSources": "Schema 정보를 불러올 source가 없습니다.",
+        "colColumn": "Column",
+        "colType": "Type",
+        "colNullable": "Nullable",
+        "colUnique": "Unique",
+        "goldNamesOnly": "(gold — column 이름만 제공, dtype 없음)"
+      },
+      "dataSummary": {
+        "loadFailed": "Row count 정보를 불러오지 못했습니다: {{reason}}",
+        "totalLabel": "Total row count",
+        "colRowCount": "Row count",
+        "noBreakdown": "source별 row count 정보가 없습니다."
+      },
+      "output": {
+        "loadFailed": "Output/Artifact 정보를 확인할 수 없습니다: {{reason}}",
+        "none": "이 run에 대해 보고된 output 파일이 없습니다."
+      }
+    },
+    "export": {
+      "status": {
+        "current": "CURRENT: 기준 run 확인됨, 최신",
+        "stale": "STALE: 기준 run은 유효하지만 더 새 run이 있습니다",
+        "orphan": "ORPHAN: 기준 run을 더 이상 찾을 수 없습니다",
+        "unavailable": "UNAVAILABLE: evidence를 다시 확인하지 못했습니다"
+      },
+      "meta": {
+        "createdAt": "생성 시각",
+        "evidenceFetchedAt": "Evidence 조회 시각",
+        "exportedAt": "내보내기 시각",
+        "evidenceStatus": "Evidence 상태",
+        "evidenceStatusShort": "evidence 상태"
+      },
+      "provenance": {
+        "kubi": "[AI 작성 - Ask KPubData]",
+        "user": "[사용자 작성]"
+      },
+      "tag": {
+        "ai": "AI 작성",
+        "user": "사용자 작성"
+      },
+      "detailHeading": "상세 근거",
+      "kubiHeading": "Ask KPubData 참고 분석",
+      "kubiOtherRun": "참고 분석 - 현재 Report와 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
+      "kubiOtherRunHtml": "참고 분석 - 다른 Run 기준 (dataset: {{dataset}}, run: {{run}})",
+      "reasonLabel": "판단 근거"
+    },
+    "block": {
+      "status": {
+        "partial": "일부만 확인됨",
+        "unavailable": "확인할 수 없음"
+      },
+      "section": {
+        "overview": "1. 데이터 개요",
+        "pipeline": "2. 처리 흐름",
+        "quality": "3. 품질 진단",
+        "schema": "4. 데이터 구조",
+        "data_summary": "5. 데이터 규모",
+        "output": "6. Output"
+      },
+      "showDetail": "상세 근거 보기",
+      "kubiTitle": "Ask KPubData 분석 · AI 작성",
+      "remove": "제거",
+      "edit": "편집",
+      "delete": "삭제",
+      "context": "기준 Dataset: {{dataset}} · 기준 Run: {{run}}",
+      "otherContext": "참고 분석 · 현재 Report의 기준 dataset/run과 다릅니다(자동으로 합치지 않음).",
+      "generatedAt": "생성 시각 {{at}}",
+      "reason": "판단 근거: {{reason}}",
+      "linkedEvidence": "연결된 Evidence: {{refs}}"
+    },
+    "kubiPanel": {
+      "preset": {
+        "comprehensive": {
+          "label": "보고서용 AI 분석 생성",
+          "question": "이 Report가 기준으로 하는 Dataset/Run을 종합적으로 분석해줘."
+        },
+        "quality": {
+          "label": "품질 문제 해석",
+          "question": "현재 확인된 Quality 이슈를 해석해줘."
+        },
+        "pipeline": {
+          "label": "Pipeline 실패 원인 분석",
+          "question": "이 Build의 Pipeline이 실패했다면 원인을 분석해줘."
+        },
+        "ideas": {
+          "label": "데이터 활용 아이디어",
+          "question": "이 데이터를 어떻게 활용할 수 있을지 아이디어를 제안해줘."
+        },
+        "caveats": {
+          "label": "주의사항·한계 작성",
+          "question": "이 데이터를 사용할 때 주의사항과 한계를 정리해줘."
+        }
+      },
+      "mockDisclaimer": "실제 AI 분석이 아닌 mock 응답입니다.",
+      "reason": "보고서용 AI 분석",
+      "reasonDemo": "[DEMO] 보고서용 분석(mock 응답)",
+      "chatTitle": "직접 질문하기 · 현재 Report 기준({{dataset}} · {{run}})",
+      "close": "닫기",
+      "intro": "현재 Report의 Dataset/Run과 Builder Evidence를 기준으로 보고서에 추가할 AI 해석을 생성할 수 있습니다.",
+      "needsKey": "Ask KPubData 분석에는 개인 LLM API Key가 필요합니다.",
+      "openAiSettings": "AI 설정 열기",
+      "generateDemo": "데모 보고서 분석 생성",
+      "askDirectly": "직접 질문하기",
+      "aiSettings": "AI 설정",
+      "generating": "생성 중…",
+      "cancel": "취소",
+      "error": "분석을 생성하지 못했습니다.",
+      "evidence": "근거",
+      "addToReport": "보고서에 추가",
+      "regenerate": "다시 생성"
+    },
+    "storage": {
+      "noStorage": "이 브라우저에서 로컬 저장소를 사용할 수 없습니다(프라이빗 모드 등).",
+      "serializeFailed": "Report 내용을 저장 형식으로 변환하지 못했습니다.",
+      "quotaExceeded": "저장 공간이 부족합니다. 오래된 Report를 삭제한 뒤 다시 시도하세요.",
+      "saveFailed": "Report를 저장하지 못했습니다.",
+      "staleWrite": "다른 탭 또는 창에서 이 Report을 먼저 저장했습니다. 최신 내용을 다시 불러온 뒤 저장하세요.",
+      "limitExceeded": "저장 가능한 Report 수({{limit}}개)를 초과했습니다. 사용하지 않는 Report를 먼저 삭제하세요.",
+      "notFound": "Report를 찾을 수 없습니다.",
+      "copyOf": "{{name}} (복제본)"
+    },
+    "evidenceBanner": {
+      "rechecking": "기준 evidence를 다시 확인하는 중…",
+      "recheck": "다시 확인",
+      "newFromLatest": "최신 Run으로 새 Report 만들기",
+      "status": {
+        "current": "CURRENT — 기준 run이 최신 상태입니다.",
+        "stale": "STALE — 기준 run은 유효하지만 더 새로운 Run이 있습니다.",
+        "orphan": "ORPHAN — 기준 run을 더 이상 찾을 수 없습니다(삭제되었거나 접근 불가).",
+        "unavailable": "UNAVAILABLE — evidence를 다시 확인하지 못했습니다."
+      }
+    },
+    "userEditor": {
+      "heading": "제목",
+      "headingPlaceholder": "예: 활용 아이디어",
+      "body": "내용(Markdown)",
+      "bodyPlaceholder": "자유롭게 서술하세요. **굵게**, - 목록, [링크](https://...) 를 지원합니다.",
+      "cancel": "취소",
+      "save": "저장",
+      "untitled": "제목 없음"
+    },
+    "kubiInbox": {
+      "title": "대기 중인 참고 노트",
+      "emptyTitle": "대기 중인 참고 노트가 없습니다",
+      "emptyDesc": "Ask KPubData 대화에서 '보고서에 추가' action을 승인하면 여기에 쌓입니다.",
+      "noContext": "문맥 없음",
+      "sameContext": "현재 Report와 같은 dataset/run 기준",
+      "otherContext": "현재 Report와 다른 dataset/run 기준 · 참고 분석으로 추가됨",
+      "add": "이 Report에 추가",
+      "dismiss": "무시"
+    },
+    "evidence": {
+      "lookupFailed": "조회에 실패했습니다.",
+      "schemaBothFailed": "silver/gold schema 조회에 모두 실패했습니다.",
+      "schemaNotReached": "이 source는 아직 schema를 만들 수 있는 stage까지 진행되지 않았습니다.",
+      "mockNoOutput": "mock/demo 모드에서는 이 run에 실제로 대응하는 output evidence를 제공하지 않습니다.",
+      "baseRunMissing": "이 dataset의 run 목록에서 기준 run을 찾을 수 없습니다(삭제되었거나 접근할 수 없음)."
+    },
+    "staleness": {
+      "lookupFailed": "조회에 실패했습니다.",
+      "runGone": "기준 run이 더 이상 이 dataset의 run 목록에 없습니다(삭제되었거나 접근할 수 없음).",
+      "runsReloadFailed": "run 목록을 다시 불러오지 못했습니다: {{reason}}",
+      "newerRun": "새로운 Run(`{{runId}}`)이 있습니다."
+    },
+    "contextSidebar": {
+      "evidenceFetchedAt": "Evidence 조회 시각",
+      "evaluatedRules": "평가된 규칙 수",
+      "kubiBlocks": "Ask KPubData 분석 블록",
+      "pendingNotes": "대기 중인 참고 노트",
+      "countUnit": "{{count}}개",
+      "noteUnit": "{{count}}건",
+      "none": "없음"
+    },
+    "provenance": {
+      "builder": "Builder Evidence",
+      "kubi": "AI 작성 · Ask KPubData",
+      "user": "사용자 작성"
     }
   },
   "artifacts": {
@@ -1069,6 +1694,467 @@
     },
     "meta": {
       "note": "이 실행의 manifest에는 일부 메타데이터 필드(레코드 수·스키마·출처 등)가"
+    },
+    "mockNoDownload": "Mock 모드에서는 산출물 파일 다운로드를 시뮬레이션하지 않습니다. 실연동 모드에서 확인하세요."
+  },
+  "glossary": {
+    "dataset": "KPubData에서 하나의 단위로 관리하는 빌드 결과 데이터입니다.",
+    "build": "선택한 source와 설정에 따라 데이터를 수집·처리하는 작업입니다.",
+    "run": "Build가 실제로 한 번 실행된 기록입니다. 같은 Dataset에도 여러 Run이 생길 수 있습니다.",
+    "buildSpec": "어떤 source를 가져오고 어떻게 처리할지 Builder에 전달하는 이식 가능한 실행 명세입니다.",
+    "provider": "Builder가 연결할 수 있는 외부 데이터 공급처 또는 API입니다.",
+    "credential": "Provider에서 데이터를 가져올 때 필요한 API Key 등의 인증 정보입니다.",
+    "preview": "Build 전에 가져올 데이터의 일부와 검증 결과를 미리 확인하는 기능입니다.",
+    "bronze": "수집한 원본 데이터를 가능한 그대로 보존하는 단계입니다.",
+    "silver": "Bronze 데이터를 정제·표준화해 분석과 품질 확인에 사용할 수 있게 만든 단계입니다.",
+    "gold": "특정 사용 목적에 맞게 가공한 최종 데이터 단계입니다.",
+    "quality": "Builder가 실제로 평가한 데이터 품질 규칙의 결과입니다.",
+    "schemaDrift": "이전과 비교해 컬럼 추가·삭제·타입 변경 등 데이터 구조가 달라진 상태입니다.",
+    "evidence": "Ask KPubData 또는 Report가 참고한 Builder의 Dataset·Run·Quality 등의 근거입니다.",
+    "context": "Ask KPubData 가 현재 질문을 해석할 때 사용하는 Dataset·Run·Source·Stage 범위입니다.",
+    "generatedSql": "Ask KPubData 가 선택한 Silver 또는 Gold schema를 바탕으로 생성한 조회 SQL입니다.",
+    "artifact": "Build 실행으로 생성된 데이터 파일 또는 결과물입니다.",
+    "manifest": "Run과 생성된 산출물에 대한 메타데이터 기록입니다.",
+    "readiness": "Publish 전에 필요한 조건을 Builder가 확인한 결과입니다.",
+    "helpLabel": "{{term}} 용어 도움말"
+  },
+  "legend": {
+    "stageLabel": "데이터 단계 설명",
+    "qualityLabel": "Quality 상태 설명",
+    "quality": {
+      "pass": "평가한 규칙에서 문제가 발견되지 않음",
+      "warn": "결과는 존재하지만 확인이 필요한 품질 문제가 있음",
+      "fail": "품질 규칙을 충족하지 못한 문제가 있음",
+      "na": "평가값이 없거나 적용되지 않음. PASS가 아님",
+      "unavailable": "Builder가 결과를 제공할 수 없는 상태. FAIL과 다름"
+    }
+  },
+  "discover": {
+    "page": {
+      "title": "데이터 탐색",
+      "desc": "Builder 카탈로그에서 provider와 데이터셋을 정확 검색하고, 선택한 데이터로 바로 빌드를 시작하세요."
+    },
+    "errors": {
+      "catalog": "카탈로그를 불러오지 못했습니다.",
+      "catalogTitle": "카탈로그를 불러오지 못했습니다"
+    },
+    "searchLabel": "데이터셋명·기관 검색",
+    "allProviders": "Provider 전체 ({{count}}개)",
+    "providerOption": "{{label}} ({{count}}개)",
+    "serviceKeyOnly": "서비스 키 필요만 ({{count}}개)",
+    "resetFilters": "필터 초기화",
+    "empty": {
+      "title": "Builder 카탈로그가 비어 있습니다",
+      "desc": "등록된 provider/dataset이 없습니다. Builder 설정을 확인해 주세요."
+    },
+    "noMatch": {
+      "title": "조건에 맞는 데이터셋이 없습니다",
+      "desc": "검색어나 필터를 변경해 보세요."
+    },
+    "serviceKeyBadge": "서비스 키 필요",
+    "startWith": "이 데이터로 시작하기",
+    "shownCount": "{{count}}개 표시"
+  },
+  "catalog": {
+    "page": {
+      "desc": "정확 검색과 필터로 데이터셋을 찾습니다."
+    },
+    "errors": {
+      "list": "데이터셋 목록을 불러오지 못했습니다.",
+      "listTitle": "데이터셋 목록을 불러오지 못했습니다"
+    },
+    "searchLabel": "Dataset / Provider 검색",
+    "searchPlaceholder": "데이터셋명·기관 검색",
+    "allProviders": "Provider 전체",
+    "stageLabel": "Stage 상태",
+    "allStages": "Stage 전체",
+    "allValidations": "Validation 전체",
+    "noMatch": {
+      "title": "조건에 맞는 데이터셋이 없습니다",
+      "desc": "검색어나 필터를 변경해 보세요."
+    },
+    "openDetail": "{{title}} 상세 열기",
+    "qualityError": "Quality 조회 실패",
+    "shownCount": "{{count}}개 표시",
+    "resetFilters": "필터 초기화"
+  },
+  "monitoring": {
+    "error": {
+      "title": "데이터를 가져올 수 없습니다",
+      "retry": "잠시 후 다시 시도해 주세요."
+    },
+    "api": {
+      "unavailable": "사용 불가",
+      "degraded": "성능 저하",
+      "healthy": "정상",
+      "latencyUnavailable": "Latency: 측정 불가",
+      "noSamples": "· 표본 없음"
+    },
+    "measure": {
+      "unavailable": "측정 불가",
+      "measuring": "측정 중"
+    },
+    "queue": {
+      "waiting": "대기 중",
+      "running": "실행 중",
+      "total": "전체"
+    },
+    "workers": {
+      "active": "활성",
+      "capacity": "용량",
+      "utilization": "활용률"
+    },
+    "store": {
+      "available": "정상",
+      "partial": "부분 가용",
+      "unavailable": "사용 불가",
+      "lastWrite": "마지막 쓰기: {{at}}",
+      "lastWriteNone": "마지막 쓰기: 없음"
+    },
+    "builds": {
+      "emptyTitle": "빌드 기록이 없습니다",
+      "emptyDesc": "아직 빌드가 실행되지 않았습니다.",
+      "success": "성공",
+      "failed": "실패",
+      "cancelled": "취소",
+      "excluded": "일부 run이 권한 제한으로 집계에서 제외되었습니다 (제외 {{count}}건).",
+      "noBucketTitle": "데이터가 없습니다",
+      "noBucketDesc": "시간대별 빌드 통계를 표시할 데이터가 없습니다.",
+      "bucketTitle": "시간대별 빌드 통계",
+      "bucketTooltip": "{{at}}: 성공 {{success}}, 실패 {{failed}}, 취소 {{cancelled}}"
+    },
+    "recent": {
+      "emptyTitle": "최근 실행 이력이 없습니다",
+      "title": "최근 빌드 실행",
+      "desc": "최근 실행된 빌드들의 상태와 결과를 확인할 수 있습니다.",
+      "seconds": "{{seconds}}초",
+      "errorTitle": "데이터를 가져올 수 없습니다",
+      "errorRetry": "잠시 후 다시 시도해 주세요.",
+      "emptyDesc": "아직 빌드가 실행되지 않았습니다.",
+      "emptyCta": "새 빌드 만들기",
+      "view": "보기"
+    },
+    "runStatus": {
+      "succeeded": "성공",
+      "failed": "실패",
+      "running": "실행 중",
+      "cancelled": "취소됨",
+      "queued": "대기 중"
+    }
+  },
+  "publish": {
+    "errors": {
+      "incomplete": "Builder에서 게시 요청을 완료하지 못했습니다.",
+      "invalidRequest": "게시 요청 형식이 Builder 계약과 일치하지 않습니다.",
+      "destinationRequired": "Hugging Face destination을 입력하세요.",
+      "destinationFormat": "destination은 owner/dataset 형식이어야 합니다.",
+      "readinessNotFound": "요청한 Run의 게시 준비 상태를 찾을 수 없습니다.",
+      "runNotFound": "요청한 Run을 찾을 수 없습니다.",
+      "notReady": "게시 준비가 되지 않은 Run입니다.",
+      "unknown": "게시 요청을 완료하지 못했습니다.",
+      "inProgress": "같은 게시 작업이 이미 진행 중입니다.",
+      "retryBlocked": "이전 게시 결과를 확인할 수 없어 자동 재시도가 차단되었습니다. Builder 운영자에게 상태 확인을 요청하세요.",
+      "visibilityConflict": "같은 Run과 destination이 다른 공개 설정으로 이미 게시되었습니다.",
+      "externalFailed": "외부 게시 서비스에서 작업을 완료하지 못했습니다. 결과가 불명확할 수 있으므로 자동 재시도하지 않습니다.",
+      "readinessChanged": "게시 직전 Builder 재검증에서 준비 상태가 변경되었습니다. readiness를 다시 확인하세요.",
+      "forbidden": "이 Run을 게시할 권한이 없습니다.",
+      "notFound": "선택한 Run을 Builder에서 찾을 수 없습니다.",
+      "network": "Builder 응답을 받지 못했습니다. 원격 게시 결과는 확인되지 않았습니다.",
+      "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다."
+    }
+  },
+  "assistant": {
+    "generate": {
+      "unknownProvider": "sources[{{index}}].provider: 카탈로그에 없는 provider '{{provider}}'입니다.",
+      "unknownDataset": "sources[{{index}}].dataset: provider '{{provider}}'에 없는 dataset '{{dataset}}'입니다.",
+      "yamlParse": "YAML을 파싱하지 못했습니다.",
+      "mockDisabled": "mock 모드에서는 생성 기능이 비활성화됩니다 (ST-A8, #211)",
+      "noValidate": "Builder /validate 연결이 없어 BuildSpec 생성을 중단했습니다.",
+      "noCatalog": "카탈로그를 조회할 수 없어 BuildSpec 생성을 중단했습니다.",
+      "emptyOutput": "빈 출력이 반환되었습니다.",
+      "restoreFailed": "시크릿 복원에 실패했습니다.",
+      "validateRequestFailed": "Builder 검증 요청에 실패했습니다.",
+      "validationFailed": "검증 실패"
+    },
+    "provider": {
+      "auth": "LLM API 인증에 실패했습니다. API Key를 다시 확인하세요.",
+      "rateLimit": "LLM API 요청 한도를 초과했습니다(rate limit). 잠시 후 다시 시도하세요.",
+      "serverError": "LLM 서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도하세요.",
+      "callFailed": "LLM API 호출에 실패했습니다.",
+      "callFailedStatus": "LLM API 호출에 실패했습니다. (status {{status}})",
+      "unsafeBaseUrl": "LLM base URL이 안전하지 않습니다: {{reason}}"
+    },
+    "scrub": {
+      "unknownPlaceholder": "알 수 없는 시크릿 플레이스홀더가 포함되어 있습니다."
+    },
+    "baseUrl": {
+      "invalid": "올바른 URL 형식이 아닙니다.",
+      "httpsOnly": "API Key 노출을 막기 위해 HTTPS 주소만 허용됩니다."
+    },
+    "config": {
+      "persistWarning": "LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있습니다. 신뢰하지 않는 확장 프로그램이 있다면 저장하지 마세요."
+    }
+  },
+  "status": {
+    "new": "새 초안",
+    "draft": "초안",
+    "dirty": "수정됨",
+    "validated": "검증됨",
+    "invalid": "오류 있음",
+    "queued": "대기 중",
+    "running": "실행 중",
+    "cancelling": "취소 중",
+    "succeeded": "성공",
+    "failed": "실패",
+    "cancelled": "취소됨",
+    "publishing": "게시 중",
+    "published": "게시됨"
+  },
+  "errorBoundary": {
+    "global": {
+      "title": "문제가 발생했습니다",
+      "desc": "예기치 못한 오류로 화면을 표시할 수 없습니다. 페이지를 새로고침하면 대부분 해결됩니다. 문제가 계속되면 잠시 후 다시 시도해주세요.",
+      "reload": "새로고침"
+    },
+    "feature": {
+      "title": "{{feature}} 화면에 문제가 발생했습니다",
+      "desc": "이 영역만 일시적으로 표시할 수 없습니다. 사이드바와 다른 메뉴는 정상적으로 사용할 수 있어요. 잠시 후 다시 시도해주세요.",
+      "retry": "다시 시도"
+    }
+  },
+  "router": {
+    "features": {
+      "AddData": "Add Data",
+      "DatasetCatalog": "Dataset Catalog",
+      "Discover": "Discover",
+      "Kubi": "Ask KPubData",
+      "Monitoring": "Monitoring",
+      "Provider": "Provider",
+      "Quality": "Quality",
+      "Reports": "Reports",
+      "Workspace": "Workspace",
+      "artifacts": "결과물",
+      "buildDetail": "빌드 상세",
+      "buildEdit": "빌드 편집",
+      "buildRun": "빌드 실행",
+      "builds": "빌드 목록",
+      "datasetDetail": "Dataset 상세",
+      "home": "홈",
+      "newBuild": "새 빌드 만들기",
+      "preview": "미리보기",
+      "publish": "게시",
+      "reportEditor": "Report 편집",
+      "settings": "설정",
+      "validate": "검증"
+    },
+    "loading": "화면을 불러오는 중입니다."
+  },
+  "onboarding": {
+    "skip": "건너뛰기",
+    "back": "이전",
+    "next": "다음",
+    "done": "완료",
+    "steps": {
+      "dashboard-builds": {
+        "title": "최근 Build 확인",
+        "copy": "최근 실행과 진행 상태를 확인하고 필요하면 Build 상세 화면으로 이동하세요."
+      },
+      "dashboard-overview": {
+        "title": "작업 현황 확인",
+        "copy": "현재 Dataset과 Build 실행 현황을 이 Dashboard에서 확인할 수 있습니다."
+      },
+      "dashboard-quality": {
+        "title": "품질 결과 확인",
+        "copy": "최근 Quality 경고를 확인하고 필요한 조치를 이어갈 수 있습니다."
+      },
+      "kubi-helper": {
+        "title": "막히면 Ask KPubData",
+        "copy": "Ask KPubData 는 현재 화면의 Dataset·Run·Stage와 Builder Evidence를 바탕으로 분석을 돕습니다."
+      },
+      "sidebar": {
+        "title": "작업 공간 둘러보기",
+        "copy": "왼쪽 메뉴에서 데이터 탐색, Build·Quality 확인, Ask KPubData 와 Provider 설정으로 이동할 수 있습니다."
+      },
+      "start-actions": {
+        "title": "여기서 시작하세요",
+        "copy": "카탈로그에서 데이터를 찾으려면 Discover, API·파일·URL을 직접 가져오려면 Add Data를 사용하세요."
+      },
+      "workflow": {
+        "title": "데이터가 이렇게 만들어집니다",
+        "copy": "데이터를 찾고 가져오기 설정을 준비한 뒤 Preview로 실제 데이터를 확인·검증하고 Build합니다. 이후 Quality 결과를 확인하고 활용할 수 있습니다."
+      }
+    }
+  },
+  "buildRun": {
+    "eyebrow": "실행",
+    "title": "{{id}} 실행",
+    "fallbackId": "빌드",
+    "desc": "Builds 목록/상세와 동일한 run 상태를 보여줍니다.",
+    "manageInDetail": "Build 상세에서 관리",
+    "status": "상태",
+    "unknownStatus": "상태 불명",
+    "liveUpdating": "실시간 갱신 중…",
+    "liveFailed": "실시간 상태 갱신 실패(일시적) — 마지막으로 확인된 상태를 유지합니다.",
+    "liveForbidden": "이 Run의 실시간 상태를 조회할 권한이 없습니다 — 마지막으로 확인된 상태를 대신 표시합니다.",
+    "detailHint": {
+      "title": "상세 진행은 Build 상세에서 확인하세요",
+      "desc": "이 화면은 Builds 목록/상세와 동일한 canonical run 상태만 보여줍니다. 단계별 진행(Bronze/Silver/Gold), 실행 이벤트 타임라인, 협조적 실행 취소는 Build 상세(/builds?run=...)에서 제공됩니다."
+    },
+    "openDetail": "Build 상세 보기",
+    "openArtifacts": "결과물 보기",
+    "editSpec": "스펙 수정"
+  },
+  "monitoringPage": {
+    "title": "시스템 모니터링",
+    "desc": "실행 이력과 시스템 리소스 상태를 실시간으로 확인합니다.",
+    "forbiddenTitle": "권한이 없습니다",
+    "forbiddenDesc": "모니터링 데이터를 조회하려면 로그인이 필요합니다.",
+    "lastUpdate": "마지막 업데이트: {{at}}",
+    "loading": "데이터 로드 중...",
+    "autoRefreshOn": "자동 새로고침 ON",
+    "autoRefreshOff": "자동 새로고침 OFF",
+    "refresh": "새로고침",
+    "degradedTitle": "시스템 상태 저하",
+    "degradedDesc": "일부 하위 시스템이 partial/unavailable 상태입니다. 각 카드의 상태 배지를 확인하세요."
+  },
+  "assistantChat": {
+    "llmFailed": "LLM 호출에 실패했습니다.",
+    "needsKey": "어시스턴트를 사용하려면 Settings에서 LLM API 키를 입력하세요. (BYOK)",
+    "title": "BuildSpec 어시스턴트",
+    "reset": "대화 초기화",
+    "hint": "스펙 오류 설명, 수정 제안, 데이터 소스 추천을 물어보세요.",
+    "placeholder": "질문을 입력하세요…",
+    "cancel": "취소",
+    "send": "전송"
+  },
+  "datasets": {
+    "stage": {
+      "noStageInfo": "stage 정보 없음",
+      "mixedWithFailure": "source별 진행 상태가 다르며 실패가 포함됨",
+      "stageFailed": "stage 실패",
+      "mixed": "source별 진행 상태가 다름",
+      "goldDone": "Gold 완료",
+      "silverDone": "Silver 완료",
+      "bronzeDone": "Bronze 완료",
+      "someNotRun": "실행되지 않은 stage가 있음",
+      "noStage": "사용 가능한 stage 없음"
+    },
+    "errors": {
+      "datasetNotFound": "요청한 데이터셋을 찾을 수 없습니다.",
+      "runsNotFound": "요청한 데이터셋의 실행 이력을 찾을 수 없습니다.",
+      "stagesNotFound": "요청한 실행의 stage 정보를 찾을 수 없습니다.",
+      "sourceStageNotFound": "요청한 source 또는 stage를 찾을 수 없습니다.",
+      "qualityNotFound": "요청한 실행의 quality 결과를 찾을 수 없습니다.",
+      "qualityHistoryNotFound": "요청한 데이터셋의 quality 이력을 찾을 수 없습니다.",
+      "qualityLoadFailed": "Quality 결과를 불러오지 못했습니다."
+    }
+  },
+  "validatePage": {
+    "eyebrow": "검증",
+    "title": "검증 결과",
+    "desc": "필요한 항목을 확인하고 어시스턴트에게 수정 제안을 물어보세요.",
+    "emptyTitle": "검증은 새 빌드 만들기 안에서 진행됩니다",
+    "emptyDesc": "필드별 오류와 수정 가이드는 New Build 마법사의 '검증·실행' 단계에서 바로 확인할 수 있습니다.",
+    "cta": "새 빌드 만들기"
+  },
+  "previewPage": {
+    "eyebrow": "미리보기",
+    "title": "데이터 미리보기",
+    "desc": "현재 설정으로 가져올 수 있는 샘플 데이터를 확인하는 단계입니다.",
+    "emptyTitle": "미리보기는 새 빌드 만들기 안에서 진행됩니다",
+    "emptyDesc": "샘플 행과 컬럼 스키마는 New Build 마법사의 ‘미리보기’ 단계에서 바로 확인할 수 있습니다.",
+    "cta": "새 빌드 만들기"
+  },
+  "artifactsPage": {
+    "eyebrow": "결과물",
+    "title": "생성된 결과물",
+    "desc": "결과물은 빌드 단위로 관리됩니다. 빌드를 선택하면 파일·manifest·다운로드를 볼 수 있습니다.",
+    "emptyTitle": "빌드를 선택하세요",
+    "emptyDesc": "빌드 목록에서 빌드를 연 뒤 ‘결과물’ 탭에서 파일과 manifest를 확인할 수 있습니다.",
+    "cta": "빌드 목록으로"
+  },
+  "buildArtifacts": {
+    "notProvided": "미제공",
+    "noExports": "출력 형식 없음",
+    "noSources": "소스 없음",
+    "partialManifest": "이 실행의 manifest에는 일부 메타데이터 필드(레코드 수·스키마·출처 등)가 포함되어 있지 않습니다. 파일 목록(outputs)은 그대로 사용할 수 있습니다."
+  },
+  "schemas": {
+    "uploadIdFormat": "올바른 upload_id 형식이 아닙니다.",
+    "uploadRequired": "업로드한 파일이 필요합니다.",
+    "formatRequired": "파일 포맷을 선택해주세요.",
+    "endpointRequired": "Endpoint를 입력해주세요.",
+    "httpsOnly": "https:// 로 시작하는 URL만 허용됩니다.",
+    "urlFormats": "URL 소스는 csv/json/jsonl 포맷만 지원합니다."
+  },
+  "preview": {
+    "unknownSourceError": "원인을 알 수 없는 소스 오류",
+    "allSourcesFailed": "모든 미리보기 소스가 실패했습니다: {{failures}}",
+    "schemaDraft": {
+      "zeroRows": "행이 0건이라 required/키 후보 판정이 무의미하다",
+      "scopeNote": "required/키 후보 판정은 현재 조회 범위 기준이다"
+    }
+  },
+  "runs": {
+    "errors": {
+      "missingId": "빌드 ID가 없습니다.",
+      "notFound": "빌드를 찾을 수 없습니다: {{buildId}}",
+      "notFoundNoSpec": "빌드를 찾을 수 없습니다: {{buildId}}. 이 실행의 BuildSpec snapshot이 없고(legacy) 로컬에 보관된 스펙도 없습니다.",
+      "statusUnknown": "빌드 상태를 확인할 수 없습니다: {{buildId}}. Builder 이력 목록과 manifest 어디에서도 이 실행의 최종 상태를 찾지 못했습니다.",
+      "loadFailed": "빌드 정보를 불러오지 못했습니다.",
+      "pollFailed": "run 상태를 갱신하지 못했습니다.",
+      "eventsFailed": "Run event timeline을 불러오지 못했습니다."
+    },
+    "timeline": {
+      "wholeRun": "run 전체",
+      "empty": "기록된 event가 없습니다.",
+      "time": "시간",
+      "event": "Event / 상태",
+      "lastOk": "마지막 정상"
+    },
+    "build": {
+      "jobFailed": "빌드 잡이 실패했습니다.",
+      "someSourcesFailed": "일부 소스 빌드가 실패했습니다.",
+      "runFailed": "빌드 실행에 실패했습니다."
+    },
+    "mock": {
+      "noSpecSnapshot": "Mock 모드에서는 BuildSpec snapshot을 시뮬레이션하지 않습니다. 실연동 모드에서 확인하세요.",
+      "noRunEvents": "Mock 모드에서는 structured run event를 시뮬레이션하지 않습니다. 실연동 모드에서 확인하세요."
+    }
+  },
+  "specDiff": {
+    "added": "추가",
+    "removed": "삭제",
+    "changed": "변경",
+    "noDiff": "두 스펙에 차이가 없습니다"
+  },
+  "buildSpec": {
+    "params": {
+      "finiteOnly": "파라미터 JSON에는 유한한 number와 JSON 값만 사용할 수 있습니다.",
+      "invalidJson": "파라미터가 올바른 JSON이 아닙니다. 형식을 확인하세요.",
+      "mustBeObject": "파라미터는 JSON 객체여야 합니다. 예: {\"region\": \"seoul\"}"
+    },
+    "yaml": {
+      "parseFailed": "YAML 구문을 파싱하지 못했습니다.",
+      "invalidShape": "BuildSpec 구조가 올바르지 않습니다: {{issues}}"
+    }
+  },
+  "errorState": {
+    "title": "문제가 발생했습니다",
+    "retry": "다시 시도"
+  },
+  "placeholder": {
+    "notReady": "아직 준비 중인 화면입니다"
+  },
+  "helpTooltip": {
+    "label": "도움말"
+  },
+  "formField": {
+    "required": "(필수)"
+  },
+  "config": {
+    "oidc": {
+      "issuerInvalid": "VITE_OIDC_ISSUER 형식이 올바르지 않습니다: {{issuer}}"
     }
   }
 }

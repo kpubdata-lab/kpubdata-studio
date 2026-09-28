@@ -1,17 +1,18 @@
 /**
- * 로그인 화면 (/login, #263; OIDC 연동에서 실제 Keycloak 로그인 진입점 추가).
+ * Login screen (/login, #263; added as real Keycloak login entry point in OIDC integration).
  *
- * 실제 IdP는 kpubdata-builder ADR 0015가 self-hosted Keycloak + Authorization Code +
- * PKCE(S256)로 확정했다. 이 화면은 환경에 따라 분기한다:
- * - mock/demo 환경(`!isRealBuilderEnabled()`): 기존 mockAuthProvider 이메일/비밀번호
- *   폼을 그대로 유지한다(dev/demo 전용).
- * - 실연동 + OIDC 활성: Keycloak 로그인 리다이렉트 버튼만 제공한다. 이메일/비밀번호,
- *   비밀번호 재설정, 이메일 인증은 모두 Keycloak 책임이므로 Studio는 입력 폼을 두지 않는다.
- * - 실연동 + OIDC 미구성/오류: 안내만 보여준다 — 가짜 redirect/token flow를 만들지 않는다.
+ * Real IdP: kpubdata-builder ADR 0015 confirmed self-hosted Keycloak + Authorization Code +
+ * PKCE (S256). This screen branches by environment:
+ * - Mock/demo environment (`!isRealBuilderEnabled()`): keep existing mockAuthProvider email/password
+ *   form (dev/demo only).
+ * - Real connection + OIDC enabled: provide only Keycloak login redirect button. Email/password,
+ *   password reset, email verification are all Keycloak's responsibility, so Studio has no input form.
+ * - Real connection + OIDC not configured/error: display guidance only — don't fabricate fake redirect/token flow.
  *
- * 기존 Google 로그인 플로우(#187, GoogleLoginButton/gis.ts)는 건드리지 않는다.
+ * Google login delegates to Keycloak identity broker (`keycloakLogin(returnTo, "google")`) —
+ * Studio never loads Google SDK directly or sends Google tokens to Builder.
  */
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -27,7 +28,7 @@ import { Button, Card, DemoBadge, ErrorMessage, FormField, TextInput } from "@/s
 const darkLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
 const lightLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_light.svg", import.meta.url).href;
 
-/** Auth 화면에 표시하는 짧은 제품 소개. */
+/** Brief product introduction shown on auth screen. */
 function BrandPanel() {
   const { t } = useTranslation();
   return (
@@ -84,7 +85,7 @@ export function LoginPage() {
   const oidc = getOidcConfig();
   const returnTo = getSafeReturnTo(new URLSearchParams(location.search).get("returnTo"));
 
-  // 이미 Keycloak 세션이 확인되면 앱으로 돌려보낸다(로그인 화면에 머물지 않게).
+    // If Keycloak session already confirmed, return to app (don't stay on login screen).
   useEffect(() => {
     if (!demoMode && oidcStatus === "authenticated") {
       navigate(returnTo, { replace: true });
@@ -184,19 +185,19 @@ export function LoginPage() {
             </div>
           ) : oidc.status === "error" ? (
             <div className="mt-4 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">OIDC 인증 설정에 문제가 있습니다.</p>
+              <p className="font-medium text-foreground">{t("auth.oidc.errorTitle")}</p>
               <p className="mt-2">
-                이 환경은 실제 Builder에 연결되어 있지만 OIDC 설정(<code>VITE_OIDC_ISSUER</code> /{" "}
-                <code>VITE_OIDC_CLIENT_ID</code>)이 올바르지 않습니다. 관리자에게 문의하세요.
+                <Trans
+                  i18nKey="auth.oidc.errorDesc"
+                  components={{ code: <code /> }}
+                />
               </p>
             </div>
           ) : (
             <div className="mt-4 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">OIDC 인증이 아직 구성되지 않았습니다.</p>
+              <p className="font-medium text-foreground">{t("auth.oidc.missingTitle")}</p>
               <p className="mt-2">
-                이 환경은 실제 Builder에 연결되어 있지만, 사람 사용자 로그인을 위한 OIDC IdP(Keycloak)
-                연동이 아직 준비되지 않았습니다. 관리자에게 문의하거나 연동이 완료된 이후 다시
-                시도해주세요.
+                {t("auth.oidc.missingDesc")}
               </p>
             </div>
           )}

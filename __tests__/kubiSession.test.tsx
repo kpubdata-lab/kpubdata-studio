@@ -305,6 +305,11 @@ describe("useKubiSession — Generated SQL execution via Builder /query (#256, b
 
   async function askForSilverSql() {
     configureKey();
+    // ask()는 real 모드에서 evidence 조회로 Builder를 부른다. 스텁을 나중에 깔면 그
+    // 호출들이 진짜 fetch로 나가 실패하고, builderApi의 지수 백오프(500ms+1000ms)를
+    // 요청마다 통째로 기다린다 — 이 파일이 느렸던 이유다(#376). 먼저 깔아 결과를
+    // 결정적으로 만든다. 여전히 실패 응답이므로 grounding 결과는 달라지지 않는다.
+    fetchStub(() => mockResponse(404, { error: "not mocked in this test" }));
     mockStream(() =>
       jsonText({
         answer: "Silver 데이터를 조회하는 쿼리입니다.",
@@ -364,7 +369,7 @@ describe("useKubiSession — Generated SQL execution via Builder /query (#256, b
   });
 });
 
-describe("useKubiSession — askDemo (#256 review, mock mode Kubi 데모)", () => {
+describe("useKubiSession — askDemo (#256 review, mock mode Ask KPubData 데모)", () => {
   it("works without any API key configured and never calls the LLM provider", async () => {
     vi.mocked(createProvider).mockClear();
     const { result } = renderHook(() => useKubiSession(), {
@@ -490,7 +495,7 @@ describe("useKubiSession — PATCH_BUILDSPEC diff + validate path (#256 리뷰 �
             type: "PATCH_BUILDSPEC",
             runId: "air-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "kubi-updated" }],
-            reason: "Kubi 분석 참고",
+            reason: "이 문제 설명 보기 참고",
           },
         ],
       }),

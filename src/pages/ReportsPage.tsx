@@ -1,9 +1,9 @@
 /**
- * Reports 목록/생성 화면 (`/reports`, #258).
+ * Reports list/create screen (`/reports`, #258).
  *
- * 저장된 Report Draft 목록을 관리(열기/이름변경/복제/삭제)하고, 기준 dataset/run을 골라
- * Builder evidence 기반 deterministic Report를 새로 만든다. 실제 편집/블록 구성은
- * `/reports/:reportId`(`ReportEditorPage`)에서 이어진다.
+ * Manage saved Report Draft list (open/rename/duplicate/delete), select reference dataset/run,
+ * create deterministic Report based on Builder evidence. Actual editing/block composition
+ * continues at `/reports/:reportId` (`ReportEditorPage`).
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -103,7 +103,7 @@ export function ReportsPage() {
       const evidenceRefs = buildEvidenceRefs(evidence);
       const datasetTitle = evidence.dataset.ok ? evidence.dataset.value.title : selectedDatasetId;
       const { report, result } = createReport({
-        title: `${datasetTitle} · ${selectedRunId} 보고서`,
+        title: t("reports.page.createdTitle", { dataset: datasetTitle, run: selectedRunId }),
         datasetId: selectedDatasetId,
         baseRunId: selectedRunId,
         buildSpecDigest: evidence.run.ok ? evidence.run.value.spec_digest : null,
@@ -216,8 +216,7 @@ export function ReportsPage() {
 
       {pendingNoteCount > 0 ? (
         <Card className="border-indigo-200 bg-indigo-50 text-sm dark:border-indigo-900/60 dark:bg-indigo-950/30">
-          Kubi 참고 노트 {pendingNoteCount}건이 대기 중입니다. Report를 열어 "Kubi 참고 노트 대기열"에서 추가하거나
-          무시할 수 있습니다.
+          {t("reports.page.pendingNotes", { count: pendingNoteCount })}
         </Card>
       ) : null}
 
@@ -285,7 +284,7 @@ export function ReportsPage() {
                       className="text-red-700 underline hover:text-red-900 dark:text-red-400"
                       onClick={() => handleDelete(summary.id)}
                     >
-                      삭제
+                      {t("reports.page.delete")}
                     </button>
                   </div>
                 ) : null}

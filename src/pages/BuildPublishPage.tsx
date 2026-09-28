@@ -1,3 +1,5 @@
+import { i18n } from "@/shared/i18n";
+import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -22,11 +24,12 @@ type ReadinessState =
   | { status: "error"; message: string };
 
 /**
- * 게시 화면의 Run 문맥(Dataset identity + Build 완료 상태)은 URL의 `?dataset=` 존재
- * 여부가 아니라 **exact run_id**로만 해석한다 — Builds/Runs·Artifacts·Dataset Detail·
- * 딥링크 어느 경로로 들어와도 동일하게 표시되도록 한다. canonical 경로는
- * `getBuild(runId)`(= `/builds/{run_id}/spec` snapshot + authoritative status)이며,
- * latest run으로 대체하지 않는다.
+ * The publish screen's Run context (Dataset identity + Build completion
+ * state) is resolved only from the **exact run_id**, never from the presence
+ * of `?dataset=` in the URL — so it renders identically whether entered via
+ * Builds/Runs, Artifacts, Dataset Detail or a deep link. The canonical path
+ * is `getBuild(runId)` (= `/builds/{run_id}/spec` snapshot + authoritative
+ * status); it never substitutes the latest run.
  */
 interface RunContext {
   datasetTitle: string;
@@ -40,24 +43,34 @@ type RunContextState =
   | { status: "loaded"; data: RunContext }
   | { status: "error"; message: string };
 
-const BUILD_STATUS_LABEL: Record<BuildRunStatus, string> = {
-  queued: i18n.t("buildPublish.statusQueued"),
-  running: i18n.t("buildPublish.statusRunning"),
-  cancelling: i18n.t("buildPublish.statusCancelling"),
-  succeeded: i18n.t("buildPublish.statusSucceeded"),
-  failed: i18n.t("buildPublish.statusFailed"),
-  cancelled: i18n.t("buildPublish.statusCancelled"),
+/** Keys only, not labels — sentences in module constants would freeze the language (#350). */
+const BUILD_STATUS_KEY: Record<BuildRunStatus, string> = {
+  queued: "buildPublish.statusQueued",
+  running: "buildPublish.statusRunning",
+  cancelling: "buildPublish.statusCancelling",
+  succeeded: "buildPublish.statusSucceeded",
+  failed: "buildPublish.statusFailed",
+  cancelled: "buildPublish.statusCancelled",
 };
 
 const inputClassName =
   "h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
+/** Blocker codes related to the credential used for publishing.
+ *
+ * ``credential_unavailable`` means "no credential anywhere";
+ * ``credential_required`` means "this deployment does not lend the server's"
+ * (kpubdata-builder #665). Both need the same guidance, but the latter has
+ * more direct user actions. */
+const CREDENTIAL_BLOCKER_CODES = new Set(["credential_unavailable", "credential_required"]);
+
 export function BuildPublishPage() {
   const { t } = useTranslation();
   const { buildId: runId = "" } = useParams();
   const [searchParams] = useSearchParams();
-  // `?dataset=`은 있으면 보조 표시 힌트로만 쓴다 — 없다고 실제 존재하는 Run을
-  // "확인되지 않음"으로 만들지 않는다(canonical 해석은 runId 기반).
+  // `?dataset=` is only a supplementary display hint when present — its
+  // absence never marks an actually-existing Run as "unverified" (canonical
+  // resolution is runId-based).
   const datasetHint = searchParams.get("dataset") ?? "";
   const [runContext, setRunContext] = useState<RunContextState>({ status: "loading" });
   const [readiness, setReadiness] = useState<ReadinessState>({ status: "loading" });
@@ -69,13 +82,13 @@ export function BuildPublishPage() {
 
   useEffect(() => {
     if (!runId) {
-      setRunContext({ status: "error", message: t("buildPublish.noRunId") });
+      setRunContext({ status: "error", message: i18n.t("buildPublish.noRunId") });
       return;
     }
     let active = true;
     setRunContext({ status: "loading" });
     // canonical: getBuild(runId) = BuildSpec snapshot(dataset identity) + authoritative status.
-    // dataset URL 파라미터도, listDatasetRuns 윈도우도 필요로 하지 않는다.
+    // Needs neither the dataset URL parameter nor the listDatasetRuns window.
     getBuild(runId)
       .then((run) => {
         if (!active) return;
@@ -93,7 +106,7 @@ export function BuildPublishPage() {
         if (!active) return;
         setRunContext({
           status: "error",
-          message: cause instanceof Error ? cause.message : t("buildPublish.runInfoFailed"),
+          message: cause instanceof Error ? cause.message : i18n.t("buildPublish.runInfoError"),
         });
       });
     return () => {
@@ -103,7 +116,7 @@ export function BuildPublishPage() {
 
   useEffect(() => {
     if (!runId) {
-      setReadiness({ status: "error", message: t("buildPublish.noRunId") });
+      setReadiness({ status: "error", message: i18n.t("buildPublish.noRunId") });
       return;
     }
     const controller = new AbortController();
@@ -115,7 +128,7 @@ export function BuildPublishPage() {
       .then((data) => {
         if (!active) return;
         if (data.run_id !== runId || data.target !== "huggingface") {
-          setReadiness({ status: "error", message: t("buildPublish.readinessMismatch") });
+          setReadiness({ status: "error", message: i18n.t("buildPublish.readinessMismatch") });
           return;
         }
         setReadiness({ status: "loaded", data });
@@ -138,9 +151,9 @@ export function BuildPublishPage() {
       : runCtx
         ? runCtx.status === "succeeded"
           ? runCtx.finishedAt
-            ? t("buildPublish.completeAt", { date: formatDateTime(runCtx.finishedAt) })
-            : t("buildPublish.complete")
-          : runCtx.finishedAt ? t("buildPublish.statusWithDate", { status: BUILD_STATUS_LABEL[runCtx.status], date: formatDateTime(runCtx.finishedAt) }) : BUILD_STATUS_LABEL[runCtx.status]
+            ? t("buildPublish.completedAt", { time: formatDateTime(runCtx.finishedAt) })
+            : t("buildPublish.completed")
+          : `${t(BUILD_STATUS_KEY[runCtx.status])}${runCtx.finishedAt ? ` · ${formatDateTime(runCtx.finishedAt)}` : ""}`
         : t("buildPublish.unconfirmed");
 
   const destinationError = validatePublishDestination(destination);
@@ -169,8 +182,8 @@ export function BuildPublishPage() {
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         eyebrow={t("buildPublish.eyebrow")}
-        title={t("buildPublish.pageTitle", { name: datasetLabel || runId || "Run" })}
-        description={t("buildPublish.pageDesc")}
+        title={t("buildPublish.title", { name: datasetLabel || runId || "Run" })}
+        description={t("buildPublish.desc")}
       />
 
       <Card>
@@ -178,18 +191,18 @@ export function BuildPublishPage() {
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <div><dt className="text-muted-foreground">Dataset</dt><dd>{datasetLabel || (runContext.status === "loading" ? t("buildPublish.checking") : t("buildPublish.unconfirmed"))}</dd></div>
           <div><dt className="text-muted-foreground">Run ID</dt><dd className="break-all font-mono">{runId || "—"}</dd></div>
-          <div><dt className="text-muted-foreground">{t("buildPublish.buildComplete")}</dt><dd>{buildCompletionText}</dd></div>
+          <div><dt className="text-muted-foreground">{t("buildPublish.buildCompleted")}</dt><dd>{buildCompletionText}</dd></div>
           <div><dt className="text-muted-foreground">Target</dt><dd>Hugging Face</dd></div>
         </dl>
-        <p className="mt-3 text-xs text-muted-foreground">{t("buildPublish.runContextNote")}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{t("buildPublish.exactRunNote")}</p>
         {runContext.status === "error" ? (
-          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{t("buildPublish.runContextError")}</p>
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{t("buildPublish.datasetLoadWarn")}</p>
         ) : null}
       </Card>
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-sm font-semibold">Builder readiness</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessDesc")}</p></div>
+          <div><h2 className="text-sm font-semibold">Builder readiness</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessNote")}</p></div>
           <Button variant="secondary" size="sm" disabled={readiness.status === "loading" || publish.status === "publishing"} onClick={() => setReadinessVersion((value) => value + 1)}>{t("buildPublish.recheck")}</Button>
         </div>
         {readiness.status === "loading" ? <Skeleton className="mt-4 h-20 w-full" /> : null}
@@ -198,50 +211,56 @@ export function BuildPublishPage() {
           <div className="mt-4 space-y-4">
             <p className="text-sm font-medium">
               {builderReady
-                ? t("buildPublish.readyToPublish")
+                ? t("buildPublish.readyLabel")
                 : readiness.data.blockers.length > 0
-                  ? t("buildPublish.hasBlockers")
-                  // ready: false인데 blockers가 비어 있으면("빈 카드") "blocker가 있다"고
-                  // 잘못 단정하지 않는다 — Builder가 사유를 제공하지 않은 것과 실제 blocker가
-                  // 있는 것은 다른 상태다(UI audit #4).
+                  ? t("buildPublish.blockedLabel")
+                  // ready:false with empty blockers ("empty card") must not
+                  // be mis-asserted as "has a blocker" — Builder not
+                  // supplying a reason is a different state from a real
+                  // blocker existing (UI audit #4).
                   : t("buildPublish.notReadyNoReason")}
             </p>
             {readiness.data.blockers.length > 0 ? <IssueList title="Blockers" issues={readiness.data.blockers} tone="error" /> : null}
             {readiness.data.warnings.length > 0 ? <IssueList title="Warnings" issues={readiness.data.warnings} tone="warning" /> : null}
-            {readiness.data.blockers.some((issue) => issue.code === "credential_unavailable") ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialNote")}</p> : null}
+            {readiness.data.blockers.some((issue) => CREDENTIAL_BLOCKER_CODES.has(issue.code)) ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialNote")}</p> : null}
+                        {/* credential_required differs from "nowhere"
+                (credential_unavailable) — it means more direct user actions
+                exist. The two codes carry different guidance; the same
+                guidance is never reused. */}
+            {readiness.data.blockers.some((issue) => issue.code === "credential_required") ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialRequiredNote")}</p> : null}
           </div>
         ) : null}
       </Card>
 
       <Card>
-        <h2 className="text-sm font-semibold">{t("buildPublish.publishSettings")}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.publishSettingsDesc")}</p>
+        <h2 className="text-sm font-semibold">{t("buildPublish.settingsTitle")}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.settingsNote")}</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
           <label className="text-sm font-medium">Hugging Face destination
             <input aria-label="Hugging Face destination" className={`mt-2 ${inputClassName}`} placeholder="owner/dataset" value={destination} disabled={publish.status === "publishing"} onChange={(event) => updateDestination(event.target.value)} />
             <span className={`mt-1 block text-xs ${destinationError ? "text-red-700 dark:text-red-300" : "text-muted-foreground"}`}>{destinationError ?? t("buildPublish.destinationHint")}</span>
           </label>
           <label className="flex items-center gap-3 self-center rounded-lg border border-border p-4 text-sm">
-            <input aria-label={t("buildPublish.privateDataset")} type="checkbox" checked={isPrivate} disabled={publish.status === "publishing"} onChange={(event) => updatePrivate(event.target.checked)} className="h-4 w-4 accent-emerald-600" />
-            <span><strong className="block">{t("buildPublish.privateDatasetStrong")}</strong><span className="text-xs text-muted-foreground">{t("buildPublish.privateDefault")}</span></span>
+            <input aria-label={t("buildPublish.privateLabel")} type="checkbox" checked={isPrivate} disabled={publish.status === "publishing"} onChange={(event) => updatePrivate(event.target.checked)} className="h-4 w-4 accent-emerald-600" />
+            <span><strong className="block">{t("buildPublish.privateLabel")}</strong><span className="text-xs text-muted-foreground">{t("buildPublish.privateDefault")}</span></span>
           </label>
         </div>
       </Card>
 
       {!confirmation ? (
-        <Button className="self-start" disabled={!canReview} onClick={() => setConfirmation(request)}>{t("buildPublish.finalConfirm")}</Button>
+        <Button className="self-start" disabled={!canReview} onClick={() => setConfirmation(request)}>{t("buildPublish.review")}</Button>
       ) : (
-        <Card className="border-emerald-300 dark:border-emerald-900" aria-label={t("buildPublish.publishConfirmLabel")}>
-          <h2 className="text-sm font-semibold">{t("buildPublish.publishConfirmLabel")}</h2>
+        <Card className="border-emerald-300 dark:border-emerald-900" aria-label={t("buildPublish.confirmTitle")}>
+          <h2 className="text-sm font-semibold">{t("buildPublish.confirmTitle")}</h2>
           <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
             <div><dt className="text-muted-foreground">Run ID</dt><dd className="font-mono">{runId}</dd></div>
             <div><dt className="text-muted-foreground">Target</dt><dd>huggingface</dd></div>
             <div><dt className="text-muted-foreground">Destination</dt><dd>{confirmation.destination}</dd></div>
-            <div><dt className="text-muted-foreground">{t("buildPublish.publicSetting")}</dt><dd>{confirmation.options?.private === false ? "Public" : "Private"}</dd></div>
+            <div><dt className="text-muted-foreground">{t("buildPublish.visibility")}</dt><dd>{confirmation.options?.private === false ? "Public" : "Private"}</dd></div>
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">{t("buildPublish.confirmNote")}</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button loading={publish.status === "publishing"} disabled={!builderReady || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => void publish.start(runId, confirmation)}>{t("buildPublish.runPublish")}</Button>
+            <Button loading={publish.status === "publishing"} disabled={!builderReady || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => void publish.start(runId, confirmation)}>{t("buildPublish.publishNow")}</Button>
             {publish.status !== "publishing" ? <Button variant="secondary" onClick={() => setConfirmation(undefined)}>{t("buildPublish.editSettings")}</Button> : <Button variant="secondary" onClick={publish.stopWaiting}>{t("buildPublish.stopWaiting")}</Button>}
           </div>
         </Card>
@@ -249,7 +268,7 @@ export function BuildPublishPage() {
 
       {publish.status === "published" && publish.result ? (
         <Card variant="success" role="status">
-          <div className="flex items-center gap-2"><StatusBadge status="published" /><strong>{t("buildPublish.publishComplete")}</strong></div>
+          <div className="flex items-center gap-2"><StatusBadge status="published" /><strong>{t("buildPublish.publishedTitle")}</strong></div>
           <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
             <div><dt className="text-muted-foreground">Run ID</dt><dd className="font-mono">{publish.result.run_id}</dd></div>
             <div><dt className="text-muted-foreground">Destination</dt><dd>{publish.result.destination}</dd></div>
@@ -260,7 +279,7 @@ export function BuildPublishPage() {
         </Card>
       ) : null}
       {publish.status === "failed" ? <Card variant="error" role="alert"><strong>{t("buildPublish.publishFailed")}</strong><p className="mt-2 text-sm">{publish.failure?.message}</p>{publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}</Card> : null}
-      {publish.status === "aborted" ? <Card role="status"><strong>{t("buildPublish.abortedTitle")}</strong><p className="mt-2 text-sm text-muted-foreground">{t("buildPublish.abortedDesc")}</p></Card> : null}
+      {publish.status === "aborted" ? <Card role="status"><strong>{t("buildPublish.abortedTitle")}</strong><p className="mt-2 text-sm text-muted-foreground">{t("buildPublish.abortedBody")}</p></Card> : null}
     </main>
   );
 }

@@ -1,32 +1,33 @@
 /**
- * LLM base URL 안전장치 (#256 리뷰 §2).
+ * LLM base URL safety guard (#256 review §2).
  *
- * BYOK는 사용자가 직접 base URL을 바꿀 수 있어, API key가 잘못된(또는 악의적인) 서버로
- * 전송될 위험이 있다. Studio는 별도 provider 시스템을 새로 설계하지 않고, key exfiltration을
- * 막는 최소 안전장치만 둔다: 기본 주소는 고정 안전값, 사용자가 바꾸면 HTTPS만 허용하고
- * 화면에 어떤 주소로 전송되는지 항상 보여준다(§2 "API Key가 전송되는 주소를 확인할 수 있어야
- * 합니다").
+ * BYOK lets user change base URL directly; risk of API key sent to wrong (or malicious) server.
+ * Studio doesn't redesign provider system; only adds minimal guard to prevent key exfiltration:
+ * base address fixed to safe value; if user changes it, only HTTPS allowed; UI always shows which
+ * address key sent to (§2 "API Key destination address must be verifiable").
  */
 
-/** BYOK 기본 LLM base URL. `provider.ts`의 DEFAULT_BASE_URL과 반드시 같은 값을 유지한다. */
+/** BYOK default LLM base URL. Must match `provider.ts` DEFAULT_BASE_URL exactly. */
+import { i18n } from "@/shared/i18n";
+
 export const DEFAULT_LLM_BASE_URL = "https://api.openai.com/v1";
 
 export interface BaseUrlCheck {
-  /** 요청을 보내도 되는 주소인지 여부 */
+  /** Whether safe to send requests to this address */
   safe: boolean;
-  /** safe=false일 때 사용자에게 보여줄 사유 */
+  /** Reason to show user when safe=false */
   reason?: string;
-  /** 실제 요청 시 사용할 정규화된 URL(빈 입력이면 기본값) */
+  /** Normalized URL for actual requests (default if empty input) */
   resolvedUrl: string;
-  /** 기본 주소를 그대로 쓰는지 여부(아니면 UI가 경고를 보여줘야 함) */
+  /** Whether using base address as-is (else UI must warn) */
   isDefault: boolean;
 }
 
 /**
- * 사용자가 입력한 base URL이 안전하게 사용할 수 있는 값인지 검사한다.
+ * Check if user-entered base URL is safe to use.
  *
- * @param rawUrl - 설정 화면에서 입력한 base URL(빈 문자열이면 기본값 사용).
- * @returns 안전 여부, 사유, 정규화된 URL.
+ * @param rawUrl - base URL (empty string uses default).
+ * @returns safety status, reason, normalized URL.
  */
 export function checkLlmBaseUrl(rawUrl: string): BaseUrlCheck {
   const trimmed = rawUrl.trim();
@@ -40,7 +41,7 @@ export function checkLlmBaseUrl(rawUrl: string): BaseUrlCheck {
   } catch {
     return {
       safe: false,
-      reason: "올바른 URL 형식이 아닙니다.",
+      reason: i18n.t("assistant.baseUrl.invalid"),
       resolvedUrl: trimmed,
       isDefault: false,
     };
@@ -49,7 +50,7 @@ export function checkLlmBaseUrl(rawUrl: string): BaseUrlCheck {
   if (parsed.protocol !== "https:") {
     return {
       safe: false,
-      reason: "API Key 노출을 막기 위해 HTTPS 주소만 허용됩니다.",
+      reason: i18n.t("assistant.baseUrl.httpsOnly"),
       resolvedUrl: trimmed,
       isDefault: false,
     };
@@ -63,7 +64,7 @@ export function checkLlmBaseUrl(rawUrl: string): BaseUrlCheck {
   };
 }
 
-/** 오류 메시지/로그에 API key가 그대로 남지 않도록 알려진 key 값을 치환한다. */
+/** Substitute known key values in error messages/logs so API key does not leak. */
 export function redactApiKey(text: string, apiKey: string): string {
   if (!apiKey) return text;
   return text.split(apiKey).join("[REDACTED]");

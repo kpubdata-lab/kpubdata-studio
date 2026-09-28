@@ -45,7 +45,7 @@ describe("grouped sidebar navigation (#247)", () => {
       "데이터셋 카탈로그": "/datasets",
       "빌드 / 실행": "/builds",
       "품질": "/quality",
-      Kubi: "/kubi",
+      "Ask KPubData": "/kubi",
       "리포트": "/reports",
       "Provider / API 연결": "/provider",
       "모니터링": "/monitoring",

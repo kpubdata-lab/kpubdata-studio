@@ -1,13 +1,13 @@
 /**
- * Studio 환경 설정 페이지 (/settings).
+ * Studio settings page (/settings).
  *
- * 네 개의 분리된 영역으로 구성한다(#301):
- * 1. 계정 — 로그인 상태/로그아웃(실연동) 또는 mock 안내
- * 2. 연결 — Builder API 엔드포인트와 계약 버전 호환성 점검(#29)
- * 3. 데이터 Provider 자격 증명 — GET /providers 요약(부울만, 원문 없음) + /provider CTA
- * 4. Kubi BYOK — LLM 키는 Provider credential과 완전히 분리된 정책/영역(#256)
+ * Organized into four separate areas (#301):
+ * 1. Account — login status/logout (real integration) or mock guidance
+ * 2. Connection — Builder API endpoint and contract version compatibility check (#29)
+ * 3. Data Provider credentials — GET /providers summary (boolean only, no plaintext) + /provider CTA
+ * 4. Kubi BYOK — LLM key is completely separate policy/area from Provider credential (#256)
  *
- * 구현되지 않은 team/project backend를 있는 것처럼 표시하지 않는다(#292 회귀 금지).
+ * Do not show unimplemented team/project backend as if it exists (#292 regression prevention).
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -44,7 +44,8 @@ export function SettingsPage() {
   const { email, clear } = useAuthStore();
   const oidcStatus = useAuthStore((state) => state.oidcStatus);
 
-  // OIDC 세션은 Keycloak에서 로그아웃해야 IdP 세션까지 종료된다. 그 외에는 메모리 세션만 폐기.
+  // OIDC session must be logged out from Keycloak to end IdP session. Otherwise only
+  // clear in-memory session.
   const handleLogout = () => {
     if (oidcStatus === "authenticated") {
       void keycloakLogout();
@@ -105,7 +106,7 @@ export function SettingsPage() {
             {t("settings.conn.title")}
           </p>
           <span className="text-xs text-muted-foreground">
-            필요한 Builder API 최소 버전 {MIN_BUILDER_API_VERSION}
+            {t("settings.conn.minVersion", { version: MIN_BUILDER_API_VERSION })}
           </span>
         </div>
         <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-4">
@@ -117,9 +118,9 @@ export function SettingsPage() {
         <div className="mt-4 text-sm">
           {!realEnabled ? (
             <p className="text-muted-foreground">
-              mock 모드입니다. 실제 Builder에 연결하려면{" "}
+              {t("settings.conn.mockNote")}{" "}
               <code className="text-accent-subtle-foreground">VITE_USE_REAL_BUILDER=true</code>
-              로 설정하세요.
+              {t("settings.conn.mockEnv")}
             </p>
           ) : connection.status === "checking" ? (
             <p className="text-muted-foreground">{t("settings.conn.checking")}</p>
@@ -128,7 +129,7 @@ export function SettingsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <StatusBadge status="succeeded" />
                 <span className="text-foreground">
-                  Builder API 버전 {connection.apiVersion}
+                  {t("settings.conn.version", { version: connection.apiVersion })}
                 </span>
               </div>
               {!isBuilderApiCompatible(connection.apiVersion) ? (
@@ -155,10 +156,7 @@ export function SettingsPage() {
           {t("settings.privacy.title")}
         </p>
         <div className="mt-3 space-y-2 text-sm text-muted-foreground">
-          <p>
-            어시스턴트 기능을 사용하면 대화 내용이 사용자가 설정한 외부 LLM 제공자(OpenAI 등)로
-            전송됩니다. API 키와 비용은 사용자 부담입니다.
-          </p>
+          <p>{t("settings.privacy.llm")}</p>
           <p className="text-amber-700 dark:text-amber-400">
             {t("settings.privacy.noPublic")}
           </p>
@@ -191,7 +189,7 @@ function AccountSection({
           <div className="flex items-center justify-between gap-2">
             <span className="text-foreground">{email}</span>
             <Button variant="secondary" size="sm" onClick={() => onLogout()}>
-              로그아웃
+              {t("settings.account.logout")}
             </Button>
           </div>
         ) : realEnabled ? (
@@ -203,14 +201,11 @@ function AccountSection({
               to="/login"
               className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
             >
-              로그인
+              {t("settings.account.login")}
             </Link>
           </div>
         ) : (
-          <p className="text-muted-foreground">
-            mock 모드에서는 로그인 상태가 UI 시연용으로만 동작합니다. 계정/권한 백엔드는
-            실연동과 함께 연동됩니다.
-          </p>
+          <p className="text-muted-foreground">{t("settings.account.mockNote")}</p>
         )}
       </div>
     </Card>
@@ -224,7 +219,8 @@ function ProviderCredentialSection({
   realEnabled: boolean;
   state: ProvidersState;
 }) {
-  // 요약은 서버가 계산한 configured 부울만 다룬다 — 원문 키 조회 자체를 하지 않는다.
+  const { t } = useTranslation();
+  // Summary handles only configured bool computed by server — doesn't query raw keys themselves.
   const requiringCredential =
     state.status === "ok" ? state.providers.filter((p) => p.requires_credential) : [];
   const configuredCount = requiringCredential.filter((p) => p.configured).length;
@@ -233,32 +229,31 @@ function ProviderCredentialSection({
     <Card data-testid="settings-provider-credentials">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          데이터 Provider 자격 증명
+          {t("settings.providers.title")}
         </p>
         <Link
           to="/provider"
           className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
         >
-          Provider 설정에서 관리
+          {t("settings.providers.manage")}
         </Link>
       </div>
       <div className="mt-4 text-sm">
         {!realEnabled ? (
-          <p className="text-muted-foreground">
-            mock 모드에서는 Provider 페이지에서 동작을 시연할 수 있습니다. 실제 자격 증명은
-            실연동 모드에서 Builder가 서버에 안전하게 보관합니다.
-          </p>
+          <p className="text-muted-foreground">{t("settings.providers.mockNote")}</p>
         ) : state.status === "loading" ? (
-          <p className="text-muted-foreground">Provider 구성 상태를 조회하는 중입니다…</p>
+          <p className="text-muted-foreground">{t("settings.providers.loading")}</p>
         ) : state.status === "error" ? (
           <p className="text-red-700 dark:text-red-300">{state.message}</p>
         ) : (
           <div className="space-y-3">
             <p className="text-muted-foreground">
-              자격 증명이 필요한 Provider {requiringCredential.length}개 중 {configuredCount}개가
-              구성되었습니다.
+              {t("settings.providers.summary", {
+                total: requiringCredential.length,
+                configured: configuredCount,
+              })}
             </p>
-            <ul className="flex flex-wrap gap-2" aria-label="provider 구성 상태">
+            <ul className="flex flex-wrap gap-2" aria-label={t("settings.providers.listLabel")}>
               {requiringCredential.map((provider) => (
                 <li key={provider.provider}>
                   <ProviderConfiguredBadge
@@ -276,6 +271,7 @@ function ProviderCredentialSection({
 }
 
 function ProviderConfiguredBadge({ provider, configured }: { provider: string; configured: boolean }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -286,14 +282,15 @@ function ProviderConfiguredBadge({ provider, configured }: { provider: string; c
     >
       {provider}
       <span aria-hidden="true">·</span>
-      {configured ? "구성됨" : "미구성"}
+      {configured ? t("settings.providers.configured") : t("settings.providers.notConfigured")}
     </span>
   );
 }
 
 function KubiByokSection() {
-  // Kubi LLM 키는 Provider credential과 다른 BYOK 정책을 따른다(#256/#301 분리):
-  // 기본 메모리 전용, 브라우저 저장은 명시적 opt-in + 경고.
+  // Kubi LLM key follows different BYOK policy than Provider credential (#256/#301 split):
+  // default memory-only, browser persistence is explicit opt-in + warning.
+  const { t } = useTranslation();
   const { isConfigured, model, persistToStorage, resolvedBaseUrl, isDefaultBaseUrl } =
     useAssistConfig();
 
@@ -301,21 +298,17 @@ function KubiByokSection() {
     <Card data-testid="settings-kubi-byok">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Kubi · BYOK LLM 키
+          {t("settings.byok.title")}
         </p>
         <Link
           to="/kubi"
           className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
         >
-          Kubi에서 설정
+          {t("settings.byok.configure")}
         </Link>
       </div>
       <div className="mt-4 space-y-2 text-sm">
-        <p className="text-muted-foreground">
-          Kubi 어시스턴트의 LLM 키는 데이터 Provider 자격 증명과 별도로 사용자가 직접
-          관리합니다(Bring Your Own Key). 키는 기본적으로 메모리에만 보관되며 새로고침 시
-          사라집니다.
-        </p>
+        <p className="text-muted-foreground">{t("settings.byok.desc")}</p>
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -324,24 +317,19 @@ function KubiByokSection() {
                 : "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
             }`}
           >
-            {isConfigured ? "키 설정됨" : "키 미설정"}
+            {isConfigured ? t("settings.byok.keySet") : t("settings.byok.keyUnset")}
           </span>
           {isConfigured && model ? <span className="text-muted-foreground">{model}</span> : null}
           {isConfigured && !isDefaultBaseUrl ? (
             <span className="text-amber-700 dark:text-amber-400" title={resolvedBaseUrl}>
-              사용자 지정 Base URL
+              {t("settings.byok.customBaseUrl")}
             </span>
           ) : null}
         </div>
         {persistToStorage ? (
-          <p className="text-amber-700 dark:text-amber-400">
-            브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다.
-            XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요.
-          </p>
+          <p className="text-amber-700 dark:text-amber-400">{t("settings.byok.persistOn")}</p>
         ) : (
-          <p className="text-muted-foreground">
-            브라우저 저장: 꺼짐(메모리 전용). Kubi 화면에서 명시적으로 켤 수 있습니다.
-          </p>
+          <p className="text-muted-foreground">{t("settings.byok.persistOff")}</p>
         )}
       </div>
     </Card>

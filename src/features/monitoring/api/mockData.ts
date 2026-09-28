@@ -1,6 +1,6 @@
 /**
- * mock 모드 fixture (#264, #303) — Builder 실제 wire 계약
- * (/monitoring/summary + /monitoring/builds)과 동일 형상.
+ * Mock-mode fixture (#264, #303) — same shape as the Builder's real wire
+ * contract (/monitoring/summary + /monitoring/builds).
  */
 import type { MonitoringData } from "@/features/monitoring/model";
 

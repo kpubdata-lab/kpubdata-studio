@@ -1,20 +1,21 @@
 /**
- * 공통 Textarea 컴포넌트.
+ * Common Textarea component.
  *
- * TextInput과 동일한 스타일 체계를 따르며 react-hook-form ref 주입을 위해 forwardRef로 구현한다.
+ * Follows same style system as TextInput and uses forwardRef for react-hook-form ref
+ * injection.
  */
 import { forwardRef, type TextareaHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  /** 검증 오류 상태. true이면 빨간 테두리와 aria-invalid를 적용한다. */
+  /** validation error state. If true, applies red border and aria-invalid. */
   invalid?: boolean;
-  /** true이면 monospace 글꼴을 적용한다(JSON 등 코드 입력용). 기본은 본문 글꼴. */
+  /** if true, apply monospace font (for code input like JSON). Default is body font. */
   mono?: boolean;
 }
 
 /**
- * 스타일과 오류 상태를 갖춘 멀티라인 입력 컨트롤.
+ * multiline input control with styling and error state.
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
   { invalid, mono, className, rows = 4, ...rest },

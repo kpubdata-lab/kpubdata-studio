@@ -1,8 +1,8 @@
 /**
- * #487 BuildSpec snapshot / #496 structured run events client 테스트.
+ * #487 BuildSpec snapshot / #496 structured run-events client tests.
  *
- * mock 모드에서는 두 표면 다 fixture가 없다 — "있는 척" 값을 지어내는 대신
- * 명시적으로 지원되지 않는다고 던지는지 확인한다(#255 §12 원칙).
+ * Mock mode has fixtures for neither surface — verifies it throws explicit
+ * unsupported instead of inventing "pretend" values (#255 §12 principle).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { builderApi } from "@/shared/lib/builderApi";

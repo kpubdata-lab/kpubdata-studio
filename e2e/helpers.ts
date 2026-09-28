@@ -1,20 +1,45 @@
-import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { expect, type Page } from "@playwright/test";
 
 /**
- * 공용 헬퍼 (#268).
+ * Common helpers (#268).
  *
- * - collectPageErrors: 각 스펙이 console error/unhandled rejection 없음을
- *   단정할 수 있게 한다(이슈 체크리스트).
- * - localStorage 정리: 사용자 상태(Workspace #293 소유자 버킷 포함)가 스펙 간
- *   새지 않도록 컨텍스트 시작 시 초기화한다.
+ * - collectPageErrors: each spec can assert no console error/unhandled rejection
+ *   (issue checklist).
+ * - localStorage cleanup: initialize on context start so user state (Workspace #293 owner bucket)
+ *   doesn't leak across specs.
+ * - t(): fetch screen text from locale file, not hardcoded in spec.
  */
+
+/**
+ * ko locale dictionary.
+ *
+ * `import ko from "....json"` requires Node import attribute (`with { type: "json" }`)
+ * in Playwright's ESM loader, causing **spec collection itself to fail**.
+ * Reading at runtime avoids loader syntax difference.
+ */
+const ko = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../src/shared/i18n/locales/ko.json", import.meta.url)), "utf8"),
+) as Record<string, unknown>;
+
+export function t(path: string): string {
+  const value = path
+    .split(".")
+    .reduce<unknown>((node, key) => (node as Record<string, unknown> | undefined)?.[key], ko);
+  if (typeof value !== "string") {
+    throw new Error(`ko 로케일에 문자열 키가 없다: ${path}`);
+  }
+  return value;
+}
 
 export async function prepareCleanPage(page: Page): Promise<void> {
   await page.addInitScript(() => {
     try {
       localStorage.clear();
     } catch {
-      // 프라이빗 모드 등에서는 무시한다.
+      // Ignore in private mode etc.
     }
   });
 }
@@ -24,15 +49,14 @@ export function collectPageErrors(page: Page, bucket: string[]): void {
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const text = message.text();
-    // Builder 미기동 환경에서 mock 우선 화면(Workspace 등)이 Builder 조회를
-    // 먼저 시도하고 폴백하는 것은 앱 설계상 정상이다(#292) — 리소스 로드 실패
-    // 리포트는 앱 오류가 아니므로 제외한다.
+    // In Builder-not-running env, mock-first screens (Workspace etc) try Builder query first
+    // then fallback is app design normal (#292) — resource load failure reports aren't app errors, exclude.
     if (text.includes("net::ERR_CONNECTION_REFUSED")) return;
     bucket.push(`console.error: ${text}`);
   });
 }
 
 export async function expectNoPageErrors(bucket: string[]): Promise<void> {
-  // mock 모드에서 mock 데이터 폴백 로그(warn)는 허용한다 — error만 잡는다.
+  // In mock mode, mock data fallback logs (warn) allowed — only catch errors.
   expect(bucket, `page errors:\n${bucket.join("\n")}`).toEqual([]);
 }

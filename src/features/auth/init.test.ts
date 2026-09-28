@@ -1,7 +1,7 @@
 /**
- * initAuth (auth ↔ builderApi 배선 + OIDC 부트스트랩) 테스트.
+ * initAuth (auth ↔ builderApi wiring + OIDC bootstrap) test.
  *
- * keycloak-js SDK 경계는 mock한다.
+ * Mock keycloak-js SDK boundary.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -24,6 +24,25 @@ const { mockKeycloak, KeycloakCtor } = vi.hoisted(() => {
 
 vi.mock("keycloak-js", () => ({ default: KeycloakCtor }));
 
+// Intercept callbacks that initAuth registers to builderApi; verify 401 recovery contract directly.
+const wiring = vi.hoisted(() => ({
+  authError: undefined as undefined | (() => void | boolean | Promise<void | boolean>),
+  tokenProvider: undefined as undefined | (() => string | null | Promise<string | null>),
+}));
+
+vi.mock("@/shared/lib/builderApi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/shared/lib/builderApi")>();
+  return {
+    ...actual,
+    setAuthErrorCallback: (cb: typeof wiring.authError) => {
+      wiring.authError = cb;
+    },
+    setAuthTokenProvider: (provider: typeof wiring.tokenProvider) => {
+      wiring.tokenProvider = provider;
+    },
+  };
+});
+
 import { __resetKeycloakForTests } from "./keycloak";
 import { initAuth } from "./init";
 import { useAuthStore } from "./store";
@@ -44,6 +63,8 @@ beforeEach(() => {
   mockKeycloak.updateToken.mockReset().mockResolvedValue(true);
   mockKeycloak.onAuthLogout = undefined;
   __resetKeycloakForTests();
+  wiring.authError = undefined;
+  wiring.tokenProvider = undefined;
   useAuthStore.getState().clear();
   useAuthStore.setState({ oidcStatus: "disabled" });
 });
@@ -84,7 +105,7 @@ describe("initAuth — OIDC enabled", () => {
     mockKeycloak.tokenParsed = { email: "tester@example.com", name: "테스터" };
 
     initAuth();
-    // 동기 지점에서는 이미 initializing.
+    // Already initializing at sync point.
     expect(useAuthStore.getState().oidcStatus).toBe("initializing");
 
     await flush();
@@ -92,7 +113,7 @@ describe("initAuth — OIDC enabled", () => {
     expect(useAuthStore.getState().oidcStatus).toBe("authenticated");
     expect(useAuthStore.getState().email).toBe("tester@example.com");
     expect(useAuthStore.getState().name).toBe("테스터");
-    // raw token은 store에 저장하지 않는다.
+    // Raw token not stored in store.
     expect(useAuthStore.getState().token).toBeNull();
   });
 
@@ -122,5 +143,52 @@ describe("initAuth — OIDC enabled", () => {
     mockKeycloak.onAuthLogout?.();
     expect(useAuthStore.getState().oidcStatus).toBe("unauthenticated");
     expect(useAuthStore.getState().email).toBeNull();
+  });
+});
+
+describe("initAuth — 401 복구 계약 (#189)", () => {
+  it("refresh에 성공하면 true를 반환해 요청 재시도를 허용한다", async () => {
+    mockKeycloak.init.mockResolvedValue(true);
+    mockKeycloak.authenticated = true;
+    mockKeycloak.tokenParsed = { email: "tester@example.com" };
+    mockKeycloak.token = "fresh-token";
+
+    initAuth();
+    await flush();
+
+    await expect(wiring.authError?.()).resolves.toBe(true);
+    // Session maintained — not redirected to re-login.
+    expect(useAuthStore.getState().oidcStatus).toBe("authenticated");
+    // Refreshed token exposed via token provider (not stored in store).
+    await expect(wiring.tokenProvider?.()).resolves.toBe("fresh-token");
+  });
+
+  it("refresh에 실패하면 false를 반환하고 unauthenticated로 내린다", async () => {
+    mockKeycloak.init.mockResolvedValue(true);
+    mockKeycloak.authenticated = true;
+    mockKeycloak.tokenParsed = { email: "tester@example.com" };
+    mockKeycloak.updateToken.mockRejectedValue(new Error("refresh expired"));
+
+    initAuth();
+    await flush();
+
+    await expect(wiring.authError?.()).resolves.toBe(false);
+    expect(useAuthStore.getState().oidcStatus).toBe("unauthenticated");
+    expect(useAuthStore.getState().email).toBeNull();
+  });
+
+  it("mock/데모 모드에서는 세션만 비우고 재시도를 허용하지 않는다", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+    initAuth();
+    await flush();
+    useAuthStore.getState().setSession({
+      token: "mock-token",
+      email: "demo@example.com",
+      name: null,
+      provider: "mock",
+    });
+
+    await expect(wiring.authError?.()).resolves.toBe(false);
+    expect(useAuthStore.getState().token).toBeNull();
   });
 });

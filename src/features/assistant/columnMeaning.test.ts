@@ -1,7 +1,7 @@
 /**
- * 컬럼 의미 해독 테스트 (AI-1, #228).
+ * Column meaning decoding test (AI-1, #228).
  *
- * 핵심: 샘플 값에 포함된 시크릿이 LLM 프롬프트에 노출되지 않는다.
+ * Core: secrets in sample values not exposed to LLM prompt.
  */
 import { describe, expect, it } from "vitest";
 

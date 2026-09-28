@@ -1,7 +1,7 @@
 /**
- * builderApi 재시도 정책 테스트 (#117).
+ * builderApi retry policy test (#117).
  *
- * 비멱등 POST /build는 5xx에도 재시도하지 않아야 하며, 멱등 GET은 재시도한다.
+ * Non-idempotent POST /build must not retry on 5xx; idempotent GET does retry.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -33,12 +33,12 @@ describe("builderApi retry policy", () => {
       status: 500,
     });
 
-    // 최초 1회만 호출되어야 한다 (재시도 없음).
+    // should be called only once initially (no retry).
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("retries idempotent GET /version on 5xx", async () => {
-    // 실제 백오프 대기(500ms)를 기다리지 않도록 fake timer로 시간을 직접 진행시킨다.
+    // advance time directly with fake timer to avoid actual backoff wait (500ms).
     vi.useFakeTimers();
     try {
       const fetchMock = vi
@@ -49,7 +49,7 @@ describe("builderApi retry policy", () => {
         );
 
       const pending = builderApi.version();
-      // 첫 번째 재시도 전 백오프(500ms)를 즉시 소리을 통과시킨다.
+      // immediately pass the backoff (500ms) before first retry.
       await vi.advanceTimersByTimeAsync(500);
       const result = await pending;
 
@@ -73,7 +73,7 @@ describe("apiFetch auth header injection (#186)", () => {
   });
 
   function requestInitOf(fetchMock: ReturnType<typeof vi.spyOn>) {
-    // fetch(url, init) — 두 번째 인자가 RequestInit.
+    // fetch(url, init) — second argument is RequestInit.
     return fetchMock.mock.calls[0][1] as RequestInit;
   }
 
@@ -86,7 +86,7 @@ describe("apiFetch auth header injection (#186)", () => {
 
     const headers = requestInitOf(fetchMock).headers as Record<string, string>;
     expect(headers.Authorization).toBeUndefined();
-    // 미로그인/mock 모드에서 빈 헤더가 나가지 않는다.
+    // empty header should not be sent in unauthenticated/mock mode.
     expect(headers["Content-Type"]).toBe("application/json");
   });
 
@@ -186,6 +186,97 @@ describe("auth error callback on 401 (#189, S4)", () => {
 
     await expect(builderApi.version()).rejects.toMatchObject({ status: 403 });
     expect(cb).not.toHaveBeenCalled();
+  });
+
+  it("retries the request once with the refreshed token when the callback recovers (#189)", async () => {
+    // Token expires during request: first attempt gets 401, second attempt succeeds after re-auth.
+    let token = "expired-token";
+    setAuthTokenProvider(() => token);
+    setAuthErrorCallback(() => {
+      token = "fresh-token";
+      return true;
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(401, { error: "unauthorized" }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, { service: "kpubdata-builder", api_version: "1.0.0" }),
+      );
+
+    const result = await builderApi.version();
+
+    expect(result.api_version).toBe("1.0.0");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const retryHeaders = (fetchMock.mock.calls[1]![1] as RequestInit).headers as Record<string, string>;
+    expect(retryHeaders.Authorization).toBe("Bearer fresh-token");
+  });
+
+  it("retries a recovered 401 only once and then surfaces the error", async () => {
+    setAuthTokenProvider(() => "token");
+    setAuthErrorCallback(() => true);
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(401, { error: "unauthorized" }));
+
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+    // Even if re-auth keeps reporting "success", retry is limited to 1 (loop prevention).
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry when the callback does not report a recovered session", async () => {
+    setAuthTokenProvider(() => "token");
+    // Callbacks using old contract (void return) do not trigger retry.
+    const cb = vi.fn();
+    setAuthErrorCallback(cb);
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(401, { error: "unauthorized" }));
+
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the 401 when the recovery callback itself throws", async () => {
+    setAuthTokenProvider(() => "token");
+    setAuthErrorCallback(() => {
+      throw new Error("refresh crashed");
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(401, { error: "unauthorized" }));
+
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries a 401 upload once — Builder rejects before the upload is stored (#189)", async () => {
+    let token = "expired-token";
+    setAuthTokenProvider(() => token);
+    setAuthErrorCallback(() => {
+      token = "fresh-token";
+      return true;
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(401, { error: "unauthorized" }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, {
+          upload_id: `upl_${"a".repeat(32)}`,
+          format: "csv",
+          encoding: "utf-8",
+          size_bytes: 3,
+          original_filename: "a.csv",
+          created_at: "2026-01-01T00:00:00Z",
+        }),
+      );
+
+    const result = await builderApi.uploadFile(new Blob(["a,b"]), { format: "csv" });
+
+    expect(result.upload_id).toBe(`upl_${"a".repeat(32)}`);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const retryHeaders = (fetchMock.mock.calls[1]![1] as RequestInit).headers as Record<string, string>;
+    expect(retryHeaders.Authorization).toBe("Bearer fresh-token");
   });
 });
 

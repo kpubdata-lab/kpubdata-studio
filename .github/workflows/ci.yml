@@ -24,7 +24,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["20", "22"]
+        # Node 20 은 빼야 한다. vitest 의 jsdom 경로가 undici 를 통해
+        # ``webidl.util.markAsUncloneable`` 을 호출하고, 그 내부 API 는 Node 22
+        # 부터 있다 — 20.20.2 에서 워커가 전부 기동에 실패한다(#400).
+        #
+        # 이것은 **개발 도구의 요구**이고 사용자 요구가 아니다. 배포 산출물은
+        # 정적 빌드라 최종 사용자에게 Node 가 필요하지 않다. Node 20 을 유지하면
+        # undici/jsdom/vitest 를 고정해야 하고, 그러면 보안 업데이트가 막힌다.
+        node-version: ["22", "24"]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -48,8 +55,97 @@ jobs:
       - name: Type check (tsc --noEmit)
         run: npm run typecheck
 
+      # 새 한국어 UI 문자열이 로케일을 거치지 않고 들어오는 걸 막는다 (#338).
+      # 주석·mock 데이터·LLM 프롬프트는 세지 않으므로 기준선은 0이다.
+      - name: i18n extraction gate
+        run: npm run i18n:check
+
+      # ADR 0003 (kpubdata) puts comments in English. The debt is at ZERO
+      # (#427): any Korean comment now fails the build outright.
+      - name: Korean comment gate (#427)
+        run: python3 scripts/check_korean_ts_comments.py src e2e
+
+      # Renaming a UI string without moving the assertions that name it (#429). The
+      # values this branch removed from the locales are computed exactly, so there is
+      # no guess about which literals are labels and no false positives.
+      # checkout is depth 1, so the comparison base is fetched here.
+      - name: Stale UI literal gate
+        run: |
+          git fetch --no-tags --depth=1 origin main || true
+          npm run check:stale-ui
+
       - name: Test (Vitest)
         run: npm test
 
       - name: Build
         run: npm run build
+
+  e2e:
+    # Playwright 스펙을 CI 에 편입한다 (#377). 지금까지는 `npm run test:e2e` 를 사람이
+    # 손으로 돌릴 때만 실행돼, 회귀를 잡아줄 수 있는 스펙이 사실상 놀고 있었다.
+    #
+    # 실 Builder 기동이 필요한 @real-builder 스펙은 playwright.config.ts 의 grep 이
+    # 이미 걷어낸다 — 이 잡은 mock 모드 vite dev 서버만 띄운다(webServer 설정).
+    # 브라우저는 chromium 하나만 받는다: 두 project(desktop/mobile) 모두 chromium 이라
+    # 나머지를 받아봐야 설치 시간만 늘어난다.
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          npm_config_cache: ${{ runner.temp }}/.npm-cache
+          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E
+        run: npm run test:e2e
+
+      # 실패 시 trace(playwright.config.ts 의 retain-on-failure)를 남겨야 CI 로그만
+      # 보고 원인을 추측하지 않아도 된다.
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  coverage:
+    # 커버리지 게이트 (#380). 지금 도달한 수준이 조용히 내려가지 않게 잠근다.
+    # 하한은 vitest.config.ts 의 coverage.thresholds 한 곳에서만 관리한다.
+    # quality 잡은 Node 20/22 두 번 도는데, 계측을 거기 얹으면 같은 정보를 두 배
+    # 비용으로 사게 된다 — 이 잡 하나만 계측한다.
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          npm_config_cache: ${{ runner.temp }}/.npm-cache
+          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
+
+      - name: Test with coverage
+        run: npm run test:coverage

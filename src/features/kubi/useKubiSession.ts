@@ -1,14 +1,14 @@
 /**
- * Kubi 대화 세션 (#256).
+ * Kubi conversation session (#256).
  *
- * `KubiDrawer`와 `/kubi` 페이지, 상단 `KubiSearchInput`이 전부 이 훅 하나를 공유한다 —
- * 새 어시스턴트 시스템을 만들지 않고 기존 `features/assistant`(BYOK provider/config,
- * scrubSecrets)만 재사용한다. 대화 turn 상태는 zustand 싱글턴 스토어에 두어, drawer를 열고
- * 닫아도(그리고 `/kubi` 페이지로 이동해도) 같은 대화가 이어진다.
+ * `KubiDrawer`, `/kubi` page, and top `KubiSearchInput` all share this single hook —
+ * don't create new assistant system, reuse existing `features/assistant` (BYOK provider/config,
+ * scrubSecrets). Conversation turn state in zustand singleton store, so closing/opening drawer
+ * (and navigating to `/kubi` page) continues same conversation.
  *
- * Stale guard(#256 리뷰 §6): 각 turn은 시작 시점의 `KubiContext`를 그대로 고정해서 들고 있다.
- * 화면이 바뀐 뒤에도 과거 turn은 그대로 보이지만(덮어쓰지 않음), SQL 실행/Action 적용처럼
- * 실제 부작용이 있는 동작은 turn.context가 현재 라우트 context와 일치할 때만 허용한다.
+ * Stale guard (#256 review §6): Each turn captures `KubiContext` at start and freezes it.
+ * Past turns remain visible even after screen change (not overwritten), but side-effect operations
+ * like SQL execution/Action apply only allowed when turn.context matches current route context.
  */
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,6 +32,14 @@ import {
 } from "./actions";
 import type { KubiAction } from "./schema";
 import type { KubiActionRunState, KubiContext, KubiTurn } from "./types";
+import { i18n } from "@/shared/i18n";
+
+/**
+ * All text strings in this file under `kubi.session.*` (#350).
+ * Name not `t`: file has callbacks receiving `KubiTurn` as `t`, obscures it.
+ */
+const msg = (key: string, params?: Record<string, unknown>): string =>
+  i18n.t(`kubi.session.${key}`, params ?? {});
 
 function newTurnId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
@@ -50,7 +58,7 @@ interface KubiStoreState {
   consumeSeed: () => string | null;
 }
 
-/** Kubi 대화 상태 싱글턴. `onboarded`만 저장하고 대화 내용은 세션 동안만 유지한다(장기 저장 제외 범위). */
+/** Kubi conversation state singleton. `onboarded` persisted; conversation content session-only (long-term save excluded). */
 export const useKubiStore = create<KubiStoreState>()(
   persist(
     (set, get) => ({
@@ -79,16 +87,16 @@ export const useKubiStore = create<KubiStoreState>()(
 );
 
 export interface UseKubiSessionResult {
-  /** route에서 얻을 수 있는, 지금 이 순간의 context. */
+  /** Route-derived current context at this moment. */
   liveContext: KubiContext;
   pageLabel: string;
   onboarded: boolean;
   turns: KubiTurn[];
   isConfigured: boolean;
-  /** mock Builder 모드에서만 true — BYOK 없이 `askDemo`를 쓸 수 있는지 UI가 판단하는 데 쓴다. */
+  /** true only in mock Builder mode — tells UI whether `askDemo` can work when BYOK missing. */
   isDemoAvailable: boolean;
   ask: (question: string) => Promise<void>;
-  /** BYOK/LLM 없이 mock evidence만으로 결정적 데모 답변을 만든다(`features/kubi/demo.ts`). */
+  /** Without BYOK/LLM, provide deterministic demo answer from mock evidence (`features/kubi/demo.ts`). */
   askDemo: (question: string) => Promise<void>;
   cancel: (turnId: string) => void;
   isStale: (turn: KubiTurn) => boolean;
@@ -101,9 +109,9 @@ export interface UseKubiSessionResult {
 }
 
 /**
- * Kubi 대화 세션 훅. `KubiDrawer`/`KubiPage`가 공유하는 유일한 진입점이다.
+ * Kubi conversation session hook. Single entry point shared by `KubiDrawer`/`KubiPage`.
  *
- * @returns 현재 route context, 대화 turn 목록, 질문/취소/실행/승인 액션 함수.
+ * @returns Current route context, conversation turn list, question/cancel/execute/approve action functions.
  */
 export function useKubiSession(): UseKubiSessionResult {
   const location = useLocation();
@@ -154,7 +162,7 @@ export function useKubiSession(): UseKubiSessionResult {
         updateTurn(turnId, (t) => ({
           ...t,
           status: "error",
-          error: { kind: "bad_base_url", message: baseUrlError ?? "안전하지 않은 base URL입니다." },
+          error: { kind: "bad_base_url", message: baseUrlError ?? msg("unsafeBaseUrl") },
         }));
         return;
       }
@@ -174,11 +182,10 @@ export function useKubiSession(): UseKubiSessionResult {
         const provider = createProvider({ apiKey, model, baseUrl });
         const messages = buildKubiMessages(trimmed, evidence);
         let rawOutput = "";
-        // LLM egress 스크러버에서 엔트로피 오탐 면제 대상: Builder 응답으로 존재가 확인된 exact
-        // run id(safeRunIds) + Builder `/quality` 응답에서 deterministic 하게 만든 evidence
-        // identifier(safeEvidenceIds). 그래야 모델이 실제 run id/quality id를 그대로 echo 해도
-        // crossCheck(knownRefs)·suggestedAction 와 일치해 정상 근거·action 이 제거되지 않으면서,
-        // 아직 확인되지 않은 route runId 나 임의 문자열은 엔트로피 스크럽 대상으로 남는다.
+        // LLM egress scrubber entropy false-positive exemption targets: Builder response confirmed exact
+        // run ids (safeRunIds) + deterministically derived evidence identifiers from Builder `/quality` (safeEvidenceIds).
+        // Ensures LLM echoes actual run/quality ids as-is and matches against crossCheck(knownRefs)/suggestedActions
+        // normal evidence/action without removal, while unconfirmed route runId or arbitrary text stays entropy scrub target.
         for await (const chunk of provider.stream(messages, controller.signal, {
           safeRunIds: new Set<string>([...safeRunIds, ...safeEvidenceIds]),
         })) {
@@ -203,11 +210,11 @@ export function useKubiSession(): UseKubiSessionResult {
           actionStates[index] = { status: "pending_approval" };
         });
 
-        // parse 단계에서 형식이 잘못돼 떼어낸 evidenceRef(예: 허용 목록 밖 kind)도
-        // cross-check가 제거한 근거와 같은 자리에 함께 보여준다 — answer는 살린다.
+        // Parse step malformed evidenceRefs (e.g., disallowed kind) also shown alongside cross-check removed evidence
+        // in same place — answer preserved.
         const malformedRefs = parsed.malformedEvidenceRefs;
         const rejectedRefs = [
-          ...malformedRefs.map((ref) => `형식 오류로 제외: ${ref}`),
+          ...malformedRefs.map((ref) => msg("excludedMalformed", { ref })),
           ...checked.rejectedRefs,
         ];
         const hasRejections =
@@ -225,8 +232,10 @@ export function useKubiSession(): UseKubiSessionResult {
                 kind: "hallucinated_refs",
                 message: [
                   checked.rejectedSqlReason,
-                  rejectedRefs.length ? `제외된 근거: ${rejectedRefs.join(", ")}` : null,
-                  checked.rejectedActions.length ? `제외된 action: ${checked.rejectedActions.join(", ")}` : null,
+                  rejectedRefs.length ? msg("excludedRefs", { refs: rejectedRefs.join(", ") }) : null,
+                  checked.rejectedActions.length
+                    ? msg("excludedActions", { actions: checked.rejectedActions.join(", ") })
+                    : null,
                 ]
                   .filter(Boolean)
                   .join(" "),
@@ -243,7 +252,7 @@ export function useKubiSession(): UseKubiSessionResult {
         updateTurn(turnId, (t) => ({
           ...t,
           status: "error",
-          error: { kind: "llm_error", message: cause instanceof Error ? cause.message : "LLM 호출에 실패했습니다." },
+          error: { kind: "llm_error", message: cause instanceof Error ? cause.message : msg("llmFailed") },
         }));
       } finally {
         controllersRef.current.delete(turnId);
@@ -289,7 +298,7 @@ export function useKubiSession(): UseKubiSessionResult {
         updateTurn(turnId, (t) => ({
           ...t,
           status: "error",
-          error: { kind: "llm_error", message: cause instanceof Error ? cause.message : "데모 evidence 조회에 실패했습니다." },
+          error: { kind: "llm_error", message: cause instanceof Error ? cause.message : msg("demoEvidenceFailed") },
         }));
       } finally {
         controllersRef.current.delete(turnId);
@@ -310,13 +319,13 @@ export function useKubiSession(): UseKubiSessionResult {
       if (!contextsMatch(turn.context, liveContext)) {
         updateTurn(turnId, (t) => ({
           ...t,
-          query: { status: "error", code: "invalid_context", message: "화면 문맥이 바뀌어 이 SQL을 실행할 수 없습니다." },
+          query: { status: "error", code: "invalid_context", message: msg("contextChangedSql") },
         }));
         return;
       }
       updateTurn(turnId, (t) => ({ ...t, query: { status: "running" } }));
 
-      // 데모 turn은 Builder `/query`를 호출하지 않는다 — 고정된 mock 결과만 보여준다(#256 데모).
+      // Demo turn doesn't call Builder `/query` — shows fixed mock result (#256 demo).
       if (turn.isDemo) {
         const result = await runKubiDemoQuery();
         updateTurn(turnId, (t) => ({ ...t, query: result }));
@@ -347,15 +356,15 @@ export function useKubiSession(): UseKubiSessionResult {
     [navigate],
   );
 
-  // OPEN_* / ADD_REPORT_BLOCK은 한 번의 승인으로 즉시 적용한다. PATCH_BUILDSPEC/CREATE_BUILD_DRAFT는
-  // diff/미리보기를 먼저 보여줘야 하므로 "approved" 상태로만 전환하고 실제 적용은 confirmApprovedAction이 한다.
+  // OPEN_* / ADD_REPORT_BLOCK apply immediately with single approve. PATCH_BUILDSPEC/CREATE_BUILD_DRAFT
+  // show diff/preview first, so transition to "approved" state only; actual apply done by confirmApprovedAction.
   const approveAction = useCallback(
     async (turnId: string, index: number) => {
       const turn = turns.find((t) => t.id === turnId);
       const action = turn?.response?.suggestedActions[index];
       if (!turn || !action) return;
       if (!contextsMatch(turn.context, liveContext)) {
-        setActionState(turnId, index, { status: "error", message: "화면 문맥이 바뀌어 이 action을 실행할 수 없습니다." });
+        setActionState(turnId, index, { status: "error", message: msg("contextChangedAction") });
         return;
       }
 
@@ -368,15 +377,15 @@ export function useKubiSession(): UseKubiSessionResult {
       try {
         if (action.type === "OPEN_PROVIDER" || action.type === "OPEN_BUILD" || action.type === "OPEN_QUALITY") {
           goToAction(action);
-          setActionState(turnId, index, { status: "applied", message: "화면을 열었습니다." });
+          setActionState(turnId, index, { status: "applied", message: msg("opened") });
         } else if (action.type === "ADD_REPORT_BLOCK") {
           applyAddReportBlock(action, turn.context);
-          setActionState(turnId, index, { status: "applied", message: "Report 참고 노트로 추가했습니다." });
+          setActionState(turnId, index, { status: "applied", message: msg("addedToReport") });
         }
       } catch (cause) {
         setActionState(turnId, index, {
           status: "error",
-          message: cause instanceof Error ? cause.message : "action을 적용하지 못했습니다.",
+          message: cause instanceof Error ? cause.message : msg("actionFailed"),
         });
       }
     },
@@ -399,7 +408,7 @@ export function useKubiSession(): UseKubiSessionResult {
       const action = turn?.response?.suggestedActions[index];
       if (!turn || !action) return;
       if (!contextsMatch(turn.context, liveContext)) {
-        setActionState(turnId, index, { status: "error", message: "화면 문맥이 바뀌어 이 action을 적용할 수 없습니다." });
+        setActionState(turnId, index, { status: "error", message: msg("contextChangedApply") });
         return;
       }
 
@@ -416,13 +425,13 @@ export function useKubiSession(): UseKubiSessionResult {
           setActionState(turnId, index, {
             status: "applied",
             message: result.valid
-              ? "BuildSpec에 적용했고 Builder /validate를 통과했습니다."
-              : `BuildSpec에 적용했지만 Builder /validate에 실패했습니다: ${result.errors.join("; ")}`,
+              ? msg("patchApplied")
+              : msg("patchAppliedInvalid", { errors: result.errors.join("; ") }),
           });
         } catch (cause) {
           setActionState(turnId, index, {
             status: "error",
-            message: cause instanceof Error ? cause.message : "BuildSpec patch 적용에 실패했습니다.",
+            message: cause instanceof Error ? cause.message : msg("patchFailed"),
           });
         }
         return;
@@ -431,12 +440,12 @@ export function useKubiSession(): UseKubiSessionResult {
       if (action.type === "CREATE_BUILD_DRAFT") {
         try {
           applyCreateBuildDraft(action);
-          setActionState(turnId, index, { status: "applied", message: "New Build 초안에 저장했습니다." });
+          setActionState(turnId, index, { status: "applied", message: msg("draftSaved") });
           navigate("/builds/new");
         } catch (cause) {
           setActionState(turnId, index, {
             status: "error",
-            message: cause instanceof Error ? cause.message : "초안을 저장하지 못했습니다.",
+            message: cause instanceof Error ? cause.message : msg("draftSaveFailed"),
           });
         }
       }
@@ -446,14 +455,14 @@ export function useKubiSession(): UseKubiSessionResult {
 
   const rejectAction = useCallback(
     (turnId: string, index: number) => {
-      setActionState(turnId, index, { status: "rejected", reason: "사용자가 이 action을 거부했습니다." });
+      setActionState(turnId, index, { status: "rejected", reason: msg("actionRejected") });
     },
     [setActionState],
   );
 
-  // 상단 검색창(KubiSearchInput)이 남겨둔 질문을 소비한다. KubiDrawer와 `/kubi` 페이지가 동시에
-  // mount되어 있을 수 있어(둘 다 이 훅을 쓴다), consumeSeed()의 atomic pop으로 정확히 한 곳에서만
-  // ask()가 호출되게 한다 — 같은 질문이 두 번 실행되지 않는다.
+  // Top search bar (KubiSearchInput) left question for consumption. KubiDrawer and `/kubi` page may mount
+  // simultaneously (both use this hook); atomic pop from consumeSeed() ensures ask() called exactly once —
+  // prevents same question executing twice.
   useEffect(() => {
     if (!pendingSeed) return;
     const seed = consumeSeed();

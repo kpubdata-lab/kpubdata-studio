@@ -12,7 +12,7 @@ describe("resolveKubiContext (#247, #256)", () => {
     expect(resolveKubiContext("/workspace").pageLabel).toBe("Workspace");
     expect(resolveKubiContext("/add").pageLabel).toBe("Add Data");
     expect(resolveKubiContext("/quality").pageLabel).toBe("Quality");
-    expect(resolveKubiContext("/kubi").pageLabel).toBe("Kubi");
+    expect(resolveKubiContext("/kubi").pageLabel).toBe("Ask KPubData");
     expect(resolveKubiContext("/reports").pageLabel).toBe("Reports");
     expect(resolveKubiContext("/provider").pageLabel).toBe("Provider");
     expect(resolveKubiContext("/monitoring").pageLabel).toBe("Monitoring");

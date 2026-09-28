@@ -1,22 +1,22 @@
 /**
- * Report Draft 로컬 저장소 (#258).
+ * Report Draft local storage (#258).
  *
- * `draftStorage.ts`/`specStore.ts`와 같은 `{version, ...}` 봉투 규약을 따르되, 단일 키에
- * 하나만 저장하던 그 모듈들과 달리 **여러 Report를 각자의 id로 저장**한다(#258 §11 —
- * "단일 localStorage key 하나에 Report 하나만 저장하는 구조는 피한다"). `#260 Workspace`가
- * 나중에 같은 저장 계층을 재사용할 수 있도록 이 파일의 함수 시그니처만 의존하게 하고,
- * 내부 표현(localStorage 봉투)은 자유롭게 바꿀 수 있는 여지를 남긴다.
+ * Follows `{version, ...}` envelope contract like `draftStorage.ts`/`specStore.ts`, but unlike those
+ * modules storing one per key, **saves multiple Reports each by its own id** (#258 §11 — avoid "one
+ * Report per single localStorage key"). Let function signatures depend only on this file, leaving
+ * internal representation (localStorage envelope) free to change for later #260 Workspace reuse.
  *
- * 저장 실패(quota 초과/storage 사용 불가/직렬화 실패)를 조용히 삼키지 않는다 — 호출부가
- * "저장됨"이라고 잘못 표시하지 않도록 항상 명시적 결과를 반환한다(#258 §11, §12).
+ * Never silently swallow save failures (quota exceeded/storage unavailable/serialization failed) —
+ * always return explicit result so caller does not wrongly claim "saved" (#258 §11, §12).
  */
+import { i18n } from "@/shared/i18n";
 import { REPORT_VERSION, type ReportDraft, type ReportSummary } from "./types";
 import { ownedStorageKey } from "@/features/auth/storageOwner";
 
 const STORE_KEY = "kpubdata-studio:reports";
 export const STORE_VERSION = 1;
 
-/** 저장 가능한 최대 Report 수. 넘으면 가장 오래 수정되지 않은 것부터 저장을 거부한다(자동 삭제하지 않음). */
+/** Max Reports storable. Over limit, oldest-unused rejected first (not auto-deleted). */
 export const REPORT_STORE_LIMIT = 30;
 
 interface StoreEnvelope {
@@ -40,7 +40,7 @@ function isStorageAvailable(): boolean {
   }
 }
 
-/** 저장된 봉투를 읽는다. 없거나 버전이 다르거나 손상되면 빈 봉투를 반환한다(손상 값은 정리). */
+/** Read stored envelope. Return empty envelope if missing/version mismatch/corrupt (clean corrupted values). */
 function readEnvelope(): StoreEnvelope {
   if (!isStorageAvailable()) return emptyEnvelope();
   try {
@@ -64,18 +64,18 @@ function readEnvelope(): StoreEnvelope {
 }
 
 /**
- * 봉투를 저장한다. 성공/실패를 그대로 알린다 — quota 초과·storage 미지원·직렬화 실패를
- * 구분해 이유를 돌려주고, 실패했는데도 저장된 것처럼 보이게 하지 않는다.
+ * Save envelope. Report success/failure as-is — distinguish quota exceeded/storage unsupported/serialization failed,
+ * return reason, never hide failure as success.
  */
 function writeEnvelope(envelope: StoreEnvelope): SaveResult {
   if (!isStorageAvailable()) {
-    return { ok: false, reason: "이 브라우저에서 로컬 저장소를 사용할 수 없습니다(프라이빗 모드 등)." };
+    return { ok: false, reason: i18n.t("reports.storage.noStorage") };
   }
   let serialized: string;
   try {
     serialized = JSON.stringify(envelope);
   } catch {
-    return { ok: false, reason: "Report 내용을 저장 형식으로 변환하지 못했습니다." };
+    return { ok: false, reason: i18n.t("reports.storage.serializeFailed") };
   }
   try {
     localStorage.setItem(ownedStorageKey(STORE_KEY), serialized);
@@ -87,8 +87,8 @@ function writeEnvelope(envelope: StoreEnvelope): SaveResult {
     return {
       ok: false,
       reason: isQuota
-        ? "저장 공간이 부족합니다. 오래된 Report를 삭제한 뒤 다시 시도하세요."
-        : "Report를 저장하지 못했습니다.",
+        ? i18n.t("reports.storage.quotaExceeded")
+        : i18n.t("reports.storage.saveFailed"),
     };
   }
 }
@@ -98,7 +98,7 @@ function newId(): string {
   return `report-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-/** 저장된 Report 목록을 최근 수정 순으로 요약해 반환한다. */
+/** Return summary of saved Reports in most-recently-modified order. */
 export function listReportSummaries(): ReportSummary[] {
   const envelope = readEnvelope();
   return Object.values(envelope.reports)
@@ -113,17 +113,16 @@ export function listReportSummaries(): ReportSummary[] {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-/** id로 Report 전체를 불러온다. 없으면 null. */
+/** Load full Report by id. Return null if not found. */
 export function getReport(id: string): ReportDraft | null {
   if (!id) return null;
   return readEnvelope().reports[id] ?? null;
 }
 
 /**
- * Report를 저장한다(생성/수정 공용). 이미 저장된 revision보다 낮은 revision으로 저장을
- * 시도하면(다른 탭에서 먼저 저장한 경우) 기본적으로 거부한다 — 복잡한 3-way merge 대신
- * "먼저 저장한 내용을 보존하고 사용자에게 알린다"는 최소 안전 모델을 따른다(#258 §13).
- * `force: true`를 넘기면 그래도 덮어쓴다(사용자가 명시적으로 선택했을 때만 호출부가 사용).
+ * Save Report (create/update shared). If attempting save with lower revision than stored (different tab saved first),
+ * reject by default — avoid complex 3-way merge; use minimal safety model: preserve first save and notify user (#258 §13).
+ * Pass `force: true` to overwrite anyway (caller only uses when user explicitly chose to).
  */
 export function saveReport(report: ReportDraft, options: { force?: boolean } = {}): SaveResult {
   const envelope = readEnvelope();
@@ -133,7 +132,7 @@ export function saveReport(report: ReportDraft, options: { force?: boolean } = {
     return {
       ok: false,
       conflict: true,
-      reason: "다른 탭 또는 창에서 이 Report를 먼저 저장했습니다. 최신 내용을 다시 불러온 뒤 저장하세요.",
+      reason: i18n.t("reports.storage.staleWrite"),
     };
   }
 
@@ -141,7 +140,7 @@ export function saveReport(report: ReportDraft, options: { force?: boolean } = {
   if (!existing && keys.length >= REPORT_STORE_LIMIT) {
     return {
       ok: false,
-      reason: `저장 가능한 Report 수(${REPORT_STORE_LIMIT}개)를 초과했습니다. 사용하지 않는 Report를 먼저 삭제하세요.`,
+      reason: i18n.t("reports.storage.limitExceeded", { limit: REPORT_STORE_LIMIT }),
     };
   }
 
@@ -154,7 +153,7 @@ export function saveReport(report: ReportDraft, options: { force?: boolean } = {
   return { ok: true, revision: nextRevision };
 }
 
-/** 새 Report를 만들어 저장한다. 저장 실패 시 report는 반환하되 저장은 되지 않았음을 result로 알린다. */
+/** Create and save new Report. On save failure, return Report but mark save as failed in result. */
 export function createReport(
   input: Pick<ReportDraft, "title" | "datasetId" | "baseRunId" | "buildSpecDigest" | "evidenceFetchedAt" | "blocks" | "evidenceRefs">,
 ): { report: ReportDraft; result: SaveResult } {
@@ -177,14 +176,14 @@ export function createReport(
   return { report: result.ok ? { ...report, revision: result.revision } : report, result };
 }
 
-/** 제목만 바꿔 저장한다. */
+/** Save with only title changed. */
 export function renameReport(id: string, title: string): SaveResult {
   const report = getReport(id);
-  if (!report) return { ok: false, reason: "Report를 찾을 수 없습니다." };
+  if (!report) return { ok: false, reason: i18n.t("reports.storage.notFound") };
   return saveReport({ ...report, title }, { force: true });
 }
 
-/** 기존 Report를 복제해 새 id로 저장한다(블록/evidence 전부 복사, 참조 공유 없음). */
+/** Clone existing Report, save with new id (copy all blocks/evidence, no shared refs). */
 export function duplicateReport(id: string, titleOverride?: string): { report: ReportDraft; result: SaveResult } | null {
   const source = getReport(id);
   if (!source) return null;
@@ -192,7 +191,7 @@ export function duplicateReport(id: string, titleOverride?: string): { report: R
   const cloned: ReportDraft = {
     ...structuredClone(source),
     id: newId(),
-    title: titleOverride ?? `${source.title} (복제본)`,
+    title: titleOverride ?? i18n.t("reports.storage.copyOf", { name: source.title }),
     createdAt: now,
     updatedAt: now,
     revision: 0,
@@ -201,7 +200,7 @@ export function duplicateReport(id: string, titleOverride?: string): { report: R
   return { report: result.ok ? { ...cloned, revision: result.revision } : cloned, result };
 }
 
-/** id의 Report를 삭제한다. 존재하지 않았거나 저장소 사용 불가 시 false. */
+/** Delete Report by id. Return false if not found or storage unavailable. */
 export function deleteReport(id: string): boolean {
   if (!isStorageAvailable()) return false;
   const envelope = readEnvelope();
@@ -210,7 +209,7 @@ export function deleteReport(id: string): boolean {
   return writeEnvelope(envelope).ok;
 }
 
-/** 저장된 Report가 있는지 확인한다(빈 상태 안내용). */
+/** Check if any Report saved (for empty-state message). */
 export function hasAnyReport(): boolean {
   return Object.keys(readEnvelope().reports).length > 0;
 }

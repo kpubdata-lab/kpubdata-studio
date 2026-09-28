@@ -1,9 +1,10 @@
 /**
- * 공용 DEMO/DEV 환경 배지.
+ * Public DEMO/DEV environment badge.
  *
- * 실제 계정 인증이 아직 연결되지 않은 mock/demo 환경임을 반복되는 안내 문장 대신
- * 눈에 띄는 배지 하나로 표시한다. `isRealBuilderEnabled()`(실제 Builder 연동 여부)로
- * 판단하는 호출부에서만 조건부로 렌더링한다 — 이 컴포넌트 자체는 항상 "DEMO"를 뜻한다.
+ * Shows mock/demo environment without real account auth as a single eye-catching badge
+ * instead of repeated guidance text. Conditionally rendered only from callsites that
+ * check `isRealBuilderEnabled()` (real Builder integration status) — this component
+ * itself always means "DEMO".
  */
 import { cn } from "./cn";
 

@@ -1,17 +1,18 @@
 /**
- * 개별 빌드 실행 정보 조회 API (#120, F02).
+ * Build execution info query API (#120, F02).
  *
- * mock 모드에서는 결정적 mock 이력이 전체 BuildSpec을 들고 있으므로 그대로 쓴다.
+ * In mock mode, deterministic mock history holds the entire BuildSpec; use it as-is.
  *
- * 실연동 모드에서는 Builder current contract를 authoritative source로 쓴다:
- *  - BuildSpec: `GET /builds/{run_id}/spec` snapshot이 정본이다(다른 브라우저/CLI에서
- *    생성돼 localStorage에 스펙이 없어도 편집 가능). legacy run(snapshot 404)일 때만
- *    로컬 `specStore`로 fallback한다.
- *  - status: 절대 임의로 succeeded로 만들지 않는다. `GET /builds` 목록에 있으면 그
- *    terminal summary status를, 없으면 authoritative `GET /builds/{run_id}/manifest`의
- *    `status`(ok→succeeded / failed→failed / cancelled→cancelled)를 쓴다. 둘 다
- *    불가하면 succeeded/failed/cancelled를 추측하지 않고 명시적 오류로 처리한다.
+ * In live mode, use Builder current contract as authoritative source:
+ *  - BuildSpec: `GET /builds/{run_id}/spec` snapshot is canonical (if created in
+ *    other browsers/CLI, edit is possible even without spec in localStorage);
+ *    fallback to local `specStore` only when snapshot 404 (legacy run).
+ *  - status: never assume succeeded arbitrarily. Use terminal summary status if present
+ *    in `GET /builds` list; if not, use authoritative `GET /builds/{run_id}/manifest`
+ *    `status` (ok→succeeded / failed→failed / cancelled→cancelled). If both unavailable,
+ *    do not guess; handle as explicit error.
  */
+import { i18n } from "@/shared/i18n";
 import { loadBuildSpec, redactSpecForStorage } from "@/features/build-spec/specStore";
 import { fromYamlText } from "@/features/build-spec/yamlText";
 import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -19,8 +20,8 @@ import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/share
 import { listBuilds, mockBuilds } from "./index";
 
 /**
- * authoritative manifest의 `status`를 Studio BuildRunStatus로 매핑한다. `status` 필드가
- * 없는 legacy/partial manifest는 null(추측 금지).
+ * Map authoritative manifest `status` to Studio BuildRunStatus. Legacy/partial
+ * manifests without `status` field return null (no guessing).
  */
 async function resolveManifestStatus(runId: string): Promise<BuildRunStatus | null> {
   try {
@@ -41,20 +42,20 @@ async function resolveManifestStatus(runId: string): Promise<BuildRunStatus | nu
 }
 
 /**
- * buildId로 빌드 실행 정보를 조회한다.
+ * Query build execution info by buildId.
  *
- * @param buildId - 조회할 빌드 ID(run_id).
- * @returns 빌드 실행 정보.
- * @throws Error 스펙 또는 상태를 authoritative하게 확인할 수 없는 경우.
+ * @param buildId - Build ID to query (run_id).
+ * @returns Build execution info.
+ * @throws Error if spec or status cannot be determined authoritatively.
  */
 export async function getBuild(buildId: string): Promise<BuildRun> {
   if (!buildId) {
-    throw new Error("빌드 ID가 없습니다.");
+    throw new Error(i18n.t("runs.errors.missingId"));
   }
 
   const storedSpec = loadBuildSpec(buildId);
 
-  // mock 모드: 결정적 mock 이력이 전체 BuildSpec을 들고 있으므로 그대로 활용한다.
+  // Mock mode: deterministic mock history holds entire BuildSpec; use as-is.
   if (!isRealBuilderEnabled()) {
     const mockRun = mockBuilds().find((candidate) => candidate.id === buildId);
     if (mockRun) {
@@ -63,22 +64,22 @@ export async function getBuild(buildId: string): Promise<BuildRun> {
     if (storedSpec) {
       return { id: buildId, spec: storedSpec, status: "succeeded" as const, startedAt: "" };
     }
-    throw new Error(`빌드를 찾을 수 없습니다: ${buildId}`);
+    throw new Error(i18n.t("runs.errors.notFound", { buildId }));
   }
 
-  // --- 실연동 모드 ---
+  // --- Live mode ---
 
-  // 1) BuildSpec: Builder snapshot이 authoritative. legacy(404)일 때만 로컬 fallback.
+  // 1) BuildSpec: Builder snapshot is authoritative; fallback to local only on 404 (legacy).
   let spec: BuildSpec | null = null;
   try {
     const snapshot = await builderApi.getBuildSpecSnapshot(buildId);
-    // Builder가 redaction한 canonical YAML. 복원 시 storage 경계와 동일하게 한 번 더
-    // 정규화해 secret-keyed 값이 인식 가능한 `[REDACTED]` marker가 되도록 한다 — 기존
-    // S07 marker detection/fail-closed가 그대로 동작한다. raw credential은 복원하지 않는다.
+    // Canonical YAML redacted by Builder. Upon restore, normalize again at storage boundary
+    // so secret-keyed values become recognizable `[REDACTED]` markers — existing S07 marker
+    // detection/fail-closed logic continues to work. Raw credentials are not restored.
     spec = redactSpecForStorage(fromYamlText(snapshot.spec));
   } catch (cause) {
-    // snapshot이 legacy(404)일 때만 로컬 specStore로 내려간다. 권한/네트워크/파싱
-    // 오류는 "정보 없음"으로 뭉개지 않고 그대로 노출한다.
+    // Fallback to local specStore only on legacy 404. Auth/network/parse errors are
+    // exposed as-is, not masked as "no info".
     if (!(cause instanceof ApiError && cause.status === 404)) {
       throw cause;
     }
@@ -89,11 +90,11 @@ export async function getBuild(buildId: string): Promise<BuildRun> {
 
   if (!spec) {
     throw new Error(
-      `빌드를 찾을 수 없습니다: ${buildId}. 이 실행의 BuildSpec snapshot이 없고(legacy) 로컬에 보관된 스펙도 없습니다.`,
+      i18n.t("runs.errors.notFoundNoSpec", { buildId }),
     );
   }
 
-  // 2) status: GET /builds 목록 > authoritative manifest.status > 명시적 오류.
+  // 2) status: GET /builds list > authoritative manifest.status > explicit error.
   const items: BuildListItem[] = await listBuilds().catch(() => [] as BuildListItem[]);
   const item = items.find((candidate) => candidate.id === buildId);
   if (item) {
@@ -112,6 +113,6 @@ export async function getBuild(buildId: string): Promise<BuildRun> {
   }
 
   throw new Error(
-    `빌드 상태를 확인할 수 없습니다: ${buildId}. Builder 이력 목록과 manifest 어디에서도 이 실행의 최종 상태를 찾지 못했습니다.`,
+    i18n.t("runs.errors.statusUnknown", { buildId }),
   );
 }

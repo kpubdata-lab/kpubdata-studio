@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
 
 /**
- * 핵심 route smoke (#268 체크리스트: 핵심 route smoke tests).
- * mock 모드에서 모든 주요 화면이 제목을 렌더링하고 console error가 없음을 확인한다.
+ * Core route smoke (#268 checklist: core route smoke tests).
+ * Verifies all major screens render titles and have no console errors in mock mode.
  */
 test.beforeEach(async ({ page }) => {
   await prepareCleanPage(page);
@@ -35,7 +35,7 @@ test("핵심 route가 제목을 렌더링하고 console error가 없다", async 
   await expectNoPageErrors(errors);
 });
 
-test("Settings에 Provider 자격 증명과 Kubi BYOK가 분리된 영역으로 존재한다 (#301 회귀)", async ({
+test("Settings에 Provider 자격 증명과 Ask KPubData BYOK가 분리된 영역으로 존재한다 (#301 회귀)", async ({
   page,
 }) => {
   const errors: string[] = [];

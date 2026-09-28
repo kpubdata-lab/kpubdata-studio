@@ -1,12 +1,13 @@
 /**
- * Add Data Workbench(#250) 상태 모델.
+ * Add Data Workbench (#250) state model.
  *
- * Source → Configure → Preview & Validate → Review & Build 4단계가 공유하는 draft
- * 형태와, 그 draft를 실제 제출 가능한 canonical `BuildSpec`으로 매핑하는 순수 함수를
- * 담는다. `NewBuildPage`의 `toBuildSpec`/`toFormValues`와 같은 역할이지만, Add Data는
- * kind(public_api/file/url)에 따라 서로 다른 필드 집합을 다뤄야 해서 별도로 둔다 —
- * 매핑 결과(`BuildSpec`)와 최종 제출 직렬화(`serializeSpec`/`toBuilderSpec`)는
- * `features/build-spec/specMapping.ts`를 그대로 재사용한다(#250 amendment 1).
+ * Holds draft shape shared by 4 stages (Source → Configure → Preview & Validate
+ * → Review & Build) and pure functions mapping that draft to submittable canonical
+ * `BuildSpec`. Same role as `NewBuildPage`'s `toBuildSpec`/`toFormValues`, but Add
+ * Data must handle different field sets per kind (public_api/file/url), so kept
+ * separate — mapping result (`BuildSpec`) and final submission serialization
+ * (`serializeSpec`/`toBuilderSpec`) reuse `features/build-spec/specMapping.ts`
+ * directly (#250 amendment 1).
  */
 import { parseSourceParams } from "@/features/build-spec/paramsInput";
 import { identityFromUrl } from "@/features/add-data/identity";
@@ -14,27 +15,31 @@ import { endpointHasRedactedSecret, redactUrlEndpoint, urlHasUserinfo } from "@/
 import { jsonValueHasRedactedSecret, redactSourceParamsObject, sourceParamsHasRedactedSecret } from "@/features/add-data/paramsRedaction";
 import { buildSpecSchema } from "@/shared/lib/schemas";
 import type { BuildSpec, JsonValue, SourceFormat, SourceKind, SourceRef } from "@/shared/lib/types";
+import { i18n } from "@/shared/i18n";
+
+/** All strings in this file live under `addData.model.*` (#350). */
+const t = (key: string): string => i18n.t(`addData.model.${key}`);
 
 export interface PublicApiDraft {
   provider: string;
   dataset: string;
-  /** JSON textarea 원문. `parseSourceParams`로 검증한다(NewBuildPage와 동일 로직 재사용). */
+  /** JSON textarea source. Validated via `parseSourceParams` (reuse same logic as NewBuildPage). */
   sourceParams: string;
 }
 
 export interface FileDraft {
-  /** 업로드 성공 후 Builder가 발급한 upload_id. 업로드 전에는 null. */
+  /** Builder-issued upload_id after successful upload. Null before upload. */
   uploadId: string | null;
   format: SourceFormat | null;
   encoding: string;
-  /** 표시 전용 원본 파일명(Builder 응답의 original_filename을 그대로 보존). */
+  /** Display-only original filename (preserves Builder response original_filename as-is). */
   filename: string | null;
   sizeBytes: number | null;
 }
 
 export interface UrlDraft {
   endpoint: string;
-  /** url source의 format은 선택(csv/json/jsonl) — 생략하면 Builder가 Content-Type로 추론. */
+  /** URL source format is optional (csv/json/jsonl) — omit to let Builder infer from Content-Type. */
   format: Extract<SourceFormat, "csv" | "json" | "jsonl"> | null;
 }
 
@@ -43,9 +48,9 @@ export type PreviewLimit = 5 | 10 | 20;
 export type PreviewColumnView = "key" | "all";
 
 export interface AddDataDraft {
-  /** YAML에서 읽은 canonical spec. GUI projection과 별도로 보존한다. */
+  /** Canonical spec read from YAML. Preserved separately from GUI projection. */
   canonicalBase?: BuildSpec;
-  /** Source 단계에서 아직 선택하지 않았으면 null. */
+  /** Source step has not yet been selected; null until chosen. */
   sourceKind: SourceKind | null;
   publicApi: PublicApiDraft;
   file: FileDraft;
@@ -53,11 +58,12 @@ export interface AddDataDraft {
   datasetId: string;
   title: string;
   description: string;
-  /**
-   * 사용자가 고급 설정(Dataset metadata)에서 해당 필드를 직접 수정했는지(#250 amendment 2).
-   * true면 provider/dataset/파일/endpoint가 바뀌어도 자동 생성값이 더 이상 덮어쓰지 않는다
-   * — `identity.ts`가 만드는 값은 어디까지나 기본값이고, 사용자가 고른 값이 항상 이긴다.
-   */
+    /**
+     * Whether user directly edited this field in advanced settings (Dataset metadata)
+     * (#250 amendment 2). If true, auto-gen values will no longer overwrite when
+     * provider/dataset/file/endpoint changes — values from identity.ts are defaults;
+     * user-chosen values always win.
+     */
   datasetIdTouched: boolean;
   titleTouched: boolean;
   descriptionTouched: boolean;
@@ -93,48 +99,48 @@ export interface BuildSpecResult {
 }
 
 interface CandidateResult {
-  /**
-   * 현재 GUI 값 + canonicalBase 보존 필드를 병합한 best-effort BuildSpec. sentinel이
-   * 남아 있어도(= `error`가 함께 있어도) 존재할 수 있다 — YAML 에디터가 sentinel을
-   * 실제 값으로 바꿔 붙여넣을 자리를 보여주려면 candidate 자체는 사라지면 안 된다
-   * (#283 후속 리뷰 §3).
-   */
+    /**
+     * Best-effort BuildSpec from merging current GUI values + canonicalBase
+     * preserved fields. May exist even with sentinel remaining (= `error` present
+     * too) — YAML editor needs candidate itself to show places where sentinel
+     * should be replaced with real values (#283 follow-up review §3).
+     */
   candidate?: BuildSpec;
-  /** candidate를 Builder에 제출 가능한 spec으로 취급하면 안 되는 이유(있다면). */
+  /** Reason candidate should not be treated as submittable spec (if any). */
   error?: string;
 }
 
 /**
- * draft의 GUI 값(현재 소스 kind별 입력 + canonicalBase 보존 필드)으로 candidate
- * BuildSpec을 만든다. sentinel(REDACTED) fail-closed 판정과 스키마 검증은 호출부
- * (`buildSpecFromDraft`)에서 별도로 수행한다 — 이 함수 자체는 "제출 가능 여부"가
- * 아니라 "지금 화면에 무엇을 보여줄 수 있는가"를 계산한다.
+ * Build candidate BuildSpec from draft GUI values. Sentinel fail-closed check and
+ * schema validation are done separately by caller (`buildSpecFromDraft`) — this
+ * function itself calculates "what can we show on screen now", not "is it
+ * submittable".
  */
 function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
   if (!draft.sourceKind) {
-    return { error: "Source를 먼저 선택해주세요." };
+    return { error: t("sourceRequired") };
   }
   if (draft.exportFormats.length === 0) {
-    return { error: "출력 형식을 최소 1개 선택해주세요." };
+    return { error: t("exportRequired") };
   }
   if (!draft.datasetId || !draft.title || !draft.description) {
-    return { error: "데이터셋 ID/제목/설명을 입력해주세요." };
+    return { error: t("metadataRequired") };
   }
 
   let source;
-  // sentinel이 남아 있다는 사실은 기록만 해두고(sentinelError) source 자체는 계속
-  // 만든다 — candidate가 있어야 YAML 에디터가 sentinel이 박힌 canonical spec을
-  // 보여주고, 사용자가 그 자리를 실제 값으로 고칠 수 있다.
+   // Only record that sentinel remains (sentinelError); build source anyway — candidate
+   // must exist so YAML editor can show canonical spec with sentinel and user can
+   // replace sentinel with real values.
   let sentinelError: string | undefined;
   if (draft.sourceKind === "public_api") {
     if (!draft.publicApi.provider || !draft.publicApi.dataset) {
-      return { error: "Provider와 Dataset을 선택해주세요." };
+      return { error: t("providerDatasetRequired") };
     }
-    // 저장된 초안을 복원했는데 sourceParams의 secret 값이 이미 sentinel로 지워져
-    // 있으면 fail-closed — placeholder를 실제 파라미터처럼 Builder에 제출하지 않는다
-    // (#283 후속 리뷰 §1). 사용자가 값을 다시 입력해야 Preview/Build가 가능하다.
+     // Restored from saved draft but sourceParams secret already wiped to sentinel —
+     // fail-closed — do not submit placeholder as real parameter to Builder (#283
+     // follow-up review §1). User must re-enter for Preview/Build to work.
     if (sourceParamsHasRedactedSecret(draft.publicApi.sourceParams)) {
-      sentinelError = "저장된 초안에서 시크릿이 포함된 파라미터 값이 제거되었습니다. Query/Config를 다시 입력해주세요.";
+      sentinelError = t("paramsRedacted");
     }
     const parsedParams = parseSourceParams(draft.publicApi.sourceParams);
     if (parsedParams.error) return { error: parsedParams.error };
@@ -145,7 +151,7 @@ function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
     };
   } else if (draft.sourceKind === "file") {
     if (!draft.file.uploadId || !draft.file.format) {
-      return { error: "먼저 파일을 업로드해주세요." };
+      return { error: t("uploadRequired") };
     }
     source = {
       kind: "file" as const,
@@ -156,23 +162,23 @@ function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
     };
   } else {
     if (!draft.url.endpoint) {
-      return { error: "Endpoint를 입력해주세요." };
+      return { error: t("endpointRequired") };
     }
-    // 저장된 초안을 복원했는데 endpoint의 secret query parameter가 이미 REDACTED로
-    // 지워져 있으면 fail-closed — placeholder를 실제 endpoint/credential처럼 Builder에
-    // 제출하지 않는다(Epic #246). 사용자가 값을 다시 입력해야 Preview/Build가 가능하다.
+     // Restored from saved draft but endpoint secret query param already wiped to REDACTED
+     // — fail-closed — do not submit placeholder as real endpoint/credential to Builder
+     // (Epic #246). User must re-enter for Preview/Build to work.
     if (endpointHasRedactedSecret(draft.url.endpoint)) {
-      sentinelError = "저장된 초안에서 시크릿이 포함된 URL 값이 제거되었습니다. Endpoint를 다시 입력해주세요.";
+      sentinelError = t("urlRedacted");
     }
-    // URL Auth(userinfo credential)는 계약에 없는 기능이다(#283 후속 리뷰 §4) —
-    // `user:pass@host` 형태는 조용히 지원하는 대신 항상 오류로 막는다.
+     // URL Auth (userinfo credential) not in contract (#283 follow-up review §4) —
+     // silently supporting `user:pass@host` instead fail-close always.
     if (urlHasUserinfo(draft.url.endpoint)) {
       return {
-        error: "URL에 사용자 정보(예: user:pass@host)를 포함할 수 없습니다. Endpoint에 자격 증명을 넣지 마세요.",
+        error: t("urlUserInfo"),
       };
     }
     if (!/^https:\/\//i.test(draft.url.endpoint)) {
-      return { error: "https:// 로 시작하는 URL만 지원합니다." };
+      return { error: t("httpsOnly") };
     }
     source = {
       kind: "url" as const,
@@ -191,20 +197,20 @@ function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
       ? baseSource.provider === draft.publicApi.provider && baseSource.dataset === draft.publicApi.dataset
       : draft.sourceKind === "file"
         ? baseSource.uploadId === draft.file.uploadId
-        // URL identity SSOT(hostname+path)와 동일 기준을 재사용한다 — query/userinfo/
-        // fragment만 바뀌어도 identity.ts가 이미 같은 source로 취급하므로(#283 후속
-        // 리뷰 §5), 여기서도 endpoint 원문 비교 대신 identityFromUrl().datasetId로
-        // 비교해 alias/schema 같은 보존 필드를 잃지 않게 한다.
+        // URL identity SSOT (hostname+path) — reuse same criteria. Query/userinfo/
+        // fragment changes alone do not change source (identity.ts already treats as
+        // same), so compare via identityFromUrl().datasetId instead of endpoint text
+        // to preserve trailing fields like alias/schema (#283 follow-up review §5).
         : !!baseSource.endpoint &&
           identityFromUrl(baseSource.endpoint).datasetId !== "" &&
           identityFromUrl(baseSource.endpoint).datasetId === identityFromUrl(draft.url.endpoint).datasetId)
   );
   const projectedSource = source as SourceRef;
   const mergedPrimary: SourceRef = samePrimary ? { ...baseSource, ...projectedSource } : projectedSource;
-  // 같은 format의 base export가 여러 개 있을 수 있으므로(#283 후속 리뷰 §7) 매번
-  // `.find`로 첫 항목만 재사용하면 두 번째 이후 occurrence가 첫 occurrence의
-  // options/output_path를 덮어써 버린다 — 각 base export를 index 기준으로 한 번씩만
-  // consume해 occurrence별로 보존한다.
+  // Same format base export may exist multiple times (#283 follow-up review §7) so
+  // finding first each time would let second+ occurrence overwrite first's
+  // options/output_path — consume each base export by index once to preserve per-
+  // occurrence settings.
   const usedBaseExportIndices = new Set<number>();
   const exports = draft.exportFormats.map((format) => {
     const preservedIndex = base?.exports.findIndex(
@@ -239,53 +245,54 @@ function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
 }
 
 /**
- * 현재 draft로 소스 하나짜리 canonical BuildSpec을 만든다.
+ * Build canonical BuildSpec from current draft.
  *
- * @param draft - 현재 Add Data draft.
- * @returns 검증을 통과한 스펙 또는 한국어 오류 메시지.
+ * @param draft - Current Add Data draft.
+ * @returns Validated spec or error message.
  */
 export function buildSpecFromDraft(draft: AddDataDraft): BuildSpecResult {
   const { candidate, error: candidateError } = buildCandidateFromDraft(draft);
   if (candidateError) return { error: candidateError };
-  if (!candidate) return { error: "빌드 스펙을 생성하지 못했습니다." };
+  if (!candidate) return { error: t("specBuildFailed") };
 
-  // 현재 GUI 값 + canonicalBase 보존 필드 + primary source merge를 모두 반영한
-  // 최종 candidate에 sentinel이 남아 있는지 검사한다(#283 후속 리뷰 §2). primary
-  // source를 사용자가 다시 입력했다면 위 병합에서 canonicalBase의 과거 primary
-  // sentinel은 이미 덮어써져 있으므로 여기서 걸리지 않는다 — 반면 sources[1+](trailing)
-  // 등 GUI가 편집하지 않는 영역에 sentinel이 남아 있으면 계속 fail-closed로 막는다.
+  // Check final candidate (current GUI + canonicalBase preserved + primary source
+  // merge all applied) for sentinel (#283 follow-up review §2). If user re-entered
+  // primary source, old canonicalBase sentinels already overwritten in merge above —
+  // won't error here. But sentinels in GUI-unedited areas like sources[1+] (trailing)
+  // stay fail-closed blocked.
   if (jsonValueHasRedactedSecret(candidate)) {
-    return { error: "저장된 초안에 복원할 수 없는 secret placeholder가 있습니다. 원본 credential을 다시 입력해 주세요." };
+    return { error: t("unresolvedPlaceholder") };
   }
 
   const result = buildSpecSchema.safeParse(candidate);
   if (!result.success) {
-    return { error: result.error.issues[0]?.message ?? "빌드 스펙이 올바르지 않습니다." };
+    return { error: result.error.issues[0]?.message ?? t("specInvalid") };
   }
   return { spec: result.data as BuildSpec };
 }
 
 /**
- * YAML 에디터 표시 전용 — 제출 가능 여부(sentinel fail-closed, 스키마 검증)와
- * 무관하게 지금 draft로 보여줄 수 있는 canonical BuildSpec을 만든다(#283 후속
- * 리뷰 §3). sentinel이 남아 있어도 candidate 자체는 반환해, 사용자가 YAML에서
- * sentinel을 실제 값으로 교체해 다시 Apply할 자리를 잃지 않게 한다. Preview/Build
- * 제출에는 절대 쓰지 않는다 — 그쪽은 항상 `buildSpecFromDraft`를 거친다.
+ * YAML editor display-only — creates canonical BuildSpec that can be shown for
+ * draft now, independent of submission readiness (sentinel fail-closed, schema
+ * validation) (#283 follow-up §3). Even if sentinel remains, returns candidate
+ * so user doesn't lose place to replace sentinel with real value in YAML and
+ * re-apply. Never used for Preview/Build submission — those always go through
+ * `buildSpecFromDraft`.
  */
 export function buildEditableSpecFromDraft(draft: AddDataDraft): BuildSpec | undefined {
   return buildCandidateFromDraft(draft).candidate;
 }
 
 /**
- * BuildSpec(YAML 에디터에서 파싱된 결과 등)을 draft에 되반영한다.
+ * Reflect BuildSpec back to draft (reverse of `buildSpecFromDraft`).
  *
- * `buildSpecFromDraft`의 역방향 — YAML 탭에서 소스 kind 자체를 바꿔 붙여넣었을 수도
- * 있으므로 `sources[0].kind` 기준으로 draft의 kind별 bucket을 다시 채운다. Preview/식별
- * 필드(previewLimit 등)처럼 canonical BuildSpec에 없는 draft 전용 값은 그대로 둔다.
+ * User may have pasted different source kind in YAML tab, so re-bucket draft's
+ * kind-specific fields by sources[0].kind. Draft-only values like preview options
+ * (previewLimit etc.) that don't exist in canonical BuildSpec stay unchanged.
  *
- * @param draft - 되반영할 대상 draft.
- * @param spec - YAML 에디터 등에서 얻은 BuildSpec.
- * @returns 소스/식별/출력 필드가 spec 기준으로 갱신된 새 draft.
+ * @param draft - Target draft for reflection.
+ * @param spec - BuildSpec from YAML editor, etc.
+ * @returns New draft with source/identity/output fields updated per spec.
  */
 export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): AddDataDraft {
   const source = spec.sources[0];
@@ -298,8 +305,9 @@ export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): Add
     title: spec.title,
     description: spec.description,
     canonicalBase: spec,
-    // YAML/canonical BuildSpec 편집은 고급 설정과 동급의 명시적 편집으로 취급한다 —
-    // 이후 provider/dataset/파일/URL이 바뀌어도 자동 생성값이 이 값을 덮어쓰지 않는다.
+    // YAML/canonical BuildSpec edit counts as explicit edit (same level as advanced
+    // settings) — auto-gen will not overwrite even if provider/dataset/file/URL changes
+    // afterward.
     datasetIdTouched: true,
     titleTouched: true,
     descriptionTouched: true,
@@ -334,19 +342,19 @@ export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): Add
 }
 
 /**
- * draft + preview 옵션의 서명(signature)을 만든다.
+ * Build preview signature from draft + preview options.
  *
- * Preview/Validate를 실행한 시점의 서명과 현재 서명이 다르면 "stale preview"로 간주해
- * Build를 막는다(`NewBuildPage`의 `validatedSnapshotRef` 패턴과 동일한 발상, #72).
- * 컬럼 뷰(key/all)·diff 화면 전환처럼 이미 받아온 응답을 다시 그리기만 하는 토글은
- * 새 Preview 호출이 필요 없으므로 서명에서 제외한다.
+ * Different signature between Preview/Validate time and now → consider preview
+ * stale, block Build (same pattern as `NewBuildPage`'s `validatedSnapshotRef`, #72).
+ * Column view (key/all) and diff screen toggles just re-render received response,
+ * no new Preview call needed, so excluded from signature.
  */
 /**
- * 표시 전용 — canonical BuildSpec에서 url source의 endpoint, public_api source의
- * params를 secret-redacted 버전으로 바꾼 사본을 만든다(PR #283 리뷰 대응, Epic #246,
- * 후속 리뷰 §1). Review 화면의 "실제 제출될 canonical BuildSpec" preview에만 쓰며,
- * 실제 Builder 제출에 쓰이는 spec 객체는 이 함수를 거치지 않고 `buildSpecFromDraft`
- * 결과를 그대로 쓴다.
+ * Display-only — create copy of canonical BuildSpec with url source endpoint and
+ * public_api source params replaced by secret-redacted versions (PR #283 review
+ * response, Epic #246, follow-up review §1). Used only in Review screen's "actual
+ * canonical BuildSpec to be submitted" preview; actual Builder submission uses spec
+ * from `buildSpecFromDraft` result directly, not via this function.
  */
 export function redactBuildSpecForDisplay(spec: BuildSpec): BuildSpec {
   return {

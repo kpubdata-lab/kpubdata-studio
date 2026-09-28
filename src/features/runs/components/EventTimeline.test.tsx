@@ -1,6 +1,6 @@
 /**
- * EventTimeline (#255 P1) — multi-source event를 첫 source로 뭉개지 않는지, failed/last-ok
- * event가 실제로 구분되어 렌더링되는지 확인한다.
+ * EventTimeline (#255 P1) — checks multi-source events are not collapsed into
+ * the first source, and failed/last-ok events actually render distinctly.
  */
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";

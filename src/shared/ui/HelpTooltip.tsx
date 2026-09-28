@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "./cn";
@@ -8,7 +9,9 @@ export interface HelpTooltipProps {
   className?: string;
 }
 
-export function HelpTooltip({ content, label = "도움말", className }: HelpTooltipProps) {
+export function HelpTooltip({ content, label, className }: HelpTooltipProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t("helpTooltip.label");
   const id = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -41,7 +44,7 @@ export function HelpTooltip({ content, label = "도움말", className }: HelpToo
       <button
         ref={triggerRef}
         type="button"
-        aria-label={label}
+        aria-label={resolvedLabel}
         aria-describedby={open ? id : undefined}
         aria-expanded={open}
         className="inline-flex size-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -61,12 +64,12 @@ export function HelpTooltip({ content, label = "도움말", className }: HelpToo
               id={id}
               role="tooltip"
               style={position}
-              // tooltip surface는 완전 불투명해야 한다 — `bg-card`/`text-card-foreground`는
-              // globals.css에 정의된 불투명 토큰이다(이전의 `bg-popover`는 이 테마에
-              // 없어서 배경이 비쳤다). z-index는 drawer/modal backdrop(최대 z-[82])보다
-              // 확실히 위에 오도록 z-[120]으로 둔다. 위치는 트리거 기준으로 계산하되
-              // 항상 viewport 안으로 clamp된다(가장자리 트리거에서도 화면 밖으로
-              // 튀어나오지 않는다).
+              // tooltip surface must be fully opaque — `bg-card`/`text-card-foreground`
+              // opaque token defined in globals.css (previous `bg-popover` in this theme
+              // shows background). z-index is above drawer/modal backdrop (max z-[82])
+              // set to z-[120]. Position is calculated relative to trigger but
+              // always clamped inside viewport (even edge triggers don't go offscreen
+              // does not go offscreen).
               className="fixed z-[120] rounded-lg border border-border bg-card px-3 py-2 text-left text-xs font-normal leading-5 text-card-foreground shadow-lg"
             >
               {content}

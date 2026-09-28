@@ -1,26 +1,26 @@
 /**
- * Builds/Runs master-detail(#255)용 순수 모델 헬퍼.
+ * Pure model helper for Builds/Runs master-detail (#255).
  *
- * Builder가 반환한 값만 사용하고, Studio가 상태를 추측·재계산하지 않는다(#246 원칙).
- * Run 전체 상태(BuildRunStatus)와 medallion stage 상태(StageStatus, #488)는 서로 다른
- * 축이므로 여기서도 절대 하나로 뭉개지 않는다.
+ * Use only values returned by Builder; Studio doesn't guess or recalculate state (#246 principle).
+ * Run overall status (BuildRunStatus) and medallion stage status (StageStatus, #488) are
+ * different axes; never collapse into one here either.
  */
 import { ApiError } from "@/shared/lib/builderApi";
 import type { BuildListItem, BuildRunStatus } from "@/shared/lib/types";
 import type { BuildEvent, BuildQualityResponse, QualityCheckResult, RunStageEntry } from "@/shared/lib/builderApi";
 
 /**
- * 상단 KPI 카드용 집계.
+ * Aggregation for top KPI card.
  *
- * Builder `GET /builds`는 전체 건수(total)를 제공하지 않고 `limit`으로 자른 목록만
- * 돌려준다(BuildsResponse에 count 필드 없음, contract SSOT 확인 완료). 그래서 이 집계는
- * "현재 조회된 scope" 안에서만 계산되는 값이며 전체 히스토리의 진짜 합계가 아니다 —
- * 호출부는 반드시 `scopeLimit`/`scopeCount`를 함께 노출해 그 사실을 드러내야 한다.
+ * Builder `GET /builds` doesn't provide total count, only truncated list by `limit`
+ * (no count field in BuildsResponse; contract SSOT verified). So this aggregation
+ * computes only within current query scope, not real total history — caller must
+ * expose both `scopeLimit`/`scopeCount` to reveal that fact.
  *
- * 또한 `GET /builds`는 완료된(ok/failed) 이력만 반환하고 진행 중인(queued/running) job은
- * 포함하지 않는다(별도 in-memory job registry, `GET /builds/{run_id}`). 그래서 실연동
- * 모드에서는 이 목록만으로 "지금 실행 중인 Run 수"를 정확히 셀 수 없다 — `runningAvailable`이
- * false면 Running 값을 0으로 가장하지 말고 UI에서 N/A로 표시해야 한다.
+ * Also `GET /builds` returns only completed (ok/failed) history, doesn't include
+ * in-flight (queued/running) jobs (separate in-memory registry, `GET /builds/{run_id}`).
+ * So in live mode, can't count "currently running Runs" from this list alone —
+ * if `runningAvailable` is false, show N/A in UI, don't pretend running=0.
  */
 export interface BuildKpi {
   scopeCount: number;
@@ -28,15 +28,15 @@ export interface BuildKpi {
   succeeded: number;
   failed: number;
   cancelled: number;
-  /** running + queued + cancelling 합계(기존 Running KPI 값, 하위 호환 유지). */
+  /** running + queued + cancelling sum (preserve backward compat for existing Running KPI). */
   running: number;
-  /** status가 정확히 "running"인 건수. */
+  /** Count where status is exactly "running". */
   runningOnly: number;
-  /** status가 정확히 "queued"인 건수. */
+  /** Count where status is exactly "queued". */
   queuedOnly: number;
-  /** status가 정확히 "cancelling"인 건수. */
+  /** Count where status is exactly "cancelling". */
   cancellingOnly: number;
-  /** false면 이 scope에서 running 값을 신뢰할 수 없다(계약상 완료 이력만 옴). */
+  /** False if running value unreliable in this scope (contract: only completed history). */
   runningAvailable: boolean;
 }
 
@@ -59,9 +59,9 @@ export function computeBuildKpi(
     else if (item.status === "queued") queuedOnly += 1;
     else if (item.status === "cancelling") cancellingOnly += 1;
   }
-  // Running KPI는 여전히 running+queued+cancelling 합계를 값으로 쓴다(기존 정책 유지) — 다만
-  // 호출부가 breakdown(실행 중/대기/취소 중)을 따로 보여줄 수 있도록 세 값을 각각도 노출한다.
-  // 값을 추측하지 않고 현재 조회 scope의 실제 status만 센다.
+  // Running KPI still uses running+queued+cancelling sum as value (preserve policy) — but
+  // expose each of three separately so caller can show breakdown (running/queued/cancelling).
+  // Count actual status only in current scope; don't guess.
   const running = runningOnly + queuedOnly + cancellingOnly;
   return {
     scopeCount: items.length,
@@ -90,14 +90,14 @@ export function matchesSearch(item: BuildListItem, query: string): boolean {
   return haystack.includes(trimmed);
 }
 
-/** 여러 source가 있는 run에서 하나라도 실패했으면 실패 source 목록을 뽑는다(#255 §7). */
+/** If multiple sources and any failed, return list of failed sources (#255 §7). */
 export function failedSources(sources: RunStageEntry[]): string[] {
   return sources
     .filter((source) => source.bronze.status === "failed" || source.silver.status === "failed" || source.gold.status === "failed")
     .map((source) => source.source_key);
 }
 
-/** source의 medallion stage 중 마지막으로 completed된 stage. 하나도 없으면 null(추측하지 않음). */
+/** Last completed medallion stage for source; null if none (no guessing). */
 export function lastCompletedStage(source: RunStageEntry): "gold" | "silver" | "bronze" | null {
   if (source.gold.status === "completed") return "gold";
   if (source.silver.status === "completed") return "silver";
@@ -105,7 +105,7 @@ export function lastCompletedStage(source: RunStageEntry): "gold" | "silver" | "
   return null;
 }
 
-/** source의 medallion stage 중 실제로 failed로 기록된 첫 stage. not_run은 실패가 아니다. */
+/** First medallion stage recorded as failed for source; not_run is not failure. */
 export function firstFailedStage(source: RunStageEntry): "bronze" | "silver" | "gold" | null {
   if (source.bronze.status === "failed") return "bronze";
   if (source.silver.status === "failed") return "silver";
@@ -114,11 +114,10 @@ export function firstFailedStage(source: RunStageEntry): "bronze" | "silver" | "
 }
 
 /**
- * 여러 source가 섞여 있을 때 run 전체를 하나의 label로 뭉개지 않고, 정확히
- * "모두 성공" / "부분 실패(partial)" / "모두 실패" / "정보 없음" 만 구분한다.
- * Builder run status enum에는 "partial"이 없으므로(BuildJob: queued/running/cancelling/
- * succeeded/failed/cancelled) 이 값은 Run status를 대체하지 않는, source 조합에 대한
- * 별도의 UI 전용 요약이다.
+ * Distinguish clearly when multiple sources: "all succeeded" / "partial" / "all failed" /
+ * "unavailable" only. Builder run status enum lacks "partial" (BuildJob: queued/running/
+ * cancelling/succeeded/failed/cancelled), so this is separate UI-only summary for source
+ * combination, doesn't replace Run status.
  */
 export type MultiSourceOutcome = "all_succeeded" | "partial" | "all_failed" | "unavailable";
 
@@ -147,12 +146,12 @@ export function collectFailureEvidence(sources: RunStageEntry[]): FailureEvidenc
 }
 
 /**
- * selected Run 상세를 구성하는 API(stage/quality/spec/live status)가 던진 에러를
- * Studio가 그릴 수 있는 최소 종류로만 구분한다(#255 P0 permission state).
+ * Classify errors from APIs constructing selected Run detail (stage/quality/spec/live status)
+ * into minimal kinds Studio can draw (#255 P0 permission state).
  *
- * "권한 없음"을 Studio가 추측하지 않는다 — Builder가 HTTP 403으로 명시했을 때만
- * permission_denied로 분류하고, 그 외 401/네트워크/5xx는 모두 일반 error로 남긴다.
- * 새 auth model을 만들지 않고 기존 ApiError.status만 읽는다.
+ * Don't guess "permission denied" — classify as permission_denied only when Builder says HTTP 403
+ * explicitly; treat all other 401/network/5xx as generic error. Create no new auth model;
+ * read existing ApiError.status only.
  */
 export type RunApiErrorKind = "not_found" | "permission_denied" | "error";
 
@@ -170,22 +169,22 @@ export function failQualityResults(quality: BuildQualityResponse | null | undefi
 }
 
 /**
- * P1 Structured Run Events(#496 evidence, #255 §1) 순수 헬퍼.
+ * P1 Structured Run Events (#496 evidence, #255 §1) pure helper.
  *
- * `GET /builds/{run_id}/events`는 항상 chronological ascending으로 응답한다(builder 계약).
- * 이 파일은 그 evidence를 그대로 요약할 뿐, Stage(#488)/Quality(#486)의 정본을 대체하는 새
- * 판정을 만들지 않는다.
+ * `GET /builds/{run_id}/events` always responds in chronological ascending (builder contract).
+ * This file summarizes evidence as-is, doesn't create new judgment replacing Stage (#488)/
+ * Quality (#486) canonical sources.
  */
 
-/** source_key가 없는(run 전체 범위) event를 묶어 두는 key. 실제 source_key와 절대 충돌하지 않도록 예약된 값이다. */
+/** Reserved key used to group events that lack source_key (global run scope). Avoids collision with real source_key. */
 export const GLOBAL_RUN_EVENT_SOURCE_KEY = "__run__";
 
-/** status가 "fail"로 기록된 event만 골라낸다(원본 순서 유지). */
+/** Select only events recorded with status "fail" (keep original order). */
 export function failedRunEvents(events: BuildEvent[]): BuildEvent[] {
   return events.filter((event) => event.status === "fail");
 }
 
-/** chronological ascending 응답 기준, 마지막으로 status가 "ok"였던 event. 없으면 null(추측하지 않음). */
+/** Given chronological ascending events, return the last event with status "ok"; null if none (don't guess). */
 export function lastOkRunEvent(events: BuildEvent[]): BuildEvent | null {
   for (let index = events.length - 1; index >= 0; index -= 1) {
     if (events[index].status === "ok") return events[index];
@@ -194,9 +193,9 @@ export function lastOkRunEvent(events: BuildEvent[]): BuildEvent | null {
 }
 
 /**
- * source_key별로 event를 묶는다. multi-source run의 event를 첫 source로 뭉개지 않기 위한
- * 헬퍼다(#255 §1) — source_key가 없는 event(run 전체 범위)는 {@link GLOBAL_RUN_EVENT_SOURCE_KEY}로
- * 묶고, 실제 source의 event와 절대 합치지 않는다. 각 그룹 내부의 상대 순서는 원본(ascending)을 유지한다.
+ * Group events by source_key. Helper to avoid collapsing multi-source events into the first source (#255 §1).
+ * Events without source_key (global run) are grouped under GLOBAL_RUN_EVENT_SOURCE_KEY and not merged with real source events.
+ * Preserve the original ascending order inside each group.
  */
 export function groupRunEventsBySource(events: BuildEvent[]): Map<string, BuildEvent[]> {
   const grouped = new Map<string, BuildEvent[]>();
@@ -209,7 +208,7 @@ export function groupRunEventsBySource(events: BuildEvent[]): Map<string, BuildE
   return grouped;
 }
 
-/** metrics record의 값 하나를 사람이 읽을 수 있는 짧은 문자열로 만든다. */
+/** Render a single metrics value as a short human-readable string. */
 function formatEventMetricValue(value: unknown): string {
   if (value === null || value === undefined) return "—";
   if (typeof value === "object") return JSON.stringify(value);
@@ -217,8 +216,8 @@ function formatEventMetricValue(value: unknown): string {
 }
 
 /**
- * event.metrics를 한 줄 compact summary로 만든다. metrics가 없으면 null(빈 문자열로 꾸미지 않음).
- * 너무 긴 값은 잘라서 표시하되, 원본 event.metrics는 그대로 evidence에 남아 있다.
+ * Make a one-line compact summary of event.metrics. Return null if no metrics.
+ * Truncate overly long values; the original event.metrics remain in the evidence.
  */
 export function summarizeEventMetrics(metrics: BuildEvent["metrics"]): string | null {
   if (!metrics) return null;

@@ -1,5 +1,5 @@
 /**
- * LanguageSwitcher 단위 테스트 — 토글 동작과 언어별 라벨 렌더링을 검증한다.
+ * LanguageSwitcher unit test — verifies toggle behavior and language-specific label rendering.
  */
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";

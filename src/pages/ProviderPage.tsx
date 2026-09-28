@@ -1,21 +1,25 @@
 /**
- * Provider 화면 (`/provider`) — Provider Connection·Credential + Settings 통합 (#259).
+ * Provider screen (`/provider`) — Provider Connection·Credential + Settings combined (#259).
  *
- * Issue #259: Provider credential/connection 관리와 Settings를 통합한다.
+ * Issue #259: combines Provider credential/connection management with Settings.
  *
- * 진실성 원칙 (F01, builder ADR 0012):
- * - GET /providers 요약의 `configured`는 **effective provider configuration**
- *   (user credential > server default > 없음)이다. "이 사용자가 credential을 저장했다"가
- *   아니다.
- * - "이 사용자가 저장한 credential"의 유무/마스킹 값은 GET /providers/{provider}/credential
- *   메타데이터(`{ configured, masked, updated_at }`, raw secret 없음)로만 판정한다.
- * - requires_credential=false여도 요약 configured=true일 수 있다(무인증 provider).
- * - 두 축을 화면에서 분리한다: (1) effective credential readiness(요약 configured),
- *   (2) 사용자 저장 credential 존재 여부(마스킹 값·삭제의 근거).
- * - generic Provider probe(`POST /providers/{provider}/test` · `GET .../status`)는
- *   임의의 첫 Dataset을 필수 파라미터 없이 호출하므로 신뢰할 수 없다. 이 화면은
- *   probe 결과를 "연결 성공 여부"로 노출하지 않는다 — 실제 사용 가능 여부는 선택한
- *   Dataset의 Preview가 확인한다(#S-provider-probe).
+ * Truthfulness principle (F01, builder ADR 0012):
+ * - The `configured` flag in the GET /providers summary is the **effective provider
+ *   configuration** (user credential > server default > none) — NOT "this user saved
+ *   a credential".
+ * - Whether "this user saved a credential", and its masked value, are determined
+ *   ONLY by the GET /providers/{provider}/credential metadata
+ *   (`{ configured, masked, updated_at }`, no raw secret).
+ * - requires_credential=false can still show summary configured=true (auth-free
+ *   provider).
+ * - The screen keeps the two axes separate: (1) effective credential readiness
+ *   (summary configured), (2) existence of a user-saved credential (the basis for
+ *   masked value display and deletion).
+ * - The generic Provider probe (`POST /providers/{provider}/test`,
+ *   `GET .../status`) is unreliable — it calls an arbitrary first Dataset without
+ *   required parameters. This screen never surfaces probe results as "connection
+ *   success"; actual usability is confirmed by Previewing a chosen Dataset
+ *   (#S-provider-probe).
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
@@ -38,9 +42,10 @@ import {
 import { describeCredentialReadiness } from "@/shared/lib/providerStatus";
 
 /**
- * `returnTo` query param을 안전한 내부 경로일 때만 신뢰한다(#S-add-data, §4).
- * 절대 URL/프로토콜-상대(`//evil.com`) 경로로의 open redirect를 막는다 — 이 값은
- * Add Data 같은 내부 화면이 이어서 편집을 재개할 안전한 복귀 지점으로만 쓴다.
+ * Trust the `returnTo` query param only when it is a safe internal path
+ * (#S-add-data, §4). Blocks open redirects to absolute/protocol-relative
+ * (`//evil.com`) paths — the value is only ever a safe resume point for internal
+ * screens like Add Data.
  */
 export function isSafeReturnTo(value: string | null): value is string {
   if (!value) return false;
@@ -53,11 +58,12 @@ interface ProviderConfig {
   id: string;
   name: string;
   description: string;
-  /** 이 provider가 사용자 credential을 필요로 하는지(GET /providers). */
+  /** Whether this provider requires a user credential (GET /providers). */
   requiresCredential: boolean;
   /**
-   * GET /providers 요약의 `configured` — effective provider configuration
-   * (user credential > server default > 없음). 사용자 저장 credential 유무가 아니다.
+   * The `configured` flag from the GET /providers summary — the effective
+   * provider configuration (user credential > server default > none), not
+   * whether the user saved a credential.
    */
   summaryConfigured: boolean;
 }
@@ -67,17 +73,19 @@ interface CredentialForm {
 }
 
 /**
- * 선택된 provider에 대한 "사용자 저장 credential" 메타데이터 상태.
- * `configured`는 GET /providers/{provider}/credential 응답 기준(사용자 본인 저장 여부).
+ * "User-saved credential" metadata state for the selected provider.
+ * `configured` follows the GET /providers/{provider}/credential response
+ * (whether this user personally saved one).
  */
 type CredentialMetaState =
   | { status: "idle" | "loading" }
   | { status: "not_applicable" }
   /**
-   * 운영자가 encrypted credential store(master key)를 구성하지 않았다 —
-   * Builder가 `GET /providers/{provider}/credential`에 503
-   * `credential store is not configured`로 답한 경우. "사용자가 아직 credential을
-   * 등록하지 않음"(200 `configured:false`)이나 일반 조회 실패와 구분한다.
+   * The operator has not configured the encrypted credential store (master
+   * key) — Builder answered `GET /providers/{provider}/credential` with 503
+   * `credential store is not configured`. Distinguished from "user has not
+   * registered a credential yet" (200 `configured:false`) and ordinary fetch
+   * failures.
    */
   | { status: "store_unavailable" }
   | { status: "error"; message: string }
@@ -88,14 +96,14 @@ type CredentialMetaState =
       updatedAt: string | null;
     };
 
-/** Builder가 명시한 credential store 미구성 응답만 operator remediation으로 분류한다. */
+/** Classify only Builder's explicit store-not-configured response as operator remediation. */
 export function isCredentialStoreUnavailable(cause: unknown): boolean {
   if (!(cause instanceof ApiError) || cause.status !== 503) return false;
   if (!cause.details || typeof cause.details !== "object" || Array.isArray(cause.details)) return false;
   return (cause.details as { error?: unknown }).error === "credential store is not configured";
 }
 
-/** Builder GET /providers 요약을 화면 모델로 변환한다(연결 상태는 별도 status 점검으로 채운다). */
+/** Convert the Builder GET /providers summary to a screen model (connection state filled by a separate status check). */
 function mapProviderSummary(summary: ProviderSummary): ProviderConfig {
   return {
     id: summary.provider,
@@ -111,9 +119,10 @@ function mapProviderSummary(summary: ProviderSummary): ProviderConfig {
 export function ProviderPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  // Add Data 등에서 `?provider=datago&returnTo=/add`로 넘어온 경우(#S-add-data, §4).
-  // URL에는 provider id와 safe return destination만 싣는다 — credential/BuildSpec은
-  // 절대 담지 않는다. providerParam은 목록이 로딩된 뒤 딱 한 번만 자동 선택에 쓴다.
+  // Arrived from Add Data etc. via `?provider=datago&returnTo=/add`
+  // (#S-add-data, §4). The URL carries only a provider id and a safe return
+  // destination — never credentials or a BuildSpec. providerParam is used
+  // exactly once for auto-selection after the list loads.
   const providerParam = searchParams.get("provider");
   const returnToParam = searchParams.get("returnTo");
   const safeReturnTo = isSafeReturnTo(returnToParam) ? returnToParam : null;
@@ -124,15 +133,16 @@ export function ProviderPage() {
   const [showCredentialForm, setShowCredentialForm] = useState(false);
   const [credentialForm, setCredentialForm] = useState<CredentialForm>({ credential: "" });
   const [credentialMeta, setCredentialMeta] = useState<CredentialMetaState>({ status: "idle" });
-  // credential을 이번 화면 방문에서 방금 저장했는지 — returnTo CTA는 저장 성공
-  // 이후에만 보여준다(§4). provider 전환 시 reset한다.
+  // Whether a credential was saved during this visit — the returnTo CTA
+  // shows only after a successful save (§4). Reset on provider switch.
   const [justSavedCredential, setJustSavedCredential] = useState(false);
-  // credential 메타 조회/갱신 race guard는 두 축을 함께 본다:
-  // (1) request-generation — 더 나중에 시작한 조회가 항상 이긴다.
-  // (2) selectedProviderIdRef — 그 조회의 대상 provider가 "지금 화면에 선택된"
-  //     provider와 같아야 한다. mutation(save/delete) 완료 후의 늦은
-  //     loadCredentialMeta(A)가 generation을 최신으로 올려도, 그 사이 사용자가
-  //     B로 옮겼다면 A의 결과/loading/error가 B 패널을 절대 덮지 못한다(#324, #322).
+  // The credential meta fetch/update race guard watches two axes together:
+  // (1) request-generation — a fetch started later always wins.
+  // (2) selectedProviderIdRef — the fetch's target provider must equal the
+  //     provider selected on screen right now. A late loadCredentialMeta(A)
+  //     after a mutation (save/delete) may raise the generation to newest, but
+  //     if the user moved to B meanwhile, A's result/loading/error can never
+  //     overwrite the B panel (#324, #322).
   const credentialRequestGeneration = useRef(0);
   const selectedProviderIdRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -143,15 +153,17 @@ export function ProviderPage() {
     setError(null);
     try {
       if (isRealBuilderEnabled()) {
-        // real mode: GET /providers가 canonical source다. 실패를 mock 성공으로
-        // 위장하지 않는다 — catch에서 명시적 error/빈 목록으로 떨어진다(#S01).
+        // real mode: GET /providers is the canonical source. Never disguise
+        // failure as mock success — the catch falls through to an explicit
+        // error/empty list (#S01).
         const response = await builderApi.listProviders();
         const mapped = response.providers.map(mapProviderSummary);
         setProviders(mapped);
-        // ref는 사용자 선택의 동기적 source of truth다. state updater/effect가 늦게
-        // 실행되며 이미 B로 바뀐 ref를 A로 되돌리면 stale mutation refresh가 시작될 수
-        // 있으므로, 목록 응답으로 선택을 재결정하지 않는다. 실제 목록에서 사라진 경우만
-        // 명시적으로 선택을 해제한다.
+        // The ref is the synchronous source of truth for user selection.
+        // State updaters/effects run late; flipping an already-B ref back to A
+        // could start a stale mutation refresh — so the list response never
+        // re-decides the selection. Only if it disappeared from the actual list
+        // is the selection explicitly cleared.
         const selectedId = selectedProviderIdRef.current;
         const next = selectedId ? mapped.find((provider) => provider.id === selectedId) : undefined;
         if (!next) {
@@ -161,7 +173,7 @@ export function ProviderPage() {
           setSelectedProvider(next);
         }
       } else {
-        // 명시적 mock/demo mode에서만 mock 목록을 쓴다.
+        // Use the mock list only in explicit mock/demo mode.
         setProviders(getMockProviders());
       }
     } catch {
@@ -177,14 +189,16 @@ export function ProviderPage() {
   }, [loadProviders]);
 
   /**
-   * 선택된 provider의 "사용자 저장 credential" 메타데이터를 authoritative하게 다시 읽는다.
-   * requires_credential=false면 조회 자체를 하지 않는다(등록/삭제할 credential이 없음).
+   * Authoritatively re-reads the "user-saved credential" metadata for the
+   * selected provider. Skips the fetch entirely when
+   * requires_credential=false (nothing to register or delete).
    */
   const loadCredentialMeta = useCallback(
     async (provider: ProviderConfig) => {
       const generation = ++credentialRequestGeneration.current;
-      // 이 조회 결과를 화면에 반영해도 되는지: 가장 최신 조회이면서, 그 대상이
-      // 여전히 선택된 provider일 때만. loading/error/loaded 커밋 전에 항상 확인한다.
+      // Whether this fetch's result may reach the screen: only when it is
+      // the latest fetch AND its target is still the selected provider.
+      // Always checked before committing loading/error/loaded.
       const stillCurrent = () =>
         generation === credentialRequestGeneration.current &&
         provider.id === selectedProviderIdRef.current;
@@ -220,9 +234,9 @@ export function ProviderPage() {
   );
 
   const handleProviderSelect = (provider: ProviderConfig) => {
-    // 선택 전환은 동기적으로 ref에 반영한다 — 직후의 loadCredentialMeta가
-    // 즉시 이 값을 기준으로 삼아야 하고, 진행 중이던 다른 provider의 조회는
-    // 여기서부터 stale로 판정된다.
+    // Selection changes are reflected in the ref synchronously — the
+    // immediately following loadCredentialMeta must key off this value, and
+    // any in-flight fetch for another provider is stale from this point on.
     selectedProviderIdRef.current = provider.id;
     ++credentialRequestGeneration.current;
     setSelectedProvider(provider);
@@ -232,9 +246,9 @@ export function ProviderPage() {
     void loadCredentialMeta(provider);
   };
 
-  // `?provider=`로 넘어온 경우 목록이 로딩된 뒤 해당 provider를 한 번만 자동
-  // 선택한다(#S-add-data, §4) — Discover의 catalog preselection과 같은 패턴
-  // (한 번만 적용, 목록에 없으면 조용히 넘어간다).
+  // When arrived with `?provider=`, auto-select that provider exactly
+  // once after the list loads (#S-add-data, §4) — same pattern as Discover's
+  // catalog preselection (applied once; quietly skipped if absent).
   useEffect(() => {
     if (providerParamAppliedRef.current || loading || !providerParam) return;
     providerParamAppliedRef.current = true;
@@ -249,20 +263,22 @@ export function ProviderPage() {
     setError(null);
     try {
       if (isRealBuilderEnabled()) {
-        // PUT /providers/{provider}/credential, body는 { credential } 하나뿐. 원문은
-        // response로 기대하지 않고, 선택된 provider의 canonical id를 URL에 쓴다(#S02).
+        // PUT /providers/{provider}/credential; body is only
+        // { credential }. The plaintext is not expected back in the response,
+        // and the URL uses the selected provider's canonical id (#S02).
         await builderApi.putProviderCredential(provider.id, credentialForm.credential);
       }
-      // 저장이 진행되는 동안 사용자가 다른 provider로 옮겼다면, 이 mutation의 후속
-      // form 리셋/에러가 현재 화면(B)을 오염시키면 안 된다(#322/#324와 같은 축).
+      // If the user moved to another provider while the save was in flight,
+      // this mutation's follow-up form reset/error must not pollute the
+      // current screen (B) — same axis as #322/#324.
       if (selectedProviderIdRef.current === provider.id) {
         setCredentialForm({ credential: "" });
         setShowCredentialForm(false);
         setJustSavedCredential(true);
       }
-      // 목록은 authoritative하게 갱신하되, 다른 provider를 보고 있으면 A의
-      // provider-specific refresh를 시작하지 않는다. 시작 자체가 global generation을
-      // 올려 B의 pending GET을 stale로 만들 수 있기 때문이다.
+      // Refresh the list authoritatively, but do not start A's
+      // provider-specific refresh while viewing another provider — starting
+      // it would raise the global generation and could stale B's pending GET.
       await loadProviders();
       if (selectedProviderIdRef.current === provider.id) {
         await loadCredentialMeta(provider);
@@ -285,13 +301,14 @@ export function ProviderPage() {
       if (isRealBuilderEnabled()) {
         await builderApi.deleteProviderCredential(provider.id);
       }
-      // 저장과 동일하게, 선택을 떠난 provider의 metadata refresh는 시작하지 않는다.
+      // Same as save: no metadata refresh for a provider the user left.
       await loadProviders();
       if (selectedProviderIdRef.current === provider.id) {
         await loadCredentialMeta(provider);
       }
     } catch (cause) {
-      // 삭제 도중 다른 provider로 옮겼다면 이 실패를 현재 화면 에러로 노출하지 않는다.
+      // If the user moved to another provider mid-delete, do not surface
+      // this failure on the current screen.
       if (selectedProviderIdRef.current !== provider.id) return;
       setError(
         isCredentialStoreUnavailable(cause)
@@ -301,14 +318,16 @@ export function ProviderPage() {
     }
   };
 
-  // 사용자 본인이 저장한 credential이 있는지(삭제 버튼/마스킹 값 표시의 유일한 근거).
+  // Whether the user personally saved a credential (the sole basis for the
+  // delete button and masked-value display).
   const userCredentialConfigured =
     credentialMeta.status === "loaded" && credentialMeta.configured;
 
-  // Provider 상태 배지는 generic live probe가 아니라 credential readiness로 표현한다
-  // (#S-provider-probe). 실제 Dataset API 사용 가능 여부는 Preview가 확인한다.
-  // `userCredentialConfigured`는 지금 선택된 provider에서만 알 수 있으므로 목록
-  // 배지에는 전달하지 않는다(요약 `configured`만 사용).
+  // The provider status badge reflects credential readiness, not a generic
+  // live probe (#S-provider-probe). Actual Dataset API usability is confirmed
+  // by Preview. `userCredentialConfigured` is only knowable for the currently
+  // selected provider, so it is not passed to list badges (summary
+  // `configured` only).
   const readinessToneClass: Record<"success" | "warning" | "neutral", string> = {
     success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
     warning: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
@@ -356,7 +375,7 @@ export function ProviderPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="lg:col-span-1">
-          <PageHeader eyebrow="Providers" title="제공 기관" className="mb-4" />
+          <PageHeader eyebrow="Providers" title={t("provider.page.headerTitle")} className="mb-4" />
           <Card className="p-0">
             {loading ? (
               <div className="p-6 space-y-3">
@@ -546,7 +565,7 @@ export function ProviderPage() {
   );
 }
 
-/** mock/demo 모드에서 선택된 provider의 사용자 credential 상태를 시뮬레이션한다. */
+/** Simulates the selected provider's user-credential state in mock/demo mode. */
 function mockCredentialMeta(provider: ProviderConfig): CredentialMetaState {
   if (!provider.requiresCredential) return { status: "not_applicable" };
   const configured = provider.summaryConfigured;

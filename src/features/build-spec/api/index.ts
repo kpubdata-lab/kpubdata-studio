@@ -1,5 +1,5 @@
 /**
- * 빌드 스펙 생성/저장 API 모듈이 들어올 예약 파일.
+ * Reserved placeholder for Build Spec create/save API module.
  *
- * 아직 구현은 비어 있지만, 이후 draft 저장·불러오기 연동의 진입점으로 사용된다.
+ * Currently empty, but will serve as entry point for draft save/load integration later.
  */

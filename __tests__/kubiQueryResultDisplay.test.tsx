@@ -74,8 +74,8 @@ describe("Result Preview table — array/object values (#256 리뷰 §1)", () =>
         <KubiPage />
       </MemoryRouter>,
     );
-    fireEvent.change(screen.getByLabelText("Kubi에게 질문하기"), { target: { value: "SQL 만들어줘" } });
-    fireEvent.submit(screen.getByLabelText("Kubi에게 질문하기").closest("form")!);
+    fireEvent.change(screen.getByLabelText("Ask KPubData 에 질문하기"), { target: { value: "SQL 만들어줘" } });
+    fireEvent.submit(screen.getByLabelText("Ask KPubData 에 질문하기").closest("form")!);
     // ask()는 fire-and-forget(submit 핸들러가 await하지 않는다) — 실행 버튼이 뜰 때까지 기다린다.
     const runButton = await screen.findByRole("button", { name: "실행" });
 

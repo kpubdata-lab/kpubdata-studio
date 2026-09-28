@@ -1,11 +1,12 @@
 /**
- * Workspace 화면 (`/workspace`, #260).
+ * Workspace screen (`/workspace`, #260).
  *
- * Recent Work(Dataset/Build는 Builder 조회, Report/Saved BuildSpec은 Studio local)와
- * Saved BuildSpecs(로컬 저장 spec 작업대) 두 섹션으로 구성된다. 기존 `features/workspace`의
- * 개인/팀 워크스페이스 전환(static `WORKSPACES`) 개념과는 다르다 — 그 데모용 더미 데이터는
- * 이 이슈에서 제거했다(SettingsPage 참고).
+ * Two sections: Recent Work (Dataset/Build from Builder, Report/Saved BuildSpec from Studio local)
+ * and Saved BuildSpecs (local saved spec workbench). Different from legacy `features/workspace`'s
+ * personal/team workspace toggle (static `WORKSPACES`) — demo dummy data removed in this issue (see SettingsPage).
  */
+import { i18n } from "@/shared/i18n";
+import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -40,17 +41,18 @@ const KIND_LABEL: Record<RecentWorkKind, string> = {
   savedSpec: "Saved BuildSpec",
 };
 
-const VALIDATION_META: Record<SavedSpecValidationStatus, { label: string; className: string }> = {
+/** Labels hold keys only, translated at render time — placing sentences in module constants freezes language (#350). */
+const VALIDATION_META: Record<SavedSpecValidationStatus, { labelKey: string; className: string }> = {
   validated_pass: {
-    label: i18n.t("workspace.validatedPass"),
+    labelKey: "workspace.validatedPass",
     className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
   },
   validated_fail: {
-    label: i18n.t("workspace.validatedFail"),
+    labelKey: "workspace.validatedFail",
     className: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
   },
   not_validated: {
-    label: i18n.t("workspace.notValidated"),
+    labelKey: "workspace.notValidated",
     className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
   },
 };
@@ -86,7 +88,7 @@ export function WorkspacePage() {
         if (controller.signal.aborted) return;
         setDatasetsState({
           status: "error",
-          error: cause instanceof Error ? cause.message : t("workspace.loadDatasetsFailed"),
+          error: cause instanceof Error ? cause.message : i18n.t("workspace.datasetsError"),
         });
       });
     return () => controller.abort();
@@ -101,7 +103,7 @@ export function WorkspacePage() {
         if (controller.signal.aborted) return;
         setBuildsState({
           status: "error",
-          error: cause instanceof Error ? cause.message : t("workspace.loadBuildsFailed"),
+          error: cause instanceof Error ? cause.message : i18n.t("workspace.buildsError"),
         });
       });
     return () => controller.abort();
@@ -135,7 +137,7 @@ export function WorkspacePage() {
 
   function handleRenameSubmit() {
     if (!renameTarget) return;
-    const result = renameSavedSpec(renameTarget.id, renameTarget.name.trim() || t("workspace.unnamed"));
+    const result = renameSavedSpec(renameTarget.id, renameTarget.name.trim() || i18n.t("workspace.untitled"));
     if (!result.ok) {
       setActionError(result.reason);
       return;
@@ -155,14 +157,16 @@ export function WorkspacePage() {
   }
 
   function handleDelete(id: string) {
-    if (!window.confirm(t("workspace.confirmDeleteSpec"))) return;
+    if (!window.confirm(i18n.t("workspace.deleteConfirm"))) return;
     deleteSavedSpec(id);
     refreshLocal();
   }
 
   function handleClearAllSpecs() {
     if (
-      !window.confirm(t("workspace.confirmClearAll"))
+      !window.confirm(
+        i18n.t("workspace.deleteAllConfirm"),
+      )
     )
       return;
     clearAllSavedSpecs();
@@ -173,13 +177,13 @@ export function WorkspacePage() {
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         eyebrow="Workspace"
-        title={t("workspace.pageTitle")}
-        description={t("workspace.pageDesc")}
+        title={t("workspace.title")}
+        description={t("workspace.desc")}
       />
 
       <Card variant="dashed">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("workspace.localOnlyTitle")}
+          {t("workspace.localOnlyBadge")}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           {t("workspace.localOnlyDesc")}
@@ -192,7 +196,7 @@ export function WorkspacePage() {
         {datasetsState.status === "error" ? (
           <ErrorState
             className="py-6"
-            title={t("workspace.loadDatasetsFailedTitle")}
+            title={t("workspace.datasetsErrorTitle")}
             message={datasetsState.error}
             onRetry={loadDatasets}
           />
@@ -200,14 +204,14 @@ export function WorkspacePage() {
         {buildsState.status === "error" ? (
           <ErrorState
             className="py-6"
-            title={t("workspace.loadBuildsFailedTitle")}
+            title={t("workspace.buildsErrorTitle")}
             message={buildsState.error}
             onRetry={loadBuilds}
           />
         ) : null}
 
-        {/* recentWorkItems를 loading 상태보다 먼저 확인한다 — Builder 조회가 아직 안 끝났거나
-            실패해도, 이미 로드된 로컬(Report/Saved BuildSpec) 항목은 바로 보여준다(item 17). */}
+         {/* Check recentWorkItems before loading state — even if Builder query not done or failed,
+             already-loaded local items (Report/Saved BuildSpec) display immediately (item 17). */}
         {recentWorkItems.length > 0 ? (
           <Card className="overflow-hidden p-0">
             <ul>
@@ -225,7 +229,7 @@ export function WorkspacePage() {
                       <span className="font-medium text-foreground">{item.title}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
-                      <span>{item.source === "builder" ? "Builder" : t("workspace.sourceThisBrowser")}</span>
+                      <span>{item.source === "builder" ? "Builder" : t("workspace.thisBrowser")}</span>
                       <span>{formatDateTime(item.timestamp)}</span>
                     </span>
                   </button>
@@ -240,7 +244,7 @@ export function WorkspacePage() {
             <EmptyState
               title={t("workspace.noWorkTitle")}
               description={t("workspace.noWorkDesc")}
-              actionLabel={t("workspace.exploreData")}
+              actionLabel={t("workspace.exploreCta")}
               actionHref="/discover"
             />
           </Card>
@@ -260,7 +264,7 @@ export function WorkspacePage() {
                 type="button"
                 onClick={handleClearAllSpecs}
               >
-                {t("workspace.clearAll")}
+                {t("workspace.deleteAll")}
               </Button>
             ) : undefined
           }
@@ -272,7 +276,7 @@ export function WorkspacePage() {
           {savedSpecSummaries.length === 0 ? (
             <EmptyState
               className="py-8"
-              title={t("workspace.noSpecsEmptyTitle")}
+              title={t("workspace.noSpecs")}
               description={t("workspace.noSpecsDesc")}
               actionLabel={t("workspace.newBuild")}
               actionHref="/builds/new"
@@ -317,9 +321,9 @@ export function WorkspacePage() {
                           <span className="break-all">{summary.outputPath || t("workspace.noOutput")}</span>
                           <span>·</span>
                           <span className={`rounded-full px-2 py-0.5 font-medium ${validation.className}`}>
-                            {validation.label}
+                            {t(validation.labelKey)}
                           </span>
-                          <span>{t("workspace.lastSaved", { date: formatDateTime(summary.updatedAt) })}</span>
+                          <span>{t("workspace.lastSaved", { time: formatDateTime(summary.updatedAt) })}</span>
                         </p>
                       </div>
                     )}
@@ -330,7 +334,7 @@ export function WorkspacePage() {
                           className="text-muted-foreground underline hover:text-foreground"
                           onClick={() => setRenameTarget({ id: summary.id, name: summary.name })}
                         >
-                          {t("workspace.renameAction")}
+                          {t("workspace.rename")}
                         </button>
                         <button
                           type="button"

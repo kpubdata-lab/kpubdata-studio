@@ -1,30 +1,32 @@
 /**
- * 결과물 랜딩 페이지 (/artifacts).
+ * Artifacts landing page (/artifacts).
  *
- * 결과물은 빌드 단위로 관리되므로(제안 §5.7), 이 전역 화면은 빌드 선택으로 안내한다.
- * 빌드별 상세 결과물은 /builds/:buildId/artifacts 에서 확인한다.
+ * Artifacts are managed per build (proposal §5.7), so this global screen guides users
+ * to select a build. Detailed artifacts per build are viewed at /builds/:buildId/artifacts.
  */
+import { useTranslation } from "react-i18next";
 import { Card, EmptyState, PageHeader } from "@/shared/ui";
 
 /**
- * 빌드별 결과물 화면으로 안내하는 전역 결과물 랜딩 페이지.
+ * Global artifacts landing page that guides users to the per-build artifacts screen.
  *
- * @returns 결과물 랜딩 화면.
+ * @returns Artifacts landing screen.
  */
 export function ArtifactsPage() {
+  const { t } = useTranslation();
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow="결과물"
-        title="생성된 결과물"
-        description="결과물은 빌드 단위로 관리됩니다. 빌드를 선택하면 파일·manifest·다운로드를 볼 수 있습니다."
+        eyebrow={t("artifactsPage.eyebrow")}
+        title={t("artifactsPage.title")}
+        description={t("artifactsPage.desc")}
       />
 
       <Card className="p-0">
         <EmptyState
-          title="빌드를 선택하세요"
-          description="빌드 목록에서 빌드를 연 뒤 ‘결과물’ 탭에서 파일과 manifest를 확인할 수 있습니다."
-          actionLabel="빌드 목록으로"
+          title={t("artifactsPage.emptyTitle")}
+          description={t("artifactsPage.emptyDesc")}
+          actionLabel={t("artifactsPage.cta")}
           actionHref="/builds"
         />
       </Card>

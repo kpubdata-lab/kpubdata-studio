@@ -1,16 +1,16 @@
 /**
- * 어시스턴트 설정 상태 (#205, ST-A2).
+ * Assistant config state (#205, ST-A2).
  *
- * LLM API 키는 **기본 메모리 전용**. 인증 토큰과 달리 세션마다 재입력받으면
- * 마찰이 크므로 "이 브라우저에 저장" 옵트인을 명시적 경고와 함께 제공한다.
- * 기본값은 저장하지 않는 쪽이다.
+ * LLM API key **memory-only by default**. Unlike auth token, re-entering each session has high friction,
+ * so provide explicit "save to this browser" opt-in with clear warning. Default: don't save.
  */
+import { i18n } from "@/shared/i18n";
 import { create } from "zustand";
 import { checkLlmBaseUrl } from "./baseUrl";
 
 const STORAGE_KEY = "kpubdata-assist-key";
 const STORAGE_WARNING =
-  "LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있습니다. 신뢰하지 않는 확장 프로그램이 있다면 저장하지 마세요.";
+  i18n.t("assistant.config.persistWarning");
 
 interface AssistConfigState {
   apiKey: string;
@@ -18,13 +18,13 @@ interface AssistConfigState {
   baseUrl: string;
   persistToStorage: boolean;
   isConfigured: boolean;
-  /** 이 config로 실제 요청을 보내도 되는지(#256 리뷰 §2 — HTTPS만 허용). */
+  /** Whether safe to send actual requests with this config (#256 review §2 — HTTPS only). */
   baseUrlSafe: boolean;
-  /** 안전하지 않을 때 사용자에게 보여줄 사유. */
+  /** Reason to show user when not safe. */
   baseUrlError?: string;
-  /** 실제 요청에 쓰일 정규화된 base URL(빈 입력이면 기본값). */
+  /** Normalized base URL for actual requests (default if empty input). */
   resolvedBaseUrl: string;
-  /** 기본 Provider 주소를 그대로 쓰는지 — 아니면 UI가 경고를 보여준다. */
+  /** Whether using default Provider address as-is — else UI shows warning. */
   isDefaultBaseUrl: boolean;
   setConfig: (config: { apiKey: string; model?: string; baseUrl?: string }) => void;
   enablePersistence: () => void;
@@ -55,7 +55,7 @@ function savePersistedKey(key: string): void {
     if (key) localStorage.setItem(STORAGE_KEY, key);
     else localStorage.removeItem(STORAGE_KEY);
   } catch {
-    // localStorage 접근 실패(SSR/프라이빗 모드)는 무시
+    // localStorage access failure (SSR/private mode) ignored
   }
 }
 
@@ -93,7 +93,7 @@ export const useAssistConfig = create<AssistConfigState>((set, get) => ({
   },
 }));
 
-// 옵트인한 경우에만 시작 시 로드
+// Load on startup only if opted in
 if (typeof window !== "undefined") {
   try {
     const persisted = localStorage.getItem(STORAGE_KEY);
@@ -105,6 +105,6 @@ if (typeof window !== "undefined") {
       });
     }
   } catch {
-    // 무시
+    // ignored
   }
 }
