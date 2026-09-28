@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NewBuildPage } from "@/pages/NewBuildPage";
@@ -123,6 +123,15 @@ describe("New Build draft persistence (#10)", () => {
     // 파라미터 단계로 이동하면 필드에 raw secret이 아니라 marker가 보인다.
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
     await screen.findByRole("heading", { name: "데이터 소스" });
+    // The dataset select's options come from the async catalog, and the select stays
+    // disabled until they arrive. Clicking "next" before that races the catalog (#454).
+    // Once loaded, the effect in NewBuildPage replaces the restored "air" — absent from
+    // the MSW catalog — with the first dataset, so wait for that value, not "air".
+    const datasetSelect = screen.getByLabelText(/데이터셋/);
+    await waitFor(() => {
+      expect(datasetSelect).toBeEnabled();
+      expect(datasetSelect).toHaveValue("air_quality");
+    });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
     await screen.findByRole("heading", { name: "파라미터" });
     const fieldValue = (screen.getByLabelText(/요청 파라미터/) as HTMLTextAreaElement).value;
