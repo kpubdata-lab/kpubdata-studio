@@ -156,6 +156,41 @@ jobs:
       - name: Test with coverage
         run: npm run test:coverage
 
+  contract-drift:
+    # Studio's response schemas against Builder's contract (kpubdata-builder#693).
+    # Builder main is what Studio is developed against and released with (ADR 0004).
+    # A Builder enum value Studio does not accept makes every response carrying it
+    # fail to parse — run_cancelled did, until #473 — so this fails the build instead.
+    name: Builder contract drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Checkout Builder's contract
+        uses: actions/checkout@v7
+        with:
+          repository: yeongseon/kpubdata-builder
+          path: .builder
+          sparse-checkout: contract
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          npm_config_cache: ${{ runner.temp }}/.npm-cache
+          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
+
+      - name: Compare schemas with the contract
+        env:
+          BUILDER_CONTRACT: .builder/contract/builder-api.yaml
+        run: npx vitest run src/shared/lib/contractDrift.test.ts
+
   # One gate, so that editing the matrix is not also editing branch protection (#416).
   #
   # Requiring `Lint, type check, test, build (20)` is what blocked every PR after #413
@@ -169,7 +204,7 @@ jobs:
   gate:
     name: CI gate
     runs-on: ubuntu-latest
-    needs: [quality, e2e, coverage]
+    needs: [quality, e2e, coverage, contract-drift]
     # `always()` so a failed job still reaches this step. Without it the gate is
     # skipped when something upstream fails, and a skipped required check is the same
     # absence this job exists to remove.

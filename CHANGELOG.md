@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- CI compares Studio's response schemas with Builder's contract (kpubdata-builder#693). For every contract schema Studio mirrors by name, a contract enum value Studio does not accept, or a key Studio requires that the contract does not define, fails the `Builder contract drift` job, which the CI gate requires. It reads the contract from Builder's main; locally, set `BUILDER_CONTRACT` to run it.
+
 ### Fixed
 
 - A cancelled run's event timeline parses again, and fetch progress is accepted (builder#648). The event-name schema lacked `run_cancelled`, which Builder has emitted for a cancelled async run since builder#481, so every cancelled run's timeline failed to parse. It now also accepts `source_fetch_progress`, which Builder emits after each `param_grid` combination.
