@@ -43,7 +43,7 @@ test("키보드로 내비게이션 링크에 focus가 도달하고 focus가 보�
   await expectNoPageErrors(errors);
 });
 
-test("390x844에서 topbar subtitle이 Ask KPubData/avatar 버튼과 겹치지 않는다 (UI audit #6-A)", async ({ page }) => {
+test("390x844에서 topbar breadcrumb이 Ask KPubData/avatar 버튼과 겹치지 않는다 (UI audit #6-A, #423)", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
@@ -51,7 +51,7 @@ test("390x844에서 topbar subtitle이 Ask KPubData/avatar 버튼과 겹치지 �
   await page.goto("/");
   await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
 
-  const subtitle = page.locator("header h1");
+  const subtitle = page.getByRole("navigation", { name: "현재 위치" });
   const assistantButton = page.getByRole("button", { name: "Ask KPubData 열기" });
   await expect(subtitle).toBeVisible();
   await expect(assistantButton).toBeVisible();

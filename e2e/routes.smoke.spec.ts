@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const ROUTES: Array<{ path: string; heading: RegExp | string }> = [
-  { path: "/", heading: /KPubData|데이터/ },
+  { path: "/", heading: /작업 현황|테이블로 만드세요/ },
   { path: "/discover", heading: "데이터 탐색" },
   { path: "/builds/new", heading: /템플릿 선택|기본 정보/ },
   { path: "/builds", heading: /실행 이력|Run History/ },

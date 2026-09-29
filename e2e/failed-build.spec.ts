@@ -42,14 +42,14 @@ test("실패 run 상세가 실패 stage와 증거를 표시하고 편집으로 �
   await expectNoPageErrors(errors);
 });
 
-test("Table Catalog가 실패 dataset의 stage 상태를 정상으로 위장하지 않는다 (#268 원칙)", async ({
+test("Tables 화면이 실패 dataset의 stage 상태를 정상으로 위장하지 않는다 (#268 원칙)", async ({
   page,
 }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   await page.goto("/datasets");
-  await expect(page.getByRole("heading", { name: /Table Catalog/i }).first()).toBeVisible({
+  await expect(page.getByRole("heading", { name: /^(테이블|Tables)$/ }).first()).toBeVisible({
     timeout: 10_000,
   });
   await expect(page.getByText("대기질 통합 데이터").first()).toBeVisible();

@@ -54,6 +54,11 @@ describe("Table Catalog P0 (#253)", () => {
     expect(screen.queryByText("대기질 통합 데이터")).not.toBeInTheDocument();
   });
 
+  it("offers Create Table as the Tables page's own action (#423)", async () => {
+    renderCatalog();
+    expect(await screen.findByRole("link", { name: "테이블 만들기" })).toHaveAttribute("href", "/add");
+  });
+
   it("uses the prototype five-column catalog hierarchy", async () => {
     renderCatalog();
     await screen.findByText("대기질 통합 데이터");

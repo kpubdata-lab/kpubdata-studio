@@ -2,14 +2,38 @@
 
 ## 1. 최상위 섹션
 
-Studio의 모든 정보는 사용자의 작업 흐름에 따라 다음 6가지 핵심 섹션으로 나뉩니다.
+사이드바는 빌드 콘솔(Discover · Add Data · Datasets · Builds · Provider)이 아니라
+**데이터를 찾고, 테이블로 두고, 분석하고, 운영하는** 흐름으로 묶는다 (#423). 용어는
+kpubdata 의 [TERMINOLOGY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/TERMINOLOGY.md) 를 따른다.
 
-- **Home (홈)**: 전체 요약 대시보드입니다. 최근 작업한 빌드와 현재 진행 중인 상태를 보여줍니다.
-- **Builds (빌드 관리)**: 지금까지 만든 모든 빌드 기획서와 실행 결과를 모아보는 곳입니다.
-- **New Build (새 빌드 생성)**: 새로운 데이터 수집을 시작하는 입구입니다.
-- **Preview & Validation (미리보기 및 검증)**: 빌드 실행 전, 데이터 모양을 확인하고 설정 오류를 잡는 중간 단계입니다.
-- **Artifacts (결과물 관리)**: 빌드 성공 후 만들어진 데이터 파일(Markdown, JSONL 등)을 열람하고 다운로드하는 곳입니다.
-- **Publish (출판)**: 검토가 끝난 데이터를 외부로 공유하거나 정식 출판하는 최종 관문입니다.
+```
+KPubData
+├── Home                       /
+├── DATA
+│   ├── Catalog                /discover   공공 API 소스 데이터셋
+│   └── Tables                 /datasets   소스로 만든 테이블
+├── ANALYZE
+│   ├── Workspace              /workspace
+│   └── Reports                /reports
+├── OPERATE
+│   ├── Refresh Jobs           /builds     테이블을 만들고 갱신한 실행
+│   ├── Quality                /quality
+│   └── Monitoring             /monitoring
+├── Connections                /provider
+└── Settings                   /settings
+```
+
+전역: breadcrumb (topbar) · Ask KPubData · Account
+
+- **URL 은 그대로다.** `/datasets → /tables` 같은 이름 정리는 저장된 링크를 끊지 않도록
+  redirect 와 함께 따로 한다.
+- **테이블 만들기는 메뉴가 아니라 동작이다.** 전역 `New Build` 버튼과 사이드바의
+  `Add Data` 를 없앴다. Catalog · Tables 화면의 `Create Table` 이 `/add` 로, Table
+  Detail 의 `Refresh` 가 선택한 run 의 스펙 편집(`/builds/:id/edit`)으로 간다.
+- **SQL Workspace · Saved Queries 는 화면이 생길 때 ANALYZE 에 들어간다** (#417). 없는
+  화면으로 가는 링크는 링크가 없는 것보다 나쁘다.
+- **제품명은 한 번만** — 사이드바 로고. topbar 는 보고 있는 대상을 말한다
+  (`갱신 작업 / run-1 / 스냅샷 파일`).
 
 ---
 

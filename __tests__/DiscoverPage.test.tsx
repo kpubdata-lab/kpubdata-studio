@@ -30,6 +30,11 @@ afterEach(() => {
 });
 
 describe("DiscoverPage", () => {
+  it("offers Create Table as the Catalog's own action, pointing at the creation flow (#423)", async () => {
+    renderDiscover();
+    expect(await screen.findByRole("link", { name: "테이블 만들기" })).toHaveAttribute("href", "/add");
+  });
+
   it("loads the mock catalog and renders dataset cards with provider labels and counts", async () => {
     renderDiscover();
 
