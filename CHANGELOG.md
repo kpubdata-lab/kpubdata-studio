@@ -4,6 +4,7 @@
 
 ### Added
 
+- The visual identity is written down in `docs/brand/VISUAL_IDENTITY.md` (#425): the `KPubData` wordmark leads and `Studio` is a weaker suffix, brand and status colours are separate tokens (warning, stale and partial share amber and differ by label), SQL and identifiers are always monospace, and density comes before marketing type. Five static warehouse prototypes — Home, Catalog, Tables, Table Detail, SQL Workspace — live in `docs/prototype/warehouse/` with desktop and 390px screenshots, awaiting prototype review before the app adopts them. A test fails if a status token takes a brand colour or a prototype badge carries no word.
 - Studio says when it is talking to a Builder from another release (#430). It compares its own build version with the `version` that `GET /version` reports: a minor or major difference shows one dismissible banner line and blocks nothing, a patch difference passes with a console note, and a Builder that does not report `version` gets no warning. The `api_version` contract check is unchanged and separate.
 
 ### Security

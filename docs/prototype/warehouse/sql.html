@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL Workspace — KPubData 프로토타입</title>
+<link rel="stylesheet" href="tokens.css">
+<style>.lockup{display:flex;align-items:center;gap:8px;padding:4px 8px 10px}.lockup img{height:26px}.lockup b{font:700 17px/1 var(--font-sans);color:#fff;letter-spacing:-.01em}.lockup span{font:500 12px/1 var(--font-sans);color:#94a3b8}</style>
+</head>
+<body>
+<!-- Prototype for kpubdata-studio#425. Static; data is illustrative. Rules: docs/brand/VISUAL_IDENTITY.md -->
+<div class="shell">
+<aside class="sidebar">
+<a class="lockup" href="index.html"><img src="../../assets/logo/kpubdata-brand-assets/svg/symbol_dark.svg" alt=""><b>KPubData</b><span>Studio</span></a>
+<nav><a href="index.html">홈</a><div class="group-label">DATA</div><a href="catalog.html">카탈로그</a><a href="tables.html">테이블</a><div class="group-label">ANALYZE</div><a href="sql.html" class="active">SQL Workspace</a><a href="#" class="soon">Saved Queries</a><div class="group-label">OPERATE</div><a href="#">갱신 작업</a><a href="#">품질</a><a href="#">모니터링</a></nav>
+<div class="bottom"><a href="#">연결</a><a href="#">설정</a></div>
+</aside>
+<div>
+<header class="topbar">
+<nav class="crumbs" aria-label="현재 위치"><strong>SQL Workspace</strong></nav>
+<div class="tools"><div class="search">테이블·소스·컬럼 검색 ⌘K</div><div class="ask">Ask KPubData</div><div class="avatar">DH</div></div>
+</header>
+<main>
+<div class="page-head"><div><h1>SQL Workspace</h1><p>질의는 내가 실행합니다. Ask KPubData 는 SQL 을 제안할 뿐 실행하지 않습니다.</p></div>
+<div class="actions"><a class="btn" href="#">저장</a><a class="btn primary" href="#">실행 ⌘↵</a></div></div>
+<div class="grid sql-layout">
+<div class="card"><h2>테이블</h2><div class="body grid" style="gap:6px">
+<div class="mono">housing.apartment_trade_monthly</div><div class="muted mono">&nbsp;&nbsp;snap_019 고정</div>
+<div class="mono">air.quality_hourly</div><div class="muted mono">&nbsp;&nbsp;snap_142 고정 · <span class="badge partial"><span class="axis"></span>Partial</span></div>
+<div class="mono">weather.asos_daily</div>
+</div></div>
+<div class="grid" style="gap:12px">
+<pre class="sql"><span class="kw">SELECT</span> region_id,
+       deal_ym,
+       <span class="kw">COUNT</span>(*)                          <span class="kw">AS</span> deals,
+       <span class="kw">ROUND</span>(<span class="kw">AVG</span>(deal_amount_krw) / 1e8, 2) <span class="kw">AS</span> avg_eok
+<span class="kw">FROM</span>   housing.apartment_trade_monthly
+<span class="kw">WHERE</span>  deal_ym <span class="kw">BETWEEN</span> '202601' <span class="kw">AND</span> '202608'
+<span class="kw">GROUP BY</span> region_id, deal_ym
+<span class="kw">ORDER BY</span> deals <span class="kw">DESC</span>
+<span class="kw">LIMIT</span>  20;</pre>
+<div class="muted">스냅샷 고정: housing.apartment_trade_monthly@snap_019 · 실행 0.84초 · 20행</div>
+<div class="card"><div class="table-wrap"><table>
+<tr><th class="mono">region_id</th><th class="mono">deal_ym</th><th class="num mono">deals</th><th class="num mono">avg_eok</th></tr>
+<tr><td class="mono">41135</td><td class="mono">202606</td><td class="num">1,284</td><td class="num">9.12</td></tr>
+<tr><td class="mono">11680</td><td class="mono">202606</td><td class="num">1,102</td><td class="num">24.87</td></tr>
+<tr><td class="mono">41465</td><td class="mono">202607</td><td class="num">1,047</td><td class="num">6.40</td></tr>
+<tr><td class="mono">11650</td><td class="mono">202606</td><td class="num">998</td><td class="num">27.33</td></tr>
+</table></div></div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>
