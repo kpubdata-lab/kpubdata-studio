@@ -2,7 +2,7 @@
  * Administration (#409): the menu follows the Engine's answer, the page shows the
  * Engine's 403 rather than relying on being hidden, and no credential reaches the screen.
  */
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { http, HttpResponse } from "msw";
@@ -63,6 +63,25 @@ describe("administration menu (#409)", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(useAdminStore.getState().status).toBe("unknown");
     expect(menu().queryByRole("link", { name: "관리" })).not.toBeInTheDocument();
+  });
+});
+
+describe("administration menu after a failed check (#480)", () => {
+  it("asks again on the next navigation instead of staying hidden until reload", async () => {
+    let engineUp = false;
+    mswServer.use(
+      http.get(`${API_BASE}/admin/config`, () =>
+        engineUp ? HttpResponse.json(CONFIG) : HttpResponse.json({ error: "down" }, { status: 503 }),
+      ),
+    );
+    renderShell();
+    await waitFor(() => expect(useAdminStore.getState().status).toBe("unknown"));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(menu().queryByRole("link", { name: "관리" })).not.toBeInTheDocument();
+
+    engineUp = true;
+    fireEvent.click(menu().getByRole("link", { name: "테이블" }));
+    expect(await menu().findByRole("link", { name: "관리" })).toBeInTheDocument();
   });
 });
 

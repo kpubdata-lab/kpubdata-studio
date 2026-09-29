@@ -6,6 +6,7 @@
  */
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 
@@ -18,9 +19,13 @@ export function VersionMismatchBanner() {
   const dismiss = useVersionCheckStore((s) => s.dismiss);
   const realEnabled = isRealBuilderEnabled();
 
+  const { pathname } = useLocation();
+
+  // Asked on every navigation: a success is cached for the page load, and a failure is
+  // not, so an Engine that was unreachable at first is checked when it comes back (#480).
   useEffect(() => {
     if (realEnabled) void ensureVersionChecked();
-  }, [realEnabled]);
+  }, [realEnabled, pathname]);
 
   if (!realEnabled || dismissed || comparison?.kind !== "mismatch") return null;
 

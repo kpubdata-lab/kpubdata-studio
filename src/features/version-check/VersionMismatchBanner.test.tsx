@@ -6,6 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 
 import { mswServer } from "../../../vitest.setup";
 import { API_BASE } from "@/shared/config/env";
@@ -24,12 +25,22 @@ function serveVersion(version: string | undefined) {
   );
 }
 
+function GoElsewhere() {
+  const navigate = useNavigate();
+  return (
+    <button onClick={() => navigate("/elsewhere")} type="button">
+      go
+    </button>
+  );
+}
+
 function renderShell() {
   return render(
-    <>
+    <MemoryRouter>
       <VersionMismatchBanner />
       <main>page content</main>
-    </>,
+      <GoElsewhere />
+    </MemoryRouter>,
   );
 }
 
@@ -66,7 +77,7 @@ describe("VersionMismatchBanner (#430)", () => {
     serveVersion(`${major + 1}.0.0`);
     renderShell();
 
-    fireEvent.click(await screen.findByRole("button"));
+    fireEvent.click(await screen.findByRole("button", { name: "버전 안내 닫기" }));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
@@ -112,5 +123,39 @@ describe("VersionMismatchBanner (#430)", () => {
 
     expect(screen.getByText("page content")).toBeInTheDocument();
     expect(asked).toBe(false);
+  });
+
+  it("asks again after a failure instead of staying silent until reload (#480)", async () => {
+    // The Engine is down when the page loads (the client's own retries included), then comes back.
+    let engineUp = false;
+    mswServer.use(
+      http.get(`${API_BASE}/version`, () =>
+        engineUp
+          ? HttpResponse.json({ service: "kpubdata-builder", api_version: "1.31.0", version: `${major}.${minor + 1}.0` })
+          : new HttpResponse(null, { status: 500 }),
+      ),
+    );
+    renderShell();
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    engineUp = true;
+    fireEvent.click(screen.getByRole("button", { name: "go" }));
+    expect(await screen.findByRole("status", {}, { timeout: 5000 })).toBeInTheDocument();
+  });
+
+  it("does not ask again once it has an answer", async () => {
+    let calls = 0;
+    mswServer.use(
+      http.get(`${API_BASE}/version`, () => {
+        calls += 1;
+        return HttpResponse.json({ service: "kpubdata-builder", api_version: "1.31.0", version: packageJson.version });
+      }),
+    );
+    renderShell();
+    await settled();
+    fireEvent.click(screen.getByRole("button", { name: "go" }));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls).toBe(1);
   });
 });

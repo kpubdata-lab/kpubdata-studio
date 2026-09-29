@@ -33,7 +33,9 @@ let inFlight: Promise<void> | null = null;
  * Ask Builder for its version once and record the comparison.
  *
  * A failed request records nothing: connection errors already surface where the
- * failing call is made, and a mismatch banner on top of them would be a guess.
+ * failing call is made, and a mismatch banner on top of them would be a guess. It also
+ * does not stick — the next call asks again (#480), so an Engine that was down when
+ * the page loaded is compared once it answers. A success is kept for the page load.
  */
 export function ensureVersionChecked(): Promise<void> {
   if (inFlight) return inFlight;
@@ -47,7 +49,8 @@ export function ensureVersionChecked(): Promise<void> {
       useVersionCheckStore.setState({ comparison });
     })
     .catch(() => {
-      // No verdict — see above.
+      // No verdict — see above — and no cached promise, so the next call retries.
+      inFlight = null;
     });
   return inFlight;
 }
