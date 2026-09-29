@@ -22,6 +22,7 @@ const SECTIONS: Record<string, { labelKey: string; to: string }> = {
   add: { labelKey: "nav.discover", to: "/discover" },
   tables: { labelKey: "nav.datasets", to: "/tables" },
   "refresh-jobs": { labelKey: "nav.builds", to: "/refresh-jobs" },
+  sql: { labelKey: "nav.sql", to: "/sql" },
   quality: { labelKey: "nav.quality", to: "/quality" },
   monitoring: { labelKey: "nav.monitoring", to: "/monitoring" },
   workspace: { labelKey: "nav.workspace", to: "/workspace" },

@@ -13,6 +13,7 @@ KPubData
 │   ├── Catalog                /discover   공공 API 소스 데이터셋
 │   └── Tables                 /tables     소스로 만든 테이블
 ├── ANALYZE
+│   ├── SQL Workspace          /sql        테이블 스냅샷 하나에 SQL
 │   ├── Workspace              /workspace
 │   └── Reports                /reports
 ├── OPERATE
@@ -31,8 +32,9 @@ KPubData
 - **테이블 만들기는 메뉴가 아니라 동작이다.** 전역 `New Build` 버튼과 사이드바의
   `Add Data` 를 없앴다. Catalog · Tables 화면의 `Create Table` 이 `/add` 로, Table
   Detail 의 `Refresh` 가 선택한 run 의 스펙 편집(`/refresh-jobs/:id/edit`)으로 간다.
-- **SQL Workspace · Saved Queries 는 화면이 생길 때 ANALYZE 에 들어간다** (#417). 없는
-  화면으로 가는 링크는 링크가 없는 것보다 나쁘다.
+- **SQL Workspace 는 테이블 하나씩** — Engine 의 `/query` 가 run 하나·stage 하나를 읽는다.
+  테이블 JOIN 은 kpubdata-builder#704, **Saved Queries 는 서버 저장소(kpubdata-builder#783)가
+  생길 때** ANALYZE 에 들어간다. 없는 화면으로 가는 링크는 링크가 없는 것보다 나쁘다.
 - **제품명은 한 번만** — 사이드바 로고. topbar 는 보고 있는 대상을 말한다
   (`갱신 작업 / run-1 / 스냅샷 파일`).
 
@@ -89,6 +91,7 @@ graph TD
 | `/tables` · `/tables/:id` | 테이블 목록 · 상세 | `DatasetCatalogPage` · `DatasetDetailPage` |
 | `/refresh-jobs` · `/refresh-jobs/:id[/run\|artifacts\|publish\|edit]` | 갱신 작업 · 실행 상세 | `BuildsPage` 외 |
 | `/refresh-jobs/new` | 스펙으로 테이블 만들기 (마법사) | `src/pages/NewBuildPage.tsx` |
+| `/sql` | SQL Workspace | `src/pages/SqlWorkspacePage.tsx` |
 | `/connections` | 연결 · 활용신청 안내 | `src/pages/ProviderPage.tsx` |
 | `/datasets/*` · `/builds/*` · `/provider/*` | 옛 URL → 위 경로로 redirect | `src/app/legacyRedirect.tsx` |
 

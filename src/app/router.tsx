@@ -37,6 +37,9 @@ const BuildPublishPage = lazy(() =>
 const BuildRunPage = lazy(() =>
   import("@/pages/BuildRunPage").then((m) => ({ default: m.BuildRunPage })),
 );
+const SqlWorkspacePage = lazy(() =>
+  import("@/pages/SqlWorkspacePage").then((m) => ({ default: m.SqlWorkspacePage })),
+);
 const BuildsPage = lazy(() =>
   import("@/pages/BuildsPage").then((m) => ({ default: m.BuildsPage })),
 );
@@ -226,6 +229,10 @@ export const router = createBrowserRouter([
       {
         path: "assistant",
         element: withFeatureBoundary("router.features.Assistant", <AssistantPage />),
+      },
+      {
+        path: "sql",
+        element: withFeatureBoundary("router.features.sql", <SqlWorkspacePage />),
       },
       {
         path: "reports",
