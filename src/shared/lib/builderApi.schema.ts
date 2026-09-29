@@ -162,10 +162,33 @@ export const wireEncodingSchema = z.union([
   z.string().transform((): typeof UNSUPPORTED_WIRE_ENCODING => UNSUPPORTED_WIRE_ENCODING),
 ]);
 
+/**
+ * Where a column hint came from (builder#813, ADR 0019). An open string: a newer Builder
+ * may add an origin, and the hint is still shown. `engine_inferred` is an estimate.
+ */
+export const columnMetaOriginSchema = z.string();
+
+/** Optional per-column hints (builder#813, contract 1.41.0). Metadata only — never a cast. */
+export const columnSemanticHintSchema = z.object({ kind: z.string(), origin: columnMetaOriginSchema });
+export const columnDisplayHintSchema = z.object({
+  label: z.string().optional(),
+  description: z.string().optional(),
+  format: z.string().optional(),
+  origin: columnMetaOriginSchema,
+});
+export const columnUnitHintSchema = z.object({
+  name: z.string(),
+  scale: z.number().optional(),
+  origin: columnMetaOriginSchema,
+});
+
 export const columnWireInfoSchema = z.object({
   name: z.string(),
   logical_type: z.string(),
   wire_encoding: wireEncodingSchema,
+  semantic: columnSemanticHintSchema.optional(),
+  display: columnDisplayHintSchema.optional(),
+  unit: columnUnitHintSchema.optional(),
 });
 
 /**
@@ -1081,6 +1104,41 @@ export const warehouseQueryResponseSchema = z.object({
   result: queryResponseSchema,
 });
 
+/** POST /warehouse/rows (builder#815, contract 1.43.0): one page of a pinned snapshot. */
+export const warehouseRowsRequestSchema = z.object({
+  table: z.string().min(1),
+  /** `current` for the first page; the returned `snapshot_id` for every later one. */
+  snapshot: z.string().min(1).optional(),
+  offset: z.number().int().nonnegative().optional(),
+  page_size: z.number().int().min(1).max(500).optional(),
+  columns: z.array(z.string()).min(1).optional(),
+  sort: z.array(z.object({ column: z.string(), direction: z.enum(["asc", "desc"]).optional() })).max(8).optional(),
+  count: z.enum(["exact", "none"]).optional(),
+});
+
+export const warehouseRowsResponseSchema = z.object({
+  snapshot: pinnedSnapshotSchema,
+  columns: z.array(z.string()),
+  column_meta: z.array(columnWireInfoSchema),
+  rows: z.array(z.record(z.string(), jsonQueryValueSchema)),
+  order: z.array(z.object({ column: z.string(), direction: z.enum(["asc", "desc"]) })),
+  page: z.object({
+    offset: z.number().int().nonnegative(),
+    page_size: z.number().int().positive(),
+    returned: z.number().int().nonnegative(),
+    has_more: z.boolean(),
+    next_offset: z.number().int().nonnegative().nullable(),
+  }),
+  /** `not_computed` carries a null value — never read it as 0. An unknown status stays unknown. */
+  count: z.object({
+    status: z.union([z.enum(["exact", "estimated", "not_computed"]), z.string()]),
+    value: z.number().int().nonnegative().nullable(),
+  }),
+  execution_ms: z.number().int().nonnegative(),
+  startup_ms: z.number().int().nonnegative(),
+  engine_execution_ms: z.number().int().nonnegative(),
+});
+
 export const savedAnalysisSchema = z.object({
   analysis_id: z.string(),
   name: z.string(),
@@ -1116,6 +1174,9 @@ export type WarehouseTableDetailResponse = z.infer<typeof warehouseTableDetailRe
 export type WarehouseSnapshot = z.infer<typeof warehouseSnapshotSchema>;
 export type WarehouseQueryRequest = z.infer<typeof warehouseQueryRequestSchema>;
 export type WarehouseQueryResponse = z.infer<typeof warehouseQueryResponseSchema>;
+export type WarehouseRowsRequest = z.infer<typeof warehouseRowsRequestSchema>;
+export type WarehouseRowsResponse = z.infer<typeof warehouseRowsResponseSchema>;
+export type ColumnWireInfo = z.infer<typeof columnWireInfoSchema>;
 export type SavedAnalysis = z.infer<typeof savedAnalysisSchema>;
 export type CreateAnalysisRequest = z.infer<typeof createAnalysisRequestSchema>;
 export type CreateAnalysisResponse = z.infer<typeof createAnalysisResponseSchema>;
