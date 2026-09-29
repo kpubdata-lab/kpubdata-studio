@@ -488,6 +488,8 @@ export type WarehouseTable = schemas.WarehouseTable;
 export type WarehouseSnapshot = schemas.WarehouseSnapshot;
 export type WarehouseQueryResponse = schemas.WarehouseQueryResponse;
 export type WarehouseRowsRequest = schemas.WarehouseRowsRequest;
+export type WarehouseExportRequest = schemas.WarehouseExportRequest;
+export type WarehouseExport = schemas.WarehouseExport;
 export type WarehouseRowsResponse = schemas.WarehouseRowsResponse;
 export type ColumnWireInfo = schemas.ColumnWireInfo;
 export type WarehouseAggregateRequest = schemas.WarehouseAggregateRequest;
@@ -533,6 +535,24 @@ export const builderApi = {
   /** POST /warehouse/aggregate — named aggregates over a pinned snapshot, top N only after the whole aggregate (builder#818). */
   warehouseAggregate: (request: schemas.WarehouseAggregateRequest, signal?: AbortSignal) =>
     apiFetch("/warehouse/aggregate", { method: "POST", body: request, signal, retries: 0 }, schemas.warehouseAggregateResponseSchema),
+  /**
+   * POST /warehouse/exports — Builder runs the query on a pinned snapshot, checks licence
+   * and PII policy and keeps the complete result as a bundle (builder#819). Studio never
+   * builds a result file itself (#501).
+   */
+  createWarehouseExport: (request: schemas.WarehouseExportRequest, signal?: AbortSignal) =>
+    apiFetch("/warehouse/exports", { method: "POST", body: request, signal, retries: 0 }, schemas.warehouseExportSchema),
+
+  /** GET /warehouse/exports — the caller's unexpired exports, newest first. */
+  listWarehouseExports: (signal?: AbortSignal) =>
+    apiFetch("/warehouse/exports", { signal }, schemas.warehouseExportListSchema),
+
+  /** DELETE /warehouse/exports/{id} — delete an export and its file. */
+  deleteWarehouseExport: (exportId: string, signal?: AbortSignal) =>
+    apiFetch(`/warehouse/exports/${encodeURIComponent(exportId)}`, { method: "DELETE", signal, retries: 0 }, schemas.warehouseExportDeletedSchema),
+
+  // downloadWarehouseExport is binary too; see below.
+  downloadWarehouseExport,
 
   /** GET /analyses — the caller's saved analyses, newest first (builder#783). */
   listAnalyses: (signal?: AbortSignal) => apiFetch("/analyses", { signal }, schemas.analysisListResponseSchema),
@@ -1002,6 +1022,46 @@ function filenameFromContentDisposition(header: string | null): string | null {
  * URL-encode each segment — encoding "/" as "%2F"/"%5C" or similar does not change path
  * meaning (traversal Builder rejects after decode and re-validation).
  */
+/**
+ * GET an export's bundle (builder#819) — the zip Builder wrote, with the caller's own
+ * credentials, so ownership and expiry are checked by Builder at download time.
+ */
+export async function downloadWarehouseExport(
+  exportId: string,
+  signal?: AbortSignal,
+): Promise<{ blob: Blob; filename: string }> {
+  return fetchBinary(`/warehouse/exports/${encodeURIComponent(exportId)}/download`, `${exportId}.zip`, signal);
+}
+
+/** GET a binary Builder resource with the Bearer token, retrying once after re-auth (#189). */
+async function fetchBinary(path: string, fallbackName: string, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> {
+  async function send(): Promise<Response> {
+    const headers: Record<string, string> = {};
+    const token = (await authTokenProvider?.()) ?? null;
+    if (token) headers.Authorization = `Bearer ${token}`;
+    try {
+      return await fetch(`${API_BASE}${path}`, { method: "GET", headers, signal });
+    } catch (cause) {
+      if (signal?.aborted) throw cause;
+      throw new ApiError(0, i18n.t("api.connFail"), cause);
+    }
+  }
+  let response = await send();
+  if (response.status === 401 && (await recoverFromUnauthorized())) response = await send();
+  if (!response.ok) {
+    let parsed: unknown;
+    try {
+      const text = await response.text();
+      parsed = text ? JSON.parse(text) : undefined;
+    } catch {
+      parsed = undefined;
+    }
+    throw new ApiError(response.status, formatApiErrorMessage(response.status, parsed), parsed);
+  }
+  const blob = await response.blob();
+  return { blob, filename: filenameFromContentDisposition(response.headers.get("Content-Disposition")) ?? fallbackName };
+}
+
 export async function downloadArtifactFile(
   runId: string,
   filePath: string,

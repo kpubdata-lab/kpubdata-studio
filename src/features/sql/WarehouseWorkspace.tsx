@@ -15,6 +15,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { AggregateChartPanel } from "@/features/charts/AggregateChartPanel";
 import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
+import { ExportPanel } from "@/features/export/ExportPanel";
 import { builderApi, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
 import { Button, Card, PageHeader } from "@/shared/ui";
 
@@ -193,6 +194,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
 
           {table ? <TableRowsPanel key={`${table}@${snapshot}`} snapshot={snapshot} table={table} /> : null}
           {table ? <AggregateChartPanel key={`chart-${table}@${snapshot}`} snapshot={snapshot} table={table} /> : null}
+          {table && !blocked ? <ExportPanel key={`export-${table}@${snapshot}`} snapshot={snapshot} sql={sql} table={table} /> : null}
 
           {outcome?.status === "error" ? <QueryError code={outcome.code} message={outcome.message} /> : null}
           {outcome?.status === "success" ? (

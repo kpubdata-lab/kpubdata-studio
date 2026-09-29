@@ -1188,6 +1188,81 @@ export const warehouseAggregateResponseSchema = z.object({
   engine_execution_ms: z.number().int().nonnegative(),
 });
 
+/** POST /warehouse/exports (builder#819, contract 1.45.0): a pinned query's full result, policy-checked. */
+export const warehouseExportRequestSchema = z.object({
+  table: z.string().min(1),
+  snapshot: z.string().min(1).optional(),
+  sql: z.string().min(1).max(65536),
+  format: z.enum(["csv", "jsonl"]).optional(),
+  profile: z.enum(["machine", "spreadsheet"]).optional(),
+  max_rows: z.number().int().min(1).max(1_000_000).optional(),
+});
+
+export const warehouseExportManifestSchema = z.object({
+  manifest_version: z.number().int(),
+  export_id: z.string(),
+  created_at: z.string(),
+  expires_at: z.string(),
+  query: z.object({ sql: z.string(), user_derived: z.boolean() }),
+  /** The concrete snapshot read — never `current`. */
+  snapshot: z.object({
+    table_id: z.string(),
+    logical_name: z.string(),
+    snapshot_id: z.string(),
+    revision: z.number().int().nonnegative(),
+    run_id: z.string(),
+    artifact_digest: z.string(),
+    row_count: z.number().int().nonnegative().nullable(),
+    coverage: z.record(z.string(), z.json()).nullable(),
+  }),
+  source: z.object({
+    dataset_id: z.string().nullable(),
+    terms: z.object({
+      status: z.string(),
+      license: z.string().nullable(),
+      license_name: z.string().nullable(),
+      license_link: z.string().nullable(),
+      attribution: z.string().nullable(),
+    }),
+    provenance: z.array(z.record(z.string(), z.json())),
+  }),
+  output: z.object({
+    format: z.string(),
+    profile: z.string(),
+    encoding: z.string(),
+    bom: z.boolean(),
+    row_count: z.number().int().nonnegative(),
+    completeness: z.string(),
+    columns: z.array(columnWireInfoSchema),
+    values_altered: z.array(z.object({ column: z.string(), count: z.number().int().positive(), reason: z.string() })),
+    file: z.object({ name: z.string(), bytes: z.number().int().nonnegative(), sha256: z.string() }),
+  }),
+  pii: z.object({ policy: z.string().nullable(), allowed_findings: z.array(z.record(z.string(), z.json())) }),
+});
+
+export const warehouseExportSchema = z.object({
+  export_id: z.string(),
+  status: z.string(),
+  created_at: z.string(),
+  expires_at: z.string(),
+  request: z.object({
+    table: z.string(),
+    snapshot: z.string(),
+    sql: z.string(),
+    format: z.string(),
+    profile: z.string(),
+    max_rows: z.number().int().positive(),
+  }),
+  manifest: warehouseExportManifestSchema,
+  bundle: z
+    .object({ filename: z.string(), media_type: z.string(), bytes: z.number().int().nonnegative(), sha256: z.string(), files: z.array(z.string()) })
+    .nullable(),
+  download_path: z.string().nullable(),
+});
+
+export const warehouseExportListSchema = z.object({ exports: z.array(warehouseExportSchema) });
+export const warehouseExportDeletedSchema = z.object({ export_id: z.string(), deleted: z.literal(true) });
+
 export const savedAnalysisSchema = z.object({
   analysis_id: z.string(),
   name: z.string(),
@@ -1226,6 +1301,8 @@ export type WarehouseQueryResponse = z.infer<typeof warehouseQueryResponseSchema
 export type WarehouseRowsRequest = z.infer<typeof warehouseRowsRequestSchema>;
 export type WarehouseAggregateRequest = z.infer<typeof warehouseAggregateRequestSchema>;
 export type WarehouseAggregateResponse = z.infer<typeof warehouseAggregateResponseSchema>;
+export type WarehouseExportRequest = z.infer<typeof warehouseExportRequestSchema>;
+export type WarehouseExport = z.infer<typeof warehouseExportSchema>;
 export type WarehouseRowsResponse = z.infer<typeof warehouseRowsResponseSchema>;
 export type ColumnWireInfo = z.infer<typeof columnWireInfoSchema>;
 export type SavedAnalysis = z.infer<typeof savedAnalysisSchema>;
