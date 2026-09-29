@@ -7,8 +7,10 @@
  * 임시 기동하고, Studio를 VITE_USE_REAL_BUILDER=true로 띄운 Playwright
  * real 슈트(@real-builder)를 실행한다. 종료 시 Builder를 정리한다.
  *
- * 사용: node scripts/run-real-e2e.mjs [--builder-root <path>] [--kpubdata-root <path>] [--keep]
- * 기본 --builder-root는 ../kpubdata-builder, --kpubdata-root는 ../kpubdata(웍스페이스 레이아웃).
+ * 사용: node scripts/run-real-e2e.mjs [--builder-root <path>] [--replay-dir <path>] [--keep]
+ * 기본 --builder-root는 ../kpubdata-builder. --replay-dir(또는 STUDIO_REPLAY_DIR)는 Builder 가
+ * replay 모드로 읽을 fixture 디렉터리다. Studio 는 그 위치를 추측하지 않는다 — 다른 저장소의
+ * 내부 구조에 기대지 않기 위해서다(#511). 주지 않으면 Public API 시나리오를 건너뛴다.
  *
  * kpubdata 레포가 있으면 Builder를 **replay 모드**로 띄운다(KPUBDATA_MODE=replay).
  * 기록된 fixture를 재생하므로 Public API source도 외부 네트워크와 data.go.kr
@@ -27,13 +29,10 @@ const rootIndex = args.indexOf("--builder-root");
 const builderRoot = resolve(
   rootIndex !== -1 ? args[rootIndex + 1] : join(process.cwd(), "..", "kpubdata-builder"),
 );
-const kpubdataIndex = args.indexOf("--kpubdata-root");
-const kpubdataRoot = resolve(
-  kpubdataIndex !== -1 ? args[kpubdataIndex + 1] : join(process.cwd(), "..", "kpubdata"),
-);
-// fixture는 kpubdata 레포에만 있고 배포 wheel에는 없다.
-const replayDir = join(kpubdataRoot, "tests", "fixtures");
-const replayAvailable = existsSync(replayDir);
+const replayIndex = args.indexOf("--replay-dir");
+const replayArg = replayIndex !== -1 ? args[replayIndex + 1] : process.env.STUDIO_REPLAY_DIR;
+const replayDir = replayArg ? resolve(replayArg) : null;
+const replayAvailable = replayDir !== null && existsSync(replayDir);
 
 if (!existsSync(join(builderRoot, "pyproject.toml"))) {
   console.error(`builder root not found: ${builderRoot} (pass --builder-root)`);
@@ -46,8 +45,8 @@ console.log(`[real-e2e] builder root: ${builderRoot}`);
 console.log(`[real-e2e] builder data: ${dataDir}`);
 console.log(
   replayAvailable
-    ? `[real-e2e] kpubdata replay fixtures: ${replayDir}`
-    : `[real-e2e] kpubdata replay fixtures not found at ${replayDir} — Public API 시나리오는 건너뜁니다`,
+    ? `[real-e2e] replay fixtures: ${replayDir}`
+    : `[real-e2e] no replay fixtures (--replay-dir / STUDIO_REPLAY_DIR) — Public API 시나리오는 건너뜁니다`,
 );
 
 const builder = spawn(
