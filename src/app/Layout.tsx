@@ -292,7 +292,7 @@ export function Layout() {
 
   useEffect(() => {
     void ensureAdminChecked();
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = getResolvedTheme(theme);

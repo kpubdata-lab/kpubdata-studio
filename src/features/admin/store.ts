@@ -33,7 +33,12 @@ export function ensureAdminChecked(): Promise<void> {
   inFlight = builderApi
     .adminConfig()
     .then(() => useAdminStore.setState({ status: classifyAdminProbe({ ok: true }) }))
-    .catch((cause: unknown) => useAdminStore.setState({ status: classifyAdminProbe({ ok: false, cause }) }));
+    .catch((cause: unknown) => {
+      const status = classifyAdminProbe({ ok: false, cause });
+      useAdminStore.setState({ status });
+      // A 403 is an answer; anything else is not, so the next call asks again (#480).
+      if (status === "unknown") inFlight = null;
+    });
   return inFlight;
 }
 
