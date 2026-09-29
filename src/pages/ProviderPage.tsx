@@ -22,6 +22,7 @@
  *   (#S-provider-probe).
  */
 import { useTranslation } from "react-i18next";
+import { ApplicationGuideCard } from "@/features/onboarding/ApplicationGuideCard";
 import { i18n } from "@/shared/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -561,6 +562,8 @@ export function ProviderPage() {
           )}
         </section>
       </div>
+
+      <ApplicationGuideCard />
     </main>
   );
 }

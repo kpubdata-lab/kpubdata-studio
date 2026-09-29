@@ -45,9 +45,13 @@ const MOCK_CATALOG: CatalogResponse = {
     {
       name: "datago",
       datasets: [
-        dataset("air_quality", "대기오염 정보", true),
+        {
+          ...dataset("air_quality", "대기오염 정보", true),
+          application: { required: true, url: "https://www.data.go.kr/data/15073861/openapi.do" },
+          quota: "개발계정 일 10,000건",
+        },
         dataset("apt_trade", "아파트 실거래가", true),
-        dataset("dur_product_info", "DUR 품목정보", false),
+        { ...dataset("dur_product_info", "DUR 품목정보", false), application: { required: false, url: "https://www.data.go.kr" } },
       ],
     },
     {
