@@ -245,6 +245,7 @@
       "draftSecretRemoved": "Secret-bearing parameter values were removed from the saved draft. Please re-enter the parameters.",
       "specSecretRemoved": "Secret values were removed from the saved spec. Please re-enter the credential.",
       "specInvalid": "The build spec is invalid.",
+      "unsupportedSourceKind": "This spec's first source is a {{kind}} source, which the wizard cannot edit. Editing it here would drop its file/URL settings, so the wizard does not open it — edit it in Add Data (including its YAML editor) instead.",
       "catalogFail": "Failed to load the Engine catalog.",
       "unknownSource": "This source is not in the current Engine catalog.",
       "previewFail": "Preview failed.",

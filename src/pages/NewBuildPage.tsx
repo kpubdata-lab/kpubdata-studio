@@ -27,6 +27,7 @@ import { Button, Card, PageHeader, StatusBadge, Stepper } from "@/shared/ui";
 import {
   buildSteps,
   catalogProvider,
+  editBlockReason,
   initialValues,
   redactDraftForStorage,
   toBuildSpec,
@@ -71,6 +72,9 @@ export function NewBuildPage() {
   // Base spec being edited. Serves as reference to preserve sources/metadata that
   // the form cannot express.
   const [baseSpec, setBaseSpec] = useState<BuildSpec | null>(null);
+  // Set when the opened spec has a first source the form cannot express (file/url, #496).
+  // The wizard then stays closed instead of rebuilding that source as a public API one.
+  const [editBlocked, setEditBlocked] = useState<string | null>(null);
   // Show restore banner if saved draft exists (#10). Check only once at mount.
   // In edit mode, restoring a draft would overwrite the loaded spec, so don't show banner.
   const [draftAvailable, setDraftAvailable] = useState(() => !buildId && hasDraft());
@@ -154,6 +158,9 @@ export function NewBuildPage() {
   useEffect(() => {
     if (!isEditMode || !build || buildLoading) return;
     setBaseSpec(build.spec);
+    const blocked = editBlockReason(build.spec);
+    setEditBlocked(blocked);
+    if (blocked) return;
     reset(toFormValues(build.spec));
     setPreview({ status: "idle", rows: [], schema: {}, warnings: [] });
     setValidation({ status: "idle", isValid: false, errors: [] });
@@ -172,6 +179,9 @@ export function NewBuildPage() {
     const entry = getSavedSpec(savedSpecId);
     if (!entry) return;
     setBaseSpec(entry.spec);
+    const blocked = editBlockReason(entry.spec);
+    setEditBlocked(blocked);
+    if (blocked) return;
     reset(toFormValues(entry.spec));
     setPreview({ status: "idle", rows: [], schema: {}, warnings: [] });
     setValidation({ status: "idle", isValid: false, errors: [] });
@@ -372,84 +382,94 @@ export function NewBuildPage() {
         </Card>
       ) : null}
 
-      <Card>
-        <Stepper steps={steps} current={step} onStepClick={setStep} />
-      </Card>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.8fr)]">
-        <Card>
-          {step === 0 ? <TemplateStep catalog={catalog} onSelect={selectTemplate} /> : null}
-
-          {step === 1 ? <IdentityStep register={register} errors={errors} /> : null}
-
-          {step === 2 ? (
-            <SourceStep
-              register={register}
-              errors={errors}
-              catalog={catalog}
-              providerOptions={providerOptions}
-              datasetOptions={datasetOptions}
-              selectedProvider={selectedProvider}
-            />
-          ) : null}
-
-          {step === 3 ? <ParamsStep register={register} errors={errors} /> : null}
-
-          {step === 4 ? <PreviewStep preview={preview} onRefresh={() => void runPreview()} /> : null}
-
-          {step === 5 ? <OutputStep register={register} errors={errors} /> : null}
-
-          {step === 6 ? (
-            <ReviewStep
-              validation={validation}
-              job={job}
-              canRun={validation.isValid && job.status !== "running" && !!specPreview.spec}
-              canSave={!!specPreview.spec}
-              saveSpecMessage={saveSpecMessage}
-              onRevalidate={() => void runValidate()}
-              onRun={() => {
-                if (specPreview.spec) void job.start(specPreview.spec);
-              }}
-              onSaveSpec={saveAsSavedSpec}
-              isRefresh={isEditMode}
-            />
-          ) : null}
-
-           {/* On mobile, pin bottom sticky action bar so Prev/Next are always visible
-               even in long forms (§13). */}
-          <div className="sticky bottom-0 z-10 -mx-6 -mb-6 mt-8 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-6 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:dark:bg-transparent">
-            <Button variant="ghost" onClick={goBack} disabled={step === 0}>
-              {t("newBuild.nav.prev")}
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={saveCurrentDraft}>
-                {draftSaved && !isDirty ? t("newBuild.nav.saved") : t("newBuild.nav.saveDraft")}
-              </Button>
-              {step < steps.length - 1 ? (
-                <Button onClick={() => void goNext()}>{t("newBuild.nav.next")}</Button>
-              ) : null}
-            </div>
-          </div>
+      {editBlocked ? (
+        <Card variant="dashed" className="p-4">
+          <p role="alert" className="text-sm text-foreground">
+            {editBlocked}
+          </p>
         </Card>
-
-        <aside className="space-y-5">
+      ) : (
+        <>
           <Card>
-             {/* On mobile, save space with collapsed details. On desktop (xl), shown in
-                 separate column and expanded as needed (§13). */}
-            <details className="group">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {t("newBuild.nav.specTitle")}
-                <span className="text-base transition group-open:rotate-180" aria-hidden="true">
-                  ⌄
-                </span>
-              </summary>
-              <pre className="mt-4 overflow-x-auto rounded-xl bg-zinc-950 p-4 text-xs leading-6 text-zinc-100">
-                <code>{JSON.stringify(specPreview.spec ?? values, null, 2)}</code>
-              </pre>
-            </details>
+            <Stepper steps={steps} current={step} onStepClick={setStep} />
           </Card>
-        </aside>
-      </div>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.8fr)]">
+            <Card>
+              {step === 0 ? <TemplateStep catalog={catalog} onSelect={selectTemplate} /> : null}
+
+              {step === 1 ? <IdentityStep register={register} errors={errors} /> : null}
+
+              {step === 2 ? (
+                <SourceStep
+                  register={register}
+                  errors={errors}
+                  catalog={catalog}
+                  providerOptions={providerOptions}
+                  datasetOptions={datasetOptions}
+                  selectedProvider={selectedProvider}
+                />
+              ) : null}
+
+              {step === 3 ? <ParamsStep register={register} errors={errors} /> : null}
+
+              {step === 4 ? <PreviewStep preview={preview} onRefresh={() => void runPreview()} /> : null}
+
+              {step === 5 ? <OutputStep register={register} errors={errors} /> : null}
+
+              {step === 6 ? (
+                <ReviewStep
+                  validation={validation}
+                  job={job}
+                  canRun={validation.isValid && job.status !== "running" && !!specPreview.spec}
+                  canSave={!!specPreview.spec}
+                  saveSpecMessage={saveSpecMessage}
+                  onRevalidate={() => void runValidate()}
+                  onRun={() => {
+                    if (specPreview.spec) void job.start(specPreview.spec);
+                  }}
+                  onSaveSpec={saveAsSavedSpec}
+                  isRefresh={isEditMode}
+                />
+              ) : null}
+
+               {/* On mobile, pin bottom sticky action bar so Prev/Next are always visible
+                   even in long forms (§13). */}
+              <div className="sticky bottom-0 z-10 -mx-6 -mb-6 mt-8 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-6 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:dark:bg-transparent">
+                <Button variant="ghost" onClick={goBack} disabled={step === 0}>
+                  {t("newBuild.nav.prev")}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={saveCurrentDraft}>
+                    {draftSaved && !isDirty ? t("newBuild.nav.saved") : t("newBuild.nav.saveDraft")}
+                  </Button>
+                  {step < steps.length - 1 ? (
+                    <Button onClick={() => void goNext()}>{t("newBuild.nav.next")}</Button>
+                  ) : null}
+                </div>
+              </div>
+            </Card>
+
+            <aside className="space-y-5">
+              <Card>
+                 {/* On mobile, save space with collapsed details. On desktop (xl), shown in
+                     separate column and expanded as needed (§13). */}
+                <details className="group">
+                  <summary className="flex cursor-pointer list-none items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t("newBuild.nav.specTitle")}
+                    <span className="text-base transition group-open:rotate-180" aria-hidden="true">
+                      ⌄
+                    </span>
+                  </summary>
+                  <pre className="mt-4 overflow-x-auto rounded-xl bg-zinc-950 p-4 text-xs leading-6 text-zinc-100">
+                    <code>{JSON.stringify(specPreview.spec ?? values, null, 2)}</code>
+                  </pre>
+                </details>
+              </Card>
+            </aside>
+          </div>
+        </>
+      )}
     </main>
   );
 }

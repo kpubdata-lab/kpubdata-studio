@@ -245,6 +245,7 @@
       "draftSecretRemoved": "저장된 초안에서 시크릿이 포함된 파라미터 값이 제거되었습니다. 파라미터를 다시 입력해주세요.",
       "specSecretRemoved": "저장된 스펙에서 시크릿 값이 제거되었습니다. 해당 credential을 다시 입력해주세요.",
       "specInvalid": "빌드 스펙이 올바르지 않습니다.",
+      "unsupportedSourceKind": "이 스펙의 첫 번째 소스는 {{kind}} 소스라 마법사로 편집할 수 없습니다. 여기서 편집하면 파일/URL 설정이 사라지므로 마법사에서 열지 않습니다 — 데이터 추가 화면(YAML 편집 포함)에서 편집하세요.",
       "catalogFail": "Engine catalog를 불러오지 못했습니다.",
       "unknownSource": "현재 Engine catalog에 없는 source입니다.",
       "previewFail": "미리보기에 실패했습니다.",
