@@ -25,14 +25,14 @@ describe("BuildPublishPage readiness (audit #4)", () => {
   it("mock 모드에서 실제 네트워크 요청 없이 결정적 readiness를 보여준다 (이전에는 항상 빈 카드/error였다)", async () => {
     renderPublish("air-quality-20260621");
 
-    expect(await screen.findByText("Engine 게시 준비 완료")).toBeInTheDocument();
+    expect(await screen.findByText("Builder 게시 준비 완료")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("mock 모드에서 not-ready run은 실제 blocker 내용을 보여준다", async () => {
     renderPublish("dur-older-adult-caution-20260618");
 
-    expect(await screen.findByText("Engine blocker가 있어 게시할 수 없습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("Builder blocker가 있어 게시할 수 없습니다.")).toBeInTheDocument();
     expect(screen.getByText(/Bronze stage가 실패해/)).toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe("BuildPublishPage readiness (audit #4)", () => {
     expect(
       await screen.findByText(/구체적인 사유\(blocker\)를 제공하지 않았습니다/),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Engine blocker가 있어 게시할 수 없습니다.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Builder blocker가 있어 게시할 수 없습니다.")).not.toBeInTheDocument();
   });
 });
 
@@ -124,7 +124,7 @@ describe("BuildPublishPage credential blockers (#399)", () => {
 
     renderPublish("run-still-running");
 
-    expect(await screen.findByText("Engine blocker가 있어 게시할 수 없습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("Builder blocker가 있어 게시할 수 없습니다.")).toBeInTheDocument();
     expect(screen.queryByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).not.toBeInTheDocument();
     expect(screen.queryByText(/서버 publish credential을 빌려주지 않습니다/)).not.toBeInTheDocument();
   });

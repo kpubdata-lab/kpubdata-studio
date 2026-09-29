@@ -207,7 +207,7 @@ describe("listBuilds (#95, #153)", () => {
       );
       vi.stubGlobal("fetch", fetchMock);
 
-      await expect(listBuilds()).rejects.toThrow("Engine API에 연결하지 못했습니다.");
+      await expect(listBuilds()).rejects.toThrow("Builder API에 연결하지 못했습니다.");
     });
 
     it("maintains backward compatibility with no-argument calls", async () => {

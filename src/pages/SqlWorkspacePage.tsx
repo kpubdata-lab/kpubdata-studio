@@ -4,7 +4,7 @@
  * Separate from Ask KPubData on purpose: the assistant may suggest SQL, but running
  * it is the person's act, and this screen says so. Every result names the snapshot
  * it read (table @ run · stage), so a number can be traced back after the table is
- * refreshed. One table per query until KPubData Engine joins tables
+ * refreshed. One table per query until KPubData Builder joins tables
  * (kpubdata-builder#704); saving an analysis waits for server storage
  * (kpubdata-builder#783) — a browser-only save would be lost on another device.
  *
@@ -76,7 +76,7 @@ function RunWorkspace() {
   }, [table]);
 
   // Every run, not only successful ones: a run that failed on one source still holds the
-  // other sources' tables. When a stage is not there, the Engine says so (artifact_unavailable).
+  // other sources' tables. When a stage is not there, the Builder says so (artifact_unavailable).
   const runOptions = runs?.status === "loaded" ? runs.data : [];
   const run = requestedRun || runOptions[0]?.run_id || "";
 

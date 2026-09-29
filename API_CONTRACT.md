@@ -73,7 +73,7 @@ cancel + manifest status/partial + provider credential + monitoring + publish)�
 
 | operation | 필요 버전 | 더 오래된 Builder 에서 |
 |---|---|---|
-| `GET /datasets/{id}/runs/{run_id}` | 1.31.0 | 최신 목록 밖의 run 은 "이 Engine 은 오래된 run 을 찾을 수 없다" — "없는 run" 이라고 하지 않는다 (#482) |
+| `GET /datasets/{id}/runs/{run_id}` | 1.31.0 | 최신 목록 밖의 run 은 "이 Builder 는 오래된 run 을 찾을 수 없다" — "없는 run" 이라고 하지 않는다 (#482) |
 
 정합성 규칙:
 

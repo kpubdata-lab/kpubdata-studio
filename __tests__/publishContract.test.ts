@@ -23,7 +23,7 @@ describe("Builder PR #547 OpenAPI publish shape", () => {
       warnings: [{ code: "notice", message: "review" }],
     };
     expect(publishReadinessResponseSchema.parse(fixture)).toEqual(fixture);
-    // An Engine-added field is stripped, not rejected (#497)…
+    // An Builder-added field is stripped, not rejected (#497)…
     expect(publishReadinessResponseSchema.parse({ ...fixture, destination: "owner/data" })).toEqual(fixture);
     // …but a missing required field still fails.
     const { ready: _ready, ...withoutReady } = fixture;

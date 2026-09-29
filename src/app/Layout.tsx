@@ -207,7 +207,7 @@ function buildNavGroups(t: (key: string) => string, isAdmin: boolean): NavGroup[
           </SidebarIcon>
         ),
       },
-      // Only for an administrator (#409). Hiding is a convenience; the Engine's 403 is the block.
+      // Only for an administrator (#409). Hiding is a convenience; the Builder's 403 is the block.
       ...(isAdmin
         ? [
             {

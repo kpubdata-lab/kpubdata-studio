@@ -128,7 +128,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
     expect(await within(schemaBlock).findByText("datetime")).toBeInTheDocument();
   });
 
-  it("Ask KPubData 블록과 Engine Evidence 블록이 provenance 배지로 시각적으로 구분된다", async () => {
+  it("Ask KPubData 블록과 Builder Evidence 블록이 provenance 배지로 시각적으로 구분된다", async () => {
     let report = await makeReport("air-quality", "air-2026-08-14");
     report = { ...report, blocks: [...report.blocks, makeAssistantBlock()] };
     saveReport(report, { force: true });
@@ -137,7 +137,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
 
     await screen.findByTestId("block-assistant");
     expect(screen.getByText("Ask KPubData 분석 · AI 작성")).toBeInTheDocument();
-    expect(screen.getAllByText("Engine Evidence").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Builder Evidence").length).toBeGreaterThan(0);
     expect(screen.getByText("AI 작성 · Ask KPubData")).toBeInTheDocument();
   });
 

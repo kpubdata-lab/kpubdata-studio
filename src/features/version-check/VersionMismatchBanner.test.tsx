@@ -126,7 +126,7 @@ describe("VersionMismatchBanner (#430)", () => {
   });
 
   it("asks again after a failure instead of staying silent until reload (#480)", async () => {
-    // The Engine is down when the page loads (the client's own retries included), then comes back.
+    // The Builder is down when the page loads (the client's own retries included), then comes back.
     let engineUp = false;
     mswServer.use(
       http.get(`${API_BASE}/version`, () =>

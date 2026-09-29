@@ -1,6 +1,6 @@
 /**
- * Administration (#409): the menu follows the Engine's answer, the page shows the
- * Engine's 403 rather than relying on being hidden, and no credential reaches the screen.
+ * Administration (#409): the menu follows the Builder's answer, the page shows the
+ * Builder's 403 rather than relying on being hidden, and no credential reaches the screen.
  */
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -50,7 +50,7 @@ describe("administration menu (#409)", () => {
     expect(await menu().findByRole("link", { name: "관리" })).toHaveAttribute("href", "/admin");
   });
 
-  it("does not appear when the Engine answers 403", async () => {
+  it("does not appear when the Builder answers 403", async () => {
     answerConfig(403, { error: "forbidden" });
     renderShell();
     await waitFor(() => expect(useAdminStore.getState().status).toBe("not_admin"));
@@ -106,7 +106,7 @@ describe("administration page (#409)", () => {
     expect(screen.queryByText("9f8e7d6c5b4a39281706")).not.toBeInTheDocument();
   });
 
-  it("shows the Engine's 403 when reached by URL, instead of an empty page", async () => {
+  it("shows the Builder's 403 when reached by URL, instead of an empty page", async () => {
     answerConfig(403, { error: "forbidden" });
     mswServer.use(http.get(`${API_BASE}/admin/runs`, () => HttpResponse.json({ error: "forbidden" }, { status: 403 })));
     renderPage();
@@ -114,7 +114,7 @@ describe("administration page (#409)", () => {
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
-  it("never displays a credential, even if an Engine sent one", async () => {
+  it("never displays a credential, even if an Builder sent one", async () => {
     answerConfig(200, { ...CONFIG, publish_token: "hf_SECRET_VALUE" });
     mswServer.use(http.get(`${API_BASE}/admin/runs`, () => HttpResponse.json(RUNS)));
     renderPage();

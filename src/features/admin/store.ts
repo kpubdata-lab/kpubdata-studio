@@ -1,11 +1,11 @@
 /**
  * Is the signed-in user an administrator? (#409)
  *
- * KPubData Engine has no "who am I" endpoint, so this asks the cheapest admin-only
+ * KPubData Builder has no "who am I" endpoint, so this asks the cheapest admin-only
  * one: `GET /admin/config` answers 200 to an administrator and 403 to anyone else.
- * Anything else — a network error, an Engine older than the admin role (404), mock
+ * Anything else — a network error, an Builder older than the admin role (404), mock
  * mode — is "unknown", and unknown hides the menu. Hiding is a convenience: the
- * Engine's 403 is the actual block, and the admin screen shows it when reached by URL.
+ * Builder's 403 is the actual block, and the admin screen shows it when reached by URL.
  */
 import { create } from "zustand";
 

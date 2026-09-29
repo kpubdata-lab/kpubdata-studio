@@ -121,7 +121,7 @@ describe("ProviderPage real mode (#S01)", () => {
     fireEvent.click(await screen.findByText("datago"));
 
     expect(
-      await screen.findByText(/Engine 기본 자격 증명으로 사용 중/),
+      await screen.findByText(/Builder 기본 자격 증명으로 사용 중/),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "사용자 자격 증명 등록" })).toBeInTheDocument();

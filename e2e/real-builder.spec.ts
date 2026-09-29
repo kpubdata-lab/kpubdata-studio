@@ -99,7 +99,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   await buildButton.click();
 
   // 5) The upload builds end to end. It used to end in a structured failure because
-  // the file source's async run did not pass its owner; the Engine now does, so the
+  // the file source's async run did not pass its owner; the Builder now does, so the
   // wizard lands on the new run's detail, succeeded.
   await expect(page).toHaveURL(/\/refresh-jobs\/[^/?]+/, { timeout: 60_000 });
   await expect(page.getByText("성공").and(page.locator(":visible")).first()).toBeVisible({ timeout: 60_000 });
@@ -203,17 +203,17 @@ test("빌드 실패 게이트: 파일 없이는 다음 단계 진입이 막힌�
   await expectNoPageErrors(errors);
 });
 
-test("다른 릴리스의 Engine 에 붙으면 배너가 뜨고 화면은 막히지 않는다 (#480) @real-builder", async ({ page, request }) => {
+test("다른 릴리스의 Builder 에 붙으면 배너가 뜨고 화면은 막히지 않는다 (#480) @real-builder", async ({ page, request }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   const engine = (await (await request.get(`${BUILDER_URL}/version`)).json()) as { version?: string };
-  expect(engine.version, "the Engine reports its application version (kpubdata-builder#777)").toBeTruthy();
+  expect(engine.version, "the Builder reports its application version (kpubdata-builder#777)").toBeTruthy();
 
   await page.goto("/");
   const banner = page.getByRole("status").filter({ hasText: "Studio 0.3.0" });
   await expect(banner).toBeVisible({ timeout: 30_000 });
-  await expect(banner).toContainText(`KPubData Engine ${engine.version}`);
+  await expect(banner).toContainText(`KPubData Builder ${engine.version}`);
 
   // Not blocking: the menu still takes you somewhere, with the banner still there.
   await navigateViaShell(page, /^(Refresh Jobs|갱신 작업)$/);

@@ -1,5 +1,5 @@
 /**
- * Warehouse SQL and Saved Analyses (#417), replayed against a stateful fake Engine:
+ * Warehouse SQL and Saved Analyses (#417), replayed against a stateful fake Builder:
  * tables → SQL → save → the table is refreshed → re-run reads the saved snapshot.
  */
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -14,14 +14,14 @@ import { useUIStore } from "@/shared/hooks/useUIStore";
 
 const TABLE = "housing.trade";
 
-interface Engine {
+interface Builder {
   current: string;
   analyses: Array<Record<string, unknown>>;
   runPaths: string[];
 }
 
-function fakeEngine(): Engine {
-  const engine: Engine = { current: "s2", analyses: [], runPaths: [] };
+function fakeEngine(): Builder {
+  const engine: Builder = { current: "s2", analyses: [], runPaths: [] };
   const result = (snapshotId: string) => ({
     columns: ["snapshot"],
     column_meta: [{ name: "snapshot", logical_type: "string", wire_encoding: "string" }],
@@ -160,6 +160,6 @@ describe("without a warehouse (#417)", () => {
 
   it("Saved Analyses says this deployment cannot keep them", async () => {
     renderApp("/analyses");
-    expect(await screen.findByText(/웨어하우스가 있는 KPubData Engine 이 필요합니다/)).toBeInTheDocument();
+    expect(await screen.findByText(/웨어하우스가 있는 KPubData Builder 가 필요합니다/)).toBeInTheDocument();
   });
 });

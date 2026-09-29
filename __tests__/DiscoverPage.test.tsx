@@ -117,7 +117,7 @@ describe("DiscoverPage", () => {
     vi.spyOn(discoverApi, "loadCatalog").mockResolvedValue({ providers: [] } satisfies CatalogResponse);
     renderDiscover();
 
-    expect(await screen.findByText("Engine 카탈로그가 비어 있습니다")).toBeInTheDocument();
+    expect(await screen.findByText("Builder 카탈로그가 비어 있습니다")).toBeInTheDocument();
   });
 
   it("shows an error state with retry when the catalog fails to load", async () => {

@@ -3,9 +3,9 @@
 **KPubData Studio is a workspace for collecting Korean public data, keeping it as snapshots that carry their source and terms of use, and analysing it with tables and SQL.**
 It is the web interface of the KPubData product family.
 
-> **Names** — the execution engine the UI calls **KPubData Engine** is the repository and
-> package `kpubdata-builder`. Commands and environment variables here (`VITE_BUILDER_API_URL`
-> and so on) keep the package name ([BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md)).
+> **Names** — the execution engine is **KPubData Builder**; its repository and package are
+> `kpubdata-builder`. Commands and environment variables here (`VITE_BUILDER_API_URL` and so
+> on) use the same name ([BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md)).
 
 The process of designing and normalizing datasets is often complex, with barriers including YAML editing errors, lack of visual feedback, and difficulty for non-developers. Studio removes these barriers, enabling anyone to intuitively configure and manage public data workflows without coding experience.
 
