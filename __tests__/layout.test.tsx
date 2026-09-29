@@ -64,17 +64,17 @@ describe("Layout 제품 문구 중복 제거", () => {
 
   it("sidebar에는 제품명만 남기고 tagline은 두지 않는다", () => {
     renderLayout();
-    const aside = screen.getByRole("navigation").closest("aside")!;
+    const aside = screen.getByRole("navigation", { name: "주 메뉴" }).closest("aside")!;
 
     expect(within(aside).getByRole("link", { name: "KPubData Studio 홈" })).toBeInTheDocument();
-    expect(within(aside).queryByText("공공데이터를 테이블로 만드는 워크스페이스")).not.toBeInTheDocument();
   });
 
-  it("topbar에는 workspace context tagline이 그대로 남는다", () => {
+  it("topbar names the current place, not the product again (#423)", () => {
     renderLayout();
     const header = screen.getByRole("banner");
 
-    expect(within(header).getByText("공공데이터를 테이블로 만드는 워크스페이스")).toBeInTheDocument();
+    expect(within(header).queryByRole("heading")).not.toBeInTheDocument();
+    expect(within(header).getByRole("navigation", { name: "현재 위치" })).toBeInTheDocument();
   });
 });
 
@@ -130,7 +130,7 @@ describe("Layout desktop sidebar collapse (#247)", () => {
 
   it("shrinks the sidebar's own width and keeps the toggle reachable when collapsed", () => {
     renderLayout();
-    const aside = screen.getByRole("navigation").closest("aside")!;
+    const aside = screen.getByRole("navigation", { name: "주 메뉴" }).closest("aside")!;
 
     expect(aside.className).toContain("lg:w-72");
 
@@ -139,7 +139,7 @@ describe("Layout desktop sidebar collapse (#247)", () => {
     expect(aside.className).toContain("lg:w-20");
     expect(aside.className).not.toContain("lg:w-72");
     // 사이드바 링크는 collapsed 상태에서도 여전히 접근 가능해야 한다(텍스트는 시각적으로만 숨김).
-    const nav = screen.getByRole("navigation");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
     const homeLink = within(nav).getByRole("link", { name: "홈" });
     const homeIcon = within(homeLink).getByTestId("nav-icon-home");
 
@@ -151,7 +151,7 @@ describe("Layout desktop sidebar collapse (#247)", () => {
 
   it("restores the expanded width after collapsing then expanding again", () => {
     renderLayout();
-    const aside = screen.getByRole("navigation").closest("aside")!;
+    const aside = screen.getByRole("navigation", { name: "주 메뉴" }).closest("aside")!;
 
     fireEvent.click(screen.getByRole("button", { name: "사이드바 접기" }));
     expect(aside.className).toContain("lg:w-20");

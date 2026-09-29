@@ -8,11 +8,12 @@
     "theme": "테마",
     "selectTheme": "테마 선택",
     "toggleSidebar": "사이드바 열기/닫기",
-    "tagline": "공공데이터를 테이블로 만드는 워크스페이스",
     "openAssistant": "Ask KPubData 열기",
     "goToSettingsFor": "{{email}} 설정으로 이동",
     "loginRequiredSettings": "로그인이 필요합니다 — 설정으로 이동",
-    "loginRequired": "로그인이 필요합니다"
+    "loginRequired": "로그인이 필요합니다",
+    "breadcrumb": "현재 위치",
+    "mainNav": "주 메뉴"
   },
   "reportEditor": {
     "untitled": "제목 없음",
@@ -40,38 +41,31 @@
     "addBlock": "+ 사용자 작성 블록 추가"
   },
   "nav": {
-    "groupWorkspace": "WORKSPACE",
     "groupData": "DATA",
-    "groupSystem": "SYSTEM",
     "home": "홈",
-    "discover": "탐색",
+    "discover": "카탈로그",
     "workspace": "작업대",
-    "addData": "데이터 추가",
-    "datasets": "테이블 카탈로그",
-    "builds": "실행",
+    "datasets": "테이블",
+    "builds": "갱신 작업",
     "quality": "품질",
     "reports": "리포트",
-    "provider": "Provider / API 연결",
+    "provider": "연결",
     "monitoring": "모니터링",
-    "settings": "설정"
+    "settings": "설정",
+    "groupAnalyze": "ANALYZE",
+    "groupOperate": "OPERATE"
   },
   "navDescription": {
     "home": "최근 작업 요약과 빠른 시작",
-    "discover": "Provider·소스 데이터셋 탐색",
+    "discover": "Provider별 공공 소스 데이터셋 탐색",
     "workspace": "최근 작업과 저장한 BuildSpec",
-    "addData": "Public API·File·URL로 데이터 추가",
-    "datasets": "테이블 검색",
-    "builds": "실행 이력",
+    "datasets": "소스 데이터셋으로 만든 테이블",
+    "builds": "테이블을 만들고 갱신한 실행 이력",
     "quality": "실행·테이블 품질 결과",
     "reports": "분석 리포트 생성·열람",
     "provider": "API Key·자격 증명 등록",
     "monitoring": "실행·시스템 모니터링",
     "settings": "Studio 환경설정"
-  },
-  "header": {
-    "newBuild": "테이블 만들기",
-    "buildList": "실행 목록",
-    "viewArtifacts": "스냅샷 파일 보기"
   },
   "languageSwitcher": {
     "toggle": "언어 전환",
@@ -2162,5 +2156,9 @@
     "mismatch": "Studio {{studio}} 가 KPubData Engine {{builder}} 에 연결되어 있습니다 — 서로 다른 릴리스라 일부 화면이 불러오지 못할 수 있습니다.",
     "remedy": "같은 버전의 KPubData Engine 을 배포하거나, 새로고침해 같은 버전의 Studio 를 받으세요.",
     "dismiss": "버전 안내 닫기"
+  },
+  "tableActions": {
+    "create": "테이블 만들기",
+    "refresh": "갱신"
   }
 }

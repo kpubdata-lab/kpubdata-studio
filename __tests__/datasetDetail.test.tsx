@@ -162,6 +162,11 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/builds/air-2026-08-14");
   });
 
+  it("offers Refresh for the selected run, opening its spec in edit mode (#423)", async () => {
+    renderDetail("/datasets/air-quality?run=air-2026-08-13");
+    expect(await screen.findByRole("link", { name: "갱신" })).toHaveAttribute("href", "/builds/air-2026-08-13/edit");
+  });
+
   it("'Ask about this table' carries the known latest-run context into Ask KPubData, not '—' (audit #5, #421)", async () => {
     // Default entry (no ?run= in the URL, latest run chosen implicitly). Unlike stage, the run is not
     // otherwise written to the URL, which is how the RUN context used to show as "—".

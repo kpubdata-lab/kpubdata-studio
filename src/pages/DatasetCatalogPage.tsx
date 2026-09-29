@@ -13,7 +13,7 @@ import {
 import { QualityBadge } from "@/features/quality/QualityBadge";
 import type { ValidationStatus } from "@/features/quality/model";
 import type { StageStatus } from "@/shared/lib/builderApi";
-import { Button, Card, EmptyState, ErrorState, PageHeader, SkeletonTable, TextInput } from "@/shared/ui";
+import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, SkeletonTable, TextInput } from "@/shared/ui";
 
 interface CatalogState {
   status: "loading" | "loaded" | "error";
@@ -98,8 +98,9 @@ export function DatasetCatalogPage() {
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         eyebrow="Data"
-        title="Table Catalog"
+        title={t("nav.datasets")}
         description={t("catalog.page.desc")}
+        actions={<LinkButton to="/add">{t("tableActions.create")}</LinkButton>}
       />
 
       <Card className="overflow-hidden p-0">

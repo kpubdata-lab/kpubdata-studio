@@ -15,30 +15,10 @@ import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
 import { AssistantSearchInput } from "@/features/assistant/AssistantSearchInput";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { VersionMismatchBanner } from "@/features/version-check/VersionMismatchBanner";
+import { crumbsFor } from "./breadcrumb";
 
 const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
 const sidebarSymbolUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/sidebar_dark.svg", import.meta.url).href;
-
-/**
- * Pick header CTA (label/destination) matching current route (#6.4).
- *
- * On new build page, guide to "build list" instead of duplicate "new build";
- * on other pages, lead to new build. New IA's Discover/Add Data/Quality
- * placeholder screens don't overlap these conditions, so use default (new build)
- * (#247).
- *
- * @param pathname - Current route.
- * @returns Header CTA label and destination.
- */
-function headerCtaFor(
-  pathname: string,
-  t: (key: string) => string,
-): { to: string; label: string } {
-  if (pathname === "/builds/new") return { to: "/builds", label: t("header.buildList") };
-  if (pathname.startsWith("/builds/") && pathname.endsWith("/run"))
-    return { to: pathname.replace(/\/run$/, "/artifacts"), label: t("header.viewArtifacts") };
-  return { to: "/builds/new", label: t("header.newBuild") };
-}
 
 interface NavItem {
   /** Route destination */
@@ -85,19 +65,22 @@ function SidebarIcon({ name, children }: SidebarIconProps) {
 
 interface NavGroup {
   /** Group header label (uppercase, same as prototype IA) */
-  label: string;
+  /** Group heading; absent for the ungrouped Home entry. */
+  label?: string;
   items: NavItem[];
 }
 
-// Grouped nav model (#247). There is no AI group: Ask KPubData is a feature opened from the
-// topbar and from each screen, not a destination of its own (#421). Reports sit with the workspace.
-// New Build Wizard (`/builds/new`) removed from menu but continues in route and header
-// CTA — it's the only actual build creation flow until Add Data Workbench (#250)
-// absorbs it.
+// Warehouse IA (#423): what a person does with data — find it, keep it as tables,
+// analyse it, operate it — instead of the build console's Discover · Add Data ·
+// Datasets · Builds. Home carries no group label. Creating a table is an action on
+// Catalog and Tables, not a destination, so Add Data (`/add`) and New Build
+// (`/builds/new`) keep their routes but leave the menu. SQL Workspace and Saved
+// Queries join ANALYZE when those screens exist (#417); a link to nothing is worse
+// than no link. Connections sits with Settings at the bottom. URLs are unchanged —
+// renaming them needs redirects and is separate work.
 function buildNavGroups(t: (key: string) => string): NavGroup[] {
   return [
   {
-    label: t("nav.groupWorkspace"),
     items: [
       {
         to: "/",
@@ -111,6 +94,11 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
           </SidebarIcon>
         ),
       },
+    ],
+  },
+  {
+    label: t("nav.groupData"),
+    items: [
       {
         to: "/discover",
         label: t("nav.discover"),
@@ -122,6 +110,22 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
           </SidebarIcon>
         ),
       },
+      {
+        to: "/datasets",
+        label: t("nav.datasets"),
+        description: t("navDescription.datasets"),
+        icon: (
+          <SidebarIcon name="datasets">
+            <ellipse cx="12" cy="5" rx="7" ry="3" />
+            <path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
+          </SidebarIcon>
+        ),
+      },
+    ],
+  },
+  {
+    label: t("nav.groupAnalyze"),
+    items: [
       {
         to: "/workspace",
         label: t("nav.workspace"),
@@ -147,30 +151,8 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
     ],
   },
   {
-    label: t("nav.groupData"),
+    label: t("nav.groupOperate"),
     items: [
-      {
-        to: "/add",
-        label: t("nav.addData"),
-        description: t("navDescription.addData"),
-        icon: (
-          <SidebarIcon name="add">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 8v8M8 12h8" />
-          </SidebarIcon>
-        ),
-      },
-      {
-        to: "/datasets",
-        label: t("nav.datasets"),
-        description: t("navDescription.datasets"),
-        icon: (
-          <SidebarIcon name="datasets">
-            <ellipse cx="12" cy="5" rx="7" ry="3" />
-            <path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
-          </SidebarIcon>
-        ),
-      },
       {
         to: "/builds",
         label: t("nav.builds"),
@@ -190,21 +172,6 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
           <SidebarIcon name="quality">
             <circle cx="12" cy="12" r="9" />
             <path d="m8 12 3 3 5-6" />
-          </SidebarIcon>
-        ),
-      },
-    ],
-  },
-  {
-    label: t("nav.groupSystem"),
-    items: [
-      {
-        to: "/provider",
-        label: t("nav.provider"),
-        description: t("navDescription.provider"),
-        icon: (
-          <SidebarIcon name="provider">
-            <path d="M4 21V7l8-4 8 4v14M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />
           </SidebarIcon>
         ),
       },
@@ -292,7 +259,7 @@ export function Layout() {
   );
   const email = useAuthStore((state) => state.email);
   const { pathname } = useLocation();
-  const headerCta = headerCtaFor(pathname, t);
+  const crumbs = crumbsFor(pathname, t);
 
   useEffect(() => {
     document.documentElement.dataset.theme = getResolvedTheme(theme);
@@ -375,17 +342,19 @@ export function Layout() {
             </button>
           </div>
 
-          <nav className="mt-2 flex flex-1 flex-col gap-5">
+          <nav aria-label={t("layout.mainNav")} className="mt-2 flex flex-1 flex-col gap-5">
             {navGroups.map((group) => (
-              <div key={group.label}>
-                <p
-                  className={[
-                    "px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-sidebar-muted",
-                    isDesktopSidebarCollapsed ? "lg:sr-only" : "",
-                  ].join(" ")}
-                >
-                  {group.label}
-                </p>
+              <div key={group.label ?? "home"}>
+                {group.label ? (
+                  <p
+                    className={[
+                      "px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-sidebar-muted",
+                      isDesktopSidebarCollapsed ? "lg:sr-only" : "",
+                    ].join(" ")}
+                  >
+                    {group.label}
+                  </p>
+                ) : null}
                 <div className="space-y-1">
                   {group.items.map((item) => (
                     <NavLink
@@ -407,6 +376,19 @@ export function Layout() {
             ))}
 
             <div className="mt-auto space-y-1 border-t border-sidebar-border pt-3">
+              <NavLink
+                className={navigationClassName}
+                onClick={closeMobileSidebar}
+                title={t("navDescription.provider")}
+                to="/provider"
+              >
+                <SidebarIcon name="provider">
+                  <path d="M4 21V7l8-4 8 4v14M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />
+                </SidebarIcon>
+                <span className={isDesktopSidebarCollapsed ? "lg:sr-only" : undefined}>
+                  {t("nav.provider")}
+                </span>
+              </NavLink>
               <NavLink
                 className={navigationClassName}
                 onClick={closeMobileSidebar}
@@ -458,14 +440,25 @@ export function Layout() {
                 >
                   ☰
                 </button>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    KPubData Studio
-                  </p>
-                  <h1 className="truncate text-base font-semibold tracking-tight">
-                    {t("layout.tagline")}
-                  </h1>
-                </div>
+                {/* Where the user is, not the product's name — the sidebar logo says that (#423). */}
+                <nav aria-label={t("layout.breadcrumb")} className="min-w-0">
+                  <ol className="flex min-w-0 items-center gap-1.5 text-sm">
+                    {crumbs.map((crumb, index) => (
+                      <li className="flex min-w-0 items-center gap-1.5" key={`${index}-${crumb.label}`}>
+                        {index > 0 ? <span aria-hidden="true" className="text-muted-foreground">/</span> : null}
+                        {crumb.to ? (
+                          <Link className="truncate text-muted-foreground hover:text-foreground" to={crumb.to}>
+                            {crumb.label}
+                          </Link>
+                        ) : (
+                          <span aria-current="page" className="truncate font-semibold text-foreground">
+                            {crumb.label}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
               </div>
 
                {/* Without min-w-0 here, this group loses its minimum-width protection,
@@ -491,12 +484,6 @@ export function Layout() {
 
                 <LanguageSwitcher />
 
-                <Link
-                  className="hidden rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:inline-flex"
-                  to={headerCta.to}
-                >
-                  {headerCta.label}
-                </Link>
 
                  {/* Avatar entry point — will expand to actual profile/logout menu in #263
                       (#247). */}

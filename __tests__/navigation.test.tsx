@@ -25,18 +25,28 @@ describe("grouped sidebar navigation (#247)", () => {
     );
   });
 
-  it("renders the WORKSPACE/DATA/SYSTEM groups, with no AI group (#421)", () => {
+  it("groups the menu as DATA / ANALYZE / OPERATE, with no AI group (#421, #423)", () => {
     renderLayoutAt("/");
 
-    for (const group of ["WORKSPACE", "DATA", "SYSTEM"]) {
-      expect(screen.getByText(group)).toBeInTheDocument();
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
+    // Group headings are the upper-case labels; exactly these three, in this order.
+    const headings = within(nav).getAllByText(/^[A-Z]+$/).map((node) => node.textContent);
+    expect(headings).toEqual(["DATA", "ANALYZE", "OPERATE"]);
+  });
+
+  it("has no build-console destinations: creating a table is an action, not a menu item (#423)", () => {
+    renderLayoutAt("/");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
+
+    expect(within(nav).queryByRole("link", { name: "데이터 추가" })).not.toBeInTheDocument();
+    for (const link of within(nav).getAllByRole("link")) {
+      expect(link.getAttribute("href")).not.toMatch(/^\/(add|builds\/new)$/);
     }
-    expect(screen.queryByText("AI")).not.toBeInTheDocument();
   });
 
   it("opens Ask KPubData from the topbar, not from a sidebar destination (#421)", () => {
     renderLayoutAt("/");
-    const nav = screen.getByRole("navigation");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
 
     expect(within(nav).queryByRole("link", { name: "Ask KPubData" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 열기" }));
@@ -45,19 +55,18 @@ describe("grouped sidebar navigation (#247)", () => {
 
   it("exposes every IA route as a sidebar link", () => {
     renderLayoutAt("/");
-    const nav = screen.getByRole("navigation");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
 
     const expectedLinks: Record<string, string> = {
       "홈": "/",
-      "탐색": "/discover",
+      "카탈로그": "/discover",
+      "테이블": "/datasets",
       "작업대": "/workspace",
-      "데이터 추가": "/add",
-      "테이블 카탈로그": "/datasets",
-      "실행": "/builds",
-      "품질": "/quality",
       "리포트": "/reports",
-      "Provider / API 연결": "/provider",
+      "갱신 작업": "/builds",
+      "품질": "/quality",
       "모니터링": "/monitoring",
+      "연결": "/provider",
       "설정": "/settings",
     };
 
@@ -68,7 +77,7 @@ describe("grouped sidebar navigation (#247)", () => {
 
   it("marks the current route as active via aria-current", () => {
     renderLayoutAt("/quality");
-    const nav = screen.getByRole("navigation");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
 
     expect(within(nav).getByRole("link", { name: "품질" })).toHaveAttribute(
       "aria-current",
@@ -81,7 +90,7 @@ describe("grouped sidebar navigation (#247)", () => {
 
   it("marks only Home active at the root path (end match)", () => {
     renderLayoutAt("/");
-    const nav = screen.getByRole("navigation");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
 
     expect(within(nav).getByRole("link", { name: "홈" })).toHaveAttribute(
       "aria-current",
@@ -94,8 +103,8 @@ describe("grouped sidebar navigation (#247)", () => {
     act(() => useUIStore.setState({ isMobileSidebarOpen: true }));
     expect(useUIStore.getState().isMobileSidebarOpen).toBe(true);
 
-    const nav = screen.getByRole("navigation");
-    fireEvent.click(within(nav).getByRole("link", { name: "탐색" }));
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
+    fireEvent.click(within(nav).getByRole("link", { name: "카탈로그" }));
 
     expect(useUIStore.getState().isMobileSidebarOpen).toBe(false);
   });
@@ -115,7 +124,7 @@ describe("grouped sidebar navigation (#247)", () => {
   it("keeps every IA route link accessible while the desktop sidebar is collapsed (#247)", () => {
     act(() => useUIStore.setState({ isDesktopSidebarCollapsed: true }));
     renderLayoutAt("/");
-    const nav = screen.getByRole("navigation");
+    const nav = screen.getByRole("navigation", { name: "주 메뉴" });
 
     expect(within(nav).getByRole("link", { name: "홈" })).toHaveAttribute("href", "/");
     expect(within(nav).getByRole("link", { name: "품질" })).toHaveAttribute(

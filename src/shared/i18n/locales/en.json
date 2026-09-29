@@ -8,11 +8,12 @@
     "theme": "Theme",
     "selectTheme": "Select theme",
     "toggleSidebar": "Toggle sidebar",
-    "tagline": "A workspace for turning public data into tables",
     "openAssistant": "Open Ask KPubData",
     "goToSettingsFor": "Go to settings for {{email}}",
     "loginRequiredSettings": "Login required — go to settings",
-    "loginRequired": "Login required"
+    "loginRequired": "Login required",
+    "breadcrumb": "Current location",
+    "mainNav": "Main menu"
   },
   "reportEditor": {
     "untitled": "Untitled",
@@ -40,38 +41,31 @@
     "addBlock": "+ Add a note block"
   },
   "nav": {
-    "groupWorkspace": "WORKSPACE",
     "groupData": "DATA",
-    "groupSystem": "SYSTEM",
     "home": "Home",
-    "discover": "Discover",
+    "discover": "Catalog",
     "workspace": "Workspace",
-    "addData": "Add Data",
-    "datasets": "Table Catalog",
-    "builds": "Runs",
+    "datasets": "Tables",
+    "builds": "Refresh Jobs",
     "quality": "Quality",
     "reports": "Reports",
-    "provider": "Provider / API",
+    "provider": "Connections",
     "monitoring": "Monitoring",
-    "settings": "Settings"
+    "settings": "Settings",
+    "groupAnalyze": "ANALYZE",
+    "groupOperate": "OPERATE"
   },
   "navDescription": {
     "home": "Recent activity summary and quick start",
-    "discover": "Explore providers and source datasets",
+    "discover": "Browse public source datasets by provider",
     "workspace": "Recent work and saved BuildSpecs",
-    "addData": "Add data via Public API, File, or URL",
-    "datasets": "Search tables",
-    "builds": "Run history",
+    "datasets": "Tables built from source datasets",
+    "builds": "Runs that create and refresh tables",
     "quality": "Run and table quality results",
     "reports": "Create and view analysis reports",
     "provider": "API keys and credentials",
     "monitoring": "Run and system monitoring",
     "settings": "Studio settings"
-  },
-  "header": {
-    "newBuild": "Create Table",
-    "buildList": "Runs",
-    "viewArtifacts": "View Snapshot Files"
   },
   "languageSwitcher": {
     "toggle": "Switch language",
@@ -2162,5 +2156,9 @@
     "mismatch": "Studio {{studio}} is connected to KPubData Engine {{builder}} — they come from different releases, so some screens may fail to load.",
     "remedy": "Deploy the matching KPubData Engine, or reload to pick up the matching Studio.",
     "dismiss": "Dismiss version notice"
+  },
+  "tableActions": {
+    "create": "Create Table",
+    "refresh": "Refresh"
   }
 }
