@@ -1,5 +1,5 @@
 /**
- * The direct run lookup needs Builder API 1.31.0 (#482). An older Engine answers the
+ * The direct run lookup needs Builder API 1.31.0 (#482). An older Builder answers the
  * path with a 404 that means "no such route", so it must not be read as "no such run".
  */
 import { renderHook, waitFor } from "@testing-library/react";
@@ -40,8 +40,8 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-describe("requested run vs Engine API version (#482)", () => {
-  it("says unsupported, without asking, when the Engine is older than 1.31.0", async () => {
+describe("requested run vs Builder API version (#482)", () => {
+  it("says unsupported, without asking, when the Builder is older than 1.31.0", async () => {
     engine({ status: 200, api: "1.30.0" });
     const { result } = renderHook(() => useRequestedRun("t1", "r-old", PAGE));
     await waitFor(() => expect(result.current.status).toBe("unsupported"));

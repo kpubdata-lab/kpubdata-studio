@@ -52,7 +52,7 @@ function mockReadyFetch(publishResponse: Response = response(200, SUCCESS)) {
 }
 
 async function fillAndConfirm() {
-  await screen.findByText("Engine 게시 준비 완료");
+  await screen.findByText("Builder 게시 준비 완료");
   fireEvent.change(screen.getByLabelText("Hugging Face destination"), { target: { value: "owner/dataset" } });
   fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
   return screen.getByRole("button", { name: "게시 실행" });
@@ -123,9 +123,9 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     let resolveReadiness!: (value: Response) => void;
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise<Response>((resolve) => { resolveReadiness = resolve; })));
     renderPublish();
-    expect(screen.getByText("Engine readiness").parentElement?.parentElement).toHaveTextContent("다시 확인");
+    expect(screen.getByText("Builder readiness").parentElement?.parentElement).toHaveTextContent("다시 확인");
     await act(() => resolveReadiness(response(200, { ...READY, warnings: [{ code: "notice", message: "검토 권장" }] })));
-    expect(await screen.findByText("Engine 게시 준비 완료")).toBeInTheDocument();
+    expect(await screen.findByText("Builder 게시 준비 완료")).toBeInTheDocument();
     expect(screen.getByText("검토 권장")).toBeInTheDocument();
     expect(screen.getByLabelText("비공개 Dataset")).toBeChecked();
     expect(screen.queryByText(/Kaggle|Local only/)).not.toBeInTheDocument();
@@ -159,14 +159,14 @@ describe("BuildPublishPage readiness and form (#270)", () => {
   it("shows a sanitized network readiness error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("token=hf_raw_secret")));
     renderPublish();
-    expect(await screen.findByRole("alert", {}, { timeout: 5_000 })).toHaveTextContent("Engine 응답을 받지 못했습니다");
+    expect(await screen.findByRole("alert", {}, { timeout: 5_000 })).toHaveTextContent("Builder 응답을 받지 못했습니다");
     expect(screen.queryByText(/hf_raw_secret/)).not.toBeInTheDocument();
   });
 
   it("blocks empty/invalid destination, accepts valid destination, and resets confirmation on edits", async () => {
     vi.stubGlobal("fetch", mockReadyFetch());
     renderPublish();
-    await screen.findByText("Engine 게시 준비 완료");
+    await screen.findByText("Builder 게시 준비 완료");
     const review = screen.getByRole("button", { name: "최종 확인" });
     expect(review).toBeDisabled();
     fireEvent.change(screen.getByLabelText("Hugging Face destination"), { target: { value: "bad" } });
@@ -189,7 +189,7 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(0);
     fireEvent.click(execute);
     fireEvent.click(execute);
-    await screen.findByText("Engine 게시 완료");
+    await screen.findByText("Builder 게시 완료");
     const posts = fetchMock.mock.calls.filter(([, init]) => init.method === "POST");
     expect(posts).toHaveLength(1);
     expect(JSON.parse(posts[0][1].body)).toEqual({ target: "huggingface", destination: "owner/dataset", options: { private: true } });
@@ -203,10 +203,10 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     vi.stubGlobal("fetch", fetchMock);
     renderPublish();
     fireEvent.click(await fillAndConfirm());
-    expect(screen.queryByText("Engine 게시 완료")).not.toBeInTheDocument();
+    expect(screen.queryByText("Builder 게시 완료")).not.toBeInTheDocument();
     await waitFor(() => expect(resolvePost).toBeTypeOf("function"));
     await act(() => resolvePost(response(200, SUCCESS)));
-    const success = await screen.findByText("Engine 게시 완료");
+    const success = await screen.findByText("Builder 게시 완료");
     const card = success.closest("div.rounded-xl") ?? success.parentElement!;
     expect(within(card as HTMLElement).getByRole("link")).toHaveAttribute("href", SUCCESS.reference);
     expect(screen.queryByText(/version|commit SHA|completed_at/i)).not.toBeInTheDocument();
@@ -252,7 +252,7 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     fireEvent.click(screen.getByRole("button", { name: "run 2" }));
     await screen.findByText("run-2 게시");
     await act(() => resolveOldPost(response(200, SUCCESS)));
-    expect(screen.queryByText("Engine 게시 완료")).not.toBeInTheDocument();
+    expect(screen.queryByText("Builder 게시 완료")).not.toBeInTheDocument();
   });
 });
 

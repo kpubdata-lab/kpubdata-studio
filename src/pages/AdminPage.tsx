@@ -2,10 +2,10 @@
  * Administration (#409) — the live policy and every owner's runs, metadata only.
  *
  * Reached from the menu only by an administrator, but the page does not rely on that:
- * each request is the Engine's decision, and a 403 is shown as "not an administrator"
- * rather than an empty page. Nothing here carries a credential — the Engine's admin
+ * each request is the Builder's decision, and a 403 is shown as "not an administrator"
+ * rather than an empty page. Nothing here carries a credential — the Builder's admin
  * responses are strict schemas without one, and an owner is an irreversible hash.
- * Users and sign-up approval wait for an Engine API (kpubdata-builder#785).
+ * Users and sign-up approval wait for a Builder API (kpubdata-builder#785).
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";

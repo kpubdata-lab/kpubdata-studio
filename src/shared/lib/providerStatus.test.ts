@@ -63,7 +63,7 @@ describe("describeCredentialReadiness", () => {
     const r = describeCredentialReadiness({ requiresCredential: true, summaryConfigured: true });
     expect(r.tone).toBe("success");
     expect(r.label).toBe("연결 준비됨");
-    expect(r.detail).toMatch(/Engine 기본 자격 증명/);
+    expect(r.detail).toMatch(/Builder 기본 자격 증명/);
     // do not represent same as user-registered API Key.
     expect(r.label).not.toBe("API Key 등록됨");
   });

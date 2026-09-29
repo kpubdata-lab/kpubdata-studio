@@ -1,13 +1,13 @@
 /**
- * One way to show a cell from KPubData Engine (#484).
+ * One way to show a cell from KPubData Builder (#484).
  *
  * Builder 1.30.0 says per column how its values travel (`wire_encoding`, builder#735).
  * A `decimal_string` column arrives as exact decimal text — every Decimal, and any
  * integer beyond ±(2^53−1) — and must stay text: through `Number()` the integer
  * `9007199254740993` becomes `…992`. Until now precision held only because no screen
- * happened to convert; every table of Engine values now goes through here instead.
+ * happened to convert; every table of Builder values now goes through here instead.
  *
- * The encoding is read from each response, not remembered per column: the Engine may
+ * The encoding is read from each response, not remembered per column: the Builder may
  * decide it per result set, so the same column can arrive differently.
  */
 import type { z } from "zod";

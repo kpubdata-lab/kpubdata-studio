@@ -1,8 +1,8 @@
 /**
- * Engine responses may grow; Studio's parsing must not break when they do (#497).
+ * Builder responses may grow; Studio's parsing must not break when they do (#497).
  *
  * Nineteen response schemas used to be `.strict()`, so one optional field added by the
- * Engine failed a whole screen (builder#735 needed Studio to ship first for exactly that
+ * Builder failed a whole screen (builder#735 needed Studio to ship first for exactly that
  * reason), and `wire_encoding` was a closed enum, so one new encoding failed the whole
  * response. This file is the gate:
  *

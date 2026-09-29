@@ -30,7 +30,7 @@ describe("StatusAxes (#422)", () => {
     expect(toneOf("access", "retired")).toBe("failure");
   });
 
-  it("renders nothing for an Engine that sends no axes", () => {
+  it("renders nothing for a Builder that sends no axes", () => {
     const { container } = render(<StatusAxes axes={undefined} />);
     expect(container).toBeEmptyDOMElement();
   });

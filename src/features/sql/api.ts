@@ -1,7 +1,7 @@
 /**
  * Run one read-only query against one table snapshot (#417).
  *
- * KPubData Engine's `POST /query` reads a single table — one run (the snapshot), one
+ * KPubData Builder's `POST /query` reads a single table — one run (the snapshot), one
  * stage, one source — as the relation `dataset`. Joining several tables waits for
  * kpubdata-builder#704. The person runs the query; nothing here runs one on its own.
  */
@@ -28,7 +28,7 @@ const DEMO_RESULT: QueryResponse = {
   execution_ms: 0,
 };
 
-/** An Engine query error as `{code, message}` — the Engine's own code when it gave one. */
+/** A Builder query error as `{code, message}` — the Builder's own code when it gave one. */
 export function classifyQueryError(cause: unknown): { status: "error"; code: string; message: string } {
   if (cause instanceof ApiError) {
     const details = cause.details as { code?: unknown; error?: unknown } | undefined;

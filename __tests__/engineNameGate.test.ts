@@ -1,11 +1,11 @@
 /**
- * Users read "KPubData Engine", never "Builder" (studio#424).
+ * Users read "KPubData Builder", never "Engine" (studio#510).
  *
- * `kpubdata-builder` is a repository and package name; the product is KPubData Engine
- * (kpubdata docs/brand/BRAND.md). Every locale value is something a user can read, so
- * none may say "Builder". Environment variable names like `VITE_USE_REAL_BUILDER` are
- * configuration identifiers, not the product's name, and are upper case — the check
- * is case-sensitive for that reason.
+ * The product names are KPubData, KPubData Builder and KPubData Studio. studio#424
+ * renamed Builder to "KPubData Engine"; #510 restores Builder, so "Engine" is now the
+ * stale product name. Every locale value is something a user can read, so none may say
+ * "Engine" or its Korean form "엔진". The check is case-sensitive: a lower-case "engine"
+ * describing something generic is not the product's name.
  */
 
 import { readFileSync } from "node:fs";
@@ -16,29 +16,32 @@ import { describe, expect, it } from "vitest";
 
 const LOCALES = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "shared", "i18n", "locales");
 
-/** Every `path = value` whose value names Builder as the product. */
-function builderMentions(tree: unknown, path = ""): string[] {
-  if (typeof tree === "string") return /\bBuilder\b/.test(tree) ? [`${path} = ${tree}`] : [];
+/** Every `path = value` whose value names Engine as the product. */
+function engineMentions(tree: unknown, path = ""): string[] {
+  if (typeof tree === "string") return /\bEngine\b|엔진/.test(tree) ? [`${path} = ${tree}`] : [];
   if (tree && typeof tree === "object") {
-    return Object.entries(tree).flatMap(([key, value]) => builderMentions(value, path ? `${path}.${key}` : key));
+    return Object.entries(tree).flatMap(([key, value]) => engineMentions(value, path ? `${path}.${key}` : key));
   }
   return [];
 }
 
-describe("KPubData Engine naming gate (#424)", () => {
-  it.each(["en", "ko"])("%s.json never calls the product Builder", (locale) => {
+describe("KPubData Builder naming gate (#510)", () => {
+  it.each(["en", "ko"])("%s.json never calls the product Engine", (locale) => {
     const tree: unknown = JSON.parse(readFileSync(join(LOCALES, `${locale}.json`), "utf8"));
-    expect(builderMentions(tree)).toEqual([]);
+    expect(engineMentions(tree)).toEqual([]);
   });
 
   describe("the check fails when it should", () => {
-    it("finds Builder as a word, nested", () => {
-      expect(builderMentions({ a: { b: "Builder API error" } })).toEqual(["a.b = Builder API error"]);
-      expect(builderMentions({ a: "Builder가 반환한" })).toHaveLength(1);
+    it("finds Engine as a word, nested, and the Korean form", () => {
+      expect(engineMentions({ a: { b: "Engine API error" } })).toEqual(["a.b = Engine API error"]);
+      expect(engineMentions({ a: "KPubData Engine이 반환한" })).toHaveLength(1);
+      expect(engineMentions({ a: "실행 엔진에 연결" })).toHaveLength(1);
     });
 
-    it("leaves configuration identifiers and the package name alone", () => {
-      expect(builderMentions({ a: "Set VITE_USE_REAL_BUILDER=true", b: "kpubdata-builder 0.4.0", c: "BuildSpec" })).toEqual([]);
+    it("leaves Builder, identifiers and generic lower-case words alone", () => {
+      expect(
+        engineMentions({ a: "KPubData Builder API", b: "Set VITE_USE_REAL_BUILDER=true", c: "a query engine", d: "BuildSpec" }),
+      ).toEqual([]);
     });
   });
 });

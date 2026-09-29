@@ -7,8 +7,8 @@ Studio는 `kpubdata-builder` 위에 놓이는 표현 계층이자 워크플로 �
 ```mermaid
 graph TD
     Studio[KPubData Studio SPA] --> BuilderAPI[Builder API / Service]
-    BuilderAPI --> KBuilder[kpubdata-builder Engine]
-    KBuilder --> KPubData[kpubdata Core]
+    BuilderAPI --> KBuilder[KPubData Builder · kpubdata-builder]
+    KBuilder --> KPubData[KPubData · kpubdata]
     KPubData --> PublicAPIs[Public Data APIs]
 ```
 
@@ -127,26 +127,26 @@ sequenceDiagram
     participant Page as Page
     participant FeatureAPI as features/*/api/index.ts
     participant BAPI as Builder API
-    participant Engine as kpubdata-builder
+    participant Builder as kpubdata-builder
     participant Core as kpubdata
     participant Pub as Public Data API
 
     User->>Page: 빌드 실행 요청
     Page->>FeatureAPI: runBuild(spec)
     FeatureAPI->>BAPI: POST /build
-    BAPI->>Engine: build.execute()
-    Engine->>Core: fetch_data()
+    BAPI->>Builder: build.execute()
+    Builder->>Core: fetch_data()
     Core->>Pub: HTTP GET
     Pub-->>Core: Response
-    Core-->>Engine: Normalized Records
-    Engine-->>BAPI: Build Completed
+    Core-->>Builder: Normalized Records
+    Builder-->>BAPI: Build Completed
     BAPI-->>FeatureAPI: Result JSON
     FeatureAPI-->>Page: UI용 데이터 반환
     Page-->>User: 결과 표시
 ```
 
 ### 데이터 흐름
-`Studio (SPA)` ↔ `Builder API` ↔ `kpubdata-builder (엔진)` ↔ `kpubdata (데이터 소스)`
+`Studio (SPA)` ↔ `Builder API` ↔ `KPubData Builder (kpubdata-builder)` ↔ `kpubdata (데이터 소스)`
 
 ### API 클라이언트 위치
 
