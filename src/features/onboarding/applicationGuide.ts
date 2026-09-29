@@ -2,8 +2,8 @@
  * Which source datasets need an application, grouped so one application is one row (#412).
  *
  * data.go.kr issues one service key but approves each dataset's use separately, and one
- * approval page can unlock several datasets. kpubdata's probe groups by service for that
- * reason (kpubdata#504); here the service is the application URL the catalogue gives.
+ * approval page can unlock several datasets. The service is the application URL that
+ * Builder's catalogue gives, so datasets sharing one URL share one row.
  *
  * Nothing is guessed. A dataset whose catalogue entry has no `application` is "unknown",
  * not "no application needed", and a missing `quota` is unknown, not zero.

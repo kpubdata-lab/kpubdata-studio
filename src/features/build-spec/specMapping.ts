@@ -25,8 +25,8 @@ interface BuilderSourceRef {
   provider?: string;
   dataset?: string;
   /**
-   * Builder loader.py SSOT (_FILE_ONLY_FIELDS/_URL_ONLY_FIELDS) rejects `params` as a
-   * foreign field if present as a key in kind=file/url — send only for public_api (#283 follow-up review §1).
+   * Builder rejects `params` as a foreign field if present as a key in kind=file/url
+   * (`SourceRef` in Builder's OpenAPI contract) — send only for public_api (#283 follow-up review §1).
    */
   params?: Record<string, JsonValue>;
   alias?: string;
@@ -106,7 +106,7 @@ export function toBuilderSpec(spec: BuildSpec): BuilderSpec {
       ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
       ...(source.provider !== undefined ? { provider: source.provider } : {}),
       ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
-      // Builder loader.py rejects `params` as a foreign field if it exists as a key in kind=file/url —
+      // Builder rejects `params` as a foreign field if it exists as a key in kind=file/url —
       // send only for public_api (omit kind).
       ...(!source.kind || source.kind === "public_api" ? { params: source.params } : {}),
       ...(source.alias ? { alias: source.alias } : {}),

@@ -71,6 +71,12 @@ jobs:
       - name: Korean comment gate (#427)
         run: python3 scripts/check_korean_ts_comments.py src e2e
 
+      # Studio → Builder → KPubData: src/ may cite Builder's OpenAPI contract, never a
+      # kpubdata or Builder source path, Python module, private constant or fixture
+      # (#511). The quality job feeds the CI gate, so this step is required.
+      - name: kpubdata boundary gate (#511)
+        run: npm run check:boundary
+
       # Renaming a UI string without moving the assertions that name it (#429). The
       # values this branch removed from the locales are computed exactly, so there is
       # no guess about which literals are labels and no false positives.

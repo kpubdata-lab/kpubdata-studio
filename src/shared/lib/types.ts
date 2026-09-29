@@ -102,7 +102,7 @@ export interface ExportTarget {
   options?: Record<string, JsonValue>;
 }
 
-/** single column information in manifest schema summary (Builder schema_summary.py FieldSummary). */
+/** single column information in manifest schema summary (`BuildManifest` in Builder's OpenAPI contract). */
 export interface ManifestFieldSummary {
   /** column name */
   name: string;
@@ -112,7 +112,7 @@ export interface ManifestFieldSummary {
   nullable: boolean;
 }
 
-/** schema summary per source (artifact) (Builder schema_summary.py SchemaSummary). */
+/** schema summary per source (artifact) (`BuildManifest` in Builder's OpenAPI contract). */
 export interface ManifestSchemaSummary {
   /** field summary list preserving column order */
   fields: ManifestFieldSummary[];
@@ -120,7 +120,7 @@ export interface ManifestSchemaSummary {
   total_fields: number;
 }
 
-/** detailed provenance per source (Builder provenance.py SourceProvenance). */
+/** detailed provenance per source (`SourceProvenance` in Builder's OpenAPI contract). */
 export interface ManifestSourceProvenance {
   /** data provider identifier (e.g., datago) */
   provider: string;
@@ -138,7 +138,7 @@ export interface ManifestSourceProvenance {
   params: Record<string, unknown>;
 }
 
-/** snapshot of execution environment that created build (Builder environment.py BuildEnvironment). */
+/** snapshot of execution environment that created build (`BuildManifest` in Builder's OpenAPI contract). */
 export interface ManifestBuildEnvironment {
   /** Python version that executed build */
   python_version: string;
@@ -151,7 +151,7 @@ export interface ManifestBuildEnvironment {
 /**
  * type aligned 1:1 with wire form of manifest JSON that Builder writes to disk (#98).
  *
- * Follows Builder `manifest/writer.py`'s serialization payload verbatim
+ * Follows `BuildManifest` in Builder's OpenAPI contract verbatim
  * (snake_case). The previous camelCase/single-total (recordCount)/SourceRef[]
  * shape differed from real Builder output and broke mapping. This type
  * lets the UI use the rich information Builder returns (provenance/schema/

@@ -2,7 +2,7 @@ import { i18n } from "@/shared/i18n";
 /**
  * Builder HTTP API client (#29).
  *
- * Wraps endpoints actually provided by kpubdata-builder service (`service/app.py`)
+ * Wraps endpoints Builder's OpenAPI contract defines
  * (`/version`, `/validate`, `/preview`, `/build`, `/artifacts/{run_id}`).
  * Defines request/response types per Builder API contract (API_CONTRACT.md / builder #209)
  * wire format, and throws abnormal responses as structured `ApiError`.

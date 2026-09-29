@@ -193,7 +193,7 @@ describe("toBuilderSpec/fromBuilderSpec — extra 최상위 필드 round-trip (#
   });
 });
 
-describe("toBuilderSpec — kind별 params 계약 (#283 후속 리뷰 §1, builder loader.py SSOT)", () => {
+describe("toBuilderSpec — kind별 params 계약 (#283 후속 리뷰 §1, Builder OpenAPI SourceRef)", () => {
   it("public_api source는 params key를 포함한다", () => {
     const spec: BuildSpec = {
       datasetId: "d",
