@@ -336,7 +336,7 @@ export function AddDataPage() {
 
     // Preview usability preflight — works only when Dataset metadata provides required query
     // params. If missing, don't call Preview API, just guide user in UI
-    // (doesn't replace Builder/Core validation, just pre-guides).
+    // (doesn't replace Builder validation, just pre-guides).
     if (draft.sourceKind === "public_api") {
       const selected = findDataset(catalog.providers, draft.publicApi.provider, draft.publicApi.dataset);
 

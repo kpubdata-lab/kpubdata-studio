@@ -431,9 +431,10 @@ export const sourceStageStatusSchema = z.object({
 export const datasetStageMapSchema = z.record(z.string(), sourceStageStatusSchema);
 
 /**
- * A table's state on each axis kpubdata's TERMINOLOGY keeps apart (builder#781, API
- * 1.37+). One field per axis, never merged into one badge; an axis with nothing to go on
- * is `unknown`. `access` uses kpubdata's probe identifiers (`PROBE_STATUSES`) as they are.
+ * A table's state on each status axis (builder#781, API 1.37+), as Builder's OpenAPI
+ * contract defines `status_axes`. One field per axis, never merged into one badge; an
+ * axis with nothing to go on is `unknown`. The `access` values are the contract's enum,
+ * taken as they are.
  */
 export const datasetStatusAxesSchema = z.object({
   refresh: z.enum(["queued", "running", "succeeded", "failed", "cancelled", "unknown"]),
