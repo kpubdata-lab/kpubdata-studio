@@ -776,6 +776,9 @@
     "badge": {
       "notEvaluated": "Not evaluated",
       "unavailable": "No result (unavailable)"
+    },
+    "page": {
+      "title": "Quality Center"
     }
   },
   "provider": {
@@ -1219,7 +1222,28 @@
     "schemaNone": "No schema / not supported",
     "schemaNoneDesc": "The {{stage}} stage response does not provide a schema.",
     "previewNone": "No preview / not supported",
-    "askAboutThis": "Ask about this table"
+    "askAboutThis": "Ask about this table",
+    "labels": {
+      "rows": "Rows",
+      "columns": "Columns",
+      "validation": "Validation",
+      "updated": "Updated",
+      "stageResponse": "Engine stage response",
+      "lineage": "Lineage",
+      "source": "Source",
+      "stageDetail": "Stage Detail",
+      "status": "Status",
+      "available": "Available",
+      "providerSource": "Provider / Source",
+      "output": "Output",
+      "preview": "Preview",
+      "table": "Table",
+      "schema": "Schema",
+      "quality": "Quality",
+      "specDigest": "BuildSpec digest",
+      "snapshotFiles": "Snapshot files",
+      "run": "Run"
+    }
   },
   "buildPublish": {
     "statusQueued": "Queued",
@@ -1828,7 +1852,10 @@
     "openDetail": "Open details for {{title}}",
     "qualityError": "Quality lookup failed",
     "shownCount": "{{count}} shown",
-    "resetFilters": "Reset filters"
+    "resetFilters": "Reset filters",
+    "columns": {
+      "provider": "Provider"
+    }
   },
   "monitoring": {
     "error": {
@@ -1944,12 +1971,12 @@
   },
   "router": {
     "features": {
-      "AddData": "Add Data",
+      "AddData": "Create Table",
       "DatasetCatalog": "Table Catalog",
       "Discover": "Discover",
       "Assistant": "Ask KPubData",
       "Monitoring": "Monitoring",
-      "Provider": "Provider",
+      "Provider": "Connections",
       "Quality": "Quality",
       "Reports": "Reports",
       "Workspace": "Workspace",
@@ -1960,7 +1987,7 @@
       "builds": "Runs",
       "datasetDetail": "Table details",
       "home": "Home",
-      "newBuild": "Create table",
+      "newBuild": "Create Table from a spec",
       "preview": "Preview",
       "publish": "Publish",
       "reportEditor": "Report editor",

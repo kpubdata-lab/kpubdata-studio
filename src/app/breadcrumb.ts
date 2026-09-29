@@ -19,7 +19,7 @@ type Translate = (key: string) => string;
 /** First path segment → the sidebar entry it lives under. */
 const SECTIONS: Record<string, { labelKey: string; to: string }> = {
   discover: { labelKey: "nav.discover", to: "/discover" },
-  add: { labelKey: "nav.discover", to: "/discover" },
+  add: { labelKey: "nav.datasets", to: "/tables" },
   tables: { labelKey: "nav.datasets", to: "/tables" },
   "refresh-jobs": { labelKey: "nav.builds", to: "/refresh-jobs" },
   sql: { labelKey: "nav.sql", to: "/sql" },
@@ -62,8 +62,17 @@ export function crumbsFor(pathname: string, t: Translate): Crumb[] {
   if (!section) return [{ label: decode(pathname) }];
 
   const crumbs: Crumb[] = [{ label: t(section.labelKey), to: section.to }];
-  if (head === "add") crumbs.push({ label: t("router.features.AddData") });
-  else if (head === "refresh-jobs" && rest[0] === "new") crumbs.push({ label: t("router.features.newBuild") });
+  // Creating a table is not a refresh (#422): both creation flows sit under Tables (#485).
+  if (head === "add" || (head === "refresh-jobs" && rest[0] === "new")) {
+    return [
+      { label: t("nav.datasets"), to: "/tables" },
+      { label: t(head === "add" ? "router.features.AddData" : "router.features.newBuild") },
+    ];
+  }
+  // A report id means nothing to a reader; the page's name does (#485).
+  if (head === "reports" && rest.length > 0) {
+    return [{ label: t("nav.reports"), to: "/reports" }, { label: t("router.features.reportEditor") }];
+  }
   else if (rest.length > 0) {
     const id = rest[0];
     const page = head === "refresh-jobs" && rest[1] ? RUN_PAGES[rest[1]] : undefined;

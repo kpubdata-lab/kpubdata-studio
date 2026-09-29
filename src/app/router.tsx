@@ -6,7 +6,7 @@
  */
 import { lazy, Suspense, type ReactElement } from "react";
 import { useTranslation } from "react-i18next";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import { FeatureErrorBoundary, RouteErrorBoundary } from "@/app/ErrorBoundary";
 import { Layout } from "@/app/Layout";
 import { LegacyRedirect } from "@/app/legacyRedirect";
@@ -148,7 +148,8 @@ function withFeatureBoundary(feature: string, element: ReactElement): ReactEleme
  *
  * @returns Browser router instance with rendering rules per route.
  */
-export const router = createBrowserRouter([
+/** The route tree, exported so a test can mount every page the way the app does (#485). */
+export const appRoutes: RouteObject[] = [
     // Login/Signup (#263) is a standalone screen outside App Shell (sidebar/header), so placed
     // as top-level sibling route instead of under Layout's children — pre-login state has no workspace shell yet.
     {
@@ -285,9 +286,9 @@ export const router = createBrowserRouter([
       { path: "provider/*", element: <LegacyRedirect /> },
     ],
   },
-  ],
-  {
-    // GitHub Pages subfolder (/kpubdata-studio/) routing works when base is set to basename.
-    basename: import.meta.env.BASE_URL.replace(/\/+$/, "") || "/",
-  },
-);
+  ];
+
+export const router = createBrowserRouter(appRoutes, {
+  // GitHub Pages subfolder (/kpubdata-studio/) routing works when base is set to basename.
+  basename: import.meta.env.BASE_URL.replace(/\/+$/, "") || "/",
+});

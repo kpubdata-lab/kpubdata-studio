@@ -9,10 +9,16 @@
  *    What remains legitimately are interpolation names (`{{dataset}}`), BuildSpec field
  *    paths (`sources[0].dataset`), code in backticks (the SQL relation `FROM dataset`)
  *    and Hugging Face's own `owner/dataset` wording.
+ *
+ * The same words are also checked where a screen writes them directly in TSX — JSX
+ * text and the string props a user reads (label, title, placeholder …) — because the
+ * locale check alone missed them (#485).
+ *
  * 3. Creating a table is not a Refresh. In the two creation wizards "Refresh" may only
  *    mean refreshing a preview, or describe the edit mode that re-runs an existing spec.
  */
 
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -97,5 +103,48 @@ describe("warehouse terminology gate — the checks fail when they should", () =
         ["builds.retry", "Refresh"],
       ]),
     ).toEqual(["newBuild.review.run", "addData.review.cta"]);
+  });
+});
+
+/*
+ * Hard-coded screen text (#485).
+ */
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const OLD_TERM = /\b(Artifacts?|Builder|Builds?)\b|(?<![Ss]ource )\b[Dd]atasets?\b/;
+const SHOWN_PROP = /\b(label|title|eyebrow|description|sub|placeholder|aria-label|alt|actionLabel|heading)="([^"]*)"/g;
+const JSX_TEXT = />([^<>{}]*[A-Za-z][^<>{}]*)</g;
+
+/** `file:line: text` for every old term a user would read in this source. */
+function hardCodedOldTerms(file: string, source: string): string[] {
+  const hits: string[] = [];
+  source.split("\n").forEach((line, index) => {
+    if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+    const texts = [...line.matchAll(SHOWN_PROP)].map((m) => m[2]).concat([...line.matchAll(JSX_TEXT)].map((m) => m[1]));
+    for (const text of texts) {
+      if (OLD_TERM.test(text.replace(/owner\/dataset/g, ""))) hits.push(`${file}:${index + 1}: ${text.trim()}`);
+    }
+  });
+  return hits;
+}
+
+describe("warehouse terminology gate — hard-coded TSX text (#485)", () => {
+  it("no screen writes an old term directly", () => {
+    const files = execFileSync("git", ["ls-files", "src"], { cwd: ROOT, encoding: "utf8" })
+      .split("\n")
+      .filter((file) => file.endsWith(".tsx") && !file.includes(".test."));
+    const hits = files.flatMap((file) => hardCodedOldTerms(file, readFileSync(join(ROOT, file), "utf8")));
+    expect(hits).toEqual([]);
+  });
+
+  it("finds an old term in JSX text and in a shown prop, but not in code or Hugging Face's owner/dataset", () => {
+    const source = [
+      '<th className="px-5 py-3">Build</th>',
+      '<Card title="Artifacts" />',
+      '<input placeholder="owner/dataset" />',
+      "const builderApi = useBuilder();",
+      '<p className="x">{t("run")}</p>',
+    ].join("\n");
+    expect(hardCodedOldTerms("f.tsx", source)).toEqual(["f.tsx:1: Build", "f.tsx:2: Artifacts"]);
   });
 });

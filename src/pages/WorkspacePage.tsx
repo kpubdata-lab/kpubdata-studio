@@ -189,7 +189,7 @@ export function WorkspacePage() {
       </Card>
 
       <section className="flex flex-col gap-3">
-        <PageHeader eyebrow="Recent Work" title={t("workspace.recentTitle")} className="mb-0" />
+        <PageHeader eyebrow="Recent Work" title={t("workspace.recentTitle")} className="mb-0" level={2} />
 
         {datasetsState.status === "error" ? (
           <ErrorState
@@ -254,6 +254,7 @@ export function WorkspacePage() {
           eyebrow="Saved BuildSpecs"
           title={t("workspace.savedSpecs")}
           className="mb-0"
+          level={2}
           actions={
             savedSpecSummaries.length > 0 ? (
               <Button

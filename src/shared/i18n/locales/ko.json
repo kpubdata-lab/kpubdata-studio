@@ -776,6 +776,9 @@
     "badge": {
       "notEvaluated": "평가 없음",
       "unavailable": "결과 없음(unavailable)"
+    },
+    "page": {
+      "title": "Quality Center"
     }
   },
   "provider": {
@@ -1219,7 +1222,28 @@
     "schemaNone": "Schema 없음/지원되지 않음",
     "schemaNoneDesc": "{{stage}} stage 응답이 schema를 제공하지 않습니다.",
     "previewNone": "미리보기 없음/지원되지 않음",
-    "askAboutThis": "이 테이블에 대해 묻기"
+    "askAboutThis": "이 테이블에 대해 묻기",
+    "labels": {
+      "rows": "Rows",
+      "columns": "Columns",
+      "validation": "Validation",
+      "updated": "Updated",
+      "stageResponse": "Engine stage response",
+      "lineage": "Lineage",
+      "source": "Source",
+      "stageDetail": "Stage Detail",
+      "status": "Status",
+      "available": "Available",
+      "providerSource": "Provider / Source",
+      "output": "Output",
+      "preview": "Preview",
+      "table": "Table",
+      "schema": "Schema",
+      "quality": "Quality",
+      "specDigest": "BuildSpec digest",
+      "snapshotFiles": "Snapshot files",
+      "run": "Run"
+    }
   },
   "buildPublish": {
     "statusQueued": "대기 중",
@@ -1828,7 +1852,10 @@
     "openDetail": "{{title}} 상세 열기",
     "qualityError": "Quality 조회 실패",
     "shownCount": "{{count}}개 표시",
-    "resetFilters": "필터 초기화"
+    "resetFilters": "필터 초기화",
+    "columns": {
+      "provider": "Provider"
+    }
   },
   "monitoring": {
     "error": {
@@ -1944,12 +1971,12 @@
   },
   "router": {
     "features": {
-      "AddData": "Add Data",
+      "AddData": "테이블 만들기",
       "DatasetCatalog": "테이블 카탈로그",
       "Discover": "Discover",
       "Assistant": "Ask KPubData",
       "Monitoring": "Monitoring",
-      "Provider": "Provider",
+      "Provider": "연결",
       "Quality": "Quality",
       "Reports": "Reports",
       "Workspace": "Workspace",
@@ -1960,7 +1987,7 @@
       "builds": "실행 목록",
       "datasetDetail": "테이블 상세",
       "home": "홈",
-      "newBuild": "테이블 만들기",
+      "newBuild": "스펙으로 테이블 만들기",
       "preview": "미리보기",
       "publish": "게시",
       "reportEditor": "Report 편집",

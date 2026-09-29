@@ -531,7 +531,7 @@ function RecentBuildsSection({
   const { t } = useTranslation();
   return (
     <section>
-      <PageHeader eyebrow={t("home.recent.eyebrow")} title={t("home.recent.title")} className="mb-4" />
+      <PageHeader eyebrow={t("home.recent.eyebrow")} title={t("home.recent.title")} className="mb-4" level={2} />
       <Card className="p-0">
         {loading ? (
           <div className="px-6 py-4 space-y-3">
@@ -586,7 +586,7 @@ function QualitySection({ state }: { state: RecentQualityState }) {
   const { t } = useTranslation();
   return (
     <section>
-      <PageHeader eyebrow={t("home.quality.eyebrow")} title={t("home.quality.title")} className="mb-4" />
+      <PageHeader eyebrow={t("home.quality.eyebrow")} title={t("home.quality.title")} className="mb-4" level={2} />
       <Card className="p-0">
         {state.phase === "loading" ? (
           <div className="space-y-3 px-6 py-5">
