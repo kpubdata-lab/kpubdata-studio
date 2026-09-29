@@ -29,7 +29,7 @@ describe("resolveAssistantContext — source_key", () => {
   });
 
   it("resolves ?source= on the dataset-detail route too", () => {
-    const { context } = resolveAssistantContext("/datasets/air-quality", "?run=r1&source=kma__weather&stage=gold");
+    const { context } = resolveAssistantContext("/tables/air-quality", "?run=r1&source=kma__weather&stage=gold");
     expect(context.source).toBe("kma__weather");
   });
 });

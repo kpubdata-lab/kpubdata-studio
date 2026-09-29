@@ -13,9 +13,9 @@ afterEach(() => vi.unstubAllEnvs());
 
 function renderPublish(runId: string) {
   return render(
-    <MemoryRouter initialEntries={[`/builds/${runId}/publish`]}>
+    <MemoryRouter initialEntries={[`/refresh-jobs/${runId}/publish`]}>
       <Routes>
-        <Route path="/builds/:buildId/publish" element={<BuildPublishPage />} />
+        <Route path="/refresh-jobs/:buildId/publish" element={<BuildPublishPage />} />
       </Routes>
     </MemoryRouter>,
   );

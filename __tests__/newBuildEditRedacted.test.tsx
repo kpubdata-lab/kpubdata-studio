@@ -58,9 +58,9 @@ const SPEC_WITH_SECRET: BuildSpec = {
 
 function renderEdit() {
   return render(
-    <MemoryRouter initialEntries={[`/builds/${RUN_ID}/edit`]}>
+    <MemoryRouter initialEntries={[`/refresh-jobs/${RUN_ID}/edit`]}>
       <Routes>
-        <Route path="/builds/:buildId/edit" element={<NewBuildPage />} />
+        <Route path="/refresh-jobs/:buildId/edit" element={<NewBuildPage />} />
       </Routes>
     </MemoryRouter>,
   );

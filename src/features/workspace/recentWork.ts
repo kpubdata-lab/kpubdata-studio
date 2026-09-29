@@ -58,7 +58,7 @@ export function toRecentWorkItems(source: RecentWorkSource): RecentWorkItem[] {
         title: dataset.title,
         source: "builder",
         timestamp: dataset.updated_at,
-        href: `/datasets/${encodeURIComponent(dataset.dataset_id)}`,
+        href: `/tables/${encodeURIComponent(dataset.dataset_id)}`,
       }),
     ),
     ...source.builds.map(
@@ -68,7 +68,7 @@ export function toRecentWorkItems(source: RecentWorkSource): RecentWorkItem[] {
         title: build.title ?? build.id,
         source: "builder",
         timestamp: buildTimestamp(build),
-        href: `/builds/${encodeURIComponent(build.id)}`,
+        href: `/refresh-jobs/${encodeURIComponent(build.id)}`,
       }),
     ),
     ...source.reports.map(
@@ -88,7 +88,7 @@ export function toRecentWorkItems(source: RecentWorkSource): RecentWorkItem[] {
         title: spec.name,
         source: "local",
         timestamp: spec.updatedAt,
-        href: `/builds/new?savedSpecId=${encodeURIComponent(spec.id)}`,
+        href: `/refresh-jobs/new?savedSpecId=${encodeURIComponent(spec.id)}`,
       }),
     ),
   ];

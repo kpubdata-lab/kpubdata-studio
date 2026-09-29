@@ -107,12 +107,12 @@ describe("EmptyState", () => {
           title="아직 실행이 없습니다"
           description="첫 빌드를 만들어보세요."
           actionLabel="테이블 만들기"
-          actionHref="/builds/new"
+          actionHref="/refresh-jobs/new"
         />
       </MemoryRouter>,
     );
     const link = screen.getByRole("link", { name: "테이블 만들기" });
-    expect(link).toHaveAttribute("href", "/builds/new");
+    expect(link).toHaveAttribute("href", "/refresh-jobs/new");
     // 링크가 버튼으로 감싸지지 않는다(상호작용 요소 중첩 회피).
     expect(link.closest("button")).toBeNull();
   });
@@ -128,11 +128,11 @@ describe("LinkButton", () => {
   it("renders an anchor styled as a button", () => {
     render(
       <MemoryRouter>
-        <LinkButton to="/builds">목록</LinkButton>
+        <LinkButton to="/refresh-jobs">목록</LinkButton>
       </MemoryRouter>,
     );
     const link = screen.getByRole("link", { name: "목록" });
-    expect(link).toHaveAttribute("href", "/builds");
+    expect(link).toHaveAttribute("href", "/refresh-jobs");
     expect(link).toHaveClass("rounded-lg");
   });
 });

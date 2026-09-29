@@ -369,7 +369,7 @@ describe("HomePage 최근 품질 상태", () => {
 
     const alert = await screen.findByText("Missing values 3건");
     const link = alert.closest("a");
-    expect(link).toHaveAttribute("href", "/builds/run-warn");
+    expect(link).toHaveAttribute("href", "/refresh-jobs/run-warn");
   });
 
   it("최근 Build가 6개여도 detail은 최대 5개만 병렬 조회한다", async () => {

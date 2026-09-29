@@ -33,7 +33,7 @@ function renderSettings() {
     <MemoryRouter initialEntries={["/settings"]}>
       <Routes>
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/provider" element={<div>PROVIDER_PAGE</div>} />
+        <Route path="/connections" element={<div>PROVIDER_PAGE</div>} />
         <Route path="/assistant" element={<div>ASSISTANT_PAGE</div>} />
         <Route path="/login" element={<div>LOGIN_PAGE</div>} />
       </Routes>
@@ -77,7 +77,7 @@ describe("SettingsPage 통합 (#301)", () => {
     expect(builderApi.listProviders).not.toHaveBeenCalled();
     expect(screen.getByRole("link", { name: "Provider 설정에서 관리" })).toHaveAttribute(
       "href",
-      "/provider",
+      "/connections",
     );
   });
 
@@ -122,7 +122,7 @@ describe("SettingsPage 통합 (#301)", () => {
       <MemoryRouter initialEntries={["/settings"]}>
         <Routes>
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/provider" element={<LocationProbe />} />
+          <Route path="/connections" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -130,7 +130,7 @@ describe("SettingsPage 통합 (#301)", () => {
     fireEvent.click(screen.getByRole("link", { name: "Provider 설정에서 관리" }));
 
     await waitFor(() => expect(locationRef.current).not.toBeNull());
-    expect(locationRef.current?.pathname).toBe("/provider");
+    expect(locationRef.current?.pathname).toBe("/connections");
   });
 
   it("Ask KPubData BYOK는 기본 메모리 전용임을 알리고 opt-in 경고를 유지한다", async () => {

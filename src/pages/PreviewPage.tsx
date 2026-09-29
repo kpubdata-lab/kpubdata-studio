@@ -27,7 +27,7 @@ export function PreviewPage() {
           title={t("previewPage.emptyTitle")}
           description={t("previewPage.emptyDesc")}
           actionLabel={t("previewPage.cta")}
-          actionHref="/builds/new"
+          actionHref="/refresh-jobs/new"
         />
       </Card>
     </main>

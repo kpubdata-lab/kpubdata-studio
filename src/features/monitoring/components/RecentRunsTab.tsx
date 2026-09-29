@@ -40,7 +40,7 @@ export function RecentRunsTab({
           title={t("monitoring.recent.emptyTitle")}
           description={t("monitoring.recent.emptyDesc")}
           actionLabel={t("monitoring.recent.emptyCta")}
-          actionHref="/builds/new"
+          actionHref="/refresh-jobs/new"
         />
       </Card>
     );
@@ -80,7 +80,7 @@ export function RecentRunsTab({
                 {duration !== null ? t("monitoring.recent.seconds", { seconds: duration }) : "—"}
               </div>
               <div className="text-right">
-                <LinkButton variant="secondary" size="sm" to={`/builds/${run.run_id}`}>
+                <LinkButton variant="secondary" size="sm" to={`/refresh-jobs/${run.run_id}`}>
                   {t("monitoring.recent.view")}
                 </LinkButton>
               </div>

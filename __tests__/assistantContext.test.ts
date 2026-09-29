@@ -14,32 +14,32 @@ describe("resolveAssistantContext (#247, #256)", () => {
     expect(resolveAssistantContext("/quality").pageLabel).toBe("Quality");
     expect(resolveAssistantContext("/assistant").pageLabel).toBe("Ask KPubData");
     expect(resolveAssistantContext("/reports").pageLabel).toBe("Reports");
-    expect(resolveAssistantContext("/provider").pageLabel).toBe("Provider");
+    expect(resolveAssistantContext("/connections").pageLabel).toBe("Provider");
     expect(resolveAssistantContext("/monitoring").pageLabel).toBe("Monitoring");
   });
 
   it("extracts datasetId from a dataset detail route", () => {
-    const { context, pageLabel } = resolveAssistantContext("/datasets/air-quality");
+    const { context, pageLabel } = resolveAssistantContext("/tables/air-quality");
     expect(pageLabel).toBe("테이블 상세");
     expect(context.page).toBe("dataset-detail");
     expect(context.datasetId).toBe("air-quality");
   });
 
   it("does not treat the dataset catalog itself as a dataset id", () => {
-    const { context, pageLabel } = resolveAssistantContext("/datasets");
+    const { context, pageLabel } = resolveAssistantContext("/tables");
     expect(pageLabel).toBe("테이블 카탈로그");
     expect(context.datasetId).toBeUndefined();
   });
 
   it("extracts runId from build-scoped routes but not from /builds/new", () => {
-    expect(resolveAssistantContext("/builds/run-1").context.runId).toBe("run-1");
-    expect(resolveAssistantContext("/builds/run-1/run").context.runId).toBe("run-1");
-    expect(resolveAssistantContext("/builds/new").context.runId).toBeUndefined();
-    expect(resolveAssistantContext("/builds").context.runId).toBeUndefined();
+    expect(resolveAssistantContext("/refresh-jobs/run-1").context.runId).toBe("run-1");
+    expect(resolveAssistantContext("/refresh-jobs/run-1/run").context.runId).toBe("run-1");
+    expect(resolveAssistantContext("/refresh-jobs/new").context.runId).toBeUndefined();
+    expect(resolveAssistantContext("/refresh-jobs").context.runId).toBeUndefined();
   });
 
   it("reads dataset/run/stage from Dataset Detail's ?run=&stage= query convention (#253)", () => {
-    const { context } = resolveAssistantContext("/datasets/air-quality", "?run=run-9&stage=silver");
+    const { context } = resolveAssistantContext("/tables/air-quality", "?run=run-9&stage=silver");
     expect(context.datasetId).toBe("air-quality");
     expect(context.runId).toBe("run-9");
     expect(context.stage).toBe("silver");

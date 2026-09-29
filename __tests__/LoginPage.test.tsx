@@ -74,7 +74,7 @@ describe("LoginPage", () => {
     vi.stubEnv("VITE_OIDC_CLIENT_ID", "studio");
     useAuthStore.setState({ oidcStatus: "unauthenticated" });
 
-    renderLogin("/login?returnTo=%2Fbuilds%3Frun%3Dabc");
+    renderLogin("/login?returnTo=%2Frefresh-jobs%3Frun%3Dabc");
 
     expect(document.querySelector('input[type="email"]')).not.toBeInTheDocument();
     expect(document.querySelector('input[type="password"]')).not.toBeInTheDocument();
@@ -82,20 +82,20 @@ describe("LoginPage", () => {
     expect(screen.getByRole("button", { name: "KPubData 계정으로 로그인" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Google로 계속하기" }));
-    expect(keycloakLoginMock).toHaveBeenCalledWith("/builds?run=abc", "google");
+    expect(keycloakLoginMock).toHaveBeenCalledWith("/refresh-jobs?run=abc", "google");
 
     fireEvent.click(screen.getByRole("button", { name: "KPubData 계정으로 로그인" }));
-    expect(keycloakLoginMock).toHaveBeenCalledWith("/builds?run=abc");
+    expect(keycloakLoginMock).toHaveBeenCalledWith("/refresh-jobs?run=abc");
   });
 
   it("returns an authenticated OIDC user to the preserved internal route", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     useAuthStore.setState({ oidcStatus: "authenticated" });
 
-    renderLogin("/login?returnTo=%2Fbuilds%3Frun%3Dabc");
+    renderLogin("/login?returnTo=%2Frefresh-jobs%3Frun%3Dabc");
 
     await waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith("/builds?run=abc", { replace: true }),
+      expect(navigateMock).toHaveBeenCalledWith("/refresh-jobs?run=abc", { replace: true }),
     );
   });
 

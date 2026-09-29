@@ -60,13 +60,13 @@ describe("grouped sidebar navigation (#247)", () => {
     const expectedLinks: Record<string, string> = {
       "홈": "/",
       "카탈로그": "/discover",
-      "테이블": "/datasets",
+      "테이블": "/tables",
       "작업대": "/workspace",
       "리포트": "/reports",
-      "갱신 작업": "/builds",
+      "갱신 작업": "/refresh-jobs",
       "품질": "/quality",
       "모니터링": "/monitoring",
-      "연결": "/provider",
+      "연결": "/connections",
       "설정": "/settings",
     };
 

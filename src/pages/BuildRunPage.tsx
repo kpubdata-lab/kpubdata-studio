@@ -47,7 +47,7 @@ export function BuildRunPage() {
         title={t("buildRun.title", { id: buildId || t("buildRun.fallbackId") })}
         description={t("buildRun.desc")}
         actions={
-          <LinkButton variant="secondary" to={`/builds?run=${encodeURIComponent(buildId)}`}>
+          <LinkButton variant="secondary" to={`/refresh-jobs?run=${encodeURIComponent(buildId)}`}>
             {t("buildRun.manageInDetail")}
           </LinkButton>
         }
@@ -87,13 +87,13 @@ export function BuildRunPage() {
       </Card>
 
       <div className="flex flex-wrap gap-3">
-        <LinkButton variant="secondary" to={`/builds?run=${encodeURIComponent(buildId)}`}>
+        <LinkButton variant="secondary" to={`/refresh-jobs?run=${encodeURIComponent(buildId)}`}>
           {t("buildRun.openDetail")}
         </LinkButton>
-        <LinkButton variant="secondary" to={`/builds/${buildId}/artifacts`}>
+        <LinkButton variant="secondary" to={`/refresh-jobs/${buildId}/artifacts`}>
           {t("buildRun.openArtifacts")}
         </LinkButton>
-        <LinkButton variant="ghost" to={`/builds/${buildId}/edit`}>
+        <LinkButton variant="ghost" to={`/refresh-jobs/${buildId}/edit`}>
           {t("buildRun.editSpec")}
         </LinkButton>
       </div>

@@ -47,13 +47,13 @@ describe("router 딥링크 회귀 (#247)", () => {
   it("기존 build 단위 딥링크(:buildId/*)는 그대로 유지된다", async () => {
     render(<RouterProvider router={router} />);
 
-    await navigateTo("/builds/abc/run");
+    await navigateTo("/refresh-jobs/abc/run");
     expect(await screen.findByText("상세 진행은 Run 상세에서 확인하세요")).toBeInTheDocument();
 
-    await navigateTo("/builds/abc/artifacts");
+    await navigateTo("/refresh-jobs/abc/artifacts");
     expect(await screen.findByText("Manifest 요약")).toBeInTheDocument();
 
-    await navigateTo("/builds/abc/publish");
+    await navigateTo("/refresh-jobs/abc/publish");
     expect(await screen.findByRole("heading", { name: "abc 게시" })).toBeInTheDocument();
     expect(screen.getByText("Hugging Face")).toBeInTheDocument();
   });
@@ -67,7 +67,7 @@ describe("router 딥링크 회귀 (#247)", () => {
     await navigateTo("/quality");
     expect(await screen.findByRole("heading", { name: "Quality Center" })).toBeInTheDocument();
 
-    await navigateTo("/datasets/air-quality");
+    await navigateTo("/tables/air-quality");
     expect(await screen.findByRole("heading", { name: "대기질 통합 데이터" })).toBeInTheDocument();
   });
 

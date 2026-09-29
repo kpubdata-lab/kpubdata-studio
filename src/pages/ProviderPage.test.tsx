@@ -27,7 +27,7 @@ const PROVIDERS = {
   ],
 };
 
-function renderProviders(initialEntry = "/provider") {
+function renderProviders(initialEntry = "/connections") {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <ProviderPage />
@@ -319,13 +319,13 @@ describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
         HttpResponse.json({ configured: false, masked: null, updated_at: null }),
       ),
     );
-    renderProviders("/provider?provider=datago&returnTo=%2Fadd");
+    renderProviders("/connections?provider=datago&returnTo=%2Fadd");
 
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
   });
 
   it("returnTo가 있으면 Add Data 복귀 안내 배너를 보여준다", async () => {
-    renderProviders("/provider?provider=datago&returnTo=%2Fadd");
+    renderProviders("/connections?provider=datago&returnTo=%2Fadd");
     expect(
       await screen.findByText("데이터 추가를 계속하려면 API 연결을 완료하세요."),
     ).toBeInTheDocument();
@@ -354,7 +354,7 @@ describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
         return HttpResponse.json({ provider: "datago", configured: true, masked: "dg••••99", updated_at: null });
       }),
     );
-    renderProviders("/provider?provider=datago&returnTo=%2Fadd");
+    renderProviders("/connections?provider=datago&returnTo=%2Fadd");
 
     fireEvent.click(await screen.findByRole("button", { name: "등록하기" }));
     fireEvent.change(screen.getByPlaceholderText("API Key를 입력하세요"), { target: { value: "secret" } });
@@ -370,7 +370,7 @@ describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
         HttpResponse.json({ configured: true, masked: "dg••••99", updated_at: null }),
       ),
     );
-    renderProviders("/provider?provider=datago&returnTo=%2Fadd");
+    renderProviders("/connections?provider=datago&returnTo=%2Fadd");
     await screen.findByText(/dg••••99/);
     expect(screen.queryByRole("link", { name: "데이터 설정으로 돌아가기" })).not.toBeInTheDocument();
   });

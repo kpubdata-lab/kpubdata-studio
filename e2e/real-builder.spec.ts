@@ -168,7 +168,7 @@ test("Public API source가 kpubdata를 거쳐 성공 빌드로 끝난다 @real-b
   expect(outcome?.stages_completed).toEqual(["bronze", "silver", "gold"]);
 
   // 2) Studio actually renders that run (real GET /builds/{run_id} path).
-  await page.goto(`/builds/${runId}`);
+  await page.goto(`/refresh-jobs/${runId}`);
   await expect(
     page
       .getByText(runId)

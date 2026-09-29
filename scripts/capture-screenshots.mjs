@@ -38,37 +38,37 @@ const SCREENS = [
   },
   {
     id: "builds",
-    route: "/builds",
+    route: "/refresh-jobs",
     label: "빌드 목록 (Builds)",
   },
   {
     id: "new-build",
-    route: "/builds/new",
+    route: "/refresh-jobs/new",
     label: "새 빌드 만들기 (New Build)",
   },
   {
     id: "build-detail",
-    route: `/builds/${DEMO_SUCCEEDED}`,
+    route: `/refresh-jobs/${DEMO_SUCCEEDED}`,
     label: "빌드 상세 (Build Detail)",
   },
   {
     id: "build-edit",
-    route: `/builds/${DEMO_SUCCEEDED}/edit`,
+    route: `/refresh-jobs/${DEMO_SUCCEEDED}/edit`,
     label: "빌드 편집 (Build Edit)",
   },
   {
     id: "build-run",
-    route: `/builds/${DEMO_RUNNING}/run`,
+    route: `/refresh-jobs/${DEMO_RUNNING}/run`,
     label: "빌드 실행 추적 (Build Run)",
   },
   {
     id: "build-artifacts",
-    route: `/builds/${DEMO_SUCCEEDED}/artifacts`,
+    route: `/refresh-jobs/${DEMO_SUCCEEDED}/artifacts`,
     label: "빌드 결과물 (Build Artifacts)",
   },
   {
     id: "build-publish",
-    route: `/builds/${DEMO_SUCCEEDED}/publish`,
+    route: `/refresh-jobs/${DEMO_SUCCEEDED}/publish`,
     label: "빌드 게시 (Build Publish)",
   },
   {

@@ -163,7 +163,7 @@ export function BuildArtifactsPage() {
         eyebrow={t("artifacts.page.eyebrow")}
         title={t("artifacts.page.title", { build: buildId || "Run" })}
         description={t("artifacts.page.desc")}
-        actions={<LinkButton to={`/builds/${buildId}/publish`}>{t("artifacts.page.publish")}</LinkButton>}
+        actions={<LinkButton to={`/refresh-jobs/${buildId}/publish`}>{t("artifacts.page.publish")}</LinkButton>}
       />
 
       {state.status === "loading" ? (

@@ -11,25 +11,26 @@ KPubData
 ├── Home                       /
 ├── DATA
 │   ├── Catalog                /discover   공공 API 소스 데이터셋
-│   └── Tables                 /datasets   소스로 만든 테이블
+│   └── Tables                 /tables     소스로 만든 테이블
 ├── ANALYZE
 │   ├── Workspace              /workspace
 │   └── Reports                /reports
 ├── OPERATE
-│   ├── Refresh Jobs           /builds     테이블을 만들고 갱신한 실행
+│   ├── Refresh Jobs           /refresh-jobs  테이블을 만들고 갱신한 실행
 │   ├── Quality                /quality
 │   └── Monitoring             /monitoring
-├── Connections                /provider
+├── Connections                /connections
 └── Settings                   /settings
 ```
 
 전역: breadcrumb (topbar) · Ask KPubData · Account
 
-- **URL 은 그대로다.** `/datasets → /tables` 같은 이름 정리는 저장된 링크를 끊지 않도록
-  redirect 와 함께 따로 한다.
+- **옛 URL 은 새 URL 로 redirect 한다.** `/datasets → /tables`, `/builds → /refresh-jobs`,
+  `/provider → /connections` — 나머지 경로·쿼리(`?run=`)·해시를 그대로 옮기고 `replace` 로
+  히스토리에 남기지 않는다 (`src/app/legacyRedirect.tsx`). 저장해 둔 링크가 끊기지 않는다.
 - **테이블 만들기는 메뉴가 아니라 동작이다.** 전역 `New Build` 버튼과 사이드바의
   `Add Data` 를 없앴다. Catalog · Tables 화면의 `Create Table` 이 `/add` 로, Table
-  Detail 의 `Refresh` 가 선택한 run 의 스펙 편집(`/builds/:id/edit`)으로 간다.
+  Detail 의 `Refresh` 가 선택한 run 의 스펙 편집(`/refresh-jobs/:id/edit`)으로 간다.
 - **SQL Workspace · Saved Queries 는 화면이 생길 때 ANALYZE 에 들어간다** (#417). 없는
   화면으로 가는 링크는 링크가 없는 것보다 나쁘다.
 - **제품명은 한 번만** — 사이드바 로고. topbar 는 보고 있는 대상을 말한다
@@ -80,20 +81,16 @@ graph TD
 
 각 화면에 해당하는 브라우저 주소(URL)입니다. 직관적인 구조로 설계되었습니다.
 
-```mermaid
-graph LR
-    Root["/"] --> Dashboard[HomePage]
-    Root --> Builds["/builds"]
-
-    Builds --> BuildList[BuildsPage]
-    Builds --> New["/new"]
-```
-
-| 경로 | 화면 내용 | 폴더 위치 |
+| 경로 | 화면 | 페이지 |
 | :--- | :--- | :--- |
-| `/` | 대시보드 홈 (최근 빌드 5개 표시) | `src/pages/HomePage.tsx` |
-| `/builds` | 전체 빌드 목록 (검색 및 필터링 가능) | `src/pages/BuildsPage.tsx` |
-| `/builds/new` | 새 빌드 생성 마법사 (빈 문서) | `src/pages/NewBuildPage.tsx` |
+| `/` | 홈 | `src/pages/HomePage.tsx` |
+| `/discover` | 카탈로그 | `src/pages/DiscoverPage.tsx` |
+| `/add` | 테이블 만들기 (Add Data) | `src/pages/AddDataPage.tsx` |
+| `/tables` · `/tables/:id` | 테이블 목록 · 상세 | `DatasetCatalogPage` · `DatasetDetailPage` |
+| `/refresh-jobs` · `/refresh-jobs/:id[/run\|artifacts\|publish\|edit]` | 갱신 작업 · 실행 상세 | `BuildsPage` 외 |
+| `/refresh-jobs/new` | 스펙으로 테이블 만들기 (마법사) | `src/pages/NewBuildPage.tsx` |
+| `/connections` | 연결 · 활용신청 안내 | `src/pages/ProviderPage.tsx` |
+| `/datasets/*` · `/builds/*` · `/provider/*` | 옛 URL → 위 경로로 redirect | `src/app/legacyRedirect.tsx` |
 
 > URL 매핑은 파일 시스템이 아니라 `src/app/router.tsx`의 React Router 설정이 단일 기준입니다.
 

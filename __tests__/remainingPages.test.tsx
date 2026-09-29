@@ -28,14 +28,14 @@ describe("remaining pages", () => {
 
   it("ArtifactsPage guides to the build list", () => {
     renderPage(<ArtifactsPage />);
-    expect(screen.getByRole("link", { name: "실행 목록으로" })).toHaveAttribute("href", "/builds");
+    expect(screen.getByRole("link", { name: "실행 목록으로" })).toHaveAttribute("href", "/refresh-jobs");
   });
 
   it("legacy Validate/Preview pages route into the wizard", () => {
     renderPage(<ValidatePage />);
     expect(screen.getByRole("link", { name: "테이블 만들기" })).toHaveAttribute(
       "href",
-      "/builds/new",
+      "/refresh-jobs/new",
     );
     renderPage(<PreviewPage />);
     expect(screen.getAllByRole("link", { name: "테이블 만들기" }).length).toBeGreaterThanOrEqual(1);

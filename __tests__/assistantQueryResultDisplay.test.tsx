@@ -70,7 +70,7 @@ describe("Result Preview table — array/object values (#256 리뷰 §1)", () =>
     );
 
     render(
-      <MemoryRouter initialEntries={["/datasets/air-quality?run=air-2026-08-14&stage=silver"]}>
+      <MemoryRouter initialEntries={["/tables/air-quality?run=air-2026-08-14&stage=silver"]}>
         <AssistantPage />
       </MemoryRouter>,
     );

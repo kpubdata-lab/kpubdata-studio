@@ -223,7 +223,7 @@ describe("Quality Center: review follow-ups (#254 issue review comment)", () => 
     const heading = await screen.findByText("Recent quality issues");
     const card = heading.closest("div")!.parentElement!;
     const link = within(card).getByRole("link", { name: "Run 보기" });
-    expect(link).toHaveAttribute("href", "/builds/air-2026-08-14");
+    expect(link).toHaveAttribute("href", "/refresh-jobs/air-2026-08-14");
   });
 });
 

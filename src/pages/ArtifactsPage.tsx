@@ -27,7 +27,7 @@ export function ArtifactsPage() {
           title={t("artifactsPage.emptyTitle")}
           description={t("artifactsPage.emptyDesc")}
           actionLabel={t("artifactsPage.cta")}
-          actionHref="/builds"
+          actionHref="/refresh-jobs"
         />
       </Card>
     </main>

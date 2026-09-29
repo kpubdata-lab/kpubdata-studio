@@ -71,7 +71,7 @@ export function BuildsPage() {
 
   const selectRun = useCallback(
     (runId: string) => {
-      navigate(`/builds?run=${encodeURIComponent(runId)}`);
+      navigate(`/refresh-jobs?run=${encodeURIComponent(runId)}`);
     },
     [navigate],
   );

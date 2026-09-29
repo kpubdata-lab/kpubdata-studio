@@ -222,7 +222,7 @@ describe("useAssistantSession — evidence grounding & hallucination gate (#256)
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&stage=bronze"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&stage=bronze"),
     });
     await act(async () => {
       await result.current.ask("이 원본 데이터를 SQL로 보여줘");
@@ -243,7 +243,7 @@ describe("useAssistantSession — evidence grounding & hallucination gate (#256)
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("이 데이터셋 상태 알려줘");
@@ -268,7 +268,7 @@ describe("useAssistantSession — stale context guard (#256 리뷰 §6)", () => 
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&stage=silver"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&stage=silver"),
     });
     await act(async () => {
       await result.current.ask("SQL 만들어줘");
@@ -276,7 +276,7 @@ describe("useAssistantSession — stale context guard (#256 리뷰 §6)", () => 
     const turnId = result.current.turns[0].id;
     expect(result.current.isStale(result.current.turns[0])).toBe(false);
 
-    act(() => navigateRef?.("/datasets/population?run=population-2026-08-13&stage=silver"));
+    act(() => navigateRef?.("/tables/population?run=population-2026-08-13&stage=silver"));
     await waitFor(() => expect(result.current.isStale(result.current.turns[0])).toBe(true));
 
     await act(async () => {
@@ -319,7 +319,7 @@ describe("useAssistantSession — Generated SQL execution via Builder /query (#2
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&stage=silver"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&stage=silver"),
     });
     await act(async () => {
       await result.current.ask("SQL 만들어줘");
@@ -373,7 +373,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
   it("works without any API key configured and never calls the LLM provider", async () => {
     vi.mocked(createProvider).mockClear();
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
     });
     expect(result.current.isConfigured).toBe(false);
     expect(result.current.isDemoAvailable).toBe(true);
@@ -391,7 +391,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
 
   it("is unavailable in real mode — askDemo becomes a no-op so real mode always requires BYOK", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    const { result } = renderHook(() => useAssistantSession(), { wrapper: makeWrapper("/datasets/air-quality") });
+    const { result } = renderHook(() => useAssistantSession(), { wrapper: makeWrapper("/tables/air-quality") });
     expect(result.current.isDemoAvailable).toBe(false);
 
     await act(async () => {
@@ -406,7 +406,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
     const fetchMock = vi.fn(async (_input: unknown) => new Response(null, { status: 500 }));
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
     });
     await act(async () => {
       await result.current.askDemo("지역별 분포 보여줘");
@@ -436,7 +436,7 @@ describe("useAssistantSession — Suggested Actions require approval (#256)", ()
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("빌드 상세 열어줘");
@@ -461,7 +461,7 @@ describe("useAssistantSession — Suggested Actions require approval (#256)", ()
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("빌드 상세 열어줘");
@@ -501,7 +501,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("metadata에 노트 추가해줘");
@@ -548,7 +548,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/datasets/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("patch 제안해줘");

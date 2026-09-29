@@ -23,7 +23,7 @@ export function ValidatePage() {
           title={t("validatePage.emptyTitle")}
           description={t("validatePage.emptyDesc")}
           actionLabel={t("validatePage.cta")}
-          actionHref="/builds/new"
+          actionHref="/refresh-jobs/new"
         />
       </Card>
 

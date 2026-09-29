@@ -2012,7 +2012,7 @@
     "liveForbidden": "이 Run의 실시간 상태를 조회할 권한이 없습니다 — 마지막으로 확인된 상태를 대신 표시합니다.",
     "detailHint": {
       "title": "상세 진행은 Run 상세에서 확인하세요",
-      "desc": "이 화면은 Runs 목록/상세와 동일한 canonical run 상태만 보여줍니다. 단계별 진행(Bronze/Silver/Gold), 실행 이벤트 타임라인, 협조적 실행 취소는 Run 상세(/builds?run=...)에서 제공됩니다."
+      "desc": "이 화면은 Runs 목록/상세와 동일한 canonical run 상태만 보여줍니다. 단계별 진행(Bronze/Silver/Gold), 실행 이벤트 타임라인, 협조적 실행 취소는 Run 상세(/refresh-jobs?run=...)에서 제공됩니다."
     },
     "openDetail": "Run 상세 보기",
     "openArtifacts": "스냅샷 파일 보기",

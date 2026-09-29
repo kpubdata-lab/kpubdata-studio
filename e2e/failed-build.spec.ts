@@ -14,7 +14,7 @@ test("실패 run이 Builds 목록에 실패 상태로 표시된다", async ({ pa
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
-  await page.goto("/builds");
+  await page.goto("/refresh-jobs");
   // Mock history contains failed run (air-2026-08-14).
   await expect(page.getByText("dur-older-adult-caution-20260618").first()).toBeVisible({ timeout: 10_000 });
 
@@ -25,7 +25,7 @@ test("실패 run 상세가 실패 stage와 증거를 표시하고 편집으로 �
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
-  await page.goto("/builds/dur-older-adult-caution-20260618");
+  await page.goto("/refresh-jobs/dur-older-adult-caution-20260618");
   await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
 
   // Master-detail shows failure status badge (distinct from hidden select option).
@@ -36,7 +36,7 @@ test("실패 run 상세가 실패 stage와 증거를 표시하고 편집으로 �
   const editLink = page.getByRole("link", { name: /편집|수정/ }).first();
   if (await editLink.isVisible().catch(() => false)) {
     await editLink.click();
-    await page.waitForURL(/\/builds\//);
+    await page.waitForURL(/\/refresh-jobs\//);
   }
 
   await expectNoPageErrors(errors);
@@ -48,7 +48,7 @@ test("Tables 화면이 실패 dataset의 stage 상태를 정상으로 위장하�
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
-  await page.goto("/datasets");
+  await page.goto("/tables");
   await expect(page.getByRole("heading", { name: /^(테이블|Tables)$/ }).first()).toBeVisible({
     timeout: 10_000,
   });

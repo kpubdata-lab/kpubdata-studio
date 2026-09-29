@@ -389,7 +389,7 @@ export function evidenceHref(turn: AssistantTurn, ref: AssistantEvidenceRef): st
       if (turn.context.source) params.set("source", turn.context.source);
       if (turn.context.stage) params.set("stage", turn.context.stage);
     }
-    return `/builds?${params}`;
+    return `/refresh-jobs?${params}`;
   }
   if (ref.kind === "stage") {
     if (!turn.context.runId) return null;
@@ -397,7 +397,7 @@ export function evidenceHref(turn: AssistantTurn, ref: AssistantEvidenceRef): st
     if (turn.context.datasetId) params.set("dataset", turn.context.datasetId);
     if (turn.context.source) params.set("source", turn.context.source);
     if (turn.context.stage) params.set("stage", turn.context.stage);
-    return `/builds?${params}`;
+    return `/refresh-jobs?${params}`;
   }
   if (ref.kind === "quality" || ref.kind === "schema_drift") {
     if (!turn.context.runId && !turn.context.datasetId) return null;
@@ -707,7 +707,7 @@ export function AssistantContent({ compact = false }: AssistantContentProps) {
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("assistant.input.currentDataset")}</p>
               <Link
                 className="mt-1 block text-xs font-medium text-accent-subtle-foreground underline"
-                to={`/datasets/${encodeURIComponent(session.liveContext.datasetId)}`}
+                to={`/tables/${encodeURIComponent(session.liveContext.datasetId)}`}
               >
                 {t("assistant.input.openDataset", { id: session.liveContext.datasetId })}
               </Link>

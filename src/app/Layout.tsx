@@ -111,7 +111,7 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
         ),
       },
       {
-        to: "/datasets",
+        to: "/tables",
         label: t("nav.datasets"),
         description: t("navDescription.datasets"),
         icon: (
@@ -154,7 +154,7 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
     label: t("nav.groupOperate"),
     items: [
       {
-        to: "/builds",
+        to: "/refresh-jobs",
         label: t("nav.builds"),
         description: t("navDescription.builds"),
         icon: (
@@ -380,7 +380,7 @@ export function Layout() {
                 className={navigationClassName}
                 onClick={closeMobileSidebar}
                 title={t("navDescription.provider")}
-                to="/provider"
+                to="/connections"
               >
                 <SidebarIcon name="provider">
                   <path d="M4 21V7l8-4 8 4v14M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />

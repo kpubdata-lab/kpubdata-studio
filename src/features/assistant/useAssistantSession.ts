@@ -441,7 +441,7 @@ export function useAssistantSession(): UseAssistantSessionResult {
         try {
           applyCreateBuildDraft(action);
           setActionState(turnId, index, { status: "applied", message: msg("draftSaved") });
-          navigate("/builds/new");
+          navigate("/refresh-jobs/new");
         } catch (cause) {
           setActionState(turnId, index, {
             status: "error",

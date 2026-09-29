@@ -9,7 +9,7 @@ function LocationDisplay() {
   return <output>{`${location.pathname}${location.search}`}</output>;
 }
 
-function renderGate(path = "/builds?run=abc") {
+function renderGate(path = "/refresh-jobs?run=abc") {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
@@ -46,7 +46,7 @@ describe("LoginGate", () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     vi.stubEnv("VITE_DEV_BYPASS_AUTH", "false");
     renderGate();
-    expect(screen.getByText("/login?returnTo=%2Fbuilds%3Frun%3Dabc")).toBeInTheDocument();
+    expect(screen.getByText("/login?returnTo=%2Frefresh-jobs%3Frun%3Dabc")).toBeInTheDocument();
     expect(screen.queryByText("protected content")).not.toBeInTheDocument();
   });
 

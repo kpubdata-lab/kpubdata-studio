@@ -23,19 +23,19 @@ const ROUTES: RouteMatch[] = [
   { test: /^\/discover(\/|$)/, page: "discover", labelKey: "discover" },
   { test: /^\/workspace(\/|$)/, page: "workspace", labelKey: "workspace" },
   { test: /^\/add(\/|$)/, page: "add-data", labelKey: "add-data" },
-  { test: /^\/datasets\/[^/]+/, page: "dataset-detail", labelKey: "dataset-detail" },
-  { test: /^\/datasets(\/|$)/, page: "dataset-catalog", labelKey: "dataset-catalog" },
-  { test: /^\/builds\/new(\/|$)/, page: "build-new", labelKey: "build-new" },
-  { test: /^\/builds\/[^/]+\/run(\/|$)/, page: "build-run", labelKey: "build-run" },
-  { test: /^\/builds\/[^/]+\/artifacts(\/|$)/, page: "build-artifacts", labelKey: "build-artifacts" },
-  { test: /^\/builds\/[^/]+\/publish(\/|$)/, page: "build-publish", labelKey: "build-publish" },
-  { test: /^\/builds\/[^/]+\/edit(\/|$)/, page: "build-edit", labelKey: "build-edit" },
-  { test: /^\/builds\/[^/]+(\/|$)/, page: "build-detail", labelKey: "build-detail" },
-  { test: /^\/builds(\/|$)/, page: "builds", labelKey: "builds" },
+  { test: /^\/tables\/[^/]+/, page: "dataset-detail", labelKey: "dataset-detail" },
+  { test: /^\/tables(\/|$)/, page: "dataset-catalog", labelKey: "dataset-catalog" },
+  { test: /^\/refresh-jobs\/new(\/|$)/, page: "build-new", labelKey: "build-new" },
+  { test: /^\/refresh-jobs\/[^/]+\/run(\/|$)/, page: "build-run", labelKey: "build-run" },
+  { test: /^\/refresh-jobs\/[^/]+\/artifacts(\/|$)/, page: "build-artifacts", labelKey: "build-artifacts" },
+  { test: /^\/refresh-jobs\/[^/]+\/publish(\/|$)/, page: "build-publish", labelKey: "build-publish" },
+  { test: /^\/refresh-jobs\/[^/]+\/edit(\/|$)/, page: "build-edit", labelKey: "build-edit" },
+  { test: /^\/refresh-jobs\/[^/]+(\/|$)/, page: "build-detail", labelKey: "build-detail" },
+  { test: /^\/refresh-jobs(\/|$)/, page: "builds", labelKey: "builds" },
   { test: /^\/quality(\/|$)/, page: "quality", labelKey: "quality" },
   { test: /^\/assistant(\/|$)/, page: "assistant", labelKey: "assistant" },
   { test: /^\/reports(\/|$)/, page: "reports", labelKey: "reports" },
-  { test: /^\/provider(\/|$)/, page: "provider", labelKey: "provider" },
+  { test: /^\/connections(\/|$)/, page: "provider", labelKey: "provider" },
   { test: /^\/monitoring(\/|$)/, page: "monitoring", labelKey: "monitoring" },
   { test: /^\/settings(\/|$)/, page: "settings", labelKey: "settings" },
   { test: /^\/validate(\/|$)/, page: "validate", labelKey: "validate" },
@@ -71,8 +71,8 @@ export function resolveAssistantContext(pathname: string, search = ""): Assistan
 
   const params = new URLSearchParams(search);
 
-  const datasetMatch = pathname.match(/^\/datasets\/([^/]+)/);
-  const buildMatch = pathname.match(/^\/builds\/([^/]+)/);
+  const datasetMatch = pathname.match(/^\/tables\/([^/]+)/);
+  const buildMatch = pathname.match(/^\/refresh-jobs\/([^/]+)/);
   const buildId = buildMatch && buildMatch[1] !== "new" ? decodeURIComponent(buildMatch[1]) : undefined;
 
   const datasetId = datasetMatch

@@ -221,9 +221,9 @@ export function applyAddReportBlock(
 export function actionHref(action: AssistantAction): string | null {
   switch (action.type) {
     case "OPEN_PROVIDER":
-      return "/provider";
+      return "/connections";
     case "OPEN_BUILD":
-      return `/builds/${encodeURIComponent(action.runId)}`;
+      return `/refresh-jobs/${encodeURIComponent(action.runId)}`;
     case "OPEN_QUALITY": {
       const params = new URLSearchParams();
       params.set("dataset", action.datasetId);

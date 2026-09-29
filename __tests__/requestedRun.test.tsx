@@ -81,7 +81,7 @@ function renderDetail(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/datasets/:datasetId" element={<DatasetDetailPage />} />
+        <Route path="/tables/:datasetId" element={<DatasetDetailPage />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -90,7 +90,7 @@ function renderDetail(path: string) {
 describe("Dataset Detail with a run outside the newest page (#418)", () => {
   it("opens a permalink to an older run instead of calling it invalid", async () => {
     getDatasetRunMock.mockResolvedValue({ dataset_id: "air-quality", run: OLDER });
-    renderDetail(`/datasets/air-quality?run=${OLDER.run_id}`);
+    renderDetail(`/tables/air-quality?run=${OLDER.run_id}`);
 
     await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue(OLDER.run_id));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -99,7 +99,7 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
 
   it("says a forbidden run is forbidden, and loads nothing for it", async () => {
     getDatasetRunMock.mockRejectedValue(new ApiError(403, "forbidden: not run owner"));
-    renderDetail("/datasets/air-quality?run=someone-elses-run");
+    renderDetail("/tables/air-quality?run=someone-elses-run");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("이 run에 접근할 권한이 없습니다");
     expect(listBuildStagesMock).not.toHaveBeenCalledWith("someone-elses-run", expect.anything());
@@ -107,7 +107,7 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
 
   it("says a run that is not this dataset's was not found", async () => {
     getDatasetRunMock.mockRejectedValue(new ApiError(404, "run not found in dataset"));
-    renderDetail("/datasets/air-quality?run=missing-run");
+    renderDetail("/tables/air-quality?run=missing-run");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
   });

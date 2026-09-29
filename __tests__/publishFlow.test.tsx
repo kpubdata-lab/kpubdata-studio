@@ -36,10 +36,10 @@ function response(status: number, body: unknown): Response {
   } as Response;
 }
 
-function renderPublish(path = "/builds/run-7/publish") {
+function renderPublish(path = "/refresh-jobs/run-7/publish") {
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <Routes><Route path="/builds/:buildId/publish" element={<BuildPublishPage />} /></Routes>
+      <Routes><Route path="/refresh-jobs/:buildId/publish" element={<BuildPublishPage />} /></Routes>
     </MemoryRouter>,
   );
 }
@@ -243,9 +243,9 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     render(
-      <MemoryRouter initialEntries={["/builds/run-7/publish"]}>
+      <MemoryRouter initialEntries={["/refresh-jobs/run-7/publish"]}>
         <NavigationButton />
-        <Routes><Route path="/builds/:buildId/publish" element={<BuildPublishPage />} /></Routes>
+        <Routes><Route path="/refresh-jobs/:buildId/publish" element={<BuildPublishPage />} /></Routes>
       </MemoryRouter>,
     );
     fireEvent.click(await fillAndConfirm());
@@ -258,7 +258,7 @@ describe("BuildPublishPage readiness and form (#270)", () => {
 
 function NavigationButton() {
   const navigate = useNavigate();
-  return <button onClick={() => navigate("/builds/run-2/publish")}>run 2</button>;
+  return <button onClick={() => navigate("/refresh-jobs/run-2/publish")}>run 2</button>;
 }
 
 describe("readiness stale response protection (#270)", () => {
@@ -270,9 +270,9 @@ describe("readiness stale response protection (#270)", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     render(
-      <MemoryRouter initialEntries={["/builds/run-1/publish"]}>
+      <MemoryRouter initialEntries={["/refresh-jobs/run-1/publish"]}>
         <NavigationButton />
-        <Routes><Route path="/builds/:buildId/publish" element={<BuildPublishPage />} /></Routes>
+        <Routes><Route path="/refresh-jobs/:buildId/publish" element={<BuildPublishPage />} /></Routes>
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: "run 2" }));

@@ -21,7 +21,7 @@ function renderApp() {
     <MemoryRouter initialEntries={["/add"]}>
       <Routes>
         <Route path="/add" element={<AddDataPage />} />
-        <Route path="/provider" element={<ProviderPage />} />
+        <Route path="/connections" element={<ProviderPage />} />
       </Routes>
     </MemoryRouter>,
   );

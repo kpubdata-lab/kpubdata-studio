@@ -9,7 +9,7 @@ import { DEMO_DATASETS } from "@/shared/lib/demoDatasets";
 import { useAssistConfig } from "@/features/assistant/config";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 
-function renderBuilds(initialPath = "/builds") {
+function renderBuilds(initialPath = "/refresh-jobs") {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <BuildsPage />
@@ -75,7 +75,7 @@ describe("selected Run permission state (#255 P0)", () => {
       new ApiError(403, "권한이 없습니다"),
     );
 
-    renderBuilds("/builds?run=not-in-scope-run");
+    renderBuilds("/refresh-jobs?run=not-in-scope-run");
 
     expect(await screen.findByText(/이 Run을 조회할 권한이 없습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
@@ -89,7 +89,7 @@ describe("selected Run permission state (#255 P0)", () => {
       new ApiError(404, "찾을 수 없습니다"),
     );
 
-    renderBuilds("/builds?run=not-in-scope-run");
+    renderBuilds("/refresh-jobs?run=not-in-scope-run");
 
     expect(await screen.findByText(/Run을 찾을 수 없습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/이 Run을 조회할 권한이 없습니다/)).not.toBeInTheDocument();
@@ -99,7 +99,7 @@ describe("selected Run permission state (#255 P0)", () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
     vi.spyOn(datasetsApi, "listBuildStages").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
 
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
 
     // core 정보(제목)는 계속 보인다 — supplementary 403이 상세 전체를 죽이지 않는다.
     await waitFor(() => {
@@ -118,7 +118,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   it("evaluated checks 기준 PASS/WARN/FAIL count, multi-source 현황, WARN/FAIL 근거, schema drift를 표시한다", async () => {
     // air-2026-08-14: partial availability, 2개 source(datago__air pass / kma__weather fail),
     // schema_drift 1건이 있는 기존 mock fixture를 그대로 재사용한다(새 mock 의미를 만들지 않음).
-    renderBuilds("/builds?run=air-2026-08-14");
+    renderBuilds("/refresh-jobs?run=air-2026-08-14");
 
     await waitFor(() => expect(screen.getByText("availability: partial")).toBeInTheDocument());
 
@@ -147,7 +147,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   });
 
   it("정상 응답 + availability=unavailable은 '결과 없음(unavailable)'로 표시하고 조회 실패로 취급하지 않는다(#255 후속 보완 §5-A)", async () => {
-    renderBuilds("/builds?run=population-2026-08-13");
+    renderBuilds("/refresh-jobs?run=population-2026-08-13");
 
     expect(await screen.findByText(/Quality 결과 없음 \(unavailable\)/)).toBeInTheDocument();
     expect(screen.queryByText(/Quality 조회 실패/)).not.toBeInTheDocument();
@@ -156,7 +156,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   it("Quality 404 요청 실패는 UNAVAILABLE로 표시하지 않고 조회 실패로 구분한다(#255 후속 보완 §5-B)", async () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(404, "찾을 수 없습니다"));
 
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
 
     expect(await screen.findByText("Quality 조회 실패")).toBeInTheDocument();
     expect(screen.getByText(/찾을 수 없습니다\(404\)/)).toBeInTheDocument();
@@ -166,7 +166,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
 
   it("Quality 403/network 오류도 UNAVAILABLE로 표시하지 않는다(#255 후속 보완 §5-B)", async () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     expect(await screen.findByText("Quality 조회 실패")).toBeInTheDocument();
     expect(screen.getByText(/조회할 권한이 없습니다\(403\)/)).toBeInTheDocument();
     expect(screen.queryByText("결과 없음(unavailable)")).not.toBeInTheDocument();
@@ -199,7 +199,7 @@ describe("cancelling 상태 보존 (#255 후속 보완 §2)", () => {
       updated_at: "2026-06-21T09:00:05.000Z",
     });
 
-    renderBuilds("/builds?run=real-run-1");
+    renderBuilds("/refresh-jobs?run=real-run-1");
 
     expect(await screen.findByText("취소 중")).toBeInTheDocument();
 
@@ -216,7 +216,7 @@ describe("Builds/Runs mock fixture 정합성 (#255 후속 보완 §4)", () => {
   });
 
   it("성공(succeeded) run을 선택하면 Stage/Quality가 이유 없이 404가 되지 않고 정상 표시된다", async () => {
-    renderBuilds("/builds?run=dur-product-info-20260620");
+    renderBuilds("/refresh-jobs?run=dur-product-info-20260620");
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "DUR 품목정보" })).toBeInTheDocument();
     });
@@ -234,7 +234,7 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
   it("mock mode: succeeded historical run에서는 live job registry를 조회하지 않고 경고도 뜨지 않는다", async () => {
     const spy = vi.spyOn(builderApi, "getBuildJob");
 
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
     // 목록의 deterministic mock status(성공)를 신뢰하고 별도 live 조회를 하지 않는다.
     await waitFor(() => expect(screen.getAllByText("성공", { selector: "span" }).length).toBeGreaterThan(0));
@@ -259,7 +259,7 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
     });
     const jobSpy = vi.spyOn(builderApi, "getBuildJob");
 
-    renderBuilds("/builds?run=real-run-1");
+    renderBuilds("/refresh-jobs?run=real-run-1");
     await waitFor(() => expect(screen.getAllByText("성공", { selector: "span" }).length).toBeGreaterThan(0));
 
     expect(jobSpy).not.toHaveBeenCalled();
@@ -286,7 +286,7 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
       updated_at: "2026-08-19T00:00:01.000Z",
     });
 
-    renderBuilds("/builds?run=real-run-2");
+    renderBuilds("/refresh-jobs?run=real-run-2");
 
     await waitFor(() => expect(jobSpy).toHaveBeenCalled());
     expect(await screen.findByText("실시간 갱신 중…")).toBeInTheDocument();
@@ -297,7 +297,7 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
 
 describe("DEMO_DATASETS ↔ Stage detail 정합성 (#286 후속 보완 §2)", () => {
   it("air-quality-20260621: record/row count·날짜·export가 demo source와 일치한다(generic 1,200/2026-08-14 재사용 금지)", async () => {
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
     // Bronze/Silver/Gold 모두 demo recordCount(12,304)를 그대로 보여준다.
@@ -338,7 +338,7 @@ describe("DEMO_DATASETS ↔ Stage detail 정합성 (#286 후속 보완 §2)", ()
 
 describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
   it("succeeded run: Source → Bronze → Silver → Gold → Output 흐름이 모두 completed로 표시된다", async () => {
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
     expect(screen.getByText("Bronze")).toBeInTheDocument();
@@ -349,7 +349,7 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
   });
 
   it("failed run: failed stage 이후 not_run은 '미도달'로 표시된다", async () => {
-    renderBuilds("/builds?run=dur-older-adult-caution-20260618");
+    renderBuilds("/refresh-jobs?run=dur-older-adult-caution-20260618");
     await screen.findByRole("heading", { name: "노인주의 의약품" });
 
     expect(screen.getByText("failed")).toBeInTheDocument();
@@ -358,7 +358,7 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
   });
 
   it("partial multi-source: source별로 서로 다른 진행 위치를 각자의 row로 보여준다", async () => {
-    renderBuilds("/builds?run=air-2026-08-14");
+    renderBuilds("/refresh-jobs?run=air-2026-08-14");
     await waitFor(() => expect(screen.getAllByText("datago__air").length).toBeGreaterThan(0));
 
     expect(screen.getAllByText("kma__weather").length).toBeGreaterThan(0);
@@ -374,7 +374,7 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   });
 
   it("API Key 미설정: '이 Run 분석' 클릭 시 seed하지 않고 inline card에 설정 안내만 연다", async () => {
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
@@ -391,7 +391,7 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   });
 
   it("API Key 미설정: 'Ask KPubData 설정 열기'를 누르면 기존 Ask KPubData Drawer를 연다", async () => {
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
@@ -405,7 +405,7 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   it("API Key 설정됨: '이 Run 분석' 클릭 시 기존처럼 seed하고 분석을 시작한다(no-key 안내가 뜨지 않음)", async () => {
     useAssistConfig.getState().setConfig({ apiKey: "sk-test" });
 
-    renderBuilds("/builds?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
