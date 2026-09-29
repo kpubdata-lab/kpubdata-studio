@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- A cancelled run's event timeline parses again, and fetch progress is accepted (builder#648). The event-name schema lacked `run_cancelled`, which Builder has emitted for a cancelled async run since builder#481, so every cancelled run's timeline failed to parse. It now also accepts `source_fetch_progress`, which Builder emits after each `param_grid` combination.
+
 ### Added
 
 - Connections shows **where to apply** (#412): every source dataset the catalog marks as needing an application, grouped by the page where the application is made — one application can unlock several — with a direct link, the provider's daily cap and a guide to moving to an operational account on data.go.kr. A cap the spec does not state, and today's usage (KPubData Engine does not count calls per key), read as unknown, never zero; datasets whose catalog entry says nothing about an application are counted as unknown, not "not needed". The catalog's `quota` is optional until KPubData Engine sends it (kpubdata-builder#778).

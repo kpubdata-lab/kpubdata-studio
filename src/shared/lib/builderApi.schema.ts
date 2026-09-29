@@ -903,7 +903,13 @@ export const buildEventNameSchema = z.enum([
   "run_started",
   "run_finished",
   "run_failed",
+  // Builder has emitted this for a cancelled async run since builder#481. Missing
+  // here, every cancelled run's timeline failed to parse.
+  "run_cancelled",
   "source_fetch_started",
+  // One per finished param_grid combination (builder#648), so a long fetch shows
+  // progress instead of going silent.
+  "source_fetch_progress",
   "source_fetch_completed",
   "source_fetch_failed",
   "stage_started",
