@@ -27,6 +27,10 @@ export default defineConfig({
       VITE_USE_REAL_BUILDER: "true",
       VITE_BUILDER_API_URL: process.env.REAL_BUILDER_URL ?? "http://localhost:8000",
       VITE_DEV_BYPASS_AUTH: "true",
+      // A Studio one minor release behind the Engine under test, so the release-mismatch
+      // banner is checked against the real GET /version (#480). The other specs run
+      // with it showing, which also checks the banner never blocks a screen.
+      KPUBDATA_STUDIO_VERSION: "0.3.0",
     },
   },
   // 이 슈트는 @real-builder 태그 스펙만 실행한다(mock 스펙은 기본 config 담당).
