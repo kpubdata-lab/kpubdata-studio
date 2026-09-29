@@ -140,6 +140,23 @@ export const buildManifestResponseSchema = z.object({
 }).loose();
 
 /**
+ * How Builder sends a column's values (builder#735, API contract 1.30.0).
+ *
+ * `decimal_string`: the values are exact decimal text — every Decimal column, and an
+ * integer column holding a value outside ±(2^53−1). Never pass them through `Number()`:
+ * a JSON number is a double, and `9007199254740993` becomes `…992`.
+ *
+ * Optional everywhere: a Builder older than 1.30.0 does not send it.
+ */
+export const wireEncodingSchema = z.enum(["number", "decimal_string", "string", "boolean", "json"]);
+
+export const columnWireInfoSchema = z.object({
+  name: z.string(),
+  logical_type: z.string(),
+  wire_encoding: wireEncodingSchema,
+});
+
+/**
  * Preview column schema item
  */
 export const previewColumnSchema = z.object({
@@ -147,6 +164,8 @@ export const previewColumnSchema = z.object({
   dtype: z.string(),
   nullable: z.boolean(),
   unique_count: z.number(),
+  logical_type: z.string().optional(),
+  wire_encoding: wireEncodingSchema.optional(),
 });
 
 // previewSourceSchema/previewResponseSchema depend on tableStatisticsSchema and qualityCheckResultSchema
@@ -468,6 +487,10 @@ export const silverColumnInfoSchema = z.object({
   dtype: z.string(),
   nullable: z.boolean(),
   unique_count: z.number().int(),
+  // builder#735 (1.30.0). Strict schema: without these, a 1.30.0 Builder's stage detail
+  // would fail to parse. Absent for runs written before 1.30.0.
+  logical_type: z.string().optional(),
+  wire_encoding: wireEncodingSchema.optional(),
 }).strict();
 
 export const tableStatisticsSchema = z.object({
@@ -707,6 +730,8 @@ export const jsonQueryValueSchema = z.json();
 
 export const queryResponseSchema = z.object({
   columns: z.array(z.string()),
+  // builder#735 (1.30.0): per column, whether its values arrive as exact decimal text.
+  column_meta: z.array(columnWireInfoSchema).optional(),
   rows: z.array(z.record(z.string(), jsonQueryValueSchema)),
   truncated: z.boolean(),
   execution_ms: z.number().int().nonnegative(),
