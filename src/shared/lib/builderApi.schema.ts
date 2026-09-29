@@ -414,6 +414,30 @@ export const sourceStageStatusSchema = z.object({
 
 export const datasetStageMapSchema = z.record(z.string(), sourceStageStatusSchema);
 
+/**
+ * A table's state on each axis kpubdata's TERMINOLOGY keeps apart (builder#781, API
+ * 1.37+). One field per axis, never merged into one badge; an axis with nothing to go on
+ * is `unknown`. `access` uses kpubdata's probe identifiers (`PROBE_STATUSES`) as they are.
+ */
+export const datasetStatusAxesSchema = z.object({
+  refresh: z.enum(["queued", "running", "succeeded", "failed", "cancelled", "unknown"]),
+  completeness: z.enum(["complete", "partial", "unknown"]),
+  health: z.enum(["healthy", "stale", "degraded", "unknown"]),
+  access: z.enum([
+    "available",
+    "auth_unknown",
+    "application_required",
+    "params_invalid",
+    "rate_limited",
+    "temporarily_unavailable",
+    "network_error",
+    "insufficient_metadata",
+    "retired",
+    "unknown",
+  ]),
+  maturity: z.enum(["stable", "beta", "experimental", "unknown"]),
+});
+
 export const datasetSummarySchema = z.object({
   dataset_id: z.string(),
   title: z.string(),
@@ -425,6 +449,8 @@ export const datasetSummarySchema = z.object({
   total_row_count: z.number().int(),
   stages: datasetStageMapSchema,
   quality: z.null(),
+  // Optional: an Engine older than builder#781 does not send it; Studio then shows none.
+  status_axes: datasetStatusAxesSchema.optional(),
 });
 
 export const datasetDetailResponseSchema = datasetSummarySchema.extend({
@@ -775,6 +801,7 @@ export type StageStatus = z.infer<typeof stageStatusSchema>;
 export type DatasetSourceRef = z.infer<typeof datasetSourceRefSchema>;
 export type SourceStageStatus = z.infer<typeof sourceStageStatusSchema>;
 export type DatasetSummary = z.infer<typeof datasetSummarySchema>;
+export type DatasetStatusAxes = z.infer<typeof datasetStatusAxesSchema>;
 export type DatasetDetailResponse = z.infer<typeof datasetDetailResponseSchema>;
 export type DatasetsResponse = z.infer<typeof datasetsResponseSchema>;
 export type DatasetRunSummary = z.infer<typeof datasetRunSummarySchema>;
