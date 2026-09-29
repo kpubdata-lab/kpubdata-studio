@@ -200,7 +200,7 @@ function renderHomeWithAssistantRoute() {
     <MemoryRouter initialEntries={["/"]}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/kubi" element={<div>ASSISTANT ROUTE STUB</div>} />
+        <Route path="/assistant" element={<div>ASSISTANT ROUTE STUB</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -239,7 +239,7 @@ describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-assistant-suggest)", () 
     expect(await screen.findAllByRole("heading", { name: HERO_HEADING })).toHaveLength(1);
   });
 
-  it("configured: submitting a question seeds it and navigates to /kubi (not the drawer)", async () => {
+  it("configured: submitting a question seeds it and navigates to /assistant (not the drawer)", async () => {
     useEmptyBuildsRealMode();
     configureKey();
     renderHomeWithAssistantRoute();
@@ -252,7 +252,7 @@ describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-assistant-suggest)", () 
     expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
   });
 
-  it("not configured: navigates to /kubi without seeding a question or creating a no_key turn", async () => {
+  it("not configured: navigates to /assistant without seeding a question or creating a no_key turn", async () => {
     useEmptyBuildsRealMode();
     renderHomeWithAssistantRoute();
     const input = await screen.findByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
@@ -265,7 +265,7 @@ describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-assistant-suggest)", () 
     expect(useAssistantStore.getState().turns).toHaveLength(0);
   });
 
-  it("configured: clicking a suggested-question chip seeds it and navigates to /kubi", async () => {
+  it("configured: clicking a suggested-question chip seeds it and navigates to /assistant", async () => {
     useEmptyBuildsRealMode();
     configureKey();
     renderHomeWithAssistantRoute();
@@ -306,7 +306,7 @@ describe("Home Ask KPubData Hero (#Phase2 UI polish, #S-assistant-suggest)", () 
     useEmptyBuildsRealMode();
     useAssistantStore.setState({ turns: [], onboarded: false, pendingSeed: "서울 대기오염 데이터로 뭘 할 수 있어?" });
     render(
-      <MemoryRouter initialEntries={["/kubi"]}>
+      <MemoryRouter initialEntries={["/assistant"]}>
         <AssistantPage />
       </MemoryRouter>,
     );

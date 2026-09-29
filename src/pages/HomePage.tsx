@@ -416,14 +416,14 @@ function WorkflowStrip() {
 /**
  * Home's Assistant natural language hero (#Phase2 UI polish, #S-assistant-suggest).
  *
- * Full Assistant task starts at `/kubi` page (not drawer). Reuse only existing seed mechanism
- * (`useAssistantStore().seedQuestion`), don't create new assistant system — when `/kubi` mounts,
+ * Full Assistant task starts at `/assistant` page (not drawer). Reuse only existing seed mechanism
+ * (`useAssistantStore().seedQuestion`), don't create new assistant system — when `/assistant` mounts,
  * `useAssistantSession` consumes pendingSeed to generate answer. Don't put question in URL query
  * (pass via seed store only).
  *
  * `ask()` (useAssistantSession.ts) runs immediately on seed receive and creates `no_key` error turn
  * if API Key not configured. To avoid unwanted error turn, only keep seed when `isConfigured`,
- * otherwise navigate to `/kubi` without seed and show API Key configuration guide on that screen.
+ * otherwise navigate to `/assistant` without seed and show API Key configuration guide on that screen.
  */
 function AssistantHero() {
   const { t } = useTranslation();
@@ -436,7 +436,7 @@ function AssistantHero() {
   function ask(question: string) {
     const trimmed = question.trim();
     if (trimmed && isConfigured) seedQuestion(trimmed);
-    navigate("/kubi");
+    navigate("/assistant");
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {

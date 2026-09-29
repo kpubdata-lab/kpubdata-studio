@@ -28,7 +28,7 @@ function makeReport(overrides: Partial<ReportDraft> = {}): ReportDraft {
       },
       {
         id: "k1",
-        provenance: "KUBI_INTERPRETATION",
+        provenance: "ASSISTANT_INTERPRETATION",
         note: '<script>alert(1)</script> price 결측이 특정 지역에 집중되어 있습니다.',
         reason: "Gold column profile",
         sourceContext: { datasetId: "air-quality", runId: "air-2026-08-14" },
@@ -100,7 +100,7 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
       blocks: [
         {
           id: "k2",
-          provenance: "KUBI_INTERPRETATION",
+          provenance: "ASSISTANT_INTERPRETATION",
           note: "다른 run 분석",
           reason: "x",
           sourceContext: { datasetId: "air-quality", runId: "air-2026-08-13" },

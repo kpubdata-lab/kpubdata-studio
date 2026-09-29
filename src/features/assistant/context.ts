@@ -33,10 +33,7 @@ const ROUTES: RouteMatch[] = [
   { test: /^\/builds\/[^/]+(\/|$)/, page: "build-detail", labelKey: "build-detail" },
   { test: /^\/builds(\/|$)/, page: "builds", labelKey: "builds" },
   { test: /^\/quality(\/|$)/, page: "quality", labelKey: "quality" },
-  // The URL is still `/kubi` — only the code was renamed (#446). Matching
-  // `/assistant` here would silently stop resolving the page it names. #449
-  // moves the URL, with a redirect.
-  { test: /^\/kubi(\/|$)/, page: "assistant", labelKey: "assistant" },
+  { test: /^\/assistant(\/|$)/, page: "assistant", labelKey: "assistant" },
   { test: /^\/reports(\/|$)/, page: "reports", labelKey: "reports" },
   { test: /^\/provider(\/|$)/, page: "provider", labelKey: "provider" },
   { test: /^\/monitoring(\/|$)/, page: "monitoring", labelKey: "monitoring" },

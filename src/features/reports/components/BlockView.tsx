@@ -89,7 +89,7 @@ export function BlockView({
   onRemoveAssistantBlock,
 }: {
   block: ReportBlock;
-  /** KUBI_INTERPRETATION block passed only when its dataset/run context matches this Report (#258 §7). */
+  /** ASSISTANT_INTERPRETATION block passed only when its dataset/run context matches this Report (#258 §7). */
   reportEvidenceRefs?: ReportEvidenceRef[];
   onEditUserContent?: (id: string) => void;
   onDeleteUserContent?: (id: string) => void;
@@ -100,13 +100,13 @@ export function BlockView({
     return <BuilderEvidenceBlockCard block={block} />;
   }
 
-  if (block.provenance === "KUBI_INTERPRETATION") {
+  if (block.provenance === "ASSISTANT_INTERPRETATION") {
     return (
       <Card className="space-y-2 border-indigo-200 dark:border-indigo-900/60" data-testid="block-assistant">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">{t("reports.block.assistantTitle")}</h3>
           <div className="flex items-center gap-2">
-            <ProvenanceBadge provenance="KUBI_INTERPRETATION" />
+            <ProvenanceBadge provenance="ASSISTANT_INTERPRETATION" />
             {onRemoveAssistantBlock ? (
               <button
                 type="button"

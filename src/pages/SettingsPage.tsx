@@ -301,7 +301,7 @@ function AssistantByokSection() {
           {t("settings.byok.title")}
         </p>
         <Link
-          to="/kubi"
+          to="/assistant"
           className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
         >
           {t("settings.byok.configure")}

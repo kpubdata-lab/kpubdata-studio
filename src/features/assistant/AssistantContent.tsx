@@ -1,7 +1,7 @@
 /**
  * Assistant conversation UI (#256).
  *
- * `AssistantDrawer` (global drawer) and `/kubi` dedicated page share this single component — don't create
+ * `AssistantDrawer` (global drawer) and `/assistant` dedicated page share this single component — don't create
  * a second Assistant system. `compact` differs only layout between drawer (narrow) and page (wide);
  * all state logic lives in `useAssistantSession`.
  */

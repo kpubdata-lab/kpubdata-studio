@@ -12,7 +12,7 @@ describe("resolveAssistantContext (#247, #256)", () => {
     expect(resolveAssistantContext("/workspace").pageLabel).toBe("Workspace");
     expect(resolveAssistantContext("/add").pageLabel).toBe("Add Data");
     expect(resolveAssistantContext("/quality").pageLabel).toBe("Quality");
-    expect(resolveAssistantContext("/kubi").pageLabel).toBe("Ask KPubData");
+    expect(resolveAssistantContext("/assistant").pageLabel).toBe("Ask KPubData");
     expect(resolveAssistantContext("/reports").pageLabel).toBe("Reports");
     expect(resolveAssistantContext("/provider").pageLabel).toBe("Provider");
     expect(resolveAssistantContext("/monitoring").pageLabel).toBe("Monitoring");

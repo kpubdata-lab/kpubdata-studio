@@ -34,7 +34,7 @@ function renderSettings() {
       <Routes>
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/provider" element={<div>PROVIDER_PAGE</div>} />
-        <Route path="/kubi" element={<div>ASSISTANT_PAGE</div>} />
+        <Route path="/assistant" element={<div>ASSISTANT_PAGE</div>} />
         <Route path="/login" element={<div>LOGIN_PAGE</div>} />
       </Routes>
     </MemoryRouter>,
@@ -138,7 +138,7 @@ describe("SettingsPage 통합 (#301)", () => {
 
     expect(screen.getByText(/메모리에만 보관/)).toBeInTheDocument();
     expect(screen.getByText(/브라우저 저장: 꺼짐/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ask KPubData 에서 설정" })).toHaveAttribute("href", "/kubi");
+    expect(screen.getByRole("link", { name: "Ask KPubData 에서 설정" })).toHaveAttribute("href", "/assistant");
   });
 
   it("로그인 상태에서 계정 영역이 이메일과 로그아웃을 표시한다", async () => {

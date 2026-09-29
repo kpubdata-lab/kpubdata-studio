@@ -146,11 +146,11 @@ describe("reports repository (#258 §11)", () => {
   it("evidenceRefs/blocks를 저장한 그대로 되돌려준다(provenance 보존)", () => {
     const blocks: ReportDraft["blocks"] = [
       { id: "e1", provenance: "BUILDER_EVIDENCE", section: "overview", title: "1. Overview", markdown: "x", evidenceStatus: "ok", createdAt: "x", updatedAt: "x" },
-      { id: "k1", provenance: "KUBI_INTERPRETATION", note: "note", reason: "reason", sourceContext: {}, isSameContext: true, generatedAt: "x", createdAt: "x", updatedAt: "x" },
+      { id: "k1", provenance: "ASSISTANT_INTERPRETATION", note: "note", reason: "reason", sourceContext: {}, isSameContext: true, generatedAt: "x", createdAt: "x", updatedAt: "x" },
       { id: "u1", provenance: "USER_CONTENT", heading: "h", markdown: "m", createdAt: "x", updatedAt: "x" },
     ];
     const { report } = createReport(makeInput({ blocks }));
     const reloaded = getReport(report.id)!;
-    expect(reloaded.blocks.map((b) => b.provenance)).toEqual(["BUILDER_EVIDENCE", "KUBI_INTERPRETATION", "USER_CONTENT"]);
+    expect(reloaded.blocks.map((b) => b.provenance)).toEqual(["BUILDER_EVIDENCE", "ASSISTANT_INTERPRETATION", "USER_CONTENT"]);
   });
 });

@@ -223,11 +223,7 @@ export const router = createBrowserRouter([
        // New IA AI group (actual feature implementation in #256). Global Assistant drawer
        // mounted separately at Layout level in `src/features/assistant/AssistantDrawer.tsx`.
       {
-        // The URL stays `/kubi` while the code is called `assistant` (#446). The
-        // rename was a rename; changing the address bar would break every bookmark
-        // and every link someone already shared, which is a product change and not
-        // this one. #449 carries it, with a redirect so neither URL 404s.
-        path: "kubi",
+        path: "assistant",
         element: withFeatureBoundary("router.features.Assistant", <AssistantPage />),
       },
       {

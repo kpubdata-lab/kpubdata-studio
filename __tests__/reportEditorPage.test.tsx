@@ -73,7 +73,7 @@ function makeAssistantBlock(overrides: Partial<AssistantInterpretationBlock> = {
   const now = new Date().toISOString();
   return {
     id: "assistant-1",
-    provenance: "KUBI_INTERPRETATION",
+    provenance: "ASSISTANT_INTERPRETATION",
     note: "가격 결측이 특정 지역에 집중됩니다.",
     reason: "품질 이슈 참고용",
     sourceContext: { datasetId: "air-quality", runId: "air-2026-08-14" },
@@ -330,7 +330,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     expect(screen.getByTestId("location").textContent).not.toContain("air-2026-08-14");
   });
 
-  it("생성 → 미리보기까지는 Report에 아무것도 저장하지 않고, '보고서에 추가'를 눌러야 KUBI_INTERPRETATION 블록이 추가된다", async () => {
+  it("생성 → 미리보기까지는 Report에 아무것도 저장하지 않고, '보고서에 추가'를 눌러야 ASSISTANT_INTERPRETATION 블록이 추가된다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     renderReport(report.id);
 
@@ -347,17 +347,17 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     const preview = await screen.findByTestId("assistant-report-preview");
     // 승인 전에는 Report에 저장되지 않는다.
     expect(screen.queryByTestId("block-assistant")).not.toBeInTheDocument();
-    expect(getReport(report.id)?.blocks.some((block) => block.provenance === "KUBI_INTERPRETATION")).toBe(false);
+    expect(getReport(report.id)?.blocks.some((block) => block.provenance === "ASSISTANT_INTERPRETATION")).toBe(false);
 
     fireEvent.click(within(preview).getByRole("button", { name: "보고서에 추가" }));
 
     const assistantBlock = await screen.findByTestId("block-assistant");
     // note 본문(생성된 분석 답변) 자체가 그대로 반영됐는지 확인한다 — "판단 근거" 줄과는 다른 문구를 쓴다.
     expect(within(assistantBlock).getByText(/mock 데이터 기반 예시 응답입니다/)).toBeInTheDocument();
-    expect(getReport(report.id)?.blocks.some((block) => block.provenance === "KUBI_INTERPRETATION")).toBe(true);
+    expect(getReport(report.id)?.blocks.some((block) => block.provenance === "ASSISTANT_INTERPRETATION")).toBe(true);
   });
 
-  it("대기 중인 참고 노트를 승인하면 기존 동작대로 KUBI_INTERPRETATION 블록이 추가된다(ADD_REPORT_BLOCK 승인 흐름 유지)", async () => {
+  it("대기 중인 참고 노트를 승인하면 기존 동작대로 ASSISTANT_INTERPRETATION 블록이 추가된다(ADD_REPORT_BLOCK 승인 흐름 유지)", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     queueAssistantReportNote({
       note: "가격 결측이 특정 지역에 집중됩니다.",

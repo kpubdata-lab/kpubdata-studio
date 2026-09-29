@@ -17,7 +17,7 @@ describe("reportNoteToBlock / noteMatchesReportContext (#258 §6, §7)", () => {
     const note = makeNote();
     const block = reportNoteToBlock(note, { datasetId: "air-quality", baseRunId: "air-2026-08-14" });
 
-    expect(block.provenance).toBe("KUBI_INTERPRETATION");
+    expect(block.provenance).toBe("ASSISTANT_INTERPRETATION");
     expect(block.isSameContext).toBe(true);
     expect(noteMatchesReportContext(note, { datasetId: "air-quality", baseRunId: "air-2026-08-14" })).toBe(true);
   });

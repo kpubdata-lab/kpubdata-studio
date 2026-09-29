@@ -51,7 +51,7 @@ function configureKeyAndAsk() {
 
 async function askAbout(datasetId: string) {
   render(
-    <MemoryRouter initialEntries={[`/kubi?dataset=${datasetId}`]}>
+    <MemoryRouter initialEntries={[`/assistant?dataset=${datasetId}`]}>
       <AssistantPage />
     </MemoryRouter>,
   );
