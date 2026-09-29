@@ -1,0 +1,63 @@
+# gitleaks findings reviewed and judged not to be live secrets (kpubdata-builder#691).
+#
+# Each line is a fingerprint `commit:file:rule:line` from `gitleaks git`. Add one only
+# after reading the matched value, and say here what it is — an unexplained entry is
+# how a real key gets waved through.
+
+# .next/ — Next.js build output committed by accident in #402 (d2fa133) and removed in
+# #691. The matches are previewModeSigningKey / previewModeEncryptionKey / server-action
+# encryption keys that Next generates at random for each build. This project is built
+# with Vite; no deployment ever ran that build, so the keys protect nothing. They stay
+# in history, which is not rewritten.
+d2fa133bd8e3fdf309cd750b0817bc237b6e71a4:.next/cache/.previewinfo:generic-api-key:1
+d2fa133bd8e3fdf309cd750b0817bc237b6e71a4:.next/cache/.rscinfo:generic-api-key:1
+d2fa133bd8e3fdf309cd750b0817bc237b6e71a4:.next/prerender-manifest.json:generic-api-key:159
+d2fa133bd8e3fdf309cd750b0817bc237b6e71a4:.next/prerender-manifest.json:generic-api-key:160
+d2fa133bd8e3fdf309cd750b0817bc237b6e71a4:.next/server/server-reference-manifest.json:generic-api-key:4
+
+# tests — fixtures that exist to prove a key is redacted or scrubbed before it leaves:
+# obviously synthetic values such as "abcdef0123456789…", "sk-live-secret-abc123" and
+# random-looking strings made up for entropy-based scrubbing tests (scrub.ts, #256).
+4b400342dcd16282270d4e08af0715e6121a37c6:src/features/assistant/scrub.test.ts:generic-api-key:13
+84e6e5affc5fb6c7974e2ea7aa71e54b1171bcb4:src/features/assistant/provider.test.ts:generic-api-key:138
+8fe3aa30d7714a82f5102fe28b0d178ccd2848f4:src/features/assistant/columnMeaning.test.ts:generic-api-key:10
+ab252215239c7d2b95da23d05ecc88e6ba965b8b:src/features/assistant/provider.test.ts:generic-api-key:11
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:__tests__/newBuildDraft.test.tsx:generic-api-key:60
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:__tests__/newBuildDraft.test.tsx:generic-api-key:95
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:__tests__/newBuildEditRedacted.test.tsx:generic-api-key:52
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:src/features/build-spec/specStore.test.ts:generic-api-key:141
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:src/features/build-spec/specStore.test.ts:generic-api-key:151
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:src/features/build-spec/specStore.test.ts:generic-api-key:177
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:src/features/build-spec/specStore.test.ts:generic-api-key:84
+b7a8806987c2e917204b34f70a6b7d4ad56bcae5:src/features/kubi/actions.test.ts:generic-api-key:166
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:109
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:115
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:122
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:134
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/draftStorage.test.ts:generic-api-key:137
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/draftStorage.test.ts:generic-api-key:147
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/draftStorage.test.ts:generic-api-key:159
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/draftStorage.test.ts:generic-api-key:76
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/model.test.ts:generic-api-key:233
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/model.test.ts:generic-api-key:251
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/paramsRedaction.test.ts:generic-api-key:11
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/urlRedaction.test.ts:generic-api-key:116
+bef89cc0f02f1400d97fa552a497511893adc6e0:src/features/add-data/urlRedaction.test.ts:generic-api-key:127
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:49
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:56
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:68
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/components/ReviewBuildStep.test.tsx:generic-api-key:80
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/draftStorage.test.ts:generic-api-key:34
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/draftStorage.test.ts:generic-api-key:48
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/draftStorage.test.ts:generic-api-key:61
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/model.test.ts:generic-api-key:168
+c2411635de498a0f15186bc90f0aa5516e44da03:src/features/add-data/urlRedaction.test.ts:generic-api-key:11
+c5e247585892e7043cb82ba29092da69979cdc1d:__tests__/getBuildAuthoritative.test.ts:generic-api-key:25
+d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:104
+d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:13
+d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:63
+d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:71
+d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:78
+d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:87
+eff3e573ed9b8990a3a1585e0db2bcd0a590592c:src/features/assistant/provider.test.ts:generic-api-key:11
+f5249d9071a8692fbe9aaa33be2d06c9b00fb0ce:src/features/assistant/provider.test.ts:generic-api-key:125

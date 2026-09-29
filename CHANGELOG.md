@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Security
+
+- The repository no longer tracks `.next/` and `next-env.d.ts` — 229 files of Next.js build output committed by accident with #402, in a project built with Vite (kpubdata-builder#691). A new `Security` workflow runs `npm audit` over `package-lock.json`, gitleaks over the full history and CodeQL, on every pull request and weekly; the history's reviewed findings (that build's per-build Next keys, and synthetic keys in redaction tests) are listed with their reasons in `.gitleaksignore`.
+
 ### Changed
 
 - Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004).
