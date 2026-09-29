@@ -13,7 +13,7 @@ const ROUTES: Array<{ path: string; heading: RegExp | string }> = [
   { path: "/", heading: /KPubData|데이터/ },
   { path: "/discover", heading: "데이터 탐색" },
   { path: "/builds/new", heading: /템플릿 선택|기본 정보/ },
-  { path: "/builds", heading: /빌드|Build/ },
+  { path: "/builds", heading: /실행 이력|Run History/ },
   { path: "/workspace", heading: "작업대" },
   { path: "/provider", heading: "데이터 제공 기관 연결" },
   { path: "/monitoring", heading: "시스템 모니터링" },

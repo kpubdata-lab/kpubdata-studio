@@ -35,7 +35,7 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
   it("never fabricates a dataset — with no dataset evidence it says so plainly and adds no dataset ref/actions", () => {
     const response = buildAssistantDemoResponse(baseEvidence({ context: { page: "home" } }));
     expect(response.answer).toContain("[DEMO]");
-    expect(response.answer).toContain("선택된 Dataset이 없어");
+    expect(response.answer).toContain("선택된 테이블이 없어");
     expect(response.evidenceRefs).toHaveLength(0);
     expect(response.suggestedActions).toHaveLength(0);
     expect(response.generatedSql).toBeNull();

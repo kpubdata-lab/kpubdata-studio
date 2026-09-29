@@ -379,7 +379,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
     expect(result.current.isDemoAvailable).toBe(true);
 
     await act(async () => {
-      await result.current.askDemo("이 데이터셋 품질 어때?");
+      await result.current.askDemo("이 테이블 품질 어때?");
     });
 
     expect(createProvider).not.toHaveBeenCalled();
@@ -395,7 +395,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
     expect(result.current.isDemoAvailable).toBe(false);
 
     await act(async () => {
-      await result.current.askDemo("이 데이터셋 품질 어때?");
+      await result.current.askDemo("이 테이블 품질 어때?");
     });
 
     expect(result.current.turns).toHaveLength(0);

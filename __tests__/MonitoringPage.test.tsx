@@ -252,7 +252,7 @@ describe("MonitoringPage", () => {
     await user.click(await screen.findByRole("button", { name: "Build Statistics" }));
 
     await waitFor(() => {
-      expect(screen.getByText(/빌드 기록이 없습니다/)).toBeInTheDocument();
+      expect(screen.getByText(/실행 기록이 없습니다/)).toBeInTheDocument();
     });
   });
 

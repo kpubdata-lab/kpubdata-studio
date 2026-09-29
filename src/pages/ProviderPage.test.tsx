@@ -157,7 +157,7 @@ describe("ProviderPage 연결 상태 표현 (credential readiness)", () => {
     expect(screen.getByText("연결 상태")).toBeInTheDocument();
     // With a user-saved credential: "API Key registered" + Preview guidance.
     expect(screen.getAllByText("API Key 등록됨").length).toBeGreaterThan(0);
-    expect(screen.getByText(/실제 Dataset API 사용 가능 여부는 Add Data의 Preview/)).toBeInTheDocument();
+    expect(screen.getByText(/실제 소스 데이터셋 API 사용 가능 여부는 Add Data의 Preview/)).toBeInTheDocument();
     // There is no generic probe UI.
     expect(screen.queryByRole("button", { name: "연결 테스트" })).not.toBeInTheDocument();
     expect(screen.queryByText("연결 / 실제 API 확인")).not.toBeInTheDocument();

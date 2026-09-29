@@ -411,6 +411,7 @@ export function NewBuildPage() {
                 if (specPreview.spec) void job.start(specPreview.spec);
               }}
               onSaveSpec={saveAsSavedSpec}
+              isRefresh={isEditMode}
             />
           ) : null}
 

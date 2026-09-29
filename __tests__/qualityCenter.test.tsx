@@ -25,7 +25,7 @@ afterEach(() => vi.unstubAllEnvs());
 describe("Quality Center P0 (#254)", () => {
   it("defaults to the first dataset and its latest run", async () => {
     renderQuality();
-    expect(await screen.findByLabelText("Dataset 선택")).toHaveValue("air-quality");
+    expect(await screen.findByLabelText("테이블 선택")).toHaveValue("air-quality");
     await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
   });
 
@@ -94,7 +94,7 @@ describe("Quality Center P0 (#254)", () => {
   it("hides the Dataset Detail link for the all-sources context and shows it once a source is selected", async () => {
     renderQuality("/quality?dataset=air-quality");
     await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
-    expect(screen.queryByRole("link", { name: "Dataset Detail에서 보기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Table Detail에서 보기" })).not.toBeInTheDocument();
 
     // Source select는 stagesState가 "loaded"될 때까지 disabled 상태다 — 이 대기 없이 바로
     // fireEvent.change를 보내면(느린 러너에서는 stagesState 로딩이 아직 끝나지 않아) change가
@@ -103,7 +103,7 @@ describe("Quality Center P0 (#254)", () => {
     await waitFor(() => expect(sourceSelect).toBeEnabled());
 
     fireEvent.change(sourceSelect, { target: { value: "kma__weather" } });
-    const link = await screen.findByRole("link", { name: "Dataset Detail에서 보기" });
+    const link = await screen.findByRole("link", { name: "Table Detail에서 보기" });
     expect(link).toHaveAttribute("href", expect.stringContaining("source=kma__weather"));
   });
 
@@ -146,7 +146,7 @@ describe("Quality Center P0 (#254)", () => {
     vi.resetModules();
     const { QualityPage: FreshQualityPage } = await import("@/pages/QualityPage");
     render(<MemoryRouter initialEntries={["/quality"]}><FreshQualityPage /></MemoryRouter>);
-    expect(await screen.findByText("데이터셋이 없습니다")).toBeInTheDocument();
+    expect(await screen.findByText("테이블이 없습니다")).toBeInTheDocument();
     vi.doUnmock("@/features/datasets/api");
     vi.resetModules();
   });
@@ -183,7 +183,7 @@ describe("Quality Center: review follow-ups (#254 issue review comment)", () => 
     await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
     const heading = await screen.findByText("Rule pass rate");
     const card = heading.parentElement!;
-    expect(within(card).getByText(/Dataset: 대기질 통합 데이터/)).toBeInTheDocument();
+    expect(within(card).getByText(/Table: 대기질 통합 데이터/)).toBeInTheDocument();
     expect(within(card).getByText(/Run: air-2026-08-14/)).toBeInTheDocument();
     expect(within(card).getByText(/Source: 전체 소스/)).toBeInTheDocument();
   });
@@ -222,7 +222,7 @@ describe("Quality Center: review follow-ups (#254 issue review comment)", () => 
     renderQuality();
     const heading = await screen.findByText("Recent quality issues");
     const card = heading.closest("div")!.parentElement!;
-    const link = within(card).getByRole("link", { name: "Build 보기" });
+    const link = within(card).getByRole("link", { name: "Run 보기" });
     expect(link).toHaveAttribute("href", "/builds/air-2026-08-14");
   });
 });
@@ -263,7 +263,7 @@ describe("Quality Center: API/permission errors are shown, never silently swallo
     const { QualityPage: FreshQualityPage } = await import("@/pages/QualityPage");
     render(<MemoryRouter initialEntries={["/quality"]}><FreshQualityPage /></MemoryRouter>);
 
-    expect(await screen.findByText("데이터셋 목록을 불러오지 못했습니다")).toBeInTheDocument();
-    expect(screen.queryByText("데이터셋이 없습니다")).not.toBeInTheDocument();
+    expect(await screen.findByText("테이블 목록을 불러오지 못했습니다")).toBeInTheDocument();
+    expect(screen.queryByText("테이블이 없습니다")).not.toBeInTheDocument();
   });
 });

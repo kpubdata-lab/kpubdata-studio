@@ -234,7 +234,7 @@ describe("draftValuesFromAction / applyCreateBuildDraft (#256)", () => {
     expect(values.outputPath).toContain("d1");
   });
 
-  it("writes to the New Build wizard's single draft slot", () => {
+  it("writes to the Create Table wizard's single draft slot", () => {
     const action: Extract<AssistantAction, { type: "CREATE_BUILD_DRAFT" }> = {
       type: "CREATE_BUILD_DRAFT",
       values: { datasetId: "d1", title: "t", description: "d", provider: "datago", sourceDataset: "air_quality" },

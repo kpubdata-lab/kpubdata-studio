@@ -41,7 +41,7 @@ describe("identityFromCatalog (Public API, #250 amendment 2)", () => {
 
   it("If catalog description null, use factual default (source only, don't fabricate)", () => {
     const identity = identityFromCatalog("datago", dataset({ description: null }));
-    expect(identity.description).toBe("datago/apt_trade 데이터셋입니다.");
+    expect(identity.description).toBe("datago/apt_trade 소스 데이터셋으로 만든 테이블입니다.");
   });
 });
 

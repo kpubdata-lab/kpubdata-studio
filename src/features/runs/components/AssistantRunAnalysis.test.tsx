@@ -44,7 +44,7 @@ function baseTurn(overrides: Partial<AssistantTurn> = {}): AssistantTurn {
 function session(overrides: Partial<UseAssistantSessionResult> = {}): UseAssistantSessionResult {
   return {
     liveContext: { page: "builds", runId: "run-1" },
-    pageLabel: "Builds / Runs",
+    pageLabel: "Runs",
     onboarded: true,
     turns: [],
     isConfigured: true,

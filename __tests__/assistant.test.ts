@@ -225,7 +225,7 @@ describe("generateBuildSpec (ST-A7, #210)", () => {
     const result = await generateBuildSpec(provider, "test", { catalog, validateFn });
 
     expect(result.status).toBe("partial");
-    expect(result.remaining_problems[0]).toContain("provider 'datago'에 없는 dataset");
+    expect(result.remaining_problems[0]).toContain("provider 'datago'에 없는 소스 데이터셋");
     expect(validateFn).not.toHaveBeenCalled();
   });
 

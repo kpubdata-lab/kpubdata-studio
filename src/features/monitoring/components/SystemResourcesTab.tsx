@@ -188,7 +188,7 @@ function ArtifactStoreCard({ stats }: { stats: MonitoringArtifactStoreStats }) {
 
   return (
     <Card>
-      <h3 className="text-lg font-semibold">Artifact Store</h3>
+      <h3 className="text-lg font-semibold">Snapshot File Store</h3>
       <div className="mt-2 flex items-center gap-2">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}>
           {statusLabel}

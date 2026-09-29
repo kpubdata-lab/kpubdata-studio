@@ -209,7 +209,7 @@ describe("BuildArtifactsPage - artifact 실제 다운로드", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("파일을 찾을 수 없습니다 (404)");
     expect(mockSaveBlobAsFile).not.toHaveBeenCalled();
     expect(screen.getByText("Manifest 요약")).toBeInTheDocument();
-    expect(screen.queryByText("결과물을 불러오지 못했습니다")).not.toBeInTheDocument();
+    expect(screen.queryByText("스냅샷 파일을 불러오지 못했습니다")).not.toBeInTheDocument();
   });
 
   it("다른 Run의 artifact 경로와 섞이지 않는다", async () => {
@@ -240,7 +240,7 @@ describe("BuildArtifactsPage - artifact 실제 다운로드", () => {
 
     expect(await screen.findByText("파일 목록을 불러오지 못했습니다")).toBeInTheDocument();
     expect(screen.getByText("Manifest 요약")).toBeInTheDocument();
-    expect(screen.queryByText("결과물을 불러오지 못했습니다")).not.toBeInTheDocument();
+    expect(screen.queryByText("스냅샷 파일을 불러오지 못했습니다")).not.toBeInTheDocument();
   });
 });
 

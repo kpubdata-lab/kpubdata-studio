@@ -187,7 +187,7 @@ export function BuildPublishPage() {
       <Card>
         <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("buildPublish.selectedRun")}</p>
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
-          <div><dt className="text-muted-foreground">Dataset</dt><dd>{datasetLabel || (runContext.status === "loading" ? t("buildPublish.checking") : t("buildPublish.unconfirmed"))}</dd></div>
+          <div><dt className="text-muted-foreground">Table</dt><dd>{datasetLabel || (runContext.status === "loading" ? t("buildPublish.checking") : t("buildPublish.unconfirmed"))}</dd></div>
           <div><dt className="text-muted-foreground">Run ID</dt><dd className="break-all font-mono">{runId || "—"}</dd></div>
           <div><dt className="text-muted-foreground">{t("buildPublish.buildCompleted")}</dt><dd>{buildCompletionText}</dd></div>
           <div><dt className="text-muted-foreground">Target</dt><dd>Hugging Face</dd></div>
@@ -271,7 +271,7 @@ export function BuildPublishPage() {
             <div><dt className="text-muted-foreground">Run ID</dt><dd className="font-mono">{publish.result.run_id}</dd></div>
             <div><dt className="text-muted-foreground">Destination</dt><dd>{publish.result.destination}</dd></div>
             <div><dt className="text-muted-foreground">Publisher</dt><dd>{publish.result.publisher}</dd></div>
-            <div><dt className="text-muted-foreground">Artifacts</dt><dd>{publish.result.artifact_count}</dd></div>
+            <div><dt className="text-muted-foreground">Snapshot files</dt><dd>{publish.result.artifact_count}</dd></div>
           </dl>
           <div className="mt-4 break-all text-sm">Reference: {isSafePublishReference(publish.result.reference) ? <a href={publish.result.reference} target="_blank" rel="noreferrer" className="text-emerald-700 underline dark:text-emerald-300">{publish.result.reference}</a> : <span>{publish.result.reference}</span>}</div>
         </Card>

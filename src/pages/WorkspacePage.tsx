@@ -33,8 +33,8 @@ interface AsyncState<T> {
 }
 
 const KIND_LABEL: Record<RecentWorkKind, string> = {
-  dataset: "Dataset",
-  build: "Build",
+  dataset: "Table",
+  build: "Run",
   report: "Report",
   savedSpec: "Saved BuildSpec",
 };

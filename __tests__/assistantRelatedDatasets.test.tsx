@@ -76,9 +76,9 @@ describe("Ask KPubData 관련 데이터셋 패널 (#256 이슈 체크리스트)"
     configureKeyAndAsk();
     await askAbout("air-quality");
 
-    expect(screen.getByText("관련 데이터셋")).toBeInTheDocument();
+    expect(screen.getByText("관련 소스 데이터셋")).toBeInTheDocument();
     expect(
-      screen.getByText("질문을 보내 evidence를 불러오면 같은 provider의 다른 데이터셋 후보를 확인할 수 있습니다."),
+      screen.getByText("질문을 보내 evidence를 불러오면 같은 provider의 다른 소스 데이터셋 후보를 확인할 수 있습니다."),
     ).toBeInTheDocument();
   });
 
@@ -122,7 +122,7 @@ describe("Ask KPubData 관련 데이터셋 패널 (#256 이슈 체크리스트)"
     configureKeyAndAsk();
     await askAbout("air-quality");
 
-    expect(screen.getByText("관련 데이터셋")).toBeInTheDocument();
+    expect(screen.getByText("관련 소스 데이터셋")).toBeInTheDocument();
     // air-quality 자신의 source("air")는 후보에서 제외되고, 같은 provider의 다른 catalog
     // dataset("traffic_accident")만 실제 evidence 기반으로 나타난다.
     expect(screen.getByText("traffic_accident")).toBeInTheDocument();

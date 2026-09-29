@@ -131,7 +131,7 @@ describe("ReviewBuildStep — sync build client-side interruption wording (MAJOR
 
   it("Client-side abort shows only 'request stopped' not 'cancelled' confirmation", () => {
     renderWithJob({ jobStatus: "idle", jobInterrupted: true });
-    expect(screen.getByText(/요청을 중단했습니다\. 서버 빌드 결과는 확인되지 않았습니다\./)).toBeInTheDocument();
+    expect(screen.getByText(/요청을 중단했습니다\. 서버 실행 결과는 확인되지 않았습니다\./)).toBeInTheDocument();
     expect(screen.queryByText("실행이 취소되었습니다.")).not.toBeInTheDocument();
   });
 

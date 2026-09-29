@@ -86,7 +86,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   // 4) Review & Build — show canonical BuildSpec, then real POST /build
   await page.getByRole("button", { name: "다음" }).first().click();
   await expect(page.getByText("검토 · 빌드 (Review & Build)")).toBeVisible();
-  const buildButton = page.getByRole("button", { name: "Build 시작" });
+  const buildButton = page.getByRole("button", { name: "테이블 만들기" });
   // Enabled if validation passes + preview not stale (#250 gate).
   await expect(buildButton).toBeEnabled({ timeout: 30_000 });
   await buildButton.click();
@@ -103,8 +103,8 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   // Acquire run id for next (Builds) verification.
 
   // 6) Builds history screen (real GET /builds) reflects just-submitted run (failure included).
-  await navigateViaShell(page, /Builds|빌드/);
-  await expect(page.getByRole("heading", { name: /빌드|Build/i }).first()).toBeVisible();
+  await navigateViaShell(page, /^(Runs|실행)$/);
+  await expect(page.getByRole("heading", { name: /실행 이력|Run History/i }).first()).toBeVisible();
 
   await expectNoPageErrors(errors);
 });

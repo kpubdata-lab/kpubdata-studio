@@ -110,8 +110,8 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("renders five tabs, with no AI tab (#421)", async () => {
     renderDetail();
-    const tablist = await screen.findByRole("tablist", { name: "Dataset detail tabs" });
-    for (const label of ["Overview", "Schema", "Preview", "Quality", "Builds"]) {
+    const tablist = await screen.findByRole("tablist", { name: "Table detail tabs" });
+    for (const label of ["Overview", "Schema", "Preview", "Quality", "Runs"]) {
       expect(within(tablist).getByRole("tab", { name: label })).toBeInTheDocument();
     }
     expect(within(tablist).queryByRole("tab", { name: "AI" })).not.toBeInTheDocument();
@@ -157,7 +157,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("shows run history and links each run to build detail", async () => {
     renderDetail("/datasets/air-quality?tab=builds");
-    const panel = await screen.findByRole("tabpanel", { name: "Builds" });
+    const panel = await screen.findByRole("tabpanel", { name: "Runs" });
     expect(within(panel).getByText(/air-2026-08-13/)).toBeInTheDocument();
     expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/builds/air-2026-08-14");
   });
@@ -302,7 +302,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
   it("opens Ask KPubData with this dataset's context from the Passport entry point (#421)", async () => {
     renderDetail();
     const passport = await findPassport();
-    fireEvent.click(within(passport).getByRole("button", { name: /Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다/ }));
+    fireEvent.click(within(passport).getByRole("button", { name: /Ask KPubData 가 이 테이블의 BuildSpec 수정안을 제안할 수 있습니다/ }));
 
     const drawer = await findAssistant();
     expect(within(drawer).getByText("air-quality")).toBeInTheDocument();

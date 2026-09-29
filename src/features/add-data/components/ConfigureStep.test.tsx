@@ -99,7 +99,7 @@ describe("ConfigureStep — remove generic provider probe", () => {
 describe("ConfigureStep — required request parameter UX", () => {
   it("Shows selected dataset metadata required params with examples", () => {
     renderStep({});
-    expect(screen.getByText("이 Dataset의 요청 파라미터")).toBeInTheDocument();
+    expect(screen.getByText("이 소스 데이터셋의 요청 파라미터")).toBeInTheDocument();
     expect(screen.getByText("sidoName")).toBeInTheDocument();
     expect(screen.getByText("조회할 시·도", { exact: false })).toBeInTheDocument();
     expect(screen.getAllByText(/예: 서울/).length).toBeGreaterThan(0);
@@ -111,7 +111,7 @@ describe("ConfigureStep — required request parameter UX", () => {
     renderStep({
       draft: { publicApi: { provider: "datago", dataset: "free_form", sourceParams: "{}" } },
     });
-    expect(screen.queryByText("이 Dataset의 요청 파라미터")).not.toBeInTheDocument();
+    expect(screen.queryByText("이 소스 데이터셋의 요청 파라미터")).not.toBeInTheDocument();
     expect(screen.getByText('예: {"region": "seoul"}')).toBeInTheDocument();
   });
 

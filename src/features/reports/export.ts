@@ -38,7 +38,7 @@ export function sanitizeFilename(title: string): string {
 function metadataLines(report: ReportDraft, staleness: EvidenceRunStatus | null): string[] {
   const lines = [
     `Report: ${report.title}`,
-    `Dataset: ${report.datasetId}`,
+    `Table: ${report.datasetId}`,
     `Base Run: ${report.baseRunId}`,
     `BuildSpec digest: ${report.buildSpecDigest ?? "N/A"}`,
     `${t("meta.createdAt")}: ${report.createdAt}`,

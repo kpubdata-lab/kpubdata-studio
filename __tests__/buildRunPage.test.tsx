@@ -38,7 +38,7 @@ describe("BuildRunPage (audit #3)", () => {
     expect(screen.queryByText(/미지원/)).not.toBeInTheDocument();
     expect(screen.queryByText(/아직 제공하지 않습니다/)).not.toBeInTheDocument();
     // 대신 canonical Build 상세로 안내한다.
-    expect(screen.getByText("상세 진행은 Build 상세에서 확인하세요")).toBeInTheDocument();
+    expect(screen.getByText("상세 진행은 Run 상세에서 확인하세요")).toBeInTheDocument();
   });
 
   it("routes to the canonical Build detail and keeps deep links", async () => {

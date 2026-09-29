@@ -74,8 +74,8 @@ describe("HomePage", () => {
       }),
     ).toBeInTheDocument();
     // 상태 요약 KPI 카드 라벨
-    expect(screen.getByText("DATASETS")).toBeInTheDocument();
-    expect(screen.getByText("SUCCEEDED (24H)")).toBeInTheDocument();
+    expect(screen.getByText("TABLES")).toBeInTheDocument();
+    expect(screen.getByText("RUNS SUCCEEDED (24H)")).toBeInTheDocument();
     expect(screen.getByText("RUNNING")).toBeInTheDocument();
   });
 
@@ -161,7 +161,7 @@ describe("HomePage", () => {
     mockDashboardAggregatesUnsupported();
     render(<MemoryRouter><HomePage /></MemoryRouter>);
     expect(await screen.findByText("deferred-run")).toBeInTheDocument();
-    expect(screen.queryByText(/빌드 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/실행 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
     await act(async () => {
       monitoringBuilds.resolve(HttpResponse.json({ window: "24h", bucket: "hour", availability: "available", excluded_count: 0, buckets: [{ bucket_start: "2026-08-31T00:00:00Z", bucket_end: "2026-08-31T01:00:00Z", total: 4, success: 4, failed: 0, cancelled: 0 }], recent_runs: [] }));
       monitoringSummary.resolve(HttpResponse.json({ generated_at: "2026-08-31T00:00:00Z", status: "healthy", api: { availability: "available", sample_count: 1, p95_latency_ms: 1 }, queue: { availability: "available", waiting: 0, running: 3, total: 3 }, workers: { availability: "available", active: 1, capacity: 1, utilization: 1 }, artifact_store: { availability: "available", last_write_at: null } }));
@@ -181,7 +181,7 @@ describe("HomePage", () => {
     render(<MemoryRouter><HomePage /></MemoryRouter>);
     expect(await screen.findByText("still-visible")).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByText("확인 불가")).toHaveLength(4));
-    expect(screen.queryByText(/빌드 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/실행 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
   });
 });
 

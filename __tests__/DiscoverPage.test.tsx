@@ -55,7 +55,7 @@ describe("DiscoverPage", () => {
     renderDiscover();
     await screen.findByText("대기오염 정보");
 
-    fireEvent.change(screen.getByLabelText("데이터셋명·기관 검색"), { target: { value: "인구총조사" } });
+    fireEvent.change(screen.getByLabelText("소스 데이터셋명·기관 검색"), { target: { value: "인구총조사" } });
 
     await waitFor(() => {
       expect(screen.queryByText("대기오염 정보")).not.toBeInTheDocument();
@@ -91,9 +91,9 @@ describe("DiscoverPage", () => {
     renderDiscover();
     await screen.findByText("대기오염 정보");
 
-    fireEvent.change(screen.getByLabelText("데이터셋명·기관 검색"), { target: { value: "존재하지-않는-데이터셋" } });
+    fireEvent.change(screen.getByLabelText("소스 데이터셋명·기관 검색"), { target: { value: "존재하지-않는-데이터셋" } });
 
-    expect(await screen.findByText("조건에 맞는 데이터셋이 없습니다")).toBeInTheDocument();
+    expect(await screen.findByText("조건에 맞는 소스 데이터셋이 없습니다")).toBeInTheDocument();
   });
 
   it("navigates to /add with provider and dataset query params when starting from a card", async () => {
@@ -127,11 +127,11 @@ describe("DiscoverPage", () => {
     renderDiscover();
     await screen.findByText("대기오염 정보");
 
-    fireEvent.change(screen.getByLabelText("데이터셋명·기관 검색"), { target: { value: "인구총조사" } });
+    fireEvent.change(screen.getByLabelText("소스 데이터셋명·기관 검색"), { target: { value: "인구총조사" } });
     fireEvent.click(await screen.findByRole("button", { name: "필터 초기화" }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText("데이터셋명·기관 검색")).toHaveValue("");
+      expect(screen.getByLabelText("소스 데이터셋명·기관 검색")).toHaveValue("");
     });
     expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
   });

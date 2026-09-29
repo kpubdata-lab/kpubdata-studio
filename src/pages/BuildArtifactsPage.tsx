@@ -161,7 +161,7 @@ export function BuildArtifactsPage() {
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         eyebrow={t("artifacts.page.eyebrow")}
-        title={t("artifacts.page.title", { build: buildId || "Build" })}
+        title={t("artifacts.page.title", { build: buildId || "Run" })}
         description={t("artifacts.page.desc")}
         actions={<LinkButton to={`/builds/${buildId}/publish`}>{t("artifacts.page.publish")}</LinkButton>}
       />

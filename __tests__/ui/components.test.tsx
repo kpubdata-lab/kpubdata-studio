@@ -104,14 +104,14 @@ describe("EmptyState", () => {
     render(
       <MemoryRouter>
         <EmptyState
-          title="아직 빌드가 없습니다"
+          title="아직 실행이 없습니다"
           description="첫 빌드를 만들어보세요."
-          actionLabel="새 빌드 만들기"
+          actionLabel="테이블 만들기"
           actionHref="/builds/new"
         />
       </MemoryRouter>,
     );
-    const link = screen.getByRole("link", { name: "새 빌드 만들기" });
+    const link = screen.getByRole("link", { name: "테이블 만들기" });
     expect(link).toHaveAttribute("href", "/builds/new");
     // 링크가 버튼으로 감싸지지 않는다(상호작용 요소 중첩 회피).
     expect(link.closest("button")).toBeNull();

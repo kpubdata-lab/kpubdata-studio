@@ -19,6 +19,8 @@ export interface ReviewStepProps {
   onRevalidate: () => void;
   onRun: () => void;
   onSaveSpec: () => void;
+  /** Re-running an existing run's spec refreshes a table; it does not create one (#422). */
+  isRefresh?: boolean;
 }
 
 export function ReviewStep({
@@ -30,6 +32,7 @@ export function ReviewStep({
   onRevalidate,
   onRun,
   onSaveSpec,
+  isRefresh = false,
 }: ReviewStepProps) {
   const { t } = useTranslation();
   return (
@@ -68,7 +71,7 @@ export function ReviewStep({
       ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button disabled={!canRun} loading={job.status === "running"} onClick={onRun}>
-          {t("newBuild.review.run")}
+          {t(isRefresh ? "newBuild.review.runRefresh" : "newBuild.review.run")}
         </Button>
         {job.status === "running" ? (
           <Button variant="secondary" onClick={job.cancel}>

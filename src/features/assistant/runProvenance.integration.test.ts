@@ -41,7 +41,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
 
     const checked = crossCheckAssistantResponse(
       response({
-        evidenceRefs: [{ kind: "run", id: unverified, label: "빌드 실행" }],
+        evidenceRefs: [{ kind: "run", id: unverified, label: "실행 상태" }],
         suggestedActions: [
           { type: "OPEN_BUILD", runId: unverified, reason: "확인해보세요" },
           { type: "OPEN_QUALITY", datasetId: "air-quality", runId: unverified, reason: "품질을 보세요" },
@@ -84,7 +84,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
 
     const checked = crossCheckAssistantResponse(
       response({
-        evidenceRefs: [{ kind: "run", id: actualRunId, label: "빌드 실행" }],
+        evidenceRefs: [{ kind: "run", id: actualRunId, label: "실행 상태" }],
         suggestedActions: [
           { type: "OPEN_BUILD", runId: actualRunId, reason: "확인" },
           { type: "OPEN_QUALITY", datasetId: "air-quality", runId: actualRunId, reason: "품질" },
