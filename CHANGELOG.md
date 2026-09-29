@@ -4,23 +4,13 @@
 
 ### Added
 
+- Studio builds into a container image (#411): `Dockerfile` puts the static build behind unprivileged nginx, and the Builder URL and OIDC settings are read from the container's environment at start (`BUILDER_API_URL`, `USE_REAL_BUILDER`, `OIDC_ISSUER`, `OIDC_CLIENT_ID`) into `/config.js`, so one image serves every deployment; unset values fall back to the build-time `VITE_*` ones. A value that could break out of `config.js` stops the container instead. Publishing the image from the release workflow, with a smoke test of two deployments, follows separately.
 - CI compares Studio's response schemas with Builder's contract (kpubdata-builder#693). For every contract schema Studio mirrors by name, a contract enum value Studio does not accept, or a key Studio requires that the contract does not define, fails the `Builder contract drift` job, which the CI gate requires. It reads the contract from Builder's main; locally, set `BUILDER_CONTRACT` to run it.
-
-### Fixed
-
-- A cancelled run's event timeline parses again, and fetch progress is accepted (builder#648). The event-name schema lacked `run_cancelled`, which Builder has emitted for a cancelled async run since builder#481, so every cancelled run's timeline failed to parse. It now also accepts `source_fetch_progress`, which Builder emits after each `param_grid` combination.
-
-### Added
-
 - **Administration** (`/admin`, #409): the policy in force (`ENFORCE_OWNERSHIP`, the server publish-credential fallback) and every owner's runs, metadata only, owners as short irreversible hashes. The menu entry appears only when KPubData Engine answers `GET /admin/config` with 200; a 403, an Engine without the admin role or any other failure hides it. Hiding is a convenience — reached by URL, the page shows the Engine's 403 as "not an administrator". The admin responses are parsed strictly, so a credential an Engine might add never reaches the screen. Listing users and approving sign-ups waits for an Engine API (kpubdata-builder#785).
 - **SQL Workspace** (`/sql`, #417): query one table snapshot — pick the table, the run (snapshot), the stage and, for a multi-source run, the source, then run the SQL yourself; `FROM dataset` reads that snapshot, and the result names it (`table@run · stage · source`). It sits first under ANALYZE, and Table Detail's **Query** opens it pinned to the run you are looking at. The target lives in the URL, so a link reproduces it. Joining tables waits for KPubData Engine multi-table SQL (kpubdata-builder#704) and saving an analysis for server storage (kpubdata-builder#783). Mock mode answers with demo rows, labelled demo.
 - Connections shows **where to apply** (#412): every source dataset the catalog marks as needing an application, grouped by the page where the application is made — one application can unlock several — with a direct link, the provider's daily cap and a guide to moving to an operational account on data.go.kr. A cap the spec does not state, and today's usage (KPubData Engine does not count calls per key), read as unknown, never zero; datasets whose catalog entry says nothing about an application are counted as unknown, not "not needed". The catalog's `quota` is optional until KPubData Engine sends it (kpubdata-builder#778).
 - The visual identity is written down in `docs/brand/VISUAL_IDENTITY.md` (#425): the `KPubData` wordmark leads and `Studio` is a weaker suffix, brand and status colours are separate tokens (warning, stale and partial share amber and differ by label), SQL and identifiers are always monospace, and density comes before marketing type. Five static warehouse prototypes — Home, Catalog, Tables, Table Detail, SQL Workspace — live in `docs/prototype/warehouse/` with desktop and 390px screenshots, awaiting prototype review before the app adopts them. A test fails if a status token takes a brand colour or a prototype badge carries no word.
 - Studio says when it is talking to a Builder from another release (#430). It compares its own build version with the `version` that `GET /version` reports: a minor or major difference shows one dismissible banner line and blocks nothing, a patch difference passes with a console note, and a Builder that does not report `version` gets no warning. The `api_version` contract check is unchanged and separate.
-
-### Security
-
-- The repository no longer tracks `.next/` and `next-env.d.ts` — 229 files of Next.js build output committed by accident with #402, in a project built with Vite (kpubdata-builder#691). A new `Security` workflow runs `npm audit` over `package-lock.json`, gitleaks over the full history and CodeQL, on every pull request and weekly; the history's reviewed findings (that build's per-build Next keys, and synthetic keys in redaction tests) are listed with their reasons in `.gitleaksignore`.
 
 ### Changed
 
@@ -34,6 +24,14 @@
 - Ask KPubData moves from `/kubi` to `/assistant`, and its stored values drop the old name: report blocks are `ASSISTANT_INTERPRETATION` and the inbox key is `kpubdata-studio:assistant-report-inbox`. No redirect or migration is kept — no deployment used the old names (#449).
 - A URL naming a run older than the newest page of the runs list now opens, instead of being called invalid (#418). Dataset Detail and Quality ask Builder for that run directly (`GET /datasets/{dataset_id}/runs/{run_id}`, API contract 1.31.0), and tell a run that is not this dataset's (not found) from one that is another user's (forbidden) and from a failed check.
 - Accept Builder API contract 1.30.0's column `logical_type` and `wire_encoding` (builder#735). Stage detail's column info is a strict schema, so without this a 1.30.0 Builder's silver stage detail failed to parse. Columns sent as `decimal_string` stay exact text. The fields are optional, so an older Builder still works.
+
+### Fixed
+
+- A cancelled run's event timeline parses again, and fetch progress is accepted (builder#648). The event-name schema lacked `run_cancelled`, which Builder has emitted for a cancelled async run since builder#481, so every cancelled run's timeline failed to parse. It now also accepts `source_fetch_progress`, which Builder emits after each `param_grid` combination.
+
+### Security
+
+- The repository no longer tracks `.next/` and `next-env.d.ts` — 229 files of Next.js build output committed by accident with #402, in a project built with Vite (kpubdata-builder#691). A new `Security` workflow runs `npm audit` over `package-lock.json`, gitleaks over the full history and CodeQL, on every pull request and weekly; the history's reviewed findings (that build's per-build Next keys, and synthetic keys in redaction tests) are listed with their reasons in `.gitleaksignore`.
 
 ## v0.4.0 — 2026-09-28
 

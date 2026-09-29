@@ -19,6 +19,7 @@ import { i18n } from "@/shared/i18n";
  * - Uses zod.parse() instead of `as T` casting to guarantee type safety.
  */
 import { API_BASE } from "@/shared/config/env";
+import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
 import { z } from "zod";
 
@@ -73,7 +74,7 @@ export function isBuilderApiCompatible(
 
 /** whether to enable actual Builder calls (uses mock if not set). */
 export function isRealBuilderEnabled(): boolean {
-  return import.meta.env.VITE_USE_REAL_BUILDER === "true";
+  return runtimeOr("useRealBuilder", import.meta.env.VITE_USE_REAL_BUILDER) === "true";
 }
 
 /** Structured error representing abnormal responses returned by Builder. */

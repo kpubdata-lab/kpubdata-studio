@@ -51,6 +51,30 @@ cp .env.development.real .env.development.local
 npm run dev
 ```
 
+### 컨테이너 이미지로 배포
+
+`Dockerfile` 로 이미지를 만듭니다 (#411). 이미지는
+배포마다 같고, Builder 주소와 OIDC 설정은 **컨테이너를 띄울 때** 환경변수로 넣습니다.
+
+```bash
+docker build -t kpubdata-studio .
+docker run -p 8080:8080 \
+  -e BUILDER_API_URL=https://api.example.org \
+  -e OIDC_ISSUER=https://sso.example.org/realms/kpubdata \
+  -e OIDC_CLIENT_ID=kpubdata-studio \
+  kpubdata-studio
+```
+
+| 변수 | 뜻 |
+|---|---|
+| `BUILDER_API_URL` | 브라우저가 부르는 Builder 주소. 설정하면 실 Builder 모드가 켜집니다 |
+| `USE_REAL_BUILDER` | `false` 로 두면 주소가 있어도 데모 데이터를 씁니다 |
+| `OIDC_ISSUER` · `OIDC_CLIENT_ID` | 공개 SPA 클라이언트 설정. 비밀값이 아닙니다 |
+
+브라우저가 Builder 를 직접 부르므로, Builder 의 `KPUBDATA_BUILDER_ALLOWED_ORIGINS` 에 이
+Studio 의 origin 을 넣어야 합니다. 값에 따옴표·공백·`<` 같은 문자가 있으면 컨테이너가
+그 이유를 남기고 시작하지 않습니다.
+
 ## 주요 기능
 
 - **빌드 기획서 작성**: 버튼과 입력만으로 데이터셋 빌드 규칙을 설정합니다.
