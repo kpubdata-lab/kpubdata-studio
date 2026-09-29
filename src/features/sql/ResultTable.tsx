@@ -4,8 +4,8 @@
  */
 import { useTranslation } from "react-i18next";
 
+import { DataTable } from "@/features/data-table/DataTable";
 import type { QueryResponse } from "@/shared/lib/builderApi";
-import { cellValue, encodingsOf } from "@/shared/lib/cellValue";
 import { Card, DemoBadge } from "@/shared/ui";
 
 export function QueryError({ code, message }: { code: string; message: string }) {
@@ -18,45 +18,33 @@ export function QueryError({ code, message }: { code: string; message: string })
   );
 }
 
-/** A query result with a header naming what it read. Shared by both workspaces and saved analyses. */
+/**
+ * A query result with a header naming what it read. Shared by both workspaces and saved
+ * analyses, and drawn by the one data table (#499). A result that was not cut holds every
+ * row, so its total is exact; a cut one does not say how many rows there were.
+ */
 export function ResultTable({ result, target, demo = false }: { result: QueryResponse; target: string; demo?: boolean }) {
-  const { t } = useTranslation();
-  const encodings = encodingsOf(result.column_meta);
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
-        {demo ? <DemoBadge /> : null}
-        <span className="font-mono">{target}</span>
-        <span>·</span>
-        <span>{t("sql.rows", { count: result.rows.length })}</span>
-        <span>·</span>
-        <span>{result.execution_ms} ms</span>
-        {result.truncated ? <span className="font-semibold text-amber-700 dark:text-amber-300">{t("sql.truncated")}</span> : null}
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/60 text-left">
-            <tr>
-              {result.columns.map((column) => (
-                <th className="px-3 py-2 font-mono text-xs font-semibold text-muted-foreground" key={column}>
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {result.rows.map((row, index) => (
-              <tr className="border-t border-border" key={index}>
-                {result.columns.map((column) => (
-                  <td className="px-3 py-1.5 font-mono text-xs" key={column}>
-                    {cellValue(encodings.get(column), row[column])}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+    <DataTable
+      caption={
+        <>
+          {demo ? <DemoBadge /> : null}
+          <span className="font-mono">{target}</span>
+          <span>·</span>
+          <span>{result.execution_ms} ms</span>
+          <span>·</span>
+        </>
+      }
+      columnMeta={result.column_meta}
+      columns={result.columns}
+      compact
+      rowTotal={{
+        returned: result.rows.length,
+        total: result.truncated ? null : result.rows.length,
+        status: result.truncated ? "unknown" : "exact",
+      }}
+      rows={result.rows}
+      truncated={result.truncated}
+    />
   );
 }

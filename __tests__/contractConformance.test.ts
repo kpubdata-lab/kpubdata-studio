@@ -60,6 +60,7 @@ const EXPECTED_OPERATIONS = [
   "listWarehouseTables",
   "getWarehouseTable",
   "warehouseQuery",
+  "warehouseRows",
   "listAnalyses",
   "createAnalysis",
   "runAnalysis",

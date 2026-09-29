@@ -2338,5 +2338,22 @@
     "save": "Run and save",
     "saved": "Saved \"{{name}}\" with the snapshot it read.",
     "openList": "Saved Analyses"
+  },
+  "dataTable": {
+    "truncated": "Truncated — cut at the limit. Unless the query ordered it, this is not the \"top N\"",
+    "shownRange": "rows {{from}}–{{to}} shown",
+    "totalNotComputed": "total not computed",
+    "totalUnknown": "total unknown",
+    "unit": "unit {{unit}}",
+    "estimated": "estimated",
+    "previous": "Previous",
+    "next": "Next",
+    "browse": "Browse rows",
+    "browseTitle": "Table rows",
+    "pinned": "Snapshot {{snapshot}} pinned — the next pages read the same snapshot",
+    "browseError": "Could not load rows: {{message}}",
+    "shown": "{{count}} rows shown",
+    "totalExact": "{{count}} rows in all (exact)",
+    "totalEstimated": "about {{count}} rows in all (estimated)"
   }
 }
