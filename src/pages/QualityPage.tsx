@@ -18,7 +18,7 @@ import {
   listDatasets,
 } from "@/features/datasets/api";
 import { DATASET_STAGES, formatDateTime, type DatasetStage } from "@/features/datasets/model";
-import { useRequestedRun } from "@/features/datasets/useRequestedRun";
+import { RUN_LOOKUP_API_VERSION, useRequestedRun } from "@/features/datasets/useRequestedRun";
 import { QualityBadge, QualityStateBadge } from "@/features/quality/QualityBadge";
 import {
   flattenQualityResults,
@@ -137,7 +137,7 @@ export function QualityPage() {
   const requestedRunId = searchParams.get("run");
   // Not being in the newest page does not make a run invalid (#418); Builder is asked directly.
   const requested = useRequestedRun(selectedDatasetId, requestedRunId, runsState.status === "loaded" ? runsState.data : undefined);
-  const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error";
+  const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error" || requested.status === "unsupported";
   const runPending = requested.status === "loading" && runsState.status === "loaded";
   const runOptions =
     requested.status === "available" && !requested.inPage && runsState.data ? [...runsState.data, requested.run] : runsState.data;
@@ -325,8 +325,8 @@ export function QualityPage() {
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader eyebrow="Quality" title={t("quality.page.title")} description={selectedDataset?.title} />
         <Card variant="error" role="alert">
-          <p className="font-semibold">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenTitle" : requested.status === "error" ? "quality.wrongRun.checkFailedTitle" : "quality.wrongRun.title")}</p>
-          <p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenDesc" : requested.status === "error" ? "quality.wrongRun.checkFailedDesc" : "quality.wrongRun.desc", { id: requestedRunId })}</p>
+          <p className="font-semibold">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenTitle" : requested.status === "error" ? "quality.wrongRun.checkFailedTitle" : requested.status === "unsupported" ? "quality.wrongRun.unsupportedTitle" : "quality.wrongRun.title")}</p>
+          <p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenDesc" : requested.status === "error" ? "quality.wrongRun.checkFailedDesc" : requested.status === "unsupported" ? "quality.wrongRun.unsupportedDesc" : "quality.wrongRun.desc", { id: requestedRunId, version: RUN_LOOKUP_API_VERSION })}</p>
           <Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("quality.wrongRun.back")}</Button>
         </Card>
       </main>

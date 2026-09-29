@@ -694,7 +694,9 @@
       "forbiddenDesc": "run `{{id}}`은 이 테이블에 있지만 다른 사용자의 run입니다. latest run으로 자동 변경하지 않았습니다.",
       "checkFailedTitle": "run을 확인하지 못했습니다.",
       "checkFailedDesc": "run `{{id}}`을 KPubData Engine에서 확인하는 중 오류가 났습니다. 잠시 후 다시 시도하세요.",
-      "back": "latest run 보기"
+      "back": "latest run 보기",
+      "unsupportedTitle": "이 Engine 은 오래된 run 을 찾을 수 없습니다",
+      "unsupportedDesc": "run `{{id}}` 은 최신 실행 목록에 없고, 이 KPubData Engine 은 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Engine 을 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다."
     },
     "header": {
       "desc": "점수 대신 실제 검증 통과 여부(PASS/WARN/FAIL)와 규칙별 이슈를 보여줍니다."
@@ -1243,7 +1245,9 @@
       "specDigest": "BuildSpec digest",
       "snapshotFiles": "Snapshot files",
       "run": "Run"
-    }
+    },
+    "runLookupUnsupportedTitle": "이 Engine 은 오래된 run 을 찾을 수 없습니다",
+    "runLookupUnsupportedBody": "run `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Engine 은 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Engine 을 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다."
   },
   "buildPublish": {
     "statusQueued": "대기 중",

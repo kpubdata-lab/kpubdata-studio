@@ -68,6 +68,13 @@ cancel + manifest status/partial + provider credential + monitoring + publish)�
 1.19~1.21에 추가된 미사용 endpoint는 이 최소값에 반영하지 않으며 Studio에 구현하지도
 않습니다.
 
+**최소값보다 새로운 operation 을 쓰는 곳** — 최소값을 올리는 대신, 그 operation 이 생긴
+버전보다 오래된 Builder 에서는 호출하지 않고 그 사실을 화면에 말한다. 지금 하나다:
+
+| operation | 필요 버전 | 더 오래된 Builder 에서 |
+|---|---|---|
+| `GET /datasets/{id}/runs/{run_id}` | 1.31.0 | 최신 목록 밖의 run 은 "이 Engine 은 오래된 run 을 찾을 수 없다" — "없는 run" 이라고 하지 않는다 (#482) |
+
 정합성 규칙:
 
 1. `MIN_BUILDER_API_VERSION`은 Studio가 실제로 호출·검토한 operation이 요구하는 최소
