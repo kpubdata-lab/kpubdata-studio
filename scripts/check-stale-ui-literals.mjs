@@ -105,10 +105,40 @@ const testFiles = git("ls-files")
   .split("\n")
   .filter((f) => /\.(test|spec)\.tsx?$/.test(f));
 
+// Two matches are not stale and used to fail the gate (studio#422):
+//
+// - Inside an identifier. Removing the UI word "Artifacts" matched the component
+//   name `BuildArtifactsPage` in every test that imports it. A match whose edge is a
+//   word character continuing past the removed value is part of a longer name.
+// - Inside a current value. "데이터셋이 없습니다" was removed, and a test asserting the
+//   new "조건에 맞는 소스 데이터셋이 없습니다" contains it. Current values are blanked
+//   out first, so only text that no longer renders anywhere is left to match.
+const current = [...after].filter((v) => v.length >= MIN_LENGTH).sort((a, b) => b.length - a.length);
+const WORD = /[A-Za-z0-9_]/;
+
+function withoutCurrentValues(source) {
+  let out = source;
+  for (const value of current) if (out.includes(value)) out = out.split(value).join("\u0000");
+  return out;
+}
+
+function occursOutsideIdentifier(source, value) {
+  const extendsLeft = WORD.test(value[0]);
+  const extendsRight = WORD.test(value[value.length - 1]);
+  for (let i = source.indexOf(value); i !== -1; i = source.indexOf(value, i + 1)) {
+    const left = source[i - 1];
+    const right = source[i + value.length];
+    if (extendsLeft && left !== undefined && WORD.test(left)) continue;
+    if (extendsRight && right !== undefined && WORD.test(right)) continue;
+    return true;
+  }
+  return false;
+}
+
 const stale = new Map();
 for (const file of testFiles) {
-  const source = readFileSync(join(REPO, file), "utf8");
-  const hits = removed.filter((value) => source.includes(value));
+  const source = withoutCurrentValues(readFileSync(join(REPO, file), "utf8"));
+  const hits = removed.filter((value) => occursOutsideIdentifier(source, value));
   if (hits.length) stale.set(file, hits);
 }
 

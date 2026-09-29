@@ -140,6 +140,44 @@ describe("stale UI literal gate", () => {
     expect(runGate("HEAD~1").code).toBe(0);
   });
 
+  it("ignores a removed word that only appears inside an identifier (#422)", () => {
+    writeLocales("SyntheticWidgets");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "word"]);
+    writeLocales("SyntheticGadgets");
+    writeFileSync(join(repo, "__tests__/home.test.tsx"), 'import { OldSyntheticWidgetsPage } from "./x";\n');
+    git(["add", "-A"]);
+    git(["commit", "-qm", "rename word"]);
+
+    expect(runGate("HEAD~1").code).toBe(0);
+  });
+
+  it("still fails when the removed word stands on its own (#422)", () => {
+    writeLocales("SyntheticWidgets");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "word"]);
+    writeLocales("SyntheticGadgets");
+    writeFileSync(join(repo, "__tests__/home.test.tsx"), 'getByText("SyntheticWidgets");\n');
+    git(["add", "-A"]);
+    git(["commit", "-qm", "rename word"]);
+
+    expect(runGate("HEAD~1").code).toBe(1);
+  });
+
+  it("ignores a removed string that survives inside a current one (#422)", () => {
+    // Old "합성된예전문구입니다테스트전용", new "앞말 합성된예전문구입니다테스트전용": the test
+    // asserting the new text contains the old one and is up to date.
+    writeLocales("앞말 합성된예전문구입니다테스트전용");
+    writeFileSync(
+      join(repo, "__tests__/home.test.tsx"),
+      'const HERO = "앞말 합성된예전문구입니다테스트전용";\n',
+    );
+    git(["add", "-A"]);
+    git(["commit", "-qm", "extend"]);
+
+    expect(runGate("HEAD~1").code).toBe(0);
+  });
+
   it("skips rather than fails when the base ref is missing", () => {
     const { code, out } = runGate("origin/does-not-exist");
     expect(code).toBe(0);

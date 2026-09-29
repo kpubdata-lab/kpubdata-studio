@@ -5,7 +5,7 @@
  * (네트워크 없이 각 feature module의 결정적 mock 분기)로, 그리고 amendment
  * 1/3(제출 spec == Review 표시 spec, 실제 run_id 사용)은 real 모드 + MSW로 검증한다.
  *
- * #250 최종 마감(amendment 2)에서는 Dataset ID/제목/설명을 매번 수동 입력하지 않고
+ * #250 최종 마감(amendment 2)에서는 테이블 ID/제목/설명을 매번 수동 입력하지 않고
  * provider/dataset 선택·파일 업로드·URL 입력으로부터 자동 생성되는 흐름을 정본으로
  * 삼는다 — `fillIdentity()`는 "고급 설정에서 자동 생성값을 수정하는" 시나리오에서만
  * 쓰고, 기본 happy path는 자동 생성값 그대로 다음 단계까지 진행 가능함을 검증한다.
@@ -56,10 +56,10 @@ function next() {
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
 }
 
-/** 고급 설정 collapsible을 열고 Dataset ID/제목/설명을 직접 덮어쓴다("touched" 시나리오 전용). */
+/** 고급 설정 collapsible을 열고 테이블 ID/제목/설명을 직접 덮어쓴다("touched" 시나리오 전용). */
 async function overrideIdentityInAdvancedSettings(values: { datasetId?: string; title?: string; description?: string }) {
   if (values.datasetId !== undefined) {
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: values.datasetId } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: values.datasetId } });
   }
   if (values.title !== undefined) {
     fireEvent.change(screen.getByLabelText(/^제목/), { target: { value: values.title } });
@@ -84,7 +84,7 @@ describe("Add Data Workbench — Source 선택 (#250)", () => {
 });
 
 describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendment 2)", () => {
-  it("Dataset ID/제목/설명을 직접 입력하지 않아도 Provider→Dataset 선택만으로 Build까지 진행된다", async () => {
+  it("테이블 ID/제목/설명을 직접 입력하지 않아도 Provider→소스 데이터셋 선택만으로 Build까지 진행된다", async () => {
     renderWizard();
 
     fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
@@ -93,8 +93,8 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
 
     // mock catalog는 provider "datago" / dataset "apt_trade"를 제공한다(features/add-data/api.ts).
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
 
     // 자동 생성된 identity가 요약 카드에 반영된다 — 별도 입력 없이 진행 가능.
     await screen.findByText("아파트 실거래가");
@@ -106,12 +106,12 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
     await waitFor(() => expect(screen.getAllByText(/./).length).toBeGreaterThan(0));
 
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     expect(screen.getByText(/실제 제출될 canonical BuildSpec/)).toBeInTheDocument();
     expect(screen.getByText(/"dataset_id": "datago-apt-trade"/)).toBeInTheDocument();
     expect(screen.getByText(/"title": "아파트 실거래가"/)).toBeInTheDocument();
 
-    const buildButton = await screen.findByRole("button", { name: "Build 시작" });
+    const buildButton = await screen.findByRole("button", { name: "테이블 만들기" });
     await waitFor(() => expect(buildButton).toBeEnabled());
     fireEvent.click(buildButton);
 
@@ -125,14 +125,14 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
     await screen.findByText("API 사용 준비");
 
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
 
     // 다른 provider/dataset 조합이 없는 mock catalog이므로 동일 선택을 다시 하고,
     // provider를 비웠다 다시 고르는 경로로 재생성이 일어나는지 확인한다.
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "" } });
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
   });
 
@@ -142,8 +142,8 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
 
     await overrideIdentityInAdvancedSettings({ datasetId: "custom-id", title: "커스텀 제목" });
@@ -153,7 +153,7 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
     fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
     await waitFor(() => expect(screen.getAllByText(/./).length).toBeGreaterThan(0));
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     expect(screen.getByText(/"dataset_id": "custom-id"/)).toBeInTheDocument();
     expect(screen.getByText(/"title": "커스텀 제목"/)).toBeInTheDocument();
   });
@@ -166,8 +166,8 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
 
     await overrideIdentityInAdvancedSettings({ datasetId: "custom-id", title: "커스텀 제목" });
@@ -189,15 +189,15 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
     // 테스트에 이미 쓰인 패턴을 그대로 재사용한다.
     await screen.findByRole("option", { name: "datago" });
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
 
     await overrideIdentityInAdvancedSettings({ datasetId: "custom-id", title: "커스텀 제목" });
     expect(screen.getByText(/ID: custom-id/)).toBeInTheDocument();
 
     // 다른 dataset(air_quality)으로 교체 — 이전 custom metadata가 잔존하면 안 된다.
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "air_quality" } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
     await screen.findByText(/ID: datago-air-quality/);
     expect(screen.getByText("대기오염 측정망")).toBeInTheDocument();
     expect(screen.queryByText(/ID: custom-id/)).not.toBeInTheDocument();
@@ -257,8 +257,8 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
     await overrideIdentityInAdvancedSettings({ datasetId: "custom-id", title: "커스텀 제목" });
 
@@ -269,7 +269,7 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
 
     expect(screen.queryByText(/ID: custom-id/)).not.toBeInTheDocument();
     expect(screen.queryByText("커스텀 제목")).not.toBeInTheDocument();
-    expect(screen.getByText(/Endpoint를 입력하면 Dataset ID\/제목이 자동으로 채워집니다\./)).toBeInTheDocument();
+    expect(screen.getByText(/Endpoint를 입력하면 테이블 ID\/제목이 자동으로 채워집니다\./)).toBeInTheDocument();
   });
 });
 
@@ -283,12 +283,12 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
     await screen.findByText("API 사용 준비");
     await screen.findByRole("option", { name: "datago" });
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
     return result;
   }
 
   function selectDataset(name: string) {
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: name } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: name } });
   }
 
   function selectProvider(name: string) {
@@ -301,7 +301,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
     fireEvent.click(screen.getByRole("button", { name: "예시값 적용" }));
     await waitFor(() => expect(paramsField().value).toContain("sidoName"));
     expect(paramsField().value).toContain("서울");
-    expect(screen.getByText("이 Dataset의 요청 파라미터")).toBeInTheDocument();
+    expect(screen.getByText("이 소스 데이터셋의 요청 파라미터")).toBeInTheDocument();
   }
 
   it("Case 1 — 다른 Dataset을 고르면 이전 Dataset 전용 요청 파라미터가 `{}`로 초기화된다", async () => {
@@ -316,7 +316,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
     expect(screen.queryByText(/sidoName/)).not.toBeInTheDocument();
     expect(screen.queryByText(/서울/)).not.toBeInTheDocument();
     // air_quality 전용 required-param 안내도 사라진다(apt_trade는 metadata 없음).
-    expect(screen.queryByText("이 Dataset의 요청 파라미터")).not.toBeInTheDocument();
+    expect(screen.queryByText("이 소스 데이터셋의 요청 파라미터")).not.toBeInTheDocument();
   });
 
   it("Case 1b — 실제 진입점처럼 StrictMode로 감싸도 요청 파라미터가 `{}`로 초기화된다", async () => {
@@ -342,11 +342,11 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
     // sourceParams가 같은 update에서 "{}"로 비워져야 한다.
     selectProvider("");
     expect(paramsField().value).toBe("{}");
-    expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).toHaveValue("");
+    expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("");
 
     // 다시 datago -> air_quality를 골라도 이전 "서울" 값이 되살아나지 않는다.
     selectProvider("datago");
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
     selectDataset("air_quality");
     await screen.findByText(/ID: datago-air-quality/);
     expect(paramsField().value).toBe("{}");
@@ -383,7 +383,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
     await screen.findByText(/ID: datago-air-quality/);
 
     expect(paramsField().value).toBe('{"sidoName":"부산"}');
-    expect(screen.getByText("이 Dataset의 요청 파라미터")).toBeInTheDocument();
+    expect(screen.getByText("이 소스 데이터셋의 요청 파라미터")).toBeInTheDocument();
   });
 
   it("Case 4 — 새 Dataset도 metadata가 있으면 초기화된 값 위에 새 Dataset metadata가 렌더된다", async () => {
@@ -400,7 +400,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
     expect(paramsField().value).toBe("{}");
     expect(screen.queryByText(/legacyParam/)).not.toBeInTheDocument();
     // 새 Dataset(air_quality)의 metadata가 표시된다.
-    expect(screen.getByText("이 Dataset의 요청 파라미터")).toBeInTheDocument();
+    expect(screen.getByText("이 소스 데이터셋의 요청 파라미터")).toBeInTheDocument();
     expect(screen.getByText("sidoName")).toBeInTheDocument();
     expect(screen.getByText('예: {"sidoName":"서울"}')).toBeInTheDocument();
   });
@@ -414,8 +414,8 @@ describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리�
     await screen.findByText("API 사용 준비");
     await screen.findByRole("option", { name: "datago" });
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     // lastIdentitySourceRef가 "public_api:datago:apt_trade"로 세팅된 상태를 만든다.
     await screen.findByText(/ID: datago-apt-trade/);
 
@@ -448,7 +448,7 @@ describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리�
     // 폼 모드로 돌아가 실제 GUI에서 다른 dataset을 선택하면 touched가 reset되고 새
     // catalog identity가 적용되어야 한다(기존 touched 정책 회귀 없음).
     fireEvent.click(screen.getByRole("button", { name: "Form" }));
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
     expect(screen.getByText("아파트 실거래가")).toBeInTheDocument();
     expect(screen.queryByText(/ID: custom-id/)).not.toBeInTheDocument();
@@ -463,14 +463,14 @@ describe("Add Data Workbench — stale preview (#250 §2/§6)", () => {
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     next();
     await screen.findByRole("heading", { name: "Preview · 검증" });
     fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
-    await waitFor(() => expect(screen.getByRole("button", { name: "Build 시작" })).toBeEnabled());
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
+    await waitFor(() => expect(screen.getByRole("button", { name: "테이블 만들기" })).toBeEnabled());
 
     // Configure로 돌아가 파라미터를 바꾼다 — 이전 Preview/Validation은 stale이어야 한다.
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
@@ -479,9 +479,9 @@ describe("Add Data Workbench — stale preview (#250 §2/§6)", () => {
     fireEvent.change(screen.getByLabelText(/요청 파라미터/), { target: { value: '{"region":"busan"}' } });
     next();
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
 
-    expect(screen.getByRole("button", { name: "Build 시작" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "테이블 만들기" })).toBeDisabled();
     expect(screen.getByText(/이전 Preview·Validation 결과를 재사용할 수 없습니다/)).toBeInTheDocument();
   });
 });
@@ -506,7 +506,7 @@ describe("Add Data Workbench — File source (#250, #498, amendment 2)", () => {
     next();
     await screen.findByRole("heading", { name: "Preview · 검증" });
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     expect(screen.getByText(/"kind": "file"/)).toBeInTheDocument();
     expect(screen.getByText(/"dataset_id": "2026-apt-trades"/)).toBeInTheDocument();
   });
@@ -534,7 +534,7 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
     next();
     await screen.findByRole("heading", { name: "Preview · 검증" });
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     expect(screen.getByText(/"kind": "url"/)).toBeInTheDocument();
     // 비민감 query parameter는 canonical BuildSpec preview에 그대로 보인다.
     expect(screen.getByText(/"endpoint": "https:\/\/api\.example\.org\/v1\/air-quality\?region=busan"/)).toBeInTheDocument();
@@ -556,7 +556,7 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
     next();
     await screen.findByRole("heading", { name: "Preview · 검증" });
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
 
     // 원문 secret은 화면 어디에도(Source summary/canonical BuildSpec preview) 나타나지 않는다.
     expect(document.body.textContent ?? "").not.toContain("SECRETVALUE1234567890");
@@ -632,8 +632,8 @@ describe("Add Data Workbench — mixed/partial preview (#250 §3)", () => {
     // 실제 DOM에 나타날 때까지 기다린 뒤에 provider를 선택한다(test race 수정).
     await screen.findByRole("option", { name: "datago" });
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "air_quality" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
 
     next();
     await screen.findByRole("heading", { name: "Preview · 검증" });
@@ -656,7 +656,7 @@ describe("Add Data Workbench — mixed/partial preview (#250 §3)", () => {
     expect(screen.getByText("서울")).toBeInTheDocument();
 
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     // Review에도 source별 상태가 남아 있다 — 하나의 PASS로 뭉개지지 않는다.
     const reviewSection = screen.getByText("Source별 Preview/Validation").closest("div")!;
     expect(within(reviewSection).getByText("ok-source")).toBeInTheDocument();
@@ -699,21 +699,21 @@ describe("Add Data Workbench — Review == submission, 실제 run_id 사용 (rea
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "air_quality" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
     await screen.findByText(/ID: datago-air-quality/);
     next();
     await screen.findByRole("heading", { name: "Preview · 검증" });
     fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "다음" })).toBeEnabled());
     next();
-    await screen.findByRole("heading", { name: "검토 · Build" });
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
 
     const reviewedSpecText = screen.getByText(/"dataset_id": "datago-air-quality"/).closest("pre")!.textContent!;
     const reviewedSpec = JSON.parse(reviewedSpecText);
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "Build 시작" })).toBeEnabled());
-    fireEvent.click(screen.getByRole("button", { name: "Build 시작" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "테이블 만들기" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "테이블 만들기" }));
 
     await screen.findByText("Build 상세: run=server-assigned-run-id");
 

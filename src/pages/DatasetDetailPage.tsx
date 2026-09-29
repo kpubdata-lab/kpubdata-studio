@@ -36,7 +36,7 @@ const TABS: { id: DetailTab; label: string }[] = [
   { id: "schema", label: "Schema" },
   { id: "preview", label: "Preview" },
   { id: "quality", label: "Quality" },
-  { id: "builds", label: "Builds" },
+  { id: "builds", label: "Runs" },
 ];
 
 interface CoreState {
@@ -252,17 +252,17 @@ export function DatasetDetailPage() {
   }, [stageDetailState.data]);
 
   if (core.status === "loading") {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader eyebrow="Dataset" title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
+    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader eyebrow="Table" title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
   }
 
   if (core.status === "error" || !core.dataset || !core.runs) {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader eyebrow="Dataset" title={datasetId || t("datasetDetail.fallbackTitle")} /><ErrorState title={t("datasetDetail.loadErrorTitle")} message={core.error} /></main>;
+    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader eyebrow="Table" title={datasetId || t("datasetDetail.fallbackTitle")} /><ErrorState title={t("datasetDetail.loadErrorTitle")} message={core.error} /></main>;
   }
 
   if (invalidRun) {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Dataset" title={core.dataset.title} description={core.dataset.dataset_id} />
+        <PageHeader eyebrow="Table" title={core.dataset.title} description={core.dataset.dataset_id} />
         <Card variant="error" role="alert"><p className="font-semibold">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunTitle" : requested.status === "error" ? "datasetDetail.runCheckFailedTitle" : "datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunBody" : requested.status === "error" ? "datasetDetail.runCheckFailedBody" : "datasetDetail.invalidRunBody", { run: requestedRun })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
       </main>
     );
@@ -271,9 +271,9 @@ export function DatasetDetailPage() {
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
-        eyebrow="Dataset"
+        eyebrow="Table"
         title={core.dataset.title}
-        description={<><span className="block font-mono text-xs">{core.dataset.dataset_id}</span><span className="mt-1 block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Build {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
+        description={<><span className="block font-mono text-xs">{core.dataset.dataset_id}</span><span className="mt-1 block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Run {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
         actions={<><span title={t("datasetDetail.stageStatusTitle", { source: selectedSource || "—", stage: selectedStage })} className="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold capitalize text-accent-subtle-foreground"><span>{selectedStage}</span><span className="font-normal">{sourceStageEntry?.[selectedStage].status ?? "unavailable"}</span></span><QualityBadge status={validation} /><Button size="sm" variant="secondary" aria-haspopup="dialog" onClick={askAboutThis}>{t("datasetDetail.askAboutThis")}</Button><LinkButton size="sm" to={`/builds/${encodeURIComponent(selectedRunId)}/publish?dataset=${encodeURIComponent(core.dataset.dataset_id)}`}>{t("datasetDetail.publishRun")}</LinkButton></>}
       />
 
@@ -295,7 +295,7 @@ export function DatasetDetailPage() {
         </Card>
       ) : null}
 
-      <div className="border-b border-border" role="tablist" aria-label="Dataset detail tabs">
+      <div className="border-b border-border" role="tablist" aria-label="Table detail tabs">
         <div className="flex gap-1 overflow-x-auto">
           {TABS.map((tab) => (
             <button
@@ -333,7 +333,7 @@ function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selected
   const artifactSummary = stageDetail?.stage === "gold" ? stageDetail.exports.map((item) => item.kind).join(", ") || t("datasetDetail.unpublished") : t("datasetDetail.notGoldStage");
   return <div className="space-y-4">
     <DataPassport dataset={dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStages} columnCount={columnCount} artifactSummary={artifactSummary} validation={validation} onAsk={onAsk} />
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Rows" value={rowCount === null ? "—" : rowCount.toLocaleString("ko-KR")} sub={selectedStage} /><MetricCard label="Columns" value={columnCount ?? "—"} sub="Engine stage response" /><MetricCard label="Validation" value={<QualityBadge status={validation} />} sub={selectedSource || t("datasetDetail.noSource")} /><MetricCard label="Updated" value={<span className="text-lg">{formatDateTime(selectedRun?.finished_at ?? selectedRun?.started_at ?? dataset.updated_at)}</span>} sub={`Build ${selectedRun?.run_id ?? dataset.latest_run_id}`} /></div>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Rows" value={rowCount === null ? "—" : rowCount.toLocaleString("ko-KR")} sub={selectedStage} /><MetricCard label="Columns" value={columnCount ?? "—"} sub="Engine stage response" /><MetricCard label="Validation" value={<QualityBadge status={validation} />} sub={selectedSource || t("datasetDetail.noSource")} /><MetricCard label="Updated" value={<span className="text-lg">{formatDateTime(selectedRun?.finished_at ?? selectedRun?.started_at ?? dataset.updated_at)}</span>} sub={`Run ${selectedRun?.run_id ?? dataset.latest_run_id}`} /></div>
     <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]"><Card><h3 className="text-sm font-semibold">Lineage</h3>{sourceStages ? <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center"><div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-center text-sm font-semibold">Source<span className="mt-1 block text-xs font-normal text-muted-foreground">{selectedSource}</span></div>{DATASET_STAGES.map((stageName) => <div key={stageName} className="contents"><span aria-hidden="true" className="text-center text-muted-foreground">→</span><button type="button" aria-label={`${stageName} ${sourceStages[stageName].status}`} aria-pressed={selectedStage === stageName} onClick={() => onSelectStage(stageName)} className={`rounded-lg border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedStage === stageName ? "border-accent bg-accent-subtle" : "border-border bg-card hover:bg-muted"}`}><span className="block text-sm font-semibold capitalize">{stageName}</span><span className="mt-1 block"><StageBadge status={sourceStages[stageName].status} /></span><span className="mt-1 block text-[11px] font-normal text-muted-foreground">{t(STAGE_EXPLAINER_KEY[stageName])}</span></button></div>)}</div> : <Skeleton className="mt-4 h-24 w-full" />}</Card><Card><h3 className="text-sm font-semibold">Stage Detail · <span className="capitalize">{selectedStage}</span></h3>{stageError ? <p className="mt-3 text-sm text-red-700 dark:text-red-300">{stageError}</p> : !stageDetail ? <Skeleton className="mt-4 h-24 w-full" /> : <><dl className="mt-4 space-y-3"><Definition label="Status"><StageBadge status={stageDetail.status} /></Definition><Definition label="Available">{stageDetail.available ? "yes" : "no"}</Definition><Definition label="Provider / Source">{dataset.sources.map((source) => `${source.provider}.${source.dataset}`).join(", ")} · {selectedSource}</Definition><Definition label="Output">{stageDetail.stage === "gold" ? (stageDetail.exports.map((item) => item.kind).join(", ") || t("datasetDetail.outputNone")) : t("datasetDetail.outputNotProvided")}</Definition></dl><div className="mt-4 flex gap-2"><Button variant="secondary" size="sm" onClick={() => onSelectTab("preview")}>Preview</Button><Button variant="secondary" size="sm" onClick={() => onSelectTab("quality")}>{t("datasetDetail.viewQuality")}</Button></div></>}</Card></div>
   </div>;
 }
@@ -362,13 +362,13 @@ function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selecte
       </div>
       <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Definition label="Provider / Source">{dataset.sources.map((source) => `${source.provider}.${source.dataset}`).join(", ") || t("datasetDetail.unavailable")}</Definition>
-        <Definition label="Dataset">{dataset.title}<span className="block font-mono text-xs text-muted-foreground">{dataset.dataset_id}</span></Definition>
+        <Definition label="Table">{dataset.title}<span className="block font-mono text-xs text-muted-foreground">{dataset.dataset_id}</span></Definition>
         <Definition label={t("datasetDetail.runStatusAll")}>{runStatus ?? t("datasetDetail.unavailable")}</Definition>
         <Definition label={t("datasetDetail.selectedStageStatus")}>{sourceStages ? <StageBadge status={sourceStages[selectedStage].status} /> : t("datasetDetail.unavailable")}</Definition>
         <Definition label="Quality"><QualityBadge status={validation} /></Definition>
         <Definition label="Schema">{columnCount === null ? t("datasetDetail.schemaMissing") : `${columnCount} columns`}</Definition>
         <Definition label="BuildSpec digest">{selectedRun?.spec_digest ? <span className="break-all font-mono text-xs">{selectedRun.spec_digest}</span> : t("datasetDetail.unavailable")}</Definition>
-        <Definition label="Artifact">{artifactSummary}</Definition>
+        <Definition label="Snapshot files">{artifactSummary}</Definition>
       </dl>
       <p className="mt-4 text-xs text-muted-foreground">
         {t("datasetDetail.tabsHint", { source: selectedSource || t("datasetDetail.noSource") })}
@@ -407,5 +407,5 @@ function QualityTab({ state, status, results, drift, datasetId, runId, source, s
 
 function BuildsTab({ runs, selectedRunId }: { runs: DatasetRunSummary[]; selectedRunId: string }) {
   const { t } = useTranslation();
-  return <Card className="overflow-hidden p-0"><div className="border-b border-border px-5 py-4"><h3 className="text-sm font-semibold">Recent Builds</h3><p className="mt-1 text-xs text-muted-foreground">{t("datasetDetail.runsNote")}</p></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-5 py-3">Build</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Updated</th><th className="px-5 py-3"></th></tr></thead><tbody>{runs.map((run) => <tr key={run.run_id} className={`border-b border-border last:border-0 ${run.run_id === selectedRunId ? "bg-accent-subtle" : ""}`}><td className="px-5 py-3 font-mono text-xs">{run.run_id}{run.run_id === selectedRunId ? " · selected" : ""}</td><td className="px-5 py-3">{run.status}</td><td className="px-5 py-3">{formatDateTime(run.finished_at ?? run.started_at)}</td><td className="px-5 py-3 text-right"><Link className="font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(run.run_id)}`}>{t("datasetDetail.view")}</Link></td></tr>)}</tbody></table></div></Card>;
+  return <Card className="overflow-hidden p-0"><div className="border-b border-border px-5 py-4"><h3 className="text-sm font-semibold">Recent Runs</h3><p className="mt-1 text-xs text-muted-foreground">{t("datasetDetail.runsNote")}</p></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-5 py-3">Build</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Updated</th><th className="px-5 py-3"></th></tr></thead><tbody>{runs.map((run) => <tr key={run.run_id} className={`border-b border-border last:border-0 ${run.run_id === selectedRunId ? "bg-accent-subtle" : ""}`}><td className="px-5 py-3 font-mono text-xs">{run.run_id}{run.run_id === selectedRunId ? " · selected" : ""}</td><td className="px-5 py-3">{run.status}</td><td className="px-5 py-3">{formatDateTime(run.finished_at ?? run.started_at)}</td><td className="px-5 py-3 text-right"><Link className="font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(run.run_id)}`}>{t("datasetDetail.view")}</Link></td></tr>)}</tbody></table></div></Card>;
 }

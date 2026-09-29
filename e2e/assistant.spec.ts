@@ -36,7 +36,7 @@ test("데모 질문이 결정적 mock 답변 turn를 만든다", async ({ page }
   await demoButton.click();
 
   // Demo question ("What's the quality of this dataset?") appears as question turn (#256 deterministic demo).
-  await expect(page.getByText("이 데이터셋 품질 어때?").first()).toBeVisible({
+  await expect(page.getByText("이 테이블 품질 어때?").first()).toBeVisible({
     timeout: 10_000,
   });
 

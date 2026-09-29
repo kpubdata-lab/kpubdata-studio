@@ -108,7 +108,7 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
     const patchCard = screen.getByText(/BuildSpec에 1건 변경 제안/).closest("div")!;
     expect(within(patchCard).getByText(BADGE_TEXT)).toBeInTheDocument();
 
-    const openBuildCard = screen.getByText(/Build "air-2026-08-14" 상세 열기/).closest("div")!;
+    const openBuildCard = screen.getByText(/Run "air-2026-08-14" 상세 열기/).closest("div")!;
     expect(within(openBuildCard).queryByText(BADGE_TEXT)).not.toBeInTheDocument();
 
     const reportCard = screen.getByText("Report 참고 노트로 추가").closest("div")!;

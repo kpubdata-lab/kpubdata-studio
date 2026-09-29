@@ -64,7 +64,7 @@ function useCatalogFixture() {
 async function goToPreviewStep() {
   renderWizard();
   skipTemplateStep();
-  fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "kma-daily" } });
+  fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
   fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "기상청 일별" } });
   fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "일별 관측 데이터" } });
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
@@ -84,7 +84,7 @@ afterEach(() => {
   previewBuildMock.mockReset();
 });
 
-describe("New Build Wizard", () => {
+describe("Create Table Wizard", () => {
   it("starts on the template step", () => {
     renderWizard();
     expect(screen.getByRole("heading", { name: "템플릿 선택" })).toBeInTheDocument();
@@ -99,10 +99,10 @@ describe("New Build Wizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /대기오염 정보/ }));
 
     expect(screen.getByRole("heading", { name: "기본 정보" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/데이터셋 ID/)).toHaveValue("datago-air-quality");
+    expect(screen.getByLabelText(/테이블 ID/)).toHaveValue("datago-air-quality");
     skipTemplateStep();
     await screen.findByRole("heading", { name: "데이터 소스" });
-    expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).toHaveValue("air_quality");
+    expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("air_quality");
   });
 
   it("marks templates missing from Builder catalog unavailable", async () => {
@@ -118,7 +118,7 @@ describe("New Build Wizard", () => {
     useCatalogFixture();
     renderWizard();
     skipTemplateStep();
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "custom" } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "custom" } });
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "Custom" } });
     fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "Custom dataset" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
@@ -126,7 +126,7 @@ describe("New Build Wizard", () => {
     await screen.findByRole("heading", { name: "데이터 소스" });
     fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
 
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).toHaveValue("air_quality"));
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("air_quality"));
     expect(screen.getByRole("option", { name: /대기오염/ })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: /population/ })).not.toBeInTheDocument();
   });
@@ -135,14 +135,14 @@ describe("New Build Wizard", () => {
     renderWizard();
     skipTemplateStep(); // 템플릿 → 기본 정보
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
-    expect(await screen.findByText(/데이터셋 ID를 입력해주세요/)).toBeInTheDocument();
+    expect(await screen.findByText(/테이블 ID를 입력해주세요/)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "기본 정보" })).toBeInTheDocument();
   });
 
   it("advances to the source step once identity fields are filled", async () => {
     renderWizard();
     skipTemplateStep();
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "kma-daily" } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "기상청 일별" } });
     fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "일별 관측 데이터" } });
 
@@ -155,14 +155,14 @@ describe("New Build Wizard", () => {
   it("blocks the params step when the JSON is invalid", async () => {
     renderWizard();
     skipTemplateStep();
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "kma-daily" } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "기상청 일별" } });
     fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "일별 관측" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "데이터 소스" });
     fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "air_quality" } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "파라미터" });

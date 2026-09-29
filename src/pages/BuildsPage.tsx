@@ -171,7 +171,7 @@ export function BuildsPage() {
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       {/* App Shell topbar already has global "create new build" CTA (#255 §1) — don't duplicate action here. */}
       <PageHeader
-        eyebrow="Builds / Runs"
+        eyebrow="Runs"
         title={t("builds.page.title")}
         description={
           <span>

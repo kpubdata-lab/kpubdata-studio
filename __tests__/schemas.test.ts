@@ -53,7 +53,7 @@ describe("buildSpecSchema", () => {
     expect(result.success).toBe(false);
 
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe("Dataset ID is required.");
+      expect(result.error.issues[0]?.message).toBe("Table ID (dataset_id) is required.");
     }
   });
 });

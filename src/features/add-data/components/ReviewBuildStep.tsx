@@ -179,7 +179,7 @@ export function ReviewBuildStep({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="space-y-3">
-          <p className="text-sm font-semibold">Build plan</p>
+          <p className="text-sm font-semibold">Table creation plan</p>
           <dl className="divide-y divide-border text-sm">
             {[
               [t("addData.review.planSource"), sourceSummary(draft)],

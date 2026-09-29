@@ -87,7 +87,7 @@ test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮�
   await page.getByRole("button", { name: /Preview 새로고침/ }).click();
   await page.getByRole("button", { name: "다음" }).click();
 
-  const buildButton = page.getByRole("button", { name: "Build 시작" });
+  const buildButton = page.getByRole("button", { name: "테이블 만들기" });
   await buildButton.scrollIntoViewIfNeeded();
   await expect(buildButton).toBeVisible();
 
@@ -98,7 +98,7 @@ test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮�
   expect(stickyBox).not.toBeNull();
   if (buildBox && stickyBox) {
      // Even bottom half of Start Build button must not be hidden by sticky bar.
-    expect(buildBox.y + buildBox.height, "Build 시작 버튼이 sticky bar에 가려집니다").toBeLessThanOrEqual(stickyBox.y);
+    expect(buildBox.y + buildBox.height, "테이블 만들기 버튼이 sticky bar에 가려집니다").toBeLessThanOrEqual(stickyBox.y);
   }
 
   await expectNoPageErrors(errors);

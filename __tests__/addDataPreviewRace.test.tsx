@@ -85,9 +85,9 @@ describe("Add Data Workbench — Preview latest-request race (#283 후속 리뷰
     await screen.findByLabelText("제공자 (Provider)");
     await screen.findByRole("option", { name: "datago" });
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/데이터셋 \(Dataset\)/)).not.toBeDisabled());
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
     // 실연동 모드의 기본 MSW catalog handler는 dataset "air_quality"만 제공한다.
-    fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "air_quality" } });
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
     next();
     await screen.findByText("미리보기 · 검증 (stub)");
 

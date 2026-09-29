@@ -80,7 +80,7 @@ export const sourceRefSchema = z
         ctx.addIssue({ code: "custom", path: ["provider"], message: "Provider is required." });
       }
       if (!source.dataset) {
-        ctx.addIssue({ code: "custom", path: ["dataset"], message: "Dataset is required." });
+        ctx.addIssue({ code: "custom", path: ["dataset"], message: "Source dataset is required." });
       }
     } else if (kind === "file") {
       if (!source.uploadId) {
@@ -109,7 +109,7 @@ export const exportTargetSchema = z.object({
 
 /** schema validating entire spec structure generated from new build screen */
 export const buildSpecSchema = z.object({
-  datasetId: z.string().min(1, "Dataset ID is required."),
+  datasetId: z.string().min(1, "Table ID (dataset_id) is required."),
   title: z.string().min(1, "Title is required."),
   description: z.string().min(1, "Description is required."),
   sources: z.array(sourceRefSchema).min(1, "At least one source is required."),

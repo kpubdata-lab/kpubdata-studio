@@ -15,7 +15,7 @@ function renderPage(element: ReactNode) {
 describe("remaining pages", () => {
   it("BuildsPage shows the Korean heading and loads run history (#255 master-detail)", async () => {
     renderPage(<BuildsPage />);
-    expect(screen.getByRole("heading", { name: "빌드 실행 이력" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "실행 이력" })).toBeInTheDocument();
     // mock 실행 이력이 로드된다.
     expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
   });
@@ -28,16 +28,16 @@ describe("remaining pages", () => {
 
   it("ArtifactsPage guides to the build list", () => {
     renderPage(<ArtifactsPage />);
-    expect(screen.getByRole("link", { name: "빌드 목록으로" })).toHaveAttribute("href", "/builds");
+    expect(screen.getByRole("link", { name: "실행 목록으로" })).toHaveAttribute("href", "/builds");
   });
 
   it("legacy Validate/Preview pages route into the wizard", () => {
     renderPage(<ValidatePage />);
-    expect(screen.getByRole("link", { name: "새 빌드 만들기" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "테이블 만들기" })).toHaveAttribute(
       "href",
       "/builds/new",
     );
     renderPage(<PreviewPage />);
-    expect(screen.getAllByRole("link", { name: "새 빌드 만들기" }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole("link", { name: "테이블 만들기" }).length).toBeGreaterThanOrEqual(1);
   });
 });

@@ -462,9 +462,9 @@ function KpiCards({ stats, kpi }: { stats: DashboardStats; kpi: KpiPhases }) {
   const { t } = useTranslation();
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <KpiCard label="DATASETS" help={t("home.kpi.datasets")} value={stats.datasetCount} loading={kpi.datasets === "loading"} />
+      <KpiCard label="TABLES" help={t("home.kpi.datasets")} value={stats.datasetCount} loading={kpi.datasets === "loading"} />
       <KpiCard
-        label="SUCCEEDED (24H)"
+        label="RUNS SUCCEEDED (24H)"
         help={t("home.kpi.succeeded")}
         value={stats.buildSuccess}
         loading={kpi.monitoring === "loading"}

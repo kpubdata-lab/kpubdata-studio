@@ -55,9 +55,9 @@ describe("새 IA placeholder 화면 (#247)", () => {
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 
-  it("Dataset Catalog is replaced with the built dataset P0 screen", async () => {
+  it("Table Catalog is replaced with the built dataset P0 screen", async () => {
     renderPage(<DatasetCatalogPage />);
-    expect(await screen.findByRole("heading", { name: "Dataset Catalog" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Table Catalog" })).toBeInTheDocument();
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 

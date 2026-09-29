@@ -1,5 +1,5 @@
 /**
- * New Build 템플릿 catalog 상태(loading/error/loaded) 테스트 (#Phase2 UI polish).
+ * Create Table 템플릿 catalog 상태(loading/error/loaded) 테스트 (#Phase2 UI polish).
  *
  * loading/error 상태에서는 아직 Builder catalog와 대조할 수 없으므로 어떤 템플릿도
  * "준비 중"으로 잘못 분류하지 않는다(NewBuildPage.tsx의 isTemplateAvailable/폴백 grid 참고).
@@ -30,7 +30,7 @@ function failCatalog() {
   mswServer.use(http.get(`${API_BASE}/catalog`, () => HttpResponse.error()));
 }
 
-describe("New Build 템플릿 catalog 상태 (#Phase2 UI polish)", () => {
+describe("Create Table 템플릿 catalog 상태 (#Phase2 UI polish)", () => {
   it("loading: shows the loading indicator and does not mislabel any template as 준비 중 (unavailable)", async () => {
     stallCatalog();
     renderWizard();

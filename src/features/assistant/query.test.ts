@@ -28,7 +28,7 @@ describe("blockedReason (#256)", () => {
   });
 
   it("blocks execution when dataset/run aren't both selected", () => {
-    expect(blockedReason({ page: "quality", stage: "silver" }, SILVER_SQL)).toMatch(/dataset.*run|run.*dataset/i);
+    expect(blockedReason({ page: "quality", stage: "silver" }, SILVER_SQL)).toMatch(/테이블.*run|run.*테이블|table.*run|run.*table/i);
   });
 
   it("allows execution for a matching Silver/Gold context", () => {

@@ -24,24 +24,24 @@ describe("Layout header CTA (#49)", () => {
     );
   });
 
-  it("links to New Build from the dashboard", () => {
+  it("links to Create Table from the dashboard", () => {
     renderLayoutAt("/");
-    expect(screen.getByRole("link", { name: "새 빌드 만들기" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "테이블 만들기" })).toHaveAttribute(
       "href",
       "/builds/new",
     );
   });
 
-  it("switches the CTA to the builds list while on the New Build page", () => {
+  it("switches the CTA to the builds list while on the Create Table page", () => {
     renderLayoutAt("/builds/new");
-    const cta = screen.getByRole("link", { name: "빌드 목록" });
+    const cta = screen.getByRole("link", { name: "실행 목록" });
     expect(cta).toHaveAttribute("href", "/builds");
-    expect(screen.queryByRole("link", { name: "새 빌드 만들기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "테이블 만들기" })).not.toBeInTheDocument();
   });
 
   it("offers '결과물 보기' from a run page", () => {
     renderLayoutAt("/builds/run-1/run");
-    expect(screen.getByRole("link", { name: "결과물 보기" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "스냅샷 파일 보기" })).toHaveAttribute(
       "href",
       "/builds/run-1/artifacts",
     );

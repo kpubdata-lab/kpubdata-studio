@@ -252,7 +252,7 @@ export function AssistantReportPanel({
               <div className="text-xs text-muted-foreground">
                 <p className="font-semibold uppercase tracking-wider">{t("reports.assistantPanel.evidence")}</p>
                 <ul className="mt-1 list-disc space-y-0.5 pl-4">
-                  <li>Dataset: {report.datasetId}</li>
+                  <li>Table: {report.datasetId}</li>
                   <li>Run: {report.baseRunId}</li>
                   {activeTurn.response.evidenceRefs.map((ref) => (
                     <li key={`${ref.kind}:${ref.id}`}>{ref.label}</li>

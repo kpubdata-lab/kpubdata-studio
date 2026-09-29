@@ -23,11 +23,11 @@ function renderCatalog(initialEntry = "/datasets") {
 beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "false"));
 afterEach(() => vi.unstubAllEnvs());
 
-describe("Dataset Catalog P0 (#253)", () => {
+describe("Table Catalog P0 (#253)", () => {
   it("searches dataset/provider and preserves q in the URL", async () => {
     renderCatalog();
     await screen.findByText("대기질 통합 데이터");
-    fireEvent.change(screen.getByLabelText("Dataset / Provider 검색"), { target: { value: "population" } });
+    fireEvent.change(screen.getByLabelText("소스 데이터셋 / Provider 검색"), { target: { value: "population" } });
     expect(screen.getByText("행정구역별 인구")).toBeInTheDocument();
     expect(screen.queryByText("대기질 통합 데이터")).not.toBeInTheDocument();
     expect(screen.getByTestId("location")).toHaveTextContent("?q=population");
@@ -58,7 +58,7 @@ describe("Dataset Catalog P0 (#253)", () => {
     renderCatalog();
     await screen.findByText("대기질 통합 데이터");
     expect(screen.getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual([
-      "Dataset", "Provider", "Stage", "Validation", "Updated",
+      "Table", "Provider", "Stage", "Validation", "Updated",
     ]);
     expect(screen.queryByRole("columnheader", { name: "Row count" })).not.toBeInTheDocument();
   });

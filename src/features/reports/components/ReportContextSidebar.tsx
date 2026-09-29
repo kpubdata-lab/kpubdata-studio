@@ -52,7 +52,7 @@ export function ReportContextSidebar({
       <Card>
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Report Context</p>
         <div className="mt-2 divide-y divide-border">
-          <Row label="Dataset" value={report.datasetId} />
+          <Row label="Table" value={report.datasetId} />
           <Row label="Base Run" value={report.baseRunId} />
           {sourceKeys.length > 0 ? <Row label="Source" value={sourceKeys.join(", ")} /> : null}
           <Row label="BuildSpec digest" value={report.buildSpecDigest ?? "N/A"} />

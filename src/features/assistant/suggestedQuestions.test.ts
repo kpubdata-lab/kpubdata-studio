@@ -54,7 +54,7 @@ describe("getSuggestedQuestions — context별 초기 추천", () => {
 
   it("B. Dataset context가 있으면 Dataset 질문을 노출한다", () => {
     const result = ask({ page: "dataset-detail", datasetId: "ds-1" });
-    expect(result.some((q) => q.includes("데이터셋의 구조"))).toBe(true);
+    expect(result.some((q) => q.includes("테이블의 구조"))).toBe(true);
     expect(result).not.toEqual(START_QUESTIONS);
   });
 

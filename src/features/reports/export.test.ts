@@ -63,7 +63,7 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
   it("Markdown 내보내기에 title/dataset/base run/생성시각/evidence 조회시각을 포함한다", () => {
     const md = generateMarkdownExport(makeReport(), "current");
     expect(md).toContain("테스트 Report");
-    expect(md).toContain("Dataset: air-quality");
+    expect(md).toContain("Table: air-quality");
     expect(md).toContain("Base Run: air-2026-08-14");
     expect(md).toContain("생성 시각");
     expect(md).toContain("Evidence 조회 시각");

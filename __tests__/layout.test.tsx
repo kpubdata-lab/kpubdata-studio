@@ -67,14 +67,14 @@ describe("Layout 제품 문구 중복 제거", () => {
     const aside = screen.getByRole("navigation").closest("aside")!;
 
     expect(within(aside).getByRole("link", { name: "KPubData Studio 홈" })).toBeInTheDocument();
-    expect(within(aside).queryByText("공공데이터를 데이터셋으로 만드는 워크스페이스")).not.toBeInTheDocument();
+    expect(within(aside).queryByText("공공데이터를 테이블로 만드는 워크스페이스")).not.toBeInTheDocument();
   });
 
   it("topbar에는 workspace context tagline이 그대로 남는다", () => {
     renderLayout();
     const header = screen.getByRole("banner");
 
-    expect(within(header).getByText("공공데이터를 데이터셋으로 만드는 워크스페이스")).toBeInTheDocument();
+    expect(within(header).getByText("공공데이터를 테이블로 만드는 워크스페이스")).toBeInTheDocument();
   });
 });
 

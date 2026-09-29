@@ -98,7 +98,7 @@ export function DatasetCatalogPage() {
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         eyebrow="Data"
-        title="Dataset Catalog"
+        title="Table Catalog"
         description={t("catalog.page.desc")}
       />
 
@@ -144,7 +144,7 @@ export function DatasetCatalogPage() {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-5 py-3">Dataset</th><th className="px-5 py-3">Provider</th><th className="px-5 py-3">Stage</th><th className="px-5 py-3">Validation</th><th className="px-5 py-3">Updated</th>
+                  <th className="px-5 py-3">Table</th><th className="px-5 py-3">Provider</th><th className="px-5 py-3">Stage</th><th className="px-5 py-3">Validation</th><th className="px-5 py-3">Updated</th>
                 </tr>
               </thead>
               <tbody>

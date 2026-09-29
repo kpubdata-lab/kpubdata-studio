@@ -59,7 +59,7 @@ describe("Recent Work", () => {
 
     expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
     expect((await screen.findAllByText("내 스펙")).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Dataset").length + screen.getAllByText("Build").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Table").length + screen.getAllByText("Run").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Saved BuildSpec").length).toBeGreaterThan(0);
     expect(screen.getAllByText("이 브라우저").length).toBeGreaterThan(0);
     expect(screen.getAllByText("KPubData Engine").length).toBeGreaterThan(0);
@@ -88,7 +88,7 @@ describe("Recent Work", () => {
     vi.spyOn(datasetsApi, "listDatasets").mockRejectedValue(new Error("Dataset 조회 실패"));
     renderWorkspace();
 
-    expect(await screen.findByText("Dataset 목록을 불러오지 못했습니다")).toBeInTheDocument();
+    expect(await screen.findByText("테이블 목록을 불러오지 못했습니다")).toBeInTheDocument();
     expect(screen.getByText("Dataset 조회 실패")).toBeInTheDocument();
     // Builder dataset 조회가 실패해도 로컬 Saved BuildSpec은 그대로 보인다.
     expect(screen.getAllByText("로컬 항목 유지됨").length).toBeGreaterThan(0);
@@ -97,12 +97,12 @@ describe("Recent Work", () => {
   it("retries the failed dataset load without affecting the build load", async () => {
     const spy = vi.spyOn(datasetsApi, "listDatasets").mockRejectedValueOnce(new Error("일시 오류"));
     renderWorkspace();
-    await screen.findByText("Dataset 목록을 불러오지 못했습니다");
+    await screen.findByText("테이블 목록을 불러오지 못했습니다");
 
     spy.mockResolvedValueOnce([]);
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
-    await waitFor(() => expect(screen.queryByText("Dataset 목록을 불러오지 못했습니다")).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText("테이블 목록을 불러오지 못했습니다")).not.toBeInTheDocument());
   });
 
   it("shows the local-storage-limitation notice", async () => {
@@ -112,7 +112,7 @@ describe("Recent Work", () => {
 });
 
 describe("Saved BuildSpecs", () => {
-  it("shows an empty state with a link to New Build when nothing is saved", async () => {
+  it("shows an empty state with a link to Create Table when nothing is saved", async () => {
     renderWorkspace();
     expect(await screen.findByText("저장된 BuildSpec이 없습니다")).toBeInTheDocument();
   });

@@ -20,7 +20,7 @@ describe("describeProviderProbe", () => {
     expect(p.tone).toBe("warning");
     expect(p.label).toBe("확인 필요");
     expect(p.title).toBe("인증 또는 API 활용신청 확인 필요");
-    expect(p.detail).toMatch(/Dataset\/API별 사용 권한/);
+    expect(p.detail).toMatch(/소스 데이터셋\/API별 사용 권한/);
   });
 
   it("credential이 없으면 403이라도 일반 인증 오류로 매핑한다", () => {

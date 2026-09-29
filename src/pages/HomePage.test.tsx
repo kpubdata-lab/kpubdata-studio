@@ -147,9 +147,9 @@ describe("HomePage 대시보드 KPI", () => {
     baseHandlers();
     renderHome();
 
-    expect(await within(kpiCard("DATASETS")).findByText("12")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("12")).toBeInTheDocument();
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
-    expect(await within(kpiCard("SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
+    expect(await within(kpiCard("RUNS SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
     expect(await within(kpiCard("RUNNING")).findByText("3")).toBeInTheDocument();
   });
 
@@ -158,10 +158,10 @@ describe("HomePage 대시보드 KPI", () => {
     renderHome();
 
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
-    expect(await within(kpiCard("SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
+    expect(await within(kpiCard("RUNS SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
     // 5xx retries with exponential backoff in apiFetch, so catch takes time.
     expect(
-      await within(kpiCard("DATASETS")).findByText("확인 불가", undefined),
+      await within(kpiCard("TABLES")).findByText("확인 불가", undefined),
     ).toBeInTheDocument();
   });
 
@@ -169,8 +169,8 @@ describe("HomePage 대시보드 KPI", () => {
     baseHandlers({ quality: () => HttpResponse.json({ error: "not found" }, { status: 404 }) });
     renderHome();
 
-    expect(await within(kpiCard("DATASETS")).findByText("12")).toBeInTheDocument();
-    expect(await within(kpiCard("SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("12")).toBeInTheDocument();
+    expect(await within(kpiCard("RUNS SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
     expect(within(kpiCard("QUALITY WARN (24H)")).getByText("확인 불가")).toBeInTheDocument();
   });
 
@@ -181,10 +181,10 @@ describe("HomePage 대시보드 KPI", () => {
     });
     renderHome();
 
-    expect(await within(kpiCard("DATASETS")).findByText("12")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("12")).toBeInTheDocument();
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
     expect(
-      await within(kpiCard("SUCCEEDED (24H)")).findByText("확인 불가", undefined),
+      await within(kpiCard("RUNS SUCCEEDED (24H)")).findByText("확인 불가", undefined),
     ).toBeInTheDocument();
     expect(within(kpiCard("RUNNING")).getByText("확인 불가")).toBeInTheDocument();
   });
@@ -212,8 +212,8 @@ describe("HomePage 대시보드 KPI", () => {
     renderHome();
 
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
-    expect(await within(kpiCard("DATASETS")).findByText("확인 불가")).toBeInTheDocument();
-    expect(within(kpiCard("DATASETS")).queryByText("1")).not.toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("확인 불가")).toBeInTheDocument();
+    expect(within(kpiCard("TABLES")).queryByText("1")).not.toBeInTheDocument();
   });
 
   it("Recent Builds는 KPI 요청이 지연돼도 자기 데이터를 즉시 렌더한다", async () => {
@@ -248,8 +248,8 @@ describe("HomePage 대시보드 KPI", () => {
     renderHome();
 
     expect(await screen.findByText("작업 현황을 한눈에 확인하세요")).toBeInTheDocument();
-    expect(await within(kpiCard("DATASETS")).findByText("3")).toBeInTheDocument();
-    expect(await within(kpiCard("SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("3")).toBeInTheDocument();
+    expect(await within(kpiCard("RUNS SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
   });
 
@@ -258,10 +258,10 @@ describe("HomePage 대시보드 KPI", () => {
     renderHome();
 
     expect(
-      await screen.findByText("빌드 목록을 불러올 수 없습니다", undefined),
+      await screen.findByText("실행 목록을 불러올 수 없습니다", undefined),
     ).toBeInTheDocument();
-    expect(await within(kpiCard("DATASETS")).findByText("12")).toBeInTheDocument();
-    expect(await within(kpiCard("SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("12")).toBeInTheDocument();
+    expect(await within(kpiCard("RUNS SUCCEEDED (24H)")).findByText("9")).toBeInTheDocument();
     expect(await within(kpiCard("QUALITY WARN (24H)")).findByText("4")).toBeInTheDocument();
   });
 });
@@ -303,7 +303,7 @@ describe("HomePage 최근 품질 상태", () => {
     renderHome();
 
     expect(
-      await screen.findByText("최근 확인한 Build에서 품질 경고가 없습니다"),
+      await screen.findByText("최근 확인한 Run에서 품질 경고가 없습니다"),
     ).toBeInTheDocument();
   });
 
@@ -320,7 +320,7 @@ describe("HomePage 최근 품질 상태", () => {
     renderHome();
 
     expect(await screen.findByText("일부 품질 정보를 확인할 수 없습니다")).toBeInTheDocument();
-    expect(screen.queryByText("최근 확인한 Build에서 품질 경고가 없습니다")).not.toBeInTheDocument();
+    expect(screen.queryByText("최근 확인한 Run에서 품질 경고가 없습니다")).not.toBeInTheDocument();
   });
 
   it("succeeded가 아닌 Run(failed/cancelled)에는 getBuildQuality를 호출하지 않는다", async () => {
@@ -396,7 +396,7 @@ describe("HomePage 최근 품질 상태", () => {
     });
     renderHome();
 
-    await screen.findByText("최근 확인한 Build에서 품질 경고가 없습니다");
+    await screen.findByText("최근 확인한 Run에서 품질 경고가 없습니다");
     expect(detailRuns).toHaveLength(5);
     expect(detailRuns).not.toContain("r0");
   });
@@ -408,7 +408,7 @@ describe("HomePage 최근 품질 상태", () => {
  * If total cannot be verified (old Builder / 404·5xx), show existing dashboard.
  */
 describe("HomePage 신규 사용자 판정", () => {
-  const NEW_USER_HEADING = "공공데이터를 찾아 신뢰할 수 있는 데이터셋으로 만드세요";
+  const NEW_USER_HEADING = "공공데이터를 찾아 신뢰할 수 있는 테이블로 만드세요";
   const DASHBOARD_HEADING = "작업 현황을 한눈에 확인하세요";
 
   it("dataset total > 0이고 빌드가 없으면 신규 사용자가 아니다(기존 대시보드)", async () => {
@@ -419,7 +419,7 @@ describe("HomePage 신규 사용자 판정", () => {
     renderHome();
 
     expect(await screen.findByText(DASHBOARD_HEADING)).toBeInTheDocument();
-    expect(await within(kpiCard("DATASETS")).findByText("3")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("3")).toBeInTheDocument();
     expect(screen.queryByText(NEW_USER_HEADING)).not.toBeInTheDocument();
   });
 
@@ -442,7 +442,7 @@ describe("HomePage 신규 사용자 판정", () => {
     renderHome();
 
     expect(await screen.findByText(DASHBOARD_HEADING)).toBeInTheDocument();
-    expect(await within(kpiCard("DATASETS")).findByText("확인 불가")).toBeInTheDocument();
+    expect(await within(kpiCard("TABLES")).findByText("확인 불가")).toBeInTheDocument();
     expect(screen.queryByText(NEW_USER_HEADING)).not.toBeInTheDocument();
   });
 
@@ -455,7 +455,7 @@ describe("HomePage 신규 사용자 판정", () => {
 
     expect(await screen.findByText(DASHBOARD_HEADING)).toBeInTheDocument();
     expect(
-      await within(kpiCard("DATASETS")).findByText("확인 불가", undefined),
+      await within(kpiCard("TABLES")).findByText("확인 불가", undefined),
     ).toBeInTheDocument();
     expect(screen.queryByText(NEW_USER_HEADING)).not.toBeInTheDocument();
   });
@@ -474,8 +474,8 @@ describe("HomePage 전체 작업 흐름 (설명형, 클릭 카드 아님)", () =
     expect(screen.getByText("Discover 또는 직접 데이터 추가")).toBeInTheDocument();
     expect(screen.getByText("가져오기 준비")).toBeInTheDocument();
     expect(screen.getByText("Public API는 인증·활용신청·요청값을 확인")).toBeInTheDocument();
-    expect(screen.getByText("Preview · Build")).toBeInTheDocument();
-    expect(screen.getByText("데이터를 미리 확인·검증한 뒤 Build")).toBeInTheDocument();
+    expect(screen.getByText("Preview · 테이블 만들기")).toBeInTheDocument();
+    expect(screen.getByText("데이터를 미리 확인·검증한 뒤 테이블 만들기")).toBeInTheDocument();
     expect(screen.getByText("품질 확인 · 활용")).toBeInTheDocument();
     expect(screen.getByText("Quality · Ask KPubData · Export · Publish")).toBeInTheDocument();
 

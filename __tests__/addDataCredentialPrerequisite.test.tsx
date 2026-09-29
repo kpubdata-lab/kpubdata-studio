@@ -74,8 +74,8 @@ async function selectAirQuality() {
   fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
   // provider 선택이 반영되면 Dataset select가 열리고 해당 provider의 dataset option이 붙는다.
   await screen.findByRole("option", { name: "대기오염 (air_quality)" });
-  fireEvent.change(screen.getByLabelText(/데이터셋 \(Dataset\)/), { target: { value: "air_quality" } });
-  await screen.findByText("이 Dataset의 요청 파라미터");
+  fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
+  await screen.findByText("이 소스 데이터셋의 요청 파라미터");
 }
 
 afterEach(() => {

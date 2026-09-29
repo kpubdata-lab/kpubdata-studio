@@ -1,5 +1,5 @@
 /**
- * New Build wizard step component test (#379).
+ * Create Table wizard step component test (#379).
  *
  * Isolate from page and lock each step rendering correctly. Especially ReviewStep run button
  * moved from page's `disabled={!valid || running || !spec}` to single `canRun`, so verify

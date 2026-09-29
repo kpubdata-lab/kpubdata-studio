@@ -26,7 +26,7 @@ function renderAt(path: string) {
 async function goToReviewAndValidate(path = "/builds/new") {
   renderAt(path);
   next(); // 템플릿 → 기본 정보
-  fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "air-quality" } });
+  fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "air-quality" } });
   fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "대기오염" } });
   fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "설명" } });
   next();
@@ -42,7 +42,7 @@ async function goToReviewAndValidate(path = "/builds/new") {
   next();
   await screen.findByRole("heading", { name: "검증·실행" });
   fireEvent.click(screen.getByRole("button", { name: "다시 검증" }));
-  await screen.findByText("검증을 통과했습니다. 빌드를 실행할 수 있습니다.");
+  await screen.findByText("검증을 통과했습니다. 실행할 수 있습니다.");
 }
 
 beforeEach(() => {
@@ -71,7 +71,7 @@ describe("이 스펙 저장 (Review 단계)", () => {
     vi.spyOn(window, "prompt").mockReturnValue("검증 전 저장");
     renderAt("/builds/new");
     next();
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "air-quality" } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "air-quality" } });
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "대기오염" } });
     fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "설명" } });
     next();

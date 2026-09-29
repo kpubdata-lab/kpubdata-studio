@@ -20,14 +20,14 @@ describe("resolveAssistantContext (#247, #256)", () => {
 
   it("extracts datasetId from a dataset detail route", () => {
     const { context, pageLabel } = resolveAssistantContext("/datasets/air-quality");
-    expect(pageLabel).toBe("Dataset 상세");
+    expect(pageLabel).toBe("테이블 상세");
     expect(context.page).toBe("dataset-detail");
     expect(context.datasetId).toBe("air-quality");
   });
 
   it("does not treat the dataset catalog itself as a dataset id", () => {
     const { context, pageLabel } = resolveAssistantContext("/datasets");
-    expect(pageLabel).toBe("Dataset Catalog");
+    expect(pageLabel).toBe("테이블 카탈로그");
     expect(context.datasetId).toBeUndefined();
   });
 

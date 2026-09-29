@@ -55,7 +55,7 @@ describe("Builds run history (#12, #255 master-detail)", () => {
       .mockRejectedValueOnce(new Error("네트워크 오류"));
     renderBuilds();
 
-    expect(await screen.findByText("빌드 목록을 불러오지 못했습니다")).toBeInTheDocument();
+    expect(await screen.findByText("실행 목록을 불러오지 못했습니다")).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("네트워크 오류");
 
     // 재시도하면 실제 목록을 다시 불러온다.

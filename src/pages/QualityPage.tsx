@@ -249,7 +249,7 @@ export function QualityPage() {
    // Composite context string showing "which Dataset/Run/Source/Stage" for Rule Pass Rate /
    // Recent Issues / Schema Drift to always be clear (#254 review §3, §7).
   const contextLabel = [
-    selectedDataset ? `Dataset: ${selectedDataset.title}` : null,
+    selectedDataset ? `Table: ${selectedDataset.title}` : null,
     selectedRunId ? `Run: ${selectedRunId}` : null,
     `Source: ${scopeLabel}`,
     selectedStage ? `Stage: ${selectedStage}` : null,

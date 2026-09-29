@@ -28,7 +28,7 @@ function renderWizard() {
   );
 }
 
-describe("New Build draft persistence (#10)", () => {
+describe("Create Table draft persistence (#10)", () => {
   beforeEach(() => {
     clearDraft();
     previewBuildMock.mockReset().mockResolvedValue({ rows: [], schema: {}, warnings: [] });
@@ -41,7 +41,7 @@ describe("New Build draft persistence (#10)", () => {
     const first = renderWizard();
     // 템플릿 → 기본 정보
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "kma-daily" } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
     fireEvent.click(screen.getByRole("button", { name: "초안 저장" }));
     expect(screen.getByRole("button", { name: /저장됨/ })).toBeInTheDocument();
 
@@ -53,14 +53,14 @@ describe("New Build draft persistence (#10)", () => {
     // 불러오면 저장한 값으로 채워진 기본 정보 단계로 이동한다.
     fireEvent.click(screen.getByRole("button", { name: "불러오기" }));
     expect(screen.getByRole("heading", { name: "기본 정보" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/데이터셋 ID/)).toHaveValue("kma-daily");
+    expect(screen.getByLabelText(/테이블 ID/)).toHaveValue("kma-daily");
   });
 
   it("scrubs credential-like sourceParams before writing the draft to localStorage (S07)", async () => {
     const secret = "abcdef0123456789abcdef0123456789ABCDEF";
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: "다음" })); // 템플릿 → 기본 정보
-    fireEvent.change(screen.getByLabelText(/데이터셋 ID/), { target: { value: "air-quality" } });
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "air-quality" } });
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "대기오염" } });
     fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "설명" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
@@ -160,7 +160,7 @@ describe("New Build draft persistence (#10)", () => {
     expect(validateSpecMock).toHaveBeenCalledTimes(0);
 
     // Run 경로 — 버튼은 disabled고, 강제 클릭해도 Builder 실행(executeBuild)은 0회.
-    const runButton = screen.getByRole("button", { name: "빌드 실행" });
+    const runButton = screen.getByRole("button", { name: "테이블 만들기" });
     expect(runButton).toBeDisabled();
     fireEvent.click(runButton);
     expect(executeBuildMock).toHaveBeenCalledTimes(0);

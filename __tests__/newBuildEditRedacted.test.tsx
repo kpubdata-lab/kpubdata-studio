@@ -123,14 +123,14 @@ describe("Build Edit — 복원된 redaction marker fail-closed (S07)", () => {
 
     expect(await screen.findByText(/시크릿이 포함된 파라미터 값이 제거되었습니다/)).toBeInTheDocument();
     expect(
-      screen.queryByText("검증을 통과했습니다. 빌드를 실행할 수 있습니다."),
+      screen.queryByText("검증을 통과했습니다. 실행할 수 있습니다."),
     ).not.toBeInTheDocument();
 
     // 핵심: Builder `/validate`가 호출되지 않았다(오류는 클라이언트 가드에서 났다).
     expect(validateSpecMock).toHaveBeenCalledTimes(0);
 
     // Run 경로도 막혀 있다 — 버튼은 disabled고, 강제로 클릭해도 executeBuild는 0회.
-    const runButton = screen.getByRole("button", { name: "빌드 실행" });
+    const runButton = screen.getByRole("button", { name: "갱신" });
     expect(runButton).toBeDisabled();
     fireEvent.click(runButton);
     expect(executeBuildMock).toHaveBeenCalledTimes(0);
@@ -159,7 +159,7 @@ describe("Build Edit — 복원된 redaction marker fail-closed (S07)", () => {
     ).toBeInTheDocument();
 
     // 실행 경로 시도.
-    fireEvent.click(screen.getByRole("button", { name: "빌드 실행" }));
+    fireEvent.click(screen.getByRole("button", { name: "갱신" }));
 
     // 세 경로 모두 Builder로 나가지 않았다.
     expectNoBuilderCalls();

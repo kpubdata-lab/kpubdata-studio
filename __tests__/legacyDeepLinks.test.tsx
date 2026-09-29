@@ -41,14 +41,14 @@ describe("router 딥링크 회귀 (#247)", () => {
     expect(await screen.findByRole("heading", { name: "데이터 미리보기" })).toBeInTheDocument();
 
     await navigateTo("/artifacts");
-    expect(await screen.findByRole("heading", { name: "생성된 결과물" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "생성된 스냅샷 파일" })).toBeInTheDocument();
   });
 
   it("기존 build 단위 딥링크(:buildId/*)는 그대로 유지된다", async () => {
     render(<RouterProvider router={router} />);
 
     await navigateTo("/builds/abc/run");
-    expect(await screen.findByText("상세 진행은 Build 상세에서 확인하세요")).toBeInTheDocument();
+    expect(await screen.findByText("상세 진행은 Run 상세에서 확인하세요")).toBeInTheDocument();
 
     await navigateTo("/builds/abc/artifacts");
     expect(await screen.findByText("Manifest 요약")).toBeInTheDocument();
