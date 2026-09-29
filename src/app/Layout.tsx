@@ -16,6 +16,7 @@ import { AssistantSearchInput } from "@/features/assistant/AssistantSearchInput"
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { VersionMismatchBanner } from "@/features/version-check/VersionMismatchBanner";
 import { crumbsFor } from "./breadcrumb";
+import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
 
 const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
 const sidebarSymbolUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/sidebar_dark.svg", import.meta.url).href;
@@ -78,7 +79,7 @@ interface NavGroup {
 // Queries join ANALYZE when those screens exist (#417); a link to nothing is worse
 // than no link. Connections sits with Settings at the bottom. URLs are unchanged —
 // renaming them needs redirects and is separate work.
-function buildNavGroups(t: (key: string) => string): NavGroup[] {
+function buildNavGroups(t: (key: string) => string, isAdmin: boolean): NavGroup[] {
   return [
   {
     items: [
@@ -196,6 +197,22 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
           </SidebarIcon>
         ),
       },
+      // Only for an administrator (#409). Hiding is a convenience; the Engine's 403 is the block.
+      ...(isAdmin
+        ? [
+            {
+              to: "/admin",
+              label: t("nav.admin"),
+              description: t("navDescription.admin"),
+              icon: (
+                <SidebarIcon name="admin">
+                  <path d="M12 3 4 6v6c0 4.4 3.4 8.3 8 9 4.6-.7 8-4.6 8-9V6l-8-3Z" />
+                  <path d="m9 12 2 2 4-4" />
+                </SidebarIcon>
+              ),
+            },
+          ]
+        : []),
     ],
   },
   ];
@@ -257,7 +274,8 @@ function avatarInitial(email: string | null): string {
  */
 export function Layout() {
   const { t } = useTranslation();
-  const navGroups = buildNavGroups(t);
+  const isAdmin = useAdminStore((state) => state.status === "admin");
+  const navGroups = buildNavGroups(t, isAdmin);
   const closeMobileSidebar = useUIStore((state) => state.closeMobileSidebar);
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
   const isDesktopSidebarCollapsed = useUIStore((state) => state.isDesktopSidebarCollapsed);
@@ -271,6 +289,10 @@ export function Layout() {
   const email = useAuthStore((state) => state.email);
   const { pathname } = useLocation();
   const crumbs = crumbsFor(pathname, t);
+
+  useEffect(() => {
+    void ensureAdminChecked();
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = getResolvedTheme(theme);

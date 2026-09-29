@@ -55,6 +55,8 @@ const EXPECTED_OPERATIONS = [
   "deleteProviderCredential",
   "uploadFile",
   "downloadArtifactFile",
+  "adminConfig",
+  "adminRuns",
 ] as const;
 
 describe("Builder API contract conformance (#36)", () => {

@@ -947,3 +947,40 @@ export type BuildEventStatus = z.infer<typeof buildEventStatusSchema>;
 export type BuildEventStageName = z.infer<typeof buildEventStageNameSchema>;
 export type BuildEvent = z.infer<typeof buildEventSchema>;
 export type BuildEventsResponse = z.infer<typeof buildEventsResponseSchema>;
+
+/*
+ * ============================================
+ * Administrator (builder#679, contract 1.28+)
+ * ============================================
+ * Metadata and policy state only — the contract forbids artifact bytes, credentials
+ * and response bodies here, and the schemas are strict so anything else fails to parse.
+ */
+
+export const adminConfigResponseSchema = z
+  .object({
+    enforce_ownership: z.boolean(),
+    publish_server_credential_fallback: z.boolean(),
+  })
+  .strict();
+
+export const adminRunSchema = z
+  .object({
+    run_id: z.string(),
+    status: z.string(),
+    started_at: z.string().nullable().optional(),
+    finished_at: z.string().nullable().optional(),
+    /** Irreversible owner hash — not an identity. */
+    owner_id: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const adminRunsResponseSchema = z
+  .object({
+    runs: z.array(adminRunSchema),
+    count: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export type AdminConfigResponse = z.infer<typeof adminConfigResponseSchema>;
+export type AdminRun = z.infer<typeof adminRunSchema>;
+export type AdminRunsResponse = z.infer<typeof adminRunsResponseSchema>;

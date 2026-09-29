@@ -19,7 +19,8 @@ KPubData
 ├── OPERATE
 │   ├── Refresh Jobs           /refresh-jobs  테이블을 만들고 갱신한 실행
 │   ├── Quality                /quality
-│   └── Monitoring             /monitoring
+│   ├── Monitoring             /monitoring
+│   └── 관리 (관리자만)          /admin      정책 상태 · 전체 실행(메타데이터)
 ├── Connections                /connections
 └── Settings                   /settings
 ```
@@ -93,6 +94,7 @@ graph TD
 | `/refresh-jobs/new` | 스펙으로 테이블 만들기 (마법사) | `src/pages/NewBuildPage.tsx` |
 | `/sql` | SQL Workspace | `src/pages/SqlWorkspacePage.tsx` |
 | `/connections` | 연결 · 활용신청 안내 | `src/pages/ProviderPage.tsx` |
+| `/admin` | 관리 — Engine 이 관리자로 답할 때만 메뉴에 보인다 | `src/pages/AdminPage.tsx` |
 | `/datasets/*` · `/builds/*` · `/provider/*` | 옛 URL → 위 경로로 redirect | `src/app/legacyRedirect.tsx` |
 
 > URL 매핑은 파일 시스템이 아니라 `src/app/router.tsx`의 React Router 설정이 단일 기준입니다.
