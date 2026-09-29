@@ -1011,3 +1011,92 @@ export const adminRunsResponseSchema = z
 export type AdminConfigResponse = z.infer<typeof adminConfigResponseSchema>;
 export type AdminRun = z.infer<typeof adminRunSchema>;
 export type AdminRunsResponse = z.infer<typeof adminRunsResponseSchema>;
+
+/*
+ * ============================================
+ * Warehouse and saved analyses (builder#797, #783; contract 1.38+)
+ * ============================================
+ * A deployment without a warehouse answers GET /warehouse/tables with 404
+ * `warehouse_not_configured`; Studio then keeps the run-based query path.
+ */
+
+export const warehouseTableSchema = z.object({
+  table_id: z.string(),
+  /** `<dataset_id>.<source_key>` — the name a query uses. */
+  logical_name: z.string(),
+  current_snapshot_id: z.string().nullable(),
+  revision: z.number().int().nonnegative(),
+});
+
+export const warehouseTableListResponseSchema = z.object({ tables: z.array(warehouseTableSchema) });
+
+export const warehouseSnapshotSchema = z.object({
+  snapshot_id: z.string(),
+  run_id: z.string(),
+  state: z.enum(["committed", "quarantined"]),
+  row_count: z.number().int().nonnegative().nullable(),
+  created_at: z.string(),
+  committed_at: z.string().nullable(),
+});
+
+export const warehouseTableDetailResponseSchema = warehouseTableSchema.extend({
+  snapshots: z.array(warehouseSnapshotSchema),
+});
+
+export const warehouseQueryRequestSchema = z.object({
+  table: z.string().min(1),
+  snapshot: z.string().min(1).optional(),
+  sql: z.string().min(1).max(65536),
+  limit: z.number().int().min(1).max(500).optional(),
+});
+
+export const pinnedSnapshotSchema = z.object({
+  table_id: z.string(),
+  logical_name: z.string(),
+  snapshot_id: z.string(),
+  revision: z.number().int().nonnegative(),
+});
+
+export const warehouseQueryResponseSchema = z.object({
+  snapshot: pinnedSnapshotSchema,
+  result: queryResponseSchema,
+});
+
+export const savedAnalysisSchema = z.object({
+  analysis_id: z.string(),
+  name: z.string(),
+  sql: z.string(),
+  limit: z.number().int(),
+  /** Concrete snapshot ids, never `current`. */
+  bindings: z.array(z.object({ table: z.string(), snapshot_id: z.string() })),
+  result_meta: z.object({
+    columns: z.array(z.string()),
+    column_meta: z.array(columnWireInfoSchema),
+    row_count: z.number().int().nonnegative(),
+    truncated: z.boolean(),
+    executed_at: z.string(),
+  }),
+  created_at: z.string(),
+});
+
+export const analysisListResponseSchema = z.object({ analyses: z.array(savedAnalysisSchema) });
+
+export const createAnalysisRequestSchema = warehouseQueryRequestSchema.extend({
+  name: z.string().min(1).max(200),
+});
+
+export const createAnalysisResponseSchema = z.object({
+  analysis: savedAnalysisSchema,
+  result: queryResponseSchema,
+});
+
+export const analysisDeletedResponseSchema = z.object({ analysis_id: z.string(), deleted: z.literal(true) });
+
+export type WarehouseTable = z.infer<typeof warehouseTableSchema>;
+export type WarehouseTableDetailResponse = z.infer<typeof warehouseTableDetailResponseSchema>;
+export type WarehouseSnapshot = z.infer<typeof warehouseSnapshotSchema>;
+export type WarehouseQueryRequest = z.infer<typeof warehouseQueryRequestSchema>;
+export type WarehouseQueryResponse = z.infer<typeof warehouseQueryResponseSchema>;
+export type SavedAnalysis = z.infer<typeof savedAnalysisSchema>;
+export type CreateAnalysisRequest = z.infer<typeof createAnalysisRequestSchema>;
+export type CreateAnalysisResponse = z.infer<typeof createAnalysisResponseSchema>;

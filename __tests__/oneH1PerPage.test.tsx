@@ -19,6 +19,7 @@ const PATHS = [
   "/tables",
   "/tables/air-quality",
   "/sql",
+  "/analyses",
   "/workspace",
   "/reports",
   "/reports/does-not-exist",

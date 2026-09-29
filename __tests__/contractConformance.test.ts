@@ -57,6 +57,13 @@ const EXPECTED_OPERATIONS = [
   "downloadArtifactFile",
   "adminConfig",
   "adminRuns",
+  "listWarehouseTables",
+  "getWarehouseTable",
+  "warehouseQuery",
+  "listAnalyses",
+  "createAnalysis",
+  "runAnalysis",
+  "deleteAnalysis",
 ] as const;
 
 describe("Builder API contract conformance (#36)", () => {

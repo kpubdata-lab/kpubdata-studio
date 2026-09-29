@@ -484,6 +484,10 @@ export type QueryStage = schemas.QueryStage;
 export type QueryRequest = schemas.QueryRequest;
 export type QueryResponse = schemas.QueryResponse;
 export type AdminConfigResponse = schemas.AdminConfigResponse;
+export type WarehouseTable = schemas.WarehouseTable;
+export type WarehouseSnapshot = schemas.WarehouseSnapshot;
+export type WarehouseQueryResponse = schemas.WarehouseQueryResponse;
+export type SavedAnalysis = schemas.SavedAnalysis;
 export type AdminRun = schemas.AdminRun;
 export type AdminRunsResponse = schemas.AdminRunsResponse;
 export type QueryErrorCode = schemas.QueryErrorCode;
@@ -505,6 +509,37 @@ export type BuildEventsResponse = schemas.BuildEventsResponse;
 
 /** client wrapping Builder service endpoint. */
 export const builderApi = {
+  /** GET /warehouse/tables — the caller's committed tables; 404 when there is no warehouse (builder#797). */
+  listWarehouseTables: (signal?: AbortSignal) =>
+    apiFetch("/warehouse/tables", { signal, retries: 0 }, schemas.warehouseTableListResponseSchema),
+
+  /** GET /warehouse/tables/{name} — one table and its readable snapshots, newest first. */
+  getWarehouseTable: (name: string, signal?: AbortSignal) =>
+    apiFetch(`/warehouse/tables/${encodeURIComponent(name)}`, { signal }, schemas.warehouseTableDetailResponseSchema),
+
+  /** POST /warehouse/query — read-only SQL against a snapshot pinned at query start. */
+  warehouseQuery: (request: schemas.WarehouseQueryRequest, signal?: AbortSignal) =>
+    apiFetch("/warehouse/query", { method: "POST", body: request, signal, retries: 0 }, schemas.warehouseQueryResponseSchema),
+
+  /** GET /analyses — the caller's saved analyses, newest first (builder#783). */
+  listAnalyses: (signal?: AbortSignal) => apiFetch("/analyses", { signal }, schemas.analysisListResponseSchema),
+
+  /** POST /analyses — run the query once and save it bound to the snapshot it read. */
+  createAnalysis: (request: schemas.CreateAnalysisRequest, signal?: AbortSignal) =>
+    apiFetch("/analyses", { method: "POST", body: request, signal, retries: 0 }, schemas.createAnalysisResponseSchema),
+
+  /** POST /analyses/{id}/run — re-run against the stored snapshot, not the current one. */
+  runAnalysis: (analysisId: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/analyses/${encodeURIComponent(analysisId)}/run`,
+      { method: "POST", signal, retries: 0 },
+      schemas.warehouseQueryResponseSchema,
+    ),
+
+  /** DELETE /analyses/{id} — delete it and release its snapshot hold. */
+  deleteAnalysis: (analysisId: string, signal?: AbortSignal) =>
+    apiFetch(`/analyses/${encodeURIComponent(analysisId)}`, { method: "DELETE", signal }, schemas.analysisDeletedResponseSchema),
+
   /** GET /admin/config — live policy state; 403 for anyone but an administrator (builder#679). */
   adminConfig: (signal?: AbortSignal) =>
     apiFetch("/admin/config", { signal, retries: 0 }, schemas.adminConfigResponseSchema),

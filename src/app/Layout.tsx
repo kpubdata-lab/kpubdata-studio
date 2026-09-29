@@ -139,6 +139,16 @@ function buildNavGroups(t: (key: string) => string, isAdmin: boolean): NavGroup[
         ),
       },
       {
+        to: "/analyses",
+        label: t("nav.analyses"),
+        description: t("navDescription.analyses"),
+        icon: (
+          <SidebarIcon name="analyses">
+            <path d="M6 3h12v18l-6-4-6 4V3Z" />
+          </SidebarIcon>
+        ),
+      },
+      {
         to: "/workspace",
         label: t("nav.workspace"),
         description: t("navDescription.workspace"),

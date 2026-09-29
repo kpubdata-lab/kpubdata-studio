@@ -33,6 +33,7 @@ const ROUTES: RouteMatch[] = [
   { test: /^\/refresh-jobs\/[^/]+(\/|$)/, page: "build-detail", labelKey: "build-detail" },
   { test: /^\/refresh-jobs(\/|$)/, page: "builds", labelKey: "builds" },
   { test: /^\/sql(\/|$)/, page: "sql", labelKey: "sql" },
+  { test: /^\/analyses(\/|$)/, page: "analyses", labelKey: "analyses" },
   { test: /^\/admin(\/|$)/, page: "admin", labelKey: "admin" },
   { test: /^\/quality(\/|$)/, page: "quality", labelKey: "quality" },
   { test: /^\/assistant(\/|$)/, page: "assistant", labelKey: "assistant" },
