@@ -1,7 +1,7 @@
 /**
  * SQL Workspace over committed warehouse tables (#417).
  *
- * Pick a table and a snapshot — `current` by default, resolved by the Engine when the
+ * Pick a table and a snapshot — `current` by default, resolved by the Builder when the
  * query starts — and run it yourself. The result names the snapshot it read. Saving
  * runs the query once more through `POST /analyses`, which stores that concrete
  * snapshot id, so the saved analysis re-runs on the same input after a refresh.
@@ -63,7 +63,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
     return () => controller.abort();
   }, [table]);
 
-  // Opening a saved analysis: its SQL and name come from the Engine, not the URL.
+  // Opening a saved analysis: its SQL and name come from the Builder, not the URL.
   useEffect(() => {
     if (!analysisId) return;
     const controller = new AbortController();

@@ -22,7 +22,7 @@ export function VersionMismatchBanner() {
   const { pathname } = useLocation();
 
   // Asked on every navigation: a success is cached for the page load, and a failure is
-  // not, so an Engine that was unreachable at first is checked when it comes back (#480).
+  // not, so an Builder that was unreachable at first is checked when it comes back (#480).
   useEffect(() => {
     if (realEnabled) void ensureVersionChecked();
   }, [realEnabled, pathname]);

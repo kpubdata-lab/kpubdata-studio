@@ -8,7 +8,7 @@ KPubData Studio is a workspace for collecting Korean public data, keeping it as 
 > 이 문장은 `README.md`, `README.en.md`, `ROADMAP.md` 와 kpubdata `docs/brand/BRAND.md` 가 함께 쓴다.
 > `__tests__/productDefinition.test.ts` 가 이 저장소의 사본이 어긋나면 실패한다 (#498).
 
-Collection, validation and publishing run in KPubData Engine (`kpubdata-builder`); Studio
+Collection, validation and publishing run in KPubData Builder (`kpubdata-builder`); Studio
 is where a person picks what to collect, watches it run, keeps the resulting snapshots with
 their provenance and licence, and analyses them.
 
@@ -29,13 +29,13 @@ Many users need a safer and more discoverable way to:
 
 ### Primary goals
 - Make collection (build spec authoring) visual and inspectable
-- Expose Engine validation and preview in the UI
+- Expose Builder validation and preview in the UI
 - Keep every snapshot's source, collection time and terms of use visible next to its data
 - Analyse snapshots with tables, SQL and saved analyses
 - Show outputs before publication
 
 ### Non-goals
-- Replacing the Engine's execution, validation or publishing logic
+- Replacing the Builder's execution, validation or publishing logic
 - Reimplementing provider adapters
 - Replacing a general-purpose notebook or BI tool — table, SQL and chart analysis of
   snapshots **is** in scope; arbitrary code, dashboards over non-KPubData sources and

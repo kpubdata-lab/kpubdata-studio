@@ -111,7 +111,7 @@ describe("Create Table Wizard", () => {
 
     await waitFor(() => expect(screen.getByRole("button", { name: /인구 통계/ })).toBeDisabled());
     expect(screen.getByRole("button", { name: /대기오염 정보/ })).toBeEnabled();
-    expect(screen.getByText(/현재 Engine catalog에 없는 source/)).toBeInTheDocument();
+    expect(screen.getByText(/현재 Builder catalog에 없는 source/)).toBeInTheDocument();
   });
 
   it("uses Builder catalog providers and datasets in the source selector", async () => {

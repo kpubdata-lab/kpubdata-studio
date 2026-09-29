@@ -98,7 +98,7 @@ graph TD
 | `/sql` | SQL Workspace | `src/pages/SqlWorkspacePage.tsx` |
 | `/analyses` | 저장된 분석 | `src/pages/AnalysesPage.tsx` |
 | `/connections` | 연결 · 활용신청 안내 | `src/pages/ProviderPage.tsx` |
-| `/admin` | 관리 — Engine 이 관리자로 답할 때만 메뉴에 보인다 | `src/pages/AdminPage.tsx` |
+| `/admin` | 관리 — Builder 가 관리자로 답할 때만 메뉴에 보인다 | `src/pages/AdminPage.tsx` |
 | `/datasets/*` · `/builds/*` · `/provider/*` | 옛 URL → 위 경로로 redirect | `src/app/legacyRedirect.tsx` |
 
 > URL 매핑은 파일 시스템이 아니라 `src/app/router.tsx`의 React Router 설정이 단일 기준입니다.
