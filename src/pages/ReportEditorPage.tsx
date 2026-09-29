@@ -285,7 +285,7 @@ export function ReportEditorPage() {
     (block): block is BuilderEvidenceBlock => block.provenance === "BUILDER_EVIDENCE",
   );
   const assistantBlocks = report.blocks.filter(
-    (block): block is AssistantInterpretationBlock => block.provenance === "KUBI_INTERPRETATION",
+    (block): block is AssistantInterpretationBlock => block.provenance === "ASSISTANT_INTERPRETATION",
   );
   const userBlocks = report.blocks.filter((block): block is UserContentBlock => block.provenance === "USER_CONTENT");
 

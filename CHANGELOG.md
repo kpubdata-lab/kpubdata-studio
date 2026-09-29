@@ -4,7 +4,8 @@
 
 ### Changed
 
-- Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004); nothing a user sees in Studio changes.
+- Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004).
+- Ask KPubData moves from `/kubi` to `/assistant`, and its stored values drop the old name: report blocks are `ASSISTANT_INTERPRETATION` and the inbox key is `kpubdata-studio:assistant-report-inbox`. No redirect or migration is kept — no deployment used the old names (#449).
 
 ## v0.4.0 — 2026-09-28
 

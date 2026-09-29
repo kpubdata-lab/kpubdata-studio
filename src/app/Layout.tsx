@@ -186,7 +186,7 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
     label: t("nav.groupAi"),
     items: [
       {
-        to: "/kubi",
+        to: "/assistant",
         label: t("nav.assistant"),
         description: t("navDescription.assistant"),
         icon: (

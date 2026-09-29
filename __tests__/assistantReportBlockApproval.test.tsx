@@ -41,7 +41,7 @@ function configureKey() {
 beforeEach(() => {
   useAssistantStore.setState({ turns: [], onboarded: false, pendingSeed: null });
   useAssistConfig.getState().clear();
-  localStorage.removeItem("kpubdata-studio:kubi-report-inbox");
+  localStorage.removeItem("kpubdata-studio:assistant-report-inbox");
 });
 
 afterEach(() => {

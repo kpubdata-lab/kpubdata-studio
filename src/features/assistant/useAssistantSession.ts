@@ -1,10 +1,10 @@
 /**
  * Assistant conversation session (#256).
  *
- * `AssistantDrawer`, `/kubi` page, and top `AssistantSearchInput` all share this single hook —
+ * `AssistantDrawer`, `/assistant` page, and top `AssistantSearchInput` all share this single hook —
  * don't create new assistant system, reuse existing `features/assistant` (BYOK provider/config,
  * scrubSecrets). Conversation turn state in zustand singleton store, so closing/opening drawer
- * (and navigating to `/kubi` page) continues same conversation.
+ * (and navigating to `/assistant` page) continues same conversation.
  *
  * Stale guard (#256 review §6): Each turn captures `AssistantContext` at start and freezes it.
  * Past turns remain visible even after screen change (not overwritten), but side-effect operations
@@ -460,7 +460,7 @@ export function useAssistantSession(): UseAssistantSessionResult {
     [setActionState],
   );
 
-  // Top search bar (AssistantSearchInput) left question for consumption. AssistantDrawer and `/kubi` page may mount
+  // Top search bar (AssistantSearchInput) left question for consumption. AssistantDrawer and `/assistant` page may mount
   // simultaneously (both use this hook); atomic pop from consumeSeed() ensures ask() called exactly once —
   // prevents same question executing twice.
   useEffect(() => {

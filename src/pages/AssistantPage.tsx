@@ -1,5 +1,5 @@
 /**
- * Assistant dedicated screen (`/kubi`, #256).
+ * Assistant dedicated screen (`/assistant`, #256).
  *
  * Shares the same `useAssistantSession` conversation with the global drawer (`src/features/assistant/AssistantDrawer.tsx`) —
  * not a separate Assistant system, but the same state displayed in a wider layout.

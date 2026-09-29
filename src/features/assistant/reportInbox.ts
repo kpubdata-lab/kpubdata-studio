@@ -15,10 +15,7 @@ export interface AssistantReportNote {
   savedAt: string;
 }
 
-// The stored key keeps the old name (#446). Renaming it would not migrate a
-// reader's saved notes — it would make them unreachable, which reads as data
-// loss. #449 carries the migration that lets the name change.
-const INBOX_KEY = "kpubdata-studio:kubi-report-inbox";
+const INBOX_KEY = "kpubdata-studio:assistant-report-inbox";
 const INBOX_VERSION = 1;
 const INBOX_LIMIT = 20;
 
@@ -68,7 +65,7 @@ export function listAssistantReportNotes(): AssistantReportNote[] {
 
 /**
  * Remove a note from the queue (#258 — called after the Reports editor accepts and converts a
- * note into a KUBI_INTERPRETATION block). Locate by value rather than index to avoid races
+ * note into an ASSISTANT_INTERPRETATION block). Locate by value rather than index to avoid races
  * where another tab added notes and shifted indices. If the note is already gone, silently
  * ignore it.
  */

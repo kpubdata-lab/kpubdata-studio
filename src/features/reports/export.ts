@@ -49,9 +49,9 @@ function metadataLines(report: ReportDraft, staleness: EvidenceRunStatus | null)
   return lines;
 }
 
-function provenanceLabel(kind: "BUILDER_EVIDENCE" | "KUBI_INTERPRETATION" | "USER_CONTENT"): string {
+function provenanceLabel(kind: "BUILDER_EVIDENCE" | "ASSISTANT_INTERPRETATION" | "USER_CONTENT"): string {
   if (kind === "BUILDER_EVIDENCE") return "[Builder Evidence]";
-  return kind === "KUBI_INTERPRETATION" ? t("provenance.assistant") : t("provenance.user");
+  return kind === "ASSISTANT_INTERPRETATION" ? t("provenance.assistant") : t("provenance.user");
 }
 
 /** Create Markdown file content. */
@@ -71,8 +71,8 @@ export function generateMarkdownExport(report: ReportDraft, staleness: EvidenceR
         parts.push(`### ${t("detailHeading")}`);
       }
       parts.push(block.markdown);
-    } else if (block.provenance === "KUBI_INTERPRETATION") {
-      parts.push(`## ${t("assistantHeading")} ${provenanceLabel("KUBI_INTERPRETATION")}`);
+    } else if (block.provenance === "ASSISTANT_INTERPRETATION") {
+      parts.push(`## ${t("assistantHeading")} ${provenanceLabel("ASSISTANT_INTERPRETATION")}`);
       if (!block.isSameContext) {
         parts.push(
           `> ${t("assistantOtherRun", { dataset: block.sourceContext.datasetId ?? "N/A", run: block.sourceContext.runId ?? "N/A" })}`,
@@ -124,7 +124,7 @@ export function generateHtmlExport(report: ReportDraft, staleness: EvidenceRunSt
           : "";
         return `<h2>${escapeHtml(block.title)}<span class="tag tag-evidence">Builder Evidence</span></h2>${statusNote}${summaryHtml}${renderMarkdownToHtml(block.markdown)}`;
       }
-      if (block.provenance === "KUBI_INTERPRETATION") {
+      if (block.provenance === "ASSISTANT_INTERPRETATION") {
         const contextNote = !block.isSameContext
           ? `<p class="warn">${escapeHtml(t("assistantOtherRunHtml", { dataset: block.sourceContext.datasetId ?? "N/A", run: block.sourceContext.runId ?? "N/A" }))}</p>`
           : "";

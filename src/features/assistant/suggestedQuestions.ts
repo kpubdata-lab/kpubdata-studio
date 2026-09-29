@@ -18,7 +18,7 @@ import type { AssistantContext, AssistantTurn } from "./types";
 import { i18n } from "@/shared/i18n";
 
 /**
- * Initial questions to show when Dataset/Run/Quality context missing (Home hero, empty /kubi).
+ * Initial questions to show when Dataset/Run/Quality context missing (Home hero, empty /assistant).
  * Does not include Quality/Build failure/SQL questions.
  */
 export const START_QUESTIONS = [

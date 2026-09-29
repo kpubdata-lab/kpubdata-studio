@@ -3,7 +3,7 @@
  *
  * Shows notes stashed in `features/assistant/reportInbox.ts`(#256), already approved once by user in Assistant chat.
  * User re-approves here: note text → linked evidence (context) → matches current Report's dataset/run?
- * → user approval order → only then add as KUBI_INTERPRETATION block to Report. Never auto-added.
+ * → user approval order → only then add as ASSISTANT_INTERPRETATION block to Report. Never auto-added.
  */
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";

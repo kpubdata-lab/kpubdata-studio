@@ -118,7 +118,7 @@ export function AssistantReportPanel({
     const now = new Date().toISOString();
     const block: AssistantInterpretationBlock = {
       id: newBlockId(),
-      provenance: "KUBI_INTERPRETATION",
+      provenance: "ASSISTANT_INTERPRETATION",
       note: activeTurn.response.answer,
       reason: activeTurn.isDemo
         ? t("reports.assistantPanel.reasonDemo")

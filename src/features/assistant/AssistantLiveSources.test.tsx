@@ -18,7 +18,7 @@ function stages(runId: string, sourceKeys: string[]): RunStagesResponse {
   };
 }
 
-function Harness({ initialPath = "/kubi?run=run-a" }: { initialPath?: string }) {
+function Harness({ initialPath = "/assistant?run=run-a" }: { initialPath?: string }) {
   return (
     <MemoryRouter initialEntries={[initialPath]}>
       <AssistantPage />
@@ -33,7 +33,7 @@ function LocationHarness() {
   return (
     <>
       <output data-testid="location">{location.pathname}{location.search}</output>
-      <button type="button" onClick={() => navigate("/kubi?run=run-b")}>Run B로 이동</button>
+      <button type="button" onClick={() => navigate("/assistant?run=run-b")}>Run B로 이동</button>
     </>
   );
 }
@@ -88,21 +88,21 @@ describe("Ask KPubData live Builder-confirmed source picker", () => {
 
   it("writes a selected confirmed source into URL context", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
-    render(<Harness initialPath="/kubi?run=run-a&stage=gold" />);
+    render(<Harness initialPath="/assistant?run=run-a&stage=gold" />);
     fireEvent.change(await screen.findByLabelText("분석 Source"), { target: { value: "provider.b" } });
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/kubi?run=run-a&source=provider.b"));
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/assistant?run=run-a&source=provider.b"));
   });
 
   it("remains fail-closed when a multi-source Run has no selected source", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
-    render(<Harness initialPath="/kubi?run=run-a&stage=gold" />);
+    render(<Harness initialPath="/assistant?run=run-a&stage=gold" />);
     expect(await screen.findByText("이 Run에는 source가 여러 개 있습니다. 분석할 source를 먼저 선택하세요.")).toBeInTheDocument();
     expect(screen.getByLabelText("분석 Source")).toHaveValue("");
   });
 
   it("disables the Stage select on a multi-source Run until a source is chosen (A4)", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a", "provider.b"]));
-    render(<Harness initialPath="/kubi?run=run-a&stage=gold" />);
+    render(<Harness initialPath="/assistant?run=run-a&stage=gold" />);
 
     // For a multi-source run with no selected source → Stage select must remain disabled
     // (evidence is fail-closed until a source is chosen).
@@ -120,14 +120,14 @@ describe("Ask KPubData live Builder-confirmed source picker", () => {
 
   it("keeps the Stage select usable on a single-source Run even without an explicit source (A4)", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.only"]));
-    render(<Harness initialPath="/kubi?run=run-a" />);
+    render(<Harness initialPath="/assistant?run=run-a" />);
     await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
     expect(screen.getByLabelText("분석 Stage")).toBeEnabled();
   });
 
   it("disables the Stage select when there is no Run in context (A4)", async () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stages("run-a", ["provider.a"]));
-    render(<Harness initialPath="/kubi" />);
+    render(<Harness initialPath="/assistant" />);
     expect(await screen.findByLabelText("분석 Stage")).toBeDisabled();
   });
 });
