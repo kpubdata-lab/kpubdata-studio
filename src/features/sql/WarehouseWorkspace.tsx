@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { AggregateChartPanel } from "@/features/charts/AggregateChartPanel";
 import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
 import { builderApi, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
 import { Button, Card, PageHeader } from "@/shared/ui";
@@ -191,6 +192,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
           </div>
 
           {table ? <TableRowsPanel key={`${table}@${snapshot}`} snapshot={snapshot} table={table} /> : null}
+          {table ? <AggregateChartPanel key={`chart-${table}@${snapshot}`} snapshot={snapshot} table={table} /> : null}
 
           {outcome?.status === "error" ? <QueryError code={outcome.code} message={outcome.message} /> : null}
           {outcome?.status === "success" ? (
