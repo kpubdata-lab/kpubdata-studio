@@ -408,7 +408,7 @@ export function RunDetailPanel({
             </ul>
           ) : null}
           {listItem?.status === "failed" && live.kind === "job" && live.job.error ? (
-            <p className="mt-2 text-sm">Builder error: {live.job.error}</p>
+            <p className="mt-2 text-sm">Engine error: {live.job.error}</p>
           ) : null}
           {qualityFails.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-1 text-sm">

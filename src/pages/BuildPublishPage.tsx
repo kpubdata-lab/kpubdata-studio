@@ -200,7 +200,7 @@ export function BuildPublishPage() {
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-sm font-semibold">Builder readiness</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessNote")}</p></div>
+          <div><h2 className="text-sm font-semibold">Engine readiness</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessNote")}</p></div>
           <Button variant="secondary" size="sm" disabled={readiness.status === "loading" || publish.status === "publishing"} onClick={() => setReadinessVersion((value) => value + 1)}>{t("buildPublish.recheck")}</Button>
         </div>
         {readiness.status === "loading" ? <Skeleton className="mt-4 h-20 w-full" /> : null}

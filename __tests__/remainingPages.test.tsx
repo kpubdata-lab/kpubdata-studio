@@ -23,7 +23,7 @@ describe("remaining pages", () => {
   it("SettingsPage shows the API base URL section", () => {
     renderPage(<SettingsPage />);
     expect(screen.getByRole("heading", { name: "환경 설정" })).toBeInTheDocument();
-    expect(screen.getByText("Builder API base URL")).toBeInTheDocument();
+    expect(screen.getByText("Engine API base URL")).toBeInTheDocument();
   });
 
   it("ArtifactsPage guides to the build list", () => {

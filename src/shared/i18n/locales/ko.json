@@ -114,7 +114,7 @@
       "buildsScope": "Builds (조회 범위)",
       "scopeHint": "조회된 {{count}}건 · limit {{limit}}{{more}}",
       "maybeMore": " (더 있을 수 있음)",
-      "completedOnlyHint": "Builder GET /builds는 완료된 이력만 반환합니다 (실행 중 job은 포함되지 않음)"
+      "completedOnlyHint": "Engine GET /builds는 완료된 이력만 반환합니다 (실행 중 job은 포함되지 않음)"
     },
     "search": {
       "aria": "Run 검색",
@@ -189,13 +189,13 @@
     }
   },
   "api": {
-    "timeout": "Builder API 응답이 시간 내에 오지 않았습니다.",
-    "connFail": "Builder API에 연결하지 못했습니다.",
+    "timeout": "Engine API 응답이 시간 내에 오지 않았습니다.",
+    "connFail": "Engine API에 연결하지 못했습니다.",
     "badJson": "응답 JSON을 파싱하지 못했습니다.",
-    "schemaMismatch": "Builder API 응답이 예상된 형식과 일치하지 않습니다: {{details}}",
+    "schemaMismatch": "Engine API 응답이 예상된 형식과 일치하지 않습니다: {{details}}",
     "schemaDefault": "응답 구조",
     "schemaIssueDefault": "형식 불일치",
-    "uploadMismatch": "Builder 업로드 응답이 예상된 형식과 일치하지 않습니다.",
+    "uploadMismatch": "Engine 업로드 응답이 예상된 형식과 일치하지 않습니다.",
     "http": {
       "400": "요청 형식이 올바르지 않습니다.",
       "401": "로그인이 필요하거나 세션이 만료되었습니다. 다시 로그인해주세요.",
@@ -206,7 +206,7 @@
       "500": "서버 내부 오류가 발생했습니다.",
       "502": "데이터 소스에서 오류가 발생했습니다.",
       "503": "인증 서비스에 일시적 장애가 있습니다. 잠시 후 다시 시도해주세요.",
-      "fallback": "Builder API 오류 (HTTP {{status}})"
+      "fallback": "Engine API 오류 (HTTP {{status}})"
     },
     "ctx": {
       "build": "{{base}} (빌드 ID: {{id}})",
@@ -245,8 +245,8 @@
       "draftSecretRemoved": "저장된 초안에서 시크릿이 포함된 파라미터 값이 제거되었습니다. 파라미터를 다시 입력해주세요.",
       "specSecretRemoved": "저장된 스펙에서 시크릿 값이 제거되었습니다. 해당 credential을 다시 입력해주세요.",
       "specInvalid": "빌드 스펙이 올바르지 않습니다.",
-      "catalogFail": "Builder catalog를 불러오지 못했습니다.",
-      "unknownSource": "현재 Builder catalog에 없는 source입니다.",
+      "catalogFail": "Engine catalog를 불러오지 못했습니다.",
+      "unknownSource": "현재 Engine catalog에 없는 source입니다.",
       "previewFail": "미리보기에 실패했습니다.",
       "specError": "스펙 오류",
       "validateFail": "검증 요청에 실패했습니다.",
@@ -267,8 +267,8 @@
       "descEdit": "기존 스펙을 불러왔습니다. 수정한 내용은 새 실행으로 기록됩니다.",
       "descNew": "데이터 소스, 파라미터, 출력 형식을 단계별로 설정합니다.",
       "loadingSpec": "기존 스펙을 불러오는 중입니다...",
-      "specNotFound": "빌드 {{id}}의 스펙을 찾지 못했습니다. Builder는 스펙을 보관하지 않으므로, 이 브라우저에서 실행하지 않은 빌드는 불러올 수 없습니다. 아래 입력은 새 빌드로 작성됩니다.",
-      "specEditing": "빌드 {{id}}의 스펙을 편집하고 있습니다. Builder는 기존 실행을 덮어쓰지 않으므로, 실행하면 수정된 스펙으로 새 빌드가 기록됩니다.",
+      "specNotFound": "빌드 {{id}}의 스펙을 찾지 못했습니다. KPubData Engine은 스펙을 보관하지 않으므로, 이 브라우저에서 실행하지 않은 빌드는 불러올 수 없습니다. 아래 입력은 새 빌드로 작성됩니다.",
+      "specEditing": "빌드 {{id}}의 스펙을 편집하고 있습니다. KPubData Engine은 기존 실행을 덮어쓰지 않으므로, 실행하면 수정된 스펙으로 새 빌드가 기록됩니다.",
       "savedSpecLoaded": "Saved BuildSpec {{name}}을(를) 불러왔습니다. 수정 후 \"이 스펙 저장\"을 다시 눌러야 Workspace에 반영됩니다 — 지금 열기만 한 것으로는 원본이 바뀌지 않습니다.",
       "draftExists": "저장된 초안이 있습니다. 이어서 편집할까요?",
       "load": "불러오기",
@@ -277,8 +277,8 @@
     "template": {
       "selectTitle": "템플릿 선택",
       "selectDesc": "자주 쓰는 공공데이터 조합으로 시작하거나 직접 구성으로 처음부터 설정하세요.",
-      "catalogLoading": "Builder catalog를 불러오는 중입니다...",
-      "catalogError": "Builder catalog 조회 실패: {{error}}"
+      "catalogLoading": "Engine catalog를 불러오는 중입니다...",
+      "catalogError": "Engine catalog 조회 실패: {{error}}"
     },
     "identity": {
       "title": "기본 정보",
@@ -294,9 +294,9 @@
       "providerLabel": "제공자 (Provider)",
       "providerSelect": "제공자 선택…",
       "datasetLabel": "데이터셋 (Dataset)",
-      "datasetHelp": "Builder catalog에서 제공하는 provider 내부 데이터셋 코드입니다.",
+      "datasetHelp": "Engine catalog에서 제공하는 provider 내부 데이터셋 코드입니다.",
       "datasetSelect": "데이터셋 선택…",
-      "catalogLoading": "Builder catalog를 불러오는 중입니다..."
+      "catalogLoading": "Engine catalog를 불러오는 중입니다..."
     },
     "params": {
       "title": "파라미터",
@@ -307,7 +307,7 @@
       "title": "미리보기",
       "refresh": "미리보기 새로고침",
       "guideTitle": "현재 설정으로 샘플 데이터를 확인하세요",
-      "guideDesc": "'미리보기 새로고침'을 누르면 Builder가 반환한 샘플 행과 스키마가 표시됩니다.",
+      "guideDesc": "'미리보기 새로고침'을 누르면 KPubData Engine이 반환한 샘플 행과 스키마가 표시됩니다.",
       "failTitle": "미리보기를 불러오지 못했습니다",
       "failDesc": "파라미터를 확인한 뒤 다시 시도하세요.",
       "emptyTitle": "조건에 맞는 데이터가 없습니다",
@@ -330,7 +330,7 @@
       "cancelled": "실행이 취소되었습니다.",
       "aborted": "요청을 중단했습니다. 서버 빌드 결과는 확인되지 않았습니다.",
       "saveSpec": "이 스펙 저장 (Workspace)",
-      "saveSpecDesc": "이름을 붙여 이 브라우저에 저장합니다 — Builder에는 전송되지 않습니다.",
+      "saveSpecDesc": "이름을 붙여 이 브라우저에 저장합니다 — KPubData Engine에는 전송되지 않습니다.",
       "savePrompt": "저장할 이름을 입력하세요",
       "unnamed": "이름 없는 BuildSpec",
       "savedAs": "\"{{name}}\" 이름으로 Workspace에 저장했습니다."
@@ -358,7 +358,7 @@
     },
     "actions": {
       "missingParent": "경로 \"{{path}}\"의 상위 필드가 없습니다.",
-      "specNotFound": "run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없습니다. Builder는 spec을 영속화하지 않으므로, 이 run을 Studio에서 실행/편집한 적이 있어야 patch를 적용할 수 있습니다.",
+      "specNotFound": "run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없습니다. KPubData Engine은 spec을 영속화하지 않으므로, 이 run을 Studio에서 실행/편집한 적이 있어야 patch를 적용할 수 있습니다.",
       "secretsRedacted": "저장된 BuildSpec에서 시크릿 값이 제거되어 있어(로컬 보관 정책) patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 다시 입력하세요.",
       "pathNotAllowed": "허용되지 않은 경로 \"{{path}}\"입니다. title/description/metadata/sources[].params/sources[].alias/exports[].options만 patch할 수 있습니다.",
       "credentialPath": "경로 \"{{path}}\"는 credential성 필드로 보여 patch할 수 없습니다. serviceKey/apiKey/token 등은 Provider 설정 화면에서 직접 변경하세요.",
@@ -439,14 +439,14 @@
       "openBuildUnknown": "OPEN_BUILD: evidence에 없는 run \"{{runId}}\"",
       "openQualityUnknownDataset": "OPEN_QUALITY: evidence에 없는 dataset \"{{datasetId}}\"",
       "openQualityUnknownRun": "OPEN_QUALITY: evidence에 없는 run \"{{runId}}\"",
-      "openQualityMismatch": "OPEN_QUALITY: run \"{{runId}}\"의 dataset \"{{datasetId}}\" 소속을 Builder evidence에서 확인할 수 없음",
+      "openQualityMismatch": "OPEN_QUALITY: run \"{{runId}}\"의 dataset \"{{datasetId}}\" 소속을 Engine evidence에서 확인할 수 없음",
       "patchUnknownRun": "PATCH_BUILDSPEC: evidence에 없는 run \"{{runId}}\"",
       "patchSpecMissing": "PATCH_BUILDSPEC: run \"{{runId}}\"의 원본 BuildSpec을 이 브라우저에서 찾을 수 없어 안전하게 diff를 만들 수 없습니다",
       "draftUnknownProvider": "CREATE_BUILD_DRAFT: catalog에 없는 provider \"{{provider}}\"",
       "draftUnknownDataset": "CREATE_BUILD_DRAFT: \"{{provider}}\" catalog에 없는 dataset \"{{dataset}}\"",
       "stageNone": "없음",
       "sqlStageMismatch": "현재 화면 stage({{current}})와 제안된 SQL의 stage({{proposed}})가 일치하지 않아 실행 대상에서 제외했습니다.",
-      "sqlSourceDropped": "제안된 source \"{{source}}\"를 evidence에서 확인할 수 없어 제거했습니다. 단일 소스 run이라 Builder가 자동으로 소스를 선택합니다.",
+      "sqlSourceDropped": "제안된 source \"{{source}}\"를 evidence에서 확인할 수 없어 제거했습니다. 단일 소스 run이라 KPubData Engine이 자동으로 소스를 선택합니다.",
       "sqlSourceUnknown": "evidence에 없는 source \"{{source}}\"를 참조해 실행 대상에서 제외했습니다."
     },
     "demo": {
@@ -458,7 +458,7 @@
       "noDataset": "현재 선택된 Dataset이 없어 일반 안내만 제공합니다. Dataset을 선택하면 더 구체적인 데모를 볼 수 있습니다.",
       "noQuality": "평가된 Quality 결과가 없습니다.",
       "qualitySummary": "Quality 결과 요약: {{summary}}.",
-      "sqlNote": "Generated SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Builder 호출 없음).",
+      "sqlNote": "Generated SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Engine 호출 없음).",
       "stageHint": "위 Stage 선택에서 Silver 또는 Gold를 고르면 Generated SQL·Result Preview 데모도 함께 볼 수 있습니다."
     },
     "drawer": {
@@ -490,11 +490,11 @@
       "unknownDataset": "sources[{{index}}].dataset: provider '{{provider}}'에 없는 dataset '{{dataset}}'입니다.",
       "yamlParse": "YAML을 파싱하지 못했습니다.",
       "mockDisabled": "mock 모드에서는 생성 기능이 비활성화됩니다 (ST-A8, #211)",
-      "noValidate": "Builder /validate 연결이 없어 BuildSpec 생성을 중단했습니다.",
+      "noValidate": "Engine /validate 연결이 없어 BuildSpec 생성을 중단했습니다.",
       "noCatalog": "카탈로그를 조회할 수 없어 BuildSpec 생성을 중단했습니다.",
       "emptyOutput": "빈 출력이 반환되었습니다.",
       "restoreFailed": "시크릿 복원에 실패했습니다.",
-      "validateRequestFailed": "Builder 검증 요청에 실패했습니다.",
+      "validateRequestFailed": "Engine 검증 요청에 실패했습니다.",
       "validationFailed": "검증 실패"
     },
     "input": {
@@ -547,7 +547,7 @@
       "needsDatasetRun": "실행하려면 dataset와 run이 모두 선택되어 있어야 합니다.",
       "cancelled": "요청이 취소되었습니다.",
       "unknownError": "Query 실행 중 알 수 없는 오류가 발생했습니다.",
-      "mockUnsupported": "mock 모드에서는 Query 실행을 지원하지 않습니다. VITE_USE_REAL_BUILDER=true로 실제 Builder에 연결하세요.",
+      "mockUnsupported": "mock 모드에서는 Query 실행을 지원하지 않습니다. VITE_USE_REAL_BUILDER=true로 실제 KPubData Engine에 연결하세요.",
       "stageMismatch": "현재 화면 stage({{current}})와 Generated SQL의 stage({{proposed}})가 다릅니다.",
       "stageNone": "없음"
     },
@@ -560,7 +560,7 @@
       "query_busy": "Query 처리 용량이 가득 찼습니다. 잠시 후 다시 시도하세요.",
       "query_timeout": "Query 실행이 시간 초과되었습니다.",
       "query_execution_failed": "Query 실행 중 오류가 발생했습니다.",
-      "network": "Builder에 연결하지 못했습니다.",
+      "network": "KPubData Engine에 연결하지 못했습니다.",
       "mock_mode": "mock 모드에서는 Query를 실행할 수 없습니다.",
       "unknown": "알 수 없는 오류가 발생했습니다."
     },
@@ -635,8 +635,8 @@
       "opened": "화면을 열었습니다.",
       "addedToReport": "Report 참고 노트로 추가했습니다.",
       "actionFailed": "action을 적용하지 못했습니다.",
-      "patchApplied": "BuildSpec에 적용했고 Builder /validate를 통과했습니다.",
-      "patchAppliedInvalid": "BuildSpec에 적용했지만 Builder /validate에 실패했습니다: {{errors}}",
+      "patchApplied": "BuildSpec에 적용했고 Engine /validate를 통과했습니다.",
+      "patchAppliedInvalid": "BuildSpec에 적용했지만 Engine /validate에 실패했습니다: {{errors}}",
       "patchFailed": "BuildSpec patch 적용에 실패했습니다.",
       "draftSaved": "New Build 초안에 저장했습니다."
     },
@@ -692,7 +692,7 @@
       "forbiddenTitle": "이 run에 접근할 권한이 없습니다.",
       "forbiddenDesc": "run `{{id}}`은 이 데이터셋에 있지만 다른 사용자의 run입니다. latest run으로 자동 변경하지 않았습니다.",
       "checkFailedTitle": "run을 확인하지 못했습니다.",
-      "checkFailedDesc": "run `{{id}}`을 Builder에서 확인하는 중 오류가 났습니다. 잠시 후 다시 시도하세요.",
+      "checkFailedDesc": "run `{{id}}`을 KPubData Engine에서 확인하는 중 오류가 났습니다. 잠시 후 다시 시도하세요.",
       "back": "latest run 보기"
     },
     "header": {
@@ -707,7 +707,7 @@
       "stageOption": "(문맥용)"
     },
     "scope": {
-      "desc": "현재 선택한 Dataset · Run · Source · Stage 범위의 Builder 평가 결과입니다.",
+      "desc": "현재 선택한 Dataset · Run · Source · Stage 범위의 Engine 평가 결과입니다.",
       "viewDetail": "Dataset Detail에서 보기"
     },
     "failed": {
@@ -792,7 +792,7 @@
         },
         "network": {
           "title": "네트워크 연결 오류",
-          "detail": "Builder가 Provider에 연결하지 못했습니다. 네트워크 상태를 확인하세요."
+          "detail": "KPubData Engine이 Provider에 연결하지 못했습니다. 네트워크 상태를 확인하세요."
         },
         "timeout": {
           "title": "연결 시간 초과",
@@ -804,7 +804,7 @@
         },
         "unknown": {
           "title": "연결 상태를 확인할 수 없습니다",
-          "detail": "Builder가 실제 API 확인 중 분류되지 않은 오류를 받았습니다."
+          "detail": "KPubData Engine이 실제 API 확인 중 분류되지 않은 오류를 받았습니다."
         }
       },
       "scopeNote": "이 검사는 Provider 수준의 기본 연결 확인입니다. 선택한 Dataset의 실제 사용 가능 여부는 다음 단계 Preview에서 확인합니다.",
@@ -815,7 +815,7 @@
         "userKeyLabel": "API Key 등록됨",
         "userKeyDetail": "이 Provider의 인증 정보가 준비되어 있습니다.",
         "serverDefaultLabel": "연결 준비됨",
-        "serverDefaultDetail": "이 제공 기관은 현재 Builder 기본 자격 증명으로 사용 중입니다.",
+        "serverDefaultDetail": "이 제공 기관은 현재 Engine 기본 자격 증명으로 사용 중입니다.",
         "missingKeyLabel": "API Key 미설정",
         "missingKeyDetail": "이 Provider를 사용하는 Dataset은 API Key가 필요할 수 있습니다."
       },
@@ -832,9 +832,9 @@
     "errors": {
       "loadProvider": "Provider 정보를 불러올 수 없습니다",
       "credStatus": "자격 증명 상태를 불러오지 못했습니다",
-      "saveNoStore": "Builder에 자격 증명 저장소(master key)가 구성되어 있지 않아 저장할 수 없습니다.",
+      "saveNoStore": "KPubData Engine에 자격 증명 저장소(master key)가 구성되어 있지 않아 저장할 수 없습니다.",
       "saveFail": "Credential 저장에 실패했습니다",
-      "deleteNoStore": "Builder에 자격 증명 저장소(master key)가 구성되어 있지 않아 삭제할 수 없습니다.",
+      "deleteNoStore": "KPubData Engine에 자격 증명 저장소(master key)가 구성되어 있지 않아 삭제할 수 없습니다.",
       "deleteFail": "Credential 삭제에 실패했습니다"
     },
     "page": {
@@ -859,16 +859,16 @@
       "noCredNote": "이 제공 기관은 자격 증명 없이 사용할 수 있습니다. 등록하거나 삭제할 자격 증명이 없습니다.",
       "loading": "자격 증명 상태를 불러오는 중…",
       "noStoreTitle": "자격 증명 저장소가 아직 구성되지 않았습니다",
-      "noStoreBody": "Builder에 암호화된 자격 증명 저장소(master key)가 설정되어 있지 않아 사용자 자격 증명을 등록·조회할 수 없습니다. 이는 \"아직 자격 증명을 등록하지 않음\"과는 다른 상태입니다. 운영자가 Builder에 KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY를 설정한 뒤 다시 시도하세요.",
+      "noStoreBody": "KPubData Engine에 암호화된 자격 증명 저장소(master key)가 설정되어 있지 않아 사용자 자격 증명을 등록·조회할 수 없습니다. 이는 \"아직 자격 증명을 등록하지 않음\"과는 다른 상태입니다. 운영자가 KPubData Engine에 KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY를 설정한 뒤 다시 시도하세요.",
       "keyPlaceholder": "API Key를 입력하세요",
       "save": "저장",
       "cancel": "취소",
       "savedKey": "저장된 API Key (마스킹):",
       "configured": "설정됨",
       "lastUpdated": "마지막 업데이트:",
-      "maskingNote": "Builder가 마스킹한 값이며 원문은 표시되지 않습니다.",
+      "maskingNote": "KPubData Engine이 마스킹한 값이며 원문은 표시되지 않습니다.",
       "backToData": "데이터 설정으로 돌아가기",
-      "defaultCredNote": "이 제공 기관은 현재 Builder 기본 자격 증명으로 사용 중입니다. 별도 사용자 자격 증명을 등록하면 이 기관 호출에 우선 적용됩니다.",
+      "defaultCredNote": "이 제공 기관은 현재 Engine 기본 자격 증명으로 사용 중입니다. 별도 사용자 자격 증명을 등록하면 이 기관 호출에 우선 적용됩니다.",
       "needsCredNote": "이 제공 기관을 사용하려면 자격 증명을 등록해야 합니다."
     },
     "labels": {
@@ -893,7 +893,7 @@
     },
     "explore": {
       "title": "공공데이터 탐색",
-      "desc": "Builder가 제공하는 공공데이터 카탈로그에서 Provider와 Dataset을 찾아 시작합니다.",
+      "desc": "KPubData Engine이 제공하는 공공데이터 카탈로그에서 Provider와 Dataset을 찾아 시작합니다.",
       "cta": "탐색하기"
     },
     "addData": {
@@ -941,7 +941,7 @@
       "eyebrow": "품질",
       "title": "최근 품질 상태",
       "unavailableTitle": "일부 품질 정보를 확인할 수 없습니다",
-      "unavailableDesc": "Builder에서 최근 Run의 Quality 결과를 제공하지 못했습니다. 실패한 Build를 Quality FAIL로 간주하지 않습니다.",
+      "unavailableDesc": "KPubData Engine에서 최근 Run의 Quality 결과를 제공하지 못했습니다. 실패한 Build를 Quality FAIL로 간주하지 않습니다.",
       "emptyTitle": "최근 확인한 Build에서 품질 경고가 없습니다",
       "emptyDesc": "현재 확인 가능한 최근 Quality 결과 중 추가 확인이 필요한 WARN/FAIL이 없습니다.",
       "needsCheck": "품질 확인 필요",
@@ -1020,8 +1020,8 @@
     "configure": {
       "title": "가져오기 설정",
       "apiPrepTitle": "API 사용 준비",
-      "catalogLoading": "Builder catalog를 불러오는 중입니다...",
-      "noProviders": "Builder catalog에 등록된 provider가 없습니다.",
+      "catalogLoading": "Engine catalog를 불러오는 중입니다...",
+      "noProviders": "Engine catalog에 등록된 provider가 없습니다.",
       "providerLabel": "제공자 (Provider)",
       "providerSelect": "제공자 선택…",
       "datasetLabel": "데이터셋 (Dataset)",
@@ -1077,7 +1077,7 @@
       "review": "검토 · Build"
     },
     "errors": {
-      "catalog": "Builder catalog를 불러오지 못했습니다.",
+      "catalog": "Engine catalog를 불러오지 못했습니다.",
       "upload": "파일 업로드에 실패했습니다.",
       "yamlSyntax": "YAML 구문 오류: {{message}}",
       "yamlApply": "YAML을 적용하지 못했습니다.",
@@ -1140,11 +1140,11 @@
     "stagesErrorMsg": "Stage 상태를 불러오지 못했습니다.",
     "qualityErrorMsg": "Quality 결과를 불러오지 못했습니다.",
     "stageDetailErrorMsg": "Stage 상세를 불러오지 못했습니다.",
-    "schemaSilverNote": "선택한 persisted schema와 Builder가 보고한 변경만 표시합니다.",
+    "schemaSilverNote": "선택한 persisted schema와 KPubData Engine이 보고한 변경만 표시합니다.",
     "schemaGoldNote": "Gold 응답은 column 이름만 제공하며 dtype을 추론하지 않습니다.",
     "changeCol": "변경",
     "previewNoneDesc": "{{stage}} stage는 persisted sample을 제공하지 않습니다.",
-    "previewNote": "Builder가 저장한 Silver sample 일부를 확인합니다.",
+    "previewNote": "KPubData Engine이 저장한 Silver sample 일부를 확인합니다.",
     "fetchFailed": "Quality 조회 실패",
     "noEvaluated": "평가된 결과가 없습니다.",
     "viewQualityDetail": "상세 Quality 보기",
@@ -1174,7 +1174,7 @@
     "forbiddenRunTitle": "이 run에 접근할 권한이 없습니다.",
     "forbiddenRunBody": "run `{{run}}`은 이 데이터셋에 있지만 다른 사용자의 run입니다. latest run으로 자동 변경하지 않았습니다.",
     "runCheckFailedTitle": "run을 확인하지 못했습니다.",
-    "runCheckFailedBody": "run `{{run}}`을 Builder에서 확인하는 중 오류가 났습니다. 잠시 후 다시 시도하세요.",
+    "runCheckFailedBody": "run `{{run}}`을 KPubData Engine에서 확인하는 중 오류가 났습니다. 잠시 후 다시 시도하세요.",
     "viewLatest": "latest run 보기",
     "sourceLoading": "source 불러오는 중",
     "stageStatusTitle": "선택된 source({{source}})의 {{stage}} stage 상태",
@@ -1210,56 +1210,56 @@
     "statusCancelled": "취소됨",
     "noRunId": "게시할 Run ID가 없습니다.",
     "runInfoError": "이 Run의 정보를 확인할 수 없습니다.",
-    "readinessMismatch": "Builder readiness 응답이 선택한 Run과 일치하지 않습니다.",
+    "readinessMismatch": "Engine readiness 응답이 선택한 Run과 일치하지 않습니다.",
     "checking": "확인 중…",
     "completedAt": "완료 · {{time}}",
     "completed": "완료",
     "unconfirmed": "확인되지 않음",
     "eyebrow": "게시",
     "title": "{{name}} 게시",
-    "desc": "Builder가 선택한 Run의 준비 상태를 확인한 뒤 Hugging Face에 게시합니다.",
+    "desc": "KPubData Engine이 선택한 Run의 준비 상태를 확인한 뒤 Hugging Face에 게시합니다.",
     "selectedRun": "선택한 Run",
     "buildCompleted": "Build 완료",
     "exactRunNote": "이 화면은 URL의 exact Run ID로 Dataset과 Build 완료 상태를 확인하며, latest Run으로 바꾸지 않습니다.",
     "datasetLoadWarn": "이 Run의 Dataset 정보를 불러오지 못했습니다. Run ID로 게시 준비 상태는 아래에서 계속 확인할 수 있습니다.",
-    "readinessNote": "Run·Gold·license·PII policy·publish credential을 Builder가 판정합니다.",
+    "readinessNote": "Run·Gold·license·PII policy·publish credential을 KPubData Engine이 판정합니다.",
     "recheck": "다시 확인",
-    "readyLabel": "Builder 게시 준비 완료",
-    "blockedLabel": "Builder blocker가 있어 게시할 수 없습니다.",
-    "notReadyNoReason": "Builder가 이 Run을 게시 준비되지 않음으로 판정했지만 구체적인 사유(blocker)를 제공하지 않았습니다.",
-    "credentialNote": "이 blocker는 source Provider credential이 아니라 publish 대상(Hugging Face/Kaggle) credential을 뜻합니다. Builder 배포 설정에 따라 서버 credential이 쓰이거나, 요청자 본인이 저장한 credential이 필요합니다. Studio는 어느 쪽도 입력받거나 저장하지 않습니다.",
+    "readyLabel": "Engine 게시 준비 완료",
+    "blockedLabel": "Engine blocker가 있어 게시할 수 없습니다.",
+    "notReadyNoReason": "KPubData Engine이 이 Run을 게시 준비되지 않음으로 판정했지만 구체적인 사유(blocker)를 제공하지 않았습니다.",
+    "credentialNote": "이 blocker는 source Provider credential이 아니라 publish 대상(Hugging Face/Kaggle) credential을 뜻합니다. Engine 배포 설정에 따라 서버 credential이 쓰이거나, 요청자 본인이 저장한 credential이 필요합니다. Studio는 어느 쪽도 입력받거나 저장하지 않습니다.",
     "settingsTitle": "게시 설정",
-    "settingsNote": "Readiness와 별개인 로컬 입력 검증입니다. Builder readiness는 destination이나 공개 설정을 검증하지 않습니다.",
-    "destinationHint": "Builder가 허용하는 owner/dataset 식별자",
+    "settingsNote": "Readiness와 별개인 로컬 입력 검증입니다. Engine readiness는 destination이나 공개 설정을 검증하지 않습니다.",
+    "destinationHint": "KPubData Engine이 허용하는 owner/dataset 식별자",
     "privateLabel": "비공개 Dataset",
     "privateDefault": "기본값: 비공개",
     "review": "최종 확인",
     "confirmTitle": "게시 최종 확인",
     "visibility": "공개 설정",
-    "confirmNote": "Builder의 POST 응답이 성공하기 전에는 게시 완료로 표시하지 않습니다.",
+    "confirmNote": "KPubData Engine의 POST 응답이 성공하기 전에는 게시 완료로 표시하지 않습니다.",
     "publishNow": "게시 실행",
     "editSettings": "설정 수정",
     "stopWaiting": "응답 기다리기 중단",
-    "publishedTitle": "Builder 게시 완료",
+    "publishedTitle": "Engine 게시 완료",
     "publishFailed": "게시 실패",
     "noAutoRetry": "자동 재시도하지 마세요.",
     "abortedTitle": "응답 대기를 중단했습니다.",
     "abortedBody": "브라우저 요청만 중단했으며 원격 게시 작업을 취소한 것은 아닙니다. 게시 결과는 확인되지 않았습니다.",
-    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 Builder에 저장해야 게시할 수 있습니다."
+    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 KPubData Engine에 저장해야 게시할 수 있습니다."
   },
   "settings": {
     "page": {
       "eyebrow": "설정",
       "title": "환경 설정",
-      "desc": "계정, Builder 연결, 데이터 Provider 자격 증명, Ask KPubData BYOK를 관리합니다."
+      "desc": "계정, Engine 연결, 데이터 Provider 자격 증명, Ask KPubData BYOK를 관리합니다."
     },
     "conn": {
       "title": "연결 상태",
-      "checking": "Builder 연결을 확인하는 중입니다…",
-      "version": "Builder API 버전 {{version}}",
-      "minVersion": "필요한 Builder API 최소 버전 {{version}}",
-      "mismatch": "계약 버전 불일치 주의: Builder {{api}}이(가) Studio가 요구하는 최소 버전({{min}}, 같은 major)과 호환되지 않습니다. 일부 응답 형태가 호환되지 않을 수 있습니다.",
-      "mockNote": "mock 모드입니다. 실제 Builder에 연결하려면",
+      "checking": "Engine 연결을 확인하는 중입니다…",
+      "version": "Engine API 버전 {{version}}",
+      "minVersion": "필요한 Engine API 최소 버전 {{version}}",
+      "mismatch": "계약 버전 불일치 주의: Engine {{api}}이(가) Studio가 요구하는 최소 버전({{min}}, 같은 major)과 호환되지 않습니다. 일부 응답 형태가 호환되지 않을 수 있습니다.",
+      "mockNote": "mock 모드입니다. 실제 KPubData Engine에 연결하려면",
       "mockEnv": "로 설정하세요.",
       "connFail": "연결 확인에 실패했습니다.",
       "fetchFail": "조회에 실패했습니다."
@@ -1273,14 +1273,14 @@
     "account": {
       "title": "계정",
       "logout": "로그아웃",
-      "notLoggedIn": "로그인되지 않았습니다. 실연동 모드에서는 Builder 호출을 위해 로그인이 필요합니다.",
+      "notLoggedIn": "로그인되지 않았습니다. 실연동 모드에서는 Engine 호출을 위해 로그인이 필요합니다.",
       "login": "로그인",
       "mockNote": "mock 모드에서는 로그인 상태가 UI 시연용으로만 동작합니다. 계정/권한 백엔드는"
     },
     "providers": {
       "title": "데이터 Provider 자격 증명",
       "manage": "Provider 설정에서 관리",
-      "mockNote": "mock 모드에서는 Provider 페이지에서 동작을 시연할 수 있습니다. 실제 자격 증명은 실연동 모드에서 Builder가 서버에 안전하게 보관합니다.",
+      "mockNote": "mock 모드에서는 Provider 페이지에서 동작을 시연할 수 있습니다. 실제 자격 증명은 실연동 모드에서 KPubData Engine이 서버에 안전하게 보관합니다.",
       "loading": "Provider 구성 상태를 조회하는 중입니다…",
       "summary": "자격 증명이 필요한 Provider {{total}}개 중 {{configured}}개가 구성되었습니다.",
       "listLabel": "provider 구성 상태",
@@ -1323,9 +1323,9 @@
     },
     "oidc": {
       "errorTitle": "OIDC 인증 설정에 문제가 있습니다.",
-      "errorDesc": "이 환경은 실제 Builder에 연결되어 있지만 OIDC 설정(<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>)이 올바르지 않습니다. 관리자에게 문의하세요.",
+      "errorDesc": "이 환경은 실제 KPubData Engine에 연결되어 있지만 OIDC 설정(<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>)이 올바르지 않습니다. 관리자에게 문의하세요.",
       "missingTitle": "OIDC 인증이 아직 구성되지 않았습니다.",
-      "missingDesc": "이 환경은 실제 Builder에 연결되어 있지만, 사람 사용자 로그인을 위한 OIDC IdP(Keycloak) 연동이 아직 준비되지 않았습니다. 관리자에게 문의하거나 연동이 완료된 이후 다시 시도해주세요.",
+      "missingDesc": "이 환경은 실제 KPubData Engine에 연결되어 있지만, 사람 사용자 로그인을 위한 OIDC IdP(Keycloak) 연동이 아직 준비되지 않았습니다. 관리자에게 문의하거나 연동이 완료된 이후 다시 시도해주세요.",
       "disabled": "OIDC가 활성화되지 않았습니다."
     },
     "signup": {
@@ -1353,7 +1353,7 @@
     "title": "작업대",
     "desc": "최근 작업(Recent Work)과 저장한 BuildSpec을 한 곳에서 관리합니다.",
     "localOnlyBadge": "이 브라우저에만 저장됩니다",
-    "localOnlyDesc": "Saved BuildSpec은 Builder 서버가 아니라 지금 사용 중인 이 브라우저에만 저장됩니다. 다른 기기·브라우저에서는 보이지 않고, 브라우저 데이터를 지우면 함께 사라질 수 있습니다. 팀원에게 자동으로 공유되거나 서버에 백업되지 않습니다.",
+    "localOnlyDesc": "Saved BuildSpec은 Engine 서버가 아니라 지금 사용 중인 이 브라우저에만 저장됩니다. 다른 기기·브라우저에서는 보이지 않고, 브라우저 데이터를 지우면 함께 사라질 수 있습니다. 팀원에게 자동으로 공유되거나 서버에 백업되지 않습니다.",
     "thisBrowser": "이 브라우저",
     "loading": "불러오는 중입니다…",
     "noWorkTitle": "아직 작업이 없습니다",
@@ -1392,7 +1392,7 @@
     "page": {
       "eyebrow": "리포트",
       "title": "리포트",
-      "desc": "Builder evidence를 기준으로 Report를 만들고, Ask KPubData 해석을 참고 블록으로 덧붙여 편집·저장·내보냅니다.",
+      "desc": "Engine evidence를 기준으로 Report를 만들고, Ask KPubData 해석을 참고 블록으로 덧붙여 편집·저장·내보냅니다.",
       "newTitle": "새 Report 만들기",
       "newDesc": "선택한 dataset/run이 이 Report의 기준으로 고정됩니다. 새 Run이 생겨도 이 Report는 자동으로 바뀌지 않습니다.",
       "createCta": "Report 만들기",
@@ -1612,7 +1612,7 @@
       "reasonDemo": "[DEMO] 보고서용 분석(mock 응답)",
       "chatTitle": "직접 질문하기 · 현재 Report 기준({{dataset}} · {{run}})",
       "close": "닫기",
-      "intro": "현재 Report의 Dataset/Run과 Builder Evidence를 기준으로 보고서에 추가할 AI 해석을 생성할 수 있습니다.",
+      "intro": "현재 Report의 Dataset/Run과 Engine Evidence를 기준으로 보고서에 추가할 AI 해석을 생성할 수 있습니다.",
       "needsKey": "Ask KPubData 분석에는 개인 LLM API Key가 필요합니다.",
       "openAiSettings": "AI 설정 열기",
       "generateDemo": "데모 보고서 분석 생성",
@@ -1688,7 +1688,7 @@
       "none": "없음"
     },
     "provenance": {
-      "builder": "Builder Evidence",
+      "builder": "Engine Evidence",
       "assistant": "AI 작성 · Ask KPubData",
       "user": "사용자 작성"
     }
@@ -1733,21 +1733,21 @@
     "dataset": "KPubData에서 하나의 단위로 관리하는 빌드 결과 데이터입니다.",
     "build": "선택한 source와 설정에 따라 데이터를 수집·처리하는 작업입니다.",
     "run": "Build가 실제로 한 번 실행된 기록입니다. 같은 Dataset에도 여러 Run이 생길 수 있습니다.",
-    "buildSpec": "어떤 source를 가져오고 어떻게 처리할지 Builder에 전달하는 이식 가능한 실행 명세입니다.",
-    "provider": "Builder가 연결할 수 있는 외부 데이터 공급처 또는 API입니다.",
+    "buildSpec": "어떤 source를 가져오고 어떻게 처리할지 KPubData Engine에 전달하는 이식 가능한 실행 명세입니다.",
+    "provider": "KPubData Engine이 연결할 수 있는 외부 데이터 공급처 또는 API입니다.",
     "credential": "Provider에서 데이터를 가져올 때 필요한 API Key 등의 인증 정보입니다.",
     "preview": "Build 전에 가져올 데이터의 일부와 검증 결과를 미리 확인하는 기능입니다.",
     "bronze": "수집한 원본 데이터를 가능한 그대로 보존하는 단계입니다.",
     "silver": "Bronze 데이터를 정제·표준화해 분석과 품질 확인에 사용할 수 있게 만든 단계입니다.",
     "gold": "특정 사용 목적에 맞게 가공한 최종 데이터 단계입니다.",
-    "quality": "Builder가 실제로 평가한 데이터 품질 규칙의 결과입니다.",
+    "quality": "KPubData Engine이 실제로 평가한 데이터 품질 규칙의 결과입니다.",
     "schemaDrift": "이전과 비교해 컬럼 추가·삭제·타입 변경 등 데이터 구조가 달라진 상태입니다.",
-    "evidence": "Ask KPubData 또는 Report가 참고한 Builder의 Dataset·Run·Quality 등의 근거입니다.",
+    "evidence": "Ask KPubData 또는 Report가 참고한 KPubData Engine의 Dataset·Run·Quality 등의 근거입니다.",
     "context": "Ask KPubData 가 현재 질문을 해석할 때 사용하는 Dataset·Run·Source·Stage 범위입니다.",
     "generatedSql": "Ask KPubData 가 선택한 Silver 또는 Gold schema를 바탕으로 생성한 조회 SQL입니다.",
     "artifact": "Build 실행으로 생성된 데이터 파일 또는 결과물입니다.",
     "manifest": "Run과 생성된 산출물에 대한 메타데이터 기록입니다.",
-    "readiness": "Publish 전에 필요한 조건을 Builder가 확인한 결과입니다.",
+    "readiness": "Publish 전에 필요한 조건을 KPubData Engine이 확인한 결과입니다.",
     "helpLabel": "{{term}} 용어 도움말"
   },
   "legend": {
@@ -1758,13 +1758,13 @@
       "warn": "결과는 존재하지만 확인이 필요한 품질 문제가 있음",
       "fail": "품질 규칙을 충족하지 못한 문제가 있음",
       "na": "평가값이 없거나 적용되지 않음. PASS가 아님",
-      "unavailable": "Builder가 결과를 제공할 수 없는 상태. FAIL과 다름"
+      "unavailable": "KPubData Engine이 결과를 제공할 수 없는 상태. FAIL과 다름"
     }
   },
   "discover": {
     "page": {
       "title": "데이터 탐색",
-      "desc": "Builder 카탈로그에서 provider와 데이터셋을 정확 검색하고, 선택한 데이터로 바로 빌드를 시작하세요."
+      "desc": "Engine 카탈로그에서 provider와 데이터셋을 정확 검색하고, 선택한 데이터로 바로 빌드를 시작하세요."
     },
     "errors": {
       "catalog": "카탈로그를 불러오지 못했습니다.",
@@ -1776,8 +1776,8 @@
     "serviceKeyOnly": "서비스 키 필요만 ({{count}}개)",
     "resetFilters": "필터 초기화",
     "empty": {
-      "title": "Builder 카탈로그가 비어 있습니다",
-      "desc": "등록된 provider/dataset이 없습니다. Builder 설정을 확인해 주세요."
+      "title": "Engine 카탈로그가 비어 있습니다",
+      "desc": "등록된 provider/dataset이 없습니다. Engine 설정을 확인해 주세요."
     },
     "noMatch": {
       "title": "조건에 맞는 데이터셋이 없습니다",
@@ -1876,8 +1876,8 @@
   },
   "publish": {
     "errors": {
-      "incomplete": "Builder에서 게시 요청을 완료하지 못했습니다.",
-      "invalidRequest": "게시 요청 형식이 Builder 계약과 일치하지 않습니다.",
+      "incomplete": "KPubData Engine에서 게시 요청을 완료하지 못했습니다.",
+      "invalidRequest": "게시 요청 형식이 Engine 계약과 일치하지 않습니다.",
       "destinationRequired": "Hugging Face destination을 입력하세요.",
       "destinationFormat": "destination은 owner/dataset 형식이어야 합니다.",
       "readinessNotFound": "요청한 Run의 게시 준비 상태를 찾을 수 없습니다.",
@@ -1885,14 +1885,14 @@
       "notReady": "게시 준비가 되지 않은 Run입니다.",
       "unknown": "게시 요청을 완료하지 못했습니다.",
       "inProgress": "같은 게시 작업이 이미 진행 중입니다.",
-      "retryBlocked": "이전 게시 결과를 확인할 수 없어 자동 재시도가 차단되었습니다. Builder 운영자에게 상태 확인을 요청하세요.",
+      "retryBlocked": "이전 게시 결과를 확인할 수 없어 자동 재시도가 차단되었습니다. Engine 운영자에게 상태 확인을 요청하세요.",
       "visibilityConflict": "같은 Run과 destination이 다른 공개 설정으로 이미 게시되었습니다.",
       "externalFailed": "외부 게시 서비스에서 작업을 완료하지 못했습니다. 결과가 불명확할 수 있으므로 자동 재시도하지 않습니다.",
-      "readinessChanged": "게시 직전 Builder 재검증에서 준비 상태가 변경되었습니다. readiness를 다시 확인하세요.",
+      "readinessChanged": "게시 직전 Engine 재검증에서 준비 상태가 변경되었습니다. readiness를 다시 확인하세요.",
       "forbidden": "이 Run을 게시할 권한이 없습니다.",
-      "notFound": "선택한 Run을 Builder에서 찾을 수 없습니다.",
-      "network": "Builder 응답을 받지 못했습니다. 원격 게시 결과는 확인되지 않았습니다.",
-      "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다."
+      "notFound": "선택한 Run을 KPubData Engine에서 찾을 수 없습니다.",
+      "network": "Engine 응답을 받지 못했습니다. 원격 게시 결과는 확인되지 않았습니다.",
+      "mismatch": "Engine 응답의 Run 또는 target이 요청과 일치하지 않습니다."
     }
   },
   "status": {
@@ -1969,7 +1969,7 @@
       },
       "assistant-helper": {
         "title": "막히면 Ask KPubData",
-        "copy": "Ask KPubData 는 현재 화면의 Dataset·Run·Stage와 Builder Evidence를 바탕으로 분석을 돕습니다."
+        "copy": "Ask KPubData 는 현재 화면의 Dataset·Run·Stage와 Engine Evidence를 바탕으로 분석을 돕습니다."
       },
       "sidebar": {
         "title": "작업 공간 둘러보기",
@@ -2100,7 +2100,7 @@
       "missingId": "빌드 ID가 없습니다.",
       "notFound": "빌드를 찾을 수 없습니다: {{buildId}}",
       "notFoundNoSpec": "빌드를 찾을 수 없습니다: {{buildId}}. 이 실행의 BuildSpec snapshot이 없고(legacy) 로컬에 보관된 스펙도 없습니다.",
-      "statusUnknown": "빌드 상태를 확인할 수 없습니다: {{buildId}}. Builder 이력 목록과 manifest 어디에서도 이 실행의 최종 상태를 찾지 못했습니다.",
+      "statusUnknown": "빌드 상태를 확인할 수 없습니다: {{buildId}}. Engine 이력 목록과 manifest 어디에서도 이 실행의 최종 상태를 찾지 못했습니다.",
       "loadFailed": "빌드 정보를 불러오지 못했습니다.",
       "pollFailed": "run 상태를 갱신하지 못했습니다.",
       "eventsFailed": "Run event timeline을 불러오지 못했습니다."
@@ -2158,8 +2158,8 @@
     }
   },
   "versionCheck": {
-    "mismatch": "Studio {{studio}} 가 Builder {{builder}} 에 연결되어 있습니다 — 서로 다른 릴리스라 일부 화면이 불러오지 못할 수 있습니다.",
-    "remedy": "같은 버전의 Builder 를 배포하거나, 새로고침해 같은 버전의 Studio 를 받으세요.",
+    "mismatch": "Studio {{studio}} 가 KPubData Engine {{builder}} 에 연결되어 있습니다 — 서로 다른 릴리스라 일부 화면이 불러오지 못할 수 있습니다.",
+    "remedy": "같은 버전의 KPubData Engine 을 배포하거나, 새로고침해 같은 버전의 Studio 를 받으세요.",
     "dismiss": "버전 안내 닫기"
   }
 }

@@ -63,7 +63,7 @@ describe("SettingsPage version check", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText(new RegExp(`Builder API 버전 ${MIN_BUILDER_API_VERSION}`)),
+        screen.getByText(new RegExp(`Engine API 버전 ${MIN_BUILDER_API_VERSION}`)),
       ).toBeInTheDocument(),
     );
     expect(screen.queryByRole("alert")).toBeNull();
@@ -74,7 +74,7 @@ describe("SettingsPage version check", () => {
     renderSettings();
 
     await waitFor(() =>
-      expect(screen.getByText(/Builder API 버전 1\.21\.0/)).toBeInTheDocument(),
+      expect(screen.getByText(/Engine API 버전 1\.21\.0/)).toBeInTheDocument(),
     );
     expect(screen.queryByRole("alert")).toBeNull();
   });

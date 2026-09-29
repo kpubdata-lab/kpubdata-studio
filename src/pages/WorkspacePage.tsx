@@ -227,7 +227,7 @@ export function WorkspacePage() {
                       <span className="font-medium text-foreground">{item.title}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
-                      <span>{item.source === "builder" ? "Builder" : t("workspace.thisBrowser")}</span>
+                      <span>{item.source === "builder" ? "KPubData Engine" : t("workspace.thisBrowser")}</span>
                       <span>{formatDateTime(item.timestamp)}</span>
                     </span>
                   </button>

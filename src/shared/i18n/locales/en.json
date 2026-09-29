@@ -114,7 +114,7 @@
       "buildsScope": "Builds (fetched scope)",
       "scopeHint": "{{count}} fetched · limit {{limit}}{{more}}",
       "maybeMore": " (more may exist)",
-      "completedOnlyHint": "Builder GET /builds returns only completed history (running jobs excluded)"
+      "completedOnlyHint": "Engine GET /builds returns only completed history (running jobs excluded)"
     },
     "search": {
       "aria": "Search runs",
@@ -189,13 +189,13 @@
     }
   },
   "api": {
-    "timeout": "Builder API did not respond in time.",
-    "connFail": "Could not connect to the Builder API.",
+    "timeout": "Engine API did not respond in time.",
+    "connFail": "Could not connect to the Engine API.",
     "badJson": "Failed to parse the response JSON.",
-    "schemaMismatch": "Builder API response does not match the expected shape: {{details}}",
+    "schemaMismatch": "Engine API response does not match the expected shape: {{details}}",
     "schemaDefault": "response shape",
     "schemaIssueDefault": "shape mismatch",
-    "uploadMismatch": "Builder upload response does not match the expected shape.",
+    "uploadMismatch": "Engine upload response does not match the expected shape.",
     "http": {
       "400": "The request format is invalid.",
       "401": "Login required or the session has expired. Please sign in again.",
@@ -206,7 +206,7 @@
       "500": "Internal server error occurred.",
       "502": "An error occurred at the data source.",
       "503": "The auth service is temporarily unavailable. Please try again shortly.",
-      "fallback": "Builder API error (HTTP {{status}})"
+      "fallback": "Engine API error (HTTP {{status}})"
     },
     "ctx": {
       "build": "{{base}} (build ID: {{id}})",
@@ -245,8 +245,8 @@
       "draftSecretRemoved": "Secret-bearing parameter values were removed from the saved draft. Please re-enter the parameters.",
       "specSecretRemoved": "Secret values were removed from the saved spec. Please re-enter the credential.",
       "specInvalid": "The build spec is invalid.",
-      "catalogFail": "Failed to load the Builder catalog.",
-      "unknownSource": "This source is not in the current Builder catalog.",
+      "catalogFail": "Failed to load the Engine catalog.",
+      "unknownSource": "This source is not in the current Engine catalog.",
       "previewFail": "Preview failed.",
       "specError": "Spec error",
       "validateFail": "Validation request failed.",
@@ -267,8 +267,8 @@
       "descEdit": "Loaded the existing spec. Edits are recorded as a new run.",
       "descNew": "Configure data source, parameters, and output format step by step.",
       "loadingSpec": "Loading the existing spec...",
-      "specNotFound": "Could not find the spec for build {{id}}. Builder does not keep specs, so builds not run in this browser cannot be loaded. The input below starts a new build.",
-      "specEditing": "Editing the spec of build {{id}}. Builder never overwrites previous runs — running records a new build with the modified spec.",
+      "specNotFound": "Could not find the spec for build {{id}}. KPubData Engine does not keep specs, so builds not run in this browser cannot be loaded. The input below starts a new build.",
+      "specEditing": "Editing the spec of build {{id}}. KPubData Engine never overwrites previous runs — running records a new build with the modified spec.",
       "savedSpecLoaded": "Loaded saved BuildSpec {{name}}. Press \"Save this spec\" again to apply changes to the Workspace — merely opening it does not modify the original.",
       "draftExists": "A saved draft exists. Continue editing it?",
       "load": "Load",
@@ -277,8 +277,8 @@
     "template": {
       "selectTitle": "Choose a Template",
       "selectDesc": "Start with a common public data combination or configure from scratch.",
-      "catalogLoading": "Loading the Builder catalog...",
-      "catalogError": "Builder catalog fetch failed: {{error}}"
+      "catalogLoading": "Loading the Engine catalog...",
+      "catalogError": "Engine catalog fetch failed: {{error}}"
     },
     "identity": {
       "title": "Basics",
@@ -294,9 +294,9 @@
       "providerLabel": "Provider",
       "providerSelect": "Select a provider…",
       "datasetLabel": "Dataset",
-      "datasetHelp": "Dataset code within the provider from the Builder catalog.",
+      "datasetHelp": "Dataset code within the provider from the Engine catalog.",
       "datasetSelect": "Select a dataset…",
-      "catalogLoading": "Loading the Builder catalog..."
+      "catalogLoading": "Loading the Engine catalog..."
     },
     "params": {
       "title": "Parameters",
@@ -307,7 +307,7 @@
       "title": "Preview",
       "refresh": "Refresh Preview",
       "guideTitle": "Check sample data with the current settings",
-      "guideDesc": "Press 'Refresh Preview' to see sample rows and the schema returned by Builder.",
+      "guideDesc": "Press 'Refresh Preview' to see sample rows and the schema returned by KPubData Engine.",
       "failTitle": "Could not load the preview",
       "failDesc": "Check the parameters and try again.",
       "emptyTitle": "No data matches the conditions",
@@ -330,7 +330,7 @@
       "cancelled": "The run was cancelled.",
       "aborted": "The request was aborted. The server build result was not confirmed.",
       "saveSpec": "Save this spec (Workspace)",
-      "saveSpecDesc": "Save with a name in this browser — not sent to Builder.",
+      "saveSpecDesc": "Save with a name in this browser — not sent to KPubData Engine.",
       "savePrompt": "Enter a name to save",
       "unnamed": "Untitled BuildSpec",
       "savedAs": "Saved to the Workspace as \"{{name}}\"."
@@ -358,7 +358,7 @@
     },
     "actions": {
       "missingParent": "The parent field for path \"{{path}}\" does not exist.",
-      "specNotFound": "The original BuildSpec for run \"{{runId}}\" is not in this browser. Builder does not persist specs, so a patch can only be applied to a run you have executed or edited in Studio.",
+      "specNotFound": "The original BuildSpec for run \"{{runId}}\" is not in this browser. KPubData Engine does not persist specs, so a patch can only be applied to a run you have executed or edited in Studio.",
       "secretsRedacted": "The stored BuildSpec has its secrets stripped (local storage policy), so it cannot be patched. Re-enter serviceKey/apiKey/token values in the provider settings screen.",
       "pathNotAllowed": "Path \"{{path}}\" is not allowed. Only title, description, metadata, sources[].params, sources[].alias and exports[].options can be patched.",
       "credentialPath": "Path \"{{path}}\" looks like a credential field and cannot be patched. Change serviceKey/apiKey/token values in the provider settings screen.",
@@ -439,14 +439,14 @@
       "openBuildUnknown": "OPEN_BUILD: run \"{{runId}}\" is not in the evidence",
       "openQualityUnknownDataset": "OPEN_QUALITY: dataset \"{{datasetId}}\" is not in the evidence",
       "openQualityUnknownRun": "OPEN_QUALITY: run \"{{runId}}\" is not in the evidence",
-      "openQualityMismatch": "OPEN_QUALITY: Builder evidence does not confirm that run \"{{runId}}\" belongs to dataset \"{{datasetId}}\"",
+      "openQualityMismatch": "OPEN_QUALITY: Engine evidence does not confirm that run \"{{runId}}\" belongs to dataset \"{{datasetId}}\"",
       "patchUnknownRun": "PATCH_BUILDSPEC: run \"{{runId}}\" is not in the evidence",
       "patchSpecMissing": "PATCH_BUILDSPEC: the original BuildSpec for run \"{{runId}}\" is not in this browser, so a safe diff cannot be built",
       "draftUnknownProvider": "CREATE_BUILD_DRAFT: provider \"{{provider}}\" is not in the catalog",
       "draftUnknownDataset": "CREATE_BUILD_DRAFT: dataset \"{{dataset}}\" is not in the \"{{provider}}\" catalog",
       "stageNone": "none",
       "sqlStageMismatch": "Excluded from execution: the current screen stage ({{current}}) does not match the proposed SQL stage ({{proposed}}).",
-      "sqlSourceDropped": "Removed source \"{{source}}\" because the evidence does not confirm it. This is a single-source run, so Builder picks the source automatically.",
+      "sqlSourceDropped": "Removed source \"{{source}}\" because the evidence does not confirm it. This is a single-source run, so KPubData Engine picks the source automatically.",
       "sqlSourceUnknown": "Excluded from execution: it references source \"{{source}}\", which is not in the evidence."
     },
     "demo": {
@@ -458,7 +458,7 @@
       "noDataset": "No dataset is selected, so this is general guidance only. Pick a dataset for a more specific demo.",
       "noQuality": "No quality results were evaluated.",
       "qualitySummary": "Quality summary: {{summary}}.",
-      "sqlNote": "Generated SQL is a demo preview query — running it shows mock results (no real Builder call).",
+      "sqlNote": "Generated SQL is a demo preview query — running it shows mock results (no real KPubData Engine call).",
       "stageHint": "Pick Silver or Gold in the stage selector above to also see the Generated SQL and result preview demo."
     },
     "drawer": {
@@ -490,11 +490,11 @@
       "unknownDataset": "sources[{{index}}].dataset: dataset '{{dataset}}' does not exist on provider '{{provider}}'.",
       "yamlParse": "The YAML could not be parsed.",
       "mockDisabled": "Generation is disabled in mock mode (ST-A8, #211)",
-      "noValidate": "BuildSpec generation stopped: no connection to Builder /validate.",
+      "noValidate": "BuildSpec generation stopped: no connection to Engine /validate.",
       "noCatalog": "BuildSpec generation stopped: the catalog could not be read.",
       "emptyOutput": "The output was empty.",
       "restoreFailed": "The secret could not be restored.",
-      "validateRequestFailed": "The Builder validation request failed.",
+      "validateRequestFailed": "The Engine validation request failed.",
       "validationFailed": "Validation failed"
     },
     "input": {
@@ -547,7 +547,7 @@
       "needsDatasetRun": "Both a dataset and a run must be selected to run it.",
       "cancelled": "The request was cancelled.",
       "unknownError": "An unknown error occurred while running the query.",
-      "mockUnsupported": "Query execution is not supported in mock mode. Set VITE_USE_REAL_BUILDER=true to connect to a real Builder.",
+      "mockUnsupported": "Query execution is not supported in mock mode. Set VITE_USE_REAL_BUILDER=true to connect to a real KPubData Engine.",
       "stageMismatch": "The current screen stage ({{current}}) differs from the Generated SQL stage ({{proposed}}).",
       "stageNone": "none"
     },
@@ -560,7 +560,7 @@
       "query_busy": "Query capacity is full. Please try again shortly.",
       "query_timeout": "Query execution timed out.",
       "query_execution_failed": "Query execution failed.",
-      "network": "Could not connect to Builder.",
+      "network": "Could not connect to KPubData Engine.",
       "mock_mode": "Queries cannot run in mock mode.",
       "unknown": "An unknown error occurred."
     },
@@ -635,8 +635,8 @@
       "opened": "Opened the screen.",
       "addedToReport": "Added as a report reference note.",
       "actionFailed": "The action could not be applied.",
-      "patchApplied": "Applied to the BuildSpec and it passed Builder /validate.",
-      "patchAppliedInvalid": "Applied to the BuildSpec but Builder /validate failed: {{errors}}",
+      "patchApplied": "Applied to the BuildSpec and it passed Engine /validate.",
+      "patchAppliedInvalid": "Applied to the BuildSpec but Engine /validate failed: {{errors}}",
       "patchFailed": "The BuildSpec patch could not be applied.",
       "draftSaved": "Saved to a new build draft."
     },
@@ -692,7 +692,7 @@
       "forbiddenTitle": "You do not have access to that run.",
       "forbiddenDesc": "Run `{{id}}` belongs to this dataset but to another user. Did not auto-switch to latest run.",
       "checkFailedTitle": "Could not check that run.",
-      "checkFailedDesc": "Builder could not be asked about run `{{id}}`. Try again shortly.",
+      "checkFailedDesc": "KPubData Engine could not be asked about run `{{id}}`. Try again shortly.",
       "back": "View latest run"
     },
     "header": {
@@ -707,7 +707,7 @@
       "stageOption": "(context)"
     },
     "scope": {
-      "desc": "Builder evaluation results for the currently selected Dataset · Run · Source · Stage scope.",
+      "desc": "Engine evaluation results for the currently selected Dataset · Run · Source · Stage scope.",
       "viewDetail": "View in Dataset Detail"
     },
     "failed": {
@@ -792,7 +792,7 @@
         },
         "network": {
           "title": "Network connection error",
-          "detail": "Builder could not reach the provider. Check the network."
+          "detail": "KPubData Engine could not reach the provider. Check the network."
         },
         "timeout": {
           "title": "Connection timed out",
@@ -804,7 +804,7 @@
         },
         "unknown": {
           "title": "Connection status could not be determined",
-          "detail": "Builder received an unclassified error while checking the API."
+          "detail": "KPubData Engine received an unclassified error while checking the API."
         }
       },
       "scopeNote": "This is a provider-level connection check. Whether the dataset you picked actually works is confirmed in the preview step.",
@@ -815,7 +815,7 @@
         "userKeyLabel": "API key registered",
         "userKeyDetail": "Credentials for this provider are in place.",
         "serverDefaultLabel": "Ready to connect",
-        "serverDefaultDetail": "This provider currently uses Builder's default credentials.",
+        "serverDefaultDetail": "This provider currently uses KPubData Engine's default credentials.",
         "missingKeyLabel": "No API key",
         "missingKeyDetail": "Datasets from this provider may require an API key."
       },
@@ -832,9 +832,9 @@
     "errors": {
       "loadProvider": "Could not load provider information",
       "credStatus": "Failed to load credential status",
-      "saveNoStore": "Cannot save — Builder credential store (master key) is not configured.",
+      "saveNoStore": "Cannot save — Engine credential store (master key) is not configured.",
       "saveFail": "Failed to save credential",
-      "deleteNoStore": "Cannot delete — Builder credential store (master key) is not configured.",
+      "deleteNoStore": "Cannot delete — Engine credential store (master key) is not configured.",
       "deleteFail": "Failed to delete credential"
     },
     "page": {
@@ -859,16 +859,16 @@
       "noCredNote": "This provider can be used without credentials. There is no credential to register or delete.",
       "loading": "Loading credential status…",
       "noStoreTitle": "Credential store not configured",
-      "noStoreBody": "Builder does not have an encrypted credential store (master key) configured, so user credentials cannot be registered or viewed. This is different from \"not yet registered\". Ask the operator to set KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY in Builder and try again.",
+      "noStoreBody": "KPubData Engine does not have an encrypted credential store (master key) configured, so user credentials cannot be registered or viewed. This is different from \"not yet registered\". Ask the operator to set KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY in KPubData Engine and try again.",
       "keyPlaceholder": "Enter API Key",
       "save": "Save",
       "cancel": "Cancel",
       "savedKey": "Saved API Key (masked):",
       "configured": "Configured",
       "lastUpdated": "Last updated:",
-      "maskingNote": "Value masked by Builder — the original is not shown.",
+      "maskingNote": "Value masked by KPubData Engine — the original is not shown.",
       "backToData": "Back to data settings",
-      "defaultCredNote": "This provider currently uses Builder default credentials. Registering a separate user credential takes priority for calls to this provider.",
+      "defaultCredNote": "This provider currently uses Engine default credentials. Registering a separate user credential takes priority for calls to this provider.",
       "needsCredNote": "Credentials must be registered to use this provider."
     },
     "labels": {
@@ -893,7 +893,7 @@
     },
     "explore": {
       "title": "Explore Public Data",
-      "desc": "Start from the Builder catalog of providers and datasets.",
+      "desc": "Start from the Engine catalog of providers and datasets.",
       "cta": "Explore"
     },
     "addData": {
@@ -941,7 +941,7 @@
       "eyebrow": "Quality",
       "title": "Recent quality status",
       "unavailableTitle": "Some quality information is unavailable",
-      "unavailableDesc": "Builder did not provide quality results for the recent runs. A failed build is not treated as a quality FAIL.",
+      "unavailableDesc": "KPubData Engine did not provide quality results for the recent runs. A failed build is not treated as a quality FAIL.",
       "emptyTitle": "No quality warnings in the builds checked recently",
       "emptyDesc": "None of the recent quality results available right now need a closer look.",
       "needsCheck": "Needs a quality check",
@@ -1020,8 +1020,8 @@
     "configure": {
       "title": "Import Settings",
       "apiPrepTitle": "API Setup",
-      "catalogLoading": "Loading Builder catalog...",
-      "noProviders": "No providers registered in the Builder catalog.",
+      "catalogLoading": "Loading Engine catalog...",
+      "noProviders": "No providers registered in the Engine catalog.",
       "providerLabel": "Provider",
       "providerSelect": "Select a provider…",
       "datasetLabel": "Dataset",
@@ -1077,7 +1077,7 @@
       "review": "Review · build"
     },
     "errors": {
-      "catalog": "Could not load the Builder catalog.",
+      "catalog": "Could not load the Engine catalog.",
       "upload": "File upload failed.",
       "yamlSyntax": "YAML syntax error: {{message}}",
       "yamlApply": "Could not apply the YAML.",
@@ -1140,11 +1140,11 @@
     "stagesErrorMsg": "Could not load stage status.",
     "qualityErrorMsg": "Could not load quality results.",
     "stageDetailErrorMsg": "Could not load the stage detail.",
-    "schemaSilverNote": "Shows only the persisted schema selected and the changes Builder reported.",
+    "schemaSilverNote": "Shows only the persisted schema selected and the changes KPubData Engine reported.",
     "schemaGoldNote": "The gold response provides column names only; dtypes are not inferred.",
     "changeCol": "Change",
     "previewNoneDesc": "The {{stage}} stage does not provide a persisted sample.",
-    "previewNote": "A portion of the Silver sample Builder stored.",
+    "previewNote": "A portion of the Silver sample KPubData Engine stored.",
     "fetchFailed": "Quality fetch failed",
     "noEvaluated": "Nothing was evaluated.",
     "viewQualityDetail": "Open Quality",
@@ -1174,7 +1174,7 @@
     "forbiddenRunTitle": "You do not have access to that run.",
     "forbiddenRunBody": "The run `{{run}}` belongs to this dataset but to another user. It was not silently switched to the latest run.",
     "runCheckFailedTitle": "Could not check that run.",
-    "runCheckFailedBody": "Builder could not be asked about the run `{{run}}`. Try again shortly.",
+    "runCheckFailedBody": "KPubData Engine could not be asked about the run `{{run}}`. Try again shortly.",
     "viewLatest": "View latest run",
     "sourceLoading": "loading source",
     "stageStatusTitle": "{{stage}} stage status for the selected source ({{source}})",
@@ -1210,56 +1210,56 @@
     "statusCancelled": "Cancelled",
     "noRunId": "No run ID to publish.",
     "runInfoError": "This run's information could not be read.",
-    "readinessMismatch": "The Builder readiness response does not match the selected run.",
+    "readinessMismatch": "The Engine readiness response does not match the selected run.",
     "checking": "Checking…",
     "completedAt": "Done · {{time}}",
     "completed": "Done",
     "unconfirmed": "Not confirmed",
     "eyebrow": "Publish",
     "title": "Publish {{name}}",
-    "desc": "Builder checks the selected run's readiness, then publishes to Hugging Face.",
+    "desc": "KPubData Engine checks the selected run's readiness, then publishes to Hugging Face.",
     "selectedRun": "Selected run",
     "buildCompleted": "Build completed",
     "exactRunNote": "This screen reads the dataset and completion state from the exact run ID in the URL — it never switches to the latest run.",
     "datasetLoadWarn": "The dataset information for this run could not be loaded. Readiness is still checked below by run ID.",
-    "readinessNote": "Builder decides on the run, gold stage, license, PII policy and publish credential.",
+    "readinessNote": "KPubData Engine decides on the run, gold stage, license, PII policy and publish credential.",
     "recheck": "Check again",
-    "readyLabel": "Builder is ready to publish",
-    "blockedLabel": "Builder reported blockers — publishing is not possible.",
-    "notReadyNoReason": "Builder judged this run not ready to publish but gave no specific blocker.",
-    "credentialNote": "This blocker refers to a publish target credential (Hugging Face / Kaggle), not a source provider credential. Depending on how the Builder is deployed it either uses the server credential or requires one you have stored yourself. Studio neither takes nor stores either.",
+    "readyLabel": "KPubData Engine is ready to publish",
+    "blockedLabel": "KPubData Engine reported blockers — publishing is not possible.",
+    "notReadyNoReason": "KPubData Engine judged this run not ready to publish but gave no specific blocker.",
+    "credentialNote": "This blocker refers to a publish target credential (Hugging Face / Kaggle), not a source provider credential. Depending on how KPubData Engine is deployed it either uses the server credential or requires one you have stored yourself. Studio neither takes nor stores either.",
     "settingsTitle": "Publish settings",
-    "settingsNote": "Local input validation, separate from readiness — Builder readiness does not check the destination or visibility.",
-    "destinationHint": "An owner/dataset identifier Builder accepts",
+    "settingsNote": "Local input validation, separate from readiness — Engine readiness does not check the destination or visibility.",
+    "destinationHint": "An owner/dataset identifier KPubData Engine accepts",
     "privateLabel": "Private dataset",
     "privateDefault": "Default: private",
     "review": "Review",
     "confirmTitle": "Confirm publish",
     "visibility": "Visibility",
-    "confirmNote": "Nothing is shown as published until Builder's POST succeeds.",
+    "confirmNote": "Nothing is shown as published until KPubData Engine's POST succeeds.",
     "publishNow": "Publish",
     "editSettings": "Edit settings",
     "stopWaiting": "Stop waiting",
-    "publishedTitle": "Builder published it",
+    "publishedTitle": "KPubData Engine published it",
     "publishFailed": "Publish failed",
     "noAutoRetry": "Do not retry automatically.",
     "abortedTitle": "Stopped waiting for the response.",
     "abortedBody": "Only the browser request was stopped — the remote publish was not cancelled. Its outcome is unknown.",
-    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Store your own with the Builder to publish."
+    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Store your own with KPubData Engine to publish."
   },
   "settings": {
     "page": {
       "eyebrow": "Settings",
       "title": "Preferences",
-      "desc": "Manage account, Builder connection, data provider credentials, and Ask KPubData BYOK."
+      "desc": "Manage account, Engine connection, data provider credentials, and Ask KPubData BYOK."
     },
     "conn": {
       "title": "Connection Status",
-      "checking": "Checking Builder connection…",
-      "version": "Builder API version {{version}}",
-      "minVersion": "Minimum required Builder API version {{version}}",
-      "mismatch": "Contract version mismatch: Builder {{api}} is not compatible with the minimum version ({{min}}, same major) required by Studio. Some response shapes may be incompatible.",
-      "mockNote": "Mock mode. To connect to a real Builder,",
+      "checking": "Checking Engine connection…",
+      "version": "Engine API version {{version}}",
+      "minVersion": "Minimum required Engine API version {{version}}",
+      "mismatch": "Contract version mismatch: KPubData Engine {{api}} is not compatible with the minimum version ({{min}}, same major) required by Studio. Some response shapes may be incompatible.",
+      "mockNote": "Mock mode. To connect to a real KPubData Engine,",
       "mockEnv": ".",
       "connFail": "Connection check failed.",
       "fetchFail": "Fetch failed."
@@ -1273,14 +1273,14 @@
     "account": {
       "title": "Account",
       "logout": "Sign out",
-      "notLoggedIn": "Not signed in. Real integration mode requires sign-in for Builder calls.",
+      "notLoggedIn": "Not signed in. Real integration mode requires sign-in for KPubData Engine calls.",
       "login": "Sign in",
       "mockNote": "In mock mode, login state is for UI demonstration only. Account/permission backend is"
     },
     "providers": {
       "title": "Data provider credentials",
       "manage": "Manage in provider settings",
-      "mockNote": "In mock mode the provider page demonstrates the flow. Real credentials are held safely on the server by Builder in real-integration mode.",
+      "mockNote": "In mock mode the provider page demonstrates the flow. Real credentials are held safely on the server by KPubData Engine in real-integration mode.",
       "loading": "Checking provider configuration…",
       "summary": "{{configured}} of {{total}} providers that need credentials are configured.",
       "listLabel": "provider configuration status",
@@ -1323,9 +1323,9 @@
     },
     "oidc": {
       "errorTitle": "The OIDC configuration has a problem.",
-      "errorDesc": "This environment is connected to a real Builder, but the OIDC settings (<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>) are not valid. Contact your administrator.",
+      "errorDesc": "This environment is connected to a real KPubData Engine, but the OIDC settings (<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>) are not valid. Contact your administrator.",
       "missingTitle": "OIDC authentication is not configured yet.",
-      "missingDesc": "This environment is connected to a real Builder, but the OIDC IdP (Keycloak) used for human sign-in is not wired up yet. Contact your administrator or try again once it is in place.",
+      "missingDesc": "This environment is connected to a real KPubData Engine, but the OIDC IdP (Keycloak) used for human sign-in is not wired up yet. Contact your administrator or try again once it is in place.",
       "disabled": "OIDC is not enabled."
     },
     "signup": {
@@ -1353,7 +1353,7 @@
     "title": "Workspace",
     "desc": "Recent work and saved BuildSpecs in one place.",
     "localOnlyBadge": "Stored in this browser only",
-    "localOnlyDesc": "Saved BuildSpecs live in this browser, not on the Builder server. They do not appear on other devices or browsers, clearing browser data can remove them, and they are neither shared with teammates nor backed up automatically.",
+    "localOnlyDesc": "Saved BuildSpecs live in this browser, not on the Engine server. They do not appear on other devices or browsers, clearing browser data can remove them, and they are neither shared with teammates nor backed up automatically.",
     "thisBrowser": "This browser",
     "loading": "Loading…",
     "noWorkTitle": "Nothing here yet",
@@ -1392,7 +1392,7 @@
     "page": {
       "eyebrow": "Reports",
       "title": "Reports",
-      "desc": "Create reports from Builder evidence, attach Ask KPubData analysis as reference blocks, then edit, save, and export.",
+      "desc": "Create reports from Engine evidence, attach Ask KPubData analysis as reference blocks, then edit, save, and export.",
       "newTitle": "Create New Report",
       "newDesc": "The selected dataset/run is fixed as this report's baseline. New runs do not automatically update it.",
       "createCta": "Create Report",
@@ -1612,7 +1612,7 @@
       "reasonDemo": "[DEMO] report analysis (mock response)",
       "chatTitle": "Ask directly · based on this report ({{dataset}} · {{run}})",
       "close": "Close",
-      "intro": "You can generate an AI interpretation to add to the report, based on this report's dataset/run and the Builder evidence.",
+      "intro": "You can generate an AI interpretation to add to the report, based on this report's dataset/run and the Engine evidence.",
       "needsKey": "Ask KPubData analysis needs your own LLM API key.",
       "openAiSettings": "Open AI settings",
       "generateDemo": "Generate demo report analysis",
@@ -1688,7 +1688,7 @@
       "none": "None"
     },
     "provenance": {
-      "builder": "Builder Evidence",
+      "builder": "Engine Evidence",
       "assistant": "AI-written · Ask KPubData",
       "user": "User-written"
     }
@@ -1733,21 +1733,21 @@
     "dataset": "Data produced by a build and managed as a single unit in KPubData.",
     "build": "The job that collects and processes data from the sources and settings you chose.",
     "run": "One recorded execution of a build. A dataset can have many runs.",
-    "buildSpec": "The portable execution spec telling Builder which sources to fetch and how to process them.",
-    "provider": "An external data source or API that Builder can connect to.",
+    "buildSpec": "The portable execution spec telling KPubData Engine which sources to fetch and how to process them.",
+    "provider": "An external data source or API that KPubData Engine can connect to.",
     "credential": "Authentication such as an API key, needed to fetch data from a provider.",
     "preview": "A look at part of the data and its validation results before running a build.",
     "bronze": "The stage that keeps collected data as close to the original as possible.",
     "silver": "The stage where bronze data is cleaned and standardized for analysis and quality checks.",
     "gold": "The final stage, shaped for a particular use.",
-    "quality": "The results of the data quality rules Builder actually evaluated.",
+    "quality": "The results of the data quality rules KPubData Engine actually evaluated.",
     "schemaDrift": "A change in data structure — columns added, removed or retyped — compared with before.",
-    "evidence": "The Builder dataset, run and quality facts an Ask KPubData answer or report is based on.",
+    "evidence": "The KPubData Engine dataset, run and quality facts an Ask KPubData answer or report is based on.",
     "context": "The dataset, run, source and stage scope Ask KPubData uses to interpret your question.",
     "generatedSql": "The query SQL Ask KPubData generated from the silver or gold schema you selected.",
     "artifact": "A data file or other output produced by a build run.",
     "manifest": "The metadata record of a run and the artifacts it produced.",
-    "readiness": "Builder's check of the conditions that must hold before publishing.",
+    "readiness": "KPubData Engine's check of the conditions that must hold before publishing.",
     "helpLabel": "{{term}} glossary help"
   },
   "legend": {
@@ -1758,13 +1758,13 @@
       "warn": "A result exists but there is a quality issue worth checking",
       "fail": "A quality rule was not met",
       "na": "No value was evaluated or the rule does not apply. Not a PASS",
-      "unavailable": "Builder cannot provide a result. Different from FAIL"
+      "unavailable": "KPubData Engine cannot provide a result. Different from FAIL"
     }
   },
   "discover": {
     "page": {
       "title": "Discover data",
-      "desc": "Search providers and datasets in the Builder catalog, then start a build straight from what you pick."
+      "desc": "Search providers and datasets in the Engine catalog, then start a build straight from what you pick."
     },
     "errors": {
       "catalog": "Could not load the catalog.",
@@ -1776,8 +1776,8 @@
     "serviceKeyOnly": "Needs a service key only ({{count}})",
     "resetFilters": "Reset filters",
     "empty": {
-      "title": "The Builder catalog is empty",
-      "desc": "No provider or dataset is registered. Check the Builder configuration."
+      "title": "The Engine catalog is empty",
+      "desc": "No provider or dataset is registered. Check the Engine configuration."
     },
     "noMatch": {
       "title": "No dataset matches",
@@ -1876,8 +1876,8 @@
   },
   "publish": {
     "errors": {
-      "incomplete": "Builder could not complete the publish request.",
-      "invalidRequest": "The publish request does not match the Builder contract.",
+      "incomplete": "KPubData Engine could not complete the publish request.",
+      "invalidRequest": "The publish request does not match the Engine contract.",
       "destinationRequired": "Enter a Hugging Face destination.",
       "destinationFormat": "The destination must be in owner/dataset form.",
       "readinessNotFound": "The publish readiness for that run could not be found.",
@@ -1885,14 +1885,14 @@
       "notReady": "This run is not ready to publish.",
       "unknown": "The publish request could not be completed.",
       "inProgress": "The same publish job is already running.",
-      "retryBlocked": "The previous publish result could not be confirmed, so automatic retry is blocked. Ask a Builder operator to check the state.",
+      "retryBlocked": "The previous publish result could not be confirmed, so automatic retry is blocked. Ask an Engine operator to check the state.",
       "visibilityConflict": "The same run and destination were already published with different visibility.",
       "externalFailed": "The external publishing service could not finish the job. The outcome may be unclear, so it is not retried automatically.",
-      "readinessChanged": "Builder's re-check just before publishing found the readiness had changed. Check readiness again.",
+      "readinessChanged": "KPubData Engine's re-check just before publishing found the readiness had changed. Check readiness again.",
       "forbidden": "You do not have permission to publish this run.",
-      "notFound": "The selected run could not be found in Builder.",
-      "network": "No response from Builder. The remote publish result was not confirmed.",
-      "mismatch": "The run or target in Builder's response does not match the request."
+      "notFound": "The selected run could not be found in KPubData Engine.",
+      "network": "No response from KPubData Engine. The remote publish result was not confirmed.",
+      "mismatch": "The run or target in KPubData Engine's response does not match the request."
     }
   },
   "status": {
@@ -1969,7 +1969,7 @@
       },
       "assistant-helper": {
         "title": "Stuck? Ask KPubData",
-        "copy": "Ask KPubData helps you analyze using the dataset, run and stage on the current screen along with Builder evidence."
+        "copy": "Ask KPubData helps you analyze using the dataset, run and stage on the current screen along with Engine evidence."
       },
       "sidebar": {
         "title": "Tour your workspace",
@@ -2100,7 +2100,7 @@
       "missingId": "No build id was given.",
       "notFound": "Build not found: {{buildId}}",
       "notFoundNoSpec": "Build not found: {{buildId}}. This run has no BuildSpec snapshot (legacy) and no spec is stored locally.",
-      "statusUnknown": "Build status could not be determined: {{buildId}}. Neither the Builder history nor the manifest holds a final status for this run.",
+      "statusUnknown": "Build status could not be determined: {{buildId}}. Neither the Engine history nor the manifest holds a final status for this run.",
       "loadFailed": "Could not load the build.",
       "pollFailed": "Could not refresh the run status.",
       "eventsFailed": "Could not load the run event timeline."
@@ -2158,8 +2158,8 @@
     }
   },
   "versionCheck": {
-    "mismatch": "Studio {{studio}} is connected to Builder {{builder}} — they come from different releases, so some screens may fail to load.",
-    "remedy": "Deploy the matching Builder, or reload to pick up the matching Studio.",
+    "mismatch": "Studio {{studio}} is connected to KPubData Engine {{builder}} — they come from different releases, so some screens may fail to load.",
+    "remedy": "Deploy the matching KPubData Engine, or reload to pick up the matching Studio.",
     "dismiss": "Dismiss version notice"
   }
 }

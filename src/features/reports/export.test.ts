@@ -69,9 +69,9 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
     expect(md).toContain("Evidence 조회 시각");
   });
 
-  it("Builder Evidence/AI/사용자 블록을 provenance 태그로 구분한다", () => {
+  it("Engine Evidence/AI/사용자 블록을 provenance 태그로 구분한다", () => {
     const md = generateMarkdownExport(makeReport(), "current");
-    expect(md).toContain("[Builder Evidence]");
+    expect(md).toContain("[Engine Evidence]");
     expect(md).toContain("[AI 작성");
     expect(md).toContain("[사용자 작성]");
   });
@@ -90,7 +90,7 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
   it("HTML 내보내기는 self-contained 문서이며 provenance 태그를 포함한다", () => {
     const html = generateHtmlExport(makeReport(), "current");
     expect(html).toContain("<!doctype html>");
-    expect(html).toContain("Builder Evidence");
+    expect(html).toContain("Engine Evidence");
     expect(html).toContain("AI 작성");
     expect(html).toContain("사용자 작성");
   });
