@@ -283,7 +283,7 @@ export function QualityPage() {
   if (datasetsState.status === "loading") {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Quality" title="Quality Center" description={t("quality.loading")} />
+        <PageHeader eyebrow="Quality" title={t("quality.page.title")} description={t("quality.loading")} />
         <Card><Skeleton className="h-40 w-full" /></Card>
       </main>
     );
@@ -292,7 +292,7 @@ export function QualityPage() {
   if (datasetsState.status === "error") {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Quality" title="Quality Center" />
+        <PageHeader eyebrow="Quality" title={t("quality.page.title")} />
         <ErrorState title={t("quality.errors.datasets")} message={datasetsState.error} />
       </main>
     );
@@ -301,7 +301,7 @@ export function QualityPage() {
   if (!datasetsState.data || datasetsState.data.length === 0) {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Quality" title="Quality Center" />
+        <PageHeader eyebrow="Quality" title={t("quality.page.title")} />
         <Card><EmptyState title={t("quality.empty.title")} description={t("quality.empty.desc")} actionLabel={t("quality.empty.action")} actionHref="/add" /></Card>
       </main>
     );
@@ -310,7 +310,7 @@ export function QualityPage() {
   if (invalidDataset) {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Quality" title="Quality Center" />
+        <PageHeader eyebrow="Quality" title={t("quality.page.title")} />
         <Card variant="error" role="alert">
           <p className="font-semibold">{t("quality.wrongDataset.title")}</p>
           <p className="mt-2 text-sm">{t("quality.wrongDataset.desc", { id: requestedDatasetId })}</p>
@@ -323,7 +323,7 @@ export function QualityPage() {
   if (invalidRun) {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Quality" title="Quality Center" description={selectedDataset?.title} />
+        <PageHeader eyebrow="Quality" title={t("quality.page.title")} description={selectedDataset?.title} />
         <Card variant="error" role="alert">
           <p className="font-semibold">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenTitle" : requested.status === "error" ? "quality.wrongRun.checkFailedTitle" : "quality.wrongRun.title")}</p>
           <p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenDesc" : requested.status === "error" ? "quality.wrongRun.checkFailedDesc" : "quality.wrongRun.desc", { id: requestedRunId })}</p>
@@ -337,7 +337,7 @@ export function QualityPage() {
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         eyebrow="Quality"
-        title="Quality Center"
+        title={t("quality.page.title")}
         description={t("quality.header.desc")}
         actions={
           <Button

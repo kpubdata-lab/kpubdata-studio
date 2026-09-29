@@ -329,6 +329,7 @@ export function Layout() {
 
           <aside
             data-tour="sidebar"
+            id="app-sidebar"
           className={[
             "fixed inset-y-0 left-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground transition-all lg:static lg:translate-x-0",
             isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
@@ -466,6 +467,8 @@ export function Layout() {
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 sm:px-8">
               <div className="flex min-w-0 items-center gap-3">
                 <button
+                  aria-controls="app-sidebar"
+                  aria-expanded={isMobileSidebarOpen}
                   aria-label={t("layout.toggleSidebar")}
                   className="inline-flex rounded-lg border border-border bg-card p-2 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:hidden"
                   onClick={toggleMobileSidebar}

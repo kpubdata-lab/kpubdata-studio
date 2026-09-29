@@ -145,7 +145,7 @@ export function DatasetCatalogPage() {
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-5 py-3">Table</th><th className="px-5 py-3">Provider</th><th className="px-5 py-3">Stage</th><th className="px-5 py-3">Validation</th><th className="px-5 py-3">Updated</th>
+                  <th className="px-5 py-3">Table</th><th className="px-5 py-3">{t("catalog.columns.provider")}</th><th className="px-5 py-3">Stage</th><th className="px-5 py-3">Validation</th><th className="px-5 py-3">Updated</th>
                 </tr>
               </thead>
               <tbody>

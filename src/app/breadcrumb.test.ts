@@ -29,14 +29,21 @@ describe("crumbsFor (#423)", () => {
     ]);
   });
 
-  it("files table creation under Catalog and Refresh Jobs, not as a run id", () => {
+  it("files both creation flows under Tables — creating a table is not a refresh (#485)", () => {
     expect(crumbsFor("/add", t)).toEqual([
-      { label: "<nav.discover>", to: "/discover" },
+      { label: "<nav.datasets>", to: "/tables" },
       { label: "<router.features.AddData>" },
     ]);
     expect(crumbsFor("/refresh-jobs/new", t)).toEqual([
-      { label: "<nav.builds>", to: "/refresh-jobs" },
+      { label: "<nav.datasets>", to: "/tables" },
       { label: "<router.features.newBuild>" },
+    ]);
+  });
+
+  it("names a report page instead of showing its raw id (#485)", () => {
+    expect(crumbsFor("/reports/rpt_8f3a", t)).toEqual([
+      { label: "<nav.reports>", to: "/reports" },
+      { label: "<router.features.reportEditor>" },
     ]);
   });
 

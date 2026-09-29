@@ -44,6 +44,16 @@ describe("grouped sidebar navigation (#247)", () => {
     }
   });
 
+  it("tells assistive tech whether the mobile sidebar is open and which element it controls (#485)", () => {
+    renderLayoutAt("/");
+    const toggle = screen.getByRole("button", { name: "사이드바 열기/닫기" });
+    expect(toggle).toHaveAttribute("aria-controls", "app-sidebar");
+    expect(document.getElementById("app-sidebar")).not.toBeNull();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("opens Ask KPubData from the topbar, not from a sidebar destination (#421)", () => {
     renderLayoutAt("/");
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });

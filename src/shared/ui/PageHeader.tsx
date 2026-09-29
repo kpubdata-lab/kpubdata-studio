@@ -18,6 +18,11 @@ export interface PageHeaderProps {
   actions?: ReactNode;
   /** additional className */
   className?: string;
+  /**
+   * Heading level. A page's own header is its one `<h1>` (#485); a section inside a page
+   * that reuses this layout passes 2.
+   */
+  level?: 1 | 2;
 }
 
 /**
@@ -32,7 +37,9 @@ export function PageHeader({
   description,
   actions,
   className,
+  level = 1,
 }: PageHeaderProps) {
+  const Heading = level === 1 ? "h1" : "h2";
   return (
     <div
       className={cn(
@@ -46,7 +53,7 @@ export function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight">{title}</h2>
+        <Heading className="mt-2 text-3xl font-semibold tracking-tight">{title}</Heading>
         {description ? (
           <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
         ) : null}
