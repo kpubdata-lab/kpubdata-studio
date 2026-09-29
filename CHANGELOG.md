@@ -12,8 +12,8 @@
 
 ### Changed
 
+- Ask KPubData is a feature you open from where you are, not a place of its own (#421). The sidebar has no AI group (Reports moves to the workspace group), Home has no Ask KPubData hero, and Dataset Detail has no AI tab: an **Ask about this table** header action — and the Data Passport link — writes the run, source and stage to the URL and opens the drawer with that context. A saved `?tab=ai` link opens the drawer the same way and drops the tab. `/assistant` still works.
 - `git clone && npm ci && npm test` works on a fresh machine (#431). `.nvmrc` names the Node major to use and a repository-scoped `.npmrc` pins npm to the registry the lockfile resolves from, so a machine-wide corporate feed no longer breaks the install. A test fails if either drifts from `engines` or the lockfile.
-
 - Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004).
 - Ask KPubData moves from `/kubi` to `/assistant`, and its stored values drop the old name: report blocks are `ASSISTANT_INTERPRETATION` and the inbox key is `kpubdata-studio:assistant-report-inbox`. No redirect or migration is kept — no deployment used the old names (#449).
 - A URL naming a run older than the newest page of the runs list now opens, instead of being called invalid (#418). Dataset Detail and Quality ask Builder for that run directly (`GET /datasets/{dataset_id}/runs/{run_id}`, API contract 1.31.0), and tell a run that is not this dataset's (not found) from one that is another user's (forbidden) and from a failed check.

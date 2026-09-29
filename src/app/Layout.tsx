@@ -89,7 +89,8 @@ interface NavGroup {
   items: NavItem[];
 }
 
-// Final IA (WORKSPACE/DATA/AI/SYSTEM) reflected directly in grouped nav model (#247).
+// Grouped nav model (#247). There is no AI group: Ask KPubData is a feature opened from the
+// topbar and from each screen, not a destination of its own (#421). Reports sit with the workspace.
 // New Build Wizard (`/builds/new`) removed from menu but continues in route and header
 // CTA — it's the only actual build creation flow until Add Data Workbench (#250)
 // absorbs it.
@@ -129,6 +130,17 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
           <SidebarIcon name="workspace">
             <rect width="16" height="14" x="4" y="6" rx="2" />
             <path d="M9 6V4h6v2M4 11h16" />
+          </SidebarIcon>
+        ),
+      },
+      {
+        to: "/reports",
+        label: t("nav.reports"),
+        description: t("navDescription.reports"),
+        icon: (
+          <SidebarIcon name="reports">
+            <path d="M6 3h9l3 3v15H6V3Z" />
+            <path d="M14 3v4h4M9 12h6M9 16h6" />
           </SidebarIcon>
         ),
       },
@@ -178,33 +190,6 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
           <SidebarIcon name="quality">
             <circle cx="12" cy="12" r="9" />
             <path d="m8 12 3 3 5-6" />
-          </SidebarIcon>
-        ),
-      },
-    ],
-  },
-  {
-    label: t("nav.groupAi"),
-    items: [
-      {
-        to: "/assistant",
-        label: t("nav.assistant"),
-        description: t("navDescription.assistant"),
-        icon: (
-          <SidebarIcon name="assistant">
-            <rect width="14" height="12" x="5" y="7" rx="3" />
-            <path d="M12 3v4M9 12h.01M15 12h.01M9 16h6" />
-          </SidebarIcon>
-        ),
-      },
-      {
-        to: "/reports",
-        label: t("nav.reports"),
-        description: t("navDescription.reports"),
-        icon: (
-          <SidebarIcon name="reports">
-            <path d="M6 3h9l3 3v15H6V3Z" />
-            <path d="M14 3v4h4M9 12h6M9 16h6" />
           </SidebarIcon>
         ),
       },
@@ -495,6 +480,7 @@ export function Layout() {
                 <button
                   aria-haspopup="dialog"
                   aria-label={t("layout.openAssistant")}
+                  data-tour="assistant-helper"
                   className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   onClick={openAssistantDrawer}
                   type="button"

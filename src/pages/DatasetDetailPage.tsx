@@ -19,7 +19,7 @@ import {
 } from "@/features/datasets/model";
 import { QualityBadge } from "@/features/quality/QualityBadge";
 import { qualityResultsForSource, summarizeQuality } from "@/features/quality/model";
-import { AssistantContent } from "@/features/assistant/AssistantContent";
+import { useUIStore } from "@/shared/hooks/useUIStore";
 import type {
   BuildQualityResponse,
   DatasetDetailResponse,
@@ -29,7 +29,7 @@ import type {
 } from "@/shared/lib/builderApi";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton, StageLegend } from "@/shared/ui";
 
-type DetailTab = "overview" | "schema" | "preview" | "quality" | "builds" | "ai";
+type DetailTab = "overview" | "schema" | "preview" | "quality" | "builds";
 
 const TABS: { id: DetailTab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -37,7 +37,6 @@ const TABS: { id: DetailTab; label: string }[] = [
   { id: "preview", label: "Preview" },
   { id: "quality", label: "Quality" },
   { id: "builds", label: "Builds" },
-  { id: "ai", label: "AI" },
 ];
 
 interface CoreState {
@@ -77,6 +76,7 @@ export function DatasetDetailPage() {
   const { t } = useTranslation();
   const { datasetId = "" } = useParams<{ datasetId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
   const [core, setCore] = useState<CoreState>({ status: "loading" });
   const [stagesState, setStagesState] = useState<AsyncState<RunStagesResponse>>({ status: "idle" });
   const [qualityState, setQualityState] = useState<AsyncState<BuildQualityResponse>>({ status: "idle" });
@@ -168,54 +168,47 @@ export function DatasetDetailPage() {
     setSearchParams(next);
   }
 
-  // AI tab context is determined by Assistant (AssistantContent) using only route's ?run=&source=&stage=
-  // (no-guess principle, context.ts reference) — so we must explicitly reflect selectedRunId/selectedSource/
-  // selectedStage computed in this screen to the URL. Otherwise, on first AI tab open, Assistant RUN context bar
-  // shows the latest run it knows about as "—" or Generated SQL/Result Preview appears empty (UI audit #5).
-  // Must include source to prevent stage evidence from being fail-closed in multi-source runs (#319 follow-up).
-  // Both tab bar (button onClick) and Overview tab's Assistant discoverability CTA share this helper to avoid
-  // implementing the same rule twice.
-  function goToTab(tab: DetailTab) {
-    updateContext(
-      tab === "ai"
-        ? { tab: "ai", run: selectedRunId, source: selectedSource || null, stage: selectedStage }
-        : { tab: tab === "overview" ? null : tab },
-    );
+  // Ask KPubData reads its context only from the route's ?run=&source=&stage= (context.ts, no-guess
+  // principle), so the selections this screen computed are written to the URL before the drawer opens.
+  // Otherwise the drawer shows the run as "—" and Generated SQL/Result Preview come up empty (UI audit #5).
+  // Source is included so stage evidence is not fail-closed in multi-source runs (#319 follow-up).
+  // The header action and the Passport entry share this so the rule exists once. There is no AI tab:
+  // Ask KPubData is a feature opened from here, not a place inside the page (#421).
+  function askAboutThis() {
+    updateContext({ run: selectedRunId, source: selectedSource || null, stage: selectedStage });
+    openAssistantDrawer();
   }
 
-  const tabParam = searchParams.get("tab") as DetailTab | null;
-  const selectedTab = TABS.some((tab) => tab.id === tabParam) ? tabParam as DetailTab : "overview";
+  function goToTab(tab: DetailTab) {
+    updateContext({ tab: tab === "overview" ? null : tab });
+  }
+
+  const tabParam = searchParams.get("tab");
+  const selectedTab = TABS.find((tab) => tab.id === tabParam)?.id ?? "overview";
   const selectedRun = runOptions?.find((run) => run.run_id === selectedRunId);
   const validation = summarizeQuality(qualityState.data, selectedSource);
   const selectedQualityResults = qualityResultsForSource(qualityState.data, selectedSource);
   const selectedDrift = qualityState.data?.schema_drift[selectedSource] ?? [];
 
-  // Entering/refreshing directly on AI tab creates same canonical Assistant context as tab click path (goToTab("ai")).
-  // Assistant (AssistantContent) reads context only from route's ?run=&source=&stage= (context.ts), so if this screen
-  // doesn't reflect confirmed selections back to URL, AI tab receives only dataset-level evidence (#319 follow-up,
-  // same pattern as QualityPage). Update only via replace, never touch already-valid values or invalid state
-  // to avoid creating update loops.
+  // A saved link to the removed AI tab (`?tab=ai`) still leads to Ask KPubData: once the selections are
+  // known it drops the tab, back-fills the same run/source/stage the header action would, and opens the
+  // drawer. It waits for the stages so source/stage are filled from the same place as the click path,
+  // and uses replace so the old link does not stay in history. An explicit valid value is never
+  // overwritten; invalid state is left for the error cards above.
   useEffect(() => {
-    if (selectedTab !== "ai" || core.status !== "loaded" || invalidRun || runPending || invalidSource) return;
+    if (tabParam !== "ai" || core.status !== "loaded" || invalidRun || runPending || invalidSource) return;
+    if (stagesState.status === "idle" || stagesState.status === "loading") return;
     const next = new URLSearchParams(searchParams);
-    let changed = false;
-    if (selectedRunId && !requestedRun) {
-      next.set("run", selectedRunId);
-      changed = true;
-    }
+    next.delete("tab");
+    if (selectedRunId && !requestedRun) next.set("run", selectedRunId);
     if (stagesState.status === "loaded" && selectedSource) {
-      if (!requestedSource) {
-        next.set("source", selectedSource);
-        changed = true;
-      }
-      if (!requestedStage) {
-        next.set("stage", selectedStage);
-        changed = true;
-      }
+      if (!requestedSource) next.set("source", selectedSource);
+      if (!requestedStage) next.set("stage", selectedStage);
     }
-    if (changed) setSearchParams(next, { replace: true });
+    setSearchParams(next, { replace: true });
+    openAssistantDrawer();
   }, [
-    selectedTab,
+    tabParam,
     core.status,
     invalidRun,
     runPending,
@@ -229,6 +222,7 @@ export function DatasetDetailPage() {
     selectedStage,
     searchParams,
     setSearchParams,
+    openAssistantDrawer,
   ]);
 
   // Overall run state ("ok"/"failed"/"cancelled") and selected source·stage state ("completed"/"failed"/
@@ -280,7 +274,7 @@ export function DatasetDetailPage() {
         eyebrow="Dataset"
         title={core.dataset.title}
         description={<><span className="block font-mono text-xs">{core.dataset.dataset_id}</span><span className="mt-1 block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Build {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
-        actions={<><span title={t("datasetDetail.stageStatusTitle", { source: selectedSource || "—", stage: selectedStage })} className="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold capitalize text-accent-subtle-foreground"><span>{selectedStage}</span><span className="font-normal">{sourceStageEntry?.[selectedStage].status ?? "unavailable"}</span></span><QualityBadge status={validation} /><LinkButton size="sm" to={`/builds/${encodeURIComponent(selectedRunId)}/publish?dataset=${encodeURIComponent(core.dataset.dataset_id)}`}>{t("datasetDetail.publishRun")}</LinkButton></>}
+        actions={<><span title={t("datasetDetail.stageStatusTitle", { source: selectedSource || "—", stage: selectedStage })} className="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold capitalize text-accent-subtle-foreground"><span>{selectedStage}</span><span className="font-normal">{sourceStageEntry?.[selectedStage].status ?? "unavailable"}</span></span><QualityBadge status={validation} /><Button size="sm" variant="secondary" aria-haspopup="dialog" onClick={askAboutThis}>{t("datasetDetail.askAboutThis")}</Button><LinkButton size="sm" to={`/builds/${encodeURIComponent(selectedRunId)}/publish?dataset=${encodeURIComponent(core.dataset.dataset_id)}`}>{t("datasetDetail.publishRun")}</LinkButton></>}
       />
 
       <Card className="flex flex-wrap items-end gap-3 p-3">
@@ -319,12 +313,11 @@ export function DatasetDetailPage() {
       </div>
 
       <section role="tabpanel" aria-label={TABS.find((tab) => tab.id === selectedTab)?.label}>
-        {selectedTab === "overview" ? <OverviewTab dataset={core.dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStageEntry} stageDetail={stageDetailState.data} stageError={stageDetailState.error} rowCount={summaryRowCount} validation={validation} onSelectStage={(stageName) => updateContext({ stage: stageName })} onSelectTab={goToTab} /> : null}
+        {selectedTab === "overview" ? <OverviewTab dataset={core.dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStageEntry} stageDetail={stageDetailState.data} stageError={stageDetailState.error} rowCount={summaryRowCount} validation={validation} onSelectStage={(stageName) => updateContext({ stage: stageName })} onSelectTab={goToTab} onAsk={askAboutThis} /> : null}
         {selectedTab === "schema" ? <SchemaTab state={stageDetailState} drift={selectedDrift} /> : null}
         {selectedTab === "preview" ? <PreviewTab state={stageDetailState} qualityState={qualityState} qualityStatus={validation} qualityResults={selectedQualityResults} onOpenQuality={() => updateContext({ tab: "quality" })} /> : null}
         {selectedTab === "quality" ? <QualityTab state={qualityState} status={validation} results={selectedQualityResults} drift={selectedDrift} datasetId={datasetId} runId={selectedRunId} source={selectedSource} stage={selectedStage} /> : null}
         {selectedTab === "builds" ? <BuildsTab runs={core.runs} selectedRunId={selectedRunId} /> : null}
-        {selectedTab === "ai" ? <AssistantContent compact /> : null}
       </section>
     </main>
   );
@@ -334,12 +327,12 @@ function MetricCard({ label, value, sub }: { label: string; value: ReactNode; su
   return <Card className="p-5"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><div className="mt-2 text-2xl font-bold tracking-tight">{value}</div><div className="mt-1 text-xs text-muted-foreground">{sub}</div></Card>;
 }
 
-function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selectedStage, sourceStages, stageDetail, stageError, rowCount, validation, onSelectStage, onSelectTab }: { dataset: DatasetDetailResponse; selectedRun?: DatasetRunSummary; runStatus?: string; selectedSource: string; selectedStage: DatasetStage; sourceStages?: RunStagesResponse["sources"][number]; stageDetail?: StageDetailResponse; stageError?: string; rowCount: number | null; validation: ReturnType<typeof summarizeQuality>; onSelectStage: (stage: DatasetStage) => void; onSelectTab: (tab: DetailTab) => void }) {
+function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selectedStage, sourceStages, stageDetail, stageError, rowCount, validation, onSelectStage, onSelectTab, onAsk }: { dataset: DatasetDetailResponse; selectedRun?: DatasetRunSummary; runStatus?: string; selectedSource: string; selectedStage: DatasetStage; sourceStages?: RunStagesResponse["sources"][number]; stageDetail?: StageDetailResponse; stageError?: string; rowCount: number | null; validation: ReturnType<typeof summarizeQuality>; onSelectStage: (stage: DatasetStage) => void; onSelectTab: (tab: DetailTab) => void; onAsk: () => void }) {
   const { t } = useTranslation();
   const columnCount = stageDetail?.stage === "silver" ? stageDetail.schema.length : stageDetail?.stage === "gold" ? stageDetail.columns.length : null;
   const artifactSummary = stageDetail?.stage === "gold" ? stageDetail.exports.map((item) => item.kind).join(", ") || t("datasetDetail.unpublished") : t("datasetDetail.notGoldStage");
   return <div className="space-y-4">
-    <DataPassport dataset={dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStages} columnCount={columnCount} artifactSummary={artifactSummary} validation={validation} onSelectTab={onSelectTab} />
+    <DataPassport dataset={dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStages} columnCount={columnCount} artifactSummary={artifactSummary} validation={validation} onAsk={onAsk} />
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Rows" value={rowCount === null ? "—" : rowCount.toLocaleString("ko-KR")} sub={selectedStage} /><MetricCard label="Columns" value={columnCount ?? "—"} sub="Builder stage response" /><MetricCard label="Validation" value={<QualityBadge status={validation} />} sub={selectedSource || t("datasetDetail.noSource")} /><MetricCard label="Updated" value={<span className="text-lg">{formatDateTime(selectedRun?.finished_at ?? selectedRun?.started_at ?? dataset.updated_at)}</span>} sub={`Build ${selectedRun?.run_id ?? dataset.latest_run_id}`} /></div>
     <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]"><Card><h3 className="text-sm font-semibold">Lineage</h3>{sourceStages ? <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center"><div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-center text-sm font-semibold">Source<span className="mt-1 block text-xs font-normal text-muted-foreground">{selectedSource}</span></div>{DATASET_STAGES.map((stageName) => <div key={stageName} className="contents"><span aria-hidden="true" className="text-center text-muted-foreground">→</span><button type="button" aria-label={`${stageName} ${sourceStages[stageName].status}`} aria-pressed={selectedStage === stageName} onClick={() => onSelectStage(stageName)} className={`rounded-lg border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedStage === stageName ? "border-accent bg-accent-subtle" : "border-border bg-card hover:bg-muted"}`}><span className="block text-sm font-semibold capitalize">{stageName}</span><span className="mt-1 block"><StageBadge status={sourceStages[stageName].status} /></span><span className="mt-1 block text-[11px] font-normal text-muted-foreground">{t(STAGE_EXPLAINER_KEY[stageName])}</span></button></div>)}</div> : <Skeleton className="mt-4 h-24 w-full" />}</Card><Card><h3 className="text-sm font-semibold">Stage Detail · <span className="capitalize">{selectedStage}</span></h3>{stageError ? <p className="mt-3 text-sm text-red-700 dark:text-red-300">{stageError}</p> : !stageDetail ? <Skeleton className="mt-4 h-24 w-full" /> : <><dl className="mt-4 space-y-3"><Definition label="Status"><StageBadge status={stageDetail.status} /></Definition><Definition label="Available">{stageDetail.available ? "yes" : "no"}</Definition><Definition label="Provider / Source">{dataset.sources.map((source) => `${source.provider}.${source.dataset}`).join(", ")} · {selectedSource}</Definition><Definition label="Output">{stageDetail.stage === "gold" ? (stageDetail.exports.map((item) => item.kind).join(", ") || t("datasetDetail.outputNone")) : t("datasetDetail.outputNotProvided")}</Definition></dl><div className="mt-4 flex gap-2"><Button variant="secondary" size="sm" onClick={() => onSelectTab("preview")}>Preview</Button><Button variant="secondary" size="sm" onClick={() => onSelectTab("quality")}>{t("datasetDetail.viewQuality")}</Button></div></>}</Card></div>
   </div>;
@@ -357,13 +350,13 @@ function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selected
  * aggregate vs source/stage unit) so values can diverge (see :174-178 runFailedButSelectedStageOk
  * reference) — keep fields separate with distinct labels rather than merging to preserve scope difference.
  */
-function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selectedStage, sourceStages, columnCount, artifactSummary, validation, onSelectTab }: { dataset: DatasetDetailResponse; selectedRun?: DatasetRunSummary; runStatus?: string; selectedSource: string; selectedStage: DatasetStage; sourceStages?: RunStagesResponse["sources"][number]; columnCount: number | null; artifactSummary: string; validation: ReturnType<typeof summarizeQuality>; onSelectTab: (tab: DetailTab) => void }) {
+function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selectedStage, sourceStages, columnCount, artifactSummary, validation, onAsk }: { dataset: DatasetDetailResponse; selectedRun?: DatasetRunSummary; runStatus?: string; selectedSource: string; selectedStage: DatasetStage; sourceStages?: RunStagesResponse["sources"][number]; columnCount: number | null; artifactSummary: string; validation: ReturnType<typeof summarizeQuality>; onAsk: () => void }) {
   const { t } = useTranslation();
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Data Passport</h3>
-        <button type="button" className="text-xs font-medium text-accent-subtle-foreground underline" onClick={() => onSelectTab("ai")}>
+        <button type="button" aria-haspopup="dialog" className="text-xs font-medium text-accent-subtle-foreground underline" onClick={onAsk}>
           {t("datasetDetail.assistantHint")}
         </button>
       </div>

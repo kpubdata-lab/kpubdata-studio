@@ -42,7 +42,6 @@
   "nav": {
     "groupWorkspace": "WORKSPACE",
     "groupData": "DATA",
-    "groupAi": "AI",
     "groupSystem": "SYSTEM",
     "home": "Home",
     "discover": "Discover",
@@ -51,7 +50,6 @@
     "datasets": "Dataset Catalog",
     "builds": "Builds / Runs",
     "quality": "Quality",
-    "assistant": "Ask KPubData",
     "reports": "Reports",
     "provider": "Provider / API",
     "monitoring": "Monitoring",
@@ -65,7 +63,6 @@
     "datasets": "Search built datasets",
     "builds": "Build and run history",
     "quality": "Build and dataset quality results",
-    "assistant": "Context-aware assistant",
     "reports": "Create and view analysis reports",
     "provider": "API keys and credentials",
     "monitoring": "Run and system monitoring",
@@ -916,14 +913,6 @@
       "heading": "Overall Workflow",
       "note": "Below is the recommended order — follow the sidebar and on-screen guidance for each step."
     },
-    "assistant": {
-      "title": "Not sure where to start? Ask KPubData",
-      "desc": "Describe the data or analysis you want and Ask KPubData will help you get started.",
-      "placeholder": "e.g., What can I do with Seoul air quality data?",
-      "cta": "Start with Ask KPubData →",
-      "noKey": "No API key configured yet. See the Ask KPubData screen for setup instructions.",
-      "try": "Ask KPubData about data in natural language"
-    },
     "dashboard": {
       "eyebrow": "Dashboard",
       "title": "See your work at a glance",
@@ -1209,7 +1198,8 @@
     "tabsHint": "Source: {{source}} · lineage, schema and quality details are in their own tabs.",
     "schemaNone": "No schema / not supported",
     "schemaNoneDesc": "The {{stage}} stage response does not provide a schema.",
-    "previewNone": "No preview / not supported"
+    "previewNone": "No preview / not supported",
+    "askAboutThis": "Ask about this table"
   },
   "buildPublish": {
     "statusQueued": "Queued",

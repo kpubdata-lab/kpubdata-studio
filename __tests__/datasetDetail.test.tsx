@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 
@@ -14,8 +15,14 @@ function renderDetail(initialEntry = "/datasets/air-quality") {
     <MemoryRouter initialEntries={[initialEntry]}>
       <LocationProbe />
       <Routes><Route path="/datasets/:datasetId" element={<DatasetDetailPage />} /></Routes>
+      <AssistantDrawer />
     </MemoryRouter>,
   );
+}
+
+/** Ask KPubData opens as the global drawer (Layout mounts it once; mounted here beside the page). */
+function findAssistant() {
+  return screen.findByRole("dialog", { name: "Ask KPubData" });
 }
 
 beforeEach(() => {
@@ -101,12 +108,13 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(await screen.findByText("미리보기 없음/지원되지 않음")).toBeInTheDocument();
   });
 
-  it("renders all six tabs", async () => {
+  it("renders five tabs, with no AI tab (#421)", async () => {
     renderDetail();
     const tablist = await screen.findByRole("tablist", { name: "Dataset detail tabs" });
-    for (const label of ["Overview", "Schema", "Preview", "Quality", "Builds", "AI"]) {
+    for (const label of ["Overview", "Schema", "Preview", "Quality", "Builds"]) {
       expect(within(tablist).getByRole("tab", { name: label })).toBeInTheDocument();
     }
+    expect(within(tablist).queryByRole("tab", { name: "AI" })).not.toBeInTheDocument();
   });
 
   it("shows unavailable lineage nodes without presenting them as completed", async () => {
@@ -154,21 +162,21 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/builds/air-2026-08-14");
   });
 
-  it("propagates the known latest-run context to Ask KPubData when opening the AI tab, not '—' (audit #5)", async () => {
-    // 기본 진입(초기 URL에 ?run= 없음, latest run 암묵 선택)에서 AI 탭을 클릭한다 — stage와 달리
-    // run은 URL에 명시적으로 반영되지 않아 Ask KPubData RUN context가 "—"로 보이던 문제를 재현한다.
+  it("'Ask about this table' carries the known latest-run context into Ask KPubData, not '—' (audit #5, #421)", async () => {
+    // Default entry (no ?run= in the URL, latest run chosen implicitly). Unlike stage, the run is not
+    // otherwise written to the URL, which is how the RUN context used to show as "—".
     renderDetail();
     await screen.findByLabelText("Run 선택");
-    fireEvent.click(screen.getByRole("tab", { name: "AI" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "이 테이블에 대해 묻기" }));
 
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("run=air-2026-08-14"));
-    const panel = await screen.findByRole("tabpanel", { name: "AI" });
-    expect(within(panel).getByText("air-2026-08-14")).toBeInTheDocument();
+    const drawer = await findAssistant();
+    expect(within(drawer).getByText("air-2026-08-14")).toBeInTheDocument();
   });
 
-  it("back-fills the canonical run/source/stage context on direct entry to ?tab=ai, matching the tab-click path (A1)", async () => {
-    // goToTab("ai")를 거치지 않는 직접 진입/새로고침에서도 화면이 확정한 latest run과
-    // canonical source·stage가 Ask KPubData URL context에 반영돼야 한다(#319 후속).
+  it("a saved ?tab=ai link opens Ask KPubData with the canonical run/source/stage, and drops the tab (A1, #421)", async () => {
+    // The removed AI tab's links still lead somewhere: the same context the header action writes.
     renderDetail("/datasets/air-quality?tab=ai");
 
     await waitFor(() => {
@@ -176,45 +184,40 @@ describe("Dataset Detail P0 (#253)", () => {
       expect(location).toContain("run=air-2026-08-14");
       expect(location).toContain("source=datago__air");
       expect(location).toContain("stage=gold");
+      expect(location).not.toContain("tab=ai");
     });
 
-    // 수렴 후에는 더 이상 URL을 갱신하지 않는다(update loop 없음).
+    // Once converged the URL stops changing (no update loop).
     const settled = screen.getByTestId("location").textContent;
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(screen.getByTestId("location").textContent).toBe(settled);
 
-    const panel = await screen.findByRole("tabpanel", { name: "AI" });
-    expect(within(panel).getByText("air-2026-08-14")).toBeInTheDocument();
+    const drawer = await findAssistant();
+    expect(within(drawer).getByText("air-2026-08-14")).toBeInTheDocument();
+    expect(await screen.findByRole("tabpanel", { name: "Overview" })).toBeInTheDocument();
   });
 
-  it("does not overwrite an explicit valid run/source/stage on direct entry to ?tab=ai (A1)", async () => {
+  it("a saved ?tab=ai link does not overwrite an explicit valid run/source/stage (A1)", async () => {
     renderDetail("/datasets/air-quality?tab=ai&run=air-2026-08-13&source=datago__air&stage=silver");
 
-    await screen.findByRole("tabpanel", { name: "AI" });
+    await findAssistant();
     await new Promise((resolve) => setTimeout(resolve, 50));
     const location = screen.getByTestId("location").textContent ?? "";
     expect(location).toContain("run=air-2026-08-13");
     expect(location).toContain("source=datago__air");
     expect(location).toContain("stage=silver");
+    expect(location).not.toContain("tab=ai");
   });
 
-  it("renders Ask KPubData inline on the AI tab with this dataset's context, not a drawer launcher (#256 review)", async () => {
-    renderDetail("/datasets/air-quality?tab=ai");
-    const panel = await screen.findByRole("tabpanel", { name: "AI" });
-    // 프로토타입처럼 AI 탭 자체가 Ask KPubData 전체 화면(context bar/질문/답변)이어야 한다 — drawer를 대신 여는 launcher card가 아니다.
-    expect(within(panel).getByText("air-quality")).toBeInTheDocument();
-    expect(within(panel).getByText(/BYOK/)).toBeInTheDocument();
-    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
-  });
-
-  it("AI tab demo (no API key, mock mode): Generated SQL and Result Preview render deterministically, clearly labeled as demo (#256 review)", async () => {
-    // air-2026-08-14는 multi-source run이라 어느 소스인지 URL에 있어야 stage evidence가
-    // fail-closed로 빠지지 않는다(#319 후속) — Dataset Detail의 goToTab("ai")가 실제로 하는 동기화.
-    renderDetail("/datasets/air-quality?tab=ai&source=datago__air&stage=silver");
-    const panel = await screen.findByRole("tabpanel", { name: "AI" });
-    // A1: 직접 진입 시에도 latest run이 URL context에 back-fill될 때까지 기다린 뒤 상호작용한다
-    // (goToTab("ai")가 클릭 경로에서 동기적으로 하던 동기화와 동일한 최종 상태).
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("run=air-2026-08-14"));
+  it("Ask KPubData demo (no API key, mock mode): Generated SQL and Result Preview render deterministically, clearly labeled as demo (#256 review)", async () => {
+    // air-2026-08-14 is a multi-source run, so the source has to be in the URL or stage evidence is
+    // fail-closed (#319 follow-up) — which is what askAboutThis() writes before opening the drawer.
+    renderDetail();
+    await screen.findByLabelText("Run 선택");
+    await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
+    fireEvent.click(screen.getByRole("button", { name: "이 테이블에 대해 묻기" }));
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=datago__air"));
+    const panel = await findAssistant();
 
     fireEvent.click(within(panel).getByRole("button", { name: "데모 질문 보내보기" }));
 
@@ -296,12 +299,12 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     expect(within(passport).queryByText(/인증/)).not.toBeInTheDocument();
   });
 
-  it("navigates to the AI tab from the Passport's Ask KPubData entry point", async () => {
+  it("opens Ask KPubData with this dataset's context from the Passport entry point (#421)", async () => {
     renderDetail();
     const passport = await findPassport();
     fireEvent.click(within(passport).getByRole("button", { name: /Ask KPubData 가 이 dataset의 BuildSpec 수정안을 제안할 수 있습니다/ }));
 
-    const panel = await screen.findByRole("tabpanel", { name: "AI" });
-    expect(within(panel).getByText("air-quality")).toBeInTheDocument();
+    const drawer = await findAssistant();
+    expect(within(drawer).getByText("air-quality")).toBeInTheDocument();
   });
 });
