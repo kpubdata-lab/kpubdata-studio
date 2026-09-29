@@ -127,6 +127,17 @@ function buildNavGroups(t: (key: string) => string): NavGroup[] {
     label: t("nav.groupAnalyze"),
     items: [
       {
+        to: "/sql",
+        label: t("nav.sql"),
+        description: t("navDescription.sql"),
+        icon: (
+          <SidebarIcon name="sql">
+            <path d="M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Z" />
+            <path d="M4 6v12c0 1.7 3.6 3 8 3M20 6v5M14 16l2 2 4-4" />
+          </SidebarIcon>
+        ),
+      },
+      {
         to: "/workspace",
         label: t("nav.workspace"),
         description: t("navDescription.workspace"),

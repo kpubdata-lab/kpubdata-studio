@@ -7,7 +7,8 @@
  * 1. "Artifact" is not a user term — it is a Snapshot or Snapshot File.
  * 2. "Dataset" never stands alone — Source Dataset for an origin, Table for an output.
  *    What remains legitimately are interpolation names (`{{dataset}}`), BuildSpec field
- *    paths (`sources[0].dataset`) and Hugging Face's own `owner/dataset` wording.
+ *    paths (`sources[0].dataset`), code in backticks (the SQL relation `FROM dataset`)
+ *    and Hugging Face's own `owner/dataset` wording.
  * 3. Creating a table is not a Refresh. In the two creation wizards "Refresh" may only
  *    mean refreshing a preview, or describe the edit mode that re-runs an existing spec.
  */
@@ -42,6 +43,7 @@ function bareDatasetMentions(entries: [string, string][]): string[] {
     .filter(([key]) => !HUGGING_FACE_KEYS.has(key))
     .filter(([, value]) => {
       const text = value
+        .replace(/`[^`]*`/g, "")
         .replace(/\{\{\s*\w+\s*\}\}/g, "")
         .replace(/\w*(\[\w*\])?\.dataset\b/g, "")
         .replace(/owner\/dataset/g, "");
@@ -79,8 +81,10 @@ describe("warehouse terminology gate — the checks fail when they should", () =
         ["d", "소스 데이터셋 선택"],
         ["e", "sources[{{index}}].dataset: missing"],
         ["f", "{{dataset}} · {{run}} report"],
+        ["g", "`FROM dataset` reads {{target}}."],
+        ["h", "`SELECT 1` then pick a dataset"],
       ]),
-    ).toEqual(["a", "b"]);
+    ).toEqual(["a", "b", "h"]);
   });
 
   it("finds Refresh on a creation screen but allows preview refresh and edit mode", () => {

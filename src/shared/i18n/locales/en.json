@@ -53,7 +53,8 @@
     "monitoring": "Monitoring",
     "settings": "Settings",
     "groupAnalyze": "ANALYZE",
-    "groupOperate": "OPERATE"
+    "groupOperate": "OPERATE",
+    "sql": "SQL Workspace"
   },
   "navDescription": {
     "home": "Recent activity summary and quick start",
@@ -65,7 +66,8 @@
     "reports": "Create and view analysis reports",
     "provider": "API keys and credentials",
     "monitoring": "Run and system monitoring",
-    "settings": "Studio settings"
+    "settings": "Studio settings",
+    "sql": "Query a table snapshot"
   },
   "languageSwitcher": {
     "toggle": "Switch language",
@@ -424,7 +426,8 @@
         "reports": "Reports",
         "provider": "Provider",
         "monitoring": "Monitoring",
-        "settings": "Settings"
+        "settings": "Settings",
+        "sql": "SQL Workspace"
       },
       "stageAria": "Analysis stage",
       "sourceAria": "Analysis source"
@@ -1959,7 +1962,8 @@
       "publish": "Publish",
       "reportEditor": "Report editor",
       "settings": "Settings",
-      "validate": "Validate"
+      "validate": "Validate",
+      "sql": "SQL Workspace"
     },
     "loading": "Loading the page…"
   },
@@ -2178,6 +2182,31 @@
   },
   "tableActions": {
     "create": "Create Table",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "query": "Query"
+  },
+  "sql": {
+    "title": "SQL Workspace",
+    "desc": "You run the query. Ask KPubData may suggest SQL but never runs it.",
+    "run": "Run ⌘↵",
+    "table": "Table",
+    "pickTable": "Choose a table",
+    "snapshot": "Snapshot (run)",
+    "latest": "latest",
+    "pickSource": "Choose a source",
+    "needTable": "Choose a table to query.",
+    "needRun": "This table has no run to query.",
+    "needSource": "This run has several sources — choose the one to query.",
+    "fromDataset": "`FROM dataset` reads {{target}}.",
+    "oneTable": "One table per query. Joining tables comes with KPubData Engine multi-table SQL.",
+    "editor": "SQL",
+    "loadError": "Could not load the tables or their runs.",
+    "failed": "Query failed ({{code}})",
+    "rows": "{{count}} rows",
+    "truncated": "Truncated — more rows exist",
+    "saveLater": "Saving an analysis waits for server storage in KPubData Engine; a browser-only save would be lost on another device.",
+    "errors": {
+      "unknown": "The query failed for an unknown reason."
+    }
   }
 }
