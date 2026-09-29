@@ -26,6 +26,7 @@ import { QualityBadge } from "@/features/quality/QualityBadge";
 import type { PreviewResponse, PreviewSource } from "@/shared/lib/builderApi";
 import type { PreviewColumnView, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
 import { Button, Card, EmptyState, Select } from "@/shared/ui";
+import { cellValue, encodingsOf } from "@/shared/lib/cellValue";
 
 export type PreviewState =
   | { status: "idle" }
@@ -260,6 +261,7 @@ export function PreviewValidationStep({
 function SampleTable({ source, columnView }: { source: PreviewSource; columnView: PreviewColumnView }) {
   const { t } = useTranslation();
   const allColumns = source.schema.map((c) => c.name);
+  const encodings = encodingsOf(source.schema);
   const cols = columnView === "all" ? allColumns : allColumns.slice(0, KEY_COLUMN_COUNT);
   return (
     <div className="overflow-x-auto">
@@ -276,7 +278,7 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
             <tr key={i} className="border-t border-border">
               {cols.map((c) => (
                 <td key={c} className="py-1 pr-3">
-                  {row[c] === null || row[c] === undefined ? <span className="text-muted-foreground">—</span> : String(row[c])}
+                  {row[c] === null || row[c] === undefined ? <span className="text-muted-foreground">—</span> : cellValue(encodings.get(c), row[c])}
                 </td>
               ))}
             </tr>

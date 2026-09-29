@@ -86,4 +86,32 @@ describe("SQL Workspace against KPubData Engine (#417)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("unsafe_query");
     expect(body).toEqual({ dataset_id: "t1", run_id: "r9", stage: "silver", sql: "DELETE FROM dataset" });
   });
+
+  it("shows a decimal_string column as the exact text the Engine sent (#484)", async () => {
+    mswServer.use(
+      http.get(`${API_BASE}/datasets`, () => HttpResponse.json({ datasets: [], total: 0 })),
+      http.get(`${API_BASE}/datasets/t1/runs`, () =>
+        HttpResponse.json({ dataset_id: "t1", runs: [{ run_id: "r9", status: "ok", started_at: null, finished_at: null, spec_digest: null, created_by: null }] }),
+      ),
+      http.get(`${API_BASE}/builds/r9/stages`, () => HttpResponse.json({ run_id: "r9", sources: [] })),
+      http.post(`${API_BASE}/query`, () =>
+        HttpResponse.json({
+          columns: ["id", "amount"],
+          column_meta: [
+            { name: "id", logical_type: "int64", wire_encoding: "decimal_string" },
+            { name: "amount", logical_type: "decimal", wire_encoding: "decimal_string" },
+          ],
+          rows: [{ id: "9007199254740993", amount: "0.10" }],
+          truncated: false,
+          execution_ms: 1,
+        }),
+      ),
+    );
+    renderAt("/sql?table=t1");
+    await screen.findByRole("option", { name: /r9/ });
+    fireEvent.click(screen.getByRole("button", { name: /실행/ }));
+    expect(await screen.findByText("9007199254740993")).toBeInTheDocument();
+    expect(screen.getByText("0.10")).toBeInTheDocument();
+    expect(screen.queryByText("9007199254740992")).not.toBeInTheDocument();
+  });
 });
