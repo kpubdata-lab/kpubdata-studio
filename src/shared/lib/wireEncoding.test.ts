@@ -32,7 +32,7 @@ describe("wire encoding (builder#735)", () => {
     expect(JSON.parse(`"${FIRST_UNSAFE}"`)).toBe(FIRST_UNSAFE);
   });
 
-  it("accepts a 1.30.0 silver stage detail, whose column info is a strict schema", () => {
+  it("accepts a 1.30.0 silver stage detail", () => {
     const detail = {
       run_id: "r1",
       stage: "silver",
@@ -70,9 +70,10 @@ describe("wire encoding (builder#735)", () => {
     expect(queryResponseSchema.parse({ columns: [], rows: [], truncated: false, execution_ms: 0 }).column_meta).toBeUndefined();
   });
 
-  it("rejects a wire encoding outside the contract's enum", () => {
-    expect(() =>
-      previewColumnSchema.parse({ name: "v", dtype: "Int64", nullable: false, unique_count: 1, wire_encoding: "bigint" }),
-    ).toThrow();
+  it("reads a wire encoding outside the known enum as unsupported, not as a failure (#497)", () => {
+    const column = { name: "v", dtype: "Int64", nullable: false, unique_count: 1 };
+    expect(previewColumnSchema.parse({ ...column, wire_encoding: "bigint" }).wire_encoding).toBe("unsupported");
+    // A non-string is still a type error.
+    expect(() => previewColumnSchema.parse({ ...column, wire_encoding: 7 })).toThrow();
   });
 });

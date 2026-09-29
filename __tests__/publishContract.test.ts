@@ -14,7 +14,7 @@ describe("Builder PR #547 OpenAPI publish shape", () => {
     expect(() => publishTargetSchema.parse("local")).toThrow();
   });
 
-  it("matches readiness required fields and rejects drift", () => {
+  it("matches readiness required fields and tolerates additive fields (#497)", () => {
     const fixture = {
       run_id: "run-270",
       target: "huggingface",
@@ -23,7 +23,11 @@ describe("Builder PR #547 OpenAPI publish shape", () => {
       warnings: [{ code: "notice", message: "review" }],
     };
     expect(publishReadinessResponseSchema.parse(fixture)).toEqual(fixture);
-    expect(() => publishReadinessResponseSchema.parse({ ...fixture, destination: "owner/data" })).toThrow();
+    // An Engine-added field is stripped, not rejected (#497)…
+    expect(publishReadinessResponseSchema.parse({ ...fixture, destination: "owner/data" })).toEqual(fixture);
+    // …but a missing required field still fails.
+    const { ready: _ready, ...withoutReady } = fixture;
+    expect(() => publishReadinessResponseSchema.parse(withoutReady)).toThrow();
   });
 
   it("defaults private=true and rejects unknown request/options fields", () => {
@@ -33,7 +37,7 @@ describe("Builder PR #547 OpenAPI publish shape", () => {
     expect(() => publishRequestSchema.parse({ target: "huggingface", destination: "owner/data", options: { private: true, overwrite: true } })).toThrow();
   });
 
-  it("accepts only the actual 200 response fields and requires reference", () => {
+  it("keeps only the modelled 200 response fields and requires reference", () => {
     const fixture = {
       run_id: "run-270",
       target: "huggingface",
@@ -44,7 +48,8 @@ describe("Builder PR #547 OpenAPI publish shape", () => {
       status: "ok",
     };
     expect(publishResponseSchema.parse(fixture)).toEqual(fixture);
-    expect(() => publishResponseSchema.parse({ ...fixture, version: "v1" })).toThrow();
+    // Additive field: stripped, not a parse failure (#497).
+    expect(publishResponseSchema.parse({ ...fixture, version: "v1" })).toEqual(fixture);
     const { reference: _reference, ...withoutReference } = fixture;
     expect(() => publishResponseSchema.parse(withoutReference)).toThrow();
   });
