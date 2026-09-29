@@ -117,17 +117,16 @@ flowchart TD
 5. **서버에 올리기**: `git push origin feat/issue-번호-기능이름`
 6. **PR 생성**: GitHub 웹사이트에서 `Compare & pull request` 버튼 클릭
 
-### 3-5. 커밋 메시지 규칙
-기록은 **영문**으로 작성하며, 첫 단어는 다음 중 하나를 선택합니다.
+### 3-5. 제목과 커밋 메시지 규칙
+이슈·PR·최종 커밋 제목의 **정본은 kpubdata 의 [POLICY 2.1.3](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md#213-유형은-제목이-정하고-라벨은-따라온다--2026-09-29-개정)** 입니다 — 세 저장소가
+같은 규칙과 같은 허용 type 11개를 씁니다. 요약하면:
 
-| 타입 | 의미 |
-| :--- | :--- |
-| **feat** | 새로운 기능 추가 |
-| **fix** | 버그 수정 |
-| **docs** | 문서(README 등) 수정 |
-| **test** | 테스트 코드 추가 |
-| **refactor** | 코드 개선 (기능 변화 없음) |
-| **style** | 코드 포맷팅 (세미콜론 누락 등) |
+- `type: description` 또는 `type(scope): description`, 영어, 끝에 마침표 없음
+  (예: `feat: add support for parquet export`, `fix(query): keep Decimal precision`)
+- 허용 type: `feat` `fix` `docs` `test` `perf` `refactor` `ci` `build` `chore` `style` `revert`
+- 병합은 squash 뿐이라 PR 제목이 그대로 `main` 의 커밋 제목이 됩니다. 브랜치 안의 개별 커밋
+  메시지는 자유지만 '무엇을 왜 바꿨는지' 쓰기를 권합니다.
+- 이슈 번호는 제목이 아니라 PR 본문에 `Closes #123` 으로 적습니다.
 
 ### 3-6. 절대 금지 사항
 - **`main` 브랜치에 직접 Push 금지**: 모든 변경 사항은 PR을 통해서만 반영됩니다.
@@ -166,7 +165,7 @@ React Router 기반 SPA 구조를 사용합니다.
 
 ## 6. PR 가이드 및 체크리스트
 
-PR 제목은 `[#이슈번호] 간단한 설명` 형식을 지켜주세요.
+PR 제목은 [3-5](#3-5-제목과-커밋-메시지-규칙) 의 규칙(`type(scope): description`)을 따르고, 이슈는 본문에 `Closes #123` 으로 연결해 주세요.
 
 **보내기 전 체크리스트:**
 - [ ] `npm run lint` 결과가 깨끗한가요?
