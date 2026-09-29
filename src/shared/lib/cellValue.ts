@@ -12,7 +12,9 @@
  */
 import type { z } from "zod";
 
-import type { wireEncodingSchema } from "./builderApi.schema";
+import { i18n } from "@/shared/i18n";
+
+import { UNSUPPORTED_WIRE_ENCODING, type wireEncodingSchema } from "./builderApi.schema";
 
 export type WireEncoding = z.infer<typeof wireEncodingSchema>;
 
@@ -25,9 +27,14 @@ export function encodingsOf(
   return map;
 }
 
-/** The text a cell shows. `null`/missing is "—"; exact decimal text is never parsed. */
+/**
+ * The text a cell shows. `null`/missing is "—"; exact decimal text is never parsed.
+ * A column whose encoding this Studio does not know (#497) says so instead of showing a
+ * value it cannot vouch for.
+ */
 export function cellValue(encoding: WireEncoding | undefined, value: unknown): string {
   if (value === null || value === undefined) return "—";
+  if (encoding === UNSUPPORTED_WIRE_ENCODING) return i18n.t("api.unsupportedEncoding");
   if (typeof value === "string") return value;
   if (encoding === "decimal_string") return String(value);
   if (typeof value === "object") return JSON.stringify(value);

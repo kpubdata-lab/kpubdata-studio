@@ -51,7 +51,13 @@ function unwrap(schema: z.ZodType): z.ZodType {
 }
 
 function enumOptions(schema: z.ZodType): unknown[] | null {
-  const core = unwrap(schema) as unknown as { def: { type: string; entries?: Record<string, unknown> } };
+  const core = unwrap(schema) as unknown as {
+    def: { type: string; entries?: Record<string, unknown>; options?: z.ZodType[] };
+  };
+  // An extensible enum (`wireEncodingSchema`, #497) is a union whose first branch is the
+  // known values: parsing never fails on a new one, but a value Studio shows as
+  // "unsupported" is still drift worth reporting.
+  if (core.def.type === "union" && core.def.options?.[0]) return enumOptions(core.def.options[0]);
   if (core.def.type !== "enum" || !core.def.entries) return null;
   return Object.values(core.def.entries);
 }

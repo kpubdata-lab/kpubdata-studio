@@ -192,6 +192,7 @@
     "timeout": "Engine API did not respond in time.",
     "connFail": "Could not connect to the Engine API.",
     "badJson": "Failed to parse the response JSON.",
+    "unsupportedEncoding": "Unsupported format",
     "schemaMismatch": "Engine API response does not match the expected shape: {{details}}",
     "schemaDefault": "response shape",
     "schemaIssueDefault": "shape mismatch",
