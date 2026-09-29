@@ -50,8 +50,8 @@ yarn-error.log*
 # local tooling
 .claude/
 
-# local npm config
-.npmrc
+# .npmrc is tracked: it pins the registry (#431). Credentials belong in
+# ~/.npmrc, never here — __tests__/localToolchainGate.test.ts fails on one.
 
 # Playwright E2E (#268)
 /test-results/
