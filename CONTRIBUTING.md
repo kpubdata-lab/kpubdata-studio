@@ -190,5 +190,5 @@ PR 제목은 [3-5](#3-5-제목과-커밋-메시지-규칙) 의 규칙(`type(scop
 ### KPubData Product Family
 | 저장소 | 문서 | 설명 |
 | :--- | :--- | :--- |
-| [kpubdata](https://github.com/yeongseon/kpubdata) | [CONTRIBUTING.md](https://github.com/yeongseon/kpubdata/blob/main/CONTRIBUTING.md) | Core 기여 가이드 |
+| [kpubdata](https://github.com/yeongseon/kpubdata) | [CONTRIBUTING.md](https://github.com/yeongseon/kpubdata/blob/main/CONTRIBUTING.md) | KPubData 기여 가이드 |
 | [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [CONTRIBUTING.md](https://github.com/yeongseon/kpubdata-builder/blob/main/CONTRIBUTING.md) | Builder 기여 가이드 |

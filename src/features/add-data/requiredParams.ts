@@ -6,7 +6,7 @@
  *   missing required keys in user-facing text.
  * - Treat empty strings/whitespace-only values as missing (many public data APIs treat empty as "not transmitted",
  *   and real E2E shows `{}` → NO_MANDATORY_REQUEST_PARAMETERS).
- * - Do not replace Builder/Core validation — this is only pre-flight guidance.
+ * - Do not replace Builder validation — this is only pre-flight guidance.
  */
 import { i18n } from "@/shared/i18n";
 import type { CatalogRequestParameter } from "@/shared/lib/builderApi";

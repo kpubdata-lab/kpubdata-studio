@@ -7,8 +7,8 @@ Studio는 `kpubdata-builder` 위에 놓이는 표현 계층이자 워크플로 �
 ```mermaid
 graph TD
     Studio[KPubData Studio SPA] --> BuilderAPI[Builder API / Service]
-    BuilderAPI --> KBuilder[kpubdata-builder Builder]
-    KBuilder --> KPubData[kpubdata Core]
+    BuilderAPI --> KBuilder[KPubData Builder · kpubdata-builder]
+    KBuilder --> KPubData[KPubData · kpubdata]
     KPubData --> PublicAPIs[Public Data APIs]
 ```
 
@@ -126,27 +126,19 @@ sequenceDiagram
     participant User as 사용자
     participant Page as Page
     participant FeatureAPI as features/*/api/index.ts
-    participant BAPI as Builder API
-    participant Builder as kpubdata-builder
-    participant Core as kpubdata
-    participant Pub as Public Data API
+    participant BAPI as KPubData Builder API
 
     User->>Page: 빌드 실행 요청
     Page->>FeatureAPI: runBuild(spec)
     FeatureAPI->>BAPI: POST /build
-    BAPI->>Builder: build.execute()
-    Builder->>Core: fetch_data()
-    Core->>Pub: HTTP GET
-    Pub-->>Core: Response
-    Core-->>Builder: Normalized Records
-    Builder-->>BAPI: Build Completed
-    BAPI-->>FeatureAPI: Result JSON
+    Note over BAPI: 수집·검증·게시는 Builder 안에서 일어나며<br/>Studio 는 그 내부(KPubData 호출 포함)를 모른다
+    BAPI-->>FeatureAPI: Result JSON (OpenAPI 계약)
     FeatureAPI-->>Page: UI용 데이터 반환
     Page-->>User: 결과 표시
 ```
 
 ### 데이터 흐름
-`Studio (SPA)` ↔ `Builder API` ↔ `kpubdata-builder (엔진)` ↔ `kpubdata (데이터 소스)`
+`Studio (SPA)` → `KPubData Builder` HTTP/OpenAPI 계약. Builder 뒤의 KPubData 는 Builder 의 의존성이며 Studio 는 직접 참조하지 않습니다 (Studio → Builder → KPubData).
 
 ### API 클라이언트 위치
 
@@ -233,5 +225,5 @@ graph LR
 | 저장소 | 문서 | 설명 |
 | :--- | :--- | :--- |
 | **전체 제품군** | [product-family-architecture.md](https://github.com/yeongseon/kpubdata/blob/main/docs/product-family-architecture.md) | **3개 저장소 전체 시스템 아키텍처** |
-| [kpubdata](https://github.com/yeongseon/kpubdata) | [ARCHITECTURE.md](https://github.com/yeongseon/kpubdata/blob/main/ARCHITECTURE.md) | Core 아키텍처 |
+| [kpubdata](https://github.com/yeongseon/kpubdata) | [ARCHITECTURE.md](https://github.com/yeongseon/kpubdata/blob/main/ARCHITECTURE.md) | KPubData 아키텍처 |
 | [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [ARCHITECTURE.md](https://github.com/yeongseon/kpubdata-builder/blob/main/ARCHITECTURE.md) | Builder 아키텍처 |
