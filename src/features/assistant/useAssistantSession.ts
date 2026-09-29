@@ -16,6 +16,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
+import { moveLegacyKey } from "@/shared/lib/storageMigration";
 import { contextsMatch, resolveAssistantContext } from "./context";
 import { buildAssistantDemoResponse, isAssistantDemoAvailable, runAssistantDemoQuery } from "./demo";
 import { loadAssistantEvidence } from "./evidence";
@@ -59,6 +60,10 @@ interface AssistantStoreState {
 }
 
 /** Assistant conversation state singleton. `onboarded` persisted; conversation content session-only (long-term save excluded). */
+// The persisted store was `kpubdata-studio:kubi` before the rename (#450). Moved once so a
+// returning visitor is not shown the onboarding again (#479).
+moveLegacyKey("kpubdata-studio:kubi", "kpubdata-studio:assistant");
+
 export const useAssistantStore = create<AssistantStoreState>()(
   persist(
     (set, get) => ({

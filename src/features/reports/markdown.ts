@@ -44,7 +44,8 @@ function isTableSeparatorRow(line: string): boolean {
 
 /** Splits text into blank-line-separated blocks and classifies each; unknown shapes become paragraphs. */
 function parseBlocks(markdown: string): Block[] {
-  const normalized = markdown.replace(/\r\n/g, "\n");
+  // A block stored by an older version may have no body at all (#479) — render nothing, not a crash.
+  const normalized = (typeof markdown === "string" ? markdown : "").replace(/\r\n/g, "\n");
   const chunks = normalized.split(/\n{2,}/).map((chunk) => chunk.trim()).filter(Boolean);
   const blocks: Block[] = [];
 

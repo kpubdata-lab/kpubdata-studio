@@ -13,6 +13,8 @@ import { i18n } from "@/shared/i18n";
 import { REPORT_VERSION, type ReportDraft, type ReportSummary } from "./types";
 import { ownedStorageKey } from "@/features/auth/storageOwner";
 
+import { normalizeBlocks } from "./legacy";
+
 const STORE_KEY = "kpubdata-studio:reports";
 export const STORE_VERSION = 1;
 
@@ -57,7 +59,12 @@ function readEnvelope(): StoreEnvelope {
       localStorage.removeItem(ownedStorageKey(STORE_KEY));
       return emptyEnvelope();
     }
-    return parsed as StoreEnvelope;
+    const envelope = parsed as StoreEnvelope;
+    // Blocks saved under older names or shapes (#479); the next save writes them back normalized.
+    for (const report of Object.values(envelope.reports)) {
+      if (report && typeof report === "object") report.blocks = normalizeBlocks(report.blocks);
+    }
+    return envelope;
   } catch {
     return emptyEnvelope();
   }

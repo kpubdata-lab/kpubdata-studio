@@ -7,6 +7,7 @@
  * `draftStorage.ts`.
  */
 import { ownedStorageKey } from "@/features/auth/storageOwner";
+import { moveLegacyKey } from "@/shared/lib/storageMigration";
 
 export interface AssistantReportNote {
   note: string;
@@ -24,8 +25,25 @@ interface InboxEnvelope {
   notes: AssistantReportNote[];
 }
 
+/** Notes saved before the assistant rename (#461) move to the new key once (#479). */
+const LEGACY_INBOX_KEY = "kpubdata-studio:kubi-report-inbox";
+
+function mergeInboxes(oldValue: string, newValue: string): string {
+  const notes = (value: string): AssistantReportNote[] => {
+    try {
+      const parsed = JSON.parse(value) as InboxEnvelope;
+      return Array.isArray(parsed?.notes) ? parsed.notes : [];
+    } catch {
+      return [];
+    }
+  };
+  const merged = [...notes(oldValue), ...notes(newValue)].slice(-INBOX_LIMIT);
+  return JSON.stringify({ version: INBOX_VERSION, notes: merged });
+}
+
 function readEnvelope(): InboxEnvelope {
   const empty: InboxEnvelope = { version: INBOX_VERSION, notes: [] };
+  moveLegacyKey(ownedStorageKey(LEGACY_INBOX_KEY), ownedStorageKey(INBOX_KEY), mergeInboxes);
   try {
     const raw = localStorage.getItem(ownedStorageKey(INBOX_KEY));
     if (!raw) return empty;
