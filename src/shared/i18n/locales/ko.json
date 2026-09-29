@@ -2166,5 +2166,10 @@
     "oidc": {
       "issuerInvalid": "VITE_OIDC_ISSUER 형식이 올바르지 않습니다: {{issuer}}"
     }
+  },
+  "versionCheck": {
+    "mismatch": "Studio {{studio}} 가 Builder {{builder}} 에 연결되어 있습니다 — 서로 다른 릴리스라 일부 화면이 불러오지 못할 수 있습니다.",
+    "remedy": "같은 버전의 Builder 를 배포하거나, 새로고침해 같은 버전의 Studio 를 받으세요.",
+    "dismiss": "버전 안내 닫기"
   }
 }

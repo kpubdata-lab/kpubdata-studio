@@ -17,6 +17,8 @@ interface ImportMetaEnv {
   readonly VITE_OIDC_ISSUER?: string;
   /** OIDC public SPA client id (e.g., kpubdata-studio). Public value — NOT client secret. */
   readonly VITE_OIDC_CLIENT_ID?: string;
+  /** Studio's own version, injected from `package.json` by vite `define` (#430). */
+  readonly VITE_APP_VERSION?: string;
 }
 
 interface ImportMeta {

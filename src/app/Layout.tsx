@@ -14,6 +14,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
 import { AssistantSearchInput } from "@/features/assistant/AssistantSearchInput";
 import { useUIStore } from "@/shared/hooks/useUIStore";
+import { VersionMismatchBanner } from "@/features/version-check/VersionMismatchBanner";
 
 const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
 const sidebarSymbolUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/sidebar_dark.svg", import.meta.url).href;
@@ -524,6 +525,8 @@ export function Layout() {
               </div>
             </div>
           </header>
+
+          <VersionMismatchBanner />
 
           <Outlet />
         </div>

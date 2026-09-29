@@ -1,9 +1,18 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+// Studio's own version, compared with Builder's at runtime (#430).
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as {
+  version: string;
+};
+
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(version),
+  },
   test: {
     // 개별 테스트 한도. vitest.setup.ts 의 RTL 대기 한도(30초)보다 커야 한다 — 짧으면
     // 느린 러너에서 RTL 이 기다리기도 전에 테스트 래퍼가 먼저 끊고,
