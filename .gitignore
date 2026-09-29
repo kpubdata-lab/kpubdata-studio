@@ -56,3 +56,6 @@ yarn-error.log*
 # Playwright E2E (#268)
 /test-results/
 /playwright-report/
+
+# Builder contract checkout used by the contract-drift CI job
+.builder/
