@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- A cancelled run's event timeline parses again, and fetch progress is accepted (builder#648). The event-name schema lacked `run_cancelled`, which Builder has emitted for a cancelled async run since builder#481, so every cancelled run's timeline failed to parse. It now also accepts `source_fetch_progress`, which Builder emits after each `param_grid` combination.
+
 ### Added
 
 - The visual identity is written down in `docs/brand/VISUAL_IDENTITY.md` (#425): the `KPubData` wordmark leads and `Studio` is a weaker suffix, brand and status colours are separate tokens (warning, stale and partial share amber and differ by label), SQL and identifiers are always monospace, and density comes before marketing type. Five static warehouse prototypes — Home, Catalog, Tables, Table Detail, SQL Workspace — live in `docs/prototype/warehouse/` with desktop and 390px screenshots, awaiting prototype review before the app adopts them. A test fails if a status token takes a brand colour or a prototype badge carries no word.
