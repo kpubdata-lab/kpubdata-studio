@@ -6,6 +6,7 @@ import {
   type BuildQualityResponse,
   type DatasetDetailResponse,
   type DatasetQualityHistoryResponse,
+  type DatasetRunResponse,
   type DatasetRunsResponse,
   type DatasetSummary,
   type RunStagesResponse,
@@ -51,6 +52,18 @@ export async function listDatasetRuns(datasetId: string, limit = 50, signal?: Ab
   const runs = MOCK_RUNS[datasetId];
   if (!runs) throw new ApiError(404, i18n.t("datasets.errors.runsNotFound"));
   return { ...runs, runs: runs.runs.slice(0, limit) };
+}
+
+/**
+ * One run of a dataset by id, not limited to the newest page (#418). Builder answers 404
+ * when the run is not this dataset's and 403 when it is not the caller's.
+ */
+export async function getDatasetRun(datasetId: string, runId: string, signal?: AbortSignal): Promise<DatasetRunResponse> {
+  if (isRealBuilderEnabled()) return builderApi.getDatasetRun(datasetId, runId, signal);
+  throwIfAborted(signal);
+  const run = MOCK_RUNS[datasetId]?.runs.find((candidate) => candidate.run_id === runId);
+  if (!run) throw new ApiError(404, i18n.t("datasets.errors.runsNotFound"));
+  return { dataset_id: datasetId, run };
 }
 
 export async function listBuildStages(runId: string, signal?: AbortSignal): Promise<RunStagesResponse> {

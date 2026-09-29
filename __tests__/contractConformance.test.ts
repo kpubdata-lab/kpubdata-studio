@@ -34,6 +34,7 @@ const EXPECTED_OPERATIONS = [
   "listDatasets",
   "getDataset",
   "listDatasetRuns",
+  "getDatasetRun",
   "listBuildStages",
   "getBuildStageDetail",
   "getBuildQuality",

@@ -18,6 +18,7 @@ import {
   listDatasets,
 } from "@/features/datasets/api";
 import { DATASET_STAGES, formatDateTime, type DatasetStage } from "@/features/datasets/model";
+import { useRequestedRun } from "@/features/datasets/useRequestedRun";
 import { QualityBadge, QualityStateBadge } from "@/features/quality/QualityBadge";
 import {
   flattenQualityResults,
@@ -134,9 +135,14 @@ export function QualityPage() {
   }, [selectedDatasetId, invalidDataset]);
 
   const requestedRunId = searchParams.get("run");
-  const invalidRun = Boolean(requestedRunId && runsState.status === "loaded" && !runsState.data?.some((run) => run.run_id === requestedRunId));
+  // Not being in the newest page does not make a run invalid (#418); Builder is asked directly.
+  const requested = useRequestedRun(selectedDatasetId, requestedRunId, runsState.status === "loaded" ? runsState.data : undefined);
+  const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error";
+  const runPending = requested.status === "loading" && runsState.status === "loaded";
+  const runOptions =
+    requested.status === "available" && !requested.inPage && runsState.data ? [...runsState.data, requested.run] : runsState.data;
   const selectedRunId = requestedRunId || selectedDataset?.latest_run_id || "";
-  const selectedRun = runsState.data?.find((run) => run.run_id === selectedRunId);
+  const selectedRun = runOptions?.find((run) => run.run_id === selectedRunId);
 
    // Assistant (AssistantContent) reads context only from the route's `?dataset=&run=&source=&stage=`
    // (context.ts, no-guess principle). Screen shows fallback with calculated dataset/run,
@@ -145,7 +151,7 @@ export function QualityPage() {
    // URL to sync UI selection and AssistantContext SSOT. Update via replace only to not pollute
    // history; skip for invalid dataset/run.
   useEffect(() => {
-    if (datasetsState.status !== "loaded" || invalidDataset || invalidRun) return;
+    if (datasetsState.status !== "loaded" || invalidDataset || invalidRun || runPending) return;
     const next = new URLSearchParams(searchParams);
     let changed = false;
     if (!requestedDatasetId && selectedDatasetId) {
@@ -161,6 +167,7 @@ export function QualityPage() {
     datasetsState.status,
     invalidDataset,
     invalidRun,
+    runPending,
     requestedDatasetId,
     selectedDatasetId,
     requestedRunId,
@@ -170,7 +177,7 @@ export function QualityPage() {
   ]);
 
   useEffect(() => {
-    if (!selectedRunId || invalidRun) {
+    if (!selectedRunId || invalidRun || runPending) {
       setStagesState({ status: "idle" });
       setQualityState({ status: "idle" });
       return;
@@ -189,7 +196,7 @@ export function QualityPage() {
         if (!controller.signal.aborted) setQualityState({ status: "error", error: cause instanceof Error ? cause.message : i18n.t("quality.errors.quality") });
       });
     return () => controller.abort();
-  }, [selectedRunId, invalidRun]);
+  }, [selectedRunId, invalidRun, runPending]);
 
   const sourceEntries = stagesState.data?.sources ?? [];
   const requestedSource = searchParams.get("source") ?? "";
@@ -318,8 +325,8 @@ export function QualityPage() {
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader eyebrow="Quality" title="Quality Center" description={selectedDataset?.title} />
         <Card variant="error" role="alert">
-          <p className="font-semibold">{t("quality.wrongRun.title")}</p>
-          <p className="mt-2 text-sm">{t("quality.wrongRun.desc", { id: requestedRunId })}</p>
+          <p className="font-semibold">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenTitle" : requested.status === "error" ? "quality.wrongRun.checkFailedTitle" : "quality.wrongRun.title")}</p>
+          <p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "quality.wrongRun.forbiddenDesc" : requested.status === "error" ? "quality.wrongRun.checkFailedDesc" : "quality.wrongRun.desc", { id: requestedRunId })}</p>
           <Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("quality.wrongRun.back")}</Button>
         </Card>
       </main>
@@ -358,7 +365,7 @@ export function QualityPage() {
         <label className="min-w-52 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Run
           <select aria-label={t("quality.selectors.run")} className={`mt-1 w-full ${selectClassName}`} value={selectedRunId} disabled={runsState.status !== "loaded"} onChange={(event) => updateContext({ run: event.target.value === selectedDataset?.latest_run_id ? null : event.target.value, source: null, stage: null })}>
-            {(runsState.data ?? []).map((run) => <option key={run.run_id} value={run.run_id}>{run.run_id}{run.run_id === selectedDataset?.latest_run_id ? " (latest)" : ""}</option>)}
+            {(runOptions ?? []).map((run) => <option key={run.run_id} value={run.run_id}>{run.run_id}{run.run_id === selectedDataset?.latest_run_id ? " (latest)" : ""}</option>)}
           </select>
         </label>
         <label className="min-w-52 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">

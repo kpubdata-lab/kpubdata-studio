@@ -444,6 +444,12 @@ export const datasetRunSummarySchema = z.object({
   created_by: z.string().nullable(),
 });
 
+/** GET /datasets/{dataset_id}/runs/{run_id} (builder 1.31.0, #418): one run found by id. */
+export const datasetRunResponseSchema = z.object({
+  dataset_id: z.string(),
+  run: datasetRunSummarySchema,
+});
+
 export const datasetRunsResponseSchema = z.object({
   dataset_id: z.string(),
   runs: z.array(datasetRunSummarySchema),
@@ -767,6 +773,7 @@ export type DatasetSummary = z.infer<typeof datasetSummarySchema>;
 export type DatasetDetailResponse = z.infer<typeof datasetDetailResponseSchema>;
 export type DatasetsResponse = z.infer<typeof datasetsResponseSchema>;
 export type DatasetRunSummary = z.infer<typeof datasetRunSummarySchema>;
+export type DatasetRunResponse = z.infer<typeof datasetRunResponseSchema>;
 export type DatasetRunsResponse = z.infer<typeof datasetRunsResponseSchema>;
 export type RunStageEntry = z.infer<typeof runStageEntrySchema>;
 export type RunStagesResponse = z.infer<typeof runStagesResponseSchema>;

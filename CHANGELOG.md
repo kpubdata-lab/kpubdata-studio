@@ -6,6 +6,7 @@
 
 - Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004).
 - Ask KPubData moves from `/kubi` to `/assistant`, and its stored values drop the old name: report blocks are `ASSISTANT_INTERPRETATION` and the inbox key is `kpubdata-studio:assistant-report-inbox`. No redirect or migration is kept — no deployment used the old names (#449).
+- A URL naming a run older than the newest page of the runs list now opens, instead of being called invalid (#418). Dataset Detail and Quality ask Builder for that run directly (`GET /datasets/{dataset_id}/runs/{run_id}`, API contract 1.31.0), and tell a run that is not this dataset's (not found) from one that is another user's (forbidden) and from a failed check.
 - Accept Builder API contract 1.30.0's column `logical_type` and `wire_encoding` (builder#735). Stage detail's column info is a strict schema, so without this a 1.30.0 Builder's silver stage detail failed to parse. Columns sent as `decimal_string` stay exact text. The fields are optional, so an older Builder still works.
 
 ## v0.4.0 — 2026-09-28

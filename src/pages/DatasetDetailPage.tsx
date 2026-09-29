@@ -10,6 +10,7 @@ import {
   listDatasetRuns,
 } from "@/features/datasets/api";
 import { StageBadge } from "@/features/datasets/components/StageBadge";
+import { useRequestedRun } from "@/features/datasets/useRequestedRun";
 import {
   DATASET_STAGES,
   formatDateTime,
@@ -95,10 +96,16 @@ export function DatasetDetailPage() {
 
   const requestedRun = searchParams.get("run");
   const selectedRunId = requestedRun || core.dataset?.latest_run_id || "";
-  const invalidRun = Boolean(requestedRun && core.runs && !core.runs.some((run) => run.run_id === requestedRun));
+  // Not being in the newest page does not make a run invalid (#418): Builder is asked
+  // directly, and says whether it is this dataset's and the caller's.
+  const requested = useRequestedRun(datasetId, requestedRun, core.runs);
+  const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error";
+  const runPending = requested.status === "loading";
+  const runOptions =
+    requested.status === "available" && !requested.inPage && core.runs ? [...core.runs, requested.run] : core.runs;
 
   useEffect(() => {
-    if (!selectedRunId || invalidRun) {
+    if (!selectedRunId || invalidRun || runPending) {
       setStagesState({ status: "idle" });
       setQualityState({ status: "idle" });
       return;
@@ -117,7 +124,7 @@ export function DatasetDetailPage() {
         if (!controller.signal.aborted) setQualityState({ status: "error", error: cause instanceof Error ? cause.message : i18n.t("datasetDetail.qualityErrorMsg") });
       });
     return () => controller.abort();
-  }, [selectedRunId, invalidRun]);
+  }, [selectedRunId, invalidRun, runPending]);
 
   const requestedSource = searchParams.get("source");
   const sourceEntries = stagesState.data?.sources ?? [];
@@ -138,7 +145,7 @@ export function DatasetDetailPage() {
   }, [requestedStage, validRequestedStage, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (!selectedRunId || !selectedSource || invalidRun || invalidSource) {
+    if (!selectedRunId || !selectedSource || invalidRun || runPending || invalidSource) {
       setStageDetailState({ status: "idle" });
       return;
     }
@@ -150,7 +157,7 @@ export function DatasetDetailPage() {
         if (!controller.signal.aborted) setStageDetailState({ status: "error", error: cause instanceof Error ? cause.message : i18n.t("datasetDetail.stageDetailErrorMsg") });
       });
     return () => controller.abort();
-  }, [selectedRunId, selectedSource, selectedStage, invalidRun, invalidSource]);
+  }, [selectedRunId, selectedSource, selectedStage, invalidRun, runPending, invalidSource]);
 
   function updateContext(updates: Record<string, string | null>) {
     const next = new URLSearchParams(searchParams);
@@ -178,7 +185,7 @@ export function DatasetDetailPage() {
 
   const tabParam = searchParams.get("tab") as DetailTab | null;
   const selectedTab = TABS.some((tab) => tab.id === tabParam) ? tabParam as DetailTab : "overview";
-  const selectedRun = core.runs?.find((run) => run.run_id === selectedRunId);
+  const selectedRun = runOptions?.find((run) => run.run_id === selectedRunId);
   const validation = summarizeQuality(qualityState.data, selectedSource);
   const selectedQualityResults = qualityResultsForSource(qualityState.data, selectedSource);
   const selectedDrift = qualityState.data?.schema_drift[selectedSource] ?? [];
@@ -189,7 +196,7 @@ export function DatasetDetailPage() {
   // same pattern as QualityPage). Update only via replace, never touch already-valid values or invalid state
   // to avoid creating update loops.
   useEffect(() => {
-    if (selectedTab !== "ai" || core.status !== "loaded" || invalidRun || invalidSource) return;
+    if (selectedTab !== "ai" || core.status !== "loaded" || invalidRun || runPending || invalidSource) return;
     const next = new URLSearchParams(searchParams);
     let changed = false;
     if (selectedRunId && !requestedRun) {
@@ -211,6 +218,7 @@ export function DatasetDetailPage() {
     selectedTab,
     core.status,
     invalidRun,
+    runPending,
     invalidSource,
     stagesState.status,
     selectedRunId,
@@ -261,7 +269,7 @@ export function DatasetDetailPage() {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader eyebrow="Dataset" title={core.dataset.title} description={core.dataset.dataset_id} />
-        <Card variant="error" role="alert"><p className="font-semibold">{t("datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t("datasetDetail.invalidRunBody", { run: requestedRun })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
+        <Card variant="error" role="alert"><p className="font-semibold">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunTitle" : requested.status === "error" ? "datasetDetail.runCheckFailedTitle" : "datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunBody" : requested.status === "error" ? "datasetDetail.runCheckFailedBody" : "datasetDetail.invalidRunBody", { run: requestedRun })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
       </main>
     );
   }
@@ -276,7 +284,7 @@ export function DatasetDetailPage() {
       />
 
       <Card className="flex flex-wrap items-end gap-3 p-3">
-        <label className="min-w-52 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Run<select aria-label={t("datasetDetail.runSelect")} className={`mt-1 w-full ${selectClassName}`} value={selectedRunId} onChange={(event) => updateContext({ run: event.target.value === core.dataset?.latest_run_id ? null : event.target.value, source: null, stage: null })}>{core.runs.map((run) => <option key={run.run_id} value={run.run_id}>{run.run_id}{run.run_id === core.dataset?.latest_run_id ? " (latest)" : ""}</option>)}</select></label>
+        <label className="min-w-52 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Run<select aria-label={t("datasetDetail.runSelect")} className={`mt-1 w-full ${selectClassName}`} value={selectedRunId} onChange={(event) => updateContext({ run: event.target.value === core.dataset?.latest_run_id ? null : event.target.value, source: null, stage: null })}>{(runOptions ?? []).map((run) => <option key={run.run_id} value={run.run_id}>{run.run_id}{run.run_id === core.dataset?.latest_run_id ? " (latest)" : ""}</option>)}</select></label>
         <label className="min-w-52 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Source<select aria-label={t("datasetDetail.sourceSelect")} className={`mt-1 w-full ${selectClassName}`} value={selectedSource} disabled={stagesState.status !== "loaded"} onChange={(event) => updateContext({ source: event.target.value, stage: null })}>{invalidSource && requestedSource ? <option value={requestedSource}>{t("datasetDetail.missingSource", { source: requestedSource })}</option> : null}{sourceEntries.map((source) => <option key={source.source_key} value={source.source_key}>{source.source_key}</option>)}</select></label>
         <label className="min-w-44 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stage<select aria-label={t("datasetDetail.stageSelect")} className={`mt-1 w-full ${selectClassName}`} value={selectedStage} disabled={!sourceStageEntry} onChange={(event) => updateContext({ stage: event.target.value })}>{DATASET_STAGES.map((stageName) => <option key={stageName} value={stageName}>{stageName} · {sourceStageEntry?.[stageName].status ?? "unavailable"}</option>)}</select></label>
         <div title={t("datasetDetail.runStatusTitle")} className="flex min-h-9 items-center gap-2 px-2 text-xs text-muted-foreground"><span>{t("datasetDetail.runStatusLabel")}</span><strong className="text-foreground">{runStatus}</strong></div>
