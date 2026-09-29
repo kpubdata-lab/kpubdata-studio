@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Studio says when it is talking to a Builder from another release (#430). It compares its own build version with the `version` that `GET /version` reports: a minor or major difference shows one dismissible banner line and blocks nothing, a patch difference passes with a console note, and a Builder that does not report `version` gets no warning. The `api_version` contract check is unchanged and separate.
+
 ### Security
 
 - The repository no longer tracks `.next/` and `next-env.d.ts` — 229 files of Next.js build output committed by accident with #402, in a project built with Vite (kpubdata-builder#691). A new `Security` workflow runs `npm audit` over `package-lock.json`, gitleaks over the full history and CodeQL, on every pull request and weekly; the history's reviewed findings (that build's per-build Next keys, and synthetic keys in redaction tests) are listed with their reasons in `.gitleaksignore`.

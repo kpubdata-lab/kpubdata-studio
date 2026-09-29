@@ -2166,5 +2166,10 @@
     "oidc": {
       "issuerInvalid": "VITE_OIDC_ISSUER is not a valid format: {{issuer}}"
     }
+  },
+  "versionCheck": {
+    "mismatch": "Studio {{studio}} is connected to Builder {{builder}} — they come from different releases, so some screens may fail to load.",
+    "remedy": "Deploy the matching Builder, or reload to pick up the matching Studio.",
+    "dismiss": "Dismiss version notice"
   }
 }

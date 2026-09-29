@@ -18,6 +18,8 @@ import { z } from "zod";
 export const versionResponseSchema = z.object({
   service: z.string(),
   api_version: z.string(),
+  /** Application release (ADR 0004). Absent on Builders that predate it — not a mismatch (#430). */
+  version: z.string().optional(),
 });
 
 /**

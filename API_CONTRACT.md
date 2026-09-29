@@ -45,6 +45,22 @@ Studio는 `GET /version` 응답의 `api_version`을 `MIN_BUILDER_API_VERSION`과
    1.21.0은 호환).
 4. 파싱 불가/형식 오류인 버전 문자열은 fail-closed로 비호환 처리합니다.
 
+### 애플리케이션 버전 — 짝 판정 (#430)
+
+`api_version` 과 **별개로**, `GET /version` 이 `version`(애플리케이션 릴리스)을 주면
+Studio 는 자기 빌드 버전(`package.json` → `import.meta.env.VITE_APP_VERSION`)과 비교합니다.
+Builder 와 Studio 는 같은 버전으로 나가므로(kpubdata ADR 0004) 표 없이 한 번의 비교로 끝납니다.
+
+| 차이 | 동작 |
+|---|---|
+| 같음 | 없음 |
+| patch 만 다름 | 조용히 통과, `console.info` 한 줄 |
+| minor·major 다름 | 앱 셸 상단 배너 한 줄 — 막지 않는다 |
+| `version` 없음·해석 불가·요청 실패 | 없음 — 모르는 것은 다른 것이 아니다 |
+
+계약 버전은 Studio 가 **무엇을 기대해도 되는지**, 애플리케이션 버전은 **같은 릴리스에서
+나왔는지** 말합니다. 전자는 기능 판정, 후자는 짝 판정입니다.
+
 `MIN_BUILDER_API_VERSION`은 Studio의 현재 통합 표면(async build job + cooperative
 cancel + manifest status/partial + provider credential + monitoring + publish)이 요구하는
 **최소** Builder API 버전입니다. cancellation과 manifest status/partial이 Builder
