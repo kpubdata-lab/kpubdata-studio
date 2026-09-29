@@ -47,7 +47,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("does not silently replace an invalid run with latest", async () => {
     renderDetail("/datasets/air-quality?run=missing-run");
-    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run에 접근할 수 없습니다");
+    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
     expect(screen.getByTestId("location")).toHaveTextContent("run=missing-run");
     expect(screen.queryByLabelText("Run 선택")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "이 Run 게시" })).not.toBeInTheDocument();

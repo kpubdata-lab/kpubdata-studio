@@ -72,7 +72,7 @@ describe("Quality Center P0 (#254)", () => {
 
   it("does not silently fall back to latest run for an invalid run in the URL", async () => {
     renderQuality("/quality?dataset=air-quality&run=missing-run");
-    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run에 접근할 수 없습니다");
+    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
     expect(screen.getByTestId("location")).toHaveTextContent("run=missing-run");
   });
 

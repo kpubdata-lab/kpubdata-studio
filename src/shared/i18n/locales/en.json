@@ -690,8 +690,12 @@
       "back": "View first dataset"
     },
     "wrongRun": {
-      "title": "Cannot access the selected run.",
-      "desc": "Run `{{id}}` in the URL is not in this dataset's accessible run history. Did not auto-switch to latest run.",
+      "title": "That run was not found.",
+      "desc": "Run `{{id}}` in the URL is not a run of this dataset. Did not auto-switch to latest run.",
+      "forbiddenTitle": "You do not have access to that run.",
+      "forbiddenDesc": "Run `{{id}}` belongs to this dataset but to another user. Did not auto-switch to latest run.",
+      "checkFailedTitle": "Could not check that run.",
+      "checkFailedDesc": "Builder could not be asked about run `{{id}}`. Try again shortly.",
       "back": "View latest run"
     },
     "header": {
@@ -1176,8 +1180,12 @@
     "loadingDesc": "Loading dataset information.",
     "fallbackTitle": "Dataset detail",
     "loadErrorTitle": "Could not load the dataset",
-    "invalidRunTitle": "That run is not accessible.",
-    "invalidRunBody": "The run `{{run}}` in the URL is not in this dataset's accessible history. It was not silently switched to the latest run.",
+    "invalidRunTitle": "That run was not found.",
+    "invalidRunBody": "The run `{{run}}` in the URL is not a run of this dataset. It was not silently switched to the latest run.",
+    "forbiddenRunTitle": "You do not have access to that run.",
+    "forbiddenRunBody": "The run `{{run}}` belongs to this dataset but to another user. It was not silently switched to the latest run.",
+    "runCheckFailedTitle": "Could not check that run.",
+    "runCheckFailedBody": "Builder could not be asked about the run `{{run}}`. Try again shortly.",
     "viewLatest": "View latest run",
     "sourceLoading": "loading source",
     "stageStatusTitle": "{{stage}} stage status for the selected source ({{source}})",

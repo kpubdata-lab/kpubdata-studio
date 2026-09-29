@@ -469,6 +469,7 @@ export type DatasetDetailResponse = schemas.DatasetDetailResponse;
 export type DatasetsResponse = schemas.DatasetsResponse;
 export type DatasetRunSummary = schemas.DatasetRunSummary;
 export type DatasetRunsResponse = schemas.DatasetRunsResponse;
+export type DatasetRunResponse = schemas.DatasetRunResponse;
 export type RunStageEntry = schemas.RunStageEntry;
 export type RunStagesResponse = schemas.RunStagesResponse;
 export type StageDetailResponse = schemas.StageDetailResponse;
@@ -616,6 +617,17 @@ export const builderApi = {
       schemas.datasetRunsResponseSchema,
     );
   },
+
+  /**
+   * GET /datasets/{dataset_id}/runs/{run_id} — one run by id, beyond the newest page (#418).
+   * Builder decides membership and ownership: 404 not in this dataset, 403 not the caller's.
+   */
+  getDatasetRun: (datasetId: string, runId: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/datasets/${encodeURIComponent(datasetId)}/runs/${encodeURIComponent(runId)}`,
+      { signal },
+      schemas.datasetRunResponseSchema,
+    ),
 
   /** GET /builds/{run_id}/stages — Bronze/Silver/Gold status per source. */
   listBuildStages: (runId: string, signal?: AbortSignal) =>
