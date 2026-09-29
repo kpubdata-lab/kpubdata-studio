@@ -80,6 +80,16 @@ jobs:
           git fetch --no-tags --depth=1 origin main || true
           npm run check:stale-ui
 
+      # TEMPORARY (#459): run the fixed test twenty times on Node 24, where it flaked,
+      # before trusting it. Removed before merge.
+      - name: Flake check — datasetDetail twenty times (#459)
+        if: matrix.node-version == '24'
+        run: |
+          for i in $(seq 1 20); do
+            echo "=== run $i ==="
+            npx vitest run __tests__/datasetDetail.test.tsx --reporter=dot || exit 1
+          done
+
       - name: Test (Vitest)
         run: npm test
 

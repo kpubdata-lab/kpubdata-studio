@@ -70,7 +70,9 @@ describe("Dataset Detail P0 (#253)", () => {
     renderDetail("/datasets/air-quality?stage=platinum");
     await screen.findByLabelText("Run 선택");
     await waitFor(() => expect(screen.getByTestId("location")).not.toHaveTextContent("stage=platinum"));
-    expect(screen.getByLabelText("Stage 선택")).toHaveValue("gold");
+    // The URL is cleaned at once, but the fallback stage is `bronze` until the stage
+    // summary loads and becomes the highest completed stage after it (#459).
+    await waitFor(() => expect(screen.getByLabelText("Stage 선택")).toHaveValue("gold"));
   });
 
   it("synchronizes source selection and chooses bronze when no higher stage completed", async () => {
