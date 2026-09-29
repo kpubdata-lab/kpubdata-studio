@@ -7,7 +7,7 @@
 #
 # 전제 조건:
 #   - kpubdata-builder가 ../kpubdata-builder에 있어야 함
-#   - kpubdata가 ../kpubdata에 있어야 함 (builder 의존)
+#   - Builder 의 의존성 설치는 Builder 저장소의 안내를 따른다 (Studio 는 Builder HTTP 만 안다, #511)
 #   - uv, node/npm이 설치되어 있어야 함
 
 set -eu

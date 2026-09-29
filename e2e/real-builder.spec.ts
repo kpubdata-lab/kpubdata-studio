@@ -10,12 +10,13 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpe
  * (playwright.real.config.ts's webServer injects it).
  *
  * Validation path: Studio UI → fetch → Builder HTTP → dispatch → orchestrator →
- * kpubdata ingestion(file) → Bronze/Silver/Gold → manifest → response → UI render.
+ * Builder ingestion(file) → Bronze/Silver/Gold → manifest → response → UI render.
  * File source operates deterministically without external network.
  *
- * Public API source (= kpubdata provider path) is overridden by kpubdata's replay
- * transport — recorded fixture is replayed, so no external network or service keys
- * needed here either. Runs only when runner finds kpubdata repo (REAL_BUILDER_REPLAY).
+ * Public API source runs with Builder in replay mode — a recorded fixture is replayed, so no
+ * external network or service keys are needed either. Runs only when the runner is given a
+ * replay fixture directory (--replay-dir / STUDIO_REPLAY_DIR → REAL_BUILDER_REPLAY). Studio
+ * never looks inside another repository for it (#511).
  */
 const BUILDER_URL = process.env.REAL_BUILDER_URL ?? "http://localhost:8000";
 
@@ -112,7 +113,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
 });
 
 /**
- * Public API source BuildSpec. Must match kpubdata's replay fixture and params exactly
+ * Public API source BuildSpec. Must match the replay fixture's dataset and params exactly
  * (fixture is `datago.air_station` example `gangnam_full_page`).
  * totalCount 22 ≤ page_size 100, so finishes in one page — Builder Bronze walks pages
  * with `list_all()`, replay fails if 2-page fixture missing.
@@ -120,7 +121,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
 const PUBLIC_API_SPEC = [
   "dataset_id: dataset.cross_repo_public_api",
   "title: Cross-repo Public API smoke",
-  "description: kpubdata replay fixture를 실 Builder HTTP로 빌드한다",
+  "description: replay fixture를 실 Builder HTTP로 빌드한다",
   "sources:",
   "  - provider: datago",
   "    dataset: air_station",
@@ -135,15 +136,15 @@ const PUBLIC_API_SPEC = [
   "    output_path: out/data.jsonl",
 ].join("\n");
 
-test("Public API source가 kpubdata를 거쳐 성공 빌드로 끝난다 @real-builder", async ({
+test("Public API source가 Builder 를 거쳐 성공 빌드로 끝난다 @real-builder", async ({
   page,
   request,
 }) => {
-  // Deterministic only when Builder runs in replay mode — runner sets REAL_BUILDER_REPLAY
-  // if it finds kpubdata repo.
+  // Deterministic only when Builder runs in replay mode — the runner sets REAL_BUILDER_REPLAY
+  // when it is given a replay fixture directory.
   test.skip(
     !process.env.REAL_BUILDER_REPLAY,
-    "kpubdata replay fixture 필요 — scripts/run-real-e2e.mjs가 kpubdata 레포를 찾지 못했습니다",
+    "replay fixture 필요 — scripts/run-real-e2e.mjs 에 --replay-dir 또는 STUDIO_REPLAY_DIR 를 주세요",
   );
 
   const errors: string[] = [];
@@ -151,8 +152,7 @@ test("Public API source가 kpubdata를 거쳐 성공 빌드로 끝난다 @real-b
 
   // 1) Submit real Builder Public API BuildSpec from browser context.
   //    File source scenario already covers wizard UI path, so here validates previously
-  //    untested section — Builder → kpubdata Client → provider spec executor
-  //    → Bronze/Silver/Gold — via real HTTP.
+  //    untested section — Builder's public-API ingestion → Bronze/Silver/Gold — via real HTTP.
   const runId = `ui-public-api-${Date.now()}`;
   const response = await request.post(`${BUILDER_URL}/build`, {
     data: { spec: PUBLIC_API_SPEC, run_id: runId },
@@ -166,7 +166,7 @@ test("Public API source가 kpubdata를 거쳐 성공 빌드로 끝난다 @real-b
   expect(body.status).toBe("ok");
   const outcome = body.outcomes?.[0];
   expect(outcome?.error ?? null).toBeNull();
-  // Records returned by kpubdata must pass all three stages.
+  // The fetched records must pass all three stages.
   expect(outcome?.stages_completed).toEqual(["bronze", "silver", "gold"]);
 
   // 2) Studio actually renders that run (real GET /builds/{run_id} path).
