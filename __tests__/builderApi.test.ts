@@ -363,7 +363,7 @@ describe("Zod 스키마 런타임 검증 (#158, #103)", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(builderApi.version()).rejects.toThrow("Engine API 응답이 예상된 형식과 일치하지 않습니다");
+    await expect(builderApi.version()).rejects.toThrow("Builder API 응답이 예상된 형식과 일치하지 않습니다");
   });
 
   it("validate() 스키마 검증 - valid 응답 통과", async () => {

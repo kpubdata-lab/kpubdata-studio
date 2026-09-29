@@ -11,7 +11,7 @@
  *   not_found  Builder: no run with this id belongs to the dataset (404)
  *   forbidden  Builder: it does, but not to the caller (403)
  *   error      the check itself failed (network, 5xx); nothing is known about the run
- *   unsupported the Engine predates the lookup (API < 1.31.0), so a run outside the
+ *   unsupported the Builder predates the lookup (API < 1.31.0), so a run outside the
  *              newest page cannot be checked — said as such, not as "not found" (#482)
  */
 import { useEffect, useState } from "react";
@@ -23,9 +23,9 @@ import { getDatasetRun } from "./api";
 export const RUN_LOOKUP_API_VERSION = "1.31.0";
 
 /**
- * Whether the connected Engine can look a run up directly. Unknown (mock mode, or the
+ * Whether the connected Builder can look a run up directly. Unknown (mock mode, or the
  * version check failed) counts as able: asking costs one request, and a 404 from an
- * Engine that can answer is still read correctly.
+ * Builder that can answer is still read correctly.
  */
 async function engineCanLookUpRuns(): Promise<boolean> {
   if (!isRealBuilderEnabled()) return true;

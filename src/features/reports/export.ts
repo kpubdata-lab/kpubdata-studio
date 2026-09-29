@@ -50,7 +50,7 @@ function metadataLines(report: ReportDraft, staleness: EvidenceRunStatus | null)
 }
 
 function provenanceLabel(kind: "BUILDER_EVIDENCE" | "ASSISTANT_INTERPRETATION" | "USER_CONTENT"): string {
-  if (kind === "BUILDER_EVIDENCE") return "[Engine Evidence]";
+  if (kind === "BUILDER_EVIDENCE") return "[Builder Evidence]";
   return kind === "ASSISTANT_INTERPRETATION" ? t("provenance.assistant") : t("provenance.user");
 }
 
@@ -122,7 +122,7 @@ export function generateHtmlExport(report: ReportDraft, staleness: EvidenceRunSt
         const summaryHtml = block.summary
           ? `${renderMarkdownToHtml(block.summary)}<h3>${escapeHtml(t("detailHeading"))}</h3>`
           : "";
-        return `<h2>${escapeHtml(block.title)}<span class="tag tag-evidence">Engine Evidence</span></h2>${statusNote}${summaryHtml}${renderMarkdownToHtml(block.markdown)}`;
+        return `<h2>${escapeHtml(block.title)}<span class="tag tag-evidence">Builder Evidence</span></h2>${statusNote}${summaryHtml}${renderMarkdownToHtml(block.markdown)}`;
       }
       if (block.provenance === "ASSISTANT_INTERPRETATION") {
         const contextNote = !block.isSameContext

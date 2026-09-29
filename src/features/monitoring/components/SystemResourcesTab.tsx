@@ -78,7 +78,7 @@ function SystemHealthCard({
     <Card>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Engine API</h3>
+          <h3 className="text-lg font-semibold">Builder API</h3>
           <div className="mt-2 flex items-center gap-2">
             <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}>
               {statusLabel}

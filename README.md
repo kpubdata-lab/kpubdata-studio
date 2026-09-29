@@ -2,11 +2,11 @@
 
 **KPubData Studio는 한국 공공데이터를 수집하고, 출처와 이용 조건을 유지한 스냅샷으로 관리하며, 표와 SQL 로 분석하는 작업공간입니다.**
 
-> KPubData 제품군: [Core](https://github.com/yeongseon/kpubdata) (접근 계층) → [Engine](https://github.com/yeongseon/kpubdata-builder) (실행·웨어하우스) → **Studio** (시각적 작업공간)
+> KPubData 제품군: [KPubData](https://github.com/yeongseon/kpubdata) (공공 API 접근 라이브러리) → [KPubData Builder](https://github.com/yeongseon/kpubdata-builder) (실행·웨어하우스) → **KPubData Studio** (작업공간)
 
-> **이름 구분** — 화면에서 **KPubData Engine** 이라고 부르는 실행 엔진의 저장소·패키지 이름이
-> `kpubdata-builder` 입니다. 이 문서의 명령어와 환경변수(`VITE_BUILDER_API_URL` 등)는 패키지
-> 이름을 그대로 씁니다 ([BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md)).
+> **이름** — 실행 엔진의 제품명은 **KPubData Builder**, 저장소·패키지는 `kpubdata-builder` 입니다.
+> 이 문서의 명령어와 환경변수(`VITE_BUILDER_API_URL` 등)도 같은 이름을 씁니다
+> ([BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md)).
 
 KPubData는 데이터셋을 설계·정규화하는 과정이 종종 복잡하고, YAML 편집 실수, 시각적 피드백 부재, 비개발자 접근 어려움 등의 진입장벽이 있습니다. Studio는 이러한 장벽을 제거하고, 코딩 경험이 없는 사용자도 공공데이터 처리 흐름을 직관적으로 구성하고 관리할 수 있도록 돕습니다.
 

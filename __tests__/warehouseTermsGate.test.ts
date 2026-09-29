@@ -111,7 +111,8 @@ describe("warehouse terminology gate — the checks fail when they should", () =
  */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const OLD_TERM = /\b(Artifacts?|Builder|Builds?)\b|(?<![Ss]ource )\b[Dd]atasets?\b/;
+// "Builder" left this list in #510: it is the product name again (KPubData Builder).
+const OLD_TERM = /\b(Artifacts?|Builds?)\b|(?<![Ss]ource )\b[Dd]atasets?\b/;
 const SHOWN_PROP = /\b(label|title|eyebrow|description|sub|placeholder|aria-label|alt|actionLabel|heading)="([^"]*)"/g;
 const JSX_TEXT = />([^<>{}]*[A-Za-z][^<>{}]*)</g;
 

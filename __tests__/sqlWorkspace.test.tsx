@@ -58,10 +58,10 @@ describe("SQL Workspace (#417)", () => {
   });
 });
 
-describe("SQL Workspace against KPubData Engine (#417)", () => {
+describe("SQL Workspace against KPubData Builder (#417)", () => {
   beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
 
-  it("sends exactly the pinned snapshot and shows the Engine's refusal", async () => {
+  it("sends exactly the pinned snapshot and shows the Builder's refusal", async () => {
     let body: unknown;
     mswServer.use(
       http.get(`${API_BASE}/datasets`, () =>
@@ -87,7 +87,7 @@ describe("SQL Workspace against KPubData Engine (#417)", () => {
     expect(body).toEqual({ dataset_id: "t1", run_id: "r9", stage: "silver", sql: "DELETE FROM dataset" });
   });
 
-  it("shows a decimal_string column as the exact text the Engine sent (#484)", async () => {
+  it("shows a decimal_string column as the exact text the Builder sent (#484)", async () => {
     mswServer.use(
       http.get(`${API_BASE}/datasets`, () => HttpResponse.json({ datasets: [], total: 0 })),
       http.get(`${API_BASE}/datasets/t1/runs`, () =>

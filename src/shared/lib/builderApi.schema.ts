@@ -381,7 +381,7 @@ export const providerTestResponseSchema = z.object({
  * credential is missing.
  *
  * Strict on purpose — the one response schema that is (#497). Every other response
- * strips fields it does not know so an additive Engine change cannot break a screen.
+ * strips fields it does not know so an additive Builder change cannot break a screen.
  * This one answers "what do you hold for my secret?", so any field beyond the three
  * metadata ones is treated as a possible secret leak and rejected loudly, not dropped
  * quietly.
@@ -465,7 +465,7 @@ export const datasetSummarySchema = z.object({
   total_row_count: z.number().int(),
   stages: datasetStageMapSchema,
   quality: z.null(),
-  // Optional: an Engine older than builder#781 does not send it; Studio then shows none.
+  // Optional: an Builder older than builder#781 does not send it; Studio then shows none.
   status_axes: datasetStatusAxesSchema.optional(),
 });
 
@@ -520,7 +520,7 @@ export const runStagesResponseSchema = z.object({
 });
 
 // Response schemas strip keys they do not model (zod's default) rather than rejecting them
-// (#497): an Engine that adds an optional field must not break the screen that reads the
+// (#497): an Builder that adds an optional field must not break the screen that reads the
 // response. Required keys and their types are still checked. See
 // __tests__/responseSchemaAdditive.test.tsx for the gate.
 const stageDetailBase = {
@@ -729,7 +729,7 @@ export const publishReadinessResponseSchema = z.object({
 });
 
 // Requests Studio sends stay strict (#497): a typo'd or stale key here is Studio's own
-// bug and should fail before it reaches the Engine. Only responses tolerate additions.
+// bug and should fail before it reaches the Builder. Only responses tolerate additions.
 export const publishHuggingFaceOptionsSchema = z.object({
   private: z.boolean().default(true),
 }).strict();
