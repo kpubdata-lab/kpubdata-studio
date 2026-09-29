@@ -149,8 +149,18 @@ export const buildManifestResponseSchema = z.object({
  * a JSON number is a double, and `9007199254740993` becomes `…992`.
  *
  * Optional everywhere: a Builder older than 1.30.0 does not send it.
+ *
+ * Extensible (#497): a value this Studio does not know parses as `"unsupported"` instead
+ * of failing the whole response, and the cell says so rather than guessing a number out
+ * of it. A non-string is still a type error. The known values stay a plain enum as the
+ * first branch so the contract drift check can compare them with Builder's.
  */
-export const wireEncodingSchema = z.enum(["number", "decimal_string", "string", "boolean", "json"]);
+export const knownWireEncodingSchema = z.enum(["number", "decimal_string", "string", "boolean", "json"]);
+export const UNSUPPORTED_WIRE_ENCODING = "unsupported";
+export const wireEncodingSchema = z.union([
+  knownWireEncodingSchema,
+  z.string().transform((): typeof UNSUPPORTED_WIRE_ENCODING => UNSUPPORTED_WIRE_ENCODING),
+]);
 
 export const columnWireInfoSchema = z.object({
   name: z.string(),
@@ -369,6 +379,12 @@ export const providerTestResponseSchema = z.object({
  * summary's `configured` (effective provider configuration: user credential
  * > server default > none). `masked`/`updated_at` are null if a saved
  * credential is missing.
+ *
+ * Strict on purpose — the one response schema that is (#497). Every other response
+ * strips fields it does not know so an additive Engine change cannot break a screen.
+ * This one answers "what do you hold for my secret?", so any field beyond the three
+ * metadata ones is treated as a possible secret leak and rejected loudly, not dropped
+ * quietly.
  */
 export const providerCredentialResponseSchema = z.object({
   configured: z.boolean(),
@@ -503,6 +519,10 @@ export const runStagesResponseSchema = z.object({
   sources: z.array(runStageEntrySchema),
 });
 
+// Response schemas strip keys they do not model (zod's default) rather than rejecting them
+// (#497): an Engine that adds an optional field must not break the screen that reads the
+// response. Required keys and their types are still checked. See
+// __tests__/responseSchemaAdditive.test.tsx for the gate.
 const stageDetailBase = {
   run_id: z.string(),
   source_key: z.string(),
@@ -517,18 +537,18 @@ export const bronzeStageDetailResponseSchema = z.object({
   dataset: z.string().nullable(),
   fetched_at: z.string().nullable(),
   record_count: z.number().int().nullable(),
-}).strict();
+});
 
 export const silverColumnInfoSchema = z.object({
   name: z.string(),
   dtype: z.string(),
   nullable: z.boolean(),
   unique_count: z.number().int(),
-  // builder#735 (1.30.0). Strict schema: without these, a 1.30.0 Builder's stage detail
-  // would fail to parse. Absent for runs written before 1.30.0.
+  // builder#735 (1.30.0). Absent for runs written before 1.30.0. (This schema used to be
+  // strict, which is why a 1.30.0 Builder needed Studio to ship first — #497.)
   logical_type: z.string().optional(),
   wire_encoding: wireEncodingSchema.optional(),
-}).strict();
+});
 
 export const tableStatisticsSchema = z.object({
   row_count: z.number().int(),
@@ -540,12 +560,12 @@ export const silverValidationProblemSchema = z.object({
   code: z.string(),
   field: z.string().nullable(),
   message: z.string(),
-}).strict();
+});
 
 export const silverValidationResultSchema = z.object({
   ok: z.boolean(),
   problems: z.array(silverValidationProblemSchema),
-}).strict();
+});
 
 export const silverStageDetailResponseSchema = z.object({
   ...stageDetailBase,
@@ -555,9 +575,9 @@ export const silverStageDetailResponseSchema = z.object({
   statistics: tableStatisticsSchema.nullable(),
   validation: silverValidationResultSchema.nullable(),
   sample: z.array(z.record(z.string(), z.json())),
-}).strict();
+});
 
-export const goldExportSummarySchema = z.object({ kind: z.string() }).strict();
+export const goldExportSummarySchema = z.object({ kind: z.string() });
 
 export const goldStageDetailResponseSchema = z.object({
   ...stageDetailBase,
@@ -568,7 +588,7 @@ export const goldStageDetailResponseSchema = z.object({
   exports: z.array(goldExportSummarySchema),
   sample: z.null(),
   sample_available: z.literal(false),
-}).strict();
+});
 
 export const stageDetailResponseSchema = z.discriminatedUnion("stage", [
   bronzeStageDetailResponseSchema,
@@ -587,7 +607,7 @@ export const qualityCheckResultSchema = z.object({
   affected_rows: z.number().int().nullable(),
   evaluated_rows: z.number().int().nullable(),
   detail: z.string().nullable(),
-}).strict();
+});
 
 /**
  * One cell-level change between Preview and Silver (#497). appears only in diffs for sources where diff_available=true.
@@ -641,7 +661,7 @@ export const schemaDriftFindingSchema = z.object({
   kind: z.enum(["column_added", "column_removed", "dtype_changed", "row_count_jump"]),
   column: z.string().nullable(),
   detail: z.string(),
-}).strict();
+});
 
 export const qualityAvailabilitySchema = z.enum(["available", "partial", "unavailable"]);
 
@@ -698,7 +718,7 @@ export const publishTargetSchema = z.literal("huggingface");
 export const publishIssueSchema = z.object({
   code: z.string(),
   message: z.string(),
-}).strict();
+});
 
 export const publishReadinessResponseSchema = z.object({
   run_id: z.string(),
@@ -706,8 +726,10 @@ export const publishReadinessResponseSchema = z.object({
   ready: z.boolean(),
   blockers: z.array(publishIssueSchema),
   warnings: z.array(publishIssueSchema),
-}).strict();
+});
 
+// Requests Studio sends stay strict (#497): a typo'd or stale key here is Studio's own
+// bug and should fail before it reaches the Engine. Only responses tolerate additions.
 export const publishHuggingFaceOptionsSchema = z.object({
   private: z.boolean().default(true),
 }).strict();
@@ -726,7 +748,7 @@ export const publishResponseSchema = z.object({
   reference: z.string(),
   artifact_count: z.number().int().nonnegative(),
   status: z.string(),
-}).strict();
+});
 
 export const publishErrorCodeSchema = z.enum([
   "unsupported_target",
@@ -744,7 +766,7 @@ export const publishErrorResponseSchema = z.object({
 export const publishBlockedResponseSchema = z.object({
   error: z.string(),
   blockers: z.array(publishIssueSchema),
-}).strict();
+});
 
 /**
  * ============================================
@@ -980,33 +1002,29 @@ export type BuildEventsResponse = z.infer<typeof buildEventsResponseSchema>;
  * Administrator (builder#679, contract 1.28+)
  * ============================================
  * Metadata and policy state only — the contract forbids artifact bytes, credentials
- * and response bodies here, and the schemas are strict so anything else fails to parse.
+ * and response bodies here. These schemas strip unknown keys (#497): an additive field
+ * no longer breaks the page, and nothing Studio does not model — a credential included —
+ * survives parsing, so it still never reaches the screen.
  */
 
-export const adminConfigResponseSchema = z
-  .object({
-    enforce_ownership: z.boolean(),
-    publish_server_credential_fallback: z.boolean(),
-  })
-  .strict();
+export const adminConfigResponseSchema = z.object({
+  enforce_ownership: z.boolean(),
+  publish_server_credential_fallback: z.boolean(),
+});
 
-export const adminRunSchema = z
-  .object({
-    run_id: z.string(),
-    status: z.string(),
-    started_at: z.string().nullable().optional(),
-    finished_at: z.string().nullable().optional(),
-    /** Irreversible owner hash — not an identity. */
-    owner_id: z.string().nullable().optional(),
-  })
-  .strict();
+export const adminRunSchema = z.object({
+  run_id: z.string(),
+  status: z.string(),
+  started_at: z.string().nullable().optional(),
+  finished_at: z.string().nullable().optional(),
+  /** Irreversible owner hash — not an identity. */
+  owner_id: z.string().nullable().optional(),
+});
 
-export const adminRunsResponseSchema = z
-  .object({
-    runs: z.array(adminRunSchema),
-    count: z.number().int().nonnegative(),
-  })
-  .strict();
+export const adminRunsResponseSchema = z.object({
+  runs: z.array(adminRunSchema),
+  count: z.number().int().nonnegative(),
+});
 
 export type AdminConfigResponse = z.infer<typeof adminConfigResponseSchema>;
 export type AdminRun = z.infer<typeof adminRunSchema>;

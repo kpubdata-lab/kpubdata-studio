@@ -192,6 +192,7 @@
     "timeout": "Engine API 응답이 시간 내에 오지 않았습니다.",
     "connFail": "Engine API에 연결하지 못했습니다.",
     "badJson": "응답 JSON을 파싱하지 못했습니다.",
+    "unsupportedEncoding": "지원하지 않는 형식",
     "schemaMismatch": "Engine API 응답이 예상된 형식과 일치하지 않습니다: {{details}}",
     "schemaDefault": "응답 구조",
     "schemaIssueDefault": "형식 불일치",
