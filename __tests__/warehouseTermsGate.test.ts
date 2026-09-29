@@ -111,7 +111,8 @@ describe("warehouse terminology gate — the checks fail when they should", () =
  */
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const OLD_TERM = /\b(Artifacts?|Builder|Builds?)\b|(?<![Ss]ource )\b[Dd]atasets?\b/;
+// Builder is the product name again and Engine the stale one (#510).
+const OLD_TERM = /\b(Artifacts?|Engine|Builds?)\b|(?<![Ss]ource )\b[Dd]atasets?\b/;
 const SHOWN_PROP = /\b(label|title|eyebrow|description|sub|placeholder|aria-label|alt|actionLabel|heading)="([^"]*)"/g;
 const JSX_TEXT = />([^<>{}]*[A-Za-z][^<>{}]*)</g;
 
@@ -141,10 +142,12 @@ describe("warehouse terminology gate — hard-coded TSX text (#485)", () => {
     const source = [
       '<th className="px-5 py-3">Build</th>',
       '<Card title="Artifacts" />',
+      '<h3 className="x">Engine API</h3>',
+      '<h3 className="x">Builder API</h3>',
       '<input placeholder="owner/dataset" />',
       "const builderApi = useBuilder();",
       '<p className="x">{t("run")}</p>',
     ].join("\n");
-    expect(hardCodedOldTerms("f.tsx", source)).toEqual(["f.tsx:1: Build", "f.tsx:2: Artifacts"]);
+    expect(hardCodedOldTerms("f.tsx", source)).toEqual(["f.tsx:1: Build", "f.tsx:2: Artifacts", "f.tsx:3: Engine API"]);
   });
 });
