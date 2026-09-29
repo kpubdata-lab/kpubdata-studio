@@ -40,6 +40,9 @@ const BuildRunPage = lazy(() =>
 const AdminPage = lazy(() =>
   import("@/pages/AdminPage").then((m) => ({ default: m.AdminPage })),
 );
+const AnalysesPage = lazy(() =>
+  import("@/pages/AnalysesPage").then((m) => ({ default: m.AnalysesPage })),
+);
 const SqlWorkspacePage = lazy(() =>
   import("@/pages/SqlWorkspacePage").then((m) => ({ default: m.SqlWorkspacePage })),
 );
@@ -237,6 +240,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: "sql",
         element: withFeatureBoundary("router.features.sql", <SqlWorkspacePage />),
+      },
+      {
+        path: "analyses",
+        element: withFeatureBoundary("router.features.analyses", <AnalysesPage />),
       },
       {
         path: "reports",

@@ -18,8 +18,10 @@ import { useSearchParams } from "react-router-dom";
 import { listBuildStages, listDatasetRuns, listDatasets } from "@/features/datasets/api";
 import { runTableQuery, type QueryOutcome } from "@/features/sql/api";
 import type { DatasetRunSummary, DatasetSummary } from "@/shared/lib/builderApi";
-import { cellValue, encodingsOf } from "@/shared/lib/cellValue";
-import { Button, Card, DemoBadge, PageHeader } from "@/shared/ui";
+import { Button, Card, PageHeader, Skeleton } from "@/shared/ui";
+import { QueryError, ResultTable } from "@/features/sql/ResultTable";
+import { detectWarehouse, type WarehouseAvailability } from "@/features/sql/warehouse";
+import { WarehouseWorkspace } from "@/features/sql/WarehouseWorkspace";
 
 const STAGES = ["gold", "silver"] as const;
 type Stage = (typeof STAGES)[number];
@@ -30,7 +32,8 @@ const selectClassName =
 
 type Load<T> = { status: "loading" } | { status: "error" } | { status: "loaded"; data: T };
 
-export function SqlWorkspacePage() {
+/** Query one run's table directly — the path for a deployment without a warehouse. */
+function RunWorkspace() {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const table = params.get("table") ?? "";
@@ -223,52 +226,33 @@ export function SqlWorkspacePage() {
 }
 
 function Result({ outcome, target }: { outcome: QueryOutcome; target: string }) {
-  const { t } = useTranslation();
-  if (outcome.status === "error") {
+  if (outcome.status === "error") return <QueryError code={outcome.code} message={outcome.message} />;
+  return <ResultTable demo={outcome.demo} result={outcome.result} target={target} />;
+}
+
+
+/**
+ * The SQL Workspace picks its path once: a deployment with a warehouse queries committed
+ * tables and can save analyses; one without keeps querying runs directly.
+ */
+export function SqlWorkspacePage() {
+  const [warehouse, setWarehouse] = useState<WarehouseAvailability>({ status: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void detectWarehouse(controller.signal).then((value) => {
+      if (!controller.signal.aborted) setWarehouse(value);
+    });
+    return () => controller.abort();
+  }, []);
+
+  if (warehouse.status === "loading") {
     return (
-      <Card role="alert" variant="error">
-        <p className="font-semibold">{t("sql.failed", { code: outcome.code })}</p>
-        <p className="mt-1 text-sm">{outcome.message}</p>
-      </Card>
+      <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+        <Skeleton className="h-40 w-full" />
+      </main>
     );
   }
-  const { result, demo } = outcome;
-  const encodings = encodingsOf(result.column_meta);
-  return (
-    <Card className="overflow-hidden p-0">
-      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
-        {demo ? <DemoBadge /> : null}
-        <span className="font-mono">{target}</span>
-        <span>·</span>
-        <span>{t("sql.rows", { count: result.rows.length })}</span>
-        <span>·</span>
-        <span>{result.execution_ms} ms</span>
-        {result.truncated ? <span className="font-semibold text-amber-700 dark:text-amber-300">{t("sql.truncated")}</span> : null}
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/60 text-left">
-            <tr>
-              {result.columns.map((column) => (
-                <th className="px-3 py-2 font-mono text-xs font-semibold text-muted-foreground" key={column}>
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {result.rows.map((row, index) => (
-              <tr className="border-t border-border" key={index}>
-                {result.columns.map((column) => (
-                  <td className="px-3 py-1.5 font-mono text-xs" key={column}>
-                    {cellValue(encodings.get(column), row[column])}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
-  );
+  return warehouse.status === "available" ? <WarehouseWorkspace tables={warehouse.tables} /> : <RunWorkspace />;
 }
+

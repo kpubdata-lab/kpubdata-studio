@@ -55,7 +55,8 @@
     "groupAnalyze": "ANALYZE",
     "groupOperate": "OPERATE",
     "sql": "SQL Workspace",
-    "admin": "Administration"
+    "admin": "Administration",
+    "analyses": "Saved Analyses"
   },
   "navDescription": {
     "home": "Recent activity summary and quick start",
@@ -69,7 +70,8 @@
     "monitoring": "Run and system monitoring",
     "settings": "Studio settings",
     "sql": "Query a table snapshot",
-    "admin": "Policy and all runs (administrators)"
+    "admin": "Policy and all runs (administrators)",
+    "analyses": "Queries kept with their snapshot"
   },
   "languageSwitcher": {
     "toggle": "Switch language",
@@ -430,7 +432,8 @@
         "monitoring": "Monitoring",
         "settings": "Settings",
         "sql": "SQL Workspace",
-        "admin": "Administration"
+        "admin": "Administration",
+        "analyses": "Saved Analyses"
       },
       "stageAria": "Analysis stage",
       "sourceAria": "Analysis source"
@@ -1998,7 +2001,8 @@
       "settings": "Settings",
       "validate": "Validate",
       "sql": "SQL Workspace",
-      "admin": "Administration"
+      "admin": "Administration",
+      "analyses": "Saved Analyses"
     },
     "loading": "Loading the page…"
   },
@@ -2242,7 +2246,10 @@
     "saveLater": "Saving an analysis waits for server storage in KPubData Engine; a browser-only save would be lost on another device.",
     "errors": {
       "unknown": "The query failed for an unknown reason."
-    }
+    },
+    "snapshotLabel": "Snapshot",
+    "currentSnapshot": "Current (at query start)",
+    "currentNote": "\"Current\" is pinned when the query starts; a refresh committed while it runs does not change what it reads."
   },
   "admin": {
     "title": "Administration",
@@ -2311,5 +2318,23 @@
         "unknown": "Unknown"
       }
     }
+  },
+  "analyses": {
+    "title": "Saved Analyses",
+    "desc": "SQL kept with the snapshot it read, so running it again reads the same input after a refresh.",
+    "newQuery": "New SQL query",
+    "noWarehouse": "Saving analyses needs a KPubData Engine with a warehouse; this deployment has none, so SQL Workspace queries runs directly and cannot save.",
+    "emptyTitle": "No saved analyses yet",
+    "emptyDesc": "Run a query in SQL Workspace and save it with a name.",
+    "savedMeta": "Saved {{at}} · {{count}} rows",
+    "rerun": "Run again",
+    "open": "Open in SQL Workspace",
+    "delete": "Delete",
+    "confirmDelete": "Delete \"{{name}}\"? Its snapshot is no longer kept for it.",
+    "nameLabel": "Analysis name",
+    "namePlaceholder": "e.g. Monthly deals by district",
+    "save": "Run and save",
+    "saved": "Saved \"{{name}}\" with the snapshot it read.",
+    "openList": "Saved Analyses"
   }
 }

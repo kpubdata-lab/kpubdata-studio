@@ -28,20 +28,29 @@ const DEMO_RESULT: QueryResponse = {
   execution_ms: 0,
 };
 
+/** An Engine query error as `{code, message}` — the Engine's own code when it gave one. */
+export function classifyQueryError(cause: unknown): { status: "error"; code: string; message: string } {
+  if (cause instanceof ApiError) {
+    const details = cause.details as { code?: unknown; error?: unknown } | undefined;
+    const parsed = queryErrorResponseSchema.safeParse(details);
+    if (parsed.success) return { status: "error", code: parsed.data.code ?? "unknown", message: parsed.data.error };
+    if (details && typeof details.code === "string") {
+      return { status: "error", code: details.code, message: typeof details.error === "string" ? details.error : cause.message };
+    }
+    return { status: "error", code: cause.status === 0 ? "network" : "unknown", message: cause.message };
+  }
+  return {
+    status: "error",
+    code: "unknown",
+    message: cause instanceof Error ? cause.message : i18n.t("sql.errors.unknown"),
+  };
+}
+
 export async function runTableQuery(request: QueryRequest, signal?: AbortSignal): Promise<QueryOutcome> {
   if (!isRealBuilderEnabled()) return { status: "success", result: DEMO_RESULT, demo: true };
   try {
     return { status: "success", result: await builderApi.query(request, signal), demo: false };
   } catch (cause) {
-    if (cause instanceof ApiError) {
-      const parsed = queryErrorResponseSchema.safeParse(cause.details);
-      if (parsed.success) return { status: "error", code: parsed.data.code ?? "unknown", message: parsed.data.error };
-      return { status: "error", code: cause.status === 0 ? "network" : "unknown", message: cause.message };
-    }
-    return {
-      status: "error",
-      code: "unknown",
-      message: cause instanceof Error ? cause.message : i18n.t("sql.errors.unknown"),
-    };
+    return classifyQueryError(cause);
   }
 }
