@@ -18,6 +18,7 @@ import { useSearchParams } from "react-router-dom";
 import { listBuildStages, listDatasetRuns, listDatasets } from "@/features/datasets/api";
 import { runTableQuery, type QueryOutcome } from "@/features/sql/api";
 import type { DatasetRunSummary, DatasetSummary } from "@/shared/lib/builderApi";
+import { cellValue, encodingsOf } from "@/shared/lib/cellValue";
 import { Button, Card, DemoBadge, PageHeader } from "@/shared/ui";
 
 const STAGES = ["gold", "silver"] as const;
@@ -221,12 +222,6 @@ export function SqlWorkspacePage() {
   );
 }
 
-/** `null` is shown as "—"; nested JSON as JSON, not "[object Object]". */
-function formatCell(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  return typeof value === "object" ? JSON.stringify(value) : String(value);
-}
-
 function Result({ outcome, target }: { outcome: QueryOutcome; target: string }) {
   const { t } = useTranslation();
   if (outcome.status === "error") {
@@ -238,6 +233,7 @@ function Result({ outcome, target }: { outcome: QueryOutcome; target: string }) 
     );
   }
   const { result, demo } = outcome;
+  const encodings = encodingsOf(result.column_meta);
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
@@ -265,7 +261,7 @@ function Result({ outcome, target }: { outcome: QueryOutcome; target: string }) 
               <tr className="border-t border-border" key={index}>
                 {result.columns.map((column) => (
                   <td className="px-3 py-1.5 font-mono text-xs" key={column}>
-                    {formatCell(row[column])}
+                    {cellValue(encodings.get(column), row[column])}
                   </td>
                 ))}
               </tr>

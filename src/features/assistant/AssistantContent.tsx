@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
 import { SpecDiff } from "@/features/build-spec/components/SpecDiff";
 import { useAssistConfig } from "@/features/assistant/config";
 import { Button, Card, Disclosure, TermHelp, Textarea } from "@/shared/ui";
@@ -186,10 +187,8 @@ const QUERY_ERROR_LABEL: Record<string, string> = {
  * array/object: String() produces "[object Object]", so use JSON.stringify to show actual
  * content — never summarize or transform the value itself.
  */
-export function formatQueryValue(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+export function formatQueryValue(value: unknown, encoding?: WireEncoding): string {
+  return cellValue(encoding, value);
 }
 
 function QueryResultView({ query }: { query: AssistantQueryState }) {
@@ -209,6 +208,7 @@ function QueryResultView({ query }: { query: AssistantQueryState }) {
     );
   }
   const { columns, rows, truncated, execution_ms } = query.result;
+  const encodings = encodingsOf(query.result.column_meta);
   return (
     <div className="mt-2 space-y-1.5">
       <div className="overflow-x-auto rounded-lg border border-border">
@@ -227,7 +227,7 @@ function QueryResultView({ query }: { query: AssistantQueryState }) {
               <tr key={index} className="border-t border-border">
                 {columns.map((column) => (
                   <td key={column} className="px-2.5 py-1.5">
-                    {formatQueryValue(row[column])}
+                    {formatQueryValue(row[column], encodings.get(column))}
                   </td>
                 ))}
               </tr>
