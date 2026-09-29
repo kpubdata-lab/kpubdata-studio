@@ -2387,5 +2387,32 @@
       "truncated": "Based on the {{count}} rows returned — a cut result: not the whole, not the top N, not a sample",
       "sample": "Sample of {{count}} ({{method}})"
     }
+  },
+  "export": {
+    "title": "Export the result",
+    "note": "KPubData Builder writes the file — it pins the snapshot, checks the source's terms and PII policy, and refuses a result over the row or size limit instead of cutting it. Studio never builds a result file itself.",
+    "format": "Format",
+    "profile": "For",
+    "machine": "Machines (values as sent, no BOM)",
+    "spreadsheet": "Spreadsheets (BOM, formula guard)",
+    "maxRows": "Row limit",
+    "bomNote": "A BOM only makes Excel read UTF-8. It does not stop leading zeros, large integers or dates from being converted. Cells that start like a formula get a leading ' and are counted.",
+    "create": "Export",
+    "download": "Download bundle (.zip)",
+    "ready": "{{rows}} rows — {{file}}",
+    "snapshot": "Read {{table}}@{{snapshot}} · rev {{revision}}",
+    "coverageUnknown": "Fetch coverage: not recorded (unknown, not complete)",
+    "coverageKnown": "Fetch coverage: recorded in manifest.json",
+    "derived": "A result derived by your query",
+    "terms": "Terms:",
+    "termsUnknown": "not confirmed ({{status}}) — check the source before redistributing",
+    "altered": "Cells changed for spreadsheets: {{cells}}",
+    "expires": "Expires: {{at}}",
+    "refused": {
+      "license": "The source's licence forbids changes (e.g. KOGL type 3 or 4), so it cannot be exported. Nothing was kept.",
+      "pii": "Refused: values the PII policy does not let out: {{findings}}. Nothing was kept.",
+      "limit": "Refused: over the row or size limit. Results are not cut, so nothing was kept — narrow the query or raise the limit.",
+      "other": "Export failed: {{message}}"
+    }
   }
 }
