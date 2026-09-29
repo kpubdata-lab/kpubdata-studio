@@ -108,6 +108,14 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(await screen.findByText("미리보기 없음/지원되지 않음")).toBeInTheDocument();
   });
 
+  it("shows the table's five status axes separately (#422)", async () => {
+    renderDetail();
+    const axes = await screen.findByRole("list", { name: "테이블 상태" });
+    expect(within(axes).getAllByRole("listitem")).toHaveLength(5);
+    expect(axes).toHaveTextContent("완전성부분");
+    expect(axes).toHaveTextContent("갱신실패");
+  });
+
   it("renders five tabs, with no AI tab (#421)", async () => {
     renderDetail();
     const tablist = await screen.findByRole("tablist", { name: "Table detail tabs" });

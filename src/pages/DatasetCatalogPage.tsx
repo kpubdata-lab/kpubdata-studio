@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loadDatasetCatalog, type CatalogDataset } from "@/features/datasets/api";
+import { StatusAxes } from "@/features/datasets/components/StatusAxes";
 import {
   STAGE_STATUSES,
   datasetHasStageStatus,
@@ -164,7 +165,7 @@ export function DatasetCatalogPage() {
                       }
                     }}
                   >
-                    <td className="px-5 py-4"><p className="font-semibold text-foreground">{dataset.title}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{dataset.dataset_id}</p></td>
+                    <td className="px-5 py-4"><p className="font-semibold text-foreground">{dataset.title}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{dataset.dataset_id}</p><StatusAxes axes={dataset.status_axes} className="mt-2" /></td>
                     <td className="px-5 py-4">{uniqueProviders(dataset.sources).join(", ")}</td>
                     <td className="px-5 py-4">{(() => {
                       const summary = summarizeDatasetStages(dataset.stages);

@@ -2262,5 +2262,54 @@
     "colStarted": "Started",
     "colFinished": "Finished",
     "usersLater": "Listing users and approving sign-ups waits for an Engine API (kpubdata-builder#785); until then use the identity provider's admin console."
+  },
+  "statusAxes": {
+    "label": "Table status",
+    "axis": {
+      "health": "Health",
+      "completeness": "Completeness",
+      "refresh": "Refresh",
+      "access": "Access",
+      "maturity": "Maturity"
+    },
+    "value": {
+      "health": {
+        "healthy": "Healthy",
+        "stale": "Stale",
+        "degraded": "Degraded",
+        "unknown": "Unknown"
+      },
+      "completeness": {
+        "complete": "Complete",
+        "partial": "Partial",
+        "unknown": "Unknown"
+      },
+      "refresh": {
+        "queued": "Queued",
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "unknown": "Unknown"
+      },
+      "access": {
+        "available": "Available",
+        "auth_unknown": "Key required",
+        "application_required": "Application required",
+        "params_invalid": "Check parameters",
+        "rate_limited": "Rate limited",
+        "temporarily_unavailable": "Temporarily unavailable",
+        "network_error": "Unreachable",
+        "insufficient_metadata": "Not enough metadata",
+        "retired": "Retired",
+        "unknown": "Unknown"
+      },
+      "maturity": {
+        "stable": "Stable",
+        "beta": "Beta",
+        "experimental": "Experimental",
+        "unknown": "Unknown"
+      }
+    }
   }
 }

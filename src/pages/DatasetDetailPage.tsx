@@ -10,6 +10,7 @@ import {
   listDatasetRuns,
 } from "@/features/datasets/api";
 import { StageBadge } from "@/features/datasets/components/StageBadge";
+import { StatusAxes } from "@/features/datasets/components/StatusAxes";
 import { RUN_LOOKUP_API_VERSION, useRequestedRun } from "@/features/datasets/useRequestedRun";
 import {
   DATASET_STAGES,
@@ -277,6 +278,7 @@ export function DatasetDetailPage() {
         description={<><span className="block font-mono text-xs">{core.dataset.dataset_id}</span><span className="mt-1 block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Run {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
         actions={<><span title={t("datasetDetail.stageStatusTitle", { source: selectedSource || "—", stage: selectedStage })} className="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold capitalize text-accent-subtle-foreground"><span>{selectedStage}</span><span className="font-normal">{sourceStageEntry?.[selectedStage].status ?? "unavailable"}</span></span><QualityBadge status={validation} /><Button size="sm" variant="secondary" aria-haspopup="dialog" onClick={askAboutThis}>{t("datasetDetail.askAboutThis")}</Button><LinkButton size="sm" variant="secondary" to={`/refresh-jobs/${encodeURIComponent(selectedRunId)}/edit`}>{t("tableActions.refresh")}</LinkButton><LinkButton size="sm" to={`/sql?${new URLSearchParams({ table: core.dataset.dataset_id, run: selectedRunId, stage: selectedStage === "bronze" ? "silver" : selectedStage, ...(selectedSource ? { source: selectedSource } : {}) })}`}>{t("tableActions.query")}</LinkButton><LinkButton size="sm" to={`/refresh-jobs/${encodeURIComponent(selectedRunId)}/publish?dataset=${encodeURIComponent(core.dataset.dataset_id)}`}>{t("datasetDetail.publishRun")}</LinkButton></>}
       />
+      <StatusAxes axes={core.dataset.status_axes} />
 
       <Card className="flex flex-wrap items-end gap-3 p-3">
         <label className="min-w-52 flex-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Run<select aria-label={t("datasetDetail.runSelect")} className={`mt-1 w-full ${selectClassName}`} value={selectedRunId} onChange={(event) => updateContext({ run: event.target.value === core.dataset?.latest_run_id ? null : event.target.value, source: null, stage: null })}>{(runOptions ?? []).map((run) => <option key={run.run_id} value={run.run_id}>{run.run_id}{run.run_id === core.dataset?.latest_run_id ? " (latest)" : ""}</option>)}</select></label>

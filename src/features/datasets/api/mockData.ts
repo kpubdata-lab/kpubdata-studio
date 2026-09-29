@@ -27,6 +27,7 @@ export const MOCK_DATASETS: DatasetsResponse = {
         datago__air: { bronze: "completed", silver: "completed", gold: "completed" },
         kma__weather: { bronze: "completed", silver: "failed", gold: "not_run" },
       },
+      status_axes: { refresh: "failed", completeness: "partial", health: "unknown", access: "unknown", maturity: "unknown" },
       quality: null,
     },
     {
@@ -41,6 +42,7 @@ export const MOCK_DATASETS: DatasetsResponse = {
       stages: {
         kosis__population: { bronze: "completed", silver: "completed", gold: "unavailable" },
       },
+      status_axes: { refresh: "succeeded", completeness: "complete", health: "unknown", access: "unknown", maturity: "unknown" },
       quality: null,
     },
     {
@@ -55,6 +57,7 @@ export const MOCK_DATASETS: DatasetsResponse = {
       stages: {
         seoul__transport: { bronze: "completed", silver: "completed", gold: "completed" },
       },
+      status_axes: { refresh: "running", completeness: "complete", health: "unknown", access: "unknown", maturity: "unknown" },
       quality: null,
     },
   ],
