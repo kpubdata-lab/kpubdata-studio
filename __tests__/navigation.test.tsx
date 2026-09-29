@@ -25,12 +25,22 @@ describe("grouped sidebar navigation (#247)", () => {
     );
   });
 
-  it("renders the WORKSPACE/DATA/AI/SYSTEM groups from the HTML prototype IA", () => {
+  it("renders the WORKSPACE/DATA/SYSTEM groups, with no AI group (#421)", () => {
     renderLayoutAt("/");
 
-    for (const group of ["WORKSPACE", "DATA", "AI", "SYSTEM"]) {
+    for (const group of ["WORKSPACE", "DATA", "SYSTEM"]) {
       expect(screen.getByText(group)).toBeInTheDocument();
     }
+    expect(screen.queryByText("AI")).not.toBeInTheDocument();
+  });
+
+  it("opens Ask KPubData from the topbar, not from a sidebar destination (#421)", () => {
+    renderLayoutAt("/");
+    const nav = screen.getByRole("navigation");
+
+    expect(within(nav).queryByRole("link", { name: "Ask KPubData" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 열기" }));
+    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(true);
   });
 
   it("exposes every IA route as a sidebar link", () => {
@@ -45,7 +55,6 @@ describe("grouped sidebar navigation (#247)", () => {
       "데이터셋 카탈로그": "/datasets",
       "빌드 / 실행": "/builds",
       "품질": "/quality",
-      "Ask KPubData": "/assistant",
       "리포트": "/reports",
       "Provider / API 연결": "/provider",
       "모니터링": "/monitoring",
