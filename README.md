@@ -1,6 +1,6 @@
 # KPubData Studio
 
-**KPubData Studio는 한국 공공데이터를 탐색하고 SQL로 분석하는 시각적 작업공간입니다.**
+**KPubData Studio는 한국 공공데이터를 수집하고, 출처와 이용 조건을 유지한 스냅샷으로 관리하며, 표와 SQL 로 분석하는 작업공간입니다.**
 
 > KPubData 제품군: [Core](https://github.com/yeongseon/kpubdata) (접근 계층) → [Engine](https://github.com/yeongseon/kpubdata-builder) (실행·웨어하우스) → **Studio** (시각적 작업공간)
 

@@ -2,19 +2,18 @@
 
 ## 1. Product Summary
 
-KPubData Studio is a visual interface for creating and managing public-data build workflows powered by `kpubdata-builder`.
+KPubData Studio is a workspace for collecting Korean public data, keeping it as snapshots that carry their source and terms of use, and analysing it with tables and SQL.
 
-It helps users define sources, preview records, configure metadata, run builds, and review outputs without hand-editing every configuration file.
+> **제품 정의 (정본)** — 한국 공공데이터를 수집하고, 출처와 이용 조건을 유지한 스냅샷으로 관리하며, 표와 SQL 로 분석하는 작업공간.
+> 이 문장은 `README.md`, `README.en.md`, `ROADMAP.md` 와 kpubdata `docs/brand/BRAND.md` 가 함께 쓴다.
+> `__tests__/productDefinition.test.ts` 가 이 저장소의 사본이 어긋나면 실패한다 (#498).
 
-## 현재 구현 상태 (Current implementation status — v0.1.0)
+Collection, validation and publishing run in KPubData Engine (`kpubdata-builder`); Studio
+is where a person picks what to collect, watches it run, keeps the resulting snapshots with
+their provenance and licence, and analyses them.
 
-> 이 절은 현재 실제로 구현된 범위를 명확히 구분한다.
-
-- **구현된 UI 흐름**: PRD의 Core User Flows(A/B/C)에 대응하는 라우트/페이지가 존재한다 — `builds`, `builds/new`, `builds/:id`(상세/편집), `builds/:id/run`, `builds/:id/artifacts`, `builds/:id/publish`. 추가로 독립 실행형 `validate`, `preview`, `artifacts`, `settings` 페이지를 제공한다.
-- **Builder API 연동은 기본적으로 MOCK 모드**다. 라이브 Builder 없이도 동작하도록 기본값이 mock이며(`shared/lib/builderApi.ts`, `demoDatasets.ts`), 실제 Builder 호출은 `VITE_USE_REAL_BUILDER=true` 환경 변수로만 활성화된다. 즉 현재 GitHub Pages 데모 등은 실제 백엔드가 아니라 demo 데이터로 동작한다.
-- **경계 원칙 유지**: BuildSpec 검증·preview 계산·manifest 스키마·publish 실행 로직은 Builder가 소유하며 Studio는 이를 호출/표시만 한다.
-
-> 실제 Builder API 통합의 완성도는 향후 작업이며, 세부 계획은 [ROADMAP.md](./ROADMAP.md)를 참조한다.
+Implementation status is not tracked here. Direction lives in [ROADMAP.md](./ROADMAP.md);
+issue status, priority and target release live in the GitHub Project (POLICY 2.1).
 
 ## 2. Problem
 
@@ -29,15 +28,18 @@ Many users need a safer and more discoverable way to:
 ## 3. Goals
 
 ### Primary goals
-- Make build spec authoring visual and inspectable
-- Expose builder validation and preview in UI
+- Make collection (build spec authoring) visual and inspectable
+- Expose Engine validation and preview in the UI
+- Keep every snapshot's source, collection time and terms of use visible next to its data
+- Analyse snapshots with tables, SQL and saved analyses
 - Show outputs before publication
-- Reduce YAML/TOML hand-editing burden
 
 ### Non-goals
-- Replacing the builder execution engine
+- Replacing the Engine's execution, validation or publishing logic
 - Reimplementing provider adapters
-- Acting as a notebook or BI tool
+- Replacing a general-purpose notebook or BI tool — table, SQL and chart analysis of
+  snapshots **is** in scope; arbitrary code, dashboards over non-KPubData sources and
+  report authoring for their own sake are not
 - Semantic analytics across all public datasets
 
 ## 4. Users

@@ -1,7 +1,7 @@
 # KPubData Studio
 
-**KPubData Studio is the visual web interface for the KPubData product family.**
-A web application where you can plan, preview, run, and inspect Korean public data builds from your browser.
+**KPubData Studio is a workspace for collecting Korean public data, keeping it as snapshots that carry their source and terms of use, and analysing it with tables and SQL.**
+It is the web interface of the KPubData product family.
 
 > **Names** — the execution engine the UI calls **KPubData Engine** is the repository and
 > package `kpubdata-builder`. Commands and environment variables here (`VITE_BUILDER_API_URL`
