@@ -490,6 +490,8 @@ export type WarehouseQueryResponse = schemas.WarehouseQueryResponse;
 export type WarehouseRowsRequest = schemas.WarehouseRowsRequest;
 export type WarehouseRowsResponse = schemas.WarehouseRowsResponse;
 export type ColumnWireInfo = schemas.ColumnWireInfo;
+export type WarehouseAggregateRequest = schemas.WarehouseAggregateRequest;
+export type WarehouseAggregateResponse = schemas.WarehouseAggregateResponse;
 export type SavedAnalysis = schemas.SavedAnalysis;
 export type AdminRun = schemas.AdminRun;
 export type AdminRunsResponse = schemas.AdminRunsResponse;
@@ -527,6 +529,10 @@ export const builderApi = {
   /** POST /warehouse/rows — one page of a pinned snapshot (builder#815). Pass the returned snapshot id on. */
   warehouseRows: (request: schemas.WarehouseRowsRequest, signal?: AbortSignal) =>
     apiFetch("/warehouse/rows", { method: "POST", body: request, signal, retries: 0 }, schemas.warehouseRowsResponseSchema),
+
+  /** POST /warehouse/aggregate — named aggregates over a pinned snapshot, top N only after the whole aggregate (builder#818). */
+  warehouseAggregate: (request: schemas.WarehouseAggregateRequest, signal?: AbortSignal) =>
+    apiFetch("/warehouse/aggregate", { method: "POST", body: request, signal, retries: 0 }, schemas.warehouseAggregateResponseSchema),
 
   /** GET /analyses — the caller's saved analyses, newest first (builder#783). */
   listAnalyses: (signal?: AbortSignal) => apiFetch("/analyses", { signal }, schemas.analysisListResponseSchema),

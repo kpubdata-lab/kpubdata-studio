@@ -1139,6 +1139,55 @@ export const warehouseRowsResponseSchema = z.object({
   engine_execution_ms: z.number().int().nonnegative(),
 });
 
+/** POST /warehouse/aggregate (builder#818, contract 1.44.0): named aggregates over a pinned snapshot. */
+export const aggregateMeasureSchema = z.object({
+  fn: z.enum(["count_rows", "count", "count_null", "count_distinct", "sum", "avg", "min", "max"]),
+  column: z.string().optional(),
+  as: z.string().optional(),
+  /** Required and true for `sum`: the caller states the column may be added up. */
+  additive: z.boolean().optional(),
+});
+
+export const warehouseAggregateRequestSchema = z.object({
+  table: z.string().min(1),
+  snapshot: z.string().min(1).optional(),
+  group_by: z.array(z.string()).max(4).optional(),
+  measures: z.array(aggregateMeasureSchema).min(1).max(16),
+  order_by: z.array(z.object({ key: z.string(), direction: z.enum(["asc", "desc"]).optional() })).max(8).optional(),
+  limit: z.number().int().min(1).max(1000).optional(),
+});
+
+export const warehouseAggregateResponseSchema = z.object({
+  snapshot: pinnedSnapshotSchema,
+  columns: z.array(z.string()),
+  column_meta: z.array(columnWireInfoSchema),
+  rows: z.array(z.record(z.string(), jsonQueryValueSchema)),
+  group_by: z.array(z.string()),
+  measures: z.array(
+    z.object({
+      as: z.string(),
+      fn: z.string(),
+      column: z.string().nullable(),
+      additive: z.boolean().nullable(),
+      unit_column: z.string().nullable(),
+    }),
+  ),
+  order: z.array(z.object({ key: z.string(), direction: z.enum(["asc", "desc"]) })),
+  unit: z.object({ column: z.string().nullable(), policy: z.string(), check: z.string() }),
+  /** Rows that passed the filters, all aggregated. `sampled` is always false today. */
+  input: z.object({ row_count: z.number().int().nonnegative(), sampled: z.boolean() }),
+  /** `full` — every group is here. `top_n` — the first `limit` after sorting, of `group_count`. */
+  result: z.object({
+    completeness: z.union([z.enum(["full", "top_n"]), z.string()]),
+    group_count: z.number().int().nonnegative(),
+    returned: z.number().int().nonnegative(),
+    limit: z.number().int().positive(),
+  }),
+  execution_ms: z.number().int().nonnegative(),
+  startup_ms: z.number().int().nonnegative(),
+  engine_execution_ms: z.number().int().nonnegative(),
+});
+
 export const savedAnalysisSchema = z.object({
   analysis_id: z.string(),
   name: z.string(),
@@ -1175,6 +1224,8 @@ export type WarehouseSnapshot = z.infer<typeof warehouseSnapshotSchema>;
 export type WarehouseQueryRequest = z.infer<typeof warehouseQueryRequestSchema>;
 export type WarehouseQueryResponse = z.infer<typeof warehouseQueryResponseSchema>;
 export type WarehouseRowsRequest = z.infer<typeof warehouseRowsRequestSchema>;
+export type WarehouseAggregateRequest = z.infer<typeof warehouseAggregateRequestSchema>;
+export type WarehouseAggregateResponse = z.infer<typeof warehouseAggregateResponseSchema>;
 export type WarehouseRowsResponse = z.infer<typeof warehouseRowsResponseSchema>;
 export type ColumnWireInfo = z.infer<typeof columnWireInfoSchema>;
 export type SavedAnalysis = z.infer<typeof savedAnalysisSchema>;

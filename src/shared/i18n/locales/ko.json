@@ -2355,5 +2355,37 @@
     "shown": "{{count}}행 표시",
     "totalExact": "전체 {{count}}행 (정확)",
     "totalEstimated": "전체 약 {{count}}행 (추정)"
+  },
+  "charts": {
+    "title": "차트",
+    "groupBy": "그룹 열",
+    "measure": "측정",
+    "measureColumn": "측정 열",
+    "kind": "차트 종류",
+    "bar": "막대",
+    "line": "선",
+    "limit": "그룹 수 상한",
+    "additive": "이 열은 더해도 되는 값입니다 (합계에 필요)",
+    "draw": "그리기",
+    "failed": "집계 실패: {{message}}",
+    "showChart": "차트로 보기",
+    "xAxis": "X",
+    "yAxis": "Y",
+    "aria": "{{x}} 별 {{y}} 차트",
+    "missing": "값 없음",
+    "missingCount": "값 없음 {{count}}개 — 0 이 아니라 빈 칸으로 그렸습니다",
+    "fn": {
+      "count_rows": "행 수",
+      "sum": "합계",
+      "avg": "평균",
+      "min": "최솟값",
+      "max": "최댓값"
+    },
+    "scope": {
+      "full": "전체 — {{count}}개 모두",
+      "topN": "정렬({{order}}) 기준 상위 {{returned}}개 — 전체 {{total}}개 그룹 중. 집계는 모든 행으로 했습니다",
+      "truncated": "반환된 {{count}}행 기준 — 잘린 결과라 전체도, 상위 N 도, 표본도 아닙니다",
+      "sample": "표본 {{count}}개 ({{method}})"
+    }
   }
 }

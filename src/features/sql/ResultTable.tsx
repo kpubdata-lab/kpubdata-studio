@@ -4,11 +4,18 @@
  */
 import { useTranslation } from "react-i18next";
 
+import { ResultChart } from "@/features/charts/ResultChart";
 import { DataTable } from "@/features/data-table/DataTable";
 import type { QueryResponse } from "@/shared/lib/builderApi";
 import { Card, DemoBadge } from "@/shared/ui";
 
-export function QueryError({ code, message }: { code: string; message: string }) {
+export function QueryError({
+  code,
+  message,
+}: {
+  code: string;
+  message: string;
+}) {
   const { t } = useTranslation();
   return (
     <Card role="alert" variant="error">
@@ -23,28 +30,39 @@ export function QueryError({ code, message }: { code: string; message: string })
  * analyses, and drawn by the one data table (#499). A result that was not cut holds every
  * row, so its total is exact; a cut one does not say how many rows there were.
  */
-export function ResultTable({ result, target, demo = false }: { result: QueryResponse; target: string; demo?: boolean }) {
+export function ResultTable({
+  result,
+  target,
+  demo = false,
+}: {
+  result: QueryResponse;
+  target: string;
+  demo?: boolean;
+}) {
   return (
-    <DataTable
-      caption={
-        <>
-          {demo ? <DemoBadge /> : null}
-          <span className="font-mono">{target}</span>
-          <span>·</span>
-          <span>{result.execution_ms} ms</span>
-          <span>·</span>
-        </>
-      }
-      columnMeta={result.column_meta}
-      columns={result.columns}
-      compact
-      rowTotal={{
-        returned: result.rows.length,
-        total: result.truncated ? null : result.rows.length,
-        status: result.truncated ? "unknown" : "exact",
-      }}
-      rows={result.rows}
-      truncated={result.truncated}
-    />
+    <div className="space-y-2">
+      <DataTable
+        caption={
+          <>
+            {demo ? <DemoBadge /> : null}
+            <span className="font-mono">{target}</span>
+            <span>·</span>
+            <span>{result.execution_ms} ms</span>
+            <span>·</span>
+          </>
+        }
+        columnMeta={result.column_meta}
+        columns={result.columns}
+        compact
+        rowTotal={{
+          returned: result.rows.length,
+          total: result.truncated ? null : result.rows.length,
+          status: result.truncated ? "unknown" : "exact",
+        }}
+        rows={result.rows}
+        truncated={result.truncated}
+      />
+      <ResultChart result={result} />
+    </div>
   );
 }

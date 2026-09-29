@@ -2355,5 +2355,37 @@
     "shown": "{{count}} rows shown",
     "totalExact": "{{count}} rows in all (exact)",
     "totalEstimated": "about {{count}} rows in all (estimated)"
+  },
+  "charts": {
+    "title": "Chart",
+    "groupBy": "Group column",
+    "measure": "Measure",
+    "measureColumn": "Measure column",
+    "kind": "Chart type",
+    "bar": "Bar",
+    "line": "Line",
+    "limit": "Group limit",
+    "additive": "This column may be added up (needed for a sum)",
+    "draw": "Draw",
+    "failed": "Aggregate failed: {{message}}",
+    "showChart": "Show as chart",
+    "xAxis": "X",
+    "yAxis": "Y",
+    "aria": "{{y}} by {{x}}",
+    "missing": "no value",
+    "missingCount": "{{count}} with no value — drawn as gaps, not 0",
+    "fn": {
+      "count_rows": "Row count",
+      "sum": "Sum",
+      "avg": "Average",
+      "min": "Minimum",
+      "max": "Maximum"
+    },
+    "scope": {
+      "full": "All — every one of {{count}}",
+      "topN": "Top {{returned}} by {{order}} — of {{total}} groups. Aggregated over every row",
+      "truncated": "Based on the {{count}} rows returned — a cut result: not the whole, not the top N, not a sample",
+      "sample": "Sample of {{count}} ({{method}})"
+    }
   }
 }
