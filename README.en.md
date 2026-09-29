@@ -50,6 +50,31 @@ cp .env.development.real .env.development.local
 npm run dev
 ```
 
+### Deploying the container image
+
+`Dockerfile` builds the image (#411). The image is the
+same for every deployment; the Builder URL and OIDC settings are passed as environment
+variables **when the container starts**.
+
+```bash
+docker build -t kpubdata-studio .
+docker run -p 8080:8080 \
+  -e BUILDER_API_URL=https://api.example.org \
+  -e OIDC_ISSUER=https://sso.example.org/realms/kpubdata \
+  -e OIDC_CLIENT_ID=kpubdata-studio \
+  kpubdata-studio
+```
+
+| Variable | Meaning |
+|---|---|
+| `BUILDER_API_URL` | The Builder URL the browser calls. Setting it turns real Builder mode on |
+| `USE_REAL_BUILDER` | `false` keeps the demo data even when a URL is set |
+| `OIDC_ISSUER` · `OIDC_CLIENT_ID` | Public SPA client settings — not secrets |
+
+The browser calls Builder directly, so add this Studio's origin to Builder's
+`KPUBDATA_BUILDER_ALLOWED_ORIGINS`. A value containing a quote, a space, `<` or similar
+stops the container with the reason instead of starting it.
+
 ## Key Features
 
 - **Build Planning**: Configure dataset build rules using UI buttons and inputs.

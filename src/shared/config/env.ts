@@ -6,8 +6,10 @@
  */
 import { i18n } from "@/shared/i18n";
 
+import { runtimeOr } from "./runtime";
+
 export const API_BASE =
-  import.meta.env.VITE_BUILDER_API_URL ?? "http://localhost:8000";
+  runtimeOr("builderApiUrl", import.meta.env.VITE_BUILDER_API_URL) ?? "http://localhost:8000";
 
 /** Development-only real-Builder authentication bypass policy. */
 export function resolveDevAuthBypass({ dev, bypass }: { dev: boolean; bypass?: string }): boolean {
@@ -119,10 +121,10 @@ export function resolveOidcConfig(input: {
 export function getOidcConfig(): OidcConfigResult {
   return resolveOidcConfig({
     // Same logic as builderApi.isRealBuilderEnabled(), but read directly here to avoid circular imports.
-    realBuilder: import.meta.env.VITE_USE_REAL_BUILDER === "true",
+    realBuilder: runtimeOr("useRealBuilder", import.meta.env.VITE_USE_REAL_BUILDER) === "true",
     devBypass: isDevAuthBypassEnabled(),
-    issuer: import.meta.env.VITE_OIDC_ISSUER,
-    clientId: import.meta.env.VITE_OIDC_CLIENT_ID,
+    issuer: runtimeOr("oidcIssuer", import.meta.env.VITE_OIDC_ISSUER),
+    clientId: runtimeOr("oidcClientId", import.meta.env.VITE_OIDC_CLIENT_ID),
   });
 }
 
