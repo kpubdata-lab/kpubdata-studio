@@ -110,5 +110,5 @@ Wants to inspect generated artifacts and copy/export config.
 ### KPubData Product Family
 | 저장소 | 문서 | 설명 |
 | :--- | :--- | :--- |
-| [kpubdata](https://github.com/yeongseon/kpubdata) | [PRD.md](https://github.com/yeongseon/kpubdata/blob/main/PRD.md) | Core 제품 요구사항 |
+| [kpubdata](https://github.com/yeongseon/kpubdata) | [PRD.md](https://github.com/yeongseon/kpubdata/blob/main/PRD.md) | KPubData 제품 요구사항 |
 | [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [PRD.md](https://github.com/yeongseon/kpubdata-builder/blob/main/PRD.md) | Builder 제품 요구사항 |
