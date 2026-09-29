@@ -1,7 +1,8 @@
 # KPubData Studio
 
-**KPubData Studio는 KPubData 제품군의 웹 기반 시각적 인터페이스(UI)입니다.**
-한국 공공데이터 빌드 과정을 브라우저에서 기획, 미리보기, 실행하고 검사할 수 있는 웹 애플리케이션입니다.
+**KPubData Studio는 한국 공공데이터를 탐색하고 SQL로 분석하는 시각적 작업공간입니다.**
+
+> KPubData 제품군: [Core](https://github.com/yeongseon/kpubdata) (접근 계층) → [Engine](https://github.com/yeongseon/kpubdata-builder) (실행·웨어하우스) → **Studio** (시각적 작업공간)
 
 KPubData는 데이터셋을 설계·정규화하는 과정이 종종 복잡하고, YAML 편집 실수, 시각적 피드백 부재, 비개발자 접근 어려움 등의 진입장벽이 있습니다. Studio는 이러한 장벽을 제거하고, 코딩 경험이 없는 사용자도 공공데이터 처리 흐름을 직관적으로 구성하고 관리할 수 있도록 돕습니다.
 
