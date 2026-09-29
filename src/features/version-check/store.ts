@@ -16,6 +16,8 @@ export const STUDIO_VERSION: string = import.meta.env.VITE_APP_VERSION ?? "";
 interface VersionCheckState {
   /** `null` until the check has run. A failed request stays `null` — no verdict. */
   comparison: AppVersionComparison | null;
+  /** The Engine's HTTP contract version from the same response; `null` until known (#482). */
+  apiVersion: string | null;
   /** Whether the user closed the banner for this page load. */
   dismissed: boolean;
   dismiss: () => void;
@@ -23,6 +25,7 @@ interface VersionCheckState {
 
 export const useVersionCheckStore = create<VersionCheckState>((set) => ({
   comparison: null,
+  apiVersion: null,
   dismissed: false,
   dismiss: () => set({ dismissed: true }),
 }));
@@ -46,7 +49,7 @@ export function ensureVersionChecked(): Promise<void> {
       if (comparison.kind === "patch") {
         console.info(`Studio ${comparison.studio} and KPubData Engine ${comparison.builder} differ by a patch release.`);
       }
-      useVersionCheckStore.setState({ comparison });
+      useVersionCheckStore.setState({ comparison, apiVersion: info.api_version });
     })
     .catch(() => {
       // No verdict — see above — and no cached promise, so the next call retries.
@@ -58,5 +61,5 @@ export function ensureVersionChecked(): Promise<void> {
 /** Test-only: forget the previous check. */
 export function resetVersionCheck(): void {
   inFlight = null;
-  useVersionCheckStore.setState({ comparison: null, dismissed: false });
+  useVersionCheckStore.setState({ comparison: null, apiVersion: null, dismissed: false });
 }

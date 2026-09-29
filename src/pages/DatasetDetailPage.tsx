@@ -10,7 +10,7 @@ import {
   listDatasetRuns,
 } from "@/features/datasets/api";
 import { StageBadge } from "@/features/datasets/components/StageBadge";
-import { useRequestedRun } from "@/features/datasets/useRequestedRun";
+import { RUN_LOOKUP_API_VERSION, useRequestedRun } from "@/features/datasets/useRequestedRun";
 import {
   DATASET_STAGES,
   formatDateTime,
@@ -100,7 +100,7 @@ export function DatasetDetailPage() {
   // Not being in the newest page does not make a run invalid (#418): Builder is asked
   // directly, and says whether it is this dataset's and the caller's.
   const requested = useRequestedRun(datasetId, requestedRun, core.runs);
-  const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error";
+  const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error" || requested.status === "unsupported";
   const runPending = requested.status === "loading";
   const runOptions =
     requested.status === "available" && !requested.inPage && core.runs ? [...core.runs, requested.run] : core.runs;
@@ -264,7 +264,7 @@ export function DatasetDetailPage() {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader eyebrow="Table" title={core.dataset.title} description={core.dataset.dataset_id} />
-        <Card variant="error" role="alert"><p className="font-semibold">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunTitle" : requested.status === "error" ? "datasetDetail.runCheckFailedTitle" : "datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunBody" : requested.status === "error" ? "datasetDetail.runCheckFailedBody" : "datasetDetail.invalidRunBody", { run: requestedRun })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
+        <Card variant="error" role="alert"><p className="font-semibold">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunTitle" : requested.status === "error" ? "datasetDetail.runCheckFailedTitle" : requested.status === "unsupported" ? "datasetDetail.runLookupUnsupportedTitle" : "datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunBody" : requested.status === "error" ? "datasetDetail.runCheckFailedBody" : requested.status === "unsupported" ? "datasetDetail.runLookupUnsupportedBody" : "datasetDetail.invalidRunBody", { run: requestedRun, version: RUN_LOOKUP_API_VERSION })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
       </main>
     );
   }

@@ -694,7 +694,9 @@
       "forbiddenDesc": "Run `{{id}}` belongs to this table but to another user. Did not auto-switch to latest run.",
       "checkFailedTitle": "Could not check that run.",
       "checkFailedDesc": "KPubData Engine could not be asked about run `{{id}}`. Try again shortly.",
-      "back": "View latest run"
+      "back": "View latest run",
+      "unsupportedTitle": "This Engine cannot look up an older run",
+      "unsupportedDesc": "Run `{{id}}` is not in the newest page of runs, and this KPubData Engine is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Engine to open it. Did not switch to the latest run."
     },
     "header": {
       "desc": "Shows actual validation outcomes (PASS/WARN/FAIL) and per-rule issues instead of scores."
@@ -1243,7 +1245,9 @@
       "specDigest": "BuildSpec digest",
       "snapshotFiles": "Snapshot files",
       "run": "Run"
-    }
+    },
+    "runLookupUnsupportedTitle": "This Engine cannot look up an older run",
+    "runLookupUnsupportedBody": "Run `{{run}}` is not in the newest page of runs, and this KPubData Engine is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Engine to open it. Did not switch to the latest run."
   },
   "buildPublish": {
     "statusQueued": "Queued",
