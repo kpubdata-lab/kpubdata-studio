@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { createBrowserRouter } from "react-router-dom";
 import { FeatureErrorBoundary, RouteErrorBoundary } from "@/app/ErrorBoundary";
 import { Layout } from "@/app/Layout";
+import { LegacyRedirect } from "@/app/legacyRedirect";
 import { LoginGate } from "@/features/auth/LoginGate";
 import { Skeleton } from "@/shared/ui";
 
@@ -177,19 +178,19 @@ export const router = createBrowserRouter([
         element: withFeatureBoundary("router.features.AddData", <AddDataPage />),
       },
       {
-        path: "datasets",
+        path: "tables",
         element: withFeatureBoundary("router.features.DatasetCatalog", <DatasetCatalogPage />),
       },
       {
-        path: "datasets/:datasetId",
+        path: "tables/:datasetId",
         element: withFeatureBoundary("router.features.datasetDetail", <DatasetDetailPage />),
       },
       {
-        path: "builds",
+        path: "refresh-jobs",
         element: withFeatureBoundary("router.features.builds", <BuildsPage />),
       },
       {
-        path: "builds/new",
+        path: "refresh-jobs/new",
         element: withFeatureBoundary("router.features.newBuild", <NewBuildPage />),
       },
       {
@@ -200,24 +201,24 @@ export const router = createBrowserRouter([
        // Legacy deep link (#255 §5): /builds/:buildId also uses same master-detail (BuildsPage)
        // Opens to canonical form (/builds?run=) for same context.
       {
-        path: "builds/:buildId",
+        path: "refresh-jobs/:buildId",
         element: withFeatureBoundary("router.features.buildDetail", <BuildsPage />),
       },
       {
          // Edit reuses same editor as New Build.
-        path: "builds/:buildId/edit",
+        path: "refresh-jobs/:buildId/edit",
         element: withFeatureBoundary("router.features.buildEdit", <NewBuildPage />),
       },
       {
-        path: "builds/:buildId/run",
+        path: "refresh-jobs/:buildId/run",
         element: withFeatureBoundary("router.features.buildRun", <BuildRunPage />),
       },
       {
-        path: "builds/:buildId/artifacts",
+        path: "refresh-jobs/:buildId/artifacts",
         element: withFeatureBoundary("router.features.artifacts", <BuildArtifactsPage />),
       },
       {
-        path: "builds/:buildId/publish",
+        path: "refresh-jobs/:buildId/publish",
         element: withFeatureBoundary("router.features.publish", <BuildPublishPage />),
       },
        // New IA AI group (actual feature implementation in #256). Global Assistant drawer
@@ -236,7 +237,7 @@ export const router = createBrowserRouter([
       },
        // New IA SYSTEM group (actual feature implementation in #259/#264).
       {
-        path: "provider",
+        path: "connections",
         element: withFeatureBoundary("router.features.Provider", <ProviderPage />),
       },
       {
@@ -262,6 +263,12 @@ export const router = createBrowserRouter([
         path: "settings",
         element: withFeatureBoundary("router.features.settings", <SettingsPage />),
       },
+      // Old build-console URL (#423) — redirects with path, query and hash intact.
+      { path: "datasets/*", element: <LegacyRedirect /> },
+      // Old build-console URL (#423) — redirects with path, query and hash intact.
+      { path: "builds/*", element: <LegacyRedirect /> },
+      // Old build-console URL (#423) — redirects with path, query and hash intact.
+      { path: "provider/*", element: <LegacyRedirect /> },
     ],
   },
   ],

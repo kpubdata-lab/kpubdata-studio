@@ -106,19 +106,19 @@ describe("evidenceHref run navigation", () => {
 
   it("uses the verified current run detail and retains its source/stage context", () => {
     expect(evidenceHref(turn, { kind: "run", id: "run-current", label: "현재 Run" })).toBe(
-      "/builds?run=run-current&dataset=dataset-1&source=provider.dataset&stage=gold",
+      "/refresh-jobs?run=run-current&dataset=dataset-1&source=provider.dataset&stage=gold",
     );
   });
 
   it("uses a verified different recent run and does not carry current source/stage", () => {
     expect(evidenceHref(turn, { kind: "run", id: "run-previous", label: "이전 Run" })).toBe(
-      "/builds?run=run-previous&dataset=dataset-1",
+      "/refresh-jobs?run=run-previous&dataset=dataset-1",
     );
   });
 
   it("keeps the verified stage ref navigation on its current run/source/stage", () => {
     expect(evidenceHref(turn, { kind: "stage", id: "run-current::provider.dataset::gold", label: "Gold" })).toBe(
-      "/builds?run=run-current&dataset=dataset-1&source=provider.dataset&stage=gold",
+      "/refresh-jobs?run=run-current&dataset=dataset-1&source=provider.dataset&stage=gold",
     );
   });
 });

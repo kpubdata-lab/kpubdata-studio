@@ -59,7 +59,7 @@ async function askForReportBlock() {
     }),
   );
   render(
-    <MemoryRouter initialEntries={["/datasets/air-quality?run=air-2026-08-14"]}>
+    <MemoryRouter initialEntries={["/tables/air-quality?run=air-2026-08-14"]}>
       <AssistantPage />
     </MemoryRouter>,
   );

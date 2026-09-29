@@ -35,7 +35,7 @@ describe("Layout topbar (#423)", () => {
   });
 
   it("has no global Create Table link on any screen", () => {
-    for (const path of ["/", "/builds", "/builds/new", "/builds/run-1/run"]) {
+    for (const path of ["/", "/refresh-jobs", "/refresh-jobs/new", "/refresh-jobs/run-1/run"]) {
       const { unmount } = renderLayoutAt(path);
       expect(within(screen.getByRole("banner")).queryByRole("link", { name: "테이블 만들기" })).not.toBeInTheDocument();
       unmount();
@@ -43,9 +43,9 @@ describe("Layout topbar (#423)", () => {
   });
 
   it("names the current place instead of the product", () => {
-    renderLayoutAt("/builds/run-1/artifacts");
-    expect(breadcrumb().getByRole("link", { name: "갱신 작업" })).toHaveAttribute("href", "/builds");
-    expect(breadcrumb().getByRole("link", { name: "run-1" })).toHaveAttribute("href", "/builds/run-1");
+    renderLayoutAt("/refresh-jobs/run-1/artifacts");
+    expect(breadcrumb().getByRole("link", { name: "갱신 작업" })).toHaveAttribute("href", "/refresh-jobs");
+    expect(breadcrumb().getByRole("link", { name: "run-1" })).toHaveAttribute("href", "/refresh-jobs/run-1");
     expect(breadcrumb().getByText("스냅샷 파일")).toHaveAttribute("aria-current", "page");
     expect(within(screen.getByRole("banner")).queryByText("KPubData Studio")).not.toBeInTheDocument();
   });

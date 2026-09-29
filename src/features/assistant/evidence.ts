@@ -141,7 +141,7 @@ export async function loadAssistantEvidence(
       if (dataset.latest_run_id) {
         knownRefs.datasetRunMemberships.add(datasetRunMembershipRef(dataset.dataset_id, dataset.latest_run_id));
       }
-      evidence.deepLinks.datasetDetail = `/datasets/${encodeURIComponent(dataset.dataset_id)}`;
+      evidence.deepLinks.datasetDetail = `/tables/${encodeURIComponent(dataset.dataset_id)}`;
       evidence.deepLinks.qualityCenter = `/quality?dataset=${encodeURIComponent(dataset.dataset_id)}`;
       runId = runId ?? dataset.latest_run_id;
     } else {
@@ -172,7 +172,7 @@ export async function loadAssistantEvidence(
      // not yet confirmed. Used for deepLink calculation and Builder query target, but not added to knownRefs/
      // safeRunIds until below — getBuildQuality / listBuildStages respond with 404 for nonexistent runs
      // (Builder OpenAPI SSOT), so confirmRunId is called only when those requests return successfully.
-    evidence.deepLinks.buildDetail = `/builds/${encodeURIComponent(runId)}`;
+    evidence.deepLinks.buildDetail = `/refresh-jobs/${encodeURIComponent(runId)}`;
 
     // Even if a run is older than the recent run-list window, Builder canonical spec snapshot directly
     // provides the dataset_id for each run. Query independently of other membership references, and

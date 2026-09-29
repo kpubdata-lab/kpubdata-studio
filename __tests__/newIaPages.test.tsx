@@ -76,9 +76,9 @@ describe("새 IA placeholder 화면 (#247)", () => {
 
   it("Dataset Detail loads the dataset identified by the route param", async () => {
     render(
-      <MemoryRouter initialEntries={["/datasets/air-quality"]}>
+      <MemoryRouter initialEntries={["/tables/air-quality"]}>
         <Routes>
-          <Route path="/datasets/:datasetId" element={<DatasetDetailPage />} />
+          <Route path="/tables/:datasetId" element={<DatasetDetailPage />} />
         </Routes>
       </MemoryRouter>,
     );

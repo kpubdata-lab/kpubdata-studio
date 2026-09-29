@@ -19,9 +19,9 @@ function renderWithManifest(manifest: BuildManifest, runId = "test-id", files: s
   mockGetBuildManifest.mockResolvedValue(manifest);
   mockListArtifactFiles.mockResolvedValue(files);
   return render(
-    <MemoryRouter initialEntries={[`/builds/${runId}/artifacts`]}>
+    <MemoryRouter initialEntries={[`/refresh-jobs/${runId}/artifacts`]}>
       <Routes>
-        <Route path="/builds/:buildId/artifacts" element={<BuildArtifactsPage />} />
+        <Route path="/refresh-jobs/:buildId/artifacts" element={<BuildArtifactsPage />} />
       </Routes>
     </MemoryRouter>
   );
@@ -231,9 +231,9 @@ describe("BuildArtifactsPage - artifact 실제 다운로드", () => {
     mockListArtifactFiles.mockRejectedValue(new Error("목록 조회 실패"));
 
     render(
-      <MemoryRouter initialEntries={["/builds/test-id/artifacts"]}>
+      <MemoryRouter initialEntries={["/refresh-jobs/test-id/artifacts"]}>
         <Routes>
-          <Route path="/builds/:buildId/artifacts" element={<BuildArtifactsPage />} />
+          <Route path="/refresh-jobs/:buildId/artifacts" element={<BuildArtifactsPage />} />
         </Routes>
       </MemoryRouter>,
     );

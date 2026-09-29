@@ -302,8 +302,8 @@ describe("applyAddReportBlock (#256, #258 handoff only)", () => {
 
 describe("actionHref / describeAction", () => {
   it("computes navigation targets for OPEN_* actions", () => {
-    expect(actionHref({ type: "OPEN_PROVIDER", provider: "datago", reason: "x" })).toBe("/provider");
-    expect(actionHref({ type: "OPEN_BUILD", runId: "run-1", reason: "x" })).toBe("/builds/run-1");
+    expect(actionHref({ type: "OPEN_PROVIDER", provider: "datago", reason: "x" })).toBe("/connections");
+    expect(actionHref({ type: "OPEN_BUILD", runId: "run-1", reason: "x" })).toBe("/refresh-jobs/run-1");
     expect(actionHref({ type: "OPEN_QUALITY", datasetId: "d1", runId: "r1", stage: "gold", reason: "x" })).toBe(
       "/quality?dataset=d1&run=r1&stage=gold",
     );

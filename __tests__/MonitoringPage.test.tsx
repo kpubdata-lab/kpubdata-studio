@@ -310,7 +310,7 @@ describe("MonitoringPage", () => {
       <MemoryRouter initialEntries={["/monitoring"]}>
         <Routes>
           <Route path="/monitoring" element={<MonitoringPage />} />
-          <Route path="/builds/:buildId" element={<LocationProbe />} />
+          <Route path="/refresh-jobs/:buildId" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -322,7 +322,7 @@ describe("MonitoringPage", () => {
     await waitFor(() => {
       expect(locationRef.current).not.toBeNull();
     });
-    expect(locationRef.current?.pathname).toBe("/builds/run-nav");
+    expect(locationRef.current?.pathname).toBe("/refresh-jobs/run-nav");
   });
 
   it("mock 모드에서는 네트워크를 호출하지 않는다", async () => {

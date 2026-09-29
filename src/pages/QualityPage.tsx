@@ -272,7 +272,7 @@ export function QualityPage() {
   );
 
   const datasetDetailHref = selectedDatasetId
-    ? `/datasets/${encodeURIComponent(selectedDatasetId)}?${new URLSearchParams({
+    ? `/tables/${encodeURIComponent(selectedDatasetId)}?${new URLSearchParams({
         ...(selectedRunId ? { run: selectedRunId } : {}),
         ...(selectedSource ? { source: selectedSource } : {}),
         ...(selectedStage ? { stage: selectedStage } : {}),
@@ -487,7 +487,7 @@ function ValidationTrend({ state }: { state: AsyncState<DatasetQualityHistoryRes
                 const total = run.pass_count + run.warn_count + run.fail_count;
                 return (
                   <tr key={run.run_id} className="border-b border-border last:border-0">
-                    <td className="py-2 pr-3"><Link className="font-mono text-xs text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(run.run_id)}`}>{run.run_id}</Link><div className="text-xs text-muted-foreground">{run.status}{run.status === "failed" ? t("quality.history.buildFailed") : ""}</div></td>
+                    <td className="py-2 pr-3"><Link className="font-mono text-xs text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(run.run_id)}`}>{run.run_id}</Link><div className="text-xs text-muted-foreground">{run.status}{run.status === "failed" ? t("quality.history.buildFailed") : ""}</div></td>
                     <td className="py-2 pr-3 text-xs text-muted-foreground">{formatDateTime(run.timestamp)}</td>
                     <td className="py-2 pr-3">
                       {total === 0 ? <span className="text-xs text-muted-foreground">N/A</span> : (
@@ -572,7 +572,7 @@ function RecentIssues({ issues, evaluatedTotal, contextLabel, selectedRun, onAss
                   <td className="px-4 py-3 max-w-64 truncate text-xs text-muted-foreground">{result.detail ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      {selectedRun ? <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(selectedRun.run_id)}`}>{t("quality.rules.viewBuild")}</Link> : null}
+                      {selectedRun ? <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(selectedRun.run_id)}`}>{t("quality.rules.viewBuild")}</Link> : null}
                       <Button variant="ghost" size="sm" onClick={() => onAssistant(result)}>{t("quality.assistantAnalyze")}</Button>
                     </div>
                   </td>

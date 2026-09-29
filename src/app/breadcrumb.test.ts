@@ -10,21 +10,21 @@ describe("crumbsFor (#423)", () => {
   });
 
   it("names the sidebar section of a top-level page, unlinked", () => {
-    expect(crumbsFor("/datasets", t)).toEqual([{ label: "<nav.datasets>" }]);
-    expect(crumbsFor("/provider", t)).toEqual([{ label: "<nav.provider>" }]);
+    expect(crumbsFor("/tables", t)).toEqual([{ label: "<nav.datasets>" }]);
+    expect(crumbsFor("/connections", t)).toEqual([{ label: "<nav.provider>" }]);
   });
 
   it("puts the object being looked at after its section", () => {
-    expect(crumbsFor("/datasets/air%20quality", t)).toEqual([
-      { label: "<nav.datasets>", to: "/datasets" },
+    expect(crumbsFor("/tables/air%20quality", t)).toEqual([
+      { label: "<nav.datasets>", to: "/tables" },
       { label: "air quality" },
     ]);
   });
 
   it("walks section → run → run page", () => {
-    expect(crumbsFor("/builds/run-1/artifacts", t)).toEqual([
-      { label: "<nav.builds>", to: "/builds" },
-      { label: "run-1", to: "/builds/run-1" },
+    expect(crumbsFor("/refresh-jobs/run-1/artifacts", t)).toEqual([
+      { label: "<nav.builds>", to: "/refresh-jobs" },
+      { label: "run-1", to: "/refresh-jobs/run-1" },
       { label: "<router.features.artifacts>" },
     ]);
   });
@@ -34,8 +34,8 @@ describe("crumbsFor (#423)", () => {
       { label: "<nav.discover>", to: "/discover" },
       { label: "<router.features.AddData>" },
     ]);
-    expect(crumbsFor("/builds/new", t)).toEqual([
-      { label: "<nav.builds>", to: "/builds" },
+    expect(crumbsFor("/refresh-jobs/new", t)).toEqual([
+      { label: "<nav.builds>", to: "/refresh-jobs" },
       { label: "<router.features.newBuild>" },
     ]);
   });

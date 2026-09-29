@@ -249,7 +249,7 @@ export function AddDataPage() {
    */
   function handleConnectProvider(provider: string) {
     saveAddDataDraft(draft);
-    navigate(`/provider?provider=${encodeURIComponent(provider)}&returnTo=${encodeURIComponent("/add")}`);
+    navigate(`/connections?provider=${encodeURIComponent(provider)}&returnTo=${encodeURIComponent("/add")}`);
   }
 
   async function handleUploadFile(file: File) {
@@ -428,7 +428,7 @@ export function AddDataPage() {
   useEffect(() => {
     if (job.status === "succeeded" && job.run) {
       clearAddDataDraft();
-      navigate(`/builds/${encodeURIComponent(job.run.id)}`);
+      navigate(`/refresh-jobs/${encodeURIComponent(job.run.id)}`);
     }
   }, [job.status, job.run, navigate]);
 

@@ -5,8 +5,7 @@
  * already said. That space now names what is being looked at —
  * `Tables / air-quality`, `Refresh Jobs / run-1 / Snapshot Files`. The first crumb is
  * the sidebar section the page belongs to, so the two always agree; the rest come
- * from the path. URLs are not renamed here (#423 keeps them), so this maps the
- * current ones.
+ * from the path. Old URLs redirect before they get here (legacyRedirect.tsx).
  */
 
 export interface Crumb {
@@ -21,13 +20,13 @@ type Translate = (key: string) => string;
 const SECTIONS: Record<string, { labelKey: string; to: string }> = {
   discover: { labelKey: "nav.discover", to: "/discover" },
   add: { labelKey: "nav.discover", to: "/discover" },
-  datasets: { labelKey: "nav.datasets", to: "/datasets" },
-  builds: { labelKey: "nav.builds", to: "/builds" },
+  tables: { labelKey: "nav.datasets", to: "/tables" },
+  "refresh-jobs": { labelKey: "nav.builds", to: "/refresh-jobs" },
   quality: { labelKey: "nav.quality", to: "/quality" },
   monitoring: { labelKey: "nav.monitoring", to: "/monitoring" },
   workspace: { labelKey: "nav.workspace", to: "/workspace" },
   reports: { labelKey: "nav.reports", to: "/reports" },
-  provider: { labelKey: "nav.provider", to: "/provider" },
+  connections: { labelKey: "nav.provider", to: "/connections" },
   settings: { labelKey: "nav.settings", to: "/settings" },
   assistant: { labelKey: "router.features.Assistant", to: "/assistant" },
   validate: { labelKey: "router.features.validate", to: "/validate" },
@@ -35,7 +34,7 @@ const SECTIONS: Record<string, { labelKey: string; to: string }> = {
   artifacts: { labelKey: "router.features.artifacts", to: "/artifacts" },
 };
 
-/** Trailing segment under `/builds/:id/…` → its page name. */
+/** Trailing segment under `/refresh-jobs/:id/…` → its page name. */
 const RUN_PAGES: Record<string, string> = {
   run: "router.features.buildRun",
   artifacts: "router.features.artifacts",
@@ -62,10 +61,10 @@ export function crumbsFor(pathname: string, t: Translate): Crumb[] {
 
   const crumbs: Crumb[] = [{ label: t(section.labelKey), to: section.to }];
   if (head === "add") crumbs.push({ label: t("router.features.AddData") });
-  else if (head === "builds" && rest[0] === "new") crumbs.push({ label: t("router.features.newBuild") });
+  else if (head === "refresh-jobs" && rest[0] === "new") crumbs.push({ label: t("router.features.newBuild") });
   else if (rest.length > 0) {
     const id = rest[0];
-    const page = head === "builds" && rest[1] ? RUN_PAGES[rest[1]] : undefined;
+    const page = head === "refresh-jobs" && rest[1] ? RUN_PAGES[rest[1]] : undefined;
     crumbs.push({ label: decode(id), to: page ? `/${head}/${id}` : undefined });
     if (page) crumbs.push({ label: t(page) });
   }

@@ -8,13 +8,13 @@ function LocationProbe() {
   return <output data-testid="location">{location.pathname}{location.search}</output>;
 }
 
-function renderCatalog(initialEntry = "/datasets") {
+function renderCatalog(initialEntry = "/tables") {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <LocationProbe />
       <Routes>
-        <Route path="/datasets" element={<DatasetCatalogPage />} />
-        <Route path="/datasets/:datasetId" element={<p>dataset detail destination</p>} />
+        <Route path="/tables" element={<DatasetCatalogPage />} />
+        <Route path="/tables/:datasetId" element={<p>dataset detail destination</p>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -69,7 +69,7 @@ describe("Table Catalog P0 (#253)", () => {
   });
 
   it("restores URL filters and treats no quality as N/A", async () => {
-    renderCatalog("/datasets?provider=kosis&stage=unavailable&validation=N%2FA");
+    renderCatalog("/tables?provider=kosis&stage=unavailable&validation=N%2FA");
     const row = await screen.findByRole("link", { name: "행정구역별 인구 상세 열기" });
     expect(within(row).getByText("N/A")).toBeInTheDocument();
     expect(screen.getByLabelText("Provider")).toHaveValue("kosis");
@@ -80,7 +80,7 @@ describe("Table Catalog P0 (#253)", () => {
   it("navigates to Dataset Detail when a row is clicked", async () => {
     renderCatalog();
     fireEvent.click(await screen.findByRole("link", { name: "대기질 통합 데이터 상세 열기" }));
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/datasets/air-quality"));
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/tables/air-quality"));
     expect(screen.getByText("dataset detail destination")).toBeInTheDocument();
   });
 });

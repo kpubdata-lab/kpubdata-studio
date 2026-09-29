@@ -72,7 +72,7 @@ describe("Recent Work", () => {
     const matches = await screen.findAllByText("내 스펙");
     fireEvent.click(matches[0]);
     const [href] = navigateMock.mock.calls.at(-1)!;
-    expect(href).toMatch(/^\/builds\/new\?savedSpecId=/);
+    expect(href).toMatch(/^\/refresh-jobs\/new\?savedSpecId=/);
   });
 
   it("shows a new-user empty state when Builder and local storage are both empty", async () => {

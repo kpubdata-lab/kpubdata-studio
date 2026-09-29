@@ -554,7 +554,7 @@ function RecentBuildsSection({
             title={t("home.recent.emptyTitle")}
             description={t("home.recent.emptyDesc")}
             actionLabel={t("home.recent.emptyCta")}
-            actionHref="/builds/new"
+            actionHref="/refresh-jobs/new"
           />
         ) : (
           <ul>
@@ -569,7 +569,7 @@ function RecentBuildsSection({
                   {run.startedAt ? new Date(run.startedAt).toLocaleString(dateLocale()) : "—"}
                 </span>
                 <span className="text-right">
-                  <LinkButton variant="secondary" size="sm" to={`/builds/${run.id}`}>
+                  <LinkButton variant="secondary" size="sm" to={`/refresh-jobs/${run.id}`}>
                     {t("home.recent.view")}
                   </LinkButton>
                 </span>
@@ -615,7 +615,7 @@ function QualitySection({ state }: { state: RecentQualityState }) {
                 <li key={`${alert.runId}:${alert.detail}:${index}`} className="border-b border-border last:border-0">
                   {/* In WARN/FAIL items, link to that Run's Quality context (/builds/:runId, same as ?run=
                       canonical form) — same path already used by BuildsPage and Recent Builds. */}
-                  <Link to={`/builds/${encodeURIComponent(alert.runId)}`} className="block px-6 py-3 hover:bg-muted focus-visible:bg-muted focus-visible:outline-none">
+                  <Link to={`/refresh-jobs/${encodeURIComponent(alert.runId)}`} className="block px-6 py-3 hover:bg-muted focus-visible:bg-muted focus-visible:outline-none">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="truncate font-medium">{alert.runTitle}</span>
                       <span className={alert.status === "fail" ? "font-semibold text-red-600 dark:text-red-400" : "font-semibold text-amber-700 dark:text-amber-400"}>

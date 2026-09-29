@@ -29,7 +29,7 @@ function renderWizard(initialEntries: string[] = ["/add"]) {
     <MemoryRouter initialEntries={initialEntries}>
       <Routes>
         <Route path="/add" element={<AddDataPage />} />
-        <Route path="/builds/:buildId" element={<BuildDetailStub />} />
+        <Route path="/refresh-jobs/:buildId" element={<BuildDetailStub />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -45,7 +45,7 @@ function renderWizardStrict(initialEntries: string[] = ["/add"]) {
       <MemoryRouter initialEntries={initialEntries}>
         <Routes>
           <Route path="/add" element={<AddDataPage />} />
-          <Route path="/builds/:buildId" element={<BuildDetailStub />} />
+          <Route path="/refresh-jobs/:buildId" element={<BuildDetailStub />} />
         </Routes>
       </MemoryRouter>
     </StrictMode>,

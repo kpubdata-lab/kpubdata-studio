@@ -91,7 +91,7 @@ export function DatasetCatalogPage() {
   }, [state.datasets, query, provider, stage, validation]);
 
   function openDataset(datasetId: string) {
-    navigate(`/datasets/${encodeURIComponent(datasetId)}`);
+    navigate(`/tables/${encodeURIComponent(datasetId)}`);
   }
 
   return (

@@ -16,7 +16,7 @@ describe("loadAssistantEvidence (#256)", () => {
     const { evidence, knownRefs } = await loadAssistantEvidence(context);
 
     expect(evidence.dataset?.datasetId).toBe("air-quality");
-    expect(evidence.deepLinks.datasetDetail).toBe("/datasets/air-quality");
+    expect(evidence.deepLinks.datasetDetail).toBe("/tables/air-quality");
     expect(evidence.quality?.results.some((r) => r.rule === "required_column")).toBe(true);
     expect(knownRefs.datasetIds.has("air-quality")).toBe(true);
     expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);

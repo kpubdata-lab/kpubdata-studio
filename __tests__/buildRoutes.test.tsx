@@ -10,10 +10,10 @@ function renderAt(path: string, element: React.ReactNode) {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/builds/:buildId" element={element} />
-        <Route path="/builds/:buildId/run" element={element} />
-        <Route path="/builds/:buildId/artifacts" element={element} />
-        <Route path="/builds/:buildId/publish" element={element} />
+        <Route path="/refresh-jobs/:buildId" element={element} />
+        <Route path="/refresh-jobs/:buildId/run" element={element} />
+        <Route path="/refresh-jobs/:buildId/artifacts" element={element} />
+        <Route path="/refresh-jobs/:buildId/publish" element={element} />
       </Routes>
     </MemoryRouter>,
   );
@@ -22,7 +22,7 @@ function renderAt(path: string, element: React.ReactNode) {
 describe("build-centric routes", () => {
   it("renders the builds master-detail page with data for the buildId from the legacy route (#255)", async () => {
     // 라우트 파라미터가 실제 조회에 쓰이는지 확인하기 위해 mock 이력에 존재하는 id를 쓴다.
-    renderAt("/builds/air-quality-20260621", <BuildsPage />);
+    renderAt("/refresh-jobs/air-quality-20260621", <BuildsPage />);
     // BuildsPage는 비동기로 데이터를 로드하므로 로딩이 완료될 때까지 기다린다.
     await waitFor(() => {
       // 조회된 스펙의 제목이 표시되고,
@@ -32,12 +32,12 @@ describe("build-centric routes", () => {
     expect(screen.getAllByText(/air-quality-20260621/).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /편집/ })).toHaveAttribute(
       "href",
-      "/builds/air-quality-20260621/edit",
+      "/refresh-jobs/air-quality-20260621/edit",
     );
   });
 
   it("shows an explicit not-found state instead of placeholder data for an unknown buildId (#255)", async () => {
-    renderAt("/builds/does-not-exist", <BuildsPage />);
+    renderAt("/refresh-jobs/does-not-exist", <BuildsPage />);
     // 존재하지 않는 빌드를 실제 데이터처럼 보여주면 안 된다 (#119, #120, #255).
     expect(await screen.findByText(/Run을 찾을 수 없습니다/)).toBeInTheDocument();
   });
@@ -45,21 +45,21 @@ describe("build-centric routes", () => {
   it("renders the run page with the build's actual canonical status, not fake progress steps (UI audit #3)", async () => {
     // 이전에는 buildId와 무관하게 항상 "대기"·가짜 stepper였다 — 실제 mock 이력에 존재하는
     // run(dur-pregnancy-taboo-20260621, status: running)으로 canonical 상태를 확인한다.
-    renderAt("/builds/dur-pregnancy-taboo-20260621/run", <BuildRunPage />);
+    renderAt("/refresh-jobs/dur-pregnancy-taboo-20260621/run", <BuildRunPage />);
     expect(await screen.findByText("실행 중")).toBeInTheDocument();
     expect(screen.getByText("상세 진행은 Run 상세에서 확인하세요")).toBeInTheDocument();
     expect(screen.queryByText(/미지원/)).not.toBeInTheDocument();
   });
 
   it("renders the artifacts page with a manifest section", async () => {
-    renderAt("/builds/abc/artifacts", <BuildArtifactsPage />);
+    renderAt("/refresh-jobs/abc/artifacts", <BuildArtifactsPage />);
     // manifest는 비동기로 로드되므로 로드 후 요약이 나타난다.
     expect(await screen.findByText("Manifest 요약")).toBeInTheDocument();
     expect(screen.getByText(/12,304/)).toBeInTheDocument();
   });
 
   it("renders the real publish page with only the supported Hugging Face target", () => {
-    renderAt("/builds/abc/publish", <BuildPublishPage />);
+    renderAt("/refresh-jobs/abc/publish", <BuildPublishPage />);
     expect(screen.getByText("Hugging Face")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "최종 확인" })).toBeDisabled();
     expect(screen.queryByText(/Kaggle|Local only/)).not.toBeInTheDocument();

@@ -232,7 +232,7 @@ function ProviderCredentialSection({
           {t("settings.providers.title")}
         </p>
         <Link
-          to="/provider"
+          to="/connections"
           className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
         >
           {t("settings.providers.manage")}

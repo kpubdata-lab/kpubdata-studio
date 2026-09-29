@@ -23,7 +23,7 @@ function renderAt(path: string) {
   );
 }
 
-async function goToReviewAndValidate(path = "/builds/new") {
+async function goToReviewAndValidate(path = "/refresh-jobs/new") {
   renderAt(path);
   next(); // 템플릿 → 기본 정보
   fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "air-quality" } });
@@ -69,7 +69,7 @@ describe("이 스펙 저장 (Review 단계)", () => {
 
   it("records not_validated when the user saves before running validation", async () => {
     vi.spyOn(window, "prompt").mockReturnValue("검증 전 저장");
-    renderAt("/builds/new");
+    renderAt("/refresh-jobs/new");
     next();
     fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "air-quality" } });
     fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "대기오염" } });
@@ -131,7 +131,7 @@ describe("?savedSpecId= 로 열기", () => {
       validation: { status: "validated_pass", errors: [] },
     });
 
-    renderAt(`/builds/new?savedSpecId=${entry.id}`);
+    renderAt(`/refresh-jobs/new?savedSpecId=${entry.id}`);
 
     await screen.findByText(/불러왔습니다/);
       expect(document.body.textContent).toContain("저장된 인구 스펙");
@@ -145,7 +145,7 @@ describe("?savedSpecId= 로 열기", () => {
   });
 
   it("ignores an unknown savedSpecId without crashing", async () => {
-    renderAt("/builds/new?savedSpecId=does-not-exist");
+    renderAt("/refresh-jobs/new?savedSpecId=does-not-exist");
     expect(await screen.findByRole("heading", { name: "템플릿 선택" })).toBeInTheDocument();
   });
 });

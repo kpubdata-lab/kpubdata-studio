@@ -10,11 +10,11 @@ function LocationProbe() {
   return <output data-testid="location">{location.pathname}{location.search}</output>;
 }
 
-function renderDetail(initialEntry = "/datasets/air-quality") {
+function renderDetail(initialEntry = "/tables/air-quality") {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <LocationProbe />
-      <Routes><Route path="/datasets/:datasetId" element={<DatasetDetailPage />} /></Routes>
+      <Routes><Route path="/tables/:datasetId" element={<DatasetDetailPage />} /></Routes>
       <AssistantDrawer />
     </MemoryRouter>,
   );
@@ -38,22 +38,22 @@ describe("Dataset Detail P0 (#253)", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
     expect(screen.getByRole("link", { name: "이 Run 게시" })).toHaveAttribute(
       "href",
-      "/builds/air-2026-08-14/publish?dataset=air-quality",
+      "/refresh-jobs/air-2026-08-14/publish?dataset=air-quality",
     );
   });
 
   it("selects an accessible historical run from the URL", async () => {
-    renderDetail("/datasets/air-quality?run=air-2026-08-13");
+    renderDetail("/tables/air-quality?run=air-2026-08-13");
     expect(await screen.findByLabelText("Run 선택")).toHaveValue("air-2026-08-13");
     expect(screen.getByTestId("location")).toHaveTextContent("run=air-2026-08-13");
     expect(screen.getByRole("link", { name: "이 Run 게시" })).toHaveAttribute(
       "href",
-      "/builds/air-2026-08-13/publish?dataset=air-quality",
+      "/refresh-jobs/air-2026-08-13/publish?dataset=air-quality",
     );
   });
 
   it("does not silently replace an invalid run with latest", async () => {
-    renderDetail("/datasets/air-quality?run=missing-run");
+    renderDetail("/tables/air-quality?run=missing-run");
     expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
     expect(screen.getByTestId("location")).toHaveTextContent("run=missing-run");
     expect(screen.queryByLabelText("Run 선택")).not.toBeInTheDocument();
@@ -61,7 +61,7 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("keeps an invalid source visible in the select with a recovery path", async () => {
-    renderDetail("/datasets/air-quality?source=ghost__source");
+    renderDetail("/tables/air-quality?source=ghost__source");
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("ghost__source");
     const sourceSelect = screen.getByLabelText("Source 선택");
@@ -74,7 +74,7 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("removes an invalid stage param from the URL to match the fallback UI", async () => {
-    renderDetail("/datasets/air-quality?stage=platinum");
+    renderDetail("/tables/air-quality?stage=platinum");
     await screen.findByLabelText("Run 선택");
     await waitFor(() => expect(screen.getByTestId("location")).not.toHaveTextContent("stage=platinum"));
     // The URL is cleaned at once, but the fallback stage is `bronze` until the stage
@@ -94,7 +94,7 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("updates the stage URL from lineage and applies it to Schema context", async () => {
-    renderDetail("/datasets/air-quality?stage=silver&tab=schema");
+    renderDetail("/tables/air-quality?stage=silver&tab=schema");
     expect(await screen.findByText("observed_at")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Stage 선택"), { target: { value: "bronze" } });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("stage=bronze"));
@@ -102,7 +102,7 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("shows only the persisted Silver sample and no fake Gold preview", async () => {
-    renderDetail("/datasets/air-quality?stage=silver&tab=preview");
+    renderDetail("/tables/air-quality?stage=silver&tab=preview");
     expect(await screen.findByText("2026-08-14T00:00:00Z")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Stage 선택"), { target: { value: "gold" } });
     expect(await screen.findByText("미리보기 없음/지원되지 않음")).toBeInTheDocument();
@@ -118,16 +118,16 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("shows unavailable lineage nodes without presenting them as completed", async () => {
-    renderDetail("/datasets/population");
+    renderDetail("/tables/population");
     const gold = await screen.findByRole("button", { name: "gold unavailable" });
     expect(gold).toHaveAttribute("aria-pressed", "false");
     expect(within(gold).getByText("unavailable")).toBeInTheDocument();
   });
 
   it.each([
-    ["/datasets/air-quality?source=datago__air&tab=quality", "PASS"],
-    ["/datasets/air-quality?source=kma__weather&tab=quality", "FAIL"],
-    ["/datasets/population?source=kosis__population&tab=quality", "N/A"],
+    ["/tables/air-quality?source=datago__air&tab=quality", "PASS"],
+    ["/tables/air-quality?source=kma__weather&tab=quality", "FAIL"],
+    ["/tables/population?source=kosis__population&tab=quality", "N/A"],
   ])("shows actual scoped quality without inventing a score: %s", async (path, expected) => {
     renderDetail(path);
     const panel = await screen.findByRole("tabpanel", { name: "Quality" });
@@ -156,15 +156,15 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("shows run history and links each run to build detail", async () => {
-    renderDetail("/datasets/air-quality?tab=builds");
+    renderDetail("/tables/air-quality?tab=builds");
     const panel = await screen.findByRole("tabpanel", { name: "Runs" });
     expect(within(panel).getByText(/air-2026-08-13/)).toBeInTheDocument();
-    expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/builds/air-2026-08-14");
+    expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/refresh-jobs/air-2026-08-14");
   });
 
   it("offers Refresh for the selected run, opening its spec in edit mode (#423)", async () => {
-    renderDetail("/datasets/air-quality?run=air-2026-08-13");
-    expect(await screen.findByRole("link", { name: "갱신" })).toHaveAttribute("href", "/builds/air-2026-08-13/edit");
+    renderDetail("/tables/air-quality?run=air-2026-08-13");
+    expect(await screen.findByRole("link", { name: "갱신" })).toHaveAttribute("href", "/refresh-jobs/air-2026-08-13/edit");
   });
 
   it("'Ask about this table' carries the known latest-run context into Ask KPubData, not '—' (audit #5, #421)", async () => {
@@ -182,7 +182,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("a saved ?tab=ai link opens Ask KPubData with the canonical run/source/stage, and drops the tab (A1, #421)", async () => {
     // The removed AI tab's links still lead somewhere: the same context the header action writes.
-    renderDetail("/datasets/air-quality?tab=ai");
+    renderDetail("/tables/air-quality?tab=ai");
 
     await waitFor(() => {
       const location = screen.getByTestId("location").textContent ?? "";
@@ -203,7 +203,7 @@ describe("Dataset Detail P0 (#253)", () => {
   });
 
   it("a saved ?tab=ai link does not overwrite an explicit valid run/source/stage (A1)", async () => {
-    renderDetail("/datasets/air-quality?tab=ai&run=air-2026-08-13&source=datago__air&stage=silver");
+    renderDetail("/tables/air-quality?tab=ai&run=air-2026-08-13&source=datago__air&stage=silver");
 
     await findAssistant();
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -280,7 +280,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
   });
 
   it("does not crash and uses the defined fallback ('확인 불가') for a run with no spec digest, instead of inventing one", async () => {
-    renderDetail("/datasets/population");
+    renderDetail("/tables/population");
     await screen.findByLabelText("Run 선택");
     const passport = await findPassport();
     const digestRow = within(passport).getByText("BuildSpec digest").closest("div")!;
@@ -288,7 +288,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
   });
 
   it("shows the defined '제공되지 않음' fallback for schema when the selected stage carries no schema (bronze), without crashing", async () => {
-    renderDetail("/datasets/air-quality?stage=bronze");
+    renderDetail("/tables/air-quality?stage=bronze");
     await screen.findByLabelText("Run 선택");
     const passport = await findPassport();
     const schemaRow = within(passport).getByText("Schema").closest("div")!;

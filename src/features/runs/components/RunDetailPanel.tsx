@@ -200,16 +200,16 @@ export function RunDetailPanel({
           {listItem?.finishedAt ? <span className="text-xs text-muted-foreground">{t("builds.detail.finishedAt", { time: formatDateTime(listItem.finishedAt) })}</span> : null}
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(runId)}/edit`}>
+          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/edit`}>
             {t("builds.detail.edit")}
           </Link>
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(runId)}/run`}>
+          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/run`}>
             {t("builds.detail.run")}
           </Link>
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(runId)}/artifacts`}>
+          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/artifacts`}>
             {t("builds.detail.artifacts")}
           </Link>
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/builds/${encodeURIComponent(runId)}/publish`}>
+          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/publish`}>
             {t("builds.detail.publish")}
           </Link>
           <Button
@@ -475,7 +475,7 @@ export function RunDetailPanel({
               {datasetId ? (
                 <Link
                   className="mt-2 inline-block text-xs font-medium text-accent-subtle-foreground underline"
-                  to={`/datasets/${encodeURIComponent(datasetId)}`}
+                  to={`/tables/${encodeURIComponent(datasetId)}`}
                 >
                   {t("builds.spec.viewDataset", { id: datasetId })}
                 </Link>

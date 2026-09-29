@@ -111,7 +111,7 @@ const specSnapshot: BuildSpecSnapshotResponse = {
 
 function renderBuilds() {
   return render(
-    <MemoryRouter initialEntries={[`/builds?run=${RUN_ID}`]}>
+    <MemoryRouter initialEntries={[`/refresh-jobs?run=${RUN_ID}`]}>
       <BuildsPage />
     </MemoryRouter>,
   );

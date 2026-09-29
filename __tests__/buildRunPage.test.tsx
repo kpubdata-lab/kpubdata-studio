@@ -5,9 +5,9 @@ import { BuildRunPage } from "@/pages/BuildRunPage";
 
 function renderRun(buildId: string) {
   return render(
-    <MemoryRouter initialEntries={[`/builds/${buildId}/run`]}>
+    <MemoryRouter initialEntries={[`/refresh-jobs/${buildId}/run`]}>
       <Routes>
-        <Route path="/builds/:buildId/run" element={<BuildRunPage />} />
+        <Route path="/refresh-jobs/:buildId/run" element={<BuildRunPage />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -47,7 +47,7 @@ describe("BuildRunPage (audit #3)", () => {
 
     const detailLinks = screen
       .getAllByRole("link")
-      .filter((a) => a.getAttribute("href")?.startsWith("/builds?run="));
+      .filter((a) => a.getAttribute("href")?.startsWith("/refresh-jobs?run="));
     expect(detailLinks.length).toBeGreaterThan(0);
     // legacy 화면에 항상-disabled 가짜 취소 버튼은 없다.
     expect(screen.queryByRole("button", { name: "취소" })).not.toBeInTheDocument();

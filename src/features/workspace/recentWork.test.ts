@@ -16,13 +16,13 @@ describe("toRecentWorkItems", () => {
     });
 
     expect(items).toHaveLength(4);
-    expect(items.find((i) => i.kind === "dataset")).toMatchObject({ id: "air", source: "builder", href: "/datasets/air" });
-    expect(items.find((i) => i.kind === "build")).toMatchObject({ id: "run-1", source: "builder", href: "/builds/run-1" });
+    expect(items.find((i) => i.kind === "dataset")).toMatchObject({ id: "air", source: "builder", href: "/tables/air" });
+    expect(items.find((i) => i.kind === "build")).toMatchObject({ id: "run-1", source: "builder", href: "/refresh-jobs/run-1" });
     expect(items.find((i) => i.kind === "report")).toMatchObject({ id: "rep-1", source: "local", href: "/reports/rep-1" });
     expect(items.find((i) => i.kind === "savedSpec")).toMatchObject({
       id: "spec-1",
       source: "local",
-      href: "/builds/new?savedSpecId=spec-1",
+      href: "/refresh-jobs/new?savedSpecId=spec-1",
     });
   });
 

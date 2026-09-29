@@ -2012,7 +2012,7 @@
     "liveForbidden": "You do not have permission to read this run's live status — showing the last confirmed status instead.",
     "detailHint": {
       "title": "See stage-by-stage progress in run details",
-      "desc": "This screen shows only the canonical run status, the same as the runs list and detail. Stage progress (Bronze/Silver/Gold), the run event timeline and cooperative cancellation live in run details (/builds?run=...)."
+      "desc": "This screen shows only the canonical run status, the same as the runs list and detail. Stage progress (Bronze/Silver/Gold), the run event timeline and cooperative cancellation live in run details (/refresh-jobs?run=...)."
     },
     "openDetail": "Open run details",
     "openArtifacts": "View snapshot files",
