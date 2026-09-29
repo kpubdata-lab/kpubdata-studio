@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카탈로그 — KPubData 프로토타입</title>
+<link rel="stylesheet" href="tokens.css">
+<style>.lockup{display:flex;align-items:center;gap:8px;padding:4px 8px 10px}.lockup img{height:26px}.lockup b{font:700 17px/1 var(--font-sans);color:#fff;letter-spacing:-.01em}.lockup span{font:500 12px/1 var(--font-sans);color:#94a3b8}</style>
+</head>
+<body>
+<!-- Prototype for kpubdata-studio#425. Static; data is illustrative. Rules: docs/brand/VISUAL_IDENTITY.md -->
+<div class="shell">
+<aside class="sidebar">
+<a class="lockup" href="index.html"><img src="../../assets/logo/kpubdata-brand-assets/svg/symbol_dark.svg" alt=""><b>KPubData</b><span>Studio</span></a>
+<nav><a href="index.html">홈</a><div class="group-label">DATA</div><a href="catalog.html" class="active">카탈로그</a><a href="tables.html">테이블</a><div class="group-label">ANALYZE</div><a href="sql.html">SQL Workspace</a><a href="#" class="soon">Saved Queries</a><div class="group-label">OPERATE</div><a href="#">갱신 작업</a><a href="#">품질</a><a href="#">모니터링</a></nav>
+<div class="bottom"><a href="#">연결</a><a href="#">설정</a></div>
+</aside>
+<div>
+<header class="topbar">
+<nav class="crumbs" aria-label="현재 위치"><strong>카탈로그</strong></nav>
+<div class="tools"><div class="search">테이블·소스·컬럼 검색 ⌘K</div><div class="ask">Ask KPubData</div><div class="avatar">DH</div></div>
+</header>
+<main>
+<div class="page-head"><div><h1>카탈로그</h1><p>공공 API 소스 데이터셋을 기관·분야로 찾고, 필요한 것으로 테이블을 만듭니다.</p></div>
+<div class="actions"><a class="btn primary" href="tables.html">테이블 만들기</a></div></div>
+<div class="card">
+<div class="filters"><span class="chip on">전체 기관</span><span class="chip">국토교통부</span><span class="chip">기상청</span><span class="chip">한국환경공단</span><span class="chip">통계청</span><span class="chip">키 필요한 것만</span></div>
+<div class="table-wrap"><table>
+<tr><th>소스 데이터셋</th><th>기관 · Provider</th><th>Access</th><th>Maturity</th><th>이 소스로 만든 테이블</th></tr>
+<tr><td>아파트 매매 실거래가<div class="muted mono">datago.apt_trade</div></td><td>국토교통부 · data.go.kr</td><td><span class="badge success"><span class="axis"></span>Available</span></td><td><span class="badge unknown"><span class="axis"></span>Stable</span></td><td class="mono">housing.apartment_trade_monthly</td></tr>
+<tr><td>대기오염정보 측정소별 실시간<div class="muted mono">datago.air_quality</div></td><td>한국환경공단 · data.go.kr</td><td><span class="badge warning"><span class="axis"></span>Application required</span></td><td><span class="badge unknown"><span class="axis"></span>Stable</span></td><td class="mono">air.quality_hourly</td></tr>
+<tr><td>종관기상관측(ASOS) 일자료<div class="muted mono">kma.asos_daily</div></td><td>기상청 · KMA API허브</td><td><span class="badge warning"><span class="axis"></span>Key required</span></td><td><span class="badge unknown"><span class="axis"></span>Beta</span></td><td class="mono">weather.asos_daily</td></tr>
+<tr><td>시군구별 이동자수<div class="muted mono">kosis.population_migration</div></td><td>통계청 · KOSIS</td><td><span class="badge unknown"><span class="axis"></span>Unknown</span></td><td><span class="badge unknown"><span class="axis"></span>Experimental</span></td><td class="muted">없음</td></tr>
+<tr><td>지하철 호선별 역별 승하차<div class="muted mono">seoul.subway_ridership</div></td><td>서울시 · 열린데이터광장</td><td><span class="badge failure"><span class="axis"></span>Retired</span></td><td><span class="badge unknown"><span class="axis"></span>Stable</span></td><td class="muted">없음</td></tr>
+</table></div></div>
+<p class="muted">Access 는 kpubdata 의 probe 분류(PROBE_STATUSES)와 같은 어휘다. Maturity 는 상태가 아니므로 중립색이다.</p>
+</main>
+</div>
+</div>
+</body>
+</html>

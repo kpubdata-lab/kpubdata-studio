@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>테이블 — KPubData 프로토타입</title>
+<link rel="stylesheet" href="tokens.css">
+<style>.lockup{display:flex;align-items:center;gap:8px;padding:4px 8px 10px}.lockup img{height:26px}.lockup b{font:700 17px/1 var(--font-sans);color:#fff;letter-spacing:-.01em}.lockup span{font:500 12px/1 var(--font-sans);color:#94a3b8}</style>
+</head>
+<body>
+<!-- Prototype for kpubdata-studio#425. Static; data is illustrative. Rules: docs/brand/VISUAL_IDENTITY.md -->
+<div class="shell">
+<aside class="sidebar">
+<a class="lockup" href="index.html"><img src="../../assets/logo/kpubdata-brand-assets/svg/symbol_dark.svg" alt=""><b>KPubData</b><span>Studio</span></a>
+<nav><a href="index.html">홈</a><div class="group-label">DATA</div><a href="catalog.html">카탈로그</a><a href="tables.html" class="active">테이블</a><div class="group-label">ANALYZE</div><a href="sql.html">SQL Workspace</a><a href="#" class="soon">Saved Queries</a><div class="group-label">OPERATE</div><a href="#">갱신 작업</a><a href="#">품질</a><a href="#">모니터링</a></nav>
+<div class="bottom"><a href="#">연결</a><a href="#">설정</a></div>
+</aside>
+<div>
+<header class="topbar">
+<nav class="crumbs" aria-label="현재 위치"><strong>테이블</strong></nav>
+<div class="tools"><div class="search">테이블·소스·컬럼 검색 ⌘K</div><div class="ask">Ask KPubData</div><div class="avatar">DH</div></div>
+</header>
+<main>
+<div class="page-head"><div><h1>테이블</h1><p>소스 데이터셋으로 만든 분석용 테이블. 상태는 축마다 따로 보입니다.</p></div>
+<div class="actions"><a class="btn" href="sql.html">SQL로 조회</a><a class="btn primary" href="catalog.html">테이블 만들기</a></div></div>
+<div class="card"><div class="table-wrap"><table>
+<tr><th>테이블</th><th>현재 스냅샷</th><th class="num">행</th><th>범위</th><th>Health</th><th>Completeness</th><th>마지막 갱신</th></tr>
+<tr><td><a class="mono" href="table.html">housing.apartment_trade_monthly</a></td><td class="mono">snap_019</td><td class="num">4,812,330</td><td>전국 · 2006-01~2026-08</td><td><span class="badge stale"><span class="axis"></span>Stale</span></td><td><span class="badge success"><span class="axis"></span>Complete</span></td><td class="muted">9일 전</td></tr>
+<tr><td class="mono">air.quality_hourly</td><td class="mono">snap_142</td><td class="num">18,204,551</td><td>전국 642개 측정소 · 최근 3년</td><td><span class="badge success"><span class="axis"></span>Healthy</span></td><td><span class="badge partial"><span class="axis"></span>Partial</span></td><td class="muted">1시간 전</td></tr>
+<tr><td class="mono">weather.asos_daily</td><td class="mono">snap_087</td><td class="num">1,338,905</td><td>96개 지점 · 1973~</td><td><span class="badge warning"><span class="axis"></span>Degraded</span></td><td><span class="badge success"><span class="axis"></span>Complete</span></td><td class="muted">2일 전</td></tr>
+<tr><td class="mono">population.migration_monthly</td><td class="mono">snap_004</td><td class="num">—</td><td>시군구 · 2015~</td><td><span class="badge unknown"><span class="axis"></span>Unknown</span></td><td><span class="badge unknown"><span class="axis"></span>Unknown</span></td><td class="muted">31일 전</td></tr>
+</table></div></div>
+<p class="muted">행 수를 모르면 0이 아니라 "—" 로 둔다. Partial 은 Complete 처럼 보이지 않는다.</p>
+</main>
+</div>
+</div>
+</body>
+</html>

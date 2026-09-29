@@ -1,0 +1,173 @@
+/*
+ * KPubData visual tokens for the warehouse prototypes (#425).
+ * docs/brand/VISUAL_IDENTITY.md explains each role. The rule this file exists to hold:
+ * brand colour and status colour are different tokens with different values, so
+ * "indigo" never comes to mean "success". __tests__/visualTokensGate.test.ts checks it.
+ */
+
+:root {
+  /* Brand — identity and interaction, never a status. */
+  --brand-primary: #5b5bd6;
+  --brand-primary-foreground: #ffffff;
+  --brand-subtle: #eeeeff;
+  --brand-ink: #18181b;
+
+  /* Data accent — highlights in data itself (charts, the column in focus). */
+  --data-accent: #818cf8;
+
+  /* Neutral surfaces. */
+  --surface-page: #fafafa;
+  --surface-card: #ffffff;
+  --surface-muted: #f4f4f5;
+  --surface-sidebar: #0f172a;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --border: #e4e4e7;
+
+  /* Status — one axis each; warning, stale and partial share amber and differ by label. */
+  --status-success: #15803d;
+  --status-success-subtle: #dcfce7;
+  --status-warning: #b45309;
+  --status-warning-subtle: #fef3c7;
+  --status-failure: #b91c1c;
+  --status-failure-subtle: #fee2e2;
+  --status-unknown: #52525b;
+  --status-unknown-subtle: #f4f4f5;
+  --status-stale: var(--status-warning);
+  --status-stale-subtle: var(--status-warning-subtle);
+  --status-partial: var(--status-warning);
+  --status-partial-subtle: var(--status-warning-subtle);
+
+  /* Type. Pretendard is the wordmark's face; identifiers and SQL are always mono. */
+  --font-sans: "Pretendard", "Pretendard Variable", -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "D2Coding", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --text-page-title: 600 20px/28px var(--font-sans);
+  --text-section-title: 600 14px/20px var(--font-sans);
+  --text-body: 400 14px/20px var(--font-sans);
+  --text-table: 400 13px/18px var(--font-sans);
+  --text-meta: 400 12px/16px var(--font-sans);
+  --text-code: 400 13px/18px var(--font-mono);
+
+  /* Density — a data tool, not a landing page. */
+  --row-height: 36px;
+  --gap: 12px;
+  --radius: 8px;
+}
+
+:root[data-theme="dark"] {
+  --brand-primary: #818cf8;
+  --brand-primary-foreground: #0b1020;
+  --brand-subtle: #1e1b4b;
+  --brand-ink: #ffffff;
+  --data-accent: #a5b4fc;
+  --surface-page: #09090b;
+  --surface-card: #111113;
+  --surface-muted: #18181b;
+  --surface-sidebar: #0b1220;
+  --text-primary: #fafafa;
+  --text-secondary: #d4d4d8;
+  --text-muted: #a1a1aa;
+  --border: #27272a;
+  --status-success: #4ade80;
+  --status-success-subtle: #052e16;
+  --status-warning: #fbbf24;
+  --status-warning-subtle: #422006;
+  --status-failure: #f87171;
+  --status-failure-subtle: #450a0a;
+  --status-unknown: #a1a1aa;
+  --status-unknown-subtle: #27272a;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface-page); color: var(--text-primary); font: var(--text-body); }
+a { color: inherit; text-decoration: none; }
+code, .mono { font: var(--text-code); }
+
+.shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+.sidebar { background: var(--surface-sidebar); color: #cbd5e1; padding: 16px 12px; display: flex; flex-direction: column; gap: 18px; }
+.sidebar .logo { display: block; padding: 4px 8px 8px; }
+.sidebar .logo img { height: 28px; }
+.sidebar .group-label { font: 600 11px/16px var(--font-sans); letter-spacing: .08em; color: #94a3b8; padding: 0 8px 6px; margin-top: 16px; }
+.sidebar a { display: block; padding: 7px 10px; border-radius: 6px; font-size: 13px; }
+.sidebar a:hover { background: #111c32; }
+.sidebar a.active { background: #293354; color: #fff; }
+.sidebar a.soon { color: #64748b; pointer-events: none; }
+.sidebar a.soon::after { content: " · 예정"; font-size: 11px; }
+.sidebar .bottom { margin-top: auto; border-top: 1px solid #1e293b; padding-top: 10px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 24px; border-bottom: 1px solid var(--border); background: var(--surface-card); }
+.crumbs { display: flex; gap: 6px; font-size: 13px; color: var(--text-muted); min-width: 0; }
+.crumbs strong { color: var(--text-primary); font-weight: 600; }
+.topbar .tools { display: flex; gap: 8px; align-items: center; }
+.search { width: 280px; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 10px; font: var(--text-meta); color: var(--text-muted); display: flex; align-items: center; }
+.ask { height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-card); font: var(--text-meta); color: var(--text-secondary); display: flex; align-items: center; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font-size: 12px; }
+
+main { padding: 20px 24px 40px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.page-head h1 { font: var(--text-page-title); margin: 0; }
+.page-head p { margin: 4px 0 0; color: var(--text-secondary); font: var(--text-meta); }
+.btn { height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-card); font: 500 13px/30px var(--font-sans); color: var(--text-primary); display: inline-block; }
+.btn.primary { background: var(--brand-primary); color: var(--brand-primary-foreground); border-color: var(--brand-primary); }
+.actions { display: flex; gap: 8px; }
+
+.card { background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius); }
+.card > h2 { font: var(--text-section-title); margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.card .body, .card.body { padding: 12px 14px; }
+.shell > div, .grid > * { min-width: 0; }
+.table-wrap { overflow-x: auto; }
+.grid { display: grid; gap: var(--gap); }
+.cols-2 { grid-template-columns: 1fr 1fr; }
+.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.side { grid-template-columns: 1fr 320px; }
+.sql-layout { grid-template-columns: 240px 1fr; }
+
+table { width: 100%; border-collapse: collapse; font: var(--text-table); }
+th { text-align: left; font: 600 12px/16px var(--font-sans); color: var(--text-muted); padding: 8px 14px; border-bottom: 1px solid var(--border); background: var(--surface-muted); }
+td { height: var(--row-height); padding: 0 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+
+.metric .label { font: var(--text-meta); color: var(--text-muted); }
+.metric .value { font: 600 20px/28px var(--font-sans); font-variant-numeric: tabular-nums; }
+.metric .sub { font: var(--text-meta); color: var(--text-secondary); }
+
+/* A status badge always carries its axis and its word; colour alone never carries meaning. */
+.badge { display: inline-flex; gap: 4px; align-items: center; height: 20px; padding: 0 7px; border-radius: 10px; font: 500 11px/20px var(--font-sans); white-space: nowrap; }
+.badge .axis { opacity: .7; }
+.badge.success { color: var(--status-success); background: var(--status-success-subtle); }
+.badge.warning { color: var(--status-warning); background: var(--status-warning-subtle); }
+.badge.failure { color: var(--status-failure); background: var(--status-failure-subtle); }
+.badge.unknown { color: var(--status-unknown); background: var(--status-unknown-subtle); }
+.badge.stale { color: var(--status-stale); background: var(--status-stale-subtle); }
+.badge.partial { color: var(--status-partial); background: var(--status-partial-subtle); }
+.badges { display: flex; gap: 4px; flex-wrap: wrap; }
+
+.tag { font: var(--text-meta); color: var(--text-secondary); background: var(--surface-muted); border-radius: 4px; padding: 1px 6px; }
+.muted { color: var(--text-muted); font: var(--text-meta); }
+.sql { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 12px; font: var(--text-code); white-space: pre; overflow-x: auto; margin: 0; }
+.kw { color: var(--brand-primary); font-weight: 600; }
+.bar { height: 6px; background: var(--surface-muted); border-radius: 3px; overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--data-accent); }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+.tabs a { padding: 8px 12px; font-size: 13px; color: var(--text-muted); border-bottom: 2px solid transparent; }
+.tabs a.on { color: var(--text-primary); border-bottom-color: var(--brand-primary); }
+dl.kv { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; margin: 0; font: var(--text-table); }
+dl.kv dt { color: var(--text-muted); }
+dl.kv dd { margin: 0; }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.chip { height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 14px; font: var(--text-meta); line-height: 26px; color: var(--text-secondary); background: var(--surface-card); }
+.chip.on { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-subtle); }
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .cols-2, .cols-3, .cols-4, .side, .sql-layout { grid-template-columns: 1fr; }
+  .search { display: none; }
+  main { padding: 16px; }
+  .topbar { padding: 10px 16px; }
+  .page-head { flex-direction: column; align-items: flex-start; }
+  .actions { flex-wrap: wrap; }
+}

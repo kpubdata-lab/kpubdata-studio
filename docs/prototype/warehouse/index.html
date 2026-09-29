@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>홈 — KPubData 프로토타입</title>
+<link rel="stylesheet" href="tokens.css">
+<style>.lockup{display:flex;align-items:center;gap:8px;padding:4px 8px 10px}.lockup img{height:26px}.lockup b{font:700 17px/1 var(--font-sans);color:#fff;letter-spacing:-.01em}.lockup span{font:500 12px/1 var(--font-sans);color:#94a3b8}</style>
+</head>
+<body>
+<!-- Prototype for kpubdata-studio#425. Static; data is illustrative. Rules: docs/brand/VISUAL_IDENTITY.md -->
+<div class="shell">
+<aside class="sidebar">
+<a class="lockup" href="index.html"><img src="../../assets/logo/kpubdata-brand-assets/svg/symbol_dark.svg" alt=""><b>KPubData</b><span>Studio</span></a>
+<nav><a href="index.html" class="active">홈</a><div class="group-label">DATA</div><a href="catalog.html">카탈로그</a><a href="tables.html">테이블</a><div class="group-label">ANALYZE</div><a href="sql.html">SQL Workspace</a><a href="#" class="soon">Saved Queries</a><div class="group-label">OPERATE</div><a href="#">갱신 작업</a><a href="#">품질</a><a href="#">모니터링</a></nav>
+<div class="bottom"><a href="#">연결</a><a href="#">설정</a></div>
+</aside>
+<div>
+<header class="topbar">
+<nav class="crumbs" aria-label="현재 위치"><strong>홈</strong></nav>
+<div class="tools"><div class="search">테이블·소스·컬럼 검색 ⌘K</div><div class="ask">Ask KPubData</div><div class="avatar">DH</div></div>
+</header>
+<main>
+<div class="page-head"><div><h1>홈</h1><p>내 테이블의 상태와 최근 갱신을 한 화면에서 봅니다.</p></div>
+<div class="actions"><a class="btn" href="catalog.html">공공데이터 둘러보기</a><a class="btn primary" href="sql.html">새 SQL 쿼리</a></div></div>
+<div class="grid cols-4">
+<div class="card body metric"><div class="label">테이블</div><div class="value">18</div><div class="sub">Gold 11 · Silver 7</div></div>
+<div class="card body metric"><div class="label">갱신 성공 (24h)</div><div class="value">21 / 24</div><div class="sub">실패 2 · 취소 1</div></div>
+<div class="card body metric"><div class="label">Stale 테이블</div><div class="value">3</div><div class="sub">갱신 주기 초과</div></div>
+<div class="card body metric"><div class="label">Partial 스냅샷</div><div class="value">2</div><div class="sub">일부 지역·기간 누락</div></div>
+</div>
+<div class="grid side">
+<div class="card"><h2>주의가 필요한 테이블</h2><div class="table-wrap"><table>
+<tr><th>테이블</th><th>상태</th><th>마지막 스냅샷</th></tr>
+<tr><td><a class="mono" href="table.html">housing.apartment_trade_monthly</a></td><td class="badges"><span class="badge stale"><span class="axis">Health </span>Stale</span><span class="badge success"><span class="axis">Refresh </span>Succeeded</span></td><td class="mono">snap_019 · 9일 전</td></tr>
+<tr><td class="mono">air.quality_hourly</td><td class="badges"><span class="badge partial"><span class="axis">Completeness </span>Partial</span></td><td class="mono">snap_142 · 1시간 전</td></tr>
+<tr><td class="mono">weather.asos_daily</td><td class="badges"><span class="badge failure"><span class="axis">Refresh </span>Failed</span></td><td class="mono">snap_087 · 2일 전</td></tr>
+<tr><td class="mono">population.migration_monthly</td><td class="badges"><span class="badge unknown"><span class="axis">Access </span>Unknown</span></td><td class="mono">snap_004 · 31일 전</td></tr>
+</table></div></div>
+<div class="card"><h2>최근 갱신</h2><div class="body grid" style="gap:8px">
+<div><span class="mono">air.quality_hourly</span><div class="muted">run 1043 · Succeeded · 12분 전</div></div>
+<div><span class="mono">weather.asos_daily</span><div class="muted">run 1042 · Failed · KMA 응답 없음</div></div>
+<div><span class="mono">housing.apartment_trade_monthly</span><div class="muted">run 1039 · Succeeded · 9일 전</div></div>
+</div></div>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>

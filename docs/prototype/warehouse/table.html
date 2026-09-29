@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>테이블 상세 — KPubData 프로토타입</title>
+<link rel="stylesheet" href="tokens.css">
+<style>.lockup{display:flex;align-items:center;gap:8px;padding:4px 8px 10px}.lockup img{height:26px}.lockup b{font:700 17px/1 var(--font-sans);color:#fff;letter-spacing:-.01em}.lockup span{font:500 12px/1 var(--font-sans);color:#94a3b8}</style>
+</head>
+<body>
+<!-- Prototype for kpubdata-studio#425. Static; data is illustrative. Rules: docs/brand/VISUAL_IDENTITY.md -->
+<div class="shell">
+<aside class="sidebar">
+<a class="lockup" href="index.html"><img src="../../assets/logo/kpubdata-brand-assets/svg/symbol_dark.svg" alt=""><b>KPubData</b><span>Studio</span></a>
+<nav><a href="index.html">홈</a><div class="group-label">DATA</div><a href="catalog.html">카탈로그</a><a href="tables.html" class="active">테이블</a><div class="group-label">ANALYZE</div><a href="sql.html">SQL Workspace</a><a href="#" class="soon">Saved Queries</a><div class="group-label">OPERATE</div><a href="#">갱신 작업</a><a href="#">품질</a><a href="#">모니터링</a></nav>
+<div class="bottom"><a href="#">연결</a><a href="#">설정</a></div>
+</aside>
+<div>
+<header class="topbar">
+<nav class="crumbs" aria-label="현재 위치"><a href="tables.html">테이블</a> <span>/</span> <strong>housing.apartment_trade_monthly</strong></nav>
+<div class="tools"><div class="search">테이블·소스·컬럼 검색 ⌘K</div><div class="ask">Ask KPubData</div><div class="avatar">DH</div></div>
+</header>
+<main>
+<div class="page-head"><div><h1 class="mono" style="font:600 18px/26px var(--font-mono)">housing.apartment_trade_monthly</h1><p>아파트 매매 실거래가(국토교통부)로 만든 월별 테이블</p></div>
+<div class="actions"><a class="btn" href="#">Ask about this table</a><a class="btn" href="#">갱신</a><a class="btn primary" href="sql.html">쿼리</a></div></div>
+<div class="badges"><span class="badge stale"><span class="axis">Health </span>Stale</span><span class="badge success"><span class="axis">Completeness </span>Complete</span><span class="badge success"><span class="axis">Refresh </span>Succeeded</span><span class="badge success"><span class="axis">Access </span>Available</span><span class="badge unknown"><span class="axis">Maturity </span>Stable</span></div>
+<div class="tabs"><a class="on" href="#">개요</a><a href="#">스키마</a><a href="#">미리보기</a><a href="#">품질</a><a href="#">스냅샷</a><a href="#">Lineage</a></div>
+<div class="grid side">
+<div class="grid" style="gap:12px">
+<div class="card"><h2>스키마 <span class="muted">· snap_019 · 9개 컬럼</span></h2><div class="table-wrap"><table>
+<tr><th>컬럼</th><th>타입</th><th>설명</th><th>Null</th></tr>
+<tr><td class="mono">region_id</td><td class="mono">varchar(5)</td><td>법정동 시군구 코드</td><td class="num">0%</td></tr>
+<tr><td class="mono">deal_ym</td><td class="mono">char(6)</td><td>계약 연월</td><td class="num">0%</td></tr>
+<tr><td class="mono">apt_name</td><td class="mono">varchar</td><td>단지명</td><td class="num">0.1%</td></tr>
+<tr><td class="mono">exclusive_area_m2</td><td class="mono">decimal(8,2)</td><td>전용면적</td><td class="num">0%</td></tr>
+<tr><td class="mono">deal_amount_krw</td><td class="mono">bigint</td><td>거래금액(원)</td><td class="num">0%</td></tr>
+</table></div></div>
+<div class="card"><h2>월별 거래 건수</h2><div class="body grid" style="gap:6px">
+<div class="muted">2026-04</div><div class="bar"><span style="width:62%"></span></div>
+<div class="muted">2026-05</div><div class="bar"><span style="width:71%"></span></div>
+<div class="muted">2026-06</div><div class="bar"><span style="width:80%"></span></div>
+<div class="muted">2026-07</div><div class="bar"><span style="width:77%"></span></div>
+<div class="muted">2026-08</div><div class="bar"><span style="width:54%"></span></div>
+</div></div>
+</div>
+<div class="grid" style="gap:12px;align-content:start">
+<div class="card"><h2>현재 스냅샷</h2><div class="body"><dl class="kv">
+<dt>스냅샷</dt><dd class="mono">snap_019</dd><dt>갱신 실행</dt><dd class="mono">run 1039</dd><dt>행</dt><dd>4,812,330</dd><dt>범위</dt><dd>전국 · 2006-01~2026-08</dd><dt>갱신 주기</dt><dd>7일 — <b style="color:var(--status-stale)">2일 초과</b></dd><dt>라이선스</dt><dd>공공누리 1유형</dd></dl></div></div>
+<div class="card"><h2>Lineage</h2><div class="body muted"><span class="mono">datago.apt_trade</span> → bronze → silver → <b>gold</b></div></div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>
