@@ -312,6 +312,9 @@ export const catalogDatasetSchema = z.object({
   // Backward compat: this field is undefined on old Builder versions that don't send it yet
   // (consumer uses `?? null`). Latest Builder always sends a value (object or null).
   application: catalogApplicationSchema.nullable().optional(),
+  // Provider wording for the daily cap, from the spec (kpubdata-builder#778). Optional: a
+  // Builder that does not send it yet, or a spec that does not declare it, reads as unknown.
+  quota: z.string().nullable().optional(),
 });
 
 export const catalogProviderSchema = z.object({

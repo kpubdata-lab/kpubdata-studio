@@ -877,6 +877,25 @@
       "semas": "SEMAS",
       "seoul": "Seoul Open Data Plaza",
       "sgis": "SGIS statistical geographic information"
+    },
+    "applications": {
+      "title": "Where to apply",
+      "desc": "Source datasets that need an application on top of a service key, grouped by the page where you apply. One application can unlock several source datasets.",
+      "loadError": "Could not load the catalog, so the application list is unavailable.",
+      "none": "No source dataset in the catalog is marked as needing an application.",
+      "colProvider": "Provider",
+      "colDatasets": "Source datasets",
+      "colQuota": "Daily cap",
+      "colUsage": "Used today",
+      "colApply": "Application",
+      "apply": "Apply ↗",
+      "unknown": "Unknown",
+      "usageNote": "KPubData Engine does not count calls per key, so usage is unknown. A cap the spec does not state is shown as unknown, not zero.",
+      "unknownCount": "{{count}} source datasets do not say whether they need an application — unknown, not \"not needed\". A successful preview is the final check.",
+      "operationalTitle": "Moving to an operational account (data.go.kr)",
+      "operational1": "A development account is approved automatically but its daily traffic is capped per source dataset.",
+      "operational2": "Register a use case for the source dataset under My Page › Open API › development account details.",
+      "operational3": "Then apply for an operational account; after review, the traffic cap is raised."
     }
   },
   "home": {
