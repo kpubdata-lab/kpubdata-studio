@@ -185,7 +185,7 @@ describe("MonitoringPage", () => {
       expect(screen.getByText("사용 불가")).toBeInTheDocument();
     });
     // Builder API 카드의 배지가 정상이어선 안 된다(Artifact Store의 정상 배지와 구분).
-    const apiCard = screen.getByText("Builder API").closest("div")?.parentElement?.parentElement;
+    const apiCard = screen.getByText("Engine API").closest("div")?.parentElement?.parentElement;
     expect(apiCard).not.toBeNull();
     expect(apiCard?.textContent).not.toContain("정상");
     expect(screen.getByText(/측정 불가/)).toBeInTheDocument();

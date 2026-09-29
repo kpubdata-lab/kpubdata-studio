@@ -12,6 +12,7 @@
 
 ### Changed
 
+- Studio calls the execution engine **KPubData Engine** wherever a user reads it (#424): `Builder API` → `Engine API`, `Builder catalog` → `Engine catalog`, and so on, across all 88 ko and 88 en locale values that named it and seven on-screen literals (Monitoring, Settings, Publish readiness, run errors, Workspace source, Dataset Detail and report export tags). Korean particles follow the new name (`Builder는` → `KPubData Engine은`). The repository, package, environment variables and code identifiers keep `builder`. A test fails if a locale value says `Builder` again.
 - Ask KPubData is a feature you open from where you are, not a place of its own (#421). The sidebar has no AI group (Reports moves to the workspace group), Home has no Ask KPubData hero, and Dataset Detail has no AI tab: an **Ask about this table** header action — and the Data Passport link — writes the run, source and stage to the URL and opens the drawer with that context. A saved `?tab=ai` link opens the drawer the same way and drops the tab. `/assistant` still works.
 - `git clone && npm ci && npm test` works on a fresh machine (#431). `.nvmrc` names the Node major to use and a repository-scoped `.npmrc` pins npm to the registry the lockfile resolves from, so a machine-wide corporate feed no longer breaks the install. A test fails if either drifts from `engines` or the lockfile.
 - Released together with kpubdata-builder 0.4.1, which moves to kpubdata 0.7 for its security fixes. Builder and Studio share one version (kpubdata ADR 0004).

@@ -62,7 +62,7 @@ describe("Recent Work", () => {
     expect(screen.getAllByText("Dataset").length + screen.getAllByText("Build").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Saved BuildSpec").length).toBeGreaterThan(0);
     expect(screen.getAllByText("이 브라우저").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Builder").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("KPubData Engine").length).toBeGreaterThan(0);
   });
 
   it("navigates to the item's exact href when clicked, not by title/position", async () => {

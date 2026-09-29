@@ -35,7 +35,7 @@ describe("New Build 템플릿 catalog 상태 (#Phase2 UI polish)", () => {
     stallCatalog();
     renderWizard();
 
-    expect(await screen.findByText("Builder catalog를 불러오는 중입니다...")).toBeInTheDocument();
+    expect(await screen.findByText("Engine catalog를 불러오는 중입니다...")).toBeInTheDocument();
     // catalog와 아직 대조할 수 없으므로 모든 템플릿(카탈로그 필요 템플릿 포함)이 활성 상태를 유지한다.
     expect(screen.getByRole("button", { name: /인구 통계/ })).toBeEnabled();
     expect(screen.getByRole("button", { name: /기준금리 추이/ })).toBeEnabled();
@@ -49,7 +49,7 @@ describe("New Build 템플릿 catalog 상태 (#Phase2 UI polish)", () => {
     // builderApi.apiFetch는 네트워크 오류를 지수 백오프로 재시도한다(최대 ~1.5초) — 기본
     // findByRole 타임아웃(1초)보다 길게 기다린다.
     const alert = await screen.findByRole("alert", {}, { timeout: 5000 });
-    expect(alert).toHaveTextContent("Builder catalog 조회 실패");
+    expect(alert).toHaveTextContent("Engine catalog 조회 실패");
     // 조회 실패와 "아직 준비 중인 source"는 다른 상태다 — 실패를 준비 중으로 뭉개지 않는다.
     expect(screen.queryByText(/준비 중인 템플릿/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /인구 통계/ })).toBeEnabled();

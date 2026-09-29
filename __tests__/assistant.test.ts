@@ -260,7 +260,7 @@ describe("generateBuildSpec (ST-A7, #210)", () => {
     const provider = mockProvider([validYaml, validYaml]);
     const result = await generateBuildSpec(provider, "test", {
       catalog,
-      validateFn: vi.fn().mockRejectedValue(new Error("Builder API에 연결하지 못했습니다.")),
+      validateFn: vi.fn().mockRejectedValue(new Error("Engine API에 연결하지 못했습니다.")),
     });
 
     expect(result.status).toBe("error");

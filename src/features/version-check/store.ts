@@ -42,7 +42,7 @@ export function ensureVersionChecked(): Promise<void> {
     .then((info) => {
       const comparison = compareAppVersion(STUDIO_VERSION, info.version);
       if (comparison.kind === "patch") {
-        console.info(`Studio ${comparison.studio} and Builder ${comparison.builder} differ by a patch release.`);
+        console.info(`Studio ${comparison.studio} and KPubData Engine ${comparison.builder} differ by a patch release.`);
       }
       useVersionCheckStore.setState({ comparison });
     })

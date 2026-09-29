@@ -263,7 +263,7 @@ describe("crossCheckAssistantResponse (#256 hallucination gate)", () => {
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality"]) }),
     );
     expect(result.response.generatedSql).toEqual({ sql: "SELECT * FROM dataset", stage: "silver", source: undefined });
-    expect(result.rejectedSqlReason).toContain("Builder가 자동");
+    expect(result.rejectedSqlReason).toContain("KPubData Engine이 자동");
   });
 
   it("uses dataset.sources length as the single-source signal when no sourceKeys were collected", () => {

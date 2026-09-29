@@ -56,7 +56,7 @@ test("Monitoring이 mock 상태 카드를 렌더링한다 (#268 시나리오 8)"
 
   await page.goto("/monitoring");
   await expect(page.getByRole("heading", { name: "시스템 모니터링" })).toBeVisible();
-  await expect(page.getByText("Builder API")).toBeVisible();
+  await expect(page.getByText("Engine API")).toBeVisible();
 
   // Recent Runs tab displays mock run list.
   await page.getByRole("button", { name: "Recent Runs" }).click();
