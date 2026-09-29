@@ -26,6 +26,13 @@ test.skip(!process.env.REAL_BUILDER_E2E, "실 Builder 기동 필요 — scripts/
  * Login token exists only in memory store, so full reload (page.goto) clears it —
  * after login, always navigate via SPA links (sidebar).
  */
+/** Create Table is an action of Catalog, not a menu item (#423): menu → Catalog → the action. */
+async function openCreateTable(page: import("@playwright/test").Page): Promise<void> {
+  await navigateViaShell(page, /^(Catalog|카탈로그)$/);
+  await page.getByRole("link", { name: /^(Create Table|테이블 만들기)$/ }).first().click();
+  await expect(page).toHaveURL(/\/add/);
+}
+
 async function navigateViaShell(page: import("@playwright/test").Page, label: RegExp): Promise<void> {
   await page.getByRole("link", { name: label }).first().click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"));
@@ -55,12 +62,12 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   collectPageErrors(page, errors);
 
   // 1) Source: File Upload select, proceed to Configure (SPA navigation — token preserved)
-  await navigateViaShell(page, /Add Data|데이터 추가/);
+  await openCreateTable(page);
   await page.getByRole("button", { name: "File Upload" }).first().click();
   await page.getByRole("button", { name: "다음" }).first().click();
 
   // 2) Configure: format csv + actual file upload (real Builder POST /uploads)
-  await expect(page.getByRole("heading", { name: "설정 (Configure)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "가져오기 설정" })).toBeVisible();
   await page.getByLabel("포맷 (Format)").selectOption("csv");
   const fileInput = page.getByLabel("파일");
   await fileInput.setInputFiles({
@@ -75,7 +82,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
 
   // 3) Preview & Validate step — calls real Builder /preview·/validate
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByText("미리보기 · 검증 (Preview & Validate)")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
   await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
   await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   // File source without quality checks displays "Not evaluated / N/A" (#516 principle).
@@ -85,25 +92,20 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
 
   // 4) Review & Build — show canonical BuildSpec, then real POST /build
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByText("검토 · 빌드 (Review & Build)")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "검토 · 테이블 만들기" })).toBeVisible();
   const buildButton = page.getByRole("button", { name: "테이블 만들기" });
   // Enabled if validation passes + preview not stale (#250 gate).
   await expect(buildButton).toBeEnabled({ timeout: 30_000 });
   await buildButton.click();
 
-  // 5) Expose submission outcome. File source async run doesn't pass owner to resolver
-  // to maintain upload owner boundary (#496 follow-up) → terminates with structured failure.
-  // Verify Studio displays Builder's failure reason in error UI (kpubdata#282
-  // "Build failure scenario: 502 + error message displays correctly").
-  // Success path extends with same suite if using Public API source (needs external network).
-  const failureAlert = page.getByRole("alert").first();
-  await expect(failureAlert).toBeVisible({ timeout: 60_000 });
-  await expect(failureAlert).toContainText(/stable principal|실패|failed/i);
-  void 0;
-  // Acquire run id for next (Builds) verification.
+  // 5) The upload builds end to end. It used to end in a structured failure because
+  // the file source's async run did not pass its owner; the Engine now does, so the
+  // wizard lands on the new run's detail, succeeded.
+  await expect(page).toHaveURL(/\/refresh-jobs\/[^/?]+/, { timeout: 60_000 });
+  await expect(page.getByText("성공").and(page.locator(":visible")).first()).toBeVisible({ timeout: 60_000 });
 
-  // 6) Builds history screen (real GET /builds) reflects just-submitted run (failure included).
-  await navigateViaShell(page, /^(Runs|실행)$/);
+  // 6) The run history (real GET /builds) has it.
+  await navigateViaShell(page, /^(Refresh Jobs|갱신 작업)$/);
   await expect(page.getByRole("heading", { name: /실행 이력|Run History/i }).first()).toBeVisible();
 
   await expectNoPageErrors(errors);
@@ -186,10 +188,10 @@ test("빌드 실패 게이트: 파일 없이는 다음 단계 진입이 막힌�
   collectPageErrors(page, errors);
 
   // Select File Upload but don't upload file → next step blocked (#250 gate).
-  await navigateViaShell(page, /Add Data|데이터 추가/);
+  await openCreateTable(page);
   await page.getByRole("button", { name: "File Upload" }).first().click();
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByRole("heading", { name: "설정 (Configure)" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "가져오기 설정" })).toBeVisible();
   // Still shows Configure step (progress blocked) or explicit error guidance.
   await expect(
     page
@@ -200,3 +202,23 @@ test("빌드 실패 게이트: 파일 없이는 다음 단계 진입이 막힌�
 
   await expectNoPageErrors(errors);
 });
+
+test("다른 릴리스의 Engine 에 붙으면 배너가 뜨고 화면은 막히지 않는다 (#480) @real-builder", async ({ page, request }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  const engine = (await (await request.get(`${BUILDER_URL}/version`)).json()) as { version?: string };
+  expect(engine.version, "the Engine reports its application version (kpubdata-builder#777)").toBeTruthy();
+
+  await page.goto("/");
+  const banner = page.getByRole("status").filter({ hasText: "Studio 0.3.0" });
+  await expect(banner).toBeVisible({ timeout: 30_000 });
+  await expect(banner).toContainText(`KPubData Engine ${engine.version}`);
+
+  // Not blocking: the menu still takes you somewhere, with the banner still there.
+  await navigateViaShell(page, /^(Refresh Jobs|갱신 작업)$/);
+  await expect(page).toHaveURL(/\/refresh-jobs/);
+
+  await expectNoPageErrors(errors);
+});
+

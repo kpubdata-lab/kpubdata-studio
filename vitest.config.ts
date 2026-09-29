@@ -3,10 +3,13 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// Studio's own version, compared with Builder's at runtime (#430).
-const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as {
+// Studio's own version, compared with Builder's at runtime (#430). KPUBDATA_STUDIO_VERSION
+// overrides it only so the real-Engine suite can pair Studio with an Engine of another
+// release and see the banner against a real /version (#480); nothing ships with it set.
+const { version: packageVersion } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as {
   version: string;
 };
+const version = process.env.KPUBDATA_STUDIO_VERSION || packageVersion;
 
 export default defineConfig({
   plugins: [react()],
