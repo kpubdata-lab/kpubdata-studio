@@ -482,6 +482,9 @@ export type QualitySummaryResponse = schemas.QualitySummaryResponse;
 export type QueryStage = schemas.QueryStage;
 export type QueryRequest = schemas.QueryRequest;
 export type QueryResponse = schemas.QueryResponse;
+export type AdminConfigResponse = schemas.AdminConfigResponse;
+export type AdminRun = schemas.AdminRun;
+export type AdminRunsResponse = schemas.AdminRunsResponse;
 export type QueryErrorCode = schemas.QueryErrorCode;
 export type PublishTarget = schemas.PublishTarget;
 export type PublishIssue = schemas.PublishIssue;
@@ -501,6 +504,14 @@ export type BuildEventsResponse = schemas.BuildEventsResponse;
 
 /** client wrapping Builder service endpoint. */
 export const builderApi = {
+  /** GET /admin/config — live policy state; 403 for anyone but an administrator (builder#679). */
+  adminConfig: (signal?: AbortSignal) =>
+    apiFetch("/admin/config", { signal, retries: 0 }, schemas.adminConfigResponseSchema),
+
+  /** GET /admin/runs — every owner's runs, metadata only (builder#679). */
+  adminRuns: (limit = 50, signal?: AbortSignal) =>
+    apiFetch(`/admin/runs?limit=${limit}`, { signal }, schemas.adminRunsResponseSchema),
+
   /** GET /version — contract version check (meta). */
   version: (signal?: AbortSignal) =>
     apiFetch("/version", { signal }, schemas.versionResponseSchema),

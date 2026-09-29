@@ -37,6 +37,9 @@ const BuildPublishPage = lazy(() =>
 const BuildRunPage = lazy(() =>
   import("@/pages/BuildRunPage").then((m) => ({ default: m.BuildRunPage })),
 );
+const AdminPage = lazy(() =>
+  import("@/pages/AdminPage").then((m) => ({ default: m.AdminPage })),
+);
 const SqlWorkspacePage = lazy(() =>
   import("@/pages/SqlWorkspacePage").then((m) => ({ default: m.SqlWorkspacePage })),
 );
@@ -246,6 +249,10 @@ export const router = createBrowserRouter([
       {
         path: "connections",
         element: withFeatureBoundary("router.features.Provider", <ProviderPage />),
+      },
+      {
+        path: "admin",
+        element: withFeatureBoundary("router.features.admin", <AdminPage />),
       },
       {
         path: "monitoring",

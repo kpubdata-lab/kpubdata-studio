@@ -54,7 +54,8 @@
     "settings": "Settings",
     "groupAnalyze": "ANALYZE",
     "groupOperate": "OPERATE",
-    "sql": "SQL Workspace"
+    "sql": "SQL Workspace",
+    "admin": "Administration"
   },
   "navDescription": {
     "home": "Recent activity summary and quick start",
@@ -67,7 +68,8 @@
     "provider": "API keys and credentials",
     "monitoring": "Run and system monitoring",
     "settings": "Studio settings",
-    "sql": "Query a table snapshot"
+    "sql": "Query a table snapshot",
+    "admin": "Policy and all runs (administrators)"
   },
   "languageSwitcher": {
     "toggle": "Switch language",
@@ -427,7 +429,8 @@
         "provider": "Provider",
         "monitoring": "Monitoring",
         "settings": "Settings",
-        "sql": "SQL Workspace"
+        "sql": "SQL Workspace",
+        "admin": "Administration"
       },
       "stageAria": "Analysis stage",
       "sourceAria": "Analysis source"
@@ -1963,7 +1966,8 @@
       "reportEditor": "Report editor",
       "settings": "Settings",
       "validate": "Validate",
-      "sql": "SQL Workspace"
+      "sql": "SQL Workspace",
+      "admin": "Administration"
     },
     "loading": "Loading the page…"
   },
@@ -2208,5 +2212,24 @@
     "errors": {
       "unknown": "The query failed for an unknown reason."
     }
+  },
+  "admin": {
+    "title": "Administration",
+    "desc": "The policy in force and every owner's runs — metadata only, never a credential or a result.",
+    "mock": "Administration needs a real KPubData Engine; mock mode has no administrator.",
+    "forbiddenTitle": "You are not an administrator",
+    "forbiddenBody": "KPubData Engine refused this request (403). The menu hides this page, but the Engine is what blocks it.",
+    "policyTitle": "Policy in force",
+    "enforceOwnership": "Each user sees only their own runs and tables.",
+    "publishFallback": "Publishing may fall back to the server's publish credential when a user has none.",
+    "on": "On",
+    "off": "Off",
+    "runsTitle": "All runs",
+    "runsNote": "Every owner's runs, metadata only. An owner is an irreversible hash, not an identity.",
+    "colStatus": "Status",
+    "colOwner": "Owner (hash)",
+    "colStarted": "Started",
+    "colFinished": "Finished",
+    "usersLater": "Listing users and approving sign-ups waits for an Engine API (kpubdata-builder#785); until then use the identity provider's admin console."
   }
 }
