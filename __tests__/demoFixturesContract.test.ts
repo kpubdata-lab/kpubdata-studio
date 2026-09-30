@@ -13,8 +13,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { z } from "zod";
 
 import { fetchCatalog } from "@/features/add-data/api";
+import * as mockDataModule from "@/features/datasets/api/mockData";
 import { MOCK_DATASETS, MOCK_QUALITY, MOCK_QUALITY_HISTORY, MOCK_RUNS, MOCK_STAGES, mockDatasetDetail, mockStageDetail } from "@/features/datasets/api/mockData";
-import { MOCK_WAREHOUSE_DETAILS, MOCK_WAREHOUSE_TABLES, mockWarehouseApi, mockWarehouseRows } from "@/features/datasets/api/mockWarehouse";
+import * as mockWarehouseModule from "@/features/datasets/api/mockWarehouse";
+import {
+  demoRowsPage,
+  type DemoTable,
+  MOCK_WAREHOUSE_DETAILS,
+  MOCK_WAREHOUSE_TABLES,
+  mockWarehouseApi,
+  mockWarehouseRows,
+} from "@/features/datasets/api/mockWarehouse";
 import { loadTableList, splitLogicalName } from "@/features/datasets/tableList";
 import { loadCatalog } from "@/features/discover/api";
 import { detectWarehouse } from "@/features/sql/warehouse";
@@ -32,8 +41,31 @@ function expectContract<T>(schema: z.ZodType<T>, value: unknown, label: string) 
   expect(parsed.data, `${label}: carries a field the contract does not model`).toEqual(value);
 }
 
-/** Values the demo must not make up: institutions, licence terms. */
-const INVENTED = /국토교통부|환경부|한국환경공단|식약처|식품의약품안전처|기상청|통계청|공공누리|KOGL|licen[cs]e/i;
+/**
+ * Values the demo must not make up: institutions and licence terms. Named ones are listed,
+ * and any other institution is caught by how Korean public bodies are named — a ministry
+ * (부), agency (청, 처), corporation (공사, 공단), institute (…원), commission (위원회) or a
+ * metropolitan city or province (특별시, 광역시, 경기도, …).
+ */
+const INVENTED = new RegExp(
+  [
+    "국토교통부|환경부|한국환경공단|식약처|식품의약품안전처|기상청|통계청|공공누리|KOGL|licen[cs]e",
+    "[가-힣]{2,}(?:부|청|처|공사|공단|위원회|재단|(?:진흥|연구|평가|관리|정보)원)(?![가-힣])",
+    "[가-힣]*(?:특별시|광역시|특별자치시|특별자치도)",
+    "(?:경기|강원|충청북|충청남|충북|충남|전라북|전라남|전북|전남|경상북|경상남|경북|경남|제주)도(?![가-힣])",
+  ].join("|"),
+  "i",
+);
+
+/** The first made-up institution or licence term in `text`, or null. */
+function firstInvented(text: string): string | null {
+  return text.match(INVENTED)?.[0] ?? null;
+}
+
+/** Every exported `MOCK_*` fixture of a module, so a new one is scanned without being listed here. */
+function mockFixtures(module: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(module).filter(([name]) => name.startsWith("MOCK_")));
+}
 
 describe("demo fixtures match the Builder contract (#530)", () => {
   it("datasets, runs, stages and quality", () => {
@@ -76,17 +108,35 @@ describe("demo fixtures match the Builder contract (#530)", () => {
   });
 
   it("makes up no institution name or licence term", async () => {
+    const fixtures = { ...mockFixtures(mockDataModule), ...mockFixtures(mockWarehouseModule) };
+    // The scan collects every exported fixture, including the ones #591 found missing.
+    expect(Object.keys(fixtures)).toEqual(expect.arrayContaining(["MOCK_QUALITY_HISTORY", "MOCK_WAREHOUSE_TABLES", "MOCK_WAREHOUSE_DETAILS", "MOCK_DATASETS"]));
     const everything = JSON.stringify({
-      MOCK_DATASETS,
-      MOCK_RUNS,
-      MOCK_STAGES,
-      MOCK_QUALITY,
-      MOCK_WAREHOUSE_DETAILS,
+      fixtures,
+      details: MOCK_DATASETS.datasets.map((dataset) => mockDatasetDetail(dataset.dataset_id)),
+      rows: MOCK_WAREHOUSE_TABLES.tables.map((table) => mockWarehouseRows({ table: table.logical_name, snapshot: "current", page_size: 5 })),
       DEMO_DATASETS,
       discover: await loadCatalog(),
       addData: await fetchCatalog(),
     });
-    expect(everything.match(INVENTED)?.[0] ?? null).toBeNull();
+    expect(firstInvented(everything)).toBeNull();
+  });
+});
+
+describe("the fixture gates fail when they should (#591)", () => {
+  it("expectContract rejects a field the contract does not model", () => {
+    expectContract(schemas.datasetsResponseSchema, MOCK_DATASETS, "baseline");
+    const extra = { ...MOCK_DATASETS, datasets: MOCK_DATASETS.datasets.map((dataset) => ({ ...dataset, institution: "demo" })) };
+    expect(() => expectContract(schemas.datasetsResponseSchema, extra, "extra field")).toThrow(/does not model/);
+    expect(() => expectContract(schemas.datasetsResponseSchema, { datasets: "none" }, "wrong type")).toThrow();
+  });
+
+  it("catches an institution name that is not on the named list", () => {
+    for (const name of ["서울특별시", "부산광역시", "경기도", "한국도로공사", "국민건강보험공단", "산림청", "조달청", "행정안전부", "개인정보보호위원회", "건강보험심사평가원"]) {
+      expect(firstInvented(JSON.stringify({ ...MOCK_WAREHOUSE_TABLES, provider: name })), name).toBe(name);
+    }
+    // Place names and plain words the demo does use stay allowed.
+    expect(firstInvented("서울 종로구 따릉이 대중교통 행정구역별 인구총조사 측정망 품목기준코드")).toBeNull();
   });
 });
 
@@ -119,5 +169,34 @@ describe("the demo leads with tables and snapshots (#530)", () => {
     expect(first.page).toEqual({ offset: 200, page_size: 50, returned: 29, has_more: false, next_offset: null });
     expect(first.count).toEqual({ status: "exact", value: 229 });
     await expect(mockWarehouseApi.warehouseQuery({ table: "population.kosis__population", sql: "select 1" })).rejects.toMatchObject({ status: 501 });
+  });
+
+  it("refuses a filtered or sorted page instead of answering it unfiltered (#591)", async () => {
+    const table = "population.kosis__population";
+    await expect(
+      mockWarehouseApi.warehouseRows({ table, snapshot: "current", filters: [{ column: "region_code", op: "eq", value: "11000" }] }),
+    ).rejects.toMatchObject({ status: 501, details: { code: "demo" } });
+    await expect(mockWarehouseApi.warehouseRows({ table, snapshot: "current", sort: [{ column: "population", direction: "desc" }] })).rejects.toMatchObject({
+      status: 501,
+      details: { code: "demo" },
+    });
+    // An empty filter or sort list asks for nothing the demo cannot do.
+    const plain = await mockWarehouseApi.warehouseRows({ table, snapshot: "current", filters: [], sort: [], page_size: 5 });
+    expect(plain.count).toEqual({ status: "exact", value: 229 });
+  });
+
+  it("keeps a missing row count unknown instead of reading it as 0 (#591)", () => {
+    const table = MOCK_WAREHOUSE_DETAILS["population.kosis__population"];
+    const snap = { ...table.snapshots[0], row_count: null };
+    const entry: DemoTable = {
+      table: { table_id: table.table_id, logical_name: table.logical_name, current_snapshot_id: snap.snapshot_id, revision: table.revision },
+      snapshots: [snap],
+      columns: [{ meta: { name: "region_code", logical_type: "string", wire_encoding: "string" }, value: (index) => String(index) }],
+    };
+    const page = demoRowsPage(entry, snap, { table: table.logical_name, snapshot: "current", page_size: 5, count: "exact" });
+    expect(page.count).toEqual({ status: "not_computed", value: null });
+    // The demo cannot tell where the rows end, so it never claims the last page.
+    expect(page.page).toMatchObject({ has_more: true, next_offset: 5 });
+    expectContract(schemas.warehouseRowsResponseSchema, page, "rows with no row count");
   });
 });
