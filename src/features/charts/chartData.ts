@@ -11,6 +11,13 @@
  * out of the y candidates and, if handed in as y anyway, has no coordinate — `"01234"` is
  * not drawn as 1234. As x it is the category label, as sent. Which columns are identifiers
  * is Builder's `logical_type`, never guessed from the values.
+ *
+ * Two more columns are never a measure (#590). A code stored as a number keeps a numeric
+ * `logical_type` but carries `semantic.kind: "code"` (contract 1.61.0) — a postcode is not
+ * summed. And a column whose values travel as text (`wire_encoding: "string"`) is not
+ * converted to a number implicitly — `"007"` is not drawn as 7. Only `number` and
+ * `decimal_string` encode a numeric value (contract 1.30.0). A response without column
+ * metadata keeps every column as a candidate, as before.
  */
 import { cellValue, type WireEncoding } from "@/shared/lib/cellValue";
 
@@ -39,25 +46,51 @@ export function isIdentifier(logicalType: string | undefined): boolean {
   return logicalType === IDENTIFIER_LOGICAL_TYPE;
 }
 
+/** Builder's semantic kind for a column a kpubdata spec declares a code, whatever its storage type. */
+export const CODE_SEMANTIC_KIND = "code";
+
+/** The wire encodings that carry a numeric value (builder#735). */
+const NUMERIC_ENCODINGS: ReadonlySet<string> = new Set(["number", "decimal_string"]);
+
+/** A column's metadata as far as the measure axis needs it. */
+export interface MeasureColumnMeta {
+  name: string;
+  logical_type?: string;
+  wire_encoding?: WireEncoding;
+  semantic?: { kind: string };
+}
+
+function isMeasure(meta: MeasureColumnMeta | undefined): boolean {
+  // No metadata for this column: keep it, as before metadata existed.
+  if (!meta) return true;
+  if (isIdentifier(meta.logical_type)) return false;
+  if (meta.semantic?.kind === CODE_SEMANTIC_KIND) return false;
+  return meta.wire_encoding === undefined || NUMERIC_ENCODINGS.has(meta.wire_encoding);
+}
+
 /**
- * Columns that may be drawn as a measure (y): every column except an identifier. A column
- * with no metadata, or a logical type this Studio does not know, stays a candidate — its
- * cells still show as the text received, and only numeric text gets a coordinate.
+ * Columns that may be drawn as a measure (y): a column whose values travel as `number` or
+ * `decimal_string`, and that is neither an identifier nor a declared code. A column with
+ * no metadata (an older Builder) stays a candidate — its cells still show as the text
+ * received, and only numeric text gets a coordinate.
  */
 export function measureCandidates(
   columns: readonly string[],
-  columnMeta: ReadonlyArray<{ name: string; logical_type?: string }> | null | undefined,
+  columnMeta: readonly MeasureColumnMeta[] | null | undefined,
 ): string[] {
-  const identifiers = new Set((columnMeta ?? []).filter((column) => isIdentifier(column.logical_type)).map((column) => column.name));
-  return columns.filter((column) => !identifiers.has(column));
+  const metaByName = new Map((columnMeta ?? []).map((column) => [column.name, column]));
+  return columns.filter((column) => isMeasure(metaByName.get(column)));
 }
 
 /**
  * The drawing coordinate of a value. Text that is not a finite number has none, and
- * neither has any value of an identifier column — converting it is never implicit.
+ * neither has any value of an identifier column or of a column whose values travel as
+ * text or anything other than a number — converting it is never implicit. With no
+ * encoding known (an older Builder), numeric text still gets its coordinate.
  */
-export function coordinate(value: unknown, logicalType?: string): number | null {
+export function coordinate(value: unknown, logicalType?: string, encoding?: WireEncoding): number | null {
   if (isIdentifier(logicalType)) return null;
+  if (encoding !== undefined && !NUMERIC_ENCODINGS.has(encoding)) return null;
   if (value === null || value === undefined || value === "") return null;
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "string" && /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(value.trim())) return Number(value);
@@ -74,7 +107,7 @@ export function toPoints(
 ): { points: ChartPoint[]; temporal: boolean } {
   const points = rows.map((row) => ({
     x: cellValue(encodings.get(xColumn), row[xColumn]),
-    y: coordinate(row[yColumn], yLogicalType),
+    y: coordinate(row[yColumn], yLogicalType, encodings.get(yColumn)),
     exact: cellValue(encodings.get(yColumn), row[yColumn]),
   }));
   const temporal = isTemporal(xLogicalType, points.map((point) => point.x).filter((x) => x !== "—"));

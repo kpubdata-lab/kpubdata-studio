@@ -2,7 +2,8 @@
  * Chart a SQL result as it is (#500). A cut result is drawn as "based on the N rows
  * returned" — never as the top N, and never as a representative sample.
  *
- * An identifier column (builder#702) is offered as X only, never as Y (#582).
+ * An identifier column (builder#702) is offered as X only, never as Y (#582), and so is a
+ * declared code stored as a number or a column whose values travel as text (#590).
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

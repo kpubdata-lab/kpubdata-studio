@@ -199,7 +199,8 @@ describe("an identifier column is text, never a measure (#582, builder#702)", ()
   };
 
   it("is left out of the y candidates but offered as x", () => {
-    expect(measureCandidates(result.columns, result.column_meta)).toEqual(["count", "note"]);
+    // `note` travels as text, so it is not a measure either (#590).
+    expect(measureCandidates(result.columns, result.column_meta)).toEqual(["count"]);
     render(<ResultTable result={result} target="air@s1" />);
     fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
     const [xSelect, ySelect] = screen.getAllByRole("combobox");
@@ -255,6 +256,88 @@ describe("an identifier column is text, never a measure (#582, builder#702)", ()
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
+    expect(screen.getByText(/숫자로 그릴 수 있는 열이 없습니다/)).toBeInTheDocument();
+    expect(screen.queryByTestId("chart-scope")).toBeNull();
+  });
+});
+
+describe("a declared code and text are never a measure (#590)", () => {
+  const result = {
+    columns: ["region", "postcode", "code_text", "amount", "total"],
+    column_meta: [
+      { name: "region", logical_type: "string", wire_encoding: "string" as const },
+      // A code a kpubdata spec declares, stored as a number (contract 1.61.0).
+      { name: "postcode", logical_type: "int64", wire_encoding: "number" as const, semantic: { kind: "code", origin: "core_spec" } },
+      { name: "code_text", logical_type: "string", wire_encoding: "string" as const },
+      { name: "amount", logical_type: "decimal", wire_encoding: "decimal_string" as const },
+      { name: "total", logical_type: "int64", wire_encoding: "number" as const },
+    ],
+    rows: [
+      { region: "a", postcode: 1234, code_text: "007", amount: "12.50", total: 3 },
+      { region: "b", postcode: 5678, code_text: "010", amount: "9007199254740993", total: 4 },
+    ],
+    truncated: false,
+    execution_ms: 1,
+  };
+  const openChart = (value: typeof result) => {
+    render(<ResultTable result={value} target="air@s1" />);
+    fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
+  };
+  const options = (select: HTMLElement) => within(select).getAllByRole("option").map((option) => option.textContent);
+
+  it("offers only number and decimal_string columns that are not codes as y", () => {
+    expect(measureCandidates(result.columns, result.column_meta)).toEqual(["amount", "total"]);
+    openChart(result);
+    const [xSelect, ySelect] = screen.getAllByRole("combobox");
+    expect(options(ySelect)).toEqual(["amount", "total"]);
+    // Every column is still offered as x.
+    expect(options(xSelect)).toEqual(result.columns);
+  });
+
+  it("a numeric column declared a code is not a measure", () => {
+    expect(measureCandidates(["postcode"], [result.column_meta[1]])).toEqual([]);
+  });
+
+  it("text that looks like a number gets no coordinate", () => {
+    const { points } = toPoints(result.rows, "region", "code_text", new Map([["code_text", "string" as const]]), "string", "string");
+    expect(points).toEqual([
+      { x: "a", y: null, exact: "007" },
+      { x: "b", y: null, exact: "010" },
+    ]);
+    expect(coordinate("007", "string", "string")).toBeNull();
+    expect(coordinate(7, "int64", "string")).toBeNull();
+    expect(coordinate("12.50", "decimal", "decimal_string")).toBe(12.5);
+    expect(coordinate(3, "int64", "number")).toBe(3);
+  });
+
+  it("a decimal_string column stays a measure and its tooltip shows the text as sent", () => {
+    openChart(result);
+    expect(screen.getAllByRole("combobox")[1]).toHaveValue("amount");
+    const titles = [...document.querySelectorAll("title")].map((node) => node.textContent);
+    expect(titles).toEqual(expect.arrayContaining(["a: 12.50", "b: 9007199254740993"]));
+  });
+
+  it("without column metadata every column stays a candidate, as before", () => {
+    const { column_meta: _omitted, ...bare } = result;
+    expect(measureCandidates(bare.columns, undefined)).toEqual(bare.columns);
+    expect(measureCandidates(bare.columns, null)).toEqual(bare.columns);
+    expect(measureCandidates(bare.columns, [])).toEqual(bare.columns);
+    // Numeric text still gets its coordinate when no encoding is known.
+    expect(coordinate("007")).toBe(7);
+    expect(toPoints(bare.rows, "region", "code_text", new Map()).points.map((point) => point.y)).toEqual([7, 10]);
+    render(<ResultTable result={bare} target="air@s1" />);
+    fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
+    const [, ySelect] = screen.getAllByRole("combobox");
+    expect(options(ySelect)).toEqual(bare.columns);
+    expect(ySelect).toHaveValue("postcode");
+  });
+
+  it("says so when only codes and text are left", () => {
+    openChart({
+      ...result,
+      columns: ["region", "postcode", "code_text"],
+      column_meta: result.column_meta.slice(0, 3),
+    });
     expect(screen.getByText(/숫자로 그릴 수 있는 열이 없습니다/)).toBeInTheDocument();
     expect(screen.queryByTestId("chart-scope")).toBeNull();
   });
