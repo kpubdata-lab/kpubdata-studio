@@ -2366,6 +2366,11 @@
     "colOwner": "Owner (hash)",
     "colStarted": "Started",
     "colFinished": "Finished",
+    "cardForbidden": "KPubData Builder refused this request (403); only an administrator can see it.",
+    "policyUnsupported": "This KPubData Builder has no GET /admin/config (404): it predates the admin API, or Studio is pointed at the wrong path. This is not an empty policy.",
+    "runsUnsupported": "This KPubData Builder has no GET /admin/runs (404): it predates the admin API, or Studio is pointed at the wrong path. This is not an empty run list.",
+    "runsEmpty": "KPubData Builder has recorded no runs yet.",
+    "loadFailed": "KPubData Builder could not answer: {{message}}",
     "users": {
       "title": "Users and sign-up approval",
       "note": "Everyone who has signed in through OIDC, from KPubData Builder's sign-up ledger. A user is an irreversible hash and a display name — no credential or token is kept or shown.",

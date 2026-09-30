@@ -4,7 +4,9 @@
  *
  * Reached from the menu only by an administrator, but the page does not rely on that:
  * each request is the Builder's decision, and a 403 is shown as "not an administrator"
- * rather than an empty page. Nothing here carries a credential — the Builder's admin
+ * rather than an empty page. Each card says its own state (#606): loading, loaded (an empty
+ * list says it is empty), forbidden, unsupported (a 404 — a Builder without that route) or
+ * failed, so one route failing never hides, or empties, another card. Nothing here carries a credential — the Builder's admin
  * responses are strict schemas without one, and an owner is an irreversible hash.
  */
 import { useEffect, useState } from "react";
@@ -21,7 +23,7 @@ import {
   type AdminUser,
   type AdminUsersResponse,
 } from "@/shared/lib/builderApi";
-import { Card, PageHeader, Skeleton } from "@/shared/ui";
+import { Card, cn, PageHeader, Skeleton } from "@/shared/ui";
 
 type Load<T> =
   | { status: "loading" }
@@ -62,7 +64,10 @@ export function AdminPage() {
     return () => controller.abort();
   }, [real]);
 
-  const forbidden = config.status === "forbidden" || runs.status === "forbidden" || users.status === "forbidden";
+  // A 403 with nothing answered means the caller is not an administrator. Once any card has
+  // data, a 403 is said on its own card instead, so it never hides what Builder did answer.
+  const loads = [config.status, runs.status, users.status];
+  const forbidden = loads.includes("forbidden") && !loads.includes("loaded");
 
   const replaceUser = (updated: AdminUser) =>
     setUsers((current) =>
@@ -90,7 +95,7 @@ export function AdminPage() {
           <Card>
             <h2 className="text-sm font-semibold">{t("admin.policyTitle")}</h2>
             {config.status === "loading" ? <Skeleton className="mt-3 h-12 w-full" /> : null}
-            {config.status === "error" ? <p className="mt-3 text-sm text-status-failure" role="alert">{config.message}</p> : null}
+            <CardState className="mt-3" load={config} unsupported={t("admin.policyUnsupported")} />
             {config.status === "loaded" ? (
               <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                 <Policy name="ENFORCE_OWNERSHIP" on={config.data.enforce_ownership} note={t("admin.enforceOwnership")} />
@@ -109,8 +114,13 @@ export function AdminPage() {
               <p className="mt-1 text-xs text-muted-foreground">{t("admin.runsNote")}</p>
             </div>
             {runs.status === "loading" ? <Skeleton className="m-5 h-24" /> : null}
-            {runs.status === "error" ? <p className="px-5 py-3 text-sm text-status-failure" role="alert">{runs.message}</p> : null}
-            {runs.status === "loaded" ? (
+            <CardState className="px-5 py-3" load={runs} unsupported={t("admin.runsUnsupported")} />
+            {runs.status === "loaded" && runs.data.runs.length === 0 ? (
+              <p className="px-5 py-3 text-sm text-muted-foreground" data-load="empty">
+                {t("admin.runsEmpty")}
+              </p>
+            ) : null}
+            {runs.status === "loaded" && runs.data.runs.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
@@ -144,16 +154,44 @@ export function AdminPage() {
               <p className="mt-1 text-xs text-muted-foreground">{t("admin.users.note")}</p>
             </div>
             {users.status === "loading" ? <Skeleton className="m-5 h-24" /> : null}
-            {users.status === "unsupported" ? (
-              <p className="px-5 py-3 text-sm text-muted-foreground">{t("admin.users.unsupported")}</p>
-            ) : null}
-            {users.status === "error" ? <p className="px-5 py-3 text-sm text-status-failure" role="alert">{users.message}</p> : null}
+            <CardState className="px-5 py-3" load={users} unsupported={t("admin.users.unsupported")} />
             {users.status === "loaded" ? <UsersSection onChange={replaceUser} users={users.data.users} /> : null}
           </Card>
         </>
       )}
     </main>
   );
+}
+
+/**
+ * A card's state when it has no data to show: forbidden and unsupported are quiet words
+ * (a fact about this Builder, not a failure to act on), a failure is an alert. `data-load`
+ * pins the state for component tests; the word, not the colour, carries it.
+ */
+function CardState({ className, load, unsupported }: { className: string; load: Load<unknown>; unsupported: string }) {
+  const { t } = useTranslation();
+  if (load.status === "forbidden") {
+    return (
+      <p className={cn("text-sm text-muted-foreground", className)} data-load="forbidden">
+        {t("admin.cardForbidden")}
+      </p>
+    );
+  }
+  if (load.status === "unsupported") {
+    return (
+      <p className={cn("text-sm text-muted-foreground", className)} data-load="unsupported">
+        {unsupported}
+      </p>
+    );
+  }
+  if (load.status === "error") {
+    return (
+      <p className={cn("text-sm text-status-failure", className)} data-load="error" role="alert">
+        {t("admin.loadFailed", { message: load.message })}
+      </p>
+    );
+  }
+  return null;
 }
 
 function Policy({ name, on, note }: { name: string; on: boolean; note: string }) {
