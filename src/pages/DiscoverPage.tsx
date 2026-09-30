@@ -1,7 +1,8 @@
 /**
  * Discover screen (`/discover`, #249).
  *
- * Explores Builder's original provider/dataset catalog (`GET /catalog`) with exact search and filters,
+ * Explores Builder's original provider/dataset catalog (`GET /catalog`) as a comparison table (#529)
+ * with exact search and filters (provider, service key, application),
  * then passes selected items to Add Data Workbench (`/add`, #250). Distinct from:
  * - Natural language search (Assistant, #256)
  * - Already-built dataset list (Dataset Catalog, `/datasets`, #253)
@@ -11,11 +12,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { loadCatalog } from "@/features/discover/api";
+import { loadCatalog, loadCreatedTables } from "@/features/discover/api";
+import { CatalogTable, type CreatedTables } from "@/features/discover/CatalogTable";
 import {
+  computeApplicationCount,
   computeProviderCounts,
   computeServiceKeyCount,
+  createdTablesBySource,
   flattenCatalog,
+  matchesApplicationFilter,
   matchesProviderFilter,
   matchesQuery,
   matchesServiceKeyFilter,
@@ -57,9 +62,20 @@ export function DiscoverPage() {
 
   useEffect(() => load(), [load]);
 
+  // Which tables each source made — a second, independent read; its failure only blanks that column.
+  const [created, setCreated] = useState<CreatedTables>({ status: "loading" });
+  useEffect(() => {
+    const controller = new AbortController();
+    loadCreatedTables(controller.signal)
+      .then(({ tables, complete }) => setCreated({ status: "loaded", index: createdTablesBySource(tables), complete }))
+      .catch(() => !controller.signal.aborted && setCreated({ status: "error" }));
+    return () => controller.abort();
+  }, []);
+
   const query = searchParams.get("q") ?? "";
   const provider = searchParams.get("provider") ?? "";
   const onlyRequiresKey = searchParams.get("key") === "1";
+  const onlyRequiresApplication = searchParams.get("app") === "1";
 
   function updateParam(name: string, value: string) {
     const next = new URLSearchParams(searchParams);
@@ -73,22 +89,25 @@ export function DiscoverPage() {
   const providerCounts = useMemo(() => computeProviderCounts(entries), [entries]);
   const serviceKeyCount = useMemo(() => computeServiceKeyCount(entries), [entries]);
 
+  const applicationCount = useMemo(() => computeApplicationCount(entries), [entries]);
+
   const visibleEntries = useMemo(
     () =>
       entries.filter(
         (entry) =>
           matchesQuery(entry, query) &&
           matchesProviderFilter(entry, provider) &&
-          matchesServiceKeyFilter(entry, onlyRequiresKey),
+          matchesServiceKeyFilter(entry, onlyRequiresKey) &&
+          matchesApplicationFilter(entry, onlyRequiresApplication),
       ),
-    [entries, query, provider, onlyRequiresKey],
+    [entries, query, provider, onlyRequiresKey, onlyRequiresApplication],
   );
 
   function startWithDataset(entry: DiscoverEntry) {
     navigate(`/add?provider=${encodeURIComponent(entry.provider)}&dataset=${encodeURIComponent(entry.dataset.name)}`);
   }
 
-  const hasActiveFilters = Boolean(query || provider || onlyRequiresKey);
+  const hasActiveFilters = Boolean(query || provider || onlyRequiresKey || onlyRequiresApplication);
 
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
@@ -98,7 +117,7 @@ export function DiscoverPage() {
         actions={<LinkButton to="/add">{t("tableActions.create")}</LinkButton>}
       />
 
-      <Card className="flex flex-col gap-4">
+      <Card className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <div className="min-w-56 flex-1 lg:max-w-[390px]">
             <label htmlFor="discover-search" className="sr-only">
@@ -135,6 +154,14 @@ export function DiscoverPage() {
             />
             {t("discover.serviceKeyOnly", { count: serviceKeyCount })}
           </label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={onlyRequiresApplication}
+              onChange={(event) => updateParam("app", event.target.checked ? "1" : "")}
+            />
+            {t("discover.applicationOnly", { count: applicationCount })}
+          </label>
           {hasActiveFilters ? (
             <Button variant="ghost" size="sm" onClick={() => setSearchParams({})} className="ml-auto">
               {t("discover.resetFilters")}
@@ -143,9 +170,9 @@ export function DiscoverPage() {
         </div>
 
         {state.status === "loading" ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-2">
             {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="h-32 w-full rounded-xl" />
+              <Skeleton key={index} className="h-9 w-full rounded-lg" />
             ))}
           </div>
         ) : state.status === "error" ? (
@@ -158,27 +185,7 @@ export function DiscoverPage() {
         ) : visibleEntries.length === 0 ? (
           <EmptyState title={t("discover.noMatch.title")} description={t("discover.noMatch.desc")} />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleEntries.map((entry) => (
-              <Card key={`${entry.provider}/${entry.dataset.name}`} variant="elevated" className="flex flex-col gap-3">
-                <div>
-                  <p className="font-semibold text-foreground">{entry.dataset.title}</p>
-                  <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{entry.dataset.name}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span className="rounded-full bg-muted px-2 py-0.5">{providerLabel(entry.provider)}</span>
-                  {entry.dataset.requires_service_key ? (
-                    <span className="rounded-full bg-status-warning-subtle px-2 py-0.5 font-medium text-status-warning">
-                      {t("discover.serviceKeyBadge")}
-                    </span>
-                  ) : null}
-                </div>
-                <Button size="sm" onClick={() => startWithDataset(entry)} className="mt-auto">
-                  {t("discover.startWith")}
-                </Button>
-              </Card>
-            ))}
-          </div>
+          <CatalogTable created={created} entries={visibleEntries} onStart={startWithDataset} />
         )}
 
         {state.status === "loaded" ? (

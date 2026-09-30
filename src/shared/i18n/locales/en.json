@@ -1838,7 +1838,36 @@
     },
     "serviceKeyBadge": "Service key required",
     "startWith": "Start with this data",
-    "shownCount": "{{count}} shown"
+    "shownCount": "{{count}} shown",
+    "applicationOnly": "Needs an application only ({{count}})",
+    "start": "Start",
+    "table": {
+      "caption": "Source dataset comparison — only fields the Builder catalog sends"
+    },
+    "columns": {
+      "source": "Source",
+      "provider": "Provider",
+      "access": "Access",
+      "maturity": "Maturity",
+      "createdTables": "Tables made",
+      "quota": "Daily quota",
+      "start": "Start"
+    },
+    "access": {
+      "keyNotRequired": "No service key",
+      "applicationRequired": "Application required",
+      "applicationNotRequired": "No application",
+      "applicationUnknown": "Application unknown",
+      "newWindow": "(opens in a new window)"
+    },
+    "created": {
+      "none": "None",
+      "loading": "Checking…",
+      "incompleteTitle": "Not every table was listed, so this cannot be confirmed",
+      "errorTitle": "Could not load the table list"
+    },
+    "maturityUnknownTitle": "The Builder catalog sends no maturity grade",
+    "quotaUnknownTitle": "The Builder catalog does not state a call limit"
   },
   "catalog": {
     "page": {

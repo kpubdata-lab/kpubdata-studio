@@ -60,3 +60,41 @@ export function uniqueProviders(entries: DiscoverEntry[]): string[] {
 export function computeServiceKeyCount(entries: DiscoverEntry[]): number {
   return entries.filter((entry) => entry.dataset.requires_service_key).length;
 }
+
+/**
+ * What the catalog says about a 활용신청 (#529): `application` null or absent means Builder
+ * does not know — never "not required".
+ */
+export function applicationState(entry: DiscoverEntry): "required" | "not_required" | "unknown" {
+  const application = entry.dataset.application;
+  if (!application) return "unknown";
+  return application.required ? "required" : "not_required";
+}
+
+/** "application required only" filter; false always passes (filter off). */
+export function matchesApplicationFilter(entry: DiscoverEntry, onlyRequiresApplication: boolean): boolean {
+  return !onlyRequiresApplication || applicationState(entry) === "required";
+}
+
+/** Count of sources whose application is known to be required. */
+export function computeApplicationCount(entries: DiscoverEntry[]): number {
+  return entries.filter((entry) => applicationState(entry) === "required").length;
+}
+
+/** `provider/dataset` — how a catalog source and a table's source reference meet. */
+export function sourceKey(provider: string, dataset: string): string {
+  return `${provider}/${dataset}`;
+}
+
+/** Table ids per catalog source, from each table's `sources` (#529). */
+export function createdTablesBySource(tables: { dataset_id: string; sources: { provider: string; dataset: string }[] }[]): Map<string, string[]> {
+  const index = new Map<string, string[]>();
+  for (const table of tables) {
+    for (const source of table.sources) {
+      const key = sourceKey(source.provider, source.dataset);
+      const ids = index.get(key) ?? [];
+      if (!ids.includes(table.dataset_id)) index.set(key, [...ids, table.dataset_id]);
+    }
+  }
+  return index;
+}
