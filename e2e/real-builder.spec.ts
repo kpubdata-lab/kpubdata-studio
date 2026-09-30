@@ -13,10 +13,11 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpe
  * Builder ingestion(file) → Bronze/Silver/Gold → manifest → response → UI render.
  * File source operates deterministically without external network.
  *
- * Public API source runs with Builder in replay mode — a recorded fixture is replayed, so no
- * external network or service keys are needed either. Runs only when the runner is given a
- * replay fixture directory (--replay-dir / STUDIO_REPLAY_DIR → REAL_BUILDER_REPLAY). Studio
- * never looks inside another repository for it (#511).
+ * Public API source runs with Builder in its replay mode — a recorded fixture is replayed, so
+ * no external network or service keys are needed either. The runner starts Builder with
+ * `serve --replay` (its bundled fixtures) or `serve --replay-dir` and sets REAL_BUILDER_REPLAY;
+ * a Builder without replay support skips this scenario. Studio sets no kpubdata variable and
+ * never looks inside another repository (#511, #541).
  */
 const BUILDER_URL = process.env.REAL_BUILDER_URL ?? "http://localhost:8000";
 
@@ -141,10 +142,10 @@ test("Public API source가 Builder 를 거쳐 성공 빌드로 끝난다 @real-b
   request,
 }) => {
   // Deterministic only when Builder runs in replay mode — the runner sets REAL_BUILDER_REPLAY
-  // when it is given a replay fixture directory.
+  // when the Builder it started supports `serve --replay` (kpubdata-builder#837).
   test.skip(
     !process.env.REAL_BUILDER_REPLAY,
-    "replay fixture 필요 — scripts/run-real-e2e.mjs 에 --replay-dir 또는 STUDIO_REPLAY_DIR 를 주세요",
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
   );
 
   const errors: string[] = [];
