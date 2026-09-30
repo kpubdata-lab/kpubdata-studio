@@ -27,6 +27,9 @@ const FORBIDDEN: Array<[string, RegExp]> = [
   ["kpubdata Python module", /\b(from|import)\s+kpubdata\b(?!_builder)|\bkpubdata\.(core|providers|config|transport|specs)\b/],
   ["kpubdata catalogue or support table", /\bcatalogue\.json\b|\bSUPPORTED_DATA\b|specs\/schema\.json/],
   ["kpubdata root option", /--kpubdata-root/],
+  // kpubdata's own settings (#541). Builder's are KPUBDATA_BUILDER_*, Studio's KPUBDATA_STUDIO_*
+  // and KPUBDATA_CONFIG_OUT; replay and provider keys are Builder's to set now.
+  ["kpubdata setting", /\bKPUBDATA_(?:MODE|REPLAY_DIR|CACHE_[A-Z_]+|(?!BUILDER_|STUDIO_)[A-Z0-9]+_API_KEY)\b/],
 ];
 
 export function boundaryViolations(file: string, source: string): string[] {
@@ -65,6 +68,8 @@ describe("kpubdata boundary gate (#511)", () => {
       ["from kpubdata.core.spec import x", "kpubdata Python module"],
       ["read providers/datago/catalogue.json", "kpubdata catalogue or support table"],
       ["node run.mjs --kpubdata-root x", "kpubdata root option"],
+      ['KPUBDATA_MODE: "replay"', "kpubdata setting"],
+      ["KPUBDATA_DATAGO_API_KEY=x", "kpubdata setting"],
     ])("flags %s", (line, what) => {
       expect(boundaryViolations("f", line)).toContain(`f:1: ${what}`);
     });
@@ -75,6 +80,9 @@ describe("kpubdata boundary gate (#511)", () => {
       "import kpubdata_builder",
       "kpubdata-brand-assets/svg/favicon.svg",
       "kpubdata#282",
+      "KPUBDATA_BUILDER_DEV_MODE=true",
+      "KPUBDATA_STUDIO_VERSION=0.3.0",
+      "KPUBDATA_CONFIG_OUT=/tmp/x",
     ])("allows %s", (line) => {
       expect(boundaryViolations("f", line)).toEqual([]);
     });
