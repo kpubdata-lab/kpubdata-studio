@@ -913,10 +913,8 @@
   },
   "home": {
     "hero": {
-      "eyebrow": "시작하기",
       "title": "공공데이터를 찾아 신뢰할 수 있는 테이블로 만드세요",
-      "desc": "데이터를 찾거나 직접 가져온 뒤 Preview와 Quality를 확인하고 테이블을 만들 수 있습니다.",
-      "tour": "둘러보기 다시 보기"
+      "desc": "데이터를 찾거나 직접 가져온 뒤 Preview와 Quality를 확인하고 테이블을 만들 수 있습니다."
     },
     "explore": {
       "title": "공공데이터 탐색",
@@ -928,52 +926,41 @@
       "desc": "Public API·파일·URL을 직접 추가하고 Preview와 검증을 거쳐 테이블을 만듭니다.",
       "cta": "데이터 추가하기"
     },
-    "steps": {
-      "1": "데이터 찾기",
-      "1d": "Discover 또는 직접 데이터 추가",
-      "2": "가져오기 준비",
-      "2d": "Public API는 인증·활용신청·요청값을 확인",
-      "3": "Preview · 테이블 만들기",
-      "3d": "데이터를 미리 확인·검증한 뒤 테이블 만들기",
-      "4": "품질 확인 · 활용",
-      "4d": "Quality · Ask KPubData · Export · Publish",
-      "heading": "전체 작업 흐름",
-      "note": "아래는 진행 순서를 보여주는 설명입니다 — 각 단계는 사이드바 메뉴와 화면 안내를 따라 진행하세요."
-    },
     "dashboard": {
-      "eyebrow": "대시보드",
-      "title": "작업 현황을 한눈에 확인하세요",
-      "desc": "최근 테이블, 실행 상태, 품질 경고를 모니터링합니다",
-      "guide": "사용 가이드"
-    },
-    "kpi": {
-      "datasets": "현재 접근할 수 있는 전체 테이블 수입니다.",
-      "succeeded": "최근 24시간 동안 성공적으로 완료된 Run 수입니다.",
-      "qualityWarn": "최근 24시간 Quality 검사에서 WARN이 하나 이상 확인된 Run 수입니다.",
-      "running": "현재 실행 중인 Run 수입니다.",
-      "definitionLabel": "{{label}} 정의",
-      "unavailable": "확인 불가"
+      "title": "홈",
+      "desc": "조치가 필요한 테이블과 최근 스냅샷을 먼저 봅니다."
     },
     "recent": {
-      "eyebrow": "최근 실행",
       "title": "최근 실행",
       "errorTitle": "실행 목록을 불러올 수 없습니다",
-      "errorDesc": "나중에 다시 시도해 주세요",
-      "emptyTitle": "아직 실행이 없습니다",
-      "emptyDesc": "첫 테이블을 만들어보세요",
-      "emptyCta": "테이블 만들기",
-      "view": "보기"
+      "emptyTitle": "아직 실행이 없습니다"
     },
-    "quality": {
-      "eyebrow": "품질",
-      "title": "최근 품질 상태",
-      "unavailableTitle": "일부 품질 정보를 확인할 수 없습니다",
-      "unavailableDesc": "KPubData Builder에서 최근 Run의 Quality 결과를 제공하지 못했습니다. 실패한 Run을 Quality FAIL로 간주하지 않습니다.",
-      "emptyTitle": "최근 확인한 Run에서 품질 경고가 없습니다",
-      "emptyDesc": "현재 확인 가능한 최근 Quality 결과 중 추가 확인이 필요한 WARN/FAIL이 없습니다.",
-      "needsCheck": "품질 확인 필요",
-      "incomplete": "일부 Run의 Quality 결과는 확인하지 못했습니다.",
-      "center": "Quality Center 보기"
+    "newQuery": "새 SQL 쿼리",
+    "noWarehouse": "이 배포에는 warehouse 가 없어 최근 스냅샷과 저장된 분석 대신 최근 실행을 보여 줍니다.",
+    "attention": {
+      "title": "조치가 필요한 테이블",
+      "viewAll": "모두 보기 ({{count}})",
+      "error": "테이블 상태를 불러오지 못했습니다."
+    },
+    "snapshots": {
+      "title": "최근 스냅샷",
+      "table": "테이블",
+      "snapshot": "스냅샷",
+      "rows": "행",
+      "committed": "커밋 시각",
+      "run": "실행(run)",
+      "empty": "아직 커밋된 스냅샷이 없습니다.",
+      "error": "최근 스냅샷을 불러오지 못했습니다."
+    },
+    "analyses": {
+      "title": "최근 분석",
+      "viewAll": "모두 보기",
+      "empty": "저장된 분석이 없습니다. SQL Workspace 에서 실행하고 저장하면 여기에 보입니다.",
+      "error": "저장된 분석을 불러오지 못했습니다."
+    },
+    "connections": {
+      "title": "연결 확인 필요",
+      "tables": "테이블 {{count}}개"
     }
   },
   "addData": {

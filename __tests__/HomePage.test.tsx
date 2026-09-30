@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -6,7 +6,6 @@ import { useAssistConfig } from "@/features/assistant/config";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { HomePage } from "@/pages/HomePage";
 import { AssistantPage } from "@/pages/AssistantPage";
-import { builderApi } from "@/shared/lib/builderApi";
 import { API_BASE } from "@/shared/config/env";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { mswServer } from "../vitest.setup";
@@ -15,26 +14,8 @@ import { mswServer } from "../vitest.setup";
 // 덮어써도 msw 핸들러가 매칭되도록 하드코딩 대신 API_BASE에서 파생).
 const BUILDER_BASE = API_BASE;
 
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => { resolve = done; });
-  return { promise, resolve };
-}
-
 function mockEmptyBuilds() {
   mswServer.use(http.get(`${BUILDER_BASE}/builds`, () => HttpResponse.json({ builds: [] })));
-}
-
-/**
- * dataset total / quality summary aggregate를 미지원(구버전 Builder)으로 고정한다.
- * 두 KPI는 "확인 불가"가 되어야 하며 임의 0/PASS로 합성되면 안 된다. real 모드에서
- * HomePage가 항상 이 둘을 조회하므로, 다른 KPI를 검증하는 테스트도 명시적으로 stub한다.
- */
-function mockDashboardAggregatesUnsupported() {
-  mswServer.use(
-    http.get(`${BUILDER_BASE}/datasets`, () => HttpResponse.json({ datasets: [] })),
-    http.get(`${BUILDER_BASE}/quality/summary`, () => new HttpResponse(null, { status: 404 })),
-  );
 }
 
 /**
@@ -59,39 +40,28 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("HomePage", () => {
-  it("renders the existing-user dashboard heading and KPI summary once builds load (#248)", async () => {
+describe("HomePage (mock deployment, no warehouse)", () => {
+  it("leads with tables that need attention, then recent runs, and says why there are no snapshots (#527)", async () => {
     render(
       <MemoryRouter>
         <HomePage />
       </MemoryRouter>,
     );
 
-    // mock 빌드 이력에 성공한 빌드가 있어 기존 사용자 대시보드(ExistingUserHome)가 렌더된다.
-    expect(
-      await screen.findByRole("heading", {
-        name: "작업 현황을 한눈에 확인하세요",
-      }),
-    ).toBeInTheDocument();
-    // 상태 요약 KPI 카드 라벨
-    expect(screen.getByText("TABLES")).toBeInTheDocument();
-    expect(screen.getByText("RUNS SUCCEEDED (24H)")).toBeInTheDocument();
-    expect(screen.getByText("RUNNING")).toBeInTheDocument();
-  });
+    expect(await screen.findByRole("heading", { level: 1, name: "홈" })).toBeInTheDocument();
+    // No KPI wall.
+    expect(screen.queryByText("TABLES")).not.toBeInTheDocument();
+    expect(screen.queryByText("RUNS SUCCEEDED (24H)")).not.toBeInTheDocument();
 
-  it("loads recent builds from the mock builder data", async () => {
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>,
-    );
+    const attention = await screen.findByRole("heading", { level: 2, name: "조치가 필요한 테이블" });
+    const section = attention.closest("section")!;
+    const air = within(section).getByRole("link", { name: /대기질 통합 데이터/ });
+    expect(air).toHaveAttribute("href", "/tables/air-quality");
+    expect(within(section).queryByText("행정구역별 인구")).not.toBeInTheDocument();
 
-    // 데모 빌드 이력이 최근 빌드 목록에 표시된다.
+    expect(screen.getByText(/이 배포에는 warehouse 가 없어/)).toBeInTheDocument();
     expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
-    // 각 빌드 행에서 상세로 이동하는 링크가 있다.
-    expect(
-      screen.getAllByRole("link", { name: "보기" }).length,
-    ).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByRole("heading", { name: "최근 분석" })).not.toBeInTheDocument();
   });
 
   it("points the new-user '데이터 추가하기' CTA at the canonical /add route, not /add-data (#regression)", async () => {
@@ -105,83 +75,6 @@ describe("HomePage", () => {
 
     const cta = await screen.findByRole("link", { name: "데이터 추가하기" });
     expect(cta).toHaveAttribute("href", "/add");
-  });
-
-  it("uses monitoring success counts and renders unavailable metrics as unavailable, never zero/PASS", async () => {
-    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    mswServer.use(
-      http.get(`${BUILDER_BASE}/builds`, () => HttpResponse.json({
-        builds: [
-          { run_id: "ok-run", status: "ok", started_at: "2026-08-31T00:00:00Z", finished_at: "2026-08-31T00:01:00Z" },
-          { run_id: "failed-run", status: "failed", started_at: "2026-08-31T00:02:00Z", finished_at: "2026-08-31T00:03:00Z" },
-          { run_id: "cancelled-run", status: "cancelled", started_at: "2026-08-31T00:04:00Z", finished_at: "2026-08-31T00:05:00Z" },
-        ],
-      })),
-      http.get(`${BUILDER_BASE}/monitoring/builds`, () => HttpResponse.json({
-        window: "24h",
-        bucket: "hour",
-        availability: "available",
-        excluded_count: 0,
-        buckets: [{ bucket_start: "2026-08-31T00:00:00Z", bucket_end: "2026-08-31T01:00:00Z", total: 9, success: 7, failed: 1, cancelled: 1 }],
-        recent_runs: [],
-      })),
-      http.get(`${BUILDER_BASE}/monitoring/summary`, () => HttpResponse.json({
-        generated_at: "2026-08-31T00:00:00Z",
-        status: "healthy",
-        api: { availability: "available", sample_count: 1, p95_latency_ms: 10 },
-        queue: { availability: "available", waiting: 0, running: 3, total: 3 },
-        workers: { availability: "available", active: 1, capacity: 1, utilization: 1 },
-        artifact_store: { availability: "available", last_write_at: null },
-      })),
-      http.get(`${BUILDER_BASE}/builds/ok-run/quality`, () => new HttpResponse(null, { status: 404 })),
-    );
-    mockDashboardAggregatesUnsupported();
-
-    render(<MemoryRouter><HomePage /></MemoryRouter>);
-
-    expect(await screen.findByText("7")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getAllByText("확인 불가")).toHaveLength(2);
-    expect(await screen.findByText("일부 품질 정보를 확인할 수 없습니다")).toBeInTheDocument();
-    expect(screen.queryByText("품질 경고가 없습니다")).not.toBeInTheDocument();
-    expect(screen.queryByText("모든 빌드가 정상적으로 완료되었습니다")).not.toBeInTheDocument();
-  });
-
-  it("renders recent builds before deferred monitoring settles, then uses authoritative KPIs", async () => {
-    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    const monitoringBuilds = deferred<Response>();
-    const monitoringSummary = deferred<Response>();
-    mswServer.use(
-      http.get(`${BUILDER_BASE}/builds`, () => HttpResponse.json({ builds: [
-        { run_id: "deferred-run", status: "ok", started_at: "2026-08-31T00:00:00Z", finished_at: null },
-      ] })),
-      http.get(`${BUILDER_BASE}/monitoring/builds`, () => monitoringBuilds.promise),
-      http.get(`${BUILDER_BASE}/monitoring/summary`, () => monitoringSummary.promise),
-    );
-    mockDashboardAggregatesUnsupported();
-    render(<MemoryRouter><HomePage /></MemoryRouter>);
-    expect(await screen.findByText("deferred-run")).toBeInTheDocument();
-    expect(screen.queryByText(/실행 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
-    await act(async () => {
-      monitoringBuilds.resolve(HttpResponse.json({ window: "24h", bucket: "hour", availability: "available", excluded_count: 0, buckets: [{ bucket_start: "2026-08-31T00:00:00Z", bucket_end: "2026-08-31T01:00:00Z", total: 4, success: 4, failed: 0, cancelled: 0 }], recent_runs: [] }));
-      monitoringSummary.resolve(HttpResponse.json({ generated_at: "2026-08-31T00:00:00Z", status: "healthy", api: { availability: "available", sample_count: 1, p95_latency_ms: 1 }, queue: { availability: "available", waiting: 0, running: 3, total: 3 }, workers: { availability: "available", active: 1, capacity: 1, utilization: 1 }, artifact_store: { availability: "available", last_write_at: null } }));
-    });
-    expect(await screen.findByText("4")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
-  });
-
-  it("keeps recent builds visible when monitoring fails and marks only KPIs unavailable", async () => {
-    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    mswServer.use(
-      http.get(`${BUILDER_BASE}/builds`, () => HttpResponse.json({ builds: [{ run_id: "still-visible", status: "ok", started_at: "2026-08-31T00:00:00Z", finished_at: null }] })),
-    );
-    mockDashboardAggregatesUnsupported();
-    vi.spyOn(builderApi, "getMonitoringBuilds").mockRejectedValue(new Error("monitoring down"));
-    vi.spyOn(builderApi, "getMonitoringSummary").mockRejectedValue(new Error("monitoring down"));
-    render(<MemoryRouter><HomePage /></MemoryRouter>);
-    expect(await screen.findByText("still-visible")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getAllByText("확인 불가")).toHaveLength(4));
-    expect(screen.queryByText(/실행 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
   });
 });
 
@@ -216,7 +109,7 @@ describe("Home without an Ask KPubData hero (#421)", () => {
         <HomePage />
       </MemoryRouter>,
     );
-    await screen.findByRole("heading", { name: "작업 현황을 한눈에 확인하세요" });
+    await screen.findByRole("heading", { level: 1, name: "홈" });
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
