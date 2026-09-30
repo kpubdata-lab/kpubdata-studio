@@ -81,12 +81,20 @@ export function isEnglishProse(text) {
 
 const IGNORE_MARKER = /i18n-ignore/;
 
+/** A line that holds only a comment: a line comment, a block comment or its continuation, or a JSX comment. */
+const COMMENT_LINE = /^(?:\/\/|\/\*|\*|\{\s*\/\*)/;
+
+/**
+ * Whether the text on `line` is exempt: the marker is on that line, or on the nearest
+ * non-blank line above it when that line is a comment. A marker on a code line exempts
+ * only that line, not the one after it.
+ */
 function ignored(lines, line) {
   if (IGNORE_MARKER.test(lines[line - 1] ?? "")) return true;
   for (let index = line - 2; index >= 0; index--) {
     const above = (lines[index] ?? "").trim();
     if (above === "") continue;
-    return IGNORE_MARKER.test(above);
+    return COMMENT_LINE.test(above) && IGNORE_MARKER.test(above);
   }
   return false;
 }
@@ -118,6 +126,10 @@ export function uiTexts(file, source) {
   const leaves = (expression) => {
     if (!expression) return;
     if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) add(expression, expression.text);
+    // `Run ${id}` — the literal parts, with each substitution read as a space.
+    else if (ts.isTemplateExpression(expression)) {
+      add(expression, [expression.head.text, ...expression.templateSpans.map((span) => span.literal.text)].join(" "));
+    }
     else if (ts.isParenthesizedExpression(expression)) leaves(expression.expression);
     else if (ts.isConditionalExpression(expression)) {
       leaves(expression.whenTrue);

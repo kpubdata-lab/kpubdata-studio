@@ -37,6 +37,16 @@ describe("hard-coded English UI text gate (#531)", () => {
       expect(texts(source)).toEqual(["Data Passport", RETIRED_AI_LABEL, "Table detail tabs", "Done", "Ready", "Overview"]);
     });
 
+    it("finds English in a template literal, reading each substitution as a space", () => {
+      const source = ["<Card sub={`Run ${id}`} />", "<p>{`${n} columns`}</p>"].join("\n");
+      expect(texts(source)).toEqual(["Run", "columns"]);
+    });
+
+    it("an i18n-ignore marker on a code line exempts only that line", () => {
+      const source = ['<input placeholder="gpt-4o-mini" /> {/* i18n-ignore */}', "<h3>Data Passport</h3>"].join("\n");
+      expect(texts(source)).toEqual(["Data Passport"]);
+    });
+
     it("leaves code, brand, formats, Builder's codes and marked sample values alone", () => {
       const source = [
         '<p>{t("home.title")}</p>',
@@ -50,6 +60,8 @@ describe("hard-coded English UI text gate (#531)", () => {
         "// i18n-ignore: an example value, not a label",
         '<input placeholder="gpt-4o-mini" />',
         'const cls = "text-sm font-semibold";',
+        "<div className={`rounded border ${active ? \"bg-accent\" : \"bg-card\"}`} />",
+        "<p>{`${provider}.${dataset}`}</p>",
       ].join("\n");
       expect(texts(source)).toEqual([]);
     });

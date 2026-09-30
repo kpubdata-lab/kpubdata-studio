@@ -1278,9 +1278,9 @@
     },
     "runLookupUnsupportedTitle": "This Builder cannot look up an older run",
     "runLookupUnsupportedBody": "Run `{{run}}` is not in the newest page of runs, and this KPubData Builder is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Builder to open it. Did not switch to the latest run.",
-    "tabsLabel": "Table detail tabs",
     "passportTitle": "Data Passport",
-    "sampleTitle": "Sample data"
+    "runValue": "Run {{id}}",
+    "columnCount": "{{count}} columns"
   },
   "buildPublish": {
     "statusQueued": "Queued",
@@ -1673,7 +1673,10 @@
       "otherContext": "Reference analysis · based on a different table/run than this report (not merged automatically).",
       "generatedAt": "Generated {{at}}",
       "reason": "Rationale: {{reason}}",
-      "linkedEvidence": "Linked evidence: {{refs}}"
+      "linkedEvidence": "Linked evidence: {{refs}}",
+      "stage": "Stage: {{stage}}",
+      "provider": "provider {{provider}}",
+      "model": "model {{model}}"
     },
     "assistantPanel": {
       "preset": {
@@ -2634,8 +2637,6 @@
     "schema": "Schema",
     "duplicate": "Duplicate",
     "range": "Range",
-    "overview": "Overview",
-    "preview": "Preview",
     "runs": "Runs",
     "public": "Public",
     "private": "Private",

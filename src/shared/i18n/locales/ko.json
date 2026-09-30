@@ -1278,9 +1278,9 @@
     },
     "runLookupUnsupportedTitle": "이 Builder 는 오래된 run 을 찾을 수 없습니다",
     "runLookupUnsupportedBody": "run `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다.",
-    "tabsLabel": "Table detail tabs",
     "passportTitle": "Data Passport",
-    "sampleTitle": "Sample data"
+    "runValue": "Run {{id}}",
+    "columnCount": "컬럼 {{count}}개"
   },
   "buildPublish": {
     "statusQueued": "대기 중",
@@ -1673,7 +1673,10 @@
       "otherContext": "참고 분석 · 현재 Report의 기준 테이블/run과 다릅니다(자동으로 합치지 않음).",
       "generatedAt": "생성 시각 {{at}}",
       "reason": "판단 근거: {{reason}}",
-      "linkedEvidence": "연결된 Evidence: {{refs}}"
+      "linkedEvidence": "연결된 Evidence: {{refs}}",
+      "stage": "Stage: {{stage}}",
+      "provider": "provider {{provider}}",
+      "model": "model {{model}}"
     },
     "assistantPanel": {
       "preset": {
@@ -2634,8 +2637,6 @@
     "schema": "Schema",
     "duplicate": "Duplicate",
     "range": "Range",
-    "overview": "Overview",
-    "preview": "Preview",
     "runs": "Runs",
     "public": "Public",
     "private": "Private",

@@ -49,10 +49,10 @@ import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton,
 type DetailTab = "overview" | "schema" | "preview" | "quality" | "builds";
 
 const TABS: { id: DetailTab; labelKey: string }[] = [
-  { id: "overview", labelKey: "labels.overview" },
-  { id: "schema", labelKey: "labels.schema" },
-  { id: "preview", labelKey: "labels.preview" },
-  { id: "quality", labelKey: "labels.quality" },
+  { id: "overview", labelKey: "tableDetail.tabs.overview" },
+  { id: "schema", labelKey: "tableDetail.tabs.schema" },
+  { id: "preview", labelKey: "tableDetail.tabs.preview" },
+  { id: "quality", labelKey: "tableDetail.tabs.quality" },
   { id: "builds", labelKey: "labels.runs" },
 ];
 
@@ -336,7 +336,7 @@ function RunDetailView({ note }: { note: string }) {
         </Card>
       ) : null}
 
-      <div className="border-b border-border" role="tablist" aria-label={t("datasetDetail.tabsLabel")}>
+      <div className="border-b border-border" role="tablist" aria-label={t("tableDetail.tabsLabel")}>
         <div className="flex gap-1 overflow-x-auto">
           {TABS.map((tab) => (
             <button
@@ -353,7 +353,7 @@ function RunDetailView({ note }: { note: string }) {
         </div>
       </div>
 
-      <section role="tabpanel" aria-label={t(TABS.find((tab) => tab.id === selectedTab)?.labelKey ?? "labels.overview")}>
+      <section role="tabpanel" aria-label={t(TABS.find((tab) => tab.id === selectedTab)?.labelKey ?? "tableDetail.tabs.overview")}>
         {selectedTab === "overview" ? <OverviewTab dataset={core.dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStageEntry} stageDetail={stageDetailState.data} stageError={stageDetailState.error} rowCount={summaryRowCount} validation={validation} onSelectStage={(stageName) => updateContext({ stage: stageName })} onSelectTab={goToTab} onAsk={askAboutThis} /> : null}
         {selectedTab === "schema" ? <SchemaTab state={stageDetailState} drift={selectedDrift} /> : null}
         {selectedTab === "preview" ? <PreviewTab state={stageDetailState} qualityState={qualityState} qualityStatus={validation} qualityResults={selectedQualityResults} onOpenQuality={() => updateContext({ tab: "quality" })} /> : null}
@@ -374,7 +374,7 @@ function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selected
   const artifactSummary = stageDetail?.stage === "gold" ? stageDetail.exports.map((item) => item.kind).join(", ") || t("datasetDetail.unpublished") : t("datasetDetail.notGoldStage");
   return <div className="space-y-4">
     <DataPassport dataset={dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStages} columnCount={columnCount} artifactSummary={artifactSummary} validation={validation} onAsk={onAsk} />
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label={t("datasetDetail.labels.rows")} value={rowCount === null ? "—" : rowCount.toLocaleString("ko-KR")} sub={selectedStage} /><MetricCard label={t("datasetDetail.labels.columns")} value={columnCount ?? "—"} sub={t("datasetDetail.labels.stageResponse")} /><MetricCard label={t("datasetDetail.labels.validation")} value={<QualityBadge status={validation} />} sub={selectedSource || t("datasetDetail.noSource")} /><MetricCard label={t("datasetDetail.labels.updated")} value={<span className="text-lg">{formatDateTime(selectedRun?.finished_at ?? selectedRun?.started_at ?? dataset.updated_at)}</span>} sub={`Run ${selectedRun?.run_id ?? dataset.latest_run_id}`} /></div>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label={t("datasetDetail.labels.rows")} value={rowCount === null ? "—" : rowCount.toLocaleString("ko-KR")} sub={selectedStage} /><MetricCard label={t("datasetDetail.labels.columns")} value={columnCount ?? "—"} sub={t("datasetDetail.labels.stageResponse")} /><MetricCard label={t("datasetDetail.labels.validation")} value={<QualityBadge status={validation} />} sub={selectedSource || t("datasetDetail.noSource")} /><MetricCard label={t("datasetDetail.labels.updated")} value={<span className="text-lg">{formatDateTime(selectedRun?.finished_at ?? selectedRun?.started_at ?? dataset.updated_at)}</span>} sub={t("datasetDetail.runValue", { id: selectedRun?.run_id ?? dataset.latest_run_id })} /></div>
     <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]"><Card><h3 className="text-sm font-semibold">{t("datasetDetail.labels.lineage")}</h3>{sourceStages ? <div className="mt-4 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center"><div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-center text-sm font-semibold">{t("datasetDetail.labels.source")}<span className="mt-1 block text-xs font-normal text-muted-foreground">{selectedSource}</span></div>{DATASET_STAGES.map((stageName) => <div key={stageName} className="contents"><span aria-hidden="true" className="text-center text-muted-foreground">→</span><button type="button" aria-label={`${stageName} ${sourceStages[stageName].status}`} aria-pressed={selectedStage === stageName} onClick={() => onSelectStage(stageName)} className={`rounded-lg border px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedStage === stageName ? "border-accent bg-accent-subtle" : "border-border bg-card hover:bg-muted"}`}><span className="block text-sm font-semibold capitalize">{stageName}</span><span className="mt-1 block"><StageBadge status={sourceStages[stageName].status} /></span><span className="mt-1 block text-[11px] font-normal text-muted-foreground">{t(STAGE_EXPLAINER_KEY[stageName])}</span></button></div>)}</div> : <Skeleton className="mt-4 h-24 w-full" />}</Card><Card><h3 className="text-sm font-semibold">{t("datasetDetail.labels.stageDetail")} · <span className="capitalize">{selectedStage}</span></h3>{stageError ? <p className="mt-3 text-sm text-status-failure">{stageError}</p> : !stageDetail ? <Skeleton className="mt-4 h-24 w-full" /> : <><dl className="mt-4 space-y-3"><Definition label={t("datasetDetail.labels.status")}><StageBadge status={stageDetail.status} /></Definition><Definition label={t("datasetDetail.labels.available")}>{stageDetail.available ? t("labels.yes") : t("labels.no")}</Definition><Definition label={t("datasetDetail.labels.providerSource")}>{dataset.sources.map((source) => `${source.provider}.${source.dataset}`).join(", ")} · {selectedSource}</Definition><Definition label={t("datasetDetail.labels.output")}>{stageDetail.stage === "gold" ? (stageDetail.exports.map((item) => item.kind).join(", ") || t("datasetDetail.outputNone")) : t("datasetDetail.outputNotProvided")}</Definition></dl><div className="mt-4 flex gap-2"><Button variant="secondary" size="sm" onClick={() => onSelectTab("preview")}>{t("datasetDetail.labels.preview")}</Button><Button variant="secondary" size="sm" onClick={() => onSelectTab("quality")}>{t("datasetDetail.viewQuality")}</Button></div></>}</Card></div>
   </div>;
 }
@@ -407,7 +407,7 @@ function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selecte
         <Definition label={t("datasetDetail.runStatusAll")}>{runStatus ?? t("datasetDetail.unavailable")}</Definition>
         <Definition label={t("datasetDetail.selectedStageStatus")}><StageBadge status={sourceStages?.[selectedStage].status} /></Definition>
         <Definition label={t("datasetDetail.labels.quality")}><QualityBadge status={validation} /></Definition>
-        <Definition label={t("datasetDetail.labels.schema")}>{columnCount === null ? t("datasetDetail.schemaMissing") : `${columnCount} columns`}</Definition>
+        <Definition label={t("datasetDetail.labels.schema")}>{columnCount === null ? t("datasetDetail.schemaMissing") : t("datasetDetail.columnCount", { count: columnCount })}</Definition>
         <Definition label={t("datasetDetail.labels.specDigest")}>{selectedRun?.spec_digest ? <span className="break-all font-mono text-xs">{selectedRun.spec_digest}</span> : t("datasetDetail.unavailable")}</Definition>
         <Definition label={t("datasetDetail.labels.snapshotFiles")}>{artifactSummary}</Definition>
       </dl>
@@ -437,5 +437,5 @@ function PreviewTab({ state, qualityState, qualityStatus, qualityResults, onOpen
   // A stage sample is a few rows of the stage; its total comes from the stage statistics
   // when the Builder sent them, and is unknown otherwise — never the sample size (#499).
   const stageRows = state.data.statistics?.row_count;
-  return <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]"><div className="min-w-0 space-y-2"><div><h3 className="text-sm font-semibold">{t("datasetDetail.sampleTitle")}</h3><p className="mt-1 text-xs text-muted-foreground">{t("datasetDetail.previewNote")}</p></div><DataTable columnMeta={state.data.schema} columns={columns} rowTotal={{ returned: state.data.sample.length, total: stageRows ?? null, status: stageRows === undefined || stageRows === null ? "unknown" : "exact" }} rows={state.data.sample} /></div><Card><h3 className="text-sm font-semibold">{t("labels.validation")}</h3><div className="mt-4 text-2xl font-bold"><QualityBadge status={qualityStatus} /></div><div className="mt-4 space-y-3">{qualityState.status === "error" ? <p className="text-sm text-status-failure">{t("datasetDetail.fetchFailed")}</p> : qualityResults.length === 0 ? <p className="text-sm text-muted-foreground">{t("datasetDetail.noEvaluated")}</p> : qualityResults.slice(0, 5).map((result, index) => <div key={`${result.rule}-${index}`} className="flex items-center justify-between gap-3 border-b border-border pb-2 text-sm last:border-0"><span>{result.category}</span><QualityBadge status={result.status.toUpperCase() as "PASS" | "WARN" | "FAIL"} /></div>)}</div><Button className="mt-4 w-full" variant="secondary" onClick={onOpenQuality}>{t("datasetDetail.viewQualityDetail")}</Button></Card></div>;
+  return <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]"><div className="min-w-0 space-y-2"><div><h3 className="text-sm font-semibold">{t("addData.preview.sampleTitle")}</h3><p className="mt-1 text-xs text-muted-foreground">{t("datasetDetail.previewNote")}</p></div><DataTable columnMeta={state.data.schema} columns={columns} rowTotal={{ returned: state.data.sample.length, total: stageRows ?? null, status: stageRows === undefined || stageRows === null ? "unknown" : "exact" }} rows={state.data.sample} /></div><Card><h3 className="text-sm font-semibold">{t("labels.validation")}</h3><div className="mt-4 text-2xl font-bold"><QualityBadge status={qualityStatus} /></div><div className="mt-4 space-y-3">{qualityState.status === "error" ? <p className="text-sm text-status-failure">{t("datasetDetail.fetchFailed")}</p> : qualityResults.length === 0 ? <p className="text-sm text-muted-foreground">{t("datasetDetail.noEvaluated")}</p> : qualityResults.slice(0, 5).map((result, index) => <div key={`${result.rule}-${index}`} className="flex items-center justify-between gap-3 border-b border-border pb-2 text-sm last:border-0"><span>{result.category}</span><QualityBadge status={result.status.toUpperCase() as "PASS" | "WARN" | "FAIL"} /></div>)}</div><Button className="mt-4 w-full" variant="secondary" onClick={onOpenQuality}>{t("datasetDetail.viewQualityDetail")}</Button></Card></div>;
 }

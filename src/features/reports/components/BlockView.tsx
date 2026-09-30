@@ -123,7 +123,7 @@ export function BlockView({
             dataset: block.sourceContext.datasetId ?? "N/A",
             run: block.sourceContext.runId ?? "N/A",
           })}
-          {block.sourceContext.stage ? ` · Stage: ${block.sourceContext.stage}` : ""}
+          {block.sourceContext.stage ? ` · ${t("reports.block.stage", { stage: block.sourceContext.stage })}` : ""}
         </p>
         {!block.isSameContext ? (
           <p className="rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
@@ -136,8 +136,8 @@ export function BlockView({
               i18n.language?.startsWith("en") ? "en-US" : "ko-KR",
             ),
           })}
-          {block.provider ? ` · provider ${block.provider}` : ""}
-          {block.model ? ` · model ${block.model}` : ""}
+          {block.provider ? ` · ${t("reports.block.provider", { provider: block.provider })}` : ""}
+          {block.model ? ` · ${t("reports.block.model", { model: block.model })}` : ""}
         </p>
         <div className="space-y-2 text-sm text-foreground">{renderMarkdownToReact(block.note)}</div>
         <p className="text-xs italic text-muted-foreground">
