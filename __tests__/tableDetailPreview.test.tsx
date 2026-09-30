@@ -10,9 +10,10 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
 import { API_BASE } from "@/shared/config/env";
 import { useUIStore } from "@/shared/hooks/useUIStore";
@@ -142,6 +143,9 @@ describe("Table Detail Preview on a warehouse (#537)", () => {
 describe("Table Detail Preview without a warehouse (#537)", () => {
   it("labels the run sample as a sample and offers no paging", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+    // The demo has a warehouse since #530; this is a deployment without one.
+    const hidden = hideDemoWarehouse();
+    onTestFinished(() => hidden.mockRestore());
     renderDetail("/tables/air-quality?tab=preview&stage=silver");
 
     const total = await screen.findByTestId("row-total");
