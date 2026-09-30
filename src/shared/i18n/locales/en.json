@@ -2460,5 +2460,62 @@
     "missing": "KPubData Builder did not provide this value",
     "notEvaluated": "Not evaluated",
     "axesMissing": "Table status: not provided by KPubData Builder"
+  },
+  "tableDetail": {
+    "runView": {
+      "noWarehouse": "This deployment has no warehouse, so the table is shown by run.",
+      "noSnapshot": "This table has no committed snapshot yet, so it is shown by run."
+    },
+    "errors": {
+      "table": "Could not load the table's snapshots",
+      "runs": "Could not load the run history.",
+      "schema": "Could not load the schema"
+    },
+    "attention": "States that need action",
+    "sourceTables": "Source tables",
+    "pastSnapshot": "Viewing a past snapshot:",
+    "backToCurrent": "Back to the current snapshot",
+    "tabsLabel": "Table detail tabs",
+    "tabs": {
+      "overview": "Overview",
+      "schema": "Schema",
+      "preview": "Preview",
+      "quality": "Quality",
+      "snapshots": "Snapshots"
+    },
+    "snapshotMissing": "Snapshot {{snapshot}} was not found in this table.",
+    "notCommitted": "No committed snapshot",
+    "notCommittedDesc": "This source table has not been committed yet. It shows here once a refresh finishes.",
+    "coverage": {
+      "label": "Coverage",
+      "complete": "Complete",
+      "partial": "Partial"
+    },
+    "currentSnapshot": "Current snapshot",
+    "snapshot": "Snapshot",
+    "labels": {
+      "snapshot": "Snapshot",
+      "committedAt": "Committed",
+      "rows": "Rows",
+      "revision": "Revision",
+      "run": "Produced by run"
+    },
+    "status": "Table status",
+    "sources": "Sources",
+    "schemaNote": "{{count}} columns in this snapshot — types, display names and units as KPubData Builder sent them.",
+    "schema": {
+      "column": "Column",
+      "type": "Type",
+      "label": "Display name",
+      "unit": "Unit"
+    },
+    "snapshotsNote": "This source table's snapshots, newest first. A past snapshot is chosen only here.",
+    "actions": "Actions",
+    "current": "current",
+    "quarantined": "Quarantined",
+    "view": "View",
+    "more": "More actions for {{snapshot}}",
+    "runDetail": "Run detail",
+    "editSpec": "Edit spec and refresh"
   }
 }

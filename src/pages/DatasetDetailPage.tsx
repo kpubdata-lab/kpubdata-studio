@@ -1,7 +1,17 @@
+/**
+ * Table Detail (#526).
+ *
+ * On a Builder with a warehouse a table opens on its current committed snapshot, with no
+ * run, source or stage to pick first: `WarehouseTableView`. Runs are provenance there —
+ * the run behind each snapshot, in the Snapshots tab.
+ *
+ * A deployment without a warehouse, or a table with nothing committed yet, keeps the
+ * run-based view below (run · source · stage pickers) and says why in one line.
+ */
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   getBuildQuality,
   getBuildStageDetail,
@@ -9,9 +19,12 @@ import {
   listBuildStages,
   listDatasetRuns,
 } from "@/features/datasets/api";
+import { BuildsTab, QualityTab, type AsyncState } from "@/features/datasets/components/RunPanels";
 import { StageBadge } from "@/features/datasets/components/StageBadge";
 import { StatusAxes } from "@/features/datasets/components/StatusAxes";
+import { WarehouseTableView } from "@/features/datasets/components/WarehouseTableView";
 import { RUN_LOOKUP_API_VERSION, useRequestedRun } from "@/features/datasets/useRequestedRun";
+import { datasetTablesOf } from "@/features/datasets/warehouseTables";
 import {
   DATASET_STAGES,
   formatDateTime,
@@ -20,6 +33,7 @@ import {
 } from "@/features/datasets/model";
 import { QualityBadge } from "@/features/quality/QualityBadge";
 import { qualityResultsForSource, summarizeQuality } from "@/features/quality/model";
+import { detectWarehouse } from "@/features/sql/warehouse";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { DataTable } from "@/features/data-table/DataTable";
 import type {
@@ -28,6 +42,7 @@ import type {
   DatasetRunSummary,
   RunStagesResponse,
   StageDetailResponse,
+  WarehouseTable,
 } from "@/shared/lib/builderApi";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton, StageLegend } from "@/shared/ui";
 
@@ -48,19 +63,41 @@ interface CoreState {
   error?: string;
 }
 
-interface AsyncState<T> {
-  status: "idle" | "loading" | "loaded" | "error";
-  data?: T;
-  error?: string;
+type ViewMode =
+  | { status: "loading" }
+  | { status: "snapshot"; tables: WarehouseTable[] }
+  | { status: "run"; reason: "noWarehouse" | "noSnapshot" };
+
+export function DatasetDetailPage() {
+  const { t } = useTranslation();
+  const { datasetId = "" } = useParams<{ datasetId: string }>();
+  const [mode, setMode] = useState<ViewMode>({ status: "loading" });
+
+  useEffect(() => {
+    let cancelled = false;
+    setMode({ status: "loading" });
+    void detectWarehouse().then((warehouse) => {
+      if (cancelled) return;
+      if (warehouse.status !== "available") return setMode({ status: "run", reason: "noWarehouse" });
+      const tables = datasetTablesOf(warehouse.tables, datasetId);
+      // A table with no committed snapshot yet has nothing to open on; the run view still has its runs.
+      if (!tables.some((table) => table.current_snapshot_id !== null)) return setMode({ status: "run", reason: "noSnapshot" });
+      setMode({ status: "snapshot", tables });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [datasetId]);
+
+  if (mode.status === "loading") {
+    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
+  }
+  if (mode.status === "snapshot") return <WarehouseTableView datasetId={datasetId} tables={mode.tables} />;
+  return <RunDetailView note={t(`tableDetail.runView.${mode.reason}`)} />;
 }
 
 const selectClassName =
   "h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
-function formatJson(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  return typeof value === "string" ? value : JSON.stringify(value);
-}
 
 function Definition({ label, children }: { label: string; children: ReactNode }) {
   return <div><dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm text-foreground">{children}</dd></div>;
@@ -74,7 +111,8 @@ const STAGE_EXPLAINER_KEY: Record<DatasetStage, string> = {
   gold: "datasetDetail.stageGold",
 };
 
-export function DatasetDetailPage() {
+/** The run-based view: pick a run, a source and a stage. */
+function RunDetailView({ note }: { note: string }) {
   const { t } = useTranslation();
   const { datasetId = "" } = useParams<{ datasetId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -277,6 +315,7 @@ export function DatasetDetailPage() {
         meta={<><span className="block font-mono">{core.dataset.dataset_id}</span><span className="block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Run {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
         actions={<><span title={t("datasetDetail.stageStatusTitle", { source: selectedSource || "—", stage: selectedStage })} className="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold capitalize text-accent-subtle-foreground"><span>{selectedStage}</span><span className="font-normal"><StageBadge status={sourceStageEntry?.[selectedStage].status} /></span></span><QualityBadge status={validation} /><Button size="sm" variant="secondary" aria-haspopup="dialog" onClick={askAboutThis}>{t("datasetDetail.askAboutThis")}</Button><LinkButton size="sm" variant="secondary" to={`/refresh-jobs/${encodeURIComponent(selectedRunId)}/edit`}>{t("tableActions.refresh")}</LinkButton><LinkButton size="sm" to={`/sql?${new URLSearchParams({ table: core.dataset.dataset_id, run: selectedRunId, stage: selectedStage === "bronze" ? "silver" : selectedStage, ...(selectedSource ? { source: selectedSource } : {}) })}`}>{t("tableActions.query")}</LinkButton><LinkButton size="sm" to={`/refresh-jobs/${encodeURIComponent(selectedRunId)}/publish?dataset=${encodeURIComponent(core.dataset.dataset_id)}`}>{t("datasetDetail.publishRun")}</LinkButton></>}
       />
+      <p className="text-xs text-muted-foreground">{note}</p>
       <StatusAxes axes={core.dataset.status_axes} />
 
       <Card className="flex flex-wrap items-end gap-3 p-3">
@@ -399,18 +438,4 @@ function PreviewTab({ state, qualityState, qualityStatus, qualityResults, onOpen
   // when the Builder sent them, and is unknown otherwise — never the sample size (#499).
   const stageRows = state.data.statistics?.row_count;
   return <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]"><div className="min-w-0 space-y-2"><div><h3 className="text-sm font-semibold">Sample data</h3><p className="mt-1 text-xs text-muted-foreground">{t("datasetDetail.previewNote")}</p></div><DataTable columnMeta={state.data.schema} columns={columns} rowTotal={{ returned: state.data.sample.length, total: stageRows ?? null, status: stageRows === undefined || stageRows === null ? "unknown" : "exact" }} rows={state.data.sample} /></div><Card><h3 className="text-sm font-semibold">Validation</h3><div className="mt-4 text-2xl font-bold"><QualityBadge status={qualityStatus} /></div><div className="mt-4 space-y-3">{qualityState.status === "error" ? <p className="text-sm text-status-failure">{t("datasetDetail.fetchFailed")}</p> : qualityResults.length === 0 ? <p className="text-sm text-muted-foreground">{t("datasetDetail.noEvaluated")}</p> : qualityResults.slice(0, 5).map((result, index) => <div key={`${result.rule}-${index}`} className="flex items-center justify-between gap-3 border-b border-border pb-2 text-sm last:border-0"><span>{result.category}</span><QualityBadge status={result.status.toUpperCase() as "PASS" | "WARN" | "FAIL"} /></div>)}</div><Button className="mt-4 w-full" variant="secondary" onClick={onOpenQuality}>{t("datasetDetail.viewQualityDetail")}</Button></Card></div>;
-}
-
-function QualityTab({ state, status, results, drift, datasetId, runId, source, stage }: { state: AsyncState<BuildQualityResponse>; status: ReturnType<typeof summarizeQuality>; results: ReturnType<typeof qualityResultsForSource>; drift: BuildQualityResponse["schema_drift"][string]; datasetId: string; runId: string; source: string; stage: DatasetStage }) {
-  const { t } = useTranslation();
-  if (state.status === "loading" || state.status === "idle") return <Card><Skeleton className="h-40 w-full" /></Card>;
-  if (state.status === "error") return <Card variant="error"><QualityBadge status="N/A" /><p className="mt-3 text-sm">{state.error}</p></Card>;
-  const counts = results.reduce((current, result) => ({ ...current, [result.status]: current[result.status] + 1 }), { pass: 0, warn: 0, fail: 0 });
-  const qualityCenterHref = `/quality?${new URLSearchParams({ dataset: datasetId, ...(runId ? { run: runId } : {}), ...(source ? { source } : {}), stage }).toString()}`;
-  return <div className="space-y-4"><div className="flex justify-end"><Link className="text-xs font-medium text-accent-subtle-foreground underline" to={qualityCenterHref}>{t("datasetDetail.viewInQualityCenter")}</Link></div><div className="grid gap-4 lg:grid-cols-2"><Card><h3 className="text-sm font-semibold">Validation summary</h3><div className="mt-4 flex items-end gap-3"><span className="text-3xl font-bold">{results.length}</span><span className="pb-1 text-sm text-muted-foreground">evaluated checks</span></div><div className="mt-4 flex flex-wrap gap-2"><QualityBadge status={status} /><span className="text-xs text-muted-foreground">PASS {counts.pass} · WARN {counts.warn} · FAIL {counts.fail}</span></div><p className="mt-3 text-xs text-muted-foreground">{t("datasetDetail.qualityNote")}</p></Card><Card><h3 className="text-sm font-semibold">Schema Drift</h3>{drift.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">{t("datasetDetail.noDrift")}</p> : <div className="mt-4 space-y-3">{drift.map((finding, index) => <div key={`${finding.kind}-${index}`} className="flex items-start justify-between gap-3 border-b border-border pb-3 text-sm last:border-0"><div><strong>{finding.kind}</strong><p className="mt-1 text-xs text-muted-foreground">{finding.detail}</p></div><span className="font-mono text-xs">{finding.column ?? "—"}</span></div>)}</div>}</Card></div>{results.length === 0 ? <Card><EmptyState title={t("datasetDetail.noQualityTitle")} description={t("datasetDetail.noQualityDesc")} /></Card> : <Card className="overflow-hidden p-0"><div className="border-b border-border px-5 py-4"><h3 className="text-sm font-semibold">Recent quality issues</h3></div><div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-4 py-3">Rule</th><th className="px-4 py-3">Result</th><th className="px-4 py-3">Column</th><th className="px-4 py-3">Actual</th><th className="px-4 py-3">Threshold</th></tr></thead><tbody>{results.map((result, index) => <tr key={`${result.rule}-${result.column}-${index}`} className="border-b border-border last:border-0"><td className="px-4 py-3 font-medium">{result.category} · {result.rule}</td><td className="px-4 py-3"><QualityBadge status={result.status.toUpperCase() as "PASS" | "WARN" | "FAIL"} /></td><td className="px-4 py-3">{result.column ?? "—"}</td><td className="px-4 py-3 font-mono text-xs">{formatJson(result.actual)}</td><td className="px-4 py-3 font-mono text-xs">{formatJson(result.threshold)}</td></tr>)}</tbody></table></div></Card>}</div>;
-}
-
-function BuildsTab({ runs, selectedRunId }: { runs: DatasetRunSummary[]; selectedRunId: string }) {
-  const { t } = useTranslation();
-  return <Card className="overflow-hidden p-0"><div className="border-b border-border px-5 py-4"><h3 className="text-sm font-semibold">Recent Runs</h3><p className="mt-1 text-xs text-muted-foreground">{t("datasetDetail.runsNote")}</p></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-5 py-3">{t("datasetDetail.labels.run")}</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Updated</th><th className="px-5 py-3"></th></tr></thead><tbody>{runs.map((run) => <tr key={run.run_id} className={`border-b border-border last:border-0 ${run.run_id === selectedRunId ? "bg-accent-subtle" : ""}`}><td className="px-5 py-3 font-mono text-xs">{run.run_id}{run.run_id === selectedRunId ? " · selected" : ""}</td><td className="px-5 py-3">{run.status}</td><td className="px-5 py-3">{formatDateTime(run.finished_at ?? run.started_at)}</td><td className="px-5 py-3 text-right"><Link className="font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(run.run_id)}`}>{t("datasetDetail.view")}</Link></td></tr>)}</tbody></table></div></Card>;
 }
