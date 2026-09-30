@@ -9,7 +9,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { builderApi, type WarehouseRowsRequest, type WarehouseRowsResponse } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
+import type { WarehouseRowsRequest, WarehouseRowsResponse } from "@/shared/lib/builderApi";
 
 export const CURRENT_SNAPSHOT = "current";
 
@@ -32,11 +33,14 @@ export type RowsState =
 
 type Fetch = (request: WarehouseRowsRequest, signal?: AbortSignal) => Promise<WarehouseRowsResponse>;
 
+/** The deployment's rows endpoint: the Builder's, or the demo warehouse's (#530). */
+const fetchRows: Fetch = (request, signal) => warehouseApi().warehouseRows(request, signal);
+
 export function useWarehouseRows(
   table: string,
   requestedSnapshot: string = CURRENT_SNAPSHOT,
   pageSize = 50,
-  fetchPage: Fetch = builderApi.warehouseRows,
+  fetchPage: Fetch = fetchRows,
 ) {
   const [state, setState] = useState<RowsState>({ status: "idle" });
   const pinned = useRef<string | null>(null);

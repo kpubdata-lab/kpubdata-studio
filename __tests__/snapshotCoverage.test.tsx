@@ -4,13 +4,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
 import { coverageCounts, coverageOf } from "@/features/sql/snapshotCoverage";
 import { WarehouseWorkspace } from "@/features/sql/WarehouseWorkspace";
 import { API_BASE } from "@/shared/config/env";
 import { warehouseSnapshotSchema } from "@/shared/lib/builderApi.schema";
+
+// These talk to the Builder over HTTP (MSW); in mock mode the demo warehouse would answer (#530).
+beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 const coverage = (status: string, fetched: number | null, reported: number | null) => ({
   status,

@@ -8,13 +8,12 @@
  * keeps querying runs directly (`features/sql/api.ts`), where nothing can be saved.
  */
 import {
-  builderApi,
-  isRealBuilderEnabled,
   type QueryResponse,
   type SavedAnalysis,
   type WarehouseQueryResponse,
   type WarehouseTable,
 } from "@/shared/lib/builderApi";
+import { warehouseApi } from "./warehouseApi";
 
 import { classifyQueryError } from "./api";
 
@@ -23,11 +22,13 @@ export type WarehouseAvailability =
   | { status: "available"; tables: WarehouseTable[] }
   | { status: "unavailable" };
 
-/** Whether this deployment has a warehouse the caller can query. */
+/**
+ * Whether this deployment has a warehouse the caller can query. The demo has one: its
+ * tables and snapshots come from the demo warehouse (#530).
+ */
 export async function detectWarehouse(signal?: AbortSignal): Promise<WarehouseAvailability> {
-  if (!isRealBuilderEnabled()) return { status: "unavailable" };
   try {
-    return { status: "available", tables: (await builderApi.listWarehouseTables(signal)).tables };
+    return { status: "available", tables: (await warehouseApi().listWarehouseTables(signal)).tables };
   } catch {
     // 404 is "no warehouse here"; anything else also leaves the run-based path, which
     // still works, rather than a screen that cannot query at all.
@@ -67,7 +68,7 @@ export async function queryWarehouse(
 ): Promise<WarehouseOutcome> {
   try {
     const limit = WAREHOUSE_ROW_LIMIT;
-    return fromResponse(await builderApi.warehouseQuery({ table, snapshot, sql, limit }, signal), limit);
+    return fromResponse(await warehouseApi().warehouseQuery({ table, snapshot, sql, limit }, signal), limit);
   } catch (cause) {
     return classifyQueryError(cause);
   }
@@ -83,7 +84,7 @@ export async function saveAnalysis(
 ): Promise<WarehouseOutcome> {
   try {
     const limit = WAREHOUSE_ROW_LIMIT;
-    const { analysis, result } = await builderApi.createAnalysis({ name, table, snapshot, sql, limit }, signal);
+    const { analysis, result } = await warehouseApi().createAnalysis({ name, table, snapshot, sql, limit }, signal);
     const binding = analysis.bindings[0];
     return {
       status: "success",
@@ -98,7 +99,7 @@ export async function saveAnalysis(
 
 export async function rerunAnalysis(analysisId: string, signal?: AbortSignal): Promise<WarehouseOutcome> {
   try {
-    return fromResponse(await builderApi.runAnalysis(analysisId, signal));
+    return fromResponse(await warehouseApi().runAnalysis(analysisId, signal));
   } catch (cause) {
     return classifyQueryError(cause);
   }

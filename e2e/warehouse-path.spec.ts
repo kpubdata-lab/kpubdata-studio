@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
+import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./helpers";
 
 /**
  * The warehouse path (#423): Catalog → Tables → a table → SQL, through the menu and
- * the screens' own actions rather than typed URLs. Mock mode, deterministic fixture.
+ * the screens' own actions rather than typed URLs. Mock mode: the demo warehouse (#530).
  */
 test.beforeEach(async ({ page }) => {
   await prepareCleanPage(page);
@@ -26,16 +26,15 @@ test("카탈로그에서 테이블을 거쳐 SQL 로 질의한다", async ({ pag
   await page.getByText("대기질 통합 데이터").first().click();
   await expect(page).toHaveURL(/\/tables\/air-quality/);
 
-  // Table → SQL, pinned to the run on screen.
+  // Table → SQL, bound to that table in the demo warehouse (#530).
   await page.getByRole("link", { name: "쿼리", exact: true }).click();
   await expect(page).toHaveURL(/\/sql\?.*table=air-quality/);
   await expect(page.getByRole("heading", { name: "SQL Workspace" })).toBeVisible();
+  await expect(page.getByRole("treeitem", { name: "air-quality.datago__air" })).toHaveAttribute("aria-selected", "true");
 
-  const source = page.getByRole("combobox", { name: "Source" });
-  if (await source.isVisible()) await source.selectOption("datago__air");
-  await page.getByRole("button", { name: /실행/ }).click();
-  await expect(page.getByRole("table")).toBeVisible();
-  await expect(page.getByText("air-quality@air-2026-08-14 · gold · datago__air", { exact: true })).toBeVisible();
+  // The demo has no Builder to run SQL: it says so instead of showing made-up rows.
+  await page.getByRole("button", { name: /^실행 / }).click();
+  await expect(page.getByRole("alert")).toContainText(t("sql.demoWarehouse.needsBuilder"));
 
   // The breadcrumb names where we are, not the product.
   await expect(page.getByRole("navigation", { name: "현재 위치" })).toContainText("SQL Workspace");

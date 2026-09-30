@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
 import { useUIStore } from "@/shared/hooks/useUIStore";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 function LocationProbe() {
   const location = useLocation();
@@ -27,6 +28,8 @@ function findAssistant() {
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+  // The run-based Table Detail: a deployment without a warehouse (#530).
+  hideDemoWarehouse();
   act(() => useUIStore.setState({ isAssistantDrawerOpen: false }));
 });
 afterEach(() => vi.unstubAllEnvs());
@@ -255,7 +258,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
 
     const passport = await findPassport();
-    expect(within(passport).getByText("data.go.kr.air, kma.weather")).toBeInTheDocument();
+    expect(within(passport).getByText("datago.air, kma.weather")).toBeInTheDocument();
     expect(within(passport).getByText("대기질 통합 데이터")).toBeInTheDocument();
     expect(within(passport).getByText("air-quality")).toBeInTheDocument();
     expect(within(passport).getByText("sha256:air14")).toBeInTheDocument();

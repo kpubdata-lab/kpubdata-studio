@@ -12,7 +12,8 @@ import { formatDateTime } from "@/features/datasets/model";
 import { QueryError, ResultTable } from "@/features/sql/ResultTable";
 import { pinnedLabel } from "@/features/sql/WarehouseWorkspace";
 import { detectWarehouse, rerunAnalysis, type WarehouseOutcome } from "@/features/sql/warehouse";
-import { builderApi, type SavedAnalysis } from "@/shared/lib/builderApi";
+import { type SavedAnalysis } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 import { Button, Card, EmptyState, LinkButton, PageHeader, Skeleton } from "@/shared/ui";
 
 type ListState =
@@ -33,7 +34,7 @@ export function AnalysesPage() {
       if (controller.signal.aborted) return;
       if (warehouse.status !== "available") return setList({ status: "no_warehouse" });
       try {
-        const { analyses } = await builderApi.listAnalyses(controller.signal);
+        const { analyses } = await warehouseApi().listAnalyses(controller.signal);
         setList({ status: "loaded", analyses });
       } catch (cause) {
         if (!controller.signal.aborted) setList({ status: "error", message: cause instanceof Error ? cause.message : String(cause) });
@@ -51,7 +52,7 @@ export function AnalysesPage() {
   async function remove(analysis: SavedAnalysis) {
     if (!window.confirm(t("analyses.confirmDelete", { name: analysis.name }))) return;
     try {
-      await builderApi.deleteAnalysis(analysis.analysis_id);
+      await warehouseApi().deleteAnalysis(analysis.analysis_id);
       setList((prev) =>
         prev.status === "loaded" ? { ...prev, analyses: prev.analyses.filter((a) => a.analysis_id !== analysis.analysis_id) } : prev,
       );

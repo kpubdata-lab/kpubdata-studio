@@ -9,7 +9,8 @@
  * - Connection problems group the tables whose Access axis needs action by provider.
  */
 import { kindOf } from "@/features/datasets/components/StatusAxes";
-import { builderApi, type DatasetSummary, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { type DatasetSummary, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 import type { DatasetStatusAxes } from "@/shared/lib/builderApi.schema";
 
 /** The axes Home treats as attention. Maturity is a grade, never a problem. */
@@ -75,7 +76,7 @@ export async function loadRecentSnapshots(tables: WarehouseTable[], limit: numbe
     while (next < committed.length) {
       const table = committed[next++];
       try {
-        const detail = await builderApi.getWarehouseTable(table.logical_name, signal);
+        const detail = await warehouseApi().getWarehouseTable(table.logical_name, signal);
         const snapshot = detail.snapshots.find((item) => item.snapshot_id === table.current_snapshot_id);
         if (snapshot) found.push({ logicalName: table.logical_name, snapshot });
       } catch (cause) {

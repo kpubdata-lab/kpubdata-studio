@@ -10,6 +10,7 @@ import { mswServer } from "../vitest.setup";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
 import { API_BASE } from "@/shared/config/env";
 import { useUIStore } from "@/shared/hooks/useUIStore";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 function LocationProbe() {
   const location = useLocation();
@@ -250,6 +251,7 @@ describe("Table Detail on a warehouse (#526)", () => {
 describe("Table Detail without a snapshot to open on (#526)", () => {
   it("keeps the run view and says in one line that there is no warehouse", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+    hideDemoWarehouse();
     renderDetail("/tables/air-quality");
     expect(await screen.findByText("이 배포에는 warehouse 가 없어 실행(run) 기준으로 보여 줍니다.")).toBeInTheDocument();
     expect(screen.getByLabelText("Run 선택")).toBeInTheDocument();

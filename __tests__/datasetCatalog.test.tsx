@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mswServer } from "../vitest.setup";
 import { DatasetCatalogPage } from "@/pages/DatasetCatalogPage";
 import { API_BASE } from "@/shared/config/env";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 function LocationProbe() {
   const location = useLocation();
@@ -29,7 +30,10 @@ const headers = () => screen.getAllByRole("columnheader").map((cell) => cell.tex
 afterEach(() => vi.unstubAllEnvs());
 
 describe("Tables without a warehouse (mock deployment)", () => {
-  beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "false"));
+  beforeEach(() => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+    hideDemoWarehouse();
+  });
 
   it("searches table/provider and preserves q in the URL", async () => {
     renderCatalog();

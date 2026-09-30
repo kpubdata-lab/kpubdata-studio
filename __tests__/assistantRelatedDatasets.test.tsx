@@ -71,10 +71,10 @@ afterEach(() => {
 
 describe("Ask KPubData 관련 데이터셋 패널 (#256 이슈 체크리스트)", () => {
   it("shows a plain explanation instead of guessing when the dataset's provider has no catalog overlap", async () => {
-    // 전역 MSW catalog fixture는 provider "datago"만 제공하고, air-quality mock dataset의
-    // provider("data.go.kr"/"kma")와 이름이 겹치지 않는다 — 이 경우 후보를 지어내지 않는다.
+    // The global MSW catalog only has provider "datago"; the population mock dataset's
+    // provider ("kosis") does not overlap it, so no candidate is made up.
     configureKeyAndAsk();
-    await askAbout("air-quality");
+    await askAbout("population");
 
     expect(screen.getByText("관련 소스 데이터셋")).toBeInTheDocument();
     expect(
@@ -88,7 +88,7 @@ describe("Ask KPubData 관련 데이터셋 패널 (#256 이슈 체크리스트)"
         HttpResponse.json({
           providers: [
             {
-              name: "data.go.kr",
+              name: "datago",
               datasets: [
                 {
                   name: "air",

@@ -24,6 +24,7 @@ vi.mock("@/features/datasets/api", async (importActual) => {
 
 import { useRequestedRun } from "@/features/datasets/useRequestedRun";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 const LATEST: DatasetRunSummary = {
   run_id: "air-2026-08-14",
@@ -37,6 +38,8 @@ const OLDER: DatasetRunSummary = { ...LATEST, run_id: "air-2026-08-13", status: 
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+  // The run-based Table Detail: a deployment without a warehouse (#530).
+  hideDemoWarehouse();
   act(() => useUIStore.setState({ isAssistantDrawerOpen: false }));
   getDatasetRunMock.mockReset();
   listBuildStagesMock.mockClear();

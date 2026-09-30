@@ -26,7 +26,8 @@ import {
 } from "@/features/home/homeData";
 import { listBuilds } from "@/features/runs/api";
 import { detectWarehouse } from "@/features/sql/warehouse";
-import { builderApi, type DatasetSummary, type SavedAnalysis } from "@/shared/lib/builderApi";
+import { type DatasetSummary, type SavedAnalysis } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 import type { BuildListItem } from "@/shared/lib/types";
 import { Card, LinkButton, PageHeader, Skeleton } from "@/shared/ui";
 import { MissingStatus } from "@/shared/ui/StatusState";
@@ -66,7 +67,7 @@ export function HomePage() {
   const tables = warehouse.status === "loaded" && warehouse.data.status === "available" ? warehouse.data.tables : null;
   const hasWarehouse = tables !== null;
   const snapshots = useLoad((signal) => loadRecentSnapshots(tables ?? [], RECENT_LIMIT, signal), hasWarehouse);
-  const analyses = useLoad((signal) => builderApi.listAnalyses(signal), hasWarehouse);
+  const analyses = useLoad((signal) => warehouseApi().listAnalyses(signal), hasWarehouse);
 
   const isNew =
     datasets.status === "loaded" && datasets.data.length === 0 && builds.status === "loaded" && builds.data.length === 0;

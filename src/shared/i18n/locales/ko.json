@@ -2278,6 +2278,11 @@
       "noSnapshot": "커밋된 스냅샷이 없습니다.",
       "noColumns": "컬럼이 없습니다.",
       "columnsError": "컬럼을 불러오지 못했습니다."
+    },
+    "demoWarehouse": {
+      "needsBuilder": "데모에는 KPubData Builder 가 없어 쿼리·집계·내보내기·저장된 분석을 실행하지 않습니다. Builder 를 연결하면 실행할 수 있습니다.",
+      "tableNotFound": "데모에 {{name}} 테이블이 없습니다.",
+      "snapshotNotFound": "데모에 {{name}} 의 해당 커밋 스냅샷이 없습니다."
     }
   },
   "admin": {

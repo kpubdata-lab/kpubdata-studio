@@ -15,7 +15,7 @@ const MOCK_CATALOG: CatalogResponse = {
         {
           name: "apt_trade",
           title: "아파트 실거래가",
-          description: "국토교통부 아파트 매매 실거래가 조회",
+          description: null,
           tags: ["real-estate"],
           source_url: null,
           representation: "api_json",
@@ -27,7 +27,7 @@ const MOCK_CATALOG: CatalogResponse = {
         {
           name: "air_quality",
           title: "대기오염 측정망",
-          description: "환경부 대기오염 측정망 시간자료",
+          description: null,
           tags: ["environment"],
           source_url: null,
           representation: "api_json",
