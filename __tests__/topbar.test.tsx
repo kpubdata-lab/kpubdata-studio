@@ -69,7 +69,7 @@ describe("topbar (#523)", () => {
       .getAllByRole("button")
       .map((button) => button.getAttribute("aria-label"));
 
-    expect(names).toEqual(["사이드바 열기/닫기", "페이지·테이블 검색", "Ask KPubData 열기", "계정 메뉴"]);
+    expect(names).toEqual(["사이드바 열기/닫기", "테이블·소스·페이지 검색", "Ask KPubData 열기", "계정 메뉴"]);
     expect(within(header).getByRole("navigation", { name: "현재 위치" })).toBeInTheDocument();
   });
 
@@ -78,7 +78,7 @@ describe("topbar (#523)", () => {
 
     fireEvent.keyDown(document, { key: "k", ctrlKey: true });
     const dialog = screen.getByRole("dialog", { name: "검색" });
-    const input = within(dialog).getByRole("combobox", { name: "페이지·테이블 검색" });
+    const input = within(dialog).getByRole("combobox", { name: "테이블·소스·페이지 검색" });
     expect(input).toHaveFocus();
 
     fireEvent.change(input, { target: { value: "SQL" } });
@@ -93,7 +93,7 @@ describe("topbar (#523)", () => {
   it("searches tables by name through the Tables list filter", () => {
     renderLayoutAt("/");
 
-    fireEvent.click(screen.getByRole("button", { name: "페이지·테이블 검색" }));
+    fireEvent.click(screen.getByRole("button", { name: "테이블·소스·페이지 검색" }));
     const dialog = screen.getByRole("dialog", { name: "검색" });
     fireEvent.change(within(dialog).getByRole("combobox"), { target: { value: "대기질" } });
     fireEvent.click(within(dialog).getByRole("option", { name: /테이블에서 “대기질” 검색/ }));
@@ -104,7 +104,7 @@ describe("topbar (#523)", () => {
 
   it("closes search with Escape and returns focus to the button", () => {
     renderLayoutAt("/");
-    const trigger = screen.getByRole("button", { name: "페이지·테이블 검색" });
+    const trigger = screen.getByRole("button", { name: "테이블·소스·페이지 검색" });
 
     fireEvent.click(trigger);
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "Escape" });

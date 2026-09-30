@@ -17,16 +17,27 @@
       "dark": "Dark"
     },
     "search": {
-      "open": "Search pages and tables",
+      "open": "Search tables, sources and pages",
       "button": "Search",
       "shortcut": "⌘K",
       "dialog": "Search",
-      "inputLabel": "Search pages and tables",
-      "placeholder": "Go to a page, or search tables by name…",
+      "inputLabel": "Search tables, sources and pages",
+      "placeholder": "Jump to a table, source or page…",
       "page": "Page",
       "inTables": "Search tables for “{{query}}”",
       "inCatalog": "Search the catalog for “{{query}}”",
-      "close": "Close search"
+      "close": "Close search",
+      "ask": "Ask KPubData: “{{query}}”",
+      "askHint": "Assistant",
+      "loading": "Loading tables and sources…",
+      "loadFailed": "Some tables or sources could not be loaded.",
+      "groups": {
+        "tables": "Tables",
+        "sources": "Sources",
+        "pages": "Pages",
+        "filters": "Search in lists",
+        "ask": "Ask"
+      }
     },
     "account": {
       "open": "Account menu",
