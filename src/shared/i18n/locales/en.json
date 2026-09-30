@@ -833,6 +833,9 @@
         "notConfigured": "Not configured",
         "notConfiguredTitle": "Credentials required",
         "notConfiguredDetail": "This provider requires credentials. Connect it in provider settings.",
+        "notTestable": "Not testable",
+        "notTestableTitle": "No Source Dataset to test this provider with",
+        "notTestableDetail": "No Source Dataset could be called without guessing a required parameter, so the key was not tested. This does not mean the key is wrong — check it with a Source Dataset preview.",
         "unknown": "Needs a connection check",
         "needsCheck": "Needs a check",
         "failed": "Connection error"

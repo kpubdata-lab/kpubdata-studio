@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Studio accepts the provider connection test's `not_testable` status and `dataset`, and `GET /providers`' `last_test` (kpubdata-builder#842). `not_testable` — Builder found no Source Dataset it could call without guessing a parameter — is shown as neutral "Not testable", never as a key failure. Without this, the contract-drift check failed against Builder main and a `not_testable` response would not parse.
+
 ### Added
 
 - **⌘K / Ctrl+K finds tables and sources, not only pages** (#533). The search dialog is 560px wide and matches the caller's tables (`GET /datasets`, by name, id or source) and the catalog's sources (`GET /catalog`, by title, provider or name) as the user types, grouped as Tables · Sources · Pages, with identifiers in monospace; a table opens Table Detail and a source opens the Catalog filtered to it. The Tables and Catalog list filters follow, and **Ask KPubData: "…"** is offered only as the last option — never the one Enter picks by default. Arrow keys and Enter are enough, and the dialog fits a 390px screen. The lists load the first time the dialog opens; one failing leaves the other searchable and says so in one line. Searching columns across tables waits for Builder support.

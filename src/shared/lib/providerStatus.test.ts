@@ -35,6 +35,13 @@ describe("describeProviderProbe", () => {
     expect(JSON.stringify(p)).not.toMatch(/"network"/);
   });
 
+  it("not_testable is neither a success nor a key failure (kpubdata-builder#842)", () => {
+    const p = describeProviderProbe({ status: "not_testable", credentialConfigured: true });
+    expect(p.tone).toBe("neutral");
+    expect(p.label).toBe("시험 불가");
+    expect(p.detail).toContain("키가 잘못됐다는 뜻은 아닙니다");
+  });
+
   it("알 수 없는 error_category는 unknown 문구로 떨어진다", () => {
     expect(describeProviderProbe({ status: "failed", errorCategory: "weird" }).title).toBe(
       "연결 상태를 확인할 수 없습니다",
