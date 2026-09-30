@@ -1072,6 +1072,21 @@ export const warehouseTableSchema = z.object({
 
 export const warehouseTableListResponseSchema = z.object({ tables: z.array(warehouseTableSchema) });
 
+/**
+ * Whether the fetch behind a snapshot collected what the provider reported (builder#816,
+ * contract 1.42.0). A status this Studio does not know is kept as text and read as unknown.
+ */
+export const snapshotCoverageSchema = z.object({
+  status: z.string(),
+  reasons: z.array(z.string()),
+  fetched_row_count: z.number().int().nonnegative().nullable(),
+  source_reported_total: z.object({
+    status: z.string(),
+    value: z.number().int().nonnegative().nullable(),
+    observed_at: z.string(),
+  }),
+});
+
 export const warehouseSnapshotSchema = z.object({
   snapshot_id: z.string(),
   run_id: z.string(),
@@ -1079,6 +1094,8 @@ export const warehouseSnapshotSchema = z.object({
   row_count: z.number().int().nonnegative().nullable(),
   created_at: z.string(),
   committed_at: z.string().nullable(),
+  /** Null or absent: not recorded — unknown, never complete. */
+  coverage: snapshotCoverageSchema.nullable().optional(),
 });
 
 export const warehouseTableDetailResponseSchema = warehouseTableSchema.extend({

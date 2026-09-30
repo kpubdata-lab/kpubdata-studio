@@ -2251,7 +2251,13 @@
     },
     "snapshotLabel": "Snapshot",
     "currentSnapshot": "Current (at query start)",
-    "currentNote": "\"Current\" is pinned when the query starts; a refresh committed while it runs does not change what it reads."
+    "currentNote": "\"Current\" is pinned when the query starts; a refresh committed while it runs does not change what it reads.",
+    "coverage": {
+      "complete": "Snapshot {{snapshot}}: every row the source reported was fetched.",
+      "partial": "Snapshot {{snapshot}}: partial — fewer rows were fetched than the source reported.",
+      "unknown": "Snapshot {{snapshot}}: coverage unknown — nothing records it as complete.",
+      "counts": "Fetched {{fetched}} / reported {{reported}}."
+    }
   },
   "admin": {
     "title": "Administration",
