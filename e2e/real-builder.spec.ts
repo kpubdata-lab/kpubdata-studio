@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
+import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./helpers";
 
 /**
  * Cross-repo real integration E2E (kpubdata#282 stage 3 scenario, @real-builder tag).
@@ -178,6 +178,83 @@ test("Public API source가 Builder 를 거쳐 성공 빌드로 끝난다 @real-b
       .first()
       .or(page.getByText(/Cross-repo Public API smoke/).first()),
   ).toBeVisible({ timeout: 30_000 });
+
+  await expectNoPageErrors(errors);
+});
+
+/**
+ * The same replay source without an alias (#602): Builder keys it `datago.air_station`, so
+ * the warehouse table is `<dataset_id>.datago.air_station`. The dataset id has a dot too.
+ */
+const NO_ALIAS_DATASET_ID = "dataset.cross_repo_no_alias";
+const NO_ALIAS_TITLE = "Cross-repo Public API without alias";
+const NO_ALIAS_SPEC = [
+  `dataset_id: ${NO_ALIAS_DATASET_ID}`,
+  `title: ${NO_ALIAS_TITLE}`,
+  "description: alias 없는 replay source 의 테이블을 목록에서 상세로 연다",
+  "sources:",
+  "  - provider: datago",
+  "    dataset: air_station",
+  "    params:",
+  "      station: 강남구",
+  "      term: daily",
+  "      page: 1",
+  "      page_size: 100",
+  "exports:",
+  "  - kind: jsonl",
+  "    output_path: out/data.jsonl",
+].join("\n");
+
+test("alias 없는 Public API source 의 테이블을 목록에서 열면 현재 스냅샷과 행이 보인다 (#602) @real-builder", async ({
+  page,
+  request,
+}) => {
+  test.skip(
+    !process.env.REAL_BUILDER_REPLAY,
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
+  );
+
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  const response = await request.post(`${BUILDER_URL}/build`, {
+    data: { spec: NO_ALIAS_SPEC, run_id: `ui-no-alias-${Date.now()}` },
+    timeout: 60_000,
+  });
+  expect(response.ok()).toBeTruthy();
+  expect(((await response.json()) as { status?: string }).status).toBe("ok");
+
+  // What Builder committed: the table's name keeps the whole `datago.air_station` key.
+  const logicalName = `${NO_ALIAS_DATASET_ID}.datago.air_station`;
+  const warehouse = (await (await request.get(`${BUILDER_URL}/warehouse/tables`)).json()) as {
+    tables: Array<{ logical_name: string; current_snapshot_id: string | null; dataset_id?: string | null }>;
+  };
+  const table = warehouse.tables.find((entry) => entry.logical_name === logicalName);
+  expect(table?.current_snapshot_id, `${logicalName} has a committed snapshot`).toBeTruthy();
+  const snapshotId = table?.current_snapshot_id ?? "";
+
+  // 1) The Tables list shows the snapshot on the dataset's row, and the row opens it.
+  await page.goto("/tables");
+  const row = page.getByRole("link", { name: t("catalog.openDetail").replace("{{title}}", NO_ALIAS_TITLE) });
+  await expect(row).toContainText(snapshotId, { timeout: 30_000 });
+  await row.click();
+  await expect(page).toHaveURL(new RegExp(`/tables/${NO_ALIAS_DATASET_ID.replace(".", "\\.")}$`));
+
+  // 2) The detail opens on the same current snapshot, not on the run view.
+  await expect(page.getByRole("tabpanel")).toContainText(snapshotId, { timeout: 30_000 });
+  await expect(page.getByText(t("tableDetail.runView.noSnapshot"))).toHaveCount(0);
+
+  // 3) Preview reads that snapshot's rows from the warehouse.
+  const rows = page.waitForResponse(
+    (candidate) => candidate.url().endsWith("/warehouse/rows") && candidate.request().method() === "POST",
+  );
+  await page.getByRole("tab", { name: t("tableDetail.tabs.preview") }).click();
+  const rowsResponse = await rows;
+  expect(rowsResponse.ok()).toBeTruthy();
+  const body = (await rowsResponse.json()) as { snapshot: { logical_name: string; snapshot_id: string }; rows: unknown[] };
+  expect(body.snapshot).toMatchObject({ logical_name: logicalName, snapshot_id: snapshotId });
+  expect(body.rows.length).toBeGreaterThan(0);
+  await expect(page.getByTestId("row-total")).toBeVisible();
 
   await expectNoPageErrors(errors);
 });

@@ -83,7 +83,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
   const [searchParams, setSearchParams] = useSearchParams();
   const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
 
-  const sources = tables.map((table) => ({ table, sourceKey: sourceKeyOf(table.logical_name, datasetId) ?? table.logical_name }));
+  const sources = tables.map((table) => ({ table, sourceKey: sourceKeyOf(table, datasetId) ?? table.logical_name }));
   const requestedSource = searchParams.get("source");
   const selected = sources.find((entry) => entry.sourceKey === requestedSource) ?? sources.find((entry) => entry.table.current_snapshot_id !== null) ?? sources[0];
   const logicalName = selected.table.logical_name;
