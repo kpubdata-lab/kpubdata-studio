@@ -1271,6 +1271,18 @@ export const warehouseRowsRequestSchema = z.object({
   page_size: z.number().int().min(1).max(500).optional(),
   columns: z.array(z.string()).min(1).optional(),
   sort: z.array(z.object({ column: z.string(), direction: z.enum(["asc", "desc"]).optional() })).max(8).optional(),
+  /** Row filters, ANDed. With a filter, `count` defaults to `none`. */
+  filters: z
+    .array(
+      z.object({
+        column: z.string(),
+        op: z.enum(["eq", "ne", "lt", "lte", "gt", "gte", "in", "is_null", "is_not_null"]),
+        value: jsonQueryValueSchema.optional(),
+        values: z.array(jsonQueryValueSchema).max(100).optional(),
+      }),
+    )
+    .max(16)
+    .optional(),
   count: z.enum(["exact", "none"]).optional(),
 });
 

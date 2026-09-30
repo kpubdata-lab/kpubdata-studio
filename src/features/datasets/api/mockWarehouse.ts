@@ -15,14 +15,15 @@
  * would strip.
  *
  * Nothing is computed in the demo. Row pages are generated deterministically from the
- * row index so paging holds together; a query, an aggregate, an export or a saved
- * analysis would need a Builder, so the demo answers those with a `demo` error instead of
- * a made-up result.
+ * row index so paging holds together; a filtered or sorted page, a query, an aggregate,
+ * an export or a saved analysis would need a Builder, so the demo answers those with a
+ * `demo` error instead of a made-up result.
  */
 import { i18n } from "@/shared/i18n";
 import {
   ApiError,
   type builderApi,
+  type WarehouseRowsRequest,
   type WarehouseRowsResponse,
   type WarehouseSnapshot,
   type WarehouseTable,
@@ -35,7 +36,7 @@ interface DemoColumn {
   value: (index: number) => string | number;
 }
 
-interface DemoTable {
+export interface DemoTable {
   table: WarehouseTable;
   /** Newest first, as `GET /warehouse/tables/{name}` lists them. */
   snapshots: WarehouseSnapshot[];
@@ -168,31 +169,45 @@ function resolve(tableName: string, requested: string | undefined): { entry: Dem
   return { entry, snap };
 }
 
-/** `POST /warehouse/rows` in the demo: one page of the pinned snapshot's generated rows. */
-export function mockWarehouseRows(request: Parameters<typeof builderApi.warehouseRows>[0]): WarehouseRowsResponse {
-  const { entry, snap } = resolve(request.table, request.snapshot);
-  const total = snap.row_count ?? 0;
+/**
+ * One page of generated rows for `snap` of `entry`. The demo computes nothing, so a
+ * filtered or sorted page is refused (`needsBuilder`) rather than answered with the
+ * unfiltered rows, and a snapshot without a row count keeps its count unknown: the page
+ * says `not_computed`, and since the demo cannot tell where the rows end it never claims
+ * the last page (`has_more` stays true).
+ */
+export function demoRowsPage(entry: DemoTable, snap: WarehouseSnapshot, request: WarehouseRowsRequest): WarehouseRowsResponse {
+  if ((request.filters?.length ?? 0) > 0 || (request.sort?.length ?? 0) > 0) throw needsBuilder();
+  const total = snap.row_count;
   const offset = request.offset ?? 0;
   const pageSize = request.page_size ?? 50;
   const selected = request.columns ? entry.columns.filter((item) => request.columns!.includes(item.meta.name)) : entry.columns;
-  const end = Math.min(total, offset + pageSize);
+  // Without a row count the end is unknown: the page is full and the next one may exist.
+  const end = total === null ? offset + pageSize : Math.min(total, offset + pageSize);
   const rows = [];
   for (let index = offset; index < end; index++) {
     rows.push(Object.fromEntries(selected.map((item) => [item.meta.name, item.value(index)])));
   }
-  const exact = request.count !== "none";
+  const exact = request.count !== "none" && total !== null;
+  const hasMore = total === null || end < total;
   return {
     snapshot: { table_id: entry.table.table_id, logical_name: entry.table.logical_name, snapshot_id: snap.snapshot_id, revision: entry.table.revision },
     columns: selected.map((item) => item.meta.name),
     column_meta: selected.map((item) => item.meta),
     rows,
     order: [],
-    page: { offset, page_size: pageSize, returned: rows.length, has_more: end < total, next_offset: end < total ? end : null },
+    page: { offset, page_size: pageSize, returned: rows.length, has_more: hasMore, next_offset: hasMore ? end : null },
     count: exact ? { status: "exact", value: total } : { status: "not_computed", value: null },
     execution_ms: 0,
     startup_ms: 0,
     engine_execution_ms: 0,
   };
+}
+
+/** `POST /warehouse/rows` in the demo: one page of the pinned snapshot's generated rows. */
+export function mockWarehouseRows(request: WarehouseRowsRequest): WarehouseRowsResponse {
+  const { entry, snap } = resolve(request.table, request.snapshot);
+  return demoRowsPage(entry, snap, request);
 }
 
 type WarehouseMethods = Pick<
