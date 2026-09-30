@@ -2469,7 +2469,8 @@
     "browseError": "행을 불러오지 못했습니다: {{message}}",
     "shown": "{{count}}행 표시",
     "totalExact": "전체 {{count}}행 (정확)",
-    "totalEstimated": "전체 약 {{count}}행 (추정)"
+    "totalEstimated": "전체 약 {{count}}행 (추정)",
+    "sample": "{{count}}행 · 샘플"
   },
   "charts": {
     "title": "차트",
