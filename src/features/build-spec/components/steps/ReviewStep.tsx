@@ -62,7 +62,7 @@ export function ReviewStep({
             <li
               key={error}
               role="alert"
-              className="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-200"
+              className="rounded-2xl bg-status-failure-subtle px-3 py-2 text-sm text-status-failure"
             >
               {error}
             </li>
@@ -84,7 +84,7 @@ export function ReviewStep({
           </span>
         ) : null}
         {job.status === "failed" ? (
-          <span role="alert" className="text-sm text-red-700 dark:text-red-300">
+          <span role="alert" className="text-sm text-status-failure">
             {job.error}
           </span>
         ) : null}
@@ -105,7 +105,7 @@ export function ReviewStep({
       {saveSpecMessage ? (
         <p
           role={saveSpecMessage.type === "error" ? "alert" : undefined}
-          className={`text-sm ${saveSpecMessage.type === "error" ? "text-red-700 dark:text-red-300" : "text-accent-subtle-foreground"}`}
+          className={`text-sm ${saveSpecMessage.type === "error" ? "text-status-failure" : "text-accent-subtle-foreground"}`}
         >
           {saveSpecMessage.text}
         </p>

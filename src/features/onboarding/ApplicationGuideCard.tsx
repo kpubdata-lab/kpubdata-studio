@@ -51,7 +51,7 @@ export function ApplicationGuideCard() {
 
       {state.status === "loading" ? <Skeleton className="h-24 w-full" /> : null}
       {state.status === "error" ? (
-        <p className="text-sm text-red-700 dark:text-red-300" role="alert">
+        <p className="text-sm text-status-failure" role="alert">
           {t("provider.applications.loadError")}
         </p>
       ) : null}

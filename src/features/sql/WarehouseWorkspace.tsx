@@ -42,7 +42,7 @@ function SnapshotCoverageNote({ snapshot }: { snapshot: WarehouseSnapshot | unde
   const counts = coverageCounts(snapshot);
   return (
     <p
-      className={`text-xs ${word === "complete" ? "text-muted-foreground" : "font-semibold text-amber-700 dark:text-amber-300"}`}
+      className={`text-xs ${word === "complete" ? "text-muted-foreground" : "font-semibold text-status-warning"}`}
       data-coverage={word}
       data-testid="snapshot-coverage"
     >

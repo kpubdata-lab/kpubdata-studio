@@ -16,8 +16,8 @@ const VARIANT_CLASS: Record<ButtonVariant, string> = {
   secondary:
     "border border-border bg-card text-foreground hover:bg-muted",
   ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
-  danger: "bg-red-600 text-white shadow-sm hover:bg-red-500",
-  success: "bg-emerald-600 text-white shadow-sm hover:bg-emerald-500",
+  danger: "bg-status-failure-solid text-white shadow-sm hover:bg-status-failure-solid/90",
+  success: "bg-status-success-solid text-white shadow-sm hover:bg-status-success-solid/90",
 };
 
 const SIZE_CLASS: Record<ButtonSize, string> = {

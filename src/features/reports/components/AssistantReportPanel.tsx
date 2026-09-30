@@ -239,7 +239,7 @@ export function AssistantReportPanel({
           ) : null}
 
           {activeTurn.status === "error" ? (
-            <p role="alert" className="text-xs text-red-700 dark:text-red-300">
+            <p role="alert" className="text-xs text-status-failure">
               {t("reports.assistantPanel.error")}
             </p>
           ) : null}

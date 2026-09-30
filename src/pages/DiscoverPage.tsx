@@ -169,7 +169,7 @@ export function DiscoverPage() {
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span className="rounded-full bg-muted px-2 py-0.5">{providerLabel(entry.provider)}</span>
                   {entry.dataset.requires_service_key ? (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                    <span className="rounded-full bg-status-warning-subtle px-2 py-0.5 font-medium text-status-warning">
                       {t("discover.serviceKeyBadge")}
                     </span>
                   ) : null}

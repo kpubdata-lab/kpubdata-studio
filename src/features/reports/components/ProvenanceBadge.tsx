@@ -10,7 +10,7 @@ import type { BlockProvenance } from "../types";
 const META: Record<BlockProvenance, { labelKey: string; className: string }> = {
   BUILDER_EVIDENCE: {
     labelKey: "builder",
-    className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+    className: "bg-status-success-subtle text-status-success",
   },
   ASSISTANT_INTERPRETATION: {
     labelKey: "assistant",
@@ -18,7 +18,7 @@ const META: Record<BlockProvenance, { labelKey: string; className: string }> = {
   },
   USER_CONTENT: {
     labelKey: "user",
-    className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+    className: "bg-status-warning-subtle text-status-warning",
   },
 };
 

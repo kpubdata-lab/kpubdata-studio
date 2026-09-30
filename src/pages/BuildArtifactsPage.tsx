@@ -89,7 +89,7 @@ function ArtifactRow({ runId, path }: { runId: string; path: string }) {
           {t("artifacts.files.download")}
         </Button>
         {state.status === "error" ? (
-          <span role="alert" className="text-xs text-red-600 dark:text-red-400">
+          <span role="alert" className="text-xs text-status-failure">
             {state.message}
           </span>
         ) : null}
@@ -250,7 +250,7 @@ export function BuildArtifactsPage() {
               manifest.json
             </p>
             {!hasMetadata && (
-              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+              <p className="mt-2 text-xs text-status-warning">
                 {t("buildArtifacts.partialManifest")}
               </p>
             )}

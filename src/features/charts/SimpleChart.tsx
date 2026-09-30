@@ -58,7 +58,7 @@ export function SimpleChart({
   return (
     <figure className="space-y-2">
       <figcaption
-        className={`text-xs font-semibold ${representsWhole(scope) ? "text-muted-foreground" : "text-amber-700 dark:text-amber-300"}`}
+        className={`text-xs font-semibold ${representsWhole(scope) ? "text-muted-foreground" : "text-status-warning"}`}
         data-scope={scope.kind}
         data-testid="chart-scope"
       >

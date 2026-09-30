@@ -66,7 +66,7 @@ export function SourceStep({
         <p className="text-sm text-muted-foreground">{t("newBuild.template.catalogLoading")}</p>
       ) : null}
       {catalog.status === "error" ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+        <p role="alert" className="text-sm text-status-failure">
           {catalog.error}
         </p>
       ) : null}

@@ -16,7 +16,7 @@ export function DemoBadge({ className }: DemoBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+        "inline-flex items-center gap-1.5 rounded-full bg-status-warning-subtle px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-status-warning",
         className,
       )}
     >

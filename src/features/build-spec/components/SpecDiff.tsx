@@ -12,17 +12,17 @@ import { EmptyState } from "@/shared/ui";
 const KIND_META: Record<SpecChangeKind, { labelKey: string; className: string; sign: string }> = {
   added: {
     labelKey: "added",
-    className: "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+    className: "bg-status-success-subtle text-status-success",
     sign: "+",
   },
   removed: {
     labelKey: "removed",
-    className: "bg-red-50 text-red-800 dark:bg-red-950/40 dark:text-red-300",
+    className: "bg-status-failure-subtle text-status-failure",
     sign: "−",
   },
   changed: {
     labelKey: "changed",
-    className: "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+    className: "bg-status-warning-subtle text-status-warning",
     sign: "~",
   },
 };

@@ -2,9 +2,9 @@ import { useTranslation } from "react-i18next";
 import type { QualityState, ValidationStatus } from "./model";
 
 const STATUS_CLASS: Record<ValidationStatus, string> = {
-  PASS: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  WARN: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-  FAIL: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+  PASS: "bg-status-success-subtle text-status-success",
+  WARN: "bg-status-warning-subtle text-status-warning",
+  FAIL: "bg-status-failure-subtle text-status-failure",
   "N/A": "bg-muted text-muted-foreground",
 };
 

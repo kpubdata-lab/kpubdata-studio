@@ -330,8 +330,8 @@ export function ProviderPage() {
   // selected provider, so it is not passed to list badges (summary
   // `configured` only).
   const readinessToneClass: Record<"success" | "warning" | "neutral", string> = {
-    success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-    warning: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+    success: "bg-status-success-subtle text-status-success",
+    warning: "bg-status-warning-subtle text-status-warning",
     neutral: "bg-muted text-muted-foreground",
   };
   const getReadinessPresentation = (
@@ -490,7 +490,7 @@ export function ProviderPage() {
                     </p>
                   </div>
                 ) : credentialMeta.status === "error" ? (
-                  <p className="mt-4 text-sm text-red-600 dark:text-red-400">
+                  <p className="mt-4 text-sm text-status-failure">
                     {credentialMeta.message}
                   </p>
                 ) : showCredentialForm ? (

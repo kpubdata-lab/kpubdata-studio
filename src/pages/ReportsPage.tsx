@@ -281,7 +281,7 @@ export function ReportsPage() {
                     </button>
                     <button
                       type="button"
-                      className="text-red-700 underline hover:text-red-900 dark:text-red-400"
+                      className="text-status-failure underline hover:text-status-failure"
                       onClick={() => handleDelete(summary.id)}
                     >
                       {t("reports.page.delete")}

@@ -22,9 +22,9 @@ const VARIANT_CLASS: Record<CardVariant, string> = {
   dashed:
     "border border-dashed border-border bg-transparent",
   error:
-    "border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30",
+    "border border-status-failure-border bg-status-failure-subtle",
   success:
-    "border border-emerald-300 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30",
+    "border border-status-success-border bg-status-success-subtle",
 };
 
 /**

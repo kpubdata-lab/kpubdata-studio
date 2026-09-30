@@ -50,7 +50,7 @@ function BuilderEvidenceBlockCard({ block }: { block: BuilderEvidenceBlock }) {
         <ProvenanceBadge provenance="BUILDER_EVIDENCE" />
       </div>
       {showStatusBanner ? (
-        <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+        <p className="rounded-lg bg-status-warning-subtle px-3 py-2 text-xs text-status-warning">
           {evidenceStatusLabel(block.evidenceStatus)}
           {block.unavailableReason ? `: ${block.unavailableReason}` : ""}
         </p>
@@ -155,7 +155,7 @@ export function BlockView({
   }
 
   return (
-    <Card className="space-y-2 border-amber-200 dark:border-amber-900/60" data-testid="block-user">
+    <Card className="space-y-2 border-status-warning-border" data-testid="block-user">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">{block.heading}</h3>
         <div className="flex items-center gap-2">

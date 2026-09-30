@@ -192,7 +192,7 @@ function RunWorkspace() {
             </label>
           ) : null}
           {tables.status === "error" || runs?.status === "error" ? (
-            <p className="text-xs text-red-700 dark:text-red-300" role="alert">
+            <p className="text-xs text-status-failure" role="alert">
               {t("sql.loadError")}
             </p>
           ) : null}

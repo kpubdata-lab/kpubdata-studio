@@ -28,7 +28,7 @@ export function TemplateStep({ catalog, onSelect }: TemplateStepProps) {
         <p className="text-sm text-muted-foreground">{t("newBuild.template.catalogLoading")}</p>
       ) : null}
       {catalog.status === "error" ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+        <p role="alert" className="text-sm text-status-failure">
           {t("newBuild.template.catalogError", { error: catalog.error })}
         </p>
       ) : null}

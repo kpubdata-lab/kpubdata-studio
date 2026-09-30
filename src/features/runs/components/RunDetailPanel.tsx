@@ -182,12 +182,12 @@ export function RunDetailPanel({
             <span className="text-xs text-muted-foreground">{t("builds.detail.refreshing")}</span>
           ) : null}
           {live.kind === "error" ? (
-            <span className="text-xs text-amber-700 dark:text-amber-400">
+            <span className="text-xs text-status-warning">
               {t("builds.detail.refreshFailed")}
             </span>
           ) : null}
           {live.kind === "permission_denied" ? (
-            <span className="text-xs text-red-700 dark:text-red-400">
+            <span className="text-xs text-status-failure">
               {t("builds.detail.refreshForbidden")}
             </span>
           ) : null}
@@ -257,7 +257,7 @@ export function RunDetailPanel({
         {stagesState.status === "loading" || stagesState.status === "idle" ? (
           <Skeleton className="mt-4 h-24 w-full" />
         ) : stagesState.status === "error" ? (
-          <p className="mt-3 text-sm text-red-700 dark:text-red-300">
+          <p className="mt-3 text-sm text-status-failure">
             {stagesState.permissionDenied
               ? t("builds.stage.forbidden")
               : stagesState.error}
@@ -308,8 +308,8 @@ export function RunDetailPanel({
           // §5). No UNAVAILABLE badge; only the error message matching
           // 403/404/network/5xx.
           <div className="mt-3">
-            <p className="text-sm font-semibold text-red-700 dark:text-red-300">{t("builds.quality.failedTitle")}</p>
-            <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+            <p className="text-sm font-semibold text-status-failure">{t("builds.quality.failedTitle")}</p>
+            <p className="mt-1 text-sm text-status-failure">
               {qualityState.permissionDenied
                 ? t("builds.quality.forbidden")
                 : qualityState.notFound
@@ -327,9 +327,9 @@ export function RunDetailPanel({
           <div className="mt-3 flex flex-col gap-4">
             {qualityChecksPassed ? (
               <div className="flex flex-wrap items-center gap-3 text-sm">
-                <span className="font-medium text-emerald-700 dark:text-emerald-400">{qualityChecksPassed.pass} PASS</span>
-                <span className="font-medium text-amber-700 dark:text-amber-400">{qualityChecksPassed.warn} WARN</span>
-                <span className="font-medium text-red-700 dark:text-red-400">{qualityChecksPassed.fail} FAIL</span>
+                <span className="font-medium text-status-success">{qualityChecksPassed.pass} PASS</span>
+                <span className="font-medium text-status-warning">{qualityChecksPassed.warn} WARN</span>
+                <span className="font-medium text-status-failure">{qualityChecksPassed.fail} FAIL</span>
                 <span className="text-xs text-muted-foreground">{t("builds.quality.evaluated", { count: qualityChecksPassed.evaluated })}</span>
               </div>
             ) : null}
@@ -379,7 +379,7 @@ export function RunDetailPanel({
             )}
 
             {qualityDrift.length > 0 ? (
-              <p className="text-xs text-amber-700 dark:text-amber-400">
+              <p className="text-xs text-status-warning">
                 {t("builds.quality.drift", {
                   count: qualityDrift.length,
                   kinds: qualityDrift.map((finding) => finding.kind).join(", "),
@@ -430,7 +430,7 @@ export function RunDetailPanel({
             <span className="flex flex-1 flex-wrap items-center gap-2">
               Run Events{eventsState.status === "loaded" ? ` (${events.length})` : ""}
               {failedEvents.length > 0 ? (
-                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-950/50 dark:text-red-300">
+                <span className="rounded-full bg-status-failure-subtle px-2 py-0.5 text-xs font-medium text-status-failure">
                   {t("builds.events.failedCount", { count: failedEvents.length })}
                 </span>
               ) : null}

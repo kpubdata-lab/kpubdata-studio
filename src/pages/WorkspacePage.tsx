@@ -43,15 +43,15 @@ const KIND_LABEL: Record<RecentWorkKind, string> = {
 const VALIDATION_META: Record<SavedSpecValidationStatus, { labelKey: string; className: string }> = {
   validated_pass: {
     labelKey: "workspace.validatedPass",
-    className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+    className: "bg-status-success-subtle text-status-success",
   },
   validated_fail: {
     labelKey: "workspace.validatedFail",
-    className: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+    className: "bg-status-failure-subtle text-status-failure",
   },
   not_validated: {
     labelKey: "workspace.notValidated",
-    className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+    className: "bg-status-warning-subtle text-status-warning",
   },
 };
 
@@ -344,7 +344,7 @@ export function WorkspacePage() {
                         </button>
                         <button
                           type="button"
-                          className="text-red-700 underline hover:text-red-900 dark:text-red-400"
+                          className="text-status-failure underline hover:text-status-failure"
                           onClick={() => handleDelete(summary.id)}
                         >
                           {t("workspace.delete")}

@@ -65,7 +65,7 @@ export function AssistantInboxPanel({
                   {new Date(note.savedAt).toLocaleString("ko-KR")}
                 </p>
                 <p
-                  className={`mt-1 text-xs font-medium ${sameContext ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}
+                  className={`mt-1 text-xs font-medium ${sameContext ? "text-status-success" : "text-status-warning"}`}
                 >
                   {sameContext ? t("reports.assistantInbox.sameContext") : t("reports.assistantInbox.otherContext")}
                 </p>

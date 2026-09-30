@@ -505,8 +505,8 @@ function KpiCard({
     );
   }
 
-  const colorClass = variant === "success" ? "text-emerald-600 dark:text-emerald-400" :
-                     variant === "error" ? "text-red-600 dark:text-red-400" :
+  const colorClass = variant === "success" ? "text-status-success" :
+                     variant === "error" ? "text-status-failure" :
                      "text-foreground";
 
   return (
@@ -618,7 +618,7 @@ function QualitySection({ state }: { state: RecentQualityState }) {
                   <Link to={`/refresh-jobs/${encodeURIComponent(alert.runId)}`} className="block px-6 py-3 hover:bg-muted focus-visible:bg-muted focus-visible:outline-none">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <span className="truncate font-medium">{alert.runTitle}</span>
-                      <span className={alert.status === "fail" ? "font-semibold text-red-600 dark:text-red-400" : "font-semibold text-amber-700 dark:text-amber-400"}>
+                      <span className={alert.status === "fail" ? "font-semibold text-status-failure" : "font-semibold text-status-warning"}>
                         {alert.status.toUpperCase()}
                       </span>
                     </div>

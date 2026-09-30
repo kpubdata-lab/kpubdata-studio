@@ -30,7 +30,7 @@ export function OutputStep({ register, errors }: OutputStepProps) {
               <input
                 type="checkbox"
                 value={format}
-                className="h-4 w-4 accent-emerald-600"
+                className="h-4 w-4 accent-status-success"
                 {...register("exportFormats", {
                   validate: (selected) =>
                     (selected?.length ?? 0) > 0 || i18n.t("newBuild.errors.outputRequired"),
@@ -41,7 +41,7 @@ export function OutputStep({ register, errors }: OutputStepProps) {
           ))}
         </div>
         {errors.exportFormats ? (
-          <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
+          <p role="alert" className="mt-2 text-sm text-status-failure">
             {errors.exportFormats.message}
           </p>
         ) : null}

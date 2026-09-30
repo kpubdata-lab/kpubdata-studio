@@ -31,7 +31,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         mono && "font-mono",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
         invalid
-          ? "border-red-400 focus-visible:ring-red-500 dark:border-red-700"
+          ? "border-status-failure focus-visible:ring-status-failure"
           : "border-input focus-visible:ring-ring",
         className,
       )}

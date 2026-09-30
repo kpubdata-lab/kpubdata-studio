@@ -68,12 +68,12 @@ export function BuildRunPage() {
           <span className="text-xs text-muted-foreground">{t("buildRun.liveUpdating")}</span>
         ) : null}
         {live.kind === "error" ? (
-          <span className="text-xs text-amber-700 dark:text-amber-400">
+          <span className="text-xs text-status-warning">
             {t("buildRun.liveFailed")}
           </span>
         ) : null}
         {live.kind === "permission_denied" ? (
-          <span className="text-xs text-red-700 dark:text-red-400">
+          <span className="text-xs text-status-failure">
             {t("buildRun.liveForbidden")}
           </span>
         ) : null}

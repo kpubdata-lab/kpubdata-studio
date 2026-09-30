@@ -49,6 +49,24 @@
   --sidebar-hover: #111c32;
   --sidebar-active: #293354;
   --sidebar-active-foreground: #ffffff;
+
+  /* Status (#425, docs/brand/VISUAL_IDENTITY.md §3.2) — never the brand colour. */
+  --status-success: #15803d;
+  --status-success-subtle: #dcfce7;
+  --status-success-border: #86efac;
+  --status-warning: #b45309;
+  --status-warning-subtle: #fef3c7;
+  --status-warning-border: #fcd34d;
+  --status-failure: #b91c1c;
+  --status-failure-subtle: #fee2e2;
+  --status-failure-border: #fca5a5;
+  --status-unknown: #52525b;
+  --status-unknown-subtle: #f4f4f5;
+  --status-unknown-border: #d4d4d8;
+  --status-success-solid: #15803d;
+  --status-warning-solid: #b45309;
+  --status-failure-solid: #b91c1c;
+  --status-unknown-solid: #52525b;
 }
 
 :root[data-theme="dark"] {
@@ -72,6 +90,22 @@
   --sidebar-hover: #111c32;
   --sidebar-active: #293354;
   --sidebar-active-foreground: #ffffff;
+  --status-success: #4ade80;
+  --status-success-subtle: #052e16;
+  --status-success-border: #166534;
+  --status-warning: #fbbf24;
+  --status-warning-subtle: #422006;
+  --status-warning-border: #92400e;
+  --status-failure: #f87171;
+  --status-failure-subtle: #450a0a;
+  --status-failure-border: #991b1b;
+  --status-unknown: #a1a1aa;
+  --status-unknown-subtle: #27272a;
+  --status-unknown-border: #3f3f46;
+  --status-success-solid: #16a34a;
+  --status-warning-solid: #d97706;
+  --status-failure-solid: #dc2626;
+  --status-unknown-solid: #71717a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -96,6 +130,23 @@
     --sidebar-hover: #111c32;
     --sidebar-active: #293354;
     --sidebar-active-foreground: #ffffff;
+
+    --status-success: #4ade80;
+    --status-success-subtle: #052e16;
+    --status-success-border: #166534;
+    --status-warning: #fbbf24;
+    --status-warning-subtle: #422006;
+    --status-warning-border: #92400e;
+    --status-failure: #f87171;
+    --status-failure-subtle: #450a0a;
+    --status-failure-border: #991b1b;
+    --status-unknown: #a1a1aa;
+    --status-unknown-subtle: #27272a;
+    --status-unknown-border: #3f3f46;
+    --status-success-solid: #16a34a;
+    --status-warning-solid: #d97706;
+    --status-failure-solid: #dc2626;
+    --status-unknown-solid: #71717a;
   }
 }
 
@@ -120,6 +171,23 @@
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+
+  --color-status-success: var(--status-success);
+  --color-status-success-subtle: var(--status-success-subtle);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-subtle: var(--status-warning-subtle);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-failure: var(--status-failure);
+  --color-status-failure-subtle: var(--status-failure-subtle);
+  --color-status-failure-border: var(--status-failure-border);
+  --color-status-unknown: var(--status-unknown);
+  --color-status-unknown-subtle: var(--status-unknown-subtle);
+  --color-status-unknown-border: var(--status-unknown-border);
+  --color-status-success-solid: var(--status-success-solid);
+  --color-status-warning-solid: var(--status-warning-solid);
+  --color-status-failure-solid: var(--status-failure-solid);
+  --color-status-unknown-solid: var(--status-unknown-solid);
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans KR", sans-serif;
