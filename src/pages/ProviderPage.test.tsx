@@ -36,7 +36,7 @@ function renderProviders(initialEntry = "/connections") {
 }
 
 async function selectProvider(name: string) {
-  fireEvent.click(await screen.findByText(name));
+  fireEvent.click(await screen.findByRole("button", { name: `자격 증명 관리 — ${name}` }));
 }
 
 beforeEach(() => {
@@ -129,7 +129,7 @@ describe("ProviderPage credential 상태", () => {
     expect(screen.queryByText(/master key/)).not.toBeInTheDocument();
 
     configured = true;
-    fireEvent.click(screen.getAllByText("datago")[0].closest("li") as HTMLElement);
+    fireEvent.click(screen.getByRole("button", { name: "자격 증명 관리 — datago" }));
     expect(await screen.findByRole("button", { name: "삭제" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "삭제" }));
     expect(await screen.findByText("Credential 삭제에 실패했습니다")).toBeInTheDocument();
@@ -153,8 +153,7 @@ describe("ProviderPage 연결 상태 표현 (credential readiness)", () => {
     await selectProvider("datago");
 
     expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
-    expect(screen.getByText("자격 증명 (Credential) 상태")).toBeInTheDocument();
-    expect(screen.getByText("연결 상태")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /자격 증명 \(Credential\) 상태 — datago/ })).toBeInTheDocument();
     // With a user-saved credential: "API Key registered" + Preview guidance.
     expect(screen.getAllByText("API Key 등록됨").length).toBeGreaterThan(0);
     expect(screen.getByText(/실제 소스 데이터셋 API 사용 가능 여부는 Add Data의 Preview/)).toBeInTheDocument();

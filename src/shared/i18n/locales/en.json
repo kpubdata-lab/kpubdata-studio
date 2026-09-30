@@ -806,8 +806,6 @@
   },
   "provider": {
     "status": {
-      "needsCred": "This provider requires credentials.",
-      "noCred": "This provider can be used without credentials.",
       "permission": {
         "title": "Check credentials or API access approval",
         "detail": "The stored credentials reached the API but access was denied. A provider can grant access per source dataset or API, so confirm whether the source dataset you picked actually works in its preview."
@@ -872,12 +870,9 @@
       "cta": "Complete API connection to continue adding data.",
       "emptyTitle": "No registered providers",
       "emptyDesc": "Add and connect data providers.",
-      "selectTitle": "Select a provider",
-      "selectDesc": "Select a provider from the list to see details.",
-      "headerTitle": "Providers"
+      "headerTitle": "Provider connections"
     },
     "detail": {
-      "connStatus": "Connection Status",
       "scopeNote": "Whether the API key is actually valid for the selected source dataset and whether required parameters are correct is verified in the Add Data Preview step. This screen only manages provider credential registration status.",
       "credTitle": "Credential Status",
       "delete": "Delete",
@@ -928,6 +923,19 @@
       "operational1": "A development account is approved automatically but its daily traffic is capped per source dataset.",
       "operational2": "Register a use case for the source dataset under My Page › Open API › development account details.",
       "operational3": "Then apply for an operational account; after review, the traffic cap is raised."
+    },
+    "table": {
+      "caption": "Authentication and configuration by provider",
+      "provider": "Provider",
+      "auth": "Authentication",
+      "authKey": "API key",
+      "authNone": "Not required",
+      "configured": "Configured",
+      "lastTest": "Last test",
+      "lastTestMissing": "Last test: not recorded by KPubData Builder",
+      "lastTestNote": "KPubData Builder does not record a last test, so it reads —. Whether a source dataset actually works is confirmed in Add Data's preview.",
+      "action": "Action",
+      "manage": "Manage credentials"
     }
   },
   "home": {

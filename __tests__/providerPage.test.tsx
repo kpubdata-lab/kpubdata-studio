@@ -259,8 +259,8 @@ describe("ProviderPage mock mode (unchanged)", () => {
     const spy = vi.spyOn(builderApi, "listProviders");
     renderPage();
 
-    expect(await screen.findByText("데이터고")).toBeInTheDocument();
-    expect(screen.getByText("KOSIS")).toBeInTheDocument();
+    expect(await screen.findByText("datago")).toBeInTheDocument();
+    expect(screen.getByText("kosis")).toBeInTheDocument();
     expect(spy).not.toHaveBeenCalled();
   });
 });
