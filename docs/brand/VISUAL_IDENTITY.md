@@ -22,12 +22,14 @@
 | Clear space | 심볼 높이의 ½ 을 네 방향에 비운다 |
 | 제품명 반복 금지 | 한 화면에 제품명은 **사이드바 로고 한 번**. topbar 는 현재 위치(breadcrumb) 를 쓴다 (#423) |
 
-**현재 자산과의 차이 — 디자이너 작업이 필요하다.** `assets/logo/kpubdata-brand-assets` 의
-승인 워드마크는 `Studio` 를 Indigo 로 강조한다. 이 규칙과 반대이지만, 그 README 가 로고
-재디자인을 금지하므로 **자산을 여기서 고치지 않았다.** 프로토타입은 승인 **심볼**
-(`symbol_dark.svg`) 옆에 텍스트로 lockup 을 조합해 규칙을 보여줄 뿐이다. 새 wordmark 벡터와
-favicon · GitHub social preview · docs logo · app icon · README header 는 이 규칙으로 디자이너가
-만든다.
+**자산 반영 (2026-09-30).** 승인 락업은 `Studio` 를 Indigo 로 강조했었다. 가로·세로 락업의
+`Studio` 패스 색만 위 규칙대로 바꿨다(라이트 `#71717A`, 다크 `#94A3B8`) — 형태·비율·위치와 심볼은 그대로다.
+앱 사이드바·로그인·가입 화면이 이 SVG 를 쓰므로 함께 바뀐다. 파생 PNG 와 GitHub social preview 는
+`node scripts/render-brand-png.mjs` 로 만든다. docs 사이트는 심볼을 로고·파비콘으로, README 는
+라이트/다크 락업을 머리에 쓴다. `__tests__/brandLockupGate.test.ts` 가 `Studio` 가 브랜드색으로 돌아가면 실패한다.
+
+**남은 것:** 굵기 — 워드마크는 Pretendard 아웃라인이라 `Studio` 의 굵기를 한 단계 낮추려면 폰트로 다시
+아웃라인을 떠야 한다. 지금은 크기(약 57%)와 색으로 약하게 했다. social preview 업로드는 저장소 설정(소유자).
 
 ## 3. 색
 
@@ -125,6 +127,6 @@ Verification)** 에서 사람이 답하고, 답을 이 표에 적는다.
 - `src/globals.css` 에 상태 토큰(`--status-*`)을 추가하고 `amber-*` · `emerald-*` 직접 사용을
   토큰으로 바꾼다
 - 배지를 "축 + 단어" 형태로 통일한다
-- 새 wordmark 자산이 나오면 사이드바 로고를 교체한다
+- ~~새 wordmark 자산이 나오면 사이드바 로고를 교체한다~~ — 사이드바가 같은 SVG 를 써서 함께 바뀌었다
 - 그 뒤 `npm run screenshots` 로 스크린샷 baseline 을 다시 만든다 — **앱 화면이 바뀌지 않은
   지금 다시 찍을 이유가 없어서 이번에는 하지 않았다.**

@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg">
+    <img alt="KPubData Studio" src="assets/logo/kpubdata-brand-assets/svg/horizontal_light.svg" width="360">
+  </picture>
+</p>
+
 # KPubData Studio
 
 **KPubData Studio는 한국 공공데이터를 수집하고, 출처와 이용 조건을 유지한 스냅샷으로 관리하며, 표와 SQL 로 분석하는 작업공간입니다.**

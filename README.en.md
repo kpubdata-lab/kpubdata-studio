@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg">
+    <img alt="KPubData Studio" src="assets/logo/kpubdata-brand-assets/svg/horizontal_light.svg" width="360">
+  </picture>
+</p>
+
 # KPubData Studio
 
 **KPubData Studio is a workspace for collecting Korean public data, keeping it as snapshots that carry their source and terms of use, and analysing it with tables and SQL.**
