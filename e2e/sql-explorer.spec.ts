@@ -22,7 +22,7 @@ async function stubWarehouse(page: Page, queries: unknown[]) {
       body: `window.__KPUBDATA_CONFIG__ = ${JSON.stringify({ useRealBuilder: "true", builderApiUrl: API })};`,
     }),
   );
-  await page.route(`${API}/**`, async (route) => {
+  await page.route((url) => url.origin === API, async (route) => {
     const url = new URL(route.request().url());
     const json = (body: unknown) => route.fulfill({ contentType: "application/json", body: JSON.stringify(body) });
     if (url.pathname === "/warehouse/tables") return json({ tables: TABLES });
