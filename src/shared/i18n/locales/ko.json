@@ -1868,29 +1868,32 @@
   },
   "catalog": {
     "page": {
-      "desc": "정확 검색과 필터로 소스 데이터셋을 찾습니다."
+      "desc": "테이블마다 현재 스냅샷과 조치가 필요한 상태를 봅니다."
     },
     "errors": {
-      "list": "소스 데이터셋 목록을 불러오지 못했습니다.",
-      "listTitle": "소스 데이터셋 목록을 불러오지 못했습니다"
+      "list": "테이블 목록을 불러오지 못했습니다.",
+      "listTitle": "테이블 목록을 불러오지 못했습니다"
     },
-    "searchLabel": "소스 데이터셋 / Provider 검색",
-    "searchPlaceholder": "소스 데이터셋명·기관 검색",
+    "searchLabel": "테이블 / Provider 검색",
+    "searchPlaceholder": "테이블명·기관 검색",
     "allProviders": "Provider 전체",
     "stageLabel": "Stage 상태",
-    "allStages": "Stage 전체",
-    "allValidations": "Validation 전체",
     "noMatch": {
-      "title": "조건에 맞는 소스 데이터셋이 없습니다",
+      "title": "조건에 맞는 테이블이 없습니다",
       "desc": "검색어나 필터를 변경해 보세요."
     },
     "openDetail": "{{title}} 상세 열기",
-    "qualityError": "Quality 조회 실패",
     "shownCount": "{{count}}개 표시",
     "resetFilters": "필터 초기화",
     "columns": {
-      "provider": "Provider"
-    }
+      "table": "테이블",
+      "snapshot": "현재 스냅샷",
+      "rows": "행",
+      "lastRefreshed": "마지막 갱신"
+    },
+    "attentionOnly": "조치 필요만",
+    "notCommitted": "커밋 전",
+    "noWarehouse": "이 배포에는 warehouse 가 없어 스냅샷과 행 수를 표시하지 않습니다. 갱신 시각은 마지막 실행 기준입니다."
   },
   "monitoring": {
     "error": {

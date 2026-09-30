@@ -12,7 +12,6 @@ import {
   type RunStagesResponse,
   type StageDetailResponse,
 } from "@/shared/lib/builderApi";
-import { summarizeQuality, type ValidationStatus } from "@/features/quality/model";
 import {
   MOCK_DATASETS,
   MOCK_QUALITY,
@@ -22,11 +21,6 @@ import {
   mockDatasetDetail,
   mockStageDetail,
 } from "./mockData";
-
-export interface CatalogDataset extends DatasetSummary {
-  validation: ValidationStatus;
-  qualityError?: string;
-}
 
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
@@ -117,7 +111,8 @@ export async function getDatasetQualityHistory(datasetId: string, limit = 30, si
   return { ...history, runs: history.runs.slice(0, limit) };
 }
 
-async function mapWithConcurrency<T, R>(
+/** Runs `mapper` over `values` with at most `concurrency` calls in flight. */
+export async function mapWithConcurrency<T, R>(
   values: T[],
   concurrency: number,
   mapper: (value: T) => Promise<R>,
@@ -132,22 +127,4 @@ async function mapWithConcurrency<T, R>(
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, worker));
   return results;
-}
-
-/** Caps per-dataset quality requests at 4 and isolates individual failures as N/A. */
-export async function loadDatasetCatalog(signal?: AbortSignal): Promise<CatalogDataset[]> {
-  const datasets = await listDatasets(50, signal);
-  return mapWithConcurrency(datasets, 4, async (dataset) => {
-    try {
-      const quality = await getBuildQuality(dataset.latest_run_id, signal);
-      return { ...dataset, validation: summarizeQuality(quality) };
-    } catch (cause) {
-      if (signal?.aborted) throw cause;
-      return {
-        ...dataset,
-        validation: "N/A",
-        qualityError: cause instanceof Error ? cause.message : i18n.t("datasets.errors.qualityLoadFailed"),
-      };
-    }
-  });
 }

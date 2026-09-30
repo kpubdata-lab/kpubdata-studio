@@ -1868,29 +1868,32 @@
   },
   "catalog": {
     "page": {
-      "desc": "Find source datasets with exact search and filters."
+      "desc": "See each table's current snapshot and the states that need action."
     },
     "errors": {
-      "list": "Could not load the source dataset list.",
-      "listTitle": "Could not load the source dataset list"
+      "list": "Could not load the table list.",
+      "listTitle": "Could not load the table list"
     },
-    "searchLabel": "Search source dataset / provider",
-    "searchPlaceholder": "Search source dataset or agency",
+    "searchLabel": "Search table / provider",
+    "searchPlaceholder": "Search table or agency",
     "allProviders": "All providers",
     "stageLabel": "Stage status",
-    "allStages": "All stages",
-    "allValidations": "All validations",
     "noMatch": {
-      "title": "No source dataset matches",
+      "title": "No table matches",
       "desc": "Try a different search term or filter."
     },
     "openDetail": "Open details for {{title}}",
-    "qualityError": "Quality lookup failed",
     "shownCount": "{{count}} shown",
     "resetFilters": "Reset filters",
     "columns": {
-      "provider": "Provider"
-    }
+      "table": "Table",
+      "snapshot": "Current snapshot",
+      "rows": "Rows",
+      "lastRefreshed": "Last refreshed"
+    },
+    "attentionOnly": "Needs attention only",
+    "notCommitted": "Not committed yet",
+    "noWarehouse": "This deployment has no warehouse, so snapshots and row counts are not shown. Refresh times come from the latest run."
   },
   "monitoring": {
     "error": {
