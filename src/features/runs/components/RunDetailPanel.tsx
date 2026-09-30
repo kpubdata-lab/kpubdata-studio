@@ -174,7 +174,7 @@ export function RunDetailPanel({
       <Card className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-lg font-semibold tracking-tight">{listItem?.title ?? runId}</h2>
-          {runStatus ? <StatusBadge status={runStatus} /> : <span className="text-xs text-muted-foreground">{t("builds.detail.statusUnknown")}</span>}
+          <StatusBadge status={runStatus} />
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-xs text-muted-foreground">{runId}</span>

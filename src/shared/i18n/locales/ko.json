@@ -147,7 +147,6 @@
     },
     "detail": {
       "analyzeQuestion": "Run {{id}}의 상태와 실패 원인을 분석해줘.",
-      "statusUnknown": "상태 불명",
       "refreshing": "실시간 갱신 중…",
       "refreshFailed": "실시간 상태 갱신 실패(일시적) — 마지막 확인된 상태를 유지합니다.",
       "refreshForbidden": "이 Run의 실시간 상태를 조회할 권한이 없습니다 — 목록에서 확인된 상태를 대신 표시합니다.",
@@ -2437,5 +2436,11 @@
       "limit": "행 수나 크기 상한을 넘어 거부했습니다. 결과를 자르지 않으므로 아무것도 만들지 않았습니다 — 질의를 좁히거나 상한을 올리세요.",
       "other": "내보내기 실패: {{message}}"
     }
+  },
+  "statusState": {
+    "unknown": "알 수 없음",
+    "missing": "KPubData Builder가 이 값을 제공하지 않았습니다",
+    "notEvaluated": "평가 안 됨",
+    "axesMissing": "테이블 상태: KPubData Builder가 제공하지 않았습니다"
   }
 }

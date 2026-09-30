@@ -147,7 +147,6 @@
     },
     "detail": {
       "analyzeQuestion": "Analyze the status and failure cause of run {{id}}.",
-      "statusUnknown": "Unknown status",
       "refreshing": "Refreshing live…",
       "refreshFailed": "Live status refresh failed (transient) — showing the last known status.",
       "refreshForbidden": "No permission to poll live status for this run — showing the status from the list instead.",
@@ -2437,5 +2436,11 @@
       "limit": "Refused: over the row or size limit. Results are not cut, so nothing was kept — narrow the query or raise the limit.",
       "other": "Export failed: {{message}}"
     }
+  },
+  "statusState": {
+    "unknown": "Unknown",
+    "missing": "KPubData Builder did not provide this value",
+    "notEvaluated": "Not evaluated",
+    "axesMissing": "Table status: not provided by KPubData Builder"
   }
 }
