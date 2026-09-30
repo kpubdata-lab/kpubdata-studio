@@ -365,3 +365,64 @@ describe("async build cancellation contract (#S03)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("BuildJob response on the polling path (#603)", () => {
+  beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
+
+  const base = {
+    run_id: "run-1",
+    created_at: "2026-10-01T00:00:00+00:00",
+    updated_at: "2026-10-01T00:00:05+00:00",
+  };
+  const poll = (body: unknown) => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(200, body));
+    return builderApi.getBuildJob("run-1");
+  };
+
+  it("parses a job that failed before a build body existed, keeping Builder's reason", async () => {
+    // What AsyncBuildExecutor stores when the provider client cannot be created.
+    const job = await poll({
+      ...base,
+      status: "failed",
+      response: { error: "provider client unavailable" },
+      error: "provider client unavailable",
+    });
+    expect(job.status).toBe("failed");
+    expect(job.error).toBe("provider client unavailable");
+  });
+
+  it("parses the contract's minimal succeeded job (getBuildJob/Succeeded)", async () => {
+    const job = await poll({ ...base, status: "succeeded", response: { run_id: "run-1", status: "ok" } });
+    expect(job.response).toEqual({ run_id: "run-1", status: "ok" });
+  });
+
+  it.each([
+    ["omitted", {}],
+    ["null", { response: null }],
+    [
+      "a full build response",
+      {
+        response: {
+          status: "ok",
+          run_id: "run-1",
+          outcomes: [{ source_key: "air", status: "ok", stages_completed: ["bronze"], error: null }],
+          manifest: "build/run-1/manifest.json",
+          api_version: "1.64.0",
+        },
+      },
+    ],
+  ])("parses a succeeded job whose response is %s", async (_label, extra) => {
+    await expect(poll({ ...base, status: "succeeded", ...extra })).resolves.toMatchObject({ status: "succeeded" });
+  });
+
+  it.each([
+    ["an unknown status", { ...base, status: "exploded" }],
+    ["a missing updated_at", { run_id: "run-1", status: "running", created_at: base.created_at }],
+    ["a non-string run_id", { ...base, run_id: 1, status: "running" }],
+    ["a response that is not an object", { ...base, status: "failed", response: "boom" }],
+    ["a response that is an array", { ...base, status: "failed", response: [] }],
+  ])("still rejects a job with %s", async (_label, body) => {
+    await expect(poll(body)).rejects.toThrow();
+  });
+});

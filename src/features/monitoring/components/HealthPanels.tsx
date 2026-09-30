@@ -119,12 +119,16 @@ export function BuilderHealthPanel({ summary }: { summary: MonitoringSummaryResp
         </Row>
         <Row status={<Availability availability={workers.availability} />} term={t("monitoring.health.workers")}>
           <Pair label={t("monitoring.workers.active")}>
-            <span className="tabular-nums text-foreground">
-              {workers.active} / {workers.capacity}
-            </span>
+            {workers.active === null || workers.capacity === null ? (
+              <Measured value={null} />
+            ) : (
+              <span className="tabular-nums text-foreground">
+                {workers.active} / {workers.capacity}
+              </span>
+            )}
           </Pair>
           <Pair label={t("monitoring.workers.utilization")}>
-            <span className="tabular-nums text-foreground">{Math.round(workers.utilization * 100)}%</span>
+            <Measured suffix="%" value={workers.utilization === null ? null : Math.round(workers.utilization * 100)} />
           </Pair>
         </Row>
         <Row status={<Availability availability={store.availability} failureWhenUnavailable />} term={t("monitoring.health.store")}>
