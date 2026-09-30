@@ -16,6 +16,11 @@
  * a directory as `serve --replay-dir`. Studio sets no kpubdata variable and never looks
  * inside another repository (#511, #541). A Builder checkout without replay support runs
  * the file-source scenarios only.
+ *
+ * Builder also gets a table catalog (`serve --warehouse`) inside its data directory, so a
+ * build commits table snapshots and the warehouse screens (Home, Tables, SQL Workspace,
+ * Saved Analyses) talk to a real catalog. Without one, `GET /warehouse/tables` answers 404
+ * and the browser logs it as a console error on every screen that asks.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, existsSync } from "node:fs";
@@ -70,6 +75,8 @@ const builder = spawn(
     dataDir,
     "--port",
     port,
+    "--warehouse",
+    join(dataDir, "warehouse"),
     ...replayArgs,
   ],
   {

@@ -223,3 +223,30 @@ test("다른 릴리스의 Builder 에 붙으면 배너가 뜨고 화면은 막�
   await expectNoPageErrors(errors);
 });
 
+test("관리자는 관리 메뉴에서 정책·실행·가입 원장을 본다 (#409) @real-builder", async ({ page, request }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  // KPUBDATA_BUILDER_DEV_MODE's principal is an administrator, so this is the administrator
+  // case against a real Builder. The ledger holds OIDC users only, so a dev-mode Builder
+  // answers an empty list — the screen must say so instead of showing nothing. The
+  // non-administrator case needs an OIDC principal and is covered with MSW in
+  // __tests__/adminScreen.test.tsx.
+  const ledger = await request.get(`${BUILDER_URL}/admin/users`);
+  expect(ledger.status()).toBe(200);
+  const body = (await ledger.json()) as { users: unknown[]; count: number };
+
+  await navigateViaShell(page, /^(Administration|관리)$/);
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByText("ENFORCE_OWNERSHIP")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: /사용자 · 가입 승인|Users and sign-up approval/ })).toBeVisible();
+  if (body.count === 0) {
+    await expect(page.getByText(/아직 로그인한 OIDC 사용자가 없습니다|No OIDC user has signed in yet/)).toBeVisible();
+  } else {
+    await expect(page.getByRole("table", { name: /^(사용자|Users)$/ })).toBeVisible();
+  }
+  await expect(page.getByRole("main").last().getByRole("alert")).toHaveCount(0);
+
+  await expectNoPageErrors(errors);
+});
+

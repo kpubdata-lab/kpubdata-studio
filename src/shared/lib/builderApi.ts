@@ -497,6 +497,9 @@ export type WarehouseAggregateResponse = schemas.WarehouseAggregateResponse;
 export type SavedAnalysis = schemas.SavedAnalysis;
 export type AdminRun = schemas.AdminRun;
 export type AdminRunsResponse = schemas.AdminRunsResponse;
+export type AdminUserStatus = schemas.AdminUserStatus;
+export type AdminUser = schemas.AdminUser;
+export type AdminUsersResponse = schemas.AdminUsersResponse;
 export type QueryErrorCode = schemas.QueryErrorCode;
 export type PublishTarget = schemas.PublishTarget;
 export type PublishIssue = schemas.PublishIssue;
@@ -580,6 +583,30 @@ export const builderApi = {
   /** GET /admin/runs — every owner's runs, metadata only (builder#679). */
   adminRuns: (limit = 50, signal?: AbortSignal) =>
     apiFetch(`/admin/runs?limit=${limit}`, { signal }, schemas.adminRunsResponseSchema),
+
+  /** GET /admin/users — the sign-up ledger, newest first; no credential (builder#785). */
+  adminUsers: (status?: schemas.AdminUserStatus, signal?: AbortSignal) =>
+    apiFetch(
+      status ? `/admin/users?status=${status}` : "/admin/users",
+      { signal },
+      schemas.adminUsersResponseSchema,
+    ),
+
+  /** POST /admin/users/{id}/approve — mark a sign-up approved; 403 for a non-administrator. */
+  adminApproveUser: (userId: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/admin/users/${encodeURIComponent(userId)}/approve`,
+      { method: "POST", signal, retries: 0 },
+      schemas.adminUserSchema,
+    ),
+
+  /** POST /admin/users/{id}/reject — mark a sign-up rejected; 403 for a non-administrator. */
+  adminRejectUser: (userId: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/admin/users/${encodeURIComponent(userId)}/reject`,
+      { method: "POST", signal, retries: 0 },
+      schemas.adminUserSchema,
+    ),
 
   /** GET /version — contract version check (meta). */
   version: (signal?: AbortSignal) =>
