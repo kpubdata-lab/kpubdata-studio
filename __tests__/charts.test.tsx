@@ -2,13 +2,13 @@
  * Charts say what they cover (#500): every group, the top N after a sort, a cut result,
  * or a sample — and a cut result is never offered as the whole, the top N or a sample.
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
 import { AggregateChartPanel, aggregateRequest } from "@/features/charts/AggregateChartPanel";
-import { coordinate, toPoints } from "@/features/charts/chartData";
+import { coordinate, measureCandidates, toPoints } from "@/features/charts/chartData";
 import { representsWhole, scopeOfAggregate, scopeOfQueryResult, type ChartScope } from "@/features/charts/chartScope";
 import { CHART_SPEC_MAX_BYTES, parseChartSpec, type ChartSpec } from "@/features/charts/chartSpec";
 import { SimpleChart } from "@/features/charts/SimpleChart";
@@ -177,5 +177,85 @@ describe("the aggregate panel asks Builder and shows what it covers", () => {
     expect(screen.getByRole("button", { name: "그리기" })).toBeDisabled();
     fireEvent.click(screen.getByRole("checkbox"));
     expect(screen.getByRole("button", { name: "그리기" })).toBeEnabled();
+  });
+});
+
+describe("an identifier column is text, never a measure (#582, builder#702)", () => {
+  const CODE19 = "1234567890123456789";
+  const result = {
+    columns: ["bjd_code", "count", "note"],
+    column_meta: [
+      { name: "bjd_code", logical_type: "identifier", wire_encoding: "string" as const },
+      { name: "count", logical_type: "int64", wire_encoding: "number" as const },
+      { name: "note", logical_type: "some_future_type", wire_encoding: "string" as const },
+    ],
+    rows: [
+      { bjd_code: "01234", count: 5, note: "007" },
+      { bjd_code: CODE19, count: 7, note: "x" },
+      { bjd_code: null, count: 2, note: null },
+    ],
+    truncated: false,
+    execution_ms: 1,
+  };
+
+  it("is left out of the y candidates but offered as x", () => {
+    expect(measureCandidates(result.columns, result.column_meta)).toEqual(["count", "note"]);
+    render(<ResultTable result={result} target="air@s1" />);
+    fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
+    const [xSelect, ySelect] = screen.getAllByRole("combobox");
+    const options = (select: HTMLElement) => within(select).getAllByRole("option").map((option) => option.textContent);
+    expect(options(xSelect)).toContain("bjd_code");
+    expect(options(ySelect)).not.toContain("bjd_code");
+    expect(ySelect).toHaveValue("count");
+  });
+
+  it("keeps a zero-led code, a 19-digit code and null as x labels, exactly", () => {
+    render(<ResultTable result={result} target="air@s1" />);
+    fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
+    const titles = [...document.querySelectorAll("title")].map((node) => node.textContent);
+    expect(titles).toEqual(expect.arrayContaining(["01234: 5", `${CODE19}: 7`, "—: 2"]));
+    // The table beside it shows the same text.
+    expect(screen.getByRole("cell", { name: "01234" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: CODE19 })).toBeInTheDocument();
+  });
+
+  it("is never coerced to a number, even when handed in as y", () => {
+    const encodings = new Map([["bjd_code", "string" as const]]);
+    const { points, temporal } = toPoints(result.rows, "count", "bjd_code", encodings, "int64", "identifier");
+    expect(points).toEqual([
+      { x: "5", y: null, exact: "01234" },
+      { x: "7", y: null, exact: CODE19 },
+      { x: "2", y: null, exact: "—" },
+    ]);
+    expect(temporal).toBe(false);
+    expect(coordinate("01234", "identifier")).toBeNull();
+    expect(coordinate("01234")).toBe(1234);
+  });
+
+  it("an identifier x is never sorted as a time axis, even when its codes look like dates", () => {
+    const { points, temporal } = toPoints(
+      [
+        { c: "2026-03", v: 1 },
+        { c: "2026-01", v: 2 },
+      ],
+      "c",
+      "v",
+      new Map(),
+      "identifier",
+    );
+    expect(temporal).toBe(false);
+    expect(points.map((point) => point.x)).toEqual(["2026-03", "2026-01"]);
+  });
+
+  it("says so when no column can be a measure", () => {
+    render(
+      <ResultTable
+        result={{ ...result, columns: ["bjd_code"], rows: [{ bjd_code: "01234" }] }}
+        target="air@s1"
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "차트로 보기" }));
+    expect(screen.getByText(/숫자로 그릴 수 있는 열이 없습니다/)).toBeInTheDocument();
+    expect(screen.queryByTestId("chart-scope")).toBeNull();
   });
 });

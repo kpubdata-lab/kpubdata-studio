@@ -118,6 +118,8 @@ export function AggregateChartPanel({
         MEASURE,
         encodings,
         groupMeta?.logical_type,
+        result.response.column_meta.find((column) => column.name === MEASURE)
+          ?.logical_type,
       )
     : null;
 

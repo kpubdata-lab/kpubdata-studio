@@ -13,7 +13,12 @@ import { DataTable, totalStatusOf } from "@/features/data-table/DataTable";
 import { rowsRequest, useWarehouseRows } from "@/features/data-table/useWarehouseRows";
 import { ResultTable } from "@/features/sql/ResultTable";
 import { API_BASE } from "@/shared/config/env";
-import { warehouseRowsResponseSchema, type WarehouseRowsResponse } from "@/shared/lib/builderApi.schema";
+import {
+  previewColumnSchema,
+  silverColumnInfoSchema,
+  warehouseRowsResponseSchema,
+  type WarehouseRowsResponse,
+} from "@/shared/lib/builderApi.schema";
 
 // These talk to the Builder over HTTP (MSW); in mock mode the demo warehouse would answer (#530).
 beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
@@ -178,5 +183,55 @@ describe("SQL results and stage samples share the table (#499)", () => {
     const source = readFileSync(join(ROOT, file), "utf8");
     expect(source).toMatch(/<DataTable\b/);
     expect(source).not.toMatch(/cellValue\(/);
+  });
+});
+
+describe("identifier columns stay text in the table and the parsers (#582, builder#702)", () => {
+  const CODE19 = "1234567890123456789";
+  const SEMANTIC = { kind: "code", origin: "core_spec" };
+  const DISPLAY = { label: "법정동코드", origin: "core_spec" };
+
+  it("shows a zero-led code, a 19-digit code and null as sent, and an unknown logical type as received", () => {
+    render(
+      <DataTable
+        columnMeta={[
+          { name: "bjd", logical_type: "identifier", wire_encoding: "string", semantic: SEMANTIC, display: DISPLAY },
+          { name: "other", logical_type: "some_future_type", wire_encoding: "string" },
+        ]}
+        columns={["bjd", "other"]}
+        rowTotal={{ returned: 3, total: 3, status: "exact" }}
+        rows={[
+          { bjd: "01234", other: "0042" },
+          { bjd: CODE19, other: "x" },
+          { bjd: null, other: null },
+        ]}
+      />,
+    );
+    const rows = screen.getAllByRole("row");
+    const cells = rows.slice(1).map((row) => within(row).getAllByRole("cell").map((cell) => cell.textContent));
+    expect(cells).toEqual([
+      ["01234", "0042"],
+      [CODE19, "x"],
+      ["—", "—"],
+    ]);
+    const headers = within(rows[0]).getAllByRole("columnheader").map((header) => header.textContent);
+    expect(headers[0]).toContain("법정동코드");
+    expect(headers[0]).toContain("identifier");
+    expect(headers[1]).toContain("some_future_type");
+  });
+
+  it("rows, preview and silver parsers accept and keep semantic/display on identifier columns", () => {
+    const rows = warehouseRowsResponseSchema.parse({
+      ...page("s1", 0, false),
+      columns: ["bjd"],
+      column_meta: [{ name: "bjd", logical_type: "identifier", wire_encoding: "string", semantic: SEMANTIC, display: DISPLAY }],
+      rows: [{ bjd: "01234" }, { bjd: CODE19 }, { bjd: null }],
+    });
+    expect(rows.column_meta[0]).toMatchObject({ logical_type: "identifier", semantic: SEMANTIC, display: DISPLAY });
+    expect(rows.rows).toEqual([{ bjd: "01234" }, { bjd: CODE19 }, { bjd: null }]);
+
+    const column = { name: "bjd", dtype: "string", nullable: true, unique_count: 3, logical_type: "identifier", wire_encoding: "string", semantic: SEMANTIC, display: DISPLAY };
+    expect(previewColumnSchema.parse(column)).toMatchObject({ semantic: SEMANTIC, display: DISPLAY });
+    expect(silverColumnInfoSchema.parse(column)).toMatchObject({ semantic: SEMANTIC, display: DISPLAY });
   });
 });
