@@ -309,8 +309,8 @@ export function mockBuilds(): BuildRun[] {
  * for developing/verifying list/search/sort UI.
  *
  * In real integration mode, calls Builder `GET /builds` and maps response to
- * BuildListItem[] (#153, builder #250). Builder response lacks spec/title, so title
- * becomes null; UI shows run ID instead.
+ * BuildListItem[] (#153, builder #250). Since kpubdata-builder#844 each run names its
+ * table (`dataset_id`, `dataset_title`) and snapshot; an older Builder omits them.
  *
  * @param limit - Optional limit parameter. Omit to use Builder default (50).
  * @returns Build execution list (mock mode: deterministic mock, real integration
@@ -318,22 +318,41 @@ export function mockBuilds(): BuildRun[] {
  */
 export async function listBuilds(limit?: number): Promise<BuildListItem[]> {
   if (!isRealBuilderEnabled()) {
+    // The demo runs name their table; they committed no warehouse snapshot, so the
+    // snapshot fields stay unsent.
     return mockBuilds().map((run) => ({
       id: run.id,
       title: run.spec.title,
       status: run.status,
       startedAt: run.startedAt,
       finishedAt: run.finishedAt ?? null,
+      datasetId: run.spec.datasetId,
     }));
   }
 
   const response = await builderApi.listBuilds(limit);
-  return response.builds.map((summary) => ({
+  return response.builds.map(mapBuildSummary);
+}
+
+/**
+ * One `GET /builds` row as a list item. The table and snapshot fields
+ * (kpubdata-builder#844) keep `undefined` when an older Builder omits them, so the table
+ * can tell "not sent" from "sent as null".
+ */
+export function mapBuildSummary(summary: BuildSummary): BuildListItem {
+  return {
     id: summary.run_id,
-     title: null, // Builder GET /builds does not provide title
+    title: summary.dataset_title ?? null,
     status: mapBuildSummaryStatus(summary.status),
-     startedAt: summary.started_at ?? null, // Normalize missing or null to explicit null
-     finishedAt: summary.finished_at ?? null, // Normalize missing or null to explicit null
-  }));
+    // Normalize missing or null to explicit null.
+    startedAt: summary.started_at ?? null,
+    finishedAt: summary.finished_at ?? null,
+    datasetId: summary.dataset_id,
+    snapshotId: summary.snapshot_id,
+    snapshots: summary.snapshots?.map((entry) => ({
+      logicalName: entry.logical_name,
+      snapshotId: entry.snapshot_id,
+    })),
+  };
 }
 

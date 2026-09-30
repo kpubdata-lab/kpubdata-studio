@@ -418,25 +418,15 @@ export function formatApiErrorMessage(status: number, parsed: unknown): string {
   return baseMessage;
 }
 
-/** single build summary in GET /builds response (per builder contract BuildSummary). */
-export interface BuildSummary {
-  /** build execution identifier */
-  run_id: string;
-   /**
-    * Build status. Builder canonical BuildSummary vocabulary is "ok" | "failed" | "cancelled"
-    * (Cancelled runs arrive as cancelled not failed — must distinguish in history/KPI).
-    */
-  status: "ok" | "failed" | "cancelled";
-  /** build start time (ISO 8601, null, or omitted) */
-  started_at?: string | null;
-  /** build end time (ISO 8601, null, or omitted) */
-  finished_at?: string | null;
-}
+/**
+ * One run in GET /builds (contract BuildSummary). Status is "ok" | "failed" | "cancelled" —
+ * a cancelled run is not a failed one. The table and snapshot fields come from
+ * kpubdata-builder#844 and are absent from an older Builder.
+ */
+export type BuildSummary = schemas.BuildSummary;
 
-/** GET /builds response wire form (per builder contract BuildsResponse). */
-export interface BuildsResponse {
-  builds: BuildSummary[];
-}
+/** GET /builds response wire form (contract BuildsResponse). */
+export type BuildsResponse = schemas.BuildsResponse;
 
 // --- response type (extracted from Zod schema) ---
 
@@ -694,7 +684,7 @@ export const builderApi = {
   /** GET /builds — build history list (#153, builder #250). */
   listBuilds: (limit?: number, signal?: AbortSignal) => {
     const query = limit !== undefined ? `?limit=${limit}` : "";
-    return apiFetch<BuildsResponse>(`/builds${query}`, { signal });
+    return apiFetch(`/builds${query}`, { signal }, schemas.buildsResponseSchema);
   },
 
   /** GET /catalog — provider/dataset catalog (#416, BL2). */

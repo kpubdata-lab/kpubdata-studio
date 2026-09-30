@@ -145,7 +145,9 @@
       "placeholder": "run id 또는 테이블 검색",
       "filterAria": "상태 필터",
       "emptyTitle": "표시할 Run이 없습니다",
-      "emptyDesc": "검색어나 상태 필터를 조정해 보세요."
+      "emptyDesc": "검색어나 상태 필터를 조정해 보세요.",
+      "tableFilterAria": "테이블 필터",
+      "allTables": "모든 테이블"
     },
     "detail": {
       "analyzeQuestion": "Run {{id}}의 상태와 실패 원인을 분석해줘.",
@@ -223,7 +225,11 @@
       "tableMissing": "테이블: KPubData Builder 의 실행 목록이 알려 주지 않습니다",
       "snapshotMissing": "스냅샷: KPubData Builder 의 실행 목록이 알려 주지 않습니다",
       "empty": "아직 갱신 기록이 없습니다.",
-      "scope": "최근 {{count}}건 (최대 {{limit}}건까지 불러옵니다)."
+      "scope": "최근 {{count}}건 (최대 {{limit}}건까지 불러옵니다).",
+      "tableUnreadable": "테이블: KPubData Builder 가 이 실행의 BuildSpec 을 읽지 못했습니다",
+      "snapshotsCount": "이 실행이 만든 스냅샷 {{count}}개",
+      "snapshotNone": "없음",
+      "snapshotNoneHint": "이 실행이 커밋한 스냅샷이 없습니다(웨어하우스 없음, 커밋 실패, 또는 이미 정리됨)."
     }
   },
   "api": {

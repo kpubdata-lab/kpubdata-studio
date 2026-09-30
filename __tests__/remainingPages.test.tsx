@@ -17,7 +17,7 @@ describe("remaining pages", () => {
     renderPage(<BuildsPage />);
     expect(screen.getByRole("heading", { name: "갱신 이력" })).toBeInTheDocument();
     // mock 실행 이력이 로드된다.
-    expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "대기오염 정보" })).toBeInTheDocument();
   });
 
   it("SettingsPage shows the API base URL section", () => {

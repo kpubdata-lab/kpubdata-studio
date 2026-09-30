@@ -10,7 +10,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as runsApi from "@/features/runs/api";
-import { BuildsPage } from "@/pages/BuildsPage";
+import { BuildsPage, leftDetail } from "@/pages/BuildsPage";
 import type { BuildListItem } from "@/shared/lib/types";
 
 const ITEMS: BuildListItem[] = [
@@ -95,5 +95,90 @@ describe("Refresh history (#535)", () => {
     fireEvent.click(screen.getByRole("row", { name: /run-failed/ }));
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/refresh-jobs/run-failed"));
     expect(screen.getByText("detail")).toBeInTheDocument();
+  });
+});
+
+describe("Refresh history table and snapshot (kpubdata-builder#844)", () => {
+  const NAMED: BuildListItem[] = [
+    {
+      id: "run-air",
+      title: "대기질",
+      status: "succeeded",
+      startedAt: null,
+      finishedAt: null,
+      datasetId: "air-quality",
+      snapshotId: "snap_012",
+      snapshots: [{ logicalName: "air-quality.datago__air", snapshotId: "snap_012" }],
+    },
+    {
+      id: "run-multi",
+      title: null,
+      status: "succeeded",
+      startedAt: null,
+      finishedAt: null,
+      datasetId: "weather",
+      snapshotId: null,
+      snapshots: [
+        { logicalName: "weather.kma__a", snapshotId: "snap_020" },
+        { logicalName: "weather.kma__b", snapshotId: "snap_021" },
+      ],
+    },
+    {
+      id: "run-none",
+      title: null,
+      status: "failed",
+      startedAt: null,
+      finishedAt: null,
+      datasetId: null,
+      snapshotId: null,
+      snapshots: [],
+    },
+  ];
+
+  it("fills Table and Snapshot from GET /builds, and tells none from not sent", async () => {
+    vi.spyOn(runsApi, "listBuilds").mockResolvedValue(NAMED);
+    renderHistory();
+
+    const air = await screen.findByRole("row", { name: /run-air/ });
+    const airCells = within(air).getAllByRole("cell");
+    expect(within(airCells[1]).getByRole("link", { name: "대기질" })).toHaveAttribute("href", "/tables/air-quality");
+    expect(airCells[1]).toHaveTextContent("air-quality");
+    expect(airCells[5]).toHaveTextContent("snap_012");
+    expect(airCells[5].querySelector('[data-status="missing"]')).toBeNull();
+
+    const multi = within(screen.getByRole("row", { name: /run-multi/ })).getAllByRole("cell");
+    expect(within(multi[1]).getByRole("link", { name: "weather" })).toHaveAttribute("href", "/tables/weather");
+    expect(multi[5]).toHaveTextContent("snap_020");
+    expect(multi[5]).toHaveTextContent("snap_021");
+
+    const none = within(screen.getByRole("row", { name: /run-none/ })).getAllByRole("cell");
+    expect(none[1].querySelector('[data-status="missing"]')).toHaveTextContent("BuildSpec");
+    expect(none[5].querySelector('[data-status="normal"]')).toHaveTextContent("없음");
+  });
+
+  it("filters by table through the URL", async () => {
+    vi.spyOn(runsApi, "listBuilds").mockResolvedValue(NAMED);
+    renderHistory();
+    await screen.findByRole("row", { name: /run-air/ });
+
+    fireEvent.change(screen.getByLabelText("테이블 필터"), { target: { value: "weather" } });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("table=weather"));
+    expect(screen.queryByRole("row", { name: /run-air/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /run-multi/ })).toBeInTheDocument();
+  });
+
+  it("leftDetail: a detail's late URL rewrite is skipped once the browser is back on the list", () => {
+    expect(leftDetail("/refresh-jobs", "run-1")).toBe(true);
+    expect(leftDetail("/studio/refresh-jobs", "run-1")).toBe(true);
+    expect(leftDetail("/refresh-jobs/run-1", "run-1")).toBe(false);
+    expect(leftDetail("/studio/refresh-jobs/run-1", "run-1")).toBe(false);
+    // An in-memory router (jsdom sits on "/") is never judged by the browser path.
+    expect(leftDetail("/", "run-1")).toBe(false);
+  });
+
+  it("offers no table filter when the Builder names no table", async () => {
+    renderHistory();
+    await screen.findByRole("row", { name: /run-ok/ });
+    expect(screen.queryByLabelText("테이블 필터")).not.toBeInTheDocument();
   });
 });

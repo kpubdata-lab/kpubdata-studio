@@ -86,8 +86,24 @@ export function matchesStatusFilter(item: BuildListItem, filter: RunStatusFilter
 export function matchesSearch(item: BuildListItem, query: string): boolean {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) return true;
-  const haystack = `${item.title ?? ""} ${item.id}`.toLowerCase();
+  const haystack = `${item.title ?? ""} ${item.datasetId ?? ""} ${item.id}`.toLowerCase();
   return haystack.includes(trimmed);
+}
+
+/** Table filter: `""` keeps every run; otherwise only runs of that dataset id (#844). */
+export function matchesTableFilter(item: BuildListItem, datasetId: string): boolean {
+  return !datasetId || item.datasetId === datasetId;
+}
+
+/** The tables the loaded runs name, for the Table filter, sorted by label. */
+export function runTables(items: BuildListItem[]): { id: string; label: string }[] {
+  const byId = new Map<string, string>();
+  for (const item of items) {
+    if (item.datasetId && !byId.has(item.datasetId)) byId.set(item.datasetId, item.title ?? item.datasetId);
+  }
+  return [...byId.entries()]
+    .map(([id, label]) => ({ id, label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 }
 
 /** If multiple sources and any failed, return list of failed sources (#255 §7). */
