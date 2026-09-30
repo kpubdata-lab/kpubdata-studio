@@ -440,6 +440,7 @@ export const uploadMetadataSchema = z.object({
   created_at: z.string(),
 });
 
+export type ProviderLastTest = z.infer<typeof providerLastTestSchema>;
 export type ProviderSummary = z.infer<typeof providerSummarySchema>;
 export type ProvidersResponse = z.infer<typeof providersResponseSchema>;
 export type ProviderTestResponse = z.infer<typeof providerTestResponseSchema>;

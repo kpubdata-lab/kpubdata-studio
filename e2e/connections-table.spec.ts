@@ -33,5 +33,14 @@ test("연결 표는 390px 에서 표 안에서만 가로로 스크롤되고 키�
   await expect(page.getByRole("heading", { name: /kosis/ })).toBeVisible();
   await expect(manage).toHaveAttribute("aria-pressed", "true");
 
+  // The Test action (kpubdata-builder#842) runs from the keyboard and fills that row's last test.
+  const datagoRow = region.getByRole("row", { name: /datago/ });
+  await expect(datagoRow).toContainText(t("provider.table.neverTested"));
+  await region.getByRole("button", { name: `${t("provider.table.test")} — datago` }).focus();
+  await page.keyboard.press("Enter");
+  await expect(datagoRow.locator('[data-last-test="not_configured"]')).toContainText(
+    t("provider.status.probe.notConfigured"),
+  );
+
   await expectNoPageErrors(errors);
 });

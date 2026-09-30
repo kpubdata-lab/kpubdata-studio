@@ -853,7 +853,8 @@
       "saveNoStore": "Cannot save — Builder credential store (master key) is not configured.",
       "saveFail": "Failed to save credential",
       "deleteNoStore": "Cannot delete — Builder credential store (master key) is not configured.",
-      "deleteFail": "Failed to delete credential"
+      "deleteFail": "Failed to delete credential",
+      "testFail": "Could not run the {{provider}} connection test"
     },
     "page": {
       "title": "Data Provider Connections",
@@ -926,9 +927,12 @@
       "configured": "Configured",
       "lastTest": "Last test",
       "lastTestMissing": "Last test: not recorded by KPubData Builder",
-      "lastTestNote": "KPubData Builder does not record a last test, so it reads —. Whether a source dataset actually works is confirmed in Add Data's preview.",
+      "lastTestNote": "Last test is the result KPubData Builder recorded for this account. A test checks the key with a source dataset that can be called without guessing a required parameter; when there is none it reads ‘Not testable’ — not a key error. Whether the source dataset you pick actually works is confirmed in Add Data's preview.",
       "action": "Action",
-      "manage": "Manage credentials"
+      "manage": "Manage credentials",
+      "neverTested": "Never tested",
+      "test": "Test",
+      "testing": "Testing…"
     }
   },
   "home": {

@@ -375,6 +375,108 @@ describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
   });
 });
 
+describe("ProviderPage last test and Test action (kpubdata-builder#842)", () => {
+  function lastTestCell(provider: string) {
+    const row = screen.getAllByRole("row").find((candidate) => candidate.textContent?.includes(provider));
+    if (!row) throw new Error(`no row for ${provider}`);
+    return row.querySelectorAll("td")[3] as HTMLElement;
+  }
+
+  it("shows last_test per provider; not_testable is quiet text, only failed is a badge", async () => {
+    mswServer.use(
+      http.get(`${API_BASE}/providers`, () =>
+        HttpResponse.json({
+          providers: [
+            {
+              provider: "datago",
+              requires_credential: true,
+              configured: true,
+              last_test: {
+                status: "connected",
+                checked_at: "2026-09-01T00:00:00+00:00",
+                error_category: null,
+                response_code: null,
+                dataset: "datago.sample",
+              },
+            },
+            {
+              provider: "kosis",
+              requires_credential: true,
+              configured: true,
+              last_test: {
+                status: "not_testable",
+                checked_at: "2026-09-01T00:00:00+00:00",
+                error_category: null,
+                response_code: null,
+                dataset: null,
+              },
+            },
+            {
+              provider: "g2b",
+              requires_credential: true,
+              configured: true,
+              last_test: {
+                status: "failed",
+                checked_at: "2026-09-01T00:00:00+00:00",
+                error_category: "auth",
+                response_code: 401,
+                dataset: null,
+              },
+            },
+            { provider: "seoul", requires_credential: true, configured: true, last_test: null },
+            { provider: "localdata", requires_credential: false, configured: true },
+          ],
+        }),
+      ),
+    );
+    renderProviders();
+    await screen.findByText("datago.sample", { exact: false });
+
+    expect(lastTestCell("datago")).toHaveTextContent("연결됨");
+    const notTestable = lastTestCell("kosis");
+    expect(notTestable).toHaveTextContent("시험 불가");
+    expect(notTestable.querySelector('[data-status="actionable"]')).toBeNull();
+    const failed = lastTestCell("g2b");
+    expect(failed.querySelector('[data-status="actionable"][data-tone="failure"]')).toHaveTextContent("연결 오류");
+    expect(lastTestCell("seoul")).toHaveTextContent("테스트 기록 없음");
+    // A Builder that does not send last_test: a dash, never a guess.
+    expect(lastTestCell("localdata").querySelector('[data-status="missing"]')).not.toBeNull();
+  });
+
+  it("Test calls POST /providers/{p}/test and shows the result as that row's last test", async () => {
+    let calls = 0;
+    mswServer.use(
+      http.post(`${API_BASE}/providers/kosis/test`, () => {
+        calls += 1;
+        return HttpResponse.json({
+          provider: "kosis",
+          status: "not_testable",
+          configured: false,
+          latency_ms: 3,
+          checked_at: "2026-09-02T00:00:00+00:00",
+        });
+      }),
+    );
+    renderProviders();
+    fireEvent.click(await screen.findByRole("button", { name: "테스트 — kosis" }));
+
+    await waitFor(() => expect(lastTestCell("kosis")).toHaveTextContent("시험 불가"));
+    expect(calls).toBe(1);
+    expect(lastTestCell("kosis").querySelector('[data-status="actionable"]')).toBeNull();
+  });
+
+  it("a Test request that fails is an error on the page, not a key failure in the row", async () => {
+    mswServer.use(
+      http.post(`${API_BASE}/providers/datago/test`, () => HttpResponse.json({ error: "boom" }, { status: 500 })),
+    );
+    renderProviders();
+    fireEvent.click(await screen.findByRole("button", { name: "테스트 — datago" }));
+
+    expect(await screen.findByText("datago 연결 테스트를 실행하지 못했습니다")).toBeInTheDocument();
+    expect(lastTestCell("datago").querySelector('[data-status="actionable"]')).toBeNull();
+  });
+});
+
 describe("isSafeReturnTo — open redirect 방지", () => {
   it("내부 절대 경로만 안전으로 판정한다", () => {
     expect(isSafeReturnTo("/add")).toBe(true);

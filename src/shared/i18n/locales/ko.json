@@ -853,7 +853,8 @@
       "saveNoStore": "KPubData Builder에 자격 증명 저장소(master key)가 구성되어 있지 않아 저장할 수 없습니다.",
       "saveFail": "Credential 저장에 실패했습니다",
       "deleteNoStore": "KPubData Builder에 자격 증명 저장소(master key)가 구성되어 있지 않아 삭제할 수 없습니다.",
-      "deleteFail": "Credential 삭제에 실패했습니다"
+      "deleteFail": "Credential 삭제에 실패했습니다",
+      "testFail": "{{provider}} 연결 테스트를 실행하지 못했습니다"
     },
     "page": {
       "title": "데이터 제공 기관 연결",
@@ -926,9 +927,12 @@
       "configured": "설정",
       "lastTest": "마지막 테스트",
       "lastTestMissing": "마지막 테스트: KPubData Builder가 기록하지 않습니다",
-      "lastTestNote": "마지막 테스트는 KPubData Builder가 기록하지 않아 — 로 표시합니다. 소스 데이터셋이 실제로 되는지는 Add Data의 Preview에서 확인합니다.",
+      "lastTestNote": "마지막 테스트는 KPubData Builder가 이 계정으로 기록한 결과입니다. 테스트는 필수 파라미터를 추측하지 않고 부를 수 있는 소스 데이터셋으로 키를 확인하고, 그런 소스 데이터셋이 없으면 ‘시험 불가’로 남깁니다 — 키 오류가 아닙니다. 고른 소스 데이터셋이 실제로 되는지는 Add Data의 Preview에서 확인합니다.",
       "action": "작업",
-      "manage": "자격 증명 관리"
+      "manage": "자격 증명 관리",
+      "neverTested": "테스트 기록 없음",
+      "test": "테스트",
+      "testing": "테스트 중…"
     }
   },
   "home": {

@@ -5,10 +5,10 @@
  *   instead of generic live probe for credential readiness expression. Only addresses
  *   axes reliably confirmable at Provider level (requirement / effective configured /
  *   user-saved credential presence).
- * - `describeProviderProbe` (retained): Maps Builder `ProviderTestResponse`. Generic
- *   probe calls arbitrary first Dataset without required params, so "connection success"
- *   cannot be trusted and was removed from user flow (#S-provider-probe). Builder API
- *   contract maintained, so mapping/tests retained (direct diagnostics).
+ * - `describeProviderProbe`: Maps a Builder test result (`ProviderTestResponse`, or the
+ *   `last_test` in GET /providers). Since kpubdata-builder#842 the test calls a dataset
+ *   that needs no guessed parameter and no application, so the Connections table shows
+ *   it as the Last test and offers a Test action. `not_testable` is neutral.
  * - In either case, Preview is SSOT for actual availability of chosen Dataset.
  *
  * All wording moved to `provider.status.*` keys (#350). Fixed constants would lock

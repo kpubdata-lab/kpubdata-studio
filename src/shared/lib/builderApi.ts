@@ -448,6 +448,7 @@ export type CatalogResponse = schemas.CatalogResponse;
 export type ProviderTestResponse = schemas.ProviderTestResponse;
 export type UploadMetadata = schemas.UploadMetadata;
 export type ProviderSummary = schemas.ProviderSummary;
+export type ProviderLastTest = schemas.ProviderLastTest;
 export type ProvidersResponse = schemas.ProvidersResponse;
 export type ProviderCredentialResponse = schemas.ProviderCredentialResponse;
 export type PreviewDiffItem = schemas.PreviewDiffItem;
@@ -841,12 +842,6 @@ export const builderApi = {
     ),
 
    /**
-    * POST /providers/{provider}/test — lightweight connection test with current principal
-    * credential (#492). Add Data Public API stage "Test Connection" button invokes this.
-    * Credential text not exchanged — Builder checks directly against server-stored
-    * credential (or unauthenticated provider).
-    */
-   /**
     * GET /providers — Runtime Provider list and current principal's configured status (#492).
     * Response contains only boolean summary — credential text does not exist anywhere.
     */
@@ -857,6 +852,12 @@ export const builderApi = {
       schemas.providersResponseSchema,
     ),
 
+   /**
+    * POST /providers/{provider}/test — connection test with the current principal's
+    * credential (#492). Since kpubdata-builder#842 it calls a dataset that needs no guessed
+    * parameter and no application, answers `not_testable` when there is none, and is
+    * remembered as `last_test` in GET /providers. Credential text is not exchanged.
+    */
   testProviderConnection: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/test`,
