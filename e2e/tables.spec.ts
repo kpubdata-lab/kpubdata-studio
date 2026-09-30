@@ -79,3 +79,56 @@ test("테이블 목록은 현재 스냅샷과 행 수를 보이고, 키보드로
 
   await expectNoPageErrors(errors);
 });
+
+test("390px 에서 상태 배지는 한 줄이고, 테이블 이름·현재 스냅샷·상태가 가로 스크롤 없이 보인다 (#573)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  // Mock mode: the demo warehouse has a table whose access is rate limited, the badge #563 caught wrapping.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tables");
+  const table = page.getByRole("table");
+  const rows = table.getByRole("link");
+  await expect(rows.first()).toBeVisible({ timeout: 10_000 });
+  await expect(table.getByText(t("statusAxes.value.access.rate_limited"))).toBeVisible();
+
+  const report = await rows.evaluateAll((elements) => {
+    const viewport = document.documentElement.clientWidth;
+    const shown = (element: Element) => getComputedStyle(element).display !== "none" && element.getClientRects().length > 0;
+    // Where an element is drawn, and on how many text lines.
+    const place = (element: Element) => {
+      const box = element.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const lines = new Set(Array.from(range.getClientRects(), (rect) => Math.round(rect.top + rect.height / 2))).size;
+      return { text: (element.textContent ?? "").trim(), left: Math.round(box.left), right: Math.round(box.right), lines };
+    };
+    return elements.map((row) => {
+      const cells = Array.from(row.querySelectorAll(":scope > td"));
+      const name = cells[0].firstElementChild ?? cells[0];
+      const snapshot = cells.find((cell) => /snap_\d+/.test(cell.textContent ?? ""));
+      const badges = Array.from(row.querySelectorAll('[data-status="actionable"]')).filter(shown);
+      return { viewport, name: place(name), snapshot: snapshot && shown(snapshot) ? place(snapshot) : null, badges: badges.map(place) };
+    });
+  });
+
+  expect(report.length).toBeGreaterThan(0);
+  expect(report.some((row) => row.badges.length > 0), "some row needs action").toBe(true);
+  // Every problem at once, so a failure shows the whole layout rather than the first cell.
+  const problems: string[] = [];
+  for (const row of report) {
+    const inView = (item: { left: number; right: number }) => item.left >= 0 && item.right <= row.viewport;
+    if (!inView(row.name)) problems.push(`table name "${row.name.text}" outside the viewport (${row.name.left}..${row.name.right})`);
+    if (!row.snapshot) problems.push(`no current snapshot shown for "${row.name.text}"`);
+    else if (!inView(row.snapshot)) problems.push(`snapshot "${row.snapshot.text}" outside the viewport (${row.snapshot.left}..${row.snapshot.right})`);
+    for (const badge of row.badges) {
+      if (badge.lines !== 1) problems.push(`badge "${badge.text}" wraps onto ${badge.lines} lines`);
+      if (!inView(badge)) problems.push(`badge "${badge.text}" outside the viewport (${badge.left}..${badge.right})`);
+    }
+  }
+  expect(problems).toEqual([]);
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow, "/tables horizontal overflow at 390px").toBeLessThanOrEqual(2);
+  await expectNoPageErrors(errors);
+});

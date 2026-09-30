@@ -69,11 +69,16 @@ describe("Tables without a warehouse (mock deployment)", () => {
   it("badges only what needs action; a healthy value is plain text (#524, #525)", async () => {
     renderCatalog();
     const air = await screen.findByRole("link", { name: "대기질 통합 데이터 상세 열기" });
-    const airBadges = within(air).getAllByText((_, element) => element?.getAttribute("data-status") === "actionable");
+    const isBadge = (_: string, element: Element | null) => element?.getAttribute("data-status") === "actionable";
+    const [nameCell, ...axisCells] = within(air).getAllByRole("cell");
+    const airBadges = axisCells.flatMap((cell) => within(cell).queryAllByText(isBadge));
     expect(airBadges.map((badge) => badge.textContent)).toEqual(["완전성부분", "갱신실패"]);
+    // The same badges under the name are what a narrow screen shows once the axis columns
+    // are hidden (#573); CSS picks one set per width, which jsdom does not apply.
+    expect(within(nameCell).getAllByText(isBadge).map((badge) => badge.textContent)).toEqual(["완전성부분", "갱신실패"]);
 
     const population = screen.getByRole("link", { name: "행정구역별 인구 상세 열기" });
-    expect(within(population).queryAllByText((_, element) => element?.getAttribute("data-status") === "actionable")).toHaveLength(0);
+    expect(within(population).queryAllByText(isBadge)).toHaveLength(0);
     expect(within(population).getByText("성공")).toHaveAttribute("data-status", "normal");
     expect(within(population).getAllByText("알 수 없음")[0]).toHaveAttribute("data-status", "unknown");
   });
