@@ -1,39 +1,54 @@
 /**
- * Actionable quality issues across tables (#536).
+ * Actionable quality issues across tables (#536, #568).
  *
  * Quality Center lists, in one table, what needs a person's attention in every table's
- * latest refresh: WARN and FAIL results and schema drift findings, all from
- * `GET /builds/{run_id}/quality`. Studio neither scores nor re-judges a result (#246).
+ * latest refresh: WARN and FAIL results and schema drift findings. They come from one
+ * KPubData Builder call, `GET /quality/issues` (kpubdata-builder#843), which reads each
+ * visible table's latest run, orders the rows failures first and counts the tables it
+ * read by what their latest run says — evaluated, not evaluated, partial, unreadable —
+ * so a table without results is never taken for a passing one. Studio neither scores
+ * nor re-judges a result (#246).
  *
- * Builder has no cross-table issues endpoint yet (kpubdata-builder#843),
- * so the list is assembled from each table's latest run, at most four requests at a
- * time. A table whose quality could not be read is counted as such — never as clean —
- * and a table with nothing evaluated is "not evaluated", never PASS.
+ * The call is paged by an opaque cursor; the page follows it up to
+ * `QUALITY_ISSUE_PAGES` pages and says so when rows remain beyond that. A Builder older
+ * than contract 1.49.0 answers 404, and the page falls back to the per-table reads it
+ * made before (first 100 tables, four at a time).
  */
-import { getBuildQuality, listDatasetsPage } from "@/features/datasets/api";
-import type {
-  BuildQualityResponse,
-  DatasetSummary,
-  QualityCheckResult,
-  SchemaDriftFinding,
-} from "@/shared/lib/builderApi";
+import {
+  getBuildQuality,
+  getDataset,
+  listDatasetsPage,
+  listQualityIssues,
+  mapWithConcurrency,
+} from "@/features/datasets/api";
+import {
+  emptyQualityCoverage,
+  issuesFromRunQuality,
+  qualityCoverageBucket,
+  sortQualityIssues,
+} from "@/features/datasets/api/qualityIssues";
+import { ApiError, type QualityIssue, type QualityIssuesCoverage } from "@/shared/lib/builderApi";
 
-/** How many tables the list reads. Builder's `total` says whether there are more. */
-export const QUALITY_TABLE_LIMIT = 100;
+/** Rows per request: the contract's maximum. */
+export const QUALITY_ISSUE_PAGE_SIZE = 500;
+/** Pages followed before the list stops and says how many rows it left out. */
+export const QUALITY_ISSUE_PAGES = 10;
+/** Tables an older Builder's per-table fallback reads. */
+export const LEGACY_TABLE_LIMIT = 100;
 
-export type TableQuality =
-  | { dataset: DatasetSummary; status: "loaded"; quality: BuildQualityResponse }
-  | { dataset: DatasetSummary; status: "error"; message: string };
+export type IssueRow = QualityIssue;
 
 export interface QualityOverview {
-  tables: TableQuality[];
-  /** Builder's table count; undefined when this Builder does not send it. */
-  total: number | undefined;
+  issues: IssueRow[];
+  /** Rows matching across all pages (Builder's `total`). */
+  total: number;
+  coverage: QualityIssuesCoverage;
+  /**
+   * Set only by the per-table fallback for an older Builder: how many tables it read, and
+   * Builder's table count (undefined when not sent).
+   */
+  legacyTables?: { shown: number; total: number | undefined };
 }
-
-export type IssueRow =
-  | { kind: "check"; dataset: DatasetSummary; runId: string; result: QualityCheckResult }
-  | { kind: "drift"; dataset: DatasetSummary; runId: string; sourceKey: string; finding: SchemaDriftFinding };
 
 /** The status filter's values. `drift` is a schema drift finding. */
 export type IssueStatus = "fail" | "warn" | "drift";
@@ -42,92 +57,103 @@ export type IssueStatus = "fail" | "warn" | "drift";
 export const DRIFT_CATEGORY = "schema_drift";
 
 export function issueStatus(row: IssueRow): IssueStatus {
-  return row.kind === "drift" ? "drift" : row.result.status === "fail" ? "fail" : "warn";
+  return row.status;
 }
 
 export function issueCategory(row: IssueRow): string {
-  return row.kind === "drift" ? DRIFT_CATEGORY : row.result.category;
+  return row.kind === "drift" ? DRIFT_CATEGORY : (row.category ?? row.check?.category ?? "");
 }
 
 export function issueSource(row: IssueRow): string {
-  return row.kind === "drift" ? row.sourceKey : row.result.source_key;
+  return row.source_key;
 }
 
-const SEVERITY: Record<IssueStatus, number> = { fail: 0, warn: 1, drift: 2 };
+/** The label a row's table goes by: Builder's title, or its id when it sent none. */
+export function issueTableTitle(row: Pick<IssueRow, "title" | "dataset_id">): string {
+  return row.title ?? row.dataset_id;
+}
 
-/** Every WARN/FAIL result and every drift finding, FAIL first, then by table title. */
-export function collectIssues(tables: TableQuality[]): IssueRow[] {
-  const rows: IssueRow[] = [];
-  for (const table of tables) {
-    if (table.status !== "loaded") continue;
-    const runId = table.quality.run_id;
-    for (const results of Object.values(table.quality.quality_results)) {
-      for (const result of results) {
-        if (result.status !== "pass") rows.push({ kind: "check", dataset: table.dataset, runId, result });
-      }
-    }
-    for (const [sourceKey, findings] of Object.entries(table.quality.schema_drift)) {
-      for (const finding of findings) rows.push({ kind: "drift", dataset: table.dataset, runId, sourceKey, finding });
+/** The tables the rows name, in first-seen order (Builder orders the rows). */
+export function issueTables(rows: IssueRow[]): { datasetId: string; title: string; runId: string }[] {
+  const seen = new Map<string, { datasetId: string; title: string; runId: string }>();
+  for (const row of rows) {
+    if (!seen.has(row.dataset_id)) {
+      seen.set(row.dataset_id, { datasetId: row.dataset_id, title: issueTableTitle(row), runId: row.run_id });
     }
   }
-  return rows.sort(
-    (a, b) => SEVERITY[issueStatus(a)] - SEVERITY[issueStatus(b)] || a.dataset.title.localeCompare(b.dataset.title),
-  );
+  return [...seen.values()];
 }
 
-export interface QualityCoverage {
-  /** Tables with at least one WARN, FAIL or drift finding. */
-  withIssues: DatasetSummary[];
-  /** Evaluated, every result PASS, no drift. */
-  passed: DatasetSummary[];
-  /** Nothing evaluated in the latest refresh (N/A) — not counted as passed. */
-  notEvaluated: DatasetSummary[];
-  /** Builder said only part of the results is available. */
-  partial: DatasetSummary[];
-  /** Quality could not be read. */
-  failed: DatasetSummary[];
+function isNotFound(cause: unknown): boolean {
+  return cause instanceof ApiError && cause.status === 404;
 }
 
-export function qualityCoverage(tables: TableQuality[]): QualityCoverage {
-  const coverage: QualityCoverage = { withIssues: [], passed: [], notEvaluated: [], partial: [], failed: [] };
-  for (const table of tables) {
-    if (table.status === "error") {
-      coverage.failed.push(table.dataset);
-      continue;
-    }
-    const results = Object.values(table.quality.quality_results).flat();
-    const drift = Object.values(table.quality.schema_drift).flat();
-    if (table.quality.availability === "partial") coverage.partial.push(table.dataset);
-    if (results.some((result) => result.status !== "pass") || drift.length > 0) coverage.withIssues.push(table.dataset);
-    else if (results.length === 0) coverage.notEvaluated.push(table.dataset);
-    else coverage.passed.push(table.dataset);
-  }
-  return coverage;
-}
-
-async function mapWithConcurrency<T, R>(values: T[], concurrency: number, mapper: (value: T) => Promise<R>): Promise<R[]> {
-  const results = new Array<R>(values.length);
-  let next = 0;
-  async function worker(): Promise<void> {
-    while (next < values.length) {
-      const index = next++;
-      results[index] = await mapper(values[index]);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(concurrency, values.length) }, worker));
-  return results;
-}
-
-/** Read every listed table's latest-run quality; one table's failure stays that table's. */
-export async function loadQualityOverview(signal?: AbortSignal): Promise<QualityOverview> {
-  const page = await listDatasetsPage(QUALITY_TABLE_LIMIT, signal);
-  const tables = await mapWithConcurrency(page.datasets, 4, async (dataset): Promise<TableQuality> => {
+/**
+ * A Builder before contract 1.49.0 has no `GET /quality/issues`: read the first
+ * `LEGACY_TABLE_LIMIT` tables' latest-run quality, four at a time, into the same rows and
+ * coverage. A table whose quality could not be read is unreadable, never clean.
+ */
+async function loadPerTable(signal?: AbortSignal): Promise<QualityOverview> {
+  const page = await listDatasetsPage(LEGACY_TABLE_LIMIT, signal);
+  const coverage = emptyQualityCoverage();
+  coverage.tables = page.datasets.length;
+  const perTable = await mapWithConcurrency(page.datasets, 4, async (dataset) => {
     try {
-      return { dataset, status: "loaded", quality: await getBuildQuality(dataset.latest_run_id, signal) };
+      return { dataset, quality: await getBuildQuality(dataset.latest_run_id, signal) };
     } catch (cause) {
       if (signal?.aborted) throw cause;
-      return { dataset, status: "error", message: cause instanceof Error ? cause.message : String(cause) };
+      return { dataset, quality: null };
     }
   });
-  return { tables, total: page.total };
+  const issues: IssueRow[] = [];
+  for (const { dataset, quality } of perTable) {
+    if (!quality) {
+      coverage.unreadable += 1;
+      continue;
+    }
+    coverage[qualityCoverageBucket(quality)] += 1;
+    issues.push(...issuesFromRunQuality({ dataset_id: dataset.dataset_id, title: dataset.title, finished_at: null }, quality));
+  }
+  sortQualityIssues(issues);
+  return { issues, total: issues.length, coverage, legacyTables: { shown: page.datasets.length, total: page.total } };
+}
+
+/** Every issue in one list, following the cursor up to `QUALITY_ISSUE_PAGES` pages. */
+export async function loadQualityOverview(signal?: AbortSignal): Promise<QualityOverview> {
+  let first;
+  try {
+    first = await listQualityIssues({ limit: QUALITY_ISSUE_PAGE_SIZE }, signal);
+  } catch (cause) {
+    if (isNotFound(cause)) return loadPerTable(signal);
+    throw cause;
+  }
+  const issues = [...first.issues];
+  let cursor = first.next_cursor;
+  for (let page = 1; cursor && page < QUALITY_ISSUE_PAGES; page += 1) {
+    const next = await listQualityIssues({ limit: QUALITY_ISSUE_PAGE_SIZE, cursor }, signal);
+    issues.push(...next.issues);
+    cursor = next.next_cursor;
+  }
+  return { issues, total: first.total, coverage: first.coverage };
+}
+
+/**
+ * Whether Builder can see a table at all — asked only for a table in the URL that no
+ * issue row names, where "no issues" and "no such table" would otherwise look alike.
+ */
+export async function tableIsVisible(datasetId: string, signal?: AbortSignal): Promise<boolean> {
+  try {
+    const response = await listQualityIssues({ datasetId, limit: 1 }, signal);
+    return response.coverage.tables > 0;
+  } catch (cause) {
+    if (!isNotFound(cause)) throw cause;
+  }
+  // An older Builder: ask for the table itself.
+  try {
+    await getDataset(datasetId, signal);
+    return true;
+  } catch (cause) {
+    if (isNotFound(cause)) return false;
+    throw cause;
+  }
 }

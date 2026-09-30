@@ -713,7 +713,7 @@
     },
     "rows": "{{count}} rows",
     "errors": {
-      "datasets": "Failed to load tables"
+      "issues": "Failed to load quality issues"
     },
     "loading": "Loading quality results for each table.",
     "empty": {
@@ -753,11 +753,13 @@
       "meta": "Latest refresh of {{count}} tables"
     },
     "coverage": {
-      "line": "{{tables}} tables — {{issues}} need attention · {{passed}} passed · {{notEvaluated}} not evaluated (N/A) · {{failed}} could not be read",
-      "more": "(the first {{shown}} of KPubData Builder's {{total}} tables)",
-      "partial": "Refreshes with partial results:",
-      "notEvaluated": "Latest refreshes with nothing evaluated (N/A — not counted as passed):",
-      "failed": "Tables whose quality could not be read:"
+      "line": "{{tables}} tables — {{evaluated}} evaluated · {{partial}} partially evaluated · {{notEvaluated}} not evaluated (N/A) · {{unreadable}} could not be read.",
+      "more": "(the first {{shown}} of {{total}})",
+      "partial": "Tables whose latest refresh evaluated only some sources (partial): {{count}} — not counted as passed.",
+      "notEvaluated": "Tables whose latest refresh evaluated nothing (N/A): {{count}} — not counted as passed.",
+      "failed": "Tables whose quality could not be read: {{count}} — this does not mean they have no issues.",
+      "issues": "Issues needing attention: {{count}} (in {{tables}} tables).",
+      "legacyMore": "(this KPubData Builder reports quality per table only, so the first {{shown}} of its {{total}} tables are read)"
     },
     "legacyRun": {
       "text": "This screen reads each table's latest refresh only. Run `{{run}}` from the link is not the latest —",
@@ -787,7 +789,7 @@
       "notApplicable": "n/a",
       "tableLevel": "whole table",
       "tableLevelTitle": "The rule applies to the whole table, not one column",
-      "none": "No quality issue needs attention. Tables not evaluated or not read are listed below.",
+      "none": "No quality issue needs attention. Tables not evaluated, partially evaluated or not read are counted separately above.",
       "noneFiltered": "No quality issue matches the filters."
     },
     "selectors": {

@@ -1,15 +1,17 @@
 /**
- * Quality Center page (`/quality`, #254, #536).
+ * Quality Center page (`/quality`, #254, #536, #568).
  *
  * Workspace-wide: one table of what needs attention in every table's latest refresh —
  * WARN and FAIL results and schema drift — filtered by Status, Table and Category. The
- * deep dive into one table (its runs, sources, stages, trend) is Table Detail's Quality
- * tab; every row links there.
+ * rows and the table coverage come from one KPubData Builder call, `GET /quality/issues`
+ * (kpubdata-builder#843), instead of one quality request per table (still the fallback
+ * for a Builder older than contract 1.49.0). The deep dive into
+ * one table (its runs, sources, stages, trend) is Table Detail's Quality tab; every row
+ * links there.
  *
  * Displays only actual evaluated quality results returned by Builder; Studio doesn't
- * create scores or re-judge PASS/WARN/FAIL (#246). A table with nothing evaluated is
- * "not evaluated" (N/A), never counted as passed, and a table whose quality could not be
- * read is said so, never shown as clean.
+ * create scores or re-judge PASS/WARN/FAIL (#246). Builder's coverage counts tables not
+ * evaluated, partially evaluated and unreadable separately; none is counted as passed.
  *
  * Filters live in the URL (`?status=&dataset=&category=`); `dataset` keeps its name so
  * Ask KPubData's context and older links (`?dataset=&run=`) still resolve. A `run` that
@@ -23,43 +25,27 @@ import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { QualityIssuesTable } from "@/features/quality/QualityIssuesTable";
 import {
   DRIFT_CATEGORY,
-  collectIssues,
   issueCategory,
   issueStatus,
+  issueTables,
   loadQualityOverview,
-  qualityCoverage,
+  tableIsVisible,
   type IssueStatus,
   type QualityOverview,
 } from "@/features/quality/issues";
-import { qualityAssistantSeedQuestion, summarizeChecksPassed } from "@/features/quality/model";
+import { qualityAssistantSeedQuestion } from "@/features/quality/model";
 import { useUIStore } from "@/shared/hooks/useUIStore";
-import type { DatasetSummary } from "@/shared/lib/builderApi";
 import { Button, Card, EmptyState, ErrorState, PageHeader, Skeleton } from "@/shared/ui";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "loaded"; overview: QualityOverview };
+
+/** Whether Builder can see the table named in the URL, when no issue row names it. */
+type Visibility = "unknown" | "visible" | "invisible";
 
 const STATUSES: IssueStatus[] = ["fail", "warn", "drift"];
 
 const selectClassName =
   "h-9 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
-function TableLinks({ datasets }: { datasets: DatasetSummary[] }) {
-  return (
-    <>
-      {datasets.map((dataset, index) => (
-        <span key={dataset.dataset_id}>
-          {index > 0 ? ", " : null}
-          <Link
-            className="text-accent-subtle-foreground underline-offset-2 hover:underline"
-            to={`/tables/${encodeURIComponent(dataset.dataset_id)}?tab=quality`}
-          >
-            {dataset.title}
-          </Link>
-        </span>
-      ))}
-    </>
-  );
-}
 
 export function QualityPage() {
   const { t } = useTranslation();
@@ -67,6 +53,7 @@ export function QualityPage() {
   const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
   const seedAssistantQuestion = useAssistantStore((state) => state.seedQuestion);
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [visibility, setVisibility] = useState<Visibility>("unknown");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -80,9 +67,8 @@ export function QualityPage() {
     return () => controller.abort();
   }, []);
 
-  const tables = useMemo(() => (state.status === "loaded" ? state.overview.tables : []), [state]);
-  const issues = useMemo(() => collectIssues(tables), [tables]);
-  const coverage = useMemo(() => qualityCoverage(tables), [tables]);
+  const issues = useMemo(() => (state.status === "loaded" ? state.overview.issues : []), [state]);
+  const tables = useMemo(() => issueTables(issues), [issues]);
   const categories = useMemo(() => {
     const found = new Set(issues.map(issueCategory));
     return [...found].sort((a, b) => (a === DRIFT_CATEGORY ? 1 : b === DRIFT_CATEGORY ? -1 : a.localeCompare(b)));
@@ -93,13 +79,30 @@ export function QualityPage() {
   const datasetFilter = searchParams.get("dataset") ?? "";
   const categoryFilter = searchParams.get("category") ?? "";
   const legacyRun = searchParams.get("run");
-  const filteredTable = tables.find((table) => table.dataset.dataset_id === datasetFilter)?.dataset;
-  const invalidDataset = Boolean(datasetFilter && state.status === "loaded" && !filteredTable);
+  const filteredTable = tables.find((table) => table.datasetId === datasetFilter);
+  const needsVisibilityCheck = Boolean(datasetFilter && state.status === "loaded" && !filteredTable);
+
+  // A table in the URL that no issue names either has no issues or is not visible to this
+  // account; one filtered call tells the two apart.
+  useEffect(() => {
+    setVisibility("unknown");
+    if (!needsVisibilityCheck) return;
+    const controller = new AbortController();
+    tableIsVisible(datasetFilter, controller.signal)
+      .then((visible) => {
+        if (!controller.signal.aborted) setVisibility(visible ? "visible" : "invisible");
+      })
+      .catch(() => {
+        // Unknown stays unknown: the filter then just finds no issues.
+      });
+    return () => controller.abort();
+  }, [needsVisibilityCheck, datasetFilter]);
+  const invalidDataset = needsVisibilityCheck && visibility === "invisible";
 
   const visible = issues.filter(
     (row) =>
       (!statusFilter || issueStatus(row) === statusFilter) &&
-      (!datasetFilter || row.dataset.dataset_id === datasetFilter) &&
+      (!datasetFilter || row.dataset_id === datasetFilter) &&
       (!categoryFilter || issueCategory(row) === categoryFilter),
   );
 
@@ -112,18 +115,28 @@ export function QualityPage() {
     setSearchParams(next);
   }
 
+  const coverage = state.status === "loaded" ? state.overview.coverage : null;
   const header = (
     <PageHeader
       title={t("quality.page.title")}
-      meta={state.status === "loaded" ? t("quality.page.meta", { count: tables.length }) : undefined}
+      meta={coverage ? t("quality.page.meta", { count: coverage.tables }) : undefined}
       description={t("quality.header.desc")}
       actions={
-        state.status === "loaded" ? (
+        coverage ? (
           <Button
             variant="secondary"
             onClick={() => {
-              const results = tables.flatMap((table) => (table.status === "loaded" ? Object.values(table.quality.quality_results).flat() : []));
-              seedAssistantQuestion(qualityAssistantSeedQuestion(summarizeChecksPassed(results)));
+              const fail = issues.filter((row) => row.status === "fail").length;
+              const warn = issues.filter((row) => row.status === "warn").length;
+              seedAssistantQuestion(
+                qualityAssistantSeedQuestion({
+                  pass: 0,
+                  warn,
+                  fail,
+                  evaluated: coverage.evaluated + coverage.partial,
+                  status: fail > 0 ? "FAIL" : warn > 0 ? "WARN" : "N/A",
+                }),
+              );
               openAssistantDrawer();
             }}
           >
@@ -149,12 +162,13 @@ export function QualityPage() {
     return (
       <main className={main}>
         {header}
-        <ErrorState title={t("quality.errors.datasets")} message={state.message} />
+        <ErrorState title={t("quality.errors.issues")} message={state.message} />
       </main>
     );
   }
 
-  if (tables.length === 0) {
+  const { total } = state.overview;
+  if (state.overview.coverage.tables === 0) {
     return (
       <main className={main}>
         {header}
@@ -163,8 +177,9 @@ export function QualityPage() {
     );
   }
 
-  const total = state.overview.total;
-  const legacyRunIsOlder = Boolean(legacyRun && filteredTable && legacyRun !== filteredTable.latest_run_id);
+  const tableCoverage = state.overview.coverage;
+  const legacyTables = state.overview.legacyTables;
+  const legacyRunIsOlder = Boolean(legacyRun && filteredTable && legacyRun !== filteredTable.runId);
 
   return (
     <main className={main}>
@@ -172,13 +187,17 @@ export function QualityPage() {
 
       <p className="text-sm text-muted-foreground" data-testid="quality-coverage">
         {t("quality.coverage.line", {
-          tables: tables.length,
-          issues: coverage.withIssues.length,
-          passed: coverage.passed.length,
-          notEvaluated: coverage.notEvaluated.length,
-          failed: coverage.failed.length,
-        })}
-        {total !== undefined && total > tables.length ? ` ${t("quality.coverage.more", { shown: tables.length, total })}` : null}
+          tables: tableCoverage.tables,
+          evaluated: tableCoverage.evaluated,
+          partial: tableCoverage.partial,
+          notEvaluated: tableCoverage.not_evaluated,
+          unreadable: tableCoverage.unreadable,
+        })}{" "}
+        {t("quality.coverage.issues", { count: total, tables: tables.length })}
+        {issues.length < total ? ` ${t("quality.coverage.more", { shown: issues.length, total })}` : null}
+        {legacyTables && legacyTables.total !== undefined && legacyTables.total > legacyTables.shown
+          ? ` ${t("quality.coverage.legacyMore", { shown: legacyTables.shown, total: legacyTables.total })}`
+          : null}
       </p>
 
       {legacyRunIsOlder && filteredTable ? (
@@ -186,7 +205,7 @@ export function QualityPage() {
           {t("quality.legacyRun.text", { run: legacyRun })}{" "}
           <Link
             className="text-accent-subtle-foreground underline"
-            to={`/tables/${encodeURIComponent(filteredTable.dataset_id)}?${new URLSearchParams({
+            to={`/tables/${encodeURIComponent(filteredTable.datasetId)}?${new URLSearchParams({
               run: legacyRun ?? "",
               ...(searchParams.get("source") ? { source: searchParams.get("source") ?? "" } : {}),
               tab: "quality",
@@ -212,10 +231,12 @@ export function QualityPage() {
           <select aria-label={t("quality.filters.table")} className={`mt-1 ${selectClassName}`} onChange={(event) => setFilter("dataset", event.target.value)} value={invalidDataset ? "" : datasetFilter}>
             <option value="">{t("quality.filters.allTables")}</option>
             {tables.map((table) => (
-              <option key={table.dataset.dataset_id} value={table.dataset.dataset_id}>
-                {table.dataset.title}
+              <option key={table.datasetId} value={table.datasetId}>
+                {table.title}
               </option>
             ))}
+            {/* A visible table from the URL that has no issues keeps its place in the filter. */}
+            {datasetFilter && !filteredTable && !invalidDataset ? <option value={datasetFilter}>{datasetFilter}</option> : null}
           </select>
         </label>
         <label className="text-xs font-semibold text-muted-foreground">
@@ -246,19 +267,15 @@ export function QualityPage() {
         <QualityIssuesTable rows={visible} />
       )}
 
-      {coverage.partial.length > 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {t("quality.coverage.partial")} <TableLinks datasets={coverage.partial} />
-        </p>
+      {tableCoverage.partial > 0 ? (
+        <p className="text-sm text-muted-foreground">{t("quality.coverage.partial", { count: tableCoverage.partial })}</p>
       ) : null}
-      {coverage.notEvaluated.length > 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {t("quality.coverage.notEvaluated")} <TableLinks datasets={coverage.notEvaluated} />
-        </p>
+      {tableCoverage.not_evaluated > 0 ? (
+        <p className="text-sm text-muted-foreground">{t("quality.coverage.notEvaluated", { count: tableCoverage.not_evaluated })}</p>
       ) : null}
-      {coverage.failed.length > 0 ? (
+      {tableCoverage.unreadable > 0 ? (
         <p className="text-sm text-status-failure" role="alert">
-          {t("quality.coverage.failed")} <TableLinks datasets={coverage.failed} />
+          {t("quality.coverage.failed", { count: tableCoverage.unreadable })}
         </p>
       ) : null}
     </main>
