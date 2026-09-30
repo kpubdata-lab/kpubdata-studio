@@ -1,636 +1,358 @@
 /**
- * Studio home dashboard screen — branches by new user / existing user state.
+ * Home (#527): what needs attention and what changed, not an operations dashboard.
  *
- * Issue #248: Implement Home with new user and existing user state branching.
+ * Left: tables that need attention (the section is left out when there are none) and the
+ * most recent snapshots, with the run that made each only as a secondary column. Right:
+ * recent saved analyses and connection problems. Every item is one click from its table
+ * or analysis. There are no KPI cards, no workflow strip and no tour over the screen.
  *
- * New user detection is based on dataset/build existence:
- * - New user: Welcome message, public data search, direct data import. Ask KPubData is not
- *   a Home hero — it is a feature reached from the topbar and from each screen's context (#421)
- * - Existing user: Actual KPIs (DATASETS, BUILD SUCCESS, VALIDATION WARN, RUNNING), recent datasets,
- *   recent Build stage summarization, quality warnings/failed Builds
- *
- * Phase 2 UI polish: Removed "example datasets coming soon" placeholder section — it gave the
- * impression of incomplete service without actual example datasets. The same CTA is now handled
- * by the "public data search → /discover" card.
+ * A deployment without a warehouse has no snapshots or saved analyses; it keeps the recent
+ * runs list and says why in one line. Someone with no tables and no runs yet gets the two
+ * ways to start: find a source in the Catalog, or make a table from a file.
  */
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { i18n } from "@/shared/i18n";
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
 import { Link } from "react-router-dom";
-import { listBuilds } from "@/features/runs/api";
-import { FirstRunTour, resetFirstRunTour } from "@/features/onboarding/FirstRunTour";
-import { useAuthStore } from "@/features/auth/store";
-import { builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
-import type { BuildQualityResponse, QualityCheckResult } from "@/shared/lib/builderApi.schema";
-import type { BuildListItem } from "@/shared/lib/types";
+
+import { listDatasets } from "@/features/datasets/api";
+import { AxisValue } from "@/features/datasets/components/StatusAxes";
+import { formatDateTime } from "@/features/datasets/model";
 import {
-  Button,
-  Card,
-  EmptyState,
-  LinkButton,
-  PageHeader,
-  Skeleton,
-  HelpTooltip,
-} from "@/shared/ui";
+  attentionAxes,
+  connectionProblems,
+  loadRecentSnapshots,
+  splitTableName,
+  type RecentSnapshot,
+} from "@/features/home/homeData";
+import { listBuilds } from "@/features/runs/api";
+import { detectWarehouse } from "@/features/sql/warehouse";
+import { builderApi, type DatasetSummary, type SavedAnalysis } from "@/shared/lib/builderApi";
+import type { BuildListItem } from "@/shared/lib/types";
+import { Card, LinkButton, PageHeader, Skeleton } from "@/shared/ui";
+import { MissingStatus } from "@/shared/ui/StatusState";
 
-interface DashboardStats {
-  datasetCount: number | null;
-  buildSuccess: number | null;
-  qualityWarn: number | null;
-  running: number | null;
-}
+type Loadable<T> = { status: "loading" } | { status: "loaded"; data: T } | { status: "error" };
 
-/**
- * Each KPI aggregate is an independent API boundary — if one fails, other KPI values and
- * Recent Builds remain unaffected. "loading" renders as skeleton, "unavailable" renders as
- * "verification unavailable" (no fabricated numbers).
- */
-type KpiPhase = "loading" | "ready" | "unavailable";
+const ATTENTION_LIMIT = 6;
+const RECENT_LIMIT = 5;
 
-interface KpiPhases {
-  /** DATASETS — authoritative `total` from GET /datasets (Builder 1.22.0). */
-  datasets: KpiPhase;
-  /** SUCCEEDED (24H) + RUNNING — GET /monitoring/* shared boundary. */
-  monitoring: KpiPhase;
-  /** QUALITY WARN (24H) — GET /quality/summary (Builder 1.22.0). */
-  quality: KpiPhase;
-}
-
-/**
- * Query only authoritative dataset total for DATASETS KPI + new user detection independently —
- * don't touch monitoring/quality boundaries.
- *
- * Builder 1.21.0 and below don't send `total`, so when that happens, don't substitute with
- * items.length/limit; instead mark as "verification unavailable" (kpi.datasets="unavailable",
- * datasetCount=null). Callers won't misinterpret this state as "no datasets".
- */
-function loadDatasetTotal(
-  isActive: () => boolean,
-  setStats: Dispatch<SetStateAction<DashboardStats>>,
-  setKpi: Dispatch<SetStateAction<KpiPhases>>,
-): void {
-  builderApi
-    .listDatasets(1)
-    .then((res) => {
-      if (!isActive()) return;
-      setStats((prev) => ({ ...prev, datasetCount: res.total ?? null }));
-      setKpi((prev) => ({ ...prev, datasets: res.total === undefined ? "unavailable" : "ready" }));
-    })
-    .catch(() => {
-      if (!isActive()) return;
-      setStats((prev) => ({ ...prev, datasetCount: null }));
-      setKpi((prev) => ({ ...prev, datasets: "unavailable" }));
-    });
-}
-
-/**
- * In real mode, load all 3 Home KPI boundaries independently.
- *
- * The three requests never block each other or already-committed Recent Builds.
- * If one aggregate fails/is unsupported, only that KPI becomes "verification unavailable"
- * without fabricating values.
- */
-function loadRealKpis(
-  isActive: () => boolean,
-  setStats: Dispatch<SetStateAction<DashboardStats>>,
-  setKpi: Dispatch<SetStateAction<KpiPhases>>,
-): void {
-  // (1) DATASETS — dataset total.
-  loadDatasetTotal(isActive, setStats, setKpi);
-
-   // (2) SUCCEEDED (24H) + RUNNING — monitoring. Each endpoint failure only nulls its value.
-  void Promise.all([
-    builderApi.getMonitoringBuilds().catch(() => null),
-    builderApi.getMonitoringSummary().catch(() => null),
-  ]).then(([monitoring, summary]) => {
-    if (!isActive()) return;
-    const monitoredSuccess =
-      monitoring?.availability === "available"
-        ? monitoring.buckets.reduce((sum, bucket) => sum + bucket.success, 0)
-        : null;
-    setStats((prev) => ({
-      ...prev,
-      buildSuccess: monitoredSuccess,
-      // GET /builds contract provides only terminal summary, so don't interpret as active count.
-      running: summary?.queue.running ?? null,
-    }));
-    setKpi((prev) => ({ ...prev, monitoring: "ready" }));
-  });
-
-   // (3) QUALITY WARN (24H) — quality summary. Unsupported (Builder 1.21.0 below → 404) / failure → "verification unavailable".
-  builderApi
-    .getQualitySummary()
-    .then((res) => {
-      if (!isActive()) return;
-      setStats((prev) => ({
-        ...prev,
-        qualityWarn: res.availability === "available" ? res.warn_runs : null,
-      }));
-      setKpi((prev) => ({ ...prev, quality: "ready" }));
-    })
-    .catch(() => {
-      if (!isActive()) return;
-      setStats((prev) => ({ ...prev, qualityWarn: null }));
-      setKpi((prev) => ({ ...prev, quality: "unavailable" }));
-    });
-}
-
-/**
- * Determine whether user is new.
- *
- * New user is confirmed only when "no builds AND no datasets" is actually verified. Empty build
- * list alone is insufficient — can't distinguish from users who have datasets but haven't run builds yet.
- * In real mode, also check authoritative `total` from Builder GET /datasets (1.22.0); if total is
- * unavailable (old Builder / 404·5xx), don't guess new; show existing dashboard (DATASETS only "verification unavailable").
- */
-export function HomePage() {
-  const realBuilder = isRealBuilderEnabled();
-  const userId = useAuthStore((state) => state.userId);
-  const [builds, setBuilds] = useState<BuildListItem[]>([]);
-  const [buildsState, setBuildsState] = useState<"loading" | "error" | "success">("loading");
-  const [stats, setStats] = useState<DashboardStats>({
-    datasetCount: null,
-    buildSuccess: null,
-    qualityWarn: null,
-    running: null,
-  });
-  const [kpi, setKpi] = useState<KpiPhases>({
-    datasets: "loading",
-    monitoring: "loading",
-    quality: "loading",
-  });
-  const [recentQuality, setRecentQuality] = useState<RecentQualityState>({
-    phase: "loading",
-    alerts: [],
-  });
-
+function useLoad<T>(load: (signal: AbortSignal) => Promise<T>, enabled = true): Loadable<T> {
+  const [state, setState] = useState<Loadable<T>>({ status: "loading" });
   useEffect(() => {
-    let active = true;
-
-    // Real Builder's aggregate is an independent API boundary from Recent Builds. Starts immediately
-    // regardless of whether /builds succeeds or returns empty list.
-    if (realBuilder) {
-      loadRealKpis(() => active, setStats, setKpi);
-    }
-
-     // Recent Builds is completely independent from KPI requests — commit immediately on receive,
-     // and on failure, mark only that section as error regardless of KPI state.
-    listBuilds()
-      .then((list) => {
-        if (!active) return;
-        setBuilds(list);
-        setBuildsState("success");
-
-         // Real mode aggregate was already independently requested at effect start. Empty build is
-         // only one criterion for new user detection; doesn't make monitoring/quality unavailable.
-        if (list.length === 0) {
-          if (!realBuilder) {
-            setKpi({ datasets: "unavailable", monitoring: "unavailable", quality: "unavailable" });
-          }
-          return;
-        }
-
-        if (realBuilder) {
-          return;
-        }
-
-         // Mock/demo: keep existing demo meaning — compute directly from mock list. Already in mock
-         // mode, so no path to substitute real failures with mock numbers.
-        const succeeded = list.filter((b) => b.status === "succeeded").length;
-        const running = list.filter(
-          (b) => b.status === "running" || b.status === "queued",
-        ).length;
-        setStats({ datasetCount: null, buildSuccess: succeeded, qualityWarn: null, running });
-        setKpi({ datasets: "unavailable", monitoring: "ready", quality: "unavailable" });
+    if (!enabled) return;
+    let live = true;
+    const controller = new AbortController();
+    load(controller.signal)
+      .then((data) => {
+        if (live) setState({ status: "loaded", data });
       })
       .catch(() => {
-        if (!active) return;
-        setBuildsState("error");
-       // Real aggregate continues independently from /builds error. Mock/demo keeps existing
-       // behavior to avoid displaying KPI without grounds.
-        if (!realBuilder) {
-          setKpi({ datasets: "unavailable", monitoring: "unavailable", quality: "unavailable" });
-        }
+        if (live) setState({ status: "error" });
       });
-
     return () => {
-      active = false;
+      live = false;
+      controller.abort();
     };
-  }, [realBuilder]);
+    // Each loader is fixed for the page's lifetime; only `enabled` starts it.
+  }, [enabled]);
+  return state;
+}
 
-  const recentBuilds = useMemo(
-    () =>
-      [...builds]
-        .sort((a, b) => {
-          const aTime = a.startedAt ? new Date(a.startedAt).getTime() : 0;
-          const bTime = b.startedAt ? new Date(b.startedAt).getTime() : 0;
-          return bTime - aTime;
-        })
-        .slice(0, 5),
-    [builds],
-  );
+export function HomePage() {
+  const { t } = useTranslation();
+  const datasets = useLoad((signal) => listDatasets(50, signal));
+  const builds = useLoad(() => listBuilds());
+  const warehouse = useLoad((signal) => detectWarehouse(signal));
+  const tables = warehouse.status === "loaded" && warehouse.data.status === "available" ? warehouse.data.tables : null;
+  const hasWarehouse = tables !== null;
+  const snapshots = useLoad((signal) => loadRecentSnapshots(tables ?? [], RECENT_LIMIT, signal), hasWarehouse);
+  const analyses = useLoad((signal) => builderApi.listAnalyses(signal), hasWarehouse);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    if (buildsState === "loading") {
-      setRecentQuality({ phase: "loading", alerts: [] });
-      return () => controller.abort();
-    }
-    if (!realBuilder || buildsState === "error" || recentBuilds.length === 0) {
-      setRecentQuality({ phase: "unavailable", alerts: [] });
-      return () => controller.abort();
-    }
-
-       // Quality results are queried from manifest (GET /builds/{run_id}/quality). Only successfully
-       // completed Runs have manifest, so calling getBuildQuality on queued/running/cancelled Runs
-       // always returns 404 — query only canonical succeeded Runs.
-    const qualityRuns = recentBuilds.filter((run) => run.status === "succeeded");
-    if (qualityRuns.length === 0) {
-      setRecentQuality({ phase: "ready", alerts: [], incomplete: false });
-      return () => controller.abort();
-    }
-
-    setRecentQuality({ phase: "loading", alerts: [] });
-    void Promise.allSettled(
-      qualityRuns.map((run) => builderApi.getBuildQuality(run.id, controller.signal)),
-    ).then((results) => {
-      if (controller.signal.aborted) return;
-      const alerts: QualityAlert[] = [];
-      let incomplete = false;
-      results.forEach((result, index) => {
-        if (result.status === "rejected") {
-          incomplete = true;
-          return;
-        }
-        if (result.value.availability !== "available") incomplete = true;
-        alerts.push(...qualityAlertsForRun(qualityRuns[index], result.value));
-      });
-      setRecentQuality({ phase: "ready", alerts: alerts.slice(0, 5), incomplete });
-    });
-
-    return () => controller.abort();
-  }, [buildsState, realBuilder, recentBuilds]);
-
-  // Real mode: confirm new user only when ALL conditions met: 0 builds + dataset total query
-  // success (kpi.datasets="ready") + total===0. If total is unavailable, don't guess with only
-  // empty build. Mock/demo mode has no dataset aggregate authority, so keep existing build-based decision.
-  const datasetsConfirmedEmpty = kpi.datasets === "ready" && stats.datasetCount === 0;
   const isNew =
-    buildsState === "success" &&
-    builds.length === 0 &&
-    (realBuilder ? datasetsConfirmedEmpty : true);
+    datasets.status === "loaded" && datasets.data.length === 0 && builds.status === "loaded" && builds.data.length === 0;
 
+  if (isNew) return <StartHome />;
+
+  const warehouseKnown = warehouse.status !== "loading";
   return (
-    <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-      {isNew ? (
-        <EmptyWorkspaceHome userId={userId} />
-      ) : (
-        <ExistingUserHome
-          userId={userId}
-          stats={stats}
-          recentBuilds={recentBuilds}
-          buildsState={buildsState}
-          kpi={kpi}
-          recentQuality={recentQuality}
-        />
-      )}
+    <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+      <PageHeader
+        title={t("home.dashboard.title")}
+        description={t("home.dashboard.desc")}
+        actions={<LinkButton to="/sql">{t("home.newQuery")}</LinkButton>}
+      />
+      {warehouseKnown && !hasWarehouse ? <p className="text-xs text-muted-foreground">{t("home.noWarehouse")}</p> : null}
+
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-5">
+          <AttentionTables datasets={datasets} />
+          {!warehouseKnown ? (
+            <SectionSkeleton title={t("home.snapshots.title")} />
+          ) : hasWarehouse ? (
+            <RecentSnapshots state={snapshots} />
+          ) : (
+            <RecentRuns state={builds} />
+          )}
+        </div>
+        <div className="min-w-0 space-y-5">
+          {hasWarehouse ? <RecentAnalyses state={analyses} /> : null}
+          <ConnectionAttention datasets={datasets} />
+        </div>
+      </div>
     </main>
   );
 }
 
-function EmptyWorkspaceHome({ userId }: { userId: string | null }) {
+/** First visit: the two direct ways to a first table. */
+function StartHome() {
   const { t } = useTranslation();
   return (
-    <>
-      <PageHeader
-        title={t("home.hero.title")}
-        description={t("home.hero.desc")}
-        actions={<Button variant="ghost" size="sm" onClick={resetFirstRunTour}>{t("home.hero.tour")}</Button>}
-      />
-
-      <WorkflowStrip />
-
-      <section data-tour="start-actions" className="grid gap-6 lg:grid-cols-2">
-        <Card variant="elevated" className="flex flex-col items-center justify-center p-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">{t("home.explore.title")}</h2>
-          <p className="mt-3 text-muted-foreground">
-            {t("home.explore.desc")}
-          </p>
-          <LinkButton className="mt-6" variant="secondary" to="/discover">
+    <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+      <PageHeader title={t("home.hero.title")} description={t("home.hero.desc")} />
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card className="flex flex-col items-start gap-2">
+          <h2 className="text-sm font-semibold">{t("home.explore.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("home.explore.desc")}</p>
+          <LinkButton className="mt-2" to="/discover">
             {t("home.explore.cta")}
           </LinkButton>
         </Card>
-
-        <Card variant="elevated" className="flex flex-col items-center justify-center p-10 text-center">
-          <h2 className="text-xl font-semibold tracking-tight">{t("home.addData.title")}</h2>
-          <p className="mt-3 text-muted-foreground">
-            {t("home.addData.desc")}
-          </p>
-          <LinkButton className="mt-6" variant="secondary" to="/add">
+        <Card className="flex flex-col items-start gap-2">
+          <h2 className="text-sm font-semibold">{t("home.addData.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("home.addData.desc")}</p>
+          <LinkButton className="mt-2" variant="secondary" to="/add">
             {t("home.addData.cta")}
           </LinkButton>
         </Card>
       </section>
-      {userId ? <FirstRunTour userId={userId} /> : null}
-    </>
+    </main>
   );
 }
 
-interface QualityAlert {
-  runId: string;
-  runTitle: string;
-  status: "warn" | "fail";
-  detail: string;
-}
-
-type RecentQualityState =
-  | { phase: "loading"; alerts: [] }
-  | { phase: "ready"; alerts: QualityAlert[]; incomplete: boolean }
-  | { phase: "unavailable"; alerts: [] };
-
-function qualityAlertsForRun(
-  run: BuildListItem,
-  response: BuildQualityResponse,
-): QualityAlert[] {
-  const runTitle = run.title ?? run.id;
-  return Object.values(response.quality_results)
-    .flat()
-    .filter((result): result is QualityCheckResult & { status: "warn" | "fail" } =>
-      result.status === "warn" || result.status === "fail",
-    )
-    .map((result) => ({
-      runId: run.id,
-      runTitle,
-      status: result.status,
-      detail: result.detail ?? [result.rule, result.column].filter(Boolean).join(" · "),
-    }));
-}
-
-/** STEP number only is constant — labels follow language switching, so interpret at render time. */
-const WORKFLOW_STEP_NUMBERS = ["1", "2", "3", "4"] as const;
-
-/**
- * Overall task flow description for Home. Not a clickable action card but workflow overview, so
- * don't add hover/button feel (shadow emphasis, cursor-pointer) or card-level navigation —
- * actual work in each STEP happens below in "search public data"/"import data directly" cards
- * and sidebar.
- */
-function WorkflowStrip() {
-  const { t } = useTranslation();
+function Section({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <section data-tour="workflow" aria-labelledby="workflow-heading" className="space-y-3">
-      <div>
-        <h2 id="workflow-heading" className="text-sm font-semibold text-foreground">{t("home.steps.heading")}</h2>
-        <p className="text-xs text-muted-foreground">{t("home.steps.note")}</p>
+    <section className="min-w-0">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        {action}
       </div>
-      <ol className="grid items-stretch gap-2 sm:grid-cols-2 xl:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr]">
-        {WORKFLOW_STEP_NUMBERS.map((number, index) => (
-          <li key={number} className="contents">
-            <div className="rounded-xl border border-border bg-card p-4">
-              <span className="text-xs font-semibold text-accent-subtle-foreground">STEP {number}</span>
-              <h3 className="mt-2 text-sm font-semibold">{t(`home.steps.${number}`)}</h3>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{t(`home.steps.${number}d`)}</p>
-            </div>
-            {index < WORKFLOW_STEP_NUMBERS.length - 1 ? (
-              <span aria-hidden="true" className="hidden items-center justify-center text-muted-foreground xl:flex">→</span>
-            ) : null}
-          </li>
+      <Card className="min-w-0 overflow-hidden p-0">{children}</Card>
+    </section>
+  );
+}
+
+function SectionSkeleton({ title }: { title: string }) {
+  return (
+    <Section title={title}>
+      <div className="space-y-2 p-4">
+        {[1, 2, 3].map((item) => (
+          <Skeleton className="h-6 w-full" key={item} />
         ))}
-      </ol>
-    </section>
+      </div>
+    </Section>
   );
 }
 
-function ExistingUserHome({
-  userId,
-  stats,
-  recentBuilds,
-  buildsState,
-  kpi,
-  recentQuality,
-}: {
-  userId: string | null;
-  stats: DashboardStats;
-  recentBuilds: BuildListItem[];
-  buildsState: "loading" | "error" | "success";
-  kpi: KpiPhases;
-  recentQuality: RecentQualityState;
-}) {
-  const { t } = useTranslation();
-  return (
-    <>
-      <PageHeader
-        title={t("home.dashboard.title")}
-        description={t("home.dashboard.desc")}
-        actions={userId ? <Button variant="secondary" onClick={() => resetFirstRunTour(userId)}>{t("home.dashboard.guide")}</Button> : undefined}
-      />
-
-      <section data-tour="dashboard-overview"><KpiCards stats={stats} kpi={kpi} /></section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <div data-tour="dashboard-builds"><RecentBuildsSection
-          recentBuilds={recentBuilds}
-          loading={buildsState === "loading"}
-          apiState={buildsState}
-        /></div>
-        <div data-tour="dashboard-quality"><QualitySection state={recentQuality} /></div>
-      </section>
-      {userId ? <FirstRunTour userId={userId} autoStart={false} variant="dashboard" /> : null}
-    </>
-  );
+function Note({ children }: { children: ReactNode }) {
+  return <p className="px-4 py-3 text-sm text-muted-foreground">{children}</p>;
 }
 
-/**
- * 4 KPI columns. Each looks only at its own aggregate boundary's phase — if one fails,
- * other columns keep normal values without covering entire row in error. Null values
- * render as "verification unavailable" in KpiCard (no fabricated numbers).
- */
-/** Date display follows screen language. */
-function dateLocale(): string {
-  return i18n.language?.startsWith("en") ? "en-US" : "ko-KR";
-}
-
-function KpiCards({ stats, kpi }: { stats: DashboardStats; kpi: KpiPhases }) {
+/** Only tables with a Stale, Degraded, Partial, Failed or Access state; left out when there are none. */
+function AttentionTables({ datasets }: { datasets: Loadable<DatasetSummary[]> }) {
   const { t } = useTranslation();
-  return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <KpiCard label="TABLES" help={t("home.kpi.datasets")} value={stats.datasetCount} loading={kpi.datasets === "loading"} />
-      <KpiCard
-        label="RUNS SUCCEEDED (24H)"
-        help={t("home.kpi.succeeded")}
-        value={stats.buildSuccess}
-        loading={kpi.monitoring === "loading"}
-        variant="success"
-      />
-      <KpiCard
-        label="QUALITY WARN (24H)"
-        help={t("home.kpi.qualityWarn")}
-        value={stats.qualityWarn}
-        loading={kpi.quality === "loading"}
-        variant="error"
-      />
-      <KpiCard label="RUNNING" help={t("home.kpi.running")} value={stats.running} loading={kpi.monitoring === "loading"} />
-    </section>
-  );
-}
-
-function KpiCard({
-  label,
-  help,
-  value,
-  loading,
-  variant = "default",
-}: {
-  label: string;
-  help: string;
-  value: number | null;
-  loading: boolean;
-  variant?: "default" | "success" | "error";
-}) {
-  const { t } = useTranslation();
-  if (loading) {
+  if (datasets.status === "loading") return <SectionSkeleton title={t("home.attention.title")} />;
+  if (datasets.status === "error") {
     return (
-      <Card>
-        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">{label}<HelpTooltip content={help} label={t("home.kpi.definitionLabel", { label })} /></span>
-        <Skeleton className="mt-2 h-8 w-16" />
-      </Card>
+      <Section title={t("home.attention.title")}>
+        <Note>{t("home.attention.error")}</Note>
+      </Section>
     );
   }
-
-  const colorClass = variant === "success" ? "text-status-success" :
-                     variant === "error" ? "text-status-failure" :
-                     "text-foreground";
-
+  const flagged = datasets.data.filter((dataset) => attentionAxes(dataset.status_axes).length > 0);
+  if (flagged.length === 0) return null;
   return (
-    <Card className="flex items-center justify-between">
-      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">{label}<HelpTooltip content={help} label={t("home.kpi.definitionLabel", { label })} /></span>
-      <span className={`text-2xl font-semibold tracking-tight ${colorClass}`}>
-        {value === null ? t("home.kpi.unavailable") : value}
-      </span>
-    </Card>
+    <Section
+      title={t("home.attention.title")}
+      action={
+        <Link className="text-xs text-accent-subtle-foreground underline-offset-2 hover:underline" to="/tables?attention=1">
+          {t("home.attention.viewAll", { count: flagged.length })}
+        </Link>
+      }
+    >
+      <ul>
+        {flagged.slice(0, ATTENTION_LIMIT).map((dataset) => (
+          <li className="border-b border-border last:border-0" key={dataset.dataset_id}>
+            <Link
+              className="flex flex-col gap-1 px-4 py-2.5 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:flex-row sm:items-center sm:justify-between"
+              to={`/tables/${encodeURIComponent(dataset.dataset_id)}`}
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">{dataset.title}</span>
+                <span className="block truncate font-mono text-xs text-muted-foreground">{dataset.dataset_id}</span>
+              </span>
+              <span className="flex flex-wrap gap-1">
+                {attentionAxes(dataset.status_axes).map((axis) => (
+                  <AxisValue axes={dataset.status_axes} axis={axis} key={axis} />
+                ))}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Section>
   );
 }
 
-function RecentBuildsSection({
-  recentBuilds,
-  loading,
-  apiState,
-}: {
-  recentBuilds: BuildListItem[];
-  loading: boolean;
-  apiState: "loading" | "error" | "success";
-}) {
+function RecentSnapshots({ state }: { state: Loadable<RecentSnapshot[]> }) {
   const { t } = useTranslation();
+  if (state.status === "loading") return <SectionSkeleton title={t("home.snapshots.title")} />;
   return (
-    <section>
-      <PageHeader title={t("home.recent.title")} className="mb-4" level={2} />
-      <Card className="p-0">
-        {loading ? (
-          <div className="px-6 py-4 space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="grid grid-cols-[1.4fr_0.7fr_0.9fr_0.6fr] items-center gap-4">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-5 w-1/2" />
-                <Skeleton className="h-5 w-1/2" />
-                <Skeleton className="h-8 w-12 ml-auto" />
-              </div>
-            ))}
-          </div>
-        ) : apiState === "error" ? (
-          <EmptyState
-            title={t("home.recent.errorTitle")}
-            description={t("home.recent.errorDesc")}
-          />
-        ) : recentBuilds.length === 0 ? (
-          <EmptyState
-            title={t("home.recent.emptyTitle")}
-            description={t("home.recent.emptyDesc")}
-            actionLabel={t("home.recent.emptyCta")}
-            actionHref="/refresh-jobs/new"
-          />
-        ) : (
-          <ul>
-            {recentBuilds.map((run) => (
-              <li
-                key={run.id}
-                className="grid grid-cols-[1.4fr_0.7fr_0.9fr_0.6fr] items-center gap-4 border-b border-border px-6 py-3 text-sm last:border-0"
-              >
-                <span className="font-medium">{run.title ?? run.id}</span>
-                <span className="capitalize text-muted-foreground">{run.status}</span>
-                <span className="text-muted-foreground">
-                  {run.startedAt ? new Date(run.startedAt).toLocaleString(dateLocale()) : "—"}
-                </span>
-                <span className="text-right">
-                  <LinkButton variant="secondary" size="sm" to={`/refresh-jobs/${run.id}`}>
-                    {t("home.recent.view")}
-                  </LinkButton>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-    </section>
-  );
-}
-
-function QualitySection({ state }: { state: RecentQualityState }) {
-  const { t } = useTranslation();
-  return (
-    <section>
-      <PageHeader title={t("home.quality.title")} className="mb-4" level={2} />
-      <Card className="p-0">
-        {state.phase === "loading" ? (
-          <div className="space-y-3 px-6 py-5">
-            {[1, 2, 3].map((item) => <Skeleton key={item} className="h-8 w-full" />)}
-          </div>
-        ) : state.phase === "unavailable" || (state.incomplete && state.alerts.length === 0) ? (
-          <EmptyState
-            title={t("home.quality.unavailableTitle")}
-            description={t("home.quality.unavailableDesc")}
-          />
-        ) : state.alerts.length === 0 ? (
-          <EmptyState
-            title={t("home.quality.emptyTitle")}
-            description={t("home.quality.emptyDesc")}
-          />
-        ) : (
-          <div>
-            <div className="px-6 py-4">
-              <h3 className="font-semibold">{t("home.quality.needsCheck")}</h3>
-              {state.incomplete ? (
-                <p className="mt-1 text-xs text-muted-foreground">{t("home.quality.incomplete")}</p>
-              ) : null}
-            </div>
-            <ul className="border-t border-border">
-              {state.alerts.map((alert, index) => (
-                <li key={`${alert.runId}:${alert.detail}:${index}`} className="border-b border-border last:border-0">
-                  {/* In WARN/FAIL items, link to that Run's Quality context (/builds/:runId, same as ?run=
-                      canonical form) — same path already used by BuildsPage and Recent Builds. */}
-                  <Link to={`/refresh-jobs/${encodeURIComponent(alert.runId)}`} className="block px-6 py-3 hover:bg-muted focus-visible:bg-muted focus-visible:outline-none">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="truncate font-medium">{alert.runTitle}</span>
-                      <span className={alert.status === "fail" ? "font-semibold text-status-failure" : "font-semibold text-status-warning"}>
-                        {alert.status.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{alert.detail}</p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <div className="border-t border-border px-6 py-4">
-          <LinkButton variant="secondary" size="sm" to="/quality">{t("home.quality.center")}</LinkButton>
+    <Section title={t("home.snapshots.title")}>
+      {state.status === "error" ? (
+        <Note>{t("home.snapshots.error")}</Note>
+      ) : state.data.length === 0 ? (
+        <Note>{t("home.snapshots.empty")}</Note>
+      ) : (
+        <div className="relative overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-[13px] leading-[18px]">
+            <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
+              <tr>
+                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.table")}</th>
+                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.snapshot")}</th>
+                <th className="px-4 py-2 text-right font-medium" scope="col">{t("home.snapshots.rows")}</th>
+                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.committed")}</th>
+                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.run")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {state.data.map(({ logicalName, snapshot }) => {
+                const name = splitTableName(logicalName);
+                const href = name
+                  ? `/tables/${encodeURIComponent(name.datasetId)}?${new URLSearchParams({ source: name.sourceKey })}`
+                  : "/tables";
+                return (
+                  <tr className="border-b border-border last:border-0" key={`${logicalName}@${snapshot.snapshot_id}`}>
+                    <td className="px-4 py-2">
+                      <Link className="font-mono text-accent-subtle-foreground underline-offset-2 hover:underline" to={href}>
+                        {logicalName}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-2 font-mono">{snapshot.snapshot_id}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">
+                      {snapshot.row_count === null ? <MissingStatus /> : snapshot.row_count.toLocaleString("ko-KR")}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
+                      {snapshot.committed_at ? formatDateTime(snapshot.committed_at) : <MissingStatus />}
+                    </td>
+                    <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{snapshot.run_id}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      </Card>
-    </section>
+      )}
+    </Section>
+  );
+}
+
+/** Without a warehouse: the recent runs, as before. */
+function RecentRuns({ state }: { state: Loadable<BuildListItem[]> }) {
+  const { t } = useTranslation();
+  if (state.status === "loading") return <SectionSkeleton title={t("home.recent.title")} />;
+  const runs =
+    state.status === "loaded"
+      ? [...state.data].sort((a, b) => (Date.parse(b.startedAt ?? "") || 0) - (Date.parse(a.startedAt ?? "") || 0)).slice(0, RECENT_LIMIT)
+      : [];
+  return (
+    <Section title={t("home.recent.title")}>
+      {state.status === "error" ? (
+        <Note>{t("home.recent.errorTitle")}</Note>
+      ) : runs.length === 0 ? (
+        <Note>{t("home.recent.emptyTitle")}</Note>
+      ) : (
+        <ul>
+          {runs.map((run) => (
+            <li className="border-b border-border last:border-0" key={run.id}>
+              <Link
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 text-sm hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                to={`/refresh-jobs/${encodeURIComponent(run.id)}`}
+              >
+                <span className="min-w-0 truncate font-medium">{run.title ?? run.id}</span>
+                <span className="flex gap-3 text-xs text-muted-foreground">
+                  <span>{run.status}</span>
+                  <span>{run.startedAt ? formatDateTime(run.startedAt) : "—"}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
+function RecentAnalyses({ state }: { state: Loadable<{ analyses: SavedAnalysis[] }> }) {
+  const { t } = useTranslation();
+  if (state.status === "loading") return <SectionSkeleton title={t("home.analyses.title")} />;
+  return (
+    <Section
+      title={t("home.analyses.title")}
+      action={
+        <Link className="text-xs text-accent-subtle-foreground underline-offset-2 hover:underline" to="/analyses">
+          {t("home.analyses.viewAll")}
+        </Link>
+      }
+    >
+      {state.status === "error" ? (
+        <Note>{t("home.analyses.error")}</Note>
+      ) : state.data.analyses.length === 0 ? (
+        <Note>{t("home.analyses.empty")}</Note>
+      ) : (
+        <ul>
+          {state.data.analyses.slice(0, RECENT_LIMIT).map((analysis) => (
+            <li className="border-b border-border last:border-0" key={analysis.analysis_id}>
+              <Link
+                className="block px-4 py-2.5 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                to={`/sql?${new URLSearchParams({ analysis: analysis.analysis_id })}`}
+              >
+                <span className="block truncate text-sm font-medium">{analysis.name}</span>
+                <span className="block truncate font-mono text-xs text-muted-foreground">
+                  {analysis.bindings.map((binding) => `${binding.table}@${binding.snapshot_id}`).join(", ")}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
+/** Providers whose tables report an Access problem; left out when there are none. */
+function ConnectionAttention({ datasets }: { datasets: Loadable<DatasetSummary[]> }) {
+  const { t } = useTranslation();
+  if (datasets.status !== "loaded") return null;
+  const problems = connectionProblems(datasets.data);
+  if (problems.length === 0) return null;
+  return (
+    <Section title={t("home.connections.title")}>
+      <ul>
+        {problems.map((problem) => (
+          <li className="border-b border-border last:border-0" key={`${problem.provider}:${problem.access}`}>
+            <Link
+              className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+              to="/connections"
+            >
+              <span className="min-w-0">
+                <span className="block font-mono text-sm">{problem.provider}</span>
+                <span className="block text-xs text-muted-foreground">{t("home.connections.tables", { count: problem.datasetIds.length })}</span>
+              </span>
+              <AxisValue axes={{ access: problem.access }} axis="access" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </Section>
   );
 }

@@ -913,10 +913,8 @@
   },
   "home": {
     "hero": {
-      "eyebrow": "Get Started",
       "title": "Find public data and turn it into trusted tables",
-      "desc": "Find or bring your own data, then preview, validate, and create a table.",
-      "tour": "Replay tour"
+      "desc": "Find or bring your own data, then preview, validate, and create a table."
     },
     "explore": {
       "title": "Explore Public Data",
@@ -928,52 +926,41 @@
       "desc": "Add via Public API, file, or URL — preview, validate, and create a table.",
       "cta": "Add Data"
     },
-    "steps": {
-      "1": "Find data",
-      "1d": "Discover or add your own",
-      "2": "Prepare",
-      "2d": "Public API: auth, activation, required params",
-      "3": "Preview · Create Table",
-      "3d": "Preview and validate, then create a table",
-      "4": "Quality & Use",
-      "4d": "Quality · Ask KPubData · Export · Publish",
-      "heading": "Overall Workflow",
-      "note": "Below is the recommended order — follow the sidebar and on-screen guidance for each step."
-    },
     "dashboard": {
-      "eyebrow": "Dashboard",
-      "title": "See your work at a glance",
-      "desc": "Monitor recent tables, run status, and quality alerts",
-      "guide": "User Guide"
-    },
-    "kpi": {
-      "datasets": "How many tables you can currently reach.",
-      "succeeded": "Runs that finished successfully in the last 24 hours.",
-      "qualityWarn": "Runs with at least one WARN in a quality check in the last 24 hours.",
-      "running": "Runs in progress right now.",
-      "definitionLabel": "{{label}} definition",
-      "unavailable": "Unavailable"
+      "title": "Home",
+      "desc": "Tables that need attention and recent snapshots come first."
     },
     "recent": {
-      "eyebrow": "Recent runs",
       "title": "Recent runs",
       "errorTitle": "Could not load the run list",
-      "errorDesc": "Please try again later",
-      "emptyTitle": "No runs yet",
-      "emptyDesc": "Create your first table",
-      "emptyCta": "Create Table",
-      "view": "View"
+      "emptyTitle": "No runs yet"
     },
-    "quality": {
-      "eyebrow": "Quality",
-      "title": "Recent quality status",
-      "unavailableTitle": "Some quality information is unavailable",
-      "unavailableDesc": "KPubData Builder did not provide quality results for the recent runs. A failed run is not treated as a quality FAIL.",
-      "emptyTitle": "No quality warnings in the runs checked recently",
-      "emptyDesc": "None of the recent quality results available right now need a closer look.",
-      "needsCheck": "Needs a quality check",
-      "incomplete": "Quality results for some runs could not be checked.",
-      "center": "Open Quality Center"
+    "newQuery": "New SQL query",
+    "noWarehouse": "This deployment has no warehouse, so recent runs are shown instead of recent snapshots and saved analyses.",
+    "attention": {
+      "title": "Tables that need attention",
+      "viewAll": "View all ({{count}})",
+      "error": "Could not load table states."
+    },
+    "snapshots": {
+      "title": "Recent snapshots",
+      "table": "Table",
+      "snapshot": "Snapshot",
+      "rows": "Rows",
+      "committed": "Committed",
+      "run": "Run",
+      "empty": "No snapshot has been committed yet.",
+      "error": "Could not load recent snapshots."
+    },
+    "analyses": {
+      "title": "Recent analyses",
+      "viewAll": "View all",
+      "empty": "No saved analyses. Run and save one in the SQL Workspace and it shows here.",
+      "error": "Could not load saved analyses."
+    },
+    "connections": {
+      "title": "Connections that need attention",
+      "tables": "{{count}} tables"
     }
   },
   "addData": {
