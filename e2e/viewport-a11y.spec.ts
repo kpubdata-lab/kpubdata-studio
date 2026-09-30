@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
+import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./helpers";
 
 /**
  * Responsive·keyboard basics validation (#268: minimal viewport + keyboard/focus).
@@ -67,6 +67,38 @@ test("390x844에서 topbar breadcrumb이 Ask KPubData/avatar 버튼과 겹치지
     const overlapsVertically = subtitleBox.y < assistantBox.y + assistantBox.height && assistantBox.y < subtitleBox.y + subtitleBox.height;
     expect(overlapsHorizontally && overlapsVertically, "subtitle과 Ask KPubData 버튼이 겹칩니다").toBe(false);
   }
+
+  await expectNoPageErrors(errors);
+});
+
+test("390x844에서 ⌘K 팔레트로 키보드만 써서 테이블을 연다 (#533)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
+
+  await page.keyboard.press("Control+k");
+  const dialog = page.getByRole("dialog", { name: t("layout.search.dialog") });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.type("대기");
+
+  const table = dialog.getByRole("option", { name: /대기질 통합 데이터/ });
+  await expect(table).toHaveAttribute("aria-selected", "true");
+  await expect(dialog.getByRole("option").last()).toContainText("Ask KPubData");
+
+  // The open palette stays inside the viewport: no page-level horizontal scroll.
+  const box = await dialog.boundingBox();
+  expect(box && box.x >= 0 && box.x + box.width <= 390, "palette inside the 390px viewport").toBe(true);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow, "horizontal overflow with the palette open").toBeLessThanOrEqual(2);
+
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/tables\/air-quality$/);
+  await expect(dialog).toBeHidden();
 
   await expectNoPageErrors(errors);
 });
