@@ -63,7 +63,7 @@ export function SourceStep({
         )}
       </FormField>
       {catalog.status === "loading" ? (
-        <p className="text-sm text-muted-foreground">{t("newBuild.template.catalogLoading")}</p>
+        <p className="text-sm text-muted-foreground">{t("newBuild.source.catalogLoading")}</p>
       ) : null}
       {catalog.status === "error" ? (
         <p role="alert" className="text-sm text-status-failure">

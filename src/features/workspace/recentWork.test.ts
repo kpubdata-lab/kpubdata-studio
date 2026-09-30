@@ -22,7 +22,7 @@ describe("toRecentWorkItems", () => {
     expect(items.find((i) => i.kind === "savedSpec")).toMatchObject({
       id: "spec-1",
       source: "local",
-      href: "/refresh-jobs/new?savedSpecId=spec-1",
+      href: "/add?savedSpecId=spec-1",
     });
   });
 

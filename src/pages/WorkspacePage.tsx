@@ -276,7 +276,7 @@ export function WorkspacePage() {
               title={t("workspace.noSpecs")}
               description={t("workspace.noSpecsDesc")}
               actionLabel={t("workspace.newBuild")}
-              actionHref="/refresh-jobs/new"
+              actionHref="/add"
             />
           ) : (
             <ul className="flex flex-col divide-y divide-border">
@@ -308,7 +308,7 @@ export function WorkspacePage() {
                         <button
                           type="button"
                           className="truncate text-left text-sm font-medium text-foreground underline-offset-2 hover:underline"
-                          onClick={() => navigate(`/refresh-jobs/new?savedSpecId=${encodeURIComponent(summary.id)}`)}
+                          onClick={() => navigate(`/add?savedSpecId=${encodeURIComponent(summary.id)}`)}
                         >
                           {summary.name}
                         </button>

@@ -88,7 +88,7 @@ export function toRecentWorkItems(source: RecentWorkSource): RecentWorkItem[] {
         title: spec.name,
         source: "local",
         timestamp: spec.updatedAt,
-        href: `/refresh-jobs/new?savedSpecId=${encodeURIComponent(spec.id)}`,
+        href: `/add?savedSpecId=${encodeURIComponent(spec.id)}`,
       }),
     ),
   ];

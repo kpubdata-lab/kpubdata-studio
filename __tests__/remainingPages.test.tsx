@@ -31,12 +31,9 @@ describe("remaining pages", () => {
     expect(screen.getByRole("link", { name: "실행 목록으로" })).toHaveAttribute("href", "/refresh-jobs");
   });
 
-  it("legacy Validate/Preview pages route into the wizard", () => {
+  it("legacy Validate/Preview pages route into the one creation flow (#534)", () => {
     renderPage(<ValidatePage />);
-    expect(screen.getByRole("link", { name: "테이블 만들기" })).toHaveAttribute(
-      "href",
-      "/refresh-jobs/new",
-    );
+    expect(screen.getByRole("link", { name: "테이블 만들기" })).toHaveAttribute("href", "/add");
     renderPage(<PreviewPage />);
     expect(screen.getAllByRole("link", { name: "테이블 만들기" }).length).toBeGreaterThanOrEqual(1);
   });

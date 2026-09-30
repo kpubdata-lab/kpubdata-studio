@@ -273,25 +273,7 @@
     }
   },
   "newBuild": {
-    "templates": {
-      "blank": "Start from scratch",
-      "blankDesc": "Configure everything yourself with no preset values.",
-      "air": "Air Quality Info",
-      "airDesc": "Start with data.go.kr air quality measurement data.",
-      "airTitle": "Air Quality Info",
-      "airSourceDesc": "data.go.kr air quality source dataset",
-      "rate": "Base Rate Trend",
-      "rateDesc": "Start with Bank of Korea ECOS base rate time series.",
-      "rateTitle": "Base Rate Trend",
-      "rateSourceDesc": "Bank of Korea ECOS base rate time series source dataset",
-      "pop": "Population Statistics",
-      "popDesc": "Start with KOSIS population statistics.",
-      "popTitle": "Population Statistics",
-      "popSourceDesc": "KOSIS population statistics source dataset",
-      "unavailableCount": "{{count}} templates coming soon"
-    },
     "steps": {
-      "template": "Template",
       "identity": "Basics",
       "source": "Data Source",
       "params": "Parameters",
@@ -322,22 +304,10 @@
       "eyebrowEdit": "Edit & Refresh",
       "eyebrowNew": "Create Table",
       "titleEdit": "Edit {{title}}",
-      "titleNew": "Create a Table from Public Data",
       "descEdit": "Loaded the existing spec. Edits are recorded as a new run.",
-      "descNew": "Configure data source, parameters, and output format step by step.",
       "loadingSpec": "Loading the existing spec...",
       "specNotFound": "Could not find the spec for run {{id}}. KPubData Builder does not keep specs, so runs not started in this browser cannot be loaded. The input below creates a new table.",
-      "specEditing": "Editing the spec of run {{id}}. KPubData Builder never overwrites previous runs — running records a new Refresh Run with the modified spec.",
-      "savedSpecLoaded": "Loaded saved BuildSpec {{name}}. Press \"Save this spec\" again to apply changes to the Workspace — merely opening it does not modify the original.",
-      "draftExists": "A saved draft exists. Continue editing it?",
-      "load": "Load",
-      "delete": "Delete"
-    },
-    "template": {
-      "selectTitle": "Choose a Template",
-      "selectDesc": "Start with a common public data combination or configure from scratch.",
-      "catalogLoading": "Loading the Builder catalog...",
-      "catalogError": "Builder catalog fetch failed: {{error}}"
+      "specEditing": "Editing the spec of run {{id}}. KPubData Builder never overwrites previous runs — running records a new Refresh Run with the modified spec."
     },
     "identity": {
       "title": "Basics",
@@ -398,8 +368,6 @@
     "nav": {
       "prev": "Previous",
       "next": "Next",
-      "saved": "Saved ✓",
-      "saveDraft": "Save draft",
       "specTitle": "Generated spec"
     }
   },
@@ -1038,7 +1006,10 @@
       "buildSucceeded": "Table created (run {{runId}})",
       "buildCancelled": "The run was cancelled.",
       "interrupted": "The request was interrupted. The server-side run result is unknown.",
-      "planTitle": "Table creation plan"
+      "planTitle": "Table creation plan",
+      "logicalNameLabel": "Table name to be created",
+      "logicalNameAfterPreview": "Shown after a fresh Preview.",
+      "logicalNameNote": "Table ID and the source key from KPubData Builder’s Preview."
     },
     "preview": {
       "title": "Preview · validation",
@@ -1133,12 +1104,6 @@
       "endpointLabel": "Endpoint",
       "editorForm": "Form"
     },
-    "steps": {
-      "source": "Choose data",
-      "configure": "Configure import",
-      "preview": "Preview · validate",
-      "review": "Review · create table"
-    },
     "errors": {
       "catalog": "Could not load the Builder catalog.",
       "upload": "File upload failed.",
@@ -1155,7 +1120,14 @@
     "draft": {
       "prompt": "There is a saved draft. Continue editing it?",
       "restore": "Restore",
-      "discard": "Discard"
+      "discard": "Discard",
+      "promptBoth": "Two drafts are waiting: one you saved here and one Ask KPubData made. Open one — the other is deleted.",
+      "restoreSaved": "Open saved draft",
+      "restoreAsk": "Open Ask KPubData draft",
+      "discardAll": "Delete both",
+      "openFailed": "The Ask KPubData draft could not open as it was: {{error}}",
+      "reenterParams": "Its provider, source dataset, table id and title are filled in. Enter the request parameters again. The draft is kept until you create the table or delete it.",
+      "discardKept": "Delete draft"
     },
     "nav": {
       "back": "Back",
@@ -1202,7 +1174,14 @@
       "body": "This source dataset uses a provider that needs an API key.\nRegister the credential under Provider / API connections first, then continue.",
       "cta": "Connect the API"
     },
-    "requiredParams": "Enter the required request parameter(s): {{params}}."
+    "requiredParams": "Enter the required request parameter(s): {{params}}.",
+    "stepper": {
+      "label": "Create table steps",
+      "configure": "Configure",
+      "preview": "Preview & Validate",
+      "create": "Create"
+    },
+    "savedSpecOpened": "Opened the saved spec “{{name}}”. Opening it does not change the saved copy."
   },
   "datasetDetail": {
     "stagesErrorMsg": "Could not load stage status.",

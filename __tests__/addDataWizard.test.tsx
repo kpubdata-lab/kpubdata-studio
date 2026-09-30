@@ -229,8 +229,8 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
   it("URL endpoint의 hostname/path가 바뀌면(다른 endpoint로 교체) touched가 reset되고 새 identity가 적용된다", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
-    next();
-    await screen.findByText("URL / REST API");
+    // Source and its settings share the Configure step (#534).
+    await screen.findByLabelText(/Endpoint/);
 
     fireEvent.change(screen.getByLabelText(/Endpoint/), { target: { value: "https://api.example.org/v1/air-quality" } });
     await screen.findByText(/ID: api-example-org-v1-air-quality/);
@@ -264,8 +264,8 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
 
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
-    next();
-    await screen.findByText("URL / REST API");
+    // Source and its settings share the Configure step (#534).
+    await screen.findByLabelText(/Endpoint/);
 
     expect(screen.queryByText(/ID: custom-id/)).not.toBeInTheDocument();
     expect(screen.queryByText("커스텀 제목")).not.toBeInTheDocument();
@@ -377,8 +377,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
 
     renderWizard();
     fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
-    next();
+    // The restored draft opens on the Configure step, source and settings together (#534).
     await screen.findByText("API 사용 준비");
     await screen.findByText(/ID: datago-air-quality/);
 
@@ -516,8 +515,8 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
   it("https endpoint 입력만으로 dataset identity가 자동 생성되고 query string은 identity에 포함되지 않는다", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
-    next();
-    await screen.findByText("URL / REST API");
+    // Source and its settings share the Configure step (#534).
+    await screen.findByLabelText(/Endpoint/);
 
     expect(screen.getByLabelText(/인증 \(Auth\)/)).toHaveValue("없음 (Auth=None)");
     expect(screen.getByLabelText(/인증 \(Auth\)/)).toBeDisabled();
@@ -544,8 +543,8 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
   it("secret query parameter는 Review DOM(canonical BuildSpec preview 포함)에서 가려진다 (#283 리뷰 대응, Epic #246)", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
-    next();
-    await screen.findByText("URL / REST API");
+    // Source and its settings share the Configure step (#534).
+    await screen.findByLabelText(/Endpoint/);
 
     fireEvent.change(screen.getByLabelText(/Endpoint/), {
       target: { value: "https://api.example.org/v1/air-quality?token=SECRETVALUE1234567890" },

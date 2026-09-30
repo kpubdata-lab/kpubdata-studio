@@ -1,5 +1,5 @@
 /**
- * Add Data Step 3 — Preview & Validate (#250, #497).
+ * Create table step 2 — Preview & Validate (#250, #497, #534).
  *
  * Display raw per-source responses from Builder `/preview` (`PreviewResponse.previews[]`) as-is —
  * PASS/WARN/FAIL and diff are not recalculated by Studio, using Builder values directly

@@ -1,15 +1,20 @@
 /**
- * Add Data Step 4 — Review & Build (#250).
+ * Create table step 3 — Create (review and build) (#250, #534).
  *
  * The displayed "actual canonical BuildSpec to be submitted" is the pretty-printed result of toBuilderSpec(spec) —
  * same toBuilderSpec call result as serializeSpec (compact JSON) used for build submission, so displayed and
  * submitted values never diverge (#250 amendment 1). Block build if preview is stale (spec/options changed since last preview).
+ *
+ * The logical name each source's table will get (`<dataset_id>.<source_key>`, #534) is built from the
+ * `source_key` Builder's preview returned — Studio does not derive source keys itself. Before a fresh
+ * preview there is no name to show, and the step says so.
  *
  * Two exceptions (#283 review response, Epic #246, follow-up §1): url source endpoint and public_api source sourceParams
  * may contain secret query/param values (api_key/serviceKey/token/secret, high-entropy), so redactBuildSpecForDisplay/
  * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specResult.spec))
  * bypasses this component and uses the original spec, so display redaction does not affect submitted values.
  */
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { toBuilderSpec } from "@/features/build-spec/specMapping";
@@ -92,6 +97,8 @@ export function ReviewBuildStep({
   // Actual submission always uses the original spec (AddDataPage onBuild passes specResult.spec to job.start directly) —
   // displaySpec here is a display-only copy, and redaction has no effect on actual submission (#283 review response, Epic #246).
   const { t } = useTranslation();
+  const logicalNameId = useId();
+  const logicalNames = spec && !isStale ? previewSources.map((source) => `${spec.datasetId}.${source.source_key}`) : [];
   const displaySpec = spec ? redactBuildSpecForDisplay(spec) : null;
   const displaySubmissionSpec = displaySpec ? toBuilderSpec(displaySpec) : null;
    // Do not fabricate fake single PASS from multiple sources' quality_results — sum results as Builder actually returned
@@ -154,6 +161,22 @@ export function ReviewBuildStep({
           <p className="text-xs text-muted-foreground">Bronze → Silver → Gold</p>
         </Card>
       </div>
+
+      <Card aria-labelledby={logicalNameId} className="p-4" role="group">
+        <p className="text-xs font-semibold uppercase text-muted-foreground" id={logicalNameId}>
+          {t("addData.review.logicalNameLabel")}
+        </p>
+        {logicalNames.length > 0 ? (
+          <ul className="mt-1 space-y-0.5">
+            {logicalNames.map((name) => (
+              <li className="break-all font-mono text-sm" key={name}>{name}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-sm text-muted-foreground">{t("addData.review.logicalNameAfterPreview")}</p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">{t("addData.review.logicalNameNote")}</p>
+      </Card>
 
       {isStale ? (
         <Card variant="error" className="p-4">

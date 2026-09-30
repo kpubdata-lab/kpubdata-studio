@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import { FeatureErrorBoundary, RouteErrorBoundary } from "@/app/ErrorBoundary";
 import { Layout } from "@/app/Layout";
+import { CreateTableRedirect } from "@/app/createTableRedirect";
 import { LegacyRedirect } from "@/app/legacyRedirect";
 import { LoginGate } from "@/features/auth/LoginGate";
 import { Skeleton } from "@/shared/ui";
@@ -199,10 +200,8 @@ export const appRoutes: RouteObject[] = [
         path: "refresh-jobs",
         element: withFeatureBoundary("router.features.builds", <BuildsPage />),
       },
-      {
-        path: "refresh-jobs/new",
-        element: withFeatureBoundary("router.features.newBuild", <NewBuildPage />),
-      },
+      // The second creation wizard's URL (#534) — one creation flow now, at /add.
+      { path: "refresh-jobs/new", element: <CreateTableRedirect /> },
       {
         path: "quality",
         element: withFeatureBoundary("router.features.Quality", <QualityPage />),
@@ -215,7 +214,8 @@ export const appRoutes: RouteObject[] = [
         element: withFeatureBoundary("router.features.buildDetail", <BuildsPage />),
       },
       {
-         // Edit reuses same editor as New Build.
+        // Editing an existing table's spec keeps its own editor, which preserves what the
+        // form cannot express (#496). Creating a table is /add.
         path: "refresh-jobs/:buildId/edit",
         element: withFeatureBoundary("router.features.buildEdit", <NewBuildPage />),
       },
