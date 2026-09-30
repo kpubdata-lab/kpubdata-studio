@@ -13,7 +13,7 @@ const ROUTES: Array<{ path: string; heading: RegExp | string }> = [
   { path: "/", heading: /작업 현황|테이블로 만드세요/ },
   { path: "/discover", heading: "데이터 탐색" },
   { path: "/refresh-jobs/new", heading: /템플릿 선택|기본 정보/ },
-  { path: "/refresh-jobs", heading: /실행 이력|Run History/ },
+  { path: "/refresh-jobs", heading: /갱신 이력|Refresh History/ },
   { path: "/workspace", heading: "작업대" },
   { path: "/connections", heading: "데이터 제공 기관 연결" },
   { path: "/monitoring", heading: "시스템 모니터링" },

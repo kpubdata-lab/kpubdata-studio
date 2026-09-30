@@ -1,27 +1,27 @@
 /**
- * Builds / Runs master-detail screen (`/builds`, `/builds?run=<id>`, legacy `/builds/:buildId`, #255).
+ * Refresh history (`/refresh-jobs`) and one refresh's detail (`/refresh-jobs/:buildId`,
+ * legacy `?run=<id>`) — #255, #535.
  *
- * Top KPI → Run list (master) → selected Run detail (Pipeline/Stage Progress, Quality, Failure
- * evidence, Artifacts/Dataset navigation) structure displays Builder state as-is.
+ * The list is one filterable table (Run ID, Table, Status, Started, Duration, Snapshot);
+ * search and the status filter live in the URL (`?q=&status=`), so coming back from a
+ * detail keeps them. A row opens `/refresh-jobs/:id`, where the run-centred diagnostics
+ * live: stage progress, failure evidence, spec digest and the event log (RunDetailPanel).
  * Studio never recalculates or guesses values returned by Builder (#246 principle).
  *
- * This file handles **screen assembly only** (#379). Components live under `features/runs` —
- * list/detail panels and pipeline are in `components/`, URL context/stage detail/async state are in
- * `buildContext.ts`/`stageDetails.ts`/`asyncState.ts` respectively.
+ * This file handles **screen assembly only** (#379). Components live under `features/runs`.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 
 import { getBuildQuality, listBuildStages } from "@/features/datasets/api";
-import { computeBuildKpi, matchesSearch, matchesStatusFilter, type RunStatusFilter } from "@/features/runs/model";
+import { matchesSearch, matchesStatusFilter, type RunStatusFilter } from "@/features/runs/model";
 import { isTerminalBuilderStatus, listBuilds } from "@/features/runs/api";
 import { getBuildSpecSnapshot } from "@/features/runs/api/runDetail";
 import { useAsync, type AsyncState } from "@/features/runs/asyncState";
-import { normalizeBuildContextSearch } from "@/features/runs/buildContext";
-import { KpiRow } from "@/features/runs/components/KpiRow";
+import { buildStatusFilters, normalizeBuildContextSearch } from "@/features/runs/buildContext";
+import { RefreshHistoryTable } from "@/features/runs/components/RefreshHistoryTable";
 import { RunDetailPanel } from "@/features/runs/components/RunDetailPanel";
-import { RunListPanel } from "@/features/runs/components/RunListPanel";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
 import { useRunEvents } from "@/features/runs/useRunEvents";
 import type {
@@ -31,20 +31,20 @@ import type {
 } from "@/shared/lib/builderApi";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { BuildListItem } from "@/shared/lib/types";
-import { Card, EmptyState, PageHeader, TermHelp } from "@/shared/ui";
+import { Card, ErrorState, LinkButton, PageHeader, Select, SkeletonTable, TermHelp, TextInput } from "@/shared/ui";
 
-/** `/builds` request scope. Builder has no total count, so KPI must be calculated within this value only. */
+/** `/builds` request scope. Builder has no total count, so the list says when it may be cut. */
 const LIST_LIMIT = 100;
+
+const STATUS_FILTERS: RunStatusFilter[] = ["all", "succeeded", "failed", "running", "queued", "cancelled"];
 
 export function BuildsPage() {
   const { t } = useTranslation();
-  const { buildId: legacyRunId } = useParams<{ buildId?: string }>();
+  const { buildId: pathRunId } = useParams<{ buildId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const [listState, setListState] = useState<AsyncState<BuildListItem[]>>({ status: "loading" });
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<RunStatusFilter>("all");
 
   const loadList = useCallback(() => {
     const controller = new AbortController();
@@ -65,32 +65,24 @@ export function BuildsPage() {
 
   useEffect(() => loadList(), [loadList]);
 
-  // New canonical form is ?run=. Legacy /builds/:buildId deep-link also opens same context (#255 §5).
-  // If both exist, canonical (?run=) takes priority.
-  const selectedRunId = searchParams.get("run") || legacyRunId || null;
+  // The detail is `/refresh-jobs/:id`; an older `?run=` link opens the same detail and
+  // wins when both are present.
+  const selectedRunId = searchParams.get("run") || pathRunId || null;
 
-  const selectRun = useCallback(
-    (runId: string) => {
-      navigate(`/refresh-jobs?run=${encodeURIComponent(runId)}`);
-    },
-    [navigate],
-  );
+  const clearSelection = useCallback(() => navigate("/refresh-jobs"), [navigate]);
 
-  const clearSelection = useCallback(() => {
+  const query = searchParams.get("q") ?? "";
+  const requestedStatus = searchParams.get("status") as RunStatusFilter | null;
+  const statusFilter: RunStatusFilter = requestedStatus && STATUS_FILTERS.includes(requestedStatus) ? requestedStatus : "all";
+
+  function setListParam(key: "q" | "status", value: string) {
     const next = new URLSearchParams(searchParams);
-    next.delete("run");
-    // dataset/stage are Assistant context values derived from selected Run (#255 §2) — clearing
-    // run selection also clears them to prevent previous run context leaking to next screen.
-    next.delete("dataset");
-    next.delete("stage");
-    next.delete("source");
-    setSearchParams(next);
-  }, [searchParams, setSearchParams]);
+    if (value && value !== "all") next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  }
 
   const items = listState.status === "loaded" ? listState.data : [];
-  const runningAvailable = !isRealBuilderEnabled();
-  const kpi = useMemo(() => computeBuildKpi(items, LIST_LIMIT, runningAvailable), [items, runningAvailable]);
-
   const visible = useMemo(
     () => items.filter((item) => matchesSearch(item, query) && matchesStatusFilter(item, statusFilter)),
     [items, query, statusFilter],
@@ -98,9 +90,6 @@ export function BuildsPage() {
 
   const selectedListItem = items.find((item) => item.id === selectedRunId) ?? null;
   const outOfListScope = Boolean(selectedRunId) && listState.status === "loaded" && !selectedListItem;
-  const hiddenByFilter = Boolean(
-    selectedListItem && !visible.some((item) => item.id === selectedListItem.id),
-  );
 
   const stagesState = useAsync<RunStagesResponse>(
     (signal) => (selectedRunId ? listBuildStages(selectedRunId, signal) : Promise.reject(new Error("no run"))),
@@ -167,9 +156,55 @@ export function BuildsPage() {
     stagesState.status === "error" &&
     stagesState.permissionDenied;
 
+  const main = "flex flex-1 flex-col gap-4 px-5 py-8 sm:px-8 lg:px-10 lg:py-10";
+
+  if (selectedRunId) {
+    return (
+      <main className={main}>
+        <PageHeader
+          title={t("builds.detail.title")}
+          meta={<span className="font-mono">{selectedRunId}</span>}
+          actions={
+            <LinkButton size="sm" to="/refresh-jobs" variant="secondary">
+              {t("builds.detail.back")}
+            </LinkButton>
+          }
+        />
+        {runNotFound ? (
+          <Card variant="error" role="alert">
+            <p className="font-semibold">{t("builds.run.notFoundTitle", { id: selectedRunId })}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.notFoundDesc", { limit: LIST_LIMIT })}</p>
+            <button className="mt-4 text-sm font-medium text-accent-subtle-foreground underline" onClick={clearSelection} type="button">
+              {t("builds.run.clearSelection")}
+            </button>
+          </Card>
+        ) : runPermissionDenied ? (
+          <Card variant="error" role="alert">
+            <p className="font-semibold">{t("builds.run.forbiddenTitle", { id: selectedRunId })}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.forbiddenDesc", { limit: LIST_LIMIT })}</p>
+            <button className="mt-4 text-sm font-medium text-accent-subtle-foreground underline" onClick={clearSelection} type="button">
+              {t("builds.run.clearSelection")}
+            </button>
+          </Card>
+        ) : (
+          <RunDetailPanel
+            runId={selectedRunId}
+            listItem={selectedListItem}
+            outOfListScope={outOfListScope}
+            stagesState={stagesState}
+            qualityState={qualityState}
+            specState={specState}
+            eventsState={eventsState}
+            live={live}
+          />
+        )}
+      </main>
+    );
+  }
+
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-      {/* App Shell topbar already has global "create new build" CTA (#255 §1) — don't duplicate action here. */}
+    <main className={main}>
+      {/* App Shell topbar already has the global create CTA (#255 §1) — no action duplicated here. */}
       <PageHeader
         title={t("builds.page.title")}
         description={
@@ -180,69 +215,46 @@ export function BuildsPage() {
         }
       />
 
-      <KpiRow kpi={kpi} />
-
-      <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
-        <RunListPanel
-          listState={listState}
-          visible={visible}
-          query={query}
-          onQueryChange={setQuery}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          selectedRunId={selectedRunId}
-          onSelect={selectRun}
-          onRetry={loadList}
-          hiddenByFilter={hiddenByFilter}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <TextInput
+          aria-label={t("builds.search.aria")}
+          className="flex-1"
+          onChange={(event) => setListParam("q", event.target.value)}
+          placeholder={t("builds.search.placeholder")}
+          value={query}
         />
-
-        {selectedRunId ? (
-          runNotFound ? (
-            <Card variant="error" role="alert">
-              <p className="font-semibold">{t("builds.run.notFoundTitle", { id: selectedRunId })}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("builds.run.notFoundDesc", { limit: LIST_LIMIT })}
-              </p>
-              <button
-                type="button"
-                className="mt-4 text-sm font-medium text-accent-subtle-foreground underline"
-                onClick={clearSelection}
-              >
-                {t("builds.run.clearSelection")}
-              </button>
-            </Card>
-          ) : runPermissionDenied ? (
-            <Card variant="error" role="alert">
-              <p className="font-semibold">{t("builds.run.forbiddenTitle", { id: selectedRunId })}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {t("builds.run.forbiddenDesc", { limit: LIST_LIMIT })}
-              </p>
-              <button
-                type="button"
-                className="mt-4 text-sm font-medium text-accent-subtle-foreground underline"
-                onClick={clearSelection}
-              >
-                {t("builds.run.clearSelection")}
-              </button>
-            </Card>
-          ) : (
-            <RunDetailPanel
-              runId={selectedRunId}
-              listItem={selectedListItem}
-              outOfListScope={outOfListScope}
-              stagesState={stagesState}
-              qualityState={qualityState}
-              specState={specState}
-              eventsState={eventsState}
-              live={live}
-            />
-          )
-        ) : (
-          <Card className="flex min-h-64 items-center justify-center">
-            <EmptyState title={t("builds.run.selectPrompt")} description={t("builds.run.selectPromptDesc")} />
-          </Card>
-        )}
+        <Select
+          aria-label={t("builds.search.filterAria")}
+          className="sm:w-40"
+          onChange={(event) => setListParam("status", event.target.value)}
+          value={statusFilter}
+        >
+          {buildStatusFilters(t).map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
       </div>
+
+      {listState.status === "loading" ? (
+        <SkeletonTable rows={6} />
+      ) : listState.status === "error" ? (
+        <ErrorState title={t("builds.errors.loadList")} message={listState.error} onRetry={loadList} />
+      ) : items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("builds.table.empty")}</p>
+      ) : visible.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("builds.search.emptyTitle")} — {t("builds.search.emptyDesc")}</p>
+      ) : (
+        <RefreshHistoryTable items={visible} />
+      )}
+
+      {listState.status === "loaded" ? (
+        <p className="text-xs text-muted-foreground">
+          {t("builds.table.scope", { count: items.length, limit: LIST_LIMIT })}
+          {isRealBuilderEnabled() ? ` ${t("builds.kpi.completedOnlyHint")}` : null}
+        </p>
+      ) : null}
     </main>
   );
 }
