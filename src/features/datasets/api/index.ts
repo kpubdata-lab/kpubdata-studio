@@ -9,6 +9,8 @@ import {
   type DatasetRunResponse,
   type DatasetRunsResponse,
   type DatasetSummary,
+  type QualityIssue,
+  type QualityIssuesResponse,
   type RunStagesResponse,
   type StageDetailResponse,
 } from "@/shared/lib/builderApi";
@@ -21,6 +23,7 @@ import {
   mockDatasetDetail,
   mockStageDetail,
 } from "./mockData";
+import { emptyQualityCoverage, issuesFromRunQuality, qualityCoverageBucket, sortQualityIssues } from "./qualityIssues";
 
 function throwIfAborted(signal?: AbortSignal): void {
   if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
@@ -101,6 +104,40 @@ export async function getBuildQuality(runId: string, signal?: AbortSignal): Prom
   const quality = MOCK_QUALITY[runId];
   if (!quality) throw new ApiError(404, i18n.t("datasets.errors.qualityNotFound"));
   return quality;
+}
+
+/**
+ * The demo's `GET /quality/issues`: the same rows and coverage a Builder would read from
+ * each demo table's latest run fixture.
+ */
+function mockQualityIssues(query: { datasetId?: string; limit?: number }): QualityIssuesResponse {
+  const coverage = emptyQualityCoverage();
+  const issues: QualityIssue[] = [];
+  for (const dataset of MOCK_DATASETS.datasets) {
+    if (query.datasetId && dataset.dataset_id !== query.datasetId) continue;
+    coverage.tables += 1;
+    const quality = MOCK_QUALITY[dataset.latest_run_id];
+    if (!quality) {
+      coverage.unreadable += 1;
+      continue;
+    }
+    coverage[qualityCoverageBucket(quality)] += 1;
+    const finishedAt =
+      MOCK_RUNS[dataset.dataset_id]?.runs.find((run) => run.run_id === dataset.latest_run_id)?.finished_at ?? null;
+    issues.push(...issuesFromRunQuality({ dataset_id: dataset.dataset_id, title: dataset.title, finished_at: finishedAt }, quality));
+  }
+  sortQualityIssues(issues);
+  return { issues: issues.slice(0, query.limit ?? 100), total: issues.length, next_cursor: null, coverage };
+}
+
+/** `GET /quality/issues` (kpubdata-builder#843): findings across tables in one call. */
+export async function listQualityIssues(
+  query: { datasetId?: string; limit?: number; cursor?: string } = {},
+  signal?: AbortSignal,
+): Promise<QualityIssuesResponse> {
+  if (isRealBuilderEnabled()) return builderApi.listQualityIssues(query, signal);
+  throwIfAborted(signal);
+  return mockQualityIssues(query);
 }
 
 export async function getDatasetQualityHistory(datasetId: string, limit = 30, signal?: AbortSignal): Promise<DatasetQualityHistoryResponse> {

@@ -713,7 +713,7 @@
     },
     "rows": "{{count}}행",
     "errors": {
-      "datasets": "테이블 목록을 불러오지 못했습니다"
+      "issues": "품질 문제를 불러오지 못했습니다"
     },
     "loading": "테이블별 품질 결과를 불러오는 중입니다.",
     "empty": {
@@ -753,11 +753,13 @@
       "meta": "테이블 {{count}}개의 최근 갱신 기준"
     },
     "coverage": {
-      "line": "테이블 {{tables}}개 — 조치 필요 {{issues}} · 통과 {{passed}} · 평가 안 됨(N/A) {{notEvaluated}} · 읽지 못함 {{failed}}",
-      "more": "(KPubData Builder 의 전체 {{total}}개 중 처음 {{shown}}개만 봅니다)",
-      "partial": "일부 결과만 있는 갱신(partial):",
-      "notEvaluated": "평가 결과가 없는 최근 갱신(N/A — 통과로 세지 않습니다):",
-      "failed": "품질 결과를 읽지 못한 테이블:"
+      "line": "테이블 {{tables}}개 — 평가됨 {{evaluated}} · 일부만 평가 {{partial}} · 평가 안 됨(N/A) {{notEvaluated}} · 읽지 못함 {{unreadable}}.",
+      "more": "(전체 {{total}}건 중 처음 {{shown}}건만 봅니다)",
+      "partial": "최근 갱신이 일부 소스만 평가된 테이블 {{count}}개(partial) — 통과로 세지 않습니다.",
+      "notEvaluated": "최근 갱신에 평가 결과가 없는 테이블 {{count}}개(N/A) — 통과로 세지 않습니다.",
+      "failed": "품질 결과를 읽지 못한 테이블 {{count}}개 — 문제가 없다는 뜻이 아닙니다.",
+      "issues": "조치가 필요한 문제 {{count}}건 (테이블 {{tables}}개).",
+      "legacyMore": "(이 KPubData Builder 는 테이블별로만 품질을 알려 주어 전체 {{total}}개 테이블 중 처음 {{shown}}개만 봅니다)"
     },
     "legacyRun": {
       "text": "이 화면은 각 테이블의 최근 갱신만 봅니다. 링크의 run `{{run}}` 은 최근 갱신이 아닙니다 —",
@@ -787,7 +789,7 @@
       "notApplicable": "해당 없음",
       "tableLevel": "테이블 전체",
       "tableLevelTitle": "특정 컬럼이 아니라 테이블 전체에 대한 규칙입니다",
-      "none": "조치가 필요한 품질 문제가 없습니다. 평가 안 됨·읽지 못함인 테이블은 아래에 따로 적습니다.",
+      "none": "조치가 필요한 품질 문제가 없습니다. 평가 안 됨 · 일부만 평가 · 읽지 못함인 테이블은 위 집계에 따로 셉니다.",
       "noneFiltered": "필터에 맞는 품질 문제가 없습니다."
     },
     "selectors": {

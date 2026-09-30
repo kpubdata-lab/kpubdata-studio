@@ -471,6 +471,9 @@ export type BuildQualityResponse = schemas.BuildQualityResponse;
 export type DatasetQualityHistoryEntry = schemas.DatasetQualityHistoryEntry;
 export type DatasetQualityHistoryResponse = schemas.DatasetQualityHistoryResponse;
 export type QualitySummaryResponse = schemas.QualitySummaryResponse;
+export type QualityIssue = schemas.QualityIssue;
+export type QualityIssuesCoverage = schemas.QualityIssuesCoverage;
+export type QualityIssuesResponse = schemas.QualityIssuesResponse;
 export type QueryStage = schemas.QueryStage;
 export type QueryRequest = schemas.QueryRequest;
 export type QueryResponse = schemas.QueryResponse;
@@ -840,6 +843,28 @@ export const builderApi = {
       { signal },
       schemas.qualitySummaryResponseSchema,
     ),
+
+  /**
+   * GET /quality/issues — WARN/FAIL checks and schema drift from every visible table's
+   * latest run, failures first, in one call (kpubdata-builder#843, contract 1.49.0).
+   * `coverage` counts tables evaluated, not evaluated, partial and unreadable. A Builder
+   * before 1.49.0 answers 404.
+   */
+  listQualityIssues: (
+    query: { datasetId?: string; limit?: number; cursor?: string } = {},
+    signal?: AbortSignal,
+  ) => {
+    const params = new URLSearchParams();
+    if (query.datasetId) params.set("dataset_id", query.datasetId);
+    if (query.limit !== undefined) params.set("limit", String(query.limit));
+    if (query.cursor) params.set("cursor", query.cursor);
+    const search = params.toString();
+    return apiFetch(
+      `/quality/issues${search ? `?${search}` : ""}`,
+      { signal },
+      schemas.qualityIssuesResponseSchema,
+    );
+  },
 
    /**
     * GET /providers — Runtime Provider list and current principal's configured status (#492).

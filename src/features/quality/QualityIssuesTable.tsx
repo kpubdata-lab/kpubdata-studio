@@ -1,5 +1,6 @@
 /**
- * The one table of actionable quality issues across tables (#536).
+ * The one table of actionable quality issues across tables (#536), one row per
+ * `GET /quality/issues` row (kpubdata-builder#843).
  *
  * Columns: Table, Source, Rule, Column, Status, Actual / Threshold, Affected rows,
  * Snapshot. A schema drift finding is a row too, with status "Schema drift". Every value
@@ -11,10 +12,10 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { cn } from "@/shared/ui";
-import { ActionableStatus, NotEvaluatedStatus } from "@/shared/ui/StatusState";
+import { ActionableStatus, MissingStatus, NotEvaluatedStatus } from "@/shared/ui/StatusState";
 
 import { QualityBadge } from "./QualityBadge";
-import { issueSource, issueStatus, type IssueRow } from "./issues";
+import { issueSource, issueStatus, issueTableTitle, type IssueRow } from "./issues";
 import { formatQualityValue } from "./model";
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
@@ -30,14 +31,37 @@ function rowCount(value: number | null, unit: string): ReactNode {
 }
 
 function tableQualityHref(row: IssueRow): string {
-  const params = new URLSearchParams({ run: row.runId, source: issueSource(row), tab: "quality" });
-  return `/tables/${encodeURIComponent(row.dataset.dataset_id)}?${params.toString()}`;
+  const params = new URLSearchParams({ run: row.run_id, source: issueSource(row), tab: "quality" });
+  return `/tables/${encodeURIComponent(row.dataset_id)}?${params.toString()}`;
+}
+
+function Rule({ row }: { row: IssueRow }) {
+  if (row.kind === "check" && row.check) {
+    return (
+      <>
+        <p className="text-foreground">
+          {row.check.category} · <span className="font-mono text-xs">{row.check.rule}</span>
+        </p>
+        {row.check.detail ? <p className="truncate text-xs text-muted-foreground" title={row.check.detail}>{row.check.detail}</p> : null}
+      </>
+    );
+  }
+  if (row.kind === "drift" && row.drift) {
+    return (
+      <>
+        <p className="font-mono text-xs text-foreground">{row.drift.kind}</p>
+        <p className="text-xs text-muted-foreground">{row.drift.detail}</p>
+      </>
+    );
+  }
+  return <MissingStatus />;
 }
 
 export function QualityIssuesTable({ rows }: { rows: IssueRow[] }) {
   const { t } = useTranslation();
   const caption = t("quality.issues.caption");
   const link = "text-accent-subtle-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const notApplicable = <NotEvaluatedStatus className="font-sans">{t("quality.issues.notApplicable")}</NotEvaluatedStatus>;
   return (
     // Wider than a phone: the table scrolls inside this region, never the page.
     <div
@@ -63,32 +87,21 @@ export function QualityIssuesTable({ rows }: { rows: IssueRow[] }) {
         <tbody>
           {rows.map((row, index) => {
             const status = issueStatus(row);
+            const column = row.kind === "check" ? row.check?.column : row.drift?.column;
             return (
-              <tr className="border-b border-border align-top last:border-b-0 hover:bg-muted/40" key={`${row.dataset.dataset_id}-${issueSource(row)}-${index}`}>
+              <tr className="border-b border-border align-top last:border-b-0 hover:bg-muted/40" key={`${row.dataset_id}-${issueSource(row)}-${index}`}>
                 <td className="px-3 py-2">
                   <Link className={cn("font-medium", link)} to={tableQualityHref(row)}>
-                    {row.dataset.title}
+                    {issueTableTitle(row)}
                   </Link>
-                  <p className="font-mono text-xs text-muted-foreground">{row.dataset.dataset_id}</p>
+                  <p className="font-mono text-xs text-muted-foreground">{row.dataset_id}</p>
                 </td>
                 <td className="px-3 py-2 font-mono text-xs">{issueSource(row)}</td>
                 <td className="max-w-72 px-3 py-2">
-                  {row.kind === "check" ? (
-                    <>
-                      <p className="text-foreground">
-                        {row.result.category} · <span className="font-mono text-xs">{row.result.rule}</span>
-                      </p>
-                      {row.result.detail ? <p className="truncate text-xs text-muted-foreground" title={row.result.detail}>{row.result.detail}</p> : null}
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-mono text-xs text-foreground">{row.finding.kind}</p>
-                      <p className="text-xs text-muted-foreground">{row.finding.detail}</p>
-                    </>
-                  )}
+                  <Rule row={row} />
                 </td>
                 <td className="px-3 py-2 font-mono text-xs">
-                  {(row.kind === "check" ? row.result.column : row.finding.column) ?? (
+                  {column ?? (
                     <span className="font-sans text-muted-foreground" title={t("quality.issues.tableLevelTitle")}>
                       {t("quality.issues.tableLevel")}
                     </span>
@@ -104,24 +117,22 @@ export function QualityIssuesTable({ rows }: { rows: IssueRow[] }) {
                   )}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 font-mono text-xs">
-                  {row.kind === "check" ? (
-                    `${formatQualityValue(row.result.rule, row.result.actual)} / ${formatQualityValue(row.result.rule, row.result.threshold)}`
-                  ) : (
-                    <NotEvaluatedStatus className="font-sans">{t("quality.issues.notApplicable")}</NotEvaluatedStatus>
-                  )}
+                  {row.check
+                    ? `${formatQualityValue(row.check.rule, row.check.actual)} / ${formatQualityValue(row.check.rule, row.check.threshold)}`
+                    : notApplicable}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-right font-mono text-xs tabular-nums">
-                  {row.kind === "check" ? (
+                  {row.check ? (
                     <>
-                      {rowCount(row.result.affected_rows, t("quality.rowsUnit"))} / {rowCount(row.result.evaluated_rows, t("quality.rowsUnit"))}
+                      {rowCount(row.check.affected_rows, t("quality.rowsUnit"))} / {rowCount(row.check.evaluated_rows, t("quality.rowsUnit"))}
                     </>
                   ) : (
-                    <NotEvaluatedStatus className="font-sans">{t("quality.issues.notApplicable")}</NotEvaluatedStatus>
+                    notApplicable
                   )}
                 </td>
                 <td className="px-3 py-2">
-                  <Link className={cn("break-all font-mono text-xs", link)} to={`/refresh-jobs/${encodeURIComponent(row.runId)}`}>
-                    {row.runId}
+                  <Link className={cn("break-all font-mono text-xs", link)} to={`/refresh-jobs/${encodeURIComponent(row.run_id)}`}>
+                    {row.run_id}
                   </Link>
                 </td>
               </tr>

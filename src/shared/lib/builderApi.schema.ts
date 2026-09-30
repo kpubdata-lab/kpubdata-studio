@@ -738,6 +738,48 @@ export const buildQualityResponseSchema = z.object({
   schema_drift: z.record(z.string(), z.array(schemaDriftFindingSchema)),
 });
 
+/**
+ * One row of GET /quality/issues (kpubdata-builder#843): a WARN/FAIL check (`kind: check`,
+ * the per-run QualityCheckResult unchanged) or a schema drift finding (`kind: drift`,
+ * `status: drift`) from a table's latest run.
+ */
+export const qualityIssueSchema = z.object({
+  dataset_id: z.string(),
+  title: z.string().nullable(),
+  run_id: z.string(),
+  finished_at: z.string().nullable(),
+  source_key: z.string(),
+  kind: z.enum(["check", "drift"]),
+  status: z.enum(["fail", "warn", "drift"]),
+  category: z.string().nullable(),
+  check: qualityCheckResultSchema.nullable(),
+  drift: schemaDriftFindingSchema.nullable(),
+});
+
+/**
+ * Tables read by what their latest run says about quality. None of `not_evaluated`,
+ * `partial` or `unreadable` is a pass.
+ */
+export const qualityIssuesCoverageSchema = z.object({
+  tables: z.number().int().nonnegative(),
+  evaluated: z.number().int().nonnegative(),
+  not_evaluated: z.number().int().nonnegative(),
+  partial: z.number().int().nonnegative(),
+  unreadable: z.number().int().nonnegative(),
+});
+
+/** GET /quality/issues — one page of findings across the caller's tables (#843). */
+export const qualityIssuesResponseSchema = z.object({
+  issues: z.array(qualityIssueSchema),
+  total: z.number().int().nonnegative(),
+  next_cursor: z.string().nullable(),
+  coverage: qualityIssuesCoverageSchema,
+});
+
+export type QualityIssue = z.infer<typeof qualityIssueSchema>;
+export type QualityIssuesCoverage = z.infer<typeof qualityIssuesCoverageSchema>;
+export type QualityIssuesResponse = z.infer<typeof qualityIssuesResponseSchema>;
+
 export const datasetQualityHistoryEntrySchema = z.object({
   run_id: z.string(),
   timestamp: z.string().nullable(),
