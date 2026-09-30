@@ -6,7 +6,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { clearAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "./draftStorage";
-import { INITIAL_DRAFT, buildSpecFromDraft, type AddDataDraft } from "./model";
+import { INITIAL_DRAFT, applyBuildSpecToDraft, buildSpecFromDraft, type AddDataDraft } from "./model";
 
 function urlDraft(endpoint: string): AddDataDraft {
   return {
@@ -171,5 +171,79 @@ describe("clearAddDataDraft", () => {
     saveAddDataDraft(urlDraft("https://api.example.org/data"));
     clearAddDataDraft();
     expect(loadAddDataDraft()).toBeNull();
+  });
+});
+
+describe("loadAddDataDraft — data shape (#605)", () => {
+  const KEY = "kpubdata-studio:add-data-draft";
+
+  function store(data: unknown) {
+    localStorage.setItem(KEY, JSON.stringify({ version: 1, data, savedAt: "2026-10-01T00:00:00.000Z" }));
+  }
+
+  function validDraft(): AddDataDraft {
+    return {
+      ...INITIAL_DRAFT,
+      sourceKind: "public_api",
+      publicApi: { provider: "datago", dataset: "apt_trade", sourceParams: "{}" },
+      datasetId: "apt",
+      title: "아파트",
+      description: "desc",
+    };
+  }
+
+  it("does not return the minimal version-one payload, and removes it", () => {
+    store({ sourceKind: "public_api" });
+    expect(loadAddDataDraft()).toBeNull();
+    expect(localStorage.getItem(KEY)).toBeNull();
+  });
+
+  it.each([
+    ["a missing nested object", (draft: Record<string, unknown>) => { delete draft.publicApi; }],
+    ["a missing array", (draft: Record<string, unknown>) => { delete draft.exportFormats; }],
+    ["an array of the wrong type", (draft: Record<string, unknown>) => { draft.exportFormats = "jsonl"; }],
+    ["a nested field of the wrong type", (draft: Record<string, unknown>) => { draft.url = { endpoint: 42, format: null }; }],
+    ["an unknown source kind", (draft: Record<string, unknown>) => { draft.sourceKind = "ftp"; }],
+    ["an unsupported preview limit", (draft: Record<string, unknown>) => { draft.previewLimit = 7; }],
+    ["a kept spec without sources", (draft: Record<string, unknown>) => {
+      draft.canonicalBase = { datasetId: "a", title: "b", description: "c", exports: [], metadata: {} };
+    }],
+  ])("rejects and removes a draft with %s", (_label, corrupt) => {
+    const data = JSON.parse(JSON.stringify(validDraft())) as Record<string, unknown>;
+    corrupt(data);
+    store(data);
+    expect(loadAddDataDraft()).toBeNull();
+    expect(localStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("restores a valid draft written by this version", () => {
+    saveAddDataDraft(validDraft());
+    expect(loadAddDataDraft()).toEqual(validDraft());
+  });
+
+  it("restores a draft written before the canonical spec was kept (no canonicalBase)", () => {
+    const legacy = JSON.parse(JSON.stringify(validDraft())) as Record<string, unknown>;
+    delete legacy.canonicalBase;
+    store(legacy);
+    const restored = loadAddDataDraft();
+    expect(restored).toEqual(validDraft());
+    expect(buildSpecFromDraft(restored!).spec?.sources[0]).toMatchObject({ provider: "datago", dataset: "apt_trade" });
+  });
+
+  it("restores a kept canonical spec whose endpoint storage emptied, and still asks for it again", () => {
+    const draft = applyBuildSpecToDraft(INITIAL_DRAFT, {
+      datasetId: "d",
+      title: "t",
+      description: "desc",
+      sources: [{ kind: "url", endpoint: "not-a-url?token=abc", method: "GET", params: {} }],
+      exports: [{ format: "jsonl", options: { compression: "none" } }],
+      metadata: {},
+      extra: { publish: { target: "local" } },
+    });
+    saveAddDataDraft(draft);
+    const restored = loadAddDataDraft();
+    expect(restored).not.toBeNull();
+    expect(restored!.canonicalBase?.extra).toEqual({ publish: { target: "local" } });
+    expect(buildSpecFromDraft(restored!).spec).toBeUndefined();
   });
 });

@@ -14,16 +14,88 @@
  * is separately fail-closed (empty value) (#283 follow-up §2, §4).
  *
  * buildSpecFromDraft detects sanitized endpoint/sourceParams and requires re-entry fail-closed — doesn't restore/submit placeholder as real value.
+ *
+ * A restored value is checked against `addDataDraftSchema` (#605): a matching envelope
+ * version alone let a value of the wrong shape reach the form, which crashed while
+ * rendering and stayed stored, so every visit offered it again.
  */
+import { z } from "zod";
 import { clearDraft, hasDraft, loadDraft, saveDraft } from "@/features/build-spec/draftStorage";
 import { ownedStorageKey } from "@/features/auth/storageOwner";
 import { sanitizeUrlEndpointForStorage } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsObject, redactSourceParamsText } from "@/features/add-data/paramsRedaction";
+import { jsonRecordSchema, sourceFormatSchema, sourceKindSchema } from "@/shared/lib/schemas";
 import type { AddDataDraft } from "@/features/add-data/model";
 
 // Namespace by owner key at call time (#293) — must reflect login state when save/restore functions are called,
 // not at module load time.
 const ADD_DATA_DRAFT_KEY = () => ownedStorageKey("kpubdata-studio:add-data-draft");
+
+/**
+ * The canonical spec a draft keeps (`canonicalBase`), checked for the parts the draft model
+ * reads. Not `buildSpecSchema`: storage redacts it (a malformed URL endpoint becomes ""),
+ * and the model reports what must be typed again — the stored spec need not be submittable.
+ * Unmodelled fields pass through, as in the YAML editor.
+ */
+const canonicalBaseSchema = z.looseObject({
+  datasetId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  sources: z.array(
+    z.looseObject({
+      kind: sourceKindSchema.optional(),
+      provider: z.string().optional(),
+      dataset: z.string().optional(),
+      uploadId: z.string().optional(),
+      endpoint: z.string().optional(),
+      format: sourceFormatSchema.optional(),
+      params: jsonRecordSchema,
+    }),
+  ),
+  exports: z.array(z.looseObject({ format: z.string(), options: jsonRecordSchema.optional() })),
+  metadata: jsonRecordSchema,
+  extra: jsonRecordSchema.optional(),
+});
+
+/**
+ * Every field of `AddDataDraft`, with its type (#605). Drafts written before the spec was
+ * kept (#283, `canonicalBase`) have no `canonicalBase` and restore as they are — the one
+ * earlier shape this flow wrote. Anything else that does not match is not guessed at:
+ * `loadDraft` removes it and the page says the draft could not be opened.
+ */
+export const addDataDraftSchema = z.object({
+  canonicalBase: canonicalBaseSchema.optional(),
+  sourceKind: sourceKindSchema.nullable(),
+  publicApi: z.object({ provider: z.string(), dataset: z.string(), sourceParams: z.string() }),
+  file: z.object({
+    uploadId: z.string().nullable(),
+    format: sourceFormatSchema.nullable(),
+    encoding: z.string(),
+    filename: z.string().nullable(),
+    sizeBytes: z.number().nullable(),
+  }),
+  url: z.object({ endpoint: z.string(), format: z.enum(["csv", "json", "jsonl"]).nullable() }),
+  datasetId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  datasetIdTouched: z.boolean(),
+  titleTouched: z.boolean(),
+  descriptionTouched: z.boolean(),
+  exportFormats: z.array(z.string()),
+  outputPath: z.string(),
+  previewLimit: z.union([z.literal(5), z.literal(10), z.literal(20)]),
+  previewSampleMode: z.enum(["first", "random"]),
+  previewColumns: z.enum(["key", "all"]),
+});
+
+/** `addDataDraftSchema` as `loadDraft`'s validator, typed as the draft the form uses. */
+const addDataDraftValidator = {
+  safeParse: (value: unknown): { success: true; data: AddDataDraft } | { success: false } => {
+    const result = addDataDraftSchema.safeParse(value);
+    // The loose spec schema widens unmodelled fields to `unknown`; they are carried through unchanged.
+    return result.success ? { success: true, data: result.data as AddDataDraft } : { success: false };
+  },
+};
 
 export function saveAddDataDraft(draft: AddDataDraft): void {
   const canonicalBase = draft.canonicalBase
@@ -51,9 +123,8 @@ export function saveAddDataDraft(draft: AddDataDraft): void {
 }
 
 export function loadAddDataDraft(): AddDataDraft | null {
-   // Draft shape can evolve freely (early version) so check version envelope only without zod schema —
-   // if corrupted or shape significantly differs, loadDraft already cleans it to null.
-  return loadDraft<AddDataDraft>(undefined, ADD_DATA_DRAFT_KEY());
+  // A value of another shape is removed and null returned, like one that is not JSON (#605).
+  return loadDraft<AddDataDraft>(addDataDraftValidator, ADD_DATA_DRAFT_KEY());
 }
 
 export function clearAddDataDraft(): void {

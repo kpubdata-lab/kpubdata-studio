@@ -1129,7 +1129,8 @@
       "reenterParams": "Its provider, source dataset, table id and title are filled in. Enter the request parameters again. The draft is kept until you create the table or delete it.",
       "discardKept": "Delete draft",
       "savedCorrupt": "The saved draft was damaged and could not be opened, so it was deleted.",
-      "askCorrupt": "The Ask KPubData draft was damaged and could not be opened, so it was deleted."
+      "askCorrupt": "The Ask KPubData draft was damaged and could not be opened, so it was deleted.",
+      "inputKept": "What you were entering was kept as your saved draft. Open it from the banner above to go back to it."
     },
     "nav": {
       "back": "Back",

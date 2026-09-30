@@ -6,7 +6,7 @@
  * `/add` offers the slot too and turns it into a BuildSpec with the same `toBuildSpec`
  * the form used — no second mapping.
  */
-import { clearDraft, hasDraft, loadDraft } from "@/features/build-spec/draftStorage";
+import { clearDraft, defaultDraftKey, hasDraft, loadDraft, subscribeDraftChanges } from "@/features/build-spec/draftStorage";
 import { redactDraftForStorage, toBuildSpec, type BuildFormValues } from "@/features/build-spec/newBuildModel";
 import { buildFormValuesSchema } from "@/shared/lib/schemas";
 import type { BuildSpec } from "@/shared/lib/types";
@@ -21,6 +21,21 @@ export type FormDraftResult = { spec: BuildSpec } | { error: string; values: Bui
 /** Whether a form-shaped draft is waiting. */
 export function hasFormDraft(): boolean {
   return hasDraft();
+}
+
+/**
+ * Call `listener` whenever the form-shaped draft is written or removed, in this tab or
+ * another (#604). Ask KPubData approves its draft while `/add` may already be open, and
+ * navigating to the same route does not mount the page again, so the page subscribes
+ * instead of reading the slot only once.
+ *
+ * @returns A function that stops listening.
+ */
+export function subscribeFormDraft(listener: () => void): () => void {
+  return subscribeDraftChanges((key) => {
+    // `null`: another tab cleared the whole store, which may include this slot.
+    if (key === null || key === defaultDraftKey()) listener();
+  });
 }
 
 /**

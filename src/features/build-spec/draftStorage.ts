@@ -12,6 +12,44 @@ import { ownedStorageKey } from "@/features/auth/storageOwner";
 
 const DRAFT_KEY = "kpubdata-studio:new-build-draft";
 
+/**
+ * Window event fired in this tab whenever a draft key is written or removed (#604).
+ *
+ * `storage` events only reach other tabs, so a screen already showing drafts (the one
+ * creation flow at `/add`) would not see an Ask KPubData draft approved in the same tab.
+ */
+const DRAFT_CHANGE_EVENT = "kpubdata-studio:draft-change";
+
+/** The New Build form-shaped draft key for whoever is logged in now. */
+export function defaultDraftKey(): string {
+  return ownedStorageKey(DRAFT_KEY);
+}
+
+function notifyDraftChange(key: string): void {
+  try {
+    window.dispatchEvent(new CustomEvent<{ key: string }>(DRAFT_CHANGE_EVENT, { detail: { key } }));
+  } catch {
+    // No window (SSR): nobody can be listening.
+  }
+}
+
+/**
+ * Call `listener` with the storage key whenever a draft is saved or removed — in this tab
+ * (`DRAFT_CHANGE_EVENT`) or another one (`storage`, where a cleared store gives `null`).
+ *
+ * @returns A function that stops listening.
+ */
+export function subscribeDraftChanges(listener: (key: string | null) => void): () => void {
+  const onLocal = (event: Event) => listener((event as CustomEvent<{ key: string }>).detail.key);
+  const onStorage = (event: StorageEvent) => listener(event.key);
+  window.addEventListener(DRAFT_CHANGE_EVENT, onLocal);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    window.removeEventListener(DRAFT_CHANGE_EVENT, onLocal);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 /** Envelope schema version. Bump when an incompatible shape change occurs. */
 export const DRAFT_VERSION = 1;
 
@@ -35,7 +73,7 @@ interface DraftValidator<T> {
  *
  * @param value - A serializable draft value.
  */
-export function saveDraft<T>(value: T, key: string = ownedStorageKey(DRAFT_KEY)): void {
+export function saveDraft<T>(value: T, key: string = defaultDraftKey()): void {
   try {
     const envelope: DraftEnvelope<T> = {
       version: DRAFT_VERSION,
@@ -45,7 +83,9 @@ export function saveDraft<T>(value: T, key: string = ownedStorageKey(DRAFT_KEY))
     localStorage.setItem(key, JSON.stringify(envelope));
   } catch {
     // Ignore when localStorage is unavailable.
+    return;
   }
+  notifyDraftChange(key);
 }
 
 /**
@@ -65,7 +105,7 @@ export function saveDraft<T>(value: T, key: string = ownedStorageKey(DRAFT_KEY))
  */
 export function loadDraft<T>(
   validator?: DraftValidator<T>,
-  key: string = ownedStorageKey(DRAFT_KEY),
+  key: string = defaultDraftKey(),
   sanitize?: (data: T) => T,
 ): T | null {
   try {
@@ -121,12 +161,14 @@ export function loadDraft<T>(
  *
  * @param key - Optional draft storage key. Defaults to the New Build Wizard key.
  */
-export function clearDraft(key: string = ownedStorageKey(DRAFT_KEY)): void {
+export function clearDraft(key: string = defaultDraftKey()): void {
   try {
     localStorage.removeItem(key);
   } catch {
     // ignore.
+    return;
   }
+  notifyDraftChange(key);
 }
 
 /**
@@ -135,7 +177,7 @@ export function clearDraft(key: string = ownedStorageKey(DRAFT_KEY)): void {
  * @param key - Optional draft storage key. Defaults to the New Build Wizard key.
  * @returns Whether a draft exists.
  */
-export function hasDraft(key: string = ownedStorageKey(DRAFT_KEY)): boolean {
+export function hasDraft(key: string = defaultDraftKey()): boolean {
   try {
     return localStorage.getItem(key) !== null;
   } catch {
