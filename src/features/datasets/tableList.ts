@@ -6,6 +6,7 @@
  * (`current_snapshot`, and `dataset_id` naming the dataset a table was built for), so
  * the list needs no call per table. A dataset has one warehouse table per source.
  *
+ * Tables are matched to datasets as the table detail matches them (`tableOwnerAmong`, #602).
  * An older Builder omits both fields: its tables are joined by `<dataset_id>.<source_key>`
  * and each current snapshot is read from `GET /warehouse/tables/{name}`, four at a time,
  * as before (#569). A value Builder did not send stays absent, and the page shows `—`.
@@ -18,6 +19,7 @@ import { type DatasetSummary, type WarehouseTable } from "@/shared/lib/builderAp
 import { warehouseApi } from "@/features/sql/warehouseApi";
 
 import { listDatasets, mapWithConcurrency } from "./api";
+import { tableOwnerAmong, type TableOwner } from "./warehouseTables";
 
 /** The fields of a current snapshot the list shows: in the list summary and in the detail. */
 export interface CurrentSnapshot {
@@ -48,7 +50,7 @@ export interface TableList {
   rows: TableListRow[];
 }
 
-/** The dataset a warehouse table belongs to, by the contract's `<dataset_id>.<source_key>`. */
+/** The dataset a warehouse table belongs to, split at the last dot of `<dataset_id>.<source_key>`. */
 export function splitLogicalName(logicalName: string): { datasetId: string; sourceKey: string } | null {
   const dot = logicalName.lastIndexOf(".");
   if (dot <= 0 || dot === logicalName.length - 1) return null;
@@ -56,18 +58,16 @@ export function splitLogicalName(logicalName: string): { datasetId: string; sour
 }
 
 /**
- * The dataset and source of a warehouse table. Builder's `dataset_id` wins when sent (a
- * dataset id may contain a dot); null means Builder could not tell, and the table is not
- * attributed. Only an older Builder that omits it is read by splitting the name.
+ * The dataset and source of a warehouse table when no dataset ids are at hand (Home).
+ * Builder's `dataset_id` wins when sent, and the source key is the rest of the name after
+ * it (#602); null means Builder could not tell, and the table is not attributed. Only an
+ * older Builder that omits it is read by splitting the name — the Tables list and the
+ * table detail match such a table against the dataset ids instead (`tableOwnerAmong`).
  */
-export function tableOwner(table: Pick<WarehouseTable, "logical_name" | "dataset_id">): { datasetId: string; sourceKey: string } | null {
+export function tableOwner(table: Pick<WarehouseTable, "logical_name" | "dataset_id">): TableOwner | null {
   if (table.dataset_id === undefined) return splitLogicalName(table.logical_name);
   if (table.dataset_id === null) return null;
-  const prefix = `${table.dataset_id}.`;
-  const sourceKey = table.logical_name.startsWith(prefix)
-    ? table.logical_name.slice(prefix.length)
-    : (splitLogicalName(table.logical_name)?.sourceKey ?? table.logical_name);
-  return { datasetId: table.dataset_id, sourceKey };
+  return tableOwnerAmong(table, [table.dataset_id]);
 }
 
 /**
@@ -105,8 +105,8 @@ export async function loadTableList(signal?: AbortSignal): Promise<TableList> {
 
   const listed = new Set(datasets.map((dataset) => dataset.dataset_id));
   const owned = warehouse.tables.flatMap((table) => {
-    const owner = tableOwner(table);
-    return owner !== null && listed.has(owner.datasetId) ? [{ table, owner }] : [];
+    const owner = tableOwnerAmong(table, listed);
+    return owner !== null ? [{ table, owner }] : [];
   });
   const currents = await mapWithConcurrency(owned, 4, ({ table }) => currentSnapshotOf(table, signal));
 
