@@ -71,7 +71,7 @@
     "discover": "카탈로그",
     "workspace": "작업대",
     "datasets": "테이블",
-    "builds": "갱신 작업",
+    "builds": "갱신 이력",
     "quality": "품질",
     "reports": "리포트",
     "provider": "연결",
@@ -115,33 +115,24 @@
       "loadListFallback": "실행 목록을 불러오지 못했습니다."
     },
     "page": {
-      "title": "실행 이력",
-      "desc": "각 <b>Run</b>은 데이터를 수집·처리해 테이블 <b>스냅샷</b>을 만드는 한 번의 실행 기록입니다."
+      "title": "갱신 이력",
+      "desc": "테이블을 만들고 갱신한 기록입니다. 각 <b>Run</b>은 데이터를 수집·처리해 테이블 <b>스냅샷</b>을 만드는 한 번의 실행입니다."
     },
     "run": {
       "notFoundTitle": "Run을 찾을 수 없습니다: {{id}}",
       "notFoundDesc": "목록 조회 범위(최대 {{limit}}건)에도 없고 stage 정보 조회도 404입니다. 삭제되었거나 존재한 적 없는 run_id일 수 있습니다.",
       "clearSelection": "선택 해제",
       "forbiddenTitle": "이 Run을 조회할 권한이 없습니다: {{id}}",
-      "forbiddenDesc": "목록 조회 범위(최대 {{limit}}건)에도 없어 존재 여부를 판단할 다른 근거가 없고, stage 정보 조회는 403(권한 없음)입니다. Run이 없는 것인지 접근 권한이 없는 것인지는 Studio가 추측하지 않습니다.",
-      "selectPrompt": "Run을 선택하세요",
-      "selectPromptDesc": "왼쪽 목록에서 확인할 Run을 선택하면 상세 정보가 표시됩니다."
+      "forbiddenDesc": "목록 조회 범위(최대 {{limit}}건)에도 없어 존재 여부를 판단할 다른 근거가 없고, stage 정보 조회는 403(권한 없음)입니다. Run이 없는 것인지 접근 권한이 없는 것인지는 Studio가 추측하지 않습니다."
     },
     "kpi": {
-      "scope": "조회 범위 기준",
-      "running": "실행 중 {{count}}",
-      "cancelling": "취소 중 {{count}}",
-      "queued": "대기 {{count}}",
-      "buildsScope": "Runs (조회 범위)",
-      "scopeHint": "조회된 {{count}}건 · limit {{limit}}{{more}}",
-      "maybeMore": " (더 있을 수 있음)",
-      "completedOnlyHint": "Builder GET /builds는 완료된 이력만 반환합니다 (실행 중 job은 포함되지 않음)"
+      "completedOnlyHint": "Builder GET /builds는 완료된 이력만 반환합니다 (실행 중 job은 포함되지 않음)",
+      "scope": "조회 범위 기준"
     },
     "search": {
       "aria": "Run 검색",
-      "placeholder": "run id 또는 제목 검색",
+      "placeholder": "run id 또는 테이블 검색",
       "filterAria": "상태 필터",
-      "outOfScope": "선택한 Run은 현재 검색/필터 조건 밖에 있어 목록에는 보이지 않지만, 오른쪽 상세는 계속 표시됩니다.",
       "emptyTitle": "표시할 Run이 없습니다",
       "emptyDesc": "검색어나 상태 필터를 조정해 보세요."
     },
@@ -157,7 +148,9 @@
       "run": "실행",
       "artifacts": "스냅샷 파일",
       "publish": "게시",
-      "analyze": "이 Run 분석"
+      "analyze": "이 Run 분석",
+      "title": "갱신 상세",
+      "back": "← 갱신 이력"
     },
     "stage": {
       "forbidden": "이 Run의 Stage Progress를 조회할 권한이 없습니다.",
@@ -206,6 +199,20 @@
       "splits": "split {{count}}개",
       "unreached": "미도달",
       "rowsUnit": "행"
+    },
+    "table": {
+      "caption": "갱신 이력",
+      "runId": "Run ID",
+      "table": "테이블",
+      "status": "상태",
+      "started": "시작",
+      "duration": "소요 시간",
+      "snapshot": "스냅샷",
+      "seconds": "{{count}}초",
+      "tableMissing": "테이블: KPubData Builder 의 실행 목록이 알려 주지 않습니다",
+      "snapshotMissing": "스냅샷: KPubData Builder 의 실행 목록이 알려 주지 않습니다",
+      "empty": "아직 갱신 기록이 없습니다.",
+      "scope": "최근 {{count}}건 (최대 {{limit}}건까지 불러옵니다)."
     }
   },
   "api": {

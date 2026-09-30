@@ -13,7 +13,7 @@
  * fail / 수정 후 pass 해야 한다.
  */
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as datasetsApi from "@/features/datasets/api";
 import * as runsApi from "@/features/runs/api";
@@ -109,9 +109,23 @@ const specSnapshot: BuildSpecSnapshotResponse = {
   spec_digest: "sha256:" + "0".repeat(64),
 };
 
+/**
+ * Switches the selected run the way an old `?run=` link does, keeping the same page
+ * instance mounted — the refresh history list is no longer beside the detail (#535).
+ */
+function SwitchRun() {
+  const navigate = useNavigate();
+  return (
+    <button onClick={() => navigate("/refresh-jobs?run=other-run")} type="button">
+      switch-run
+    </button>
+  );
+}
+
 function renderBuilds() {
   return render(
     <MemoryRouter initialEntries={[`/refresh-jobs?run=${RUN_ID}`]}>
+      <SwitchRun />
       <BuildsPage />
     </MemoryRouter>,
   );
@@ -249,7 +263,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     expect(useAssistantStore.getState().turns).toHaveLength(0);
 
     // 다른 run 선택 → 이전 pending analyze 의도가 폐기돼야 한다.
-    fireEvent.click(screen.getByText("Other Run"));
+    fireEvent.click(screen.getByRole("button", { name: "switch-run" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Other Run" })).toBeInTheDocument());
 
     await new Promise((r) => setTimeout(r, 50));
@@ -358,7 +372,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     expect(useAssistantStore.getState().turns).toHaveLength(0);
 
     // run 변경 → 이전 pending 폐기. B의 context가 canonical해져도 클릭 없이 자동 분석하지 않는다.
-    fireEvent.click(screen.getByText("Other Run"));
+    fireEvent.click(screen.getByRole("button", { name: "switch-run" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Other Run" })).toBeInTheDocument());
     await new Promise((r) => setTimeout(r, 50));
 

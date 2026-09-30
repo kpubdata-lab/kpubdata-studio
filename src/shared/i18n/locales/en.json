@@ -71,7 +71,7 @@
     "discover": "Catalog",
     "workspace": "Workspace",
     "datasets": "Tables",
-    "builds": "Refresh Jobs",
+    "builds": "Refresh History",
     "quality": "Quality",
     "reports": "Reports",
     "provider": "Connections",
@@ -115,33 +115,24 @@
       "loadListFallback": "Failed to load runs."
     },
     "page": {
-      "title": "Run History",
-      "desc": "Each <b>run</b> is one recorded execution that collects and processes data and produces a table <b>snapshot</b>."
+      "title": "Refresh History",
+      "desc": "The record of creating and refreshing tables. Each <b>run</b> is one execution that collects and processes data and produces a table <b>snapshot</b>."
     },
     "run": {
       "notFoundTitle": "Run not found: {{id}}",
       "notFoundDesc": "Not within the list scope (max {{limit}}) and stage lookup returned 404. It may have been deleted or never existed.",
       "clearSelection": "Clear selection",
       "forbiddenTitle": "No permission to view this run: {{id}}",
-      "forbiddenDesc": "Not within the list scope (max {{limit}}) and stage lookup returned 403. Studio does not guess whether the run does not exist or access is denied.",
-      "selectPrompt": "Select a run",
-      "selectPromptDesc": "Pick a run from the list to see its details."
+      "forbiddenDesc": "Not within the list scope (max {{limit}}) and stage lookup returned 403. Studio does not guess whether the run does not exist or access is denied."
     },
     "kpi": {
-      "scope": "within fetched scope",
-      "running": "Running {{count}}",
-      "cancelling": "Cancelling {{count}}",
-      "queued": "Queued {{count}}",
-      "buildsScope": "Runs (fetched scope)",
-      "scopeHint": "{{count}} fetched · limit {{limit}}{{more}}",
-      "maybeMore": " (more may exist)",
-      "completedOnlyHint": "Builder GET /builds returns only completed history (running jobs excluded)"
+      "completedOnlyHint": "Builder GET /builds returns only completed history (running jobs excluded)",
+      "scope": "within fetched scope"
     },
     "search": {
       "aria": "Search runs",
-      "placeholder": "Search by run id or title",
+      "placeholder": "Search by run id or table",
       "filterAria": "Status filter",
-      "outOfScope": "The selected run is outside the current search/filter conditions, so it is not visible in the list, but details remain shown on the right.",
       "emptyTitle": "No runs to show",
       "emptyDesc": "Try adjusting the search or status filter."
     },
@@ -157,7 +148,9 @@
       "run": "Run",
       "artifacts": "Snapshot Files",
       "publish": "Publish",
-      "analyze": "Analyze run"
+      "analyze": "Analyze run",
+      "title": "Refresh detail",
+      "back": "← Refresh History"
     },
     "stage": {
       "forbidden": "No permission to view stage progress for this run.",
@@ -206,6 +199,20 @@
       "splits": "{{count}} splits",
       "unreached": "Not reached",
       "rowsUnit": " rows"
+    },
+    "table": {
+      "caption": "Refresh history",
+      "runId": "Run ID",
+      "table": "Table",
+      "status": "Status",
+      "started": "Started",
+      "duration": "Duration",
+      "snapshot": "Snapshot",
+      "seconds": "{{count}}s",
+      "tableMissing": "Table: not in KPubData Builder's run list",
+      "snapshotMissing": "Snapshot: not in KPubData Builder's run list",
+      "empty": "No refresh has been recorded yet.",
+      "scope": "The latest {{count}} (up to {{limit}} are loaded)."
     }
   },
   "api": {

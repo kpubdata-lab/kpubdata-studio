@@ -107,8 +107,8 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   await expect(page.getByText("성공").and(page.locator(":visible")).first()).toBeVisible({ timeout: 60_000 });
 
   // 6) The run history (real GET /builds) has it.
-  await navigateViaShell(page, /^(Refresh Jobs|갱신 작업)$/);
-  await expect(page.getByRole("heading", { name: /실행 이력|Run History/i }).first()).toBeVisible();
+  await navigateViaShell(page, /^(Refresh History|갱신 이력)$/);
+  await expect(page.getByRole("heading", { name: /갱신 이력|Refresh History/i }).first()).toBeVisible();
 
   await expectNoPageErrors(errors);
 });
@@ -217,7 +217,7 @@ test("다른 릴리스의 Builder 에 붙으면 배너가 뜨고 화면은 막�
   await expect(banner).toContainText(`KPubData Builder ${engine.version}`);
 
   // Not blocking: the menu still takes you somewhere, with the banner still there.
-  await navigateViaShell(page, /^(Refresh Jobs|갱신 작업)$/);
+  await navigateViaShell(page, /^(Refresh History|갱신 이력)$/);
   await expect(page).toHaveURL(/\/refresh-jobs/);
 
   await expectNoPageErrors(errors);

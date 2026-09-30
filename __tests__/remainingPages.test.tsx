@@ -15,7 +15,7 @@ function renderPage(element: ReactNode) {
 describe("remaining pages", () => {
   it("BuildsPage shows the Korean heading and loads run history (#255 master-detail)", async () => {
     renderPage(<BuildsPage />);
-    expect(screen.getByRole("heading", { name: "실행 이력" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "갱신 이력" })).toBeInTheDocument();
     // mock 실행 이력이 로드된다.
     expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
   });

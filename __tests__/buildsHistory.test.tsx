@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as datasetsApi from "@/features/datasets/api";
 import * as runsApi from "@/features/runs/api";
@@ -12,7 +12,10 @@ import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 function renderBuilds(initialPath = "/refresh-jobs") {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <BuildsPage />
+      <Routes>
+        <Route path="/refresh-jobs" element={<BuildsPage />} />
+        <Route path="/refresh-jobs/:buildId" element={<BuildsPage />} />
+      </Routes>
     </MemoryRouter>,
   );
 }
@@ -29,11 +32,13 @@ describe("Builds run history (#12, #255 master-detail)", () => {
     // "실패"는 상태 필터 <option>에도 나타나므로 배지(span)로만 좁혀서 확인한다.
     expect(screen.getAllByText("실패", { selector: "span" }).length).toBeGreaterThan(0);
 
-    // 목록 항목을 선택하면 오른쪽 상세 패널에 같은 run이 열린다.
+    // Clicking a row opens that run's detail at /refresh-jobs/:id (#535).
     fireEvent.click(screen.getByText("대기오염 정보"));
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
     });
+    expect(screen.getByRole("heading", { level: 1, name: "갱신 상세" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "← 갱신 이력" })).toHaveAttribute("href", "/refresh-jobs");
   });
 
   it("filters the history by title/id search", async () => {
@@ -80,8 +85,8 @@ describe("selected Run permission state (#255 P0)", () => {
     expect(await screen.findByText(/이 Run을 조회할 권한이 없습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
 
-    // 전체 Runs 목록은 계속 정상 렌더된다 — supplementary/detail 403이 목록을 죽이지 않는다.
-    expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
+    // The way back to the refresh history stays available (#535: the list is its own page).
+    expect(screen.getByRole("link", { name: "← 갱신 이력" })).toHaveAttribute("href", "/refresh-jobs");
   });
 
   it("selected Run 404: 존재 판정 근거인 stage 조회가 404면 기존 not-found 메시지를 유지한다", async () => {
