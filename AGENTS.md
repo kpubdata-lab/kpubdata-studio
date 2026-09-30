@@ -8,12 +8,23 @@
 
 ## Mission
 
-Implement KPubData Studio: the UI shell and workflow interface for
-`kpubdata-builder`.
+Implement KPubData Studio: a workspace for collecting Korean public data, keeping
+it as snapshots that carry their source and terms of use, and analysing it with
+tables and SQL. It is the visual workspace for KPubData Builder (`kpubdata-builder`)
+— the product definition is shared word for word with `README.en.md`, `PRD.md` and
+kpubdata's [BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md),
+and `__tests__/productDefinition.test.ts` checks the copies.
 
 ## Ground rules
 
 - Studio does not reimplement builder logic.
+- **Studio consumes KPubData Builder's HTTP/OpenAPI contract and nothing else.**
+  It does not depend on KPubData's constants, private modules, fixtures, catalogue
+  files or repository layout — Independence Rules 8 and 9 of
+  [kpubdata ADR 0007](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0007-independence-rules.md).
+  Linking to KPubData's governance and brand documents is fine. The gate is
+  `__tests__/kpubdataBoundary.test.ts`; when Studio needs something Builder does not
+  expose, ask Builder for it rather than reading KPubData directly.
 - Keep UI state transitions explicit.
 - Generated specs must be portable.
 - Surface validation results and the manifest, do not bury them.
