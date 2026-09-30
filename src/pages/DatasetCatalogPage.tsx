@@ -15,6 +15,7 @@ import { formatDateTime, uniqueProviders } from "@/features/datasets/model";
 import { loadTableList, type SourceSnapshot, type TableList, type TableListRow } from "@/features/datasets/tableList";
 import { i18n } from "@/shared/i18n";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, SkeletonTable, TextInput } from "@/shared/ui";
+import { cn } from "@/shared/ui/cn";
 import { MissingStatus, NotEvaluatedStatus } from "@/shared/ui/StatusState";
 
 interface ListState {
@@ -28,6 +29,9 @@ const selectClassName =
 
 /** The axes shown as columns. Access is shown under the table name, only when it needs action. */
 const AXIS_COLUMNS: Axis[] = ["health", "completeness", "refresh"];
+
+/** A column that only fits from `sm` up. */
+const WIDE_ONLY = "hidden sm:table-cell";
 
 export function DatasetCatalogPage() {
   const { t } = useTranslation();
@@ -82,11 +86,18 @@ export function DatasetCatalogPage() {
     navigate(`/tables/${encodeURIComponent(datasetId)}`);
   }
 
-  const headers = [
-    t("catalog.columns.table"),
-    ...(warehouse ? [t("catalog.columns.snapshot"), t("catalog.columns.rows")] : []),
-    ...AXIS_COLUMNS.map((axis) => t(`statusAxes.axis.${axis}`)),
-    t("catalog.columns.lastRefreshed"),
+  // Below `sm` only the key columns stay: the table, its current snapshot, and the status
+  // (drawn under the table name). The rest scrolls nowhere — it is simply not shown (#573).
+  const headers: { label: string; className?: string }[] = [
+    { label: t("catalog.columns.table") },
+    ...(warehouse
+      ? [
+          { label: t("catalog.columns.snapshot") },
+          { label: t("catalog.columns.rows"), className: `${WIDE_ONLY} text-right` },
+        ]
+      : []),
+    ...AXIS_COLUMNS.map((axis) => ({ label: t(`statusAxes.axis.${axis}`), className: WIDE_ONLY })),
+    { label: t("catalog.columns.lastRefreshed"), className: WIDE_ONLY },
   ];
 
   return (
@@ -130,12 +141,12 @@ export function DatasetCatalogPage() {
           <EmptyState title={t("catalog.noMatch.title")} description={t("catalog.noMatch.desc")} />
         ) : (
           <div className="relative overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-[13px] leading-[18px]">
+            <table className="w-full text-left sm:min-w-[760px] text-[13px] leading-[18px]">
               <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                 <tr>
-                  {headers.map((header, index) => (
-                    <th className={`px-4 py-2 font-medium ${warehouse && index === 2 ? "text-right" : ""}`} key={header} scope="col">
-                      {header}
+                  {headers.map((header) => (
+                    <th className={cn("px-4 py-2 font-medium", header.className)} key={header.label} scope="col">
+                      {header.label}
                     </th>
                   ))}
                 </tr>
@@ -157,32 +168,28 @@ export function DatasetCatalogPage() {
                     }}
                   >
                     <td className="px-4 py-2">
-                      <p className="font-mono text-foreground">{row.dataset_id}</p>
+                      <p className="break-all font-mono text-foreground sm:break-normal">{row.dataset_id}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {row.title} · {uniqueProviders(row.sources).join(", ")}
                       </p>
-                      {actionableAxes(row.status_axes).includes("access") ? (
-                        <div className="mt-1">
-                          <AxisValue axes={row.status_axes} axis="access" />
-                        </div>
-                      ) : null}
+                      <RowStatus axes={row.status_axes} />
                     </td>
                     {warehouse ? (
                       <>
                         <td className="px-4 py-2">
                           <PerSource row={row} render={(entry) => <SnapshotId entry={entry} />} />
                         </td>
-                        <td className="px-4 py-2 text-right tabular-nums">
+                        <td className={cn(WIDE_ONLY, "px-4 py-2 text-right tabular-nums")}>
                           <PerSource row={row} render={(entry) => <RowCount entry={entry} />} />
                         </td>
                       </>
                     ) : null}
                     {AXIS_COLUMNS.map((axis) => (
-                      <td className="whitespace-nowrap px-4 py-2" key={axis}>
+                      <td className={cn(WIDE_ONLY, "whitespace-nowrap px-4 py-2")} key={axis}>
                         <AxisValue axes={row.status_axes} axis={axis} />
                       </td>
                     ))}
-                    <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
+                    <td className={cn(WIDE_ONLY, "whitespace-nowrap px-4 py-2 text-muted-foreground")}>
                       {warehouse ? (
                         <PerSource row={row} render={(entry) => <CommittedAt entry={entry} />} />
                       ) : row.updated_at ? (
@@ -213,6 +220,34 @@ export function DatasetCatalogPage() {
 }
 
 /**
+ * The status under a table's name. Access has no column, so an access that needs action
+ * is always here. Below `sm`, where the axis columns are hidden, every axis that needs
+ * action is here too — or, when none does, the health axis as quiet text — so a narrow
+ * screen still shows each table's status without scrolling (#573).
+ */
+function RowStatus({ axes }: { axes: TableListRow["status_axes"] }) {
+  const { t } = useTranslation();
+  const actionable = actionableAxes(axes);
+  if (actionable.length === 0) {
+    return (
+      <p className="mt-1 text-xs sm:hidden">
+        <span className="mr-1 text-muted-foreground">{t("statusAxes.axis.health")}</span>
+        <AxisValue axes={axes} axis="health" />
+      </p>
+    );
+  }
+  return (
+    <ul className={cn("mt-1 flex flex-wrap gap-1", !actionable.includes("access") && "sm:hidden")}>
+      {actionable.map((axis) => (
+        <li className={axis === "access" ? undefined : "sm:hidden"} key={axis}>
+          <AxisValue axes={axes} axis={axis} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
  * One line per source table. A dataset with one source shows the value alone; with
  * several, each line is prefixed by its source key so the values are never summed.
  * A dataset the warehouse has no table for yet shows `—`.
@@ -225,7 +260,7 @@ function PerSource({ row, render }: { row: TableListRow; render: (entry: SourceS
     <ul className="space-y-0.5">
       {entries.map((entry) => (
         <li key={entry.logicalName}>
-          <span className="mr-1 font-mono text-[11px] text-muted-foreground">{entry.sourceKey}</span>
+          <span className="mr-1 break-all font-mono text-[11px] text-muted-foreground sm:break-normal">{entry.sourceKey}</span>
           {render(entry)}
         </li>
       ))}

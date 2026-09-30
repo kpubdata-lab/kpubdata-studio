@@ -13,6 +13,9 @@
  * | `missing`       | the field is absent from the response  | `—` + tooltip, screen reader gets words  |
  * | `not-evaluated` | nothing was evaluated                  | `N/A` as an abbreviation                 |
  *
+ * A badge never breaks inside its words: a rate-limit badge split over three lines reads as three
+ * facts (#573). Where space is short, the badges wrap as whole badges instead.
+ *
  * `data-status` carries the kind so component tests can pin the meaning. Colour never
  * carries it alone: a badge always has its word, and its axis when there is one.
  */
@@ -52,7 +55,7 @@ export function ActionableStatus({
 }) {
   return (
     <span
-      className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium", TONE_CLASS[tone], className)}
+      className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-1.5 py-0.5 text-xs font-medium", TONE_CLASS[tone], className)}
       data-status="actionable"
       data-tone={tone}
     >
