@@ -273,25 +273,7 @@
     }
   },
   "newBuild": {
-    "templates": {
-      "blank": "직접 구성",
-      "blankDesc": "아무 값 없이 처음부터 직접 설정합니다.",
-      "air": "대기오염 정보",
-      "airDesc": "data.go.kr 대기오염 측정 데이터로 시작합니다.",
-      "airTitle": "대기오염 정보",
-      "airSourceDesc": "data.go.kr 대기오염 측정 소스 데이터셋",
-      "rate": "기준금리 추이",
-      "rateDesc": "한국은행 ECOS 기준금리 시계열 데이터로 시작합니다.",
-      "rateTitle": "기준금리 추이",
-      "rateSourceDesc": "한국은행 ECOS 기준금리 시계열 소스 데이터셋",
-      "pop": "인구 통계",
-      "popDesc": "통계청(KOSIS) 인구 통계로 시작합니다.",
-      "popTitle": "인구 통계",
-      "popSourceDesc": "통계청 KOSIS 인구 통계 소스 데이터셋",
-      "unavailableCount": "준비 중인 템플릿 {{count}}개"
-    },
     "steps": {
-      "template": "템플릿",
       "identity": "기본 정보",
       "source": "데이터 소스",
       "params": "파라미터",
@@ -322,22 +304,10 @@
       "eyebrowEdit": "편집 · 갱신",
       "eyebrowNew": "테이블 만들기",
       "titleEdit": "{{title}} 편집",
-      "titleNew": "공공데이터로 새 테이블 만들기",
       "descEdit": "기존 스펙을 불러왔습니다. 수정한 내용은 새 실행으로 기록됩니다.",
-      "descNew": "데이터 소스, 파라미터, 출력 형식을 단계별로 설정합니다.",
       "loadingSpec": "기존 스펙을 불러오는 중입니다...",
       "specNotFound": "Run {{id}}의 스펙을 찾지 못했습니다. KPubData Builder는 스펙을 보관하지 않으므로, 이 브라우저에서 실행하지 않은 Run은 불러올 수 없습니다. 아래 입력으로는 새 테이블을 만듭니다.",
-      "specEditing": "Run {{id}}의 스펙을 편집하고 있습니다. KPubData Builder는 기존 실행을 덮어쓰지 않으므로, 실행하면 수정된 스펙으로 새 갱신 실행이 기록됩니다.",
-      "savedSpecLoaded": "Saved BuildSpec {{name}}을(를) 불러왔습니다. 수정 후 \"이 스펙 저장\"을 다시 눌러야 Workspace에 반영됩니다 — 지금 열기만 한 것으로는 원본이 바뀌지 않습니다.",
-      "draftExists": "저장된 초안이 있습니다. 이어서 편집할까요?",
-      "load": "불러오기",
-      "delete": "삭제"
-    },
-    "template": {
-      "selectTitle": "템플릿 선택",
-      "selectDesc": "자주 쓰는 공공데이터 조합으로 시작하거나 직접 구성으로 처음부터 설정하세요.",
-      "catalogLoading": "Builder catalog를 불러오는 중입니다...",
-      "catalogError": "Builder catalog 조회 실패: {{error}}"
+      "specEditing": "Run {{id}}의 스펙을 편집하고 있습니다. KPubData Builder는 기존 실행을 덮어쓰지 않으므로, 실행하면 수정된 스펙으로 새 갱신 실행이 기록됩니다."
     },
     "identity": {
       "title": "기본 정보",
@@ -398,8 +368,6 @@
     "nav": {
       "prev": "이전",
       "next": "다음",
-      "saved": "저장됨 ✓",
-      "saveDraft": "초안 저장",
       "specTitle": "생성될 스펙 (Generated spec)"
     }
   },
@@ -1038,7 +1006,10 @@
       "buildSucceeded": "테이블 생성 완료 (run {{runId}})",
       "buildCancelled": "실행이 취소되었습니다.",
       "interrupted": "요청을 중단했습니다. 서버 실행 결과는 확인되지 않았습니다.",
-      "planTitle": "Table creation plan"
+      "planTitle": "Table creation plan",
+      "logicalNameLabel": "만들어질 테이블 이름",
+      "logicalNameAfterPreview": "최신 Preview 를 실행하면 표시됩니다.",
+      "logicalNameNote": "테이블 ID 와 KPubData Builder Preview 가 알려 준 source key 입니다."
     },
     "preview": {
       "title": "Preview · 검증",
@@ -1133,12 +1104,6 @@
       "endpointLabel": "Endpoint",
       "editorForm": "Form"
     },
-    "steps": {
-      "source": "데이터 선택",
-      "configure": "가져오기 설정",
-      "preview": "Preview · 검증",
-      "review": "검토 · 테이블 만들기"
-    },
     "errors": {
       "catalog": "Builder catalog를 불러오지 못했습니다.",
       "upload": "파일 업로드에 실패했습니다.",
@@ -1202,7 +1167,14 @@
       "body": "이 소스 데이터셋은 API Key가 필요한 Provider를 사용합니다.\n먼저 Provider / API 연결에서 자격 증명을 등록한 뒤 계속하세요.",
       "cta": "API 연결하기"
     },
-    "requiredParams": "{{params}} 필수 요청 파라미터를 입력해주세요."
+    "requiredParams": "{{params}} 필수 요청 파라미터를 입력해주세요.",
+    "stepper": {
+      "label": "테이블 만들기 단계",
+      "configure": "구성",
+      "preview": "미리보기·검증",
+      "create": "만들기"
+    },
+    "savedSpecOpened": "저장된 스펙 “{{name}}”을(를) 불러왔습니다. 여는 것만으로는 저장본이 바뀌지 않습니다."
   },
   "datasetDetail": {
     "stagesErrorMsg": "Stage 상태를 불러오지 못했습니다.",

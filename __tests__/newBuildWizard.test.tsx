@@ -1,7 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearBuildSpecs, saveBuildSpec } from "@/features/build-spec/specStore";
 import { NewBuildPage } from "@/pages/NewBuildPage";
 import { API_BASE } from "@/shared/config/env";
 import { mswServer } from "../vitest.setup";
@@ -14,18 +15,35 @@ vi.mock("@/features/preview/api", () => ({
   previewBuild: previewBuildMock,
 }));
 
-function renderWizard() {
-  return render(
-    <MemoryRouter>
-      <NewBuildPage />
+const RUN_ID = "kma-daily-edit-run";
+
+/**
+ * The wizard edits an existing table's spec (#534 — creating one is /add). It opens on
+ * the identity step once the spec has loaded.
+ */
+async function renderWizard() {
+  const view = render(
+    <MemoryRouter initialEntries={[`/refresh-jobs/${RUN_ID}/edit`]}>
+      <Routes>
+        <Route path="/refresh-jobs/:buildId/edit" element={<NewBuildPage />} />
+      </Routes>
     </MemoryRouter>,
   );
+  await screen.findByRole("heading", { name: "기본 정보" }, { timeout: 8000 });
+  return view;
 }
 
-// 마법사는 템플릿 단계에서 시작한다(#11). 식별 단계로 넘어가는 헬퍼.
-function skipTemplateStep() {
-  fireEvent.click(screen.getByRole("button", { name: "다음" }));
-}
+beforeEach(() => {
+  clearBuildSpecs();
+  saveBuildSpec(RUN_ID, {
+    datasetId: "kma-daily",
+    title: "기상청 일별",
+    description: "일별 관측 데이터",
+    sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
+    exports: [{ format: "jsonl" }],
+    metadata: { outputPath: "artifacts/builds/kma-daily" },
+  });
+});
 
 /** #490로 CatalogDataset에 추가된 필수 탐색 metadata의 최소 기본값(fixture 축약용). */
 function catalogDataset(name: string, title: string, requiresServiceKey: boolean) {
@@ -62,11 +80,7 @@ function useCatalogFixture() {
 }
 
 async function goToPreviewStep() {
-  renderWizard();
-  skipTemplateStep();
-  fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
-  fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "기상청 일별" } });
-  fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "일별 관측 데이터" } });
+  await renderWizard();
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
   await screen.findByRole("heading", { name: "데이터 소스" });
@@ -82,45 +96,20 @@ async function goToPreviewStep() {
 
 afterEach(() => {
   previewBuildMock.mockReset();
+  clearBuildSpecs();
 });
 
-describe("Create Table Wizard", () => {
-  it("starts on the template step", () => {
-    renderWizard();
-    expect(screen.getByRole("heading", { name: "템플릿 선택" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /대기오염 정보/ })).toBeInTheDocument();
-  });
-
-  it("selecting a catalog-backed template prefills the current Builder dataset id", async () => {
-    useCatalogFixture();
-    renderWizard();
-    await waitFor(() => expect(screen.getByRole("button", { name: /대기오염 정보/ })).toBeEnabled());
-
-    fireEvent.click(screen.getByRole("button", { name: /대기오염 정보/ }));
-
-    expect(screen.getByRole("heading", { name: "기본 정보" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/테이블 ID/)).toHaveValue("datago-air-quality");
-    skipTemplateStep();
-    await screen.findByRole("heading", { name: "데이터 소스" });
-    expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("air_quality");
-  });
-
-  it("marks templates missing from Builder catalog unavailable", async () => {
-    useCatalogFixture();
-    renderWizard();
-
-    await waitFor(() => expect(screen.getByRole("button", { name: /인구 통계/ })).toBeDisabled());
-    expect(screen.getByRole("button", { name: /대기오염 정보/ })).toBeEnabled();
-    expect(screen.getByText(/현재 Builder catalog에 없는 source/)).toBeInTheDocument();
+describe("Spec edit wizard", () => {
+  it("opens on the identity step, with no template step (#534)", async () => {
+    await renderWizard();
+    expect(screen.queryByRole("heading", { name: "템플릿 선택" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/테이블 ID/)).toHaveValue("kma-daily");
+    expect(screen.queryByText("템플릿")).not.toBeInTheDocument();
   });
 
   it("uses Builder catalog providers and datasets in the source selector", async () => {
     useCatalogFixture();
-    renderWizard();
-    skipTemplateStep();
-    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "custom" } });
-    fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "Custom" } });
-    fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "Custom dataset" } });
+    await renderWizard();
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "데이터 소스" });
@@ -132,19 +121,15 @@ describe("Create Table Wizard", () => {
   });
 
   it("blocks advancing while required fields are empty", async () => {
-    renderWizard();
-    skipTemplateStep(); // 템플릿 → 기본 정보
+    await renderWizard();
+    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
     expect(await screen.findByText(/테이블 ID를 입력해주세요/)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "기본 정보" })).toBeInTheDocument();
   });
 
   it("advances to the source step once identity fields are filled", async () => {
-    renderWizard();
-    skipTemplateStep();
-    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
-    fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "기상청 일별" } });
-    fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "일별 관측 데이터" } });
+    await renderWizard();
 
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
@@ -153,11 +138,7 @@ describe("Create Table Wizard", () => {
   });
 
   it("blocks the params step when the JSON is invalid", async () => {
-    renderWizard();
-    skipTemplateStep();
-    fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "kma-daily" } });
-    fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "기상청 일별" } });
-    fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "일별 관측" } });
+    await renderWizard();
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "데이터 소스" });

@@ -1,26 +1,41 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { clearBuildSpecs, saveBuildSpec } from "@/features/build-spec/specStore";
 import { NewBuildPage } from "@/pages/NewBuildPage";
+
+const RUN_ID = "air-quality-edit-run";
+
+beforeEach(() => {
+  clearBuildSpecs();
+  saveBuildSpec(RUN_ID, {
+    datasetId: "air-quality",
+    title: "대기오염",
+    description: "설명",
+    sources: [{ provider: "datago", dataset: "air", params: {} }],
+    exports: [{ format: "jsonl" }],
+    metadata: { outputPath: "artifacts/builds/air-quality" },
+  });
+});
+
+afterEach(() => clearBuildSpecs());
 
 function next() {
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
 }
 
 async function goToReviewAndValidate() {
+  // Editing an existing table's spec (#534 — creating one is /add).
   render(
-    <MemoryRouter>
-      <NewBuildPage />
+    <MemoryRouter initialEntries={[`/refresh-jobs/${RUN_ID}/edit`]}>
+      <Routes>
+        <Route path="/refresh-jobs/:buildId/edit" element={<NewBuildPage />} />
+      </Routes>
     </MemoryRouter>,
   );
-  next(); // 템플릿 → 기본 정보
-  fireEvent.change(screen.getByLabelText(/테이블 ID/), { target: { value: "air-quality" } });
-  fireEvent.change(screen.getByLabelText(/제목/), { target: { value: "대기오염" } });
-  fireEvent.change(screen.getByLabelText(/설명/), { target: { value: "설명" } });
+  await screen.findByRole("heading", { name: "기본 정보" }, { timeout: 8000 });
   next(); // → 데이터 소스
   await screen.findByRole("heading", { name: "데이터 소스" });
-  fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
-  fireEvent.change(screen.getByLabelText(/데이터셋/), { target: { value: "air" } });
   next(); // → 파라미터 (기본 "{}" 유효)
   await screen.findByRole("heading", { name: "파라미터" });
   next(); // → 미리보기
@@ -34,11 +49,11 @@ async function goToReviewAndValidate() {
   await screen.findByText("검증을 통과했습니다. 실행할 수 있습니다.");
 }
 
-describe("Create Table wizard — run build (#39 wiring)", () => {
+describe("Spec edit wizard — run build (#39 wiring)", () => {
   it("runs the build (mock) and shows success after validation", async () => {
     await goToReviewAndValidate();
 
-    const runButton = screen.getByRole("button", { name: "테이블 만들기" });
+    const runButton = screen.getByRole("button", { name: "갱신" });
     expect(runButton).toBeEnabled();
     fireEvent.click(runButton);
 
@@ -47,7 +62,7 @@ describe("Create Table wizard — run build (#39 wiring)", () => {
 
   it("resets validation so an edited (unvalidated) spec cannot be run (#72)", async () => {
     await goToReviewAndValidate();
-    expect(screen.getByRole("button", { name: "테이블 만들기" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "갱신" })).toBeEnabled();
 
     // 검증 이후 출력 형식 단계로 돌아가 입력을 수정한다.
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
@@ -61,6 +76,6 @@ describe("Create Table wizard — run build (#39 wiring)", () => {
     await screen.findByRole("heading", { name: "검증·실행" });
 
     expect(screen.queryByText("검증을 통과했습니다. 실행할 수 있습니다.")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "테이블 만들기" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "갱신" })).toBeDisabled();
   });
 });

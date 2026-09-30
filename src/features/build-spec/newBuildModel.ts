@@ -41,7 +41,6 @@ export const initialValues: BuildFormValues = {
 
 export function buildSteps(t: (k: string) => string): StepItem[] {
   return [
-    { id: "template", label: t("newBuild.steps.template") },
     { id: "identity", label: t("newBuild.steps.identity") },
     { id: "source", label: t("newBuild.steps.source") },
     { id: "params", label: t("newBuild.steps.params") },
@@ -51,9 +50,8 @@ export function buildSteps(t: (k: string) => string): StepItem[] {
   ];
 }
 
-// Form fields to validate before advancing in each step. Template/Preview/Review steps have no input fields.
+// Form fields to validate before advancing in each step. Preview/Review steps have no input fields.
 export const STEP_FIELDS: Array<Array<keyof BuildFormValues>> = [
-  [],
   ["datasetId", "title", "description"],
   ["provider", "sourceDataset"],
   ["sourceParams"],

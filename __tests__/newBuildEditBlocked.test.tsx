@@ -3,14 +3,14 @@
  *
  * The form rebuilds `sources[0]` from provider/dataset/params only, so opening a file or
  * URL source in it would turn that source into a public API source on the next save.
- * Both entry points — Build Edit and "Open Saved BuildSpec" — must stop and say why.
+ * Build Edit must stop and say why. "Open Saved BuildSpec" now opens in the one creation
+ * flow at /add, which expresses file and URL sources (#534, createTableFlow.test.tsx).
  */
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { NewBuildPage } from "@/pages/NewBuildPage";
 import { clearBuildSpecs, saveBuildSpec } from "@/features/build-spec/specStore";
-import { createSavedSpec } from "@/features/workspace/savedSpecs";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const URL_SPEC: BuildSpec = {
@@ -57,33 +57,6 @@ describe("New Build wizard — unsupported first source (#496)", () => {
     expect(alert).toHaveTextContent(/url 소스라 마법사로 편집할 수 없습니다/);
     // The wizard itself is not rendered — no step heading, no navigation.
     expect(screen.queryByRole("heading", { name: "기본 정보" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "다음" })).not.toBeInTheDocument();
-  });
-
-  it("blocks opening a Saved BuildSpec whose first source is a file", async () => {
-    const { entry } = createSavedSpec({
-      name: "파일 스펙",
-      spec: {
-        ...URL_SPEC,
-        sources: [
-          {
-            kind: "file",
-            params: {},
-            uploadId: "upl_0123456789abcdef0123456789abcdef",
-            format: "csv",
-          },
-        ],
-      },
-      validation: { status: "not_validated", errors: [] },
-    });
-    render(
-      <MemoryRouter initialEntries={[`/refresh-jobs/new?savedSpecId=${entry.id}`]}>
-        <NewBuildPage />
-      </MemoryRouter>,
-    );
-
-    const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(/file 소스라 마법사로 편집할 수 없습니다/);
     expect(screen.queryByRole("button", { name: "다음" })).not.toBeInTheDocument();
   });
 });

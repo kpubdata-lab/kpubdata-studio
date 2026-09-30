@@ -36,8 +36,10 @@ test("Workspace에 Saved BuildSpec 저장·새로고침 후 재노출된다 (#26
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
+  // The old creation URL lands in the one creation flow at /add (#534).
   await page.goto("/refresh-jobs/new");
-  await expect(page.getByRole("heading", { name: /템플릿 선택|기본 정보/ }).first()).toBeVisible();
+  await expect(page).toHaveURL(/\/add$/);
+  await expect(page.getByRole("heading", { name: "데이터 선택" })).toBeVisible();
 
   // Workspace entry via Build creation CTA (save flow validated at unit level — here we check
   // screen transition and empty state guidance have no regressions).

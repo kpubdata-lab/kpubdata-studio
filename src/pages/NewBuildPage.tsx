@@ -1,26 +1,31 @@
 /**
- * New Build Wizard screen.
+ * Edit an existing table's spec (`/refresh-jobs/:buildId/edit`).
  *
  * Guides through step-by-step Stepper instead of a single form (proposal §5.2):
  * Identity → Source → Params → Preview → Output → Review & Run. Manages input with
  * React Hook Form and validates only the fields for the current step before advancing.
  * Preview/Validate are not separate pages but integrated as wizard steps (§5.3/§5.4).
+ *
+ * Creating a table is `/add` (#534): this page used to be a second creation wizard at
+ * `/refresh-jobs/new`, with templates, a draft slot and Workspace saved specs. Those moved
+ * to the one creation flow; what stays is editing, which keeps what the form cannot
+ * express from the opened spec (#496). Reached without a table, it sends the person to
+ * `/add`.
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useParams, useSearchParams } from "react-router-dom";
-import { clearDraft, hasDraft, loadDraft, saveDraft } from "@/features/build-spec/draftStorage";
+import { Navigate, useParams } from "react-router-dom";
+import { CREATE_TABLE_PATH } from "@/app/createTableRedirect";
 import { previewBuild } from "@/features/preview/api";
 import { useBuild } from "@/features/runs/useBuild";
 import { useBuildJob } from "@/features/runs/useBuildJob";
 import { validateSpec } from "@/features/validation/api";
-import { createSavedSpec, getSavedSpec } from "@/features/workspace/savedSpecs";
+import { createSavedSpec } from "@/features/workspace/savedSpecs";
 import type { SavedSpecValidation } from "@/features/workspace/types";
 import { builderApi } from "@/shared/lib/builderApi";
 import { providerLabel } from "@/shared/lib/providerLabels";
-import { buildFormValuesSchema } from "@/shared/lib/schemas";
 import type { BuildSpec } from "@/shared/lib/types";
 import { Button, Card, PageHeader, StatusBadge, Stepper } from "@/shared/ui";
 
@@ -29,7 +34,6 @@ import {
   catalogProvider,
   editBlockReason,
   initialValues,
-  redactDraftForStorage,
   toBuildSpec,
   toFormValues,
   STEP_FIELDS,
@@ -38,29 +42,30 @@ import {
   type PreviewState,
   type ValidationState,
 } from "@/features/build-spec/newBuildModel";
-import type { BuildTemplate } from "@/features/build-spec/templates";
 import { IdentityStep } from "@/features/build-spec/components/steps/IdentityStep";
 import { OutputStep } from "@/features/build-spec/components/steps/OutputStep";
 import { ParamsStep } from "@/features/build-spec/components/steps/ParamsStep";
 import { PreviewStep } from "@/features/build-spec/components/steps/PreviewStep";
 import { ReviewStep } from "@/features/build-spec/components/steps/ReviewStep";
 import { SourceStep } from "@/features/build-spec/components/steps/SourceStep";
-import { TemplateStep } from "@/features/build-spec/components/steps/TemplateStep";
 
 
 /**
- * Step-by-step New Build Wizard page component.
+ * Spec edit page for the table behind `:buildId`.
  *
- * @returns Wizard UI.
+ * @returns Wizard UI, or a redirect to the creation flow when there is no table.
  */
 export function NewBuildPage() {
+  const { buildId } = useParams();
+  if (!buildId) return <Navigate replace to={CREATE_TABLE_PATH} />;
+  return <EditSpecWizard buildId={buildId} />;
+}
+
+function EditSpecWizard({ buildId }: { buildId: string }) {
   const { t } = useTranslation();
   const steps = buildSteps(t);
-  // Entering via /builds/:buildId/edit (edit mode). If buildId exists, load existing spec.
-  const { buildId } = useParams();
-  const [searchParams] = useSearchParams();
-  const { build, isLoading: buildLoading } = useBuild(buildId || "");
-  const isEditMode = !!buildId && build !== null;
+  const { build, isLoading: buildLoading } = useBuild(buildId);
+  const isEditMode = build !== null;
 
   const [step, setStep] = useState(0);
   const [preview, setPreview] = useState<PreviewState>({ status: "idle", rows: [], schema: {}, warnings: [] });
@@ -75,15 +80,9 @@ export function NewBuildPage() {
   // Set when the opened spec has a first source the form cannot express (file/url, #496).
   // The wizard then stays closed instead of rebuilding that source as a public API one.
   const [editBlocked, setEditBlocked] = useState<string | null>(null);
-  // Show restore banner if saved draft exists (#10). Check only once at mount.
-  // In edit mode, restoring a draft would overwrite the loaded spec, so don't show banner.
-  const [draftAvailable, setDraftAvailable] = useState(() => !buildId && hasDraft());
-  const [draftSaved, setDraftSaved] = useState(false);
+  // The wizard shows once the opened spec is in the form, never an empty form first.
+  const [formReady, setFormReady] = useState(false);
   const [catalog, setCatalog] = useState<CatalogState>({ status: "loading", providers: [] });
-  // When opened from Workspace (#260) via "?savedSpecId=", track which Saved BuildSpec
-  // was loaded. Opening doesn't immediately overwrite the base — only clicking
-  // "Save this spec" below applies it.
-  const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
   const [saveSpecMessage, setSaveSpecMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const job = useBuildJob();
 
@@ -153,94 +152,23 @@ export function NewBuildPage() {
 
   // Edit mode: load form when build is fetched.
   //
-  // Like selectTemplate, when form is replaced, also clear preview/validation results
+  // When the form is replaced, also clear preview/validation results
   // from the previous spec to prevent stale state (#72).
   useEffect(() => {
     if (!isEditMode || !build || buildLoading) return;
     setBaseSpec(build.spec);
     const blocked = editBlockReason(build.spec);
     setEditBlocked(blocked);
+    setFormReady(true);
     if (blocked) return;
     reset(toFormValues(build.spec));
     setPreview({ status: "idle", rows: [], schema: {}, warnings: [] });
     setValidation({ status: "idle", isValid: false, errors: [] });
     validatedSnapshotRef.current = null;
-    setStep(1); // Skip template step, start from Identity
+    setStep(0);
   }, [isEditMode, build, buildLoading, reset]);
 
-  // From Workspace (#260) "Open Saved BuildSpec" entry point (`?savedSpecId=`). Apply only
-  // once at mount — don't overwrite base immediately, just fill form (#260 review §3).
-  const savedSpecPrefillApplied = useRef(false);
-  useEffect(() => {
-    if (savedSpecPrefillApplied.current || buildId) return;
-    const savedSpecId = searchParams.get("savedSpecId");
-    if (!savedSpecId) return;
-    savedSpecPrefillApplied.current = true;
-    const entry = getSavedSpec(savedSpecId);
-    if (!entry) return;
-    setBaseSpec(entry.spec);
-    const blocked = editBlockReason(entry.spec);
-    setEditBlocked(blocked);
-    if (blocked) return;
-    reset(toFormValues(entry.spec));
-    setPreview({ status: "idle", rows: [], schema: {}, warnings: [] });
-    setValidation({ status: "idle", isValid: false, errors: [] });
-    validatedSnapshotRef.current = null;
-    setOpenedSavedSpecName(entry.name);
-    setStep(1);
-  }, [buildId, searchParams, reset]);
-
   const draftStatus = validation.isValid ? "validated" : isDirty ? "dirty" : "new";
-
-  // Select template, fill form with those values, and move to Identity step (#11).
-  // Also clear preview/validation results from previous template to prevent stale state.
-  function selectTemplate(template: BuildTemplate) {
-    reset(template.values);
-    // Starting fresh from template, so discard leftover sources/metadata from
-    // previously edited spec.
-    setBaseSpec(null);
-    setPreview({ status: "idle", rows: [], schema: {}, warnings: [] });
-    setValidation({ status: "idle", isValid: false, errors: [] });
-    validatedSnapshotRef.current = null;
-    setStep(1);
-  }
-
-  // Save current form input as localStorage draft (#10).
-  // Reset with just-saved value to clear dirty state; don't touch draftAvailable banner
-  // (banner is for restore on new mount).
-  function saveCurrentDraft() {
-    const current = getValues();
-    // Persistence boundary (S07): redact credential-like values before saving to localStorage
-    // to prevent plaintext storage in draft. In-memory form state (current) stays unchanged,
-    // so ongoing Preview/Build is not affected.
-    saveDraft(redactDraftForStorage(current));
-    reset(current);
-    setDraftSaved(true);
-  }
-
-  // Restore saved draft and move to Identity step.
-  function restoreDraft() {
-    // Validate and restore saved draft by version/schema. Returns null if version mismatch
-    // or corrupted (#84). If old version stored plaintext secrets in draft, they are
-    // redacted and re-saved at restore time (loadDraft's sanitize rewrite); returned value
-    // is also redacted — below toBuildSpec guard detects marker and requests re-entry.
-    const saved = loadDraft<BuildFormValues>(buildFormValuesSchema, undefined, redactDraftForStorage);
-    if (!saved) {
-      // Clear corrupted value so banner doesn't repeat; don't navigate/hide.
-      clearDraft();
-      setDraftAvailable(false);
-      return;
-    }
-    reset(saved);
-    setDraftAvailable(false);
-    setStep(1);
-  }
-
-  // Delete saved draft and hide banner.
-  function discardDraft() {
-    clearDraft();
-    setDraftAvailable(false);
-  }
 
   async function goNext() {
     const fields = STEP_FIELDS[step];
@@ -326,22 +254,18 @@ export function NewBuildPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        title={isEditMode ? t("newBuild.page.titleEdit", { title: baseSpec?.title || buildId }) : t("newBuild.page.titleNew")}
-        description={
-          isEditMode
-            ? t("newBuild.page.descEdit")
-            : t("newBuild.page.descNew")
-        }
+        title={t("newBuild.page.titleEdit", { title: baseSpec?.title || buildId })}
+        description={t("newBuild.page.descEdit")}
         actions={<StatusBadge status={draftStatus} />}
       />
 
-      {buildId && buildLoading ? (
+      {buildLoading ? (
         <Card variant="dashed" className="p-4">
           <p className="text-sm text-muted-foreground">{t("newBuild.page.loadingSpec")}</p>
         </Card>
       ) : null}
 
-      {buildId && !buildLoading && !isEditMode ? (
+      {!buildLoading && !isEditMode ? (
         <Card variant="dashed" className="p-4">
           <p className="text-sm text-foreground">
             {t("newBuild.page.specNotFound", { id: buildId })}
@@ -357,31 +281,7 @@ export function NewBuildPage() {
         </Card>
       ) : null}
 
-      {openedSavedSpecName ? (
-        <Card variant="dashed" className="p-4">
-          <p className="text-sm text-foreground">
-            {t("newBuild.page.savedSpecLoaded", { name: openedSavedSpecName })}
-          </p>
-        </Card>
-      ) : null}
-
-      {draftAvailable ? (
-        <Card variant="dashed" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-foreground">
-            {t("newBuild.page.draftExists")}
-          </p>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={restoreDraft}>
-              {t("newBuild.page.load")}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={discardDraft}>
-              {t("newBuild.page.delete")}
-            </Button>
-          </div>
-        </Card>
-      ) : null}
-
-      {editBlocked ? (
+      {!isEditMode || !formReady ? null : editBlocked ? (
         <Card variant="dashed" className="p-4">
           <p role="alert" className="text-sm text-foreground">
             {editBlocked}
@@ -395,11 +295,9 @@ export function NewBuildPage() {
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(20rem,0.8fr)]">
             <Card>
-              {step === 0 ? <TemplateStep catalog={catalog} onSelect={selectTemplate} /> : null}
+              {step === 0 ? <IdentityStep register={register} errors={errors} /> : null}
 
-              {step === 1 ? <IdentityStep register={register} errors={errors} /> : null}
-
-              {step === 2 ? (
+              {step === 1 ? (
                 <SourceStep
                   register={register}
                   errors={errors}
@@ -410,13 +308,13 @@ export function NewBuildPage() {
                 />
               ) : null}
 
-              {step === 3 ? <ParamsStep register={register} errors={errors} /> : null}
+              {step === 2 ? <ParamsStep register={register} errors={errors} /> : null}
 
-              {step === 4 ? <PreviewStep preview={preview} onRefresh={() => void runPreview()} /> : null}
+              {step === 3 ? <PreviewStep preview={preview} onRefresh={() => void runPreview()} /> : null}
 
-              {step === 5 ? <OutputStep register={register} errors={errors} /> : null}
+              {step === 4 ? <OutputStep register={register} errors={errors} /> : null}
 
-              {step === 6 ? (
+              {step === 5 ? (
                 <ReviewStep
                   validation={validation}
                   job={job}
@@ -428,7 +326,7 @@ export function NewBuildPage() {
                     if (specPreview.spec) void job.start(specPreview.spec);
                   }}
                   onSaveSpec={saveAsSavedSpec}
-                  isRefresh={isEditMode}
+                  isRefresh
                 />
               ) : null}
 
@@ -438,14 +336,9 @@ export function NewBuildPage() {
                 <Button variant="ghost" onClick={goBack} disabled={step === 0}>
                   {t("newBuild.nav.prev")}
                 </Button>
-                <div className="flex gap-2">
-                  <Button variant="secondary" onClick={saveCurrentDraft}>
-                    {draftSaved && !isDirty ? t("newBuild.nav.saved") : t("newBuild.nav.saveDraft")}
-                  </Button>
-                  {step < steps.length - 1 ? (
-                    <Button onClick={() => void goNext()}>{t("newBuild.nav.next")}</Button>
-                  ) : null}
-                </div>
+                {step < steps.length - 1 ? (
+                  <Button onClick={() => void goNext()}>{t("newBuild.nav.next")}</Button>
+                ) : null}
               </div>
             </Card>
 

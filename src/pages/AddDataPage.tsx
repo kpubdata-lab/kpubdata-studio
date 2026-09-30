@@ -1,10 +1,12 @@
 /**
- * Add Data Workbench (`/add`, #250).
+ * Create a table (`/add`, #250, #534) — the one table creation flow.
  *
- * Add Data → Source → Configure → Canonical BuildSpec → Preview & Validation → Review →
- * Build → Builds/Runs. Follows the 4-step wizard structure from Prototype
- * (kpubdata_ui_prototype_v1.html) (Source/Configure/Preview & Validate/Review & Build),
- * but actual values/state/limits/availability follow Builder contract.
+ * Three steps: Configure (source, credentials, request parameters, application) →
+ * Preview & Validate → Create (with the table's logical name from Builder's preview).
+ * `/refresh-jobs/new`, the second wizard this replaced, redirects here with its query, so a
+ * Workspace saved spec (`?savedSpecId=`) and an Ask KPubData draft open in this flow.
+ * Editing an existing table's spec stays on `/refresh-jobs/:id/edit` (#496). Values, state,
+ * limits and availability follow the Builder contract.
  *
  * Reuse:
  *  - Builder API client/Zod schema — `shared/lib/builderApi.ts`
@@ -24,7 +26,9 @@ import { ConfigureStep, type CatalogState, type UploadState } from "@/features/a
 import { PreviewValidationStep, type PreviewState } from "@/features/add-data/components/PreviewValidationStep";
 import { ReviewBuildStep } from "@/features/add-data/components/ReviewBuildStep";
 import { SourceStep } from "@/features/add-data/components/SourceStep";
+import { getSavedSpec } from "@/features/workspace/savedSpecs";
 import { clearAddDataDraft, hasAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
+import { discardFormDraft, hasFormDraft, takeFormDraftSpec } from "@/features/add-data/formDraft";
 import { checkRequiredParams } from "@/features/add-data/requiredParams";
 import { findDataset, identityFromCatalog, identityFromFilename, identityFromUrl } from "@/features/add-data/identity";
 import {
@@ -39,7 +43,7 @@ import {
   type PreviewSampleMode,
 } from "@/features/add-data/model";
 import { BuildSpecShapeError, YamlSyntaxError, fromYamlText, toYamlText } from "@/features/build-spec/yamlText";
-import type { SourceKind } from "@/shared/lib/types";
+import type { BuildSpec, SourceKind } from "@/shared/lib/types";
 import { previewBuildDetailed } from "@/features/preview/api";
 import { useBuildJob } from "@/features/runs/useBuildJob";
 import { validateSpec } from "@/features/validation/api";
@@ -47,7 +51,7 @@ import { i18n } from "@/shared/i18n";
 import { Button, Card, PageHeader, Stepper } from "@/shared/ui";
 
 // Labels must follow screen language, so create at render time, not as constants.
-const STEP_IDS = ["source", "configure", "preview", "review"] as const;
+const STEP_IDS = ["configure", "preview", "create"] as const;
 
 
 export function AddDataPage() {
@@ -70,11 +74,14 @@ export function AddDataPage() {
     { status: "idle", valid: false, errors: [] },
   );
   const [yamlEditError, setYamlEditError] = useState<string>();
-  const [draftAvailable, setDraftAvailable] = useState(() => hasAddDataDraft());
+  // Either this flow's own draft or a form-shaped one Ask KPubData left (formDraft.ts).
+  const [draftAvailable, setDraftAvailable] = useState(() => hasAddDataDraft() || hasFormDraft());
+  const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
 
   const preselectApplied = useRef(false);
+  const savedSpecApplied = useRef(false);
   // Ref storing the source identity key after last auto-sync (#250 final validation §1).
   // When source identity changes (provider+dataset/URL/file — real replacement, not
   // just detail config change), reset touched flags and force-apply new identity to
@@ -127,13 +134,27 @@ export function AddDataPage() {
     const found = catalog.providers.find((p) => p.name === provider)?.datasets.find((d) => d.name === dataset);
     preselectApplied.current = true;
     if (!found) return;
+    // Source and its settings share the Configure step, so there is no step to skip.
     setDraft((current) => ({
       ...current,
       sourceKind: "public_api",
       publicApi: { ...current.publicApi, provider, dataset },
     }));
-    setStep(1);
   }, [catalog, searchParams]);
+
+  // Workspace "open saved spec" (#260), formerly handled by the second wizard. Applied
+  // once; the saved spec itself is not changed by opening it.
+  useEffect(() => {
+    if (savedSpecApplied.current) return;
+    savedSpecApplied.current = true;
+    const savedSpecId = searchParams.get("savedSpecId");
+    if (!savedSpecId) return;
+    const entry = getSavedSpec(savedSpecId);
+    if (!entry) return;
+    applySpec(entry.spec, INITIAL_DRAFT);
+    setOpenedSavedSpecName(entry.name);
+    // Once per mount: savedSpecApplied guards it; applySpec only uses refs and setters.
+  }, [searchParams]);
 
   // Public API: when provider/dataset selection changes, auto-sync dataset identity
   // (ID/title/description) from catalog dataset (#250 amendment 2). User-edited
@@ -233,8 +254,7 @@ export function AddDataPage() {
   }
 
   function goNext() {
-    if (step === 0 && !draft.sourceKind) return;
-    if (step === 1 && buildSpecFromDraft(draft).error) return;
+    if (step === 0 && (!draft.sourceKind || buildSpecFromDraft(draft).error)) return;
     setStep((s) => Math.min(s + 1, STEP_IDS.length - 1));
   }
 
@@ -287,24 +307,31 @@ export function AddDataPage() {
     }
   }
 
+  /**
+   * Put a whole BuildSpec into the draft (YAML Apply, a saved spec, an Ask KPubData draft).
+   * `base` replaces the current draft when given.
+   */
+  function applySpec(spec: BuildSpec, base?: AddDataDraft) {
+    // Applying a spec is explicit authoring (#250 amendment 2), so applyBuildSpecToDraft sets
+    // all *Touched to true — but Public API/URL identity effects only check provider/dataset/
+    // endpoint changes to judge "source changed", so if we don't sync lastIdentitySourceRef
+    // to the spec's source first, they'll misfire as sourceChanged and overwrite just-set explicit
+    // metadata (#283 follow-up review §6). Sync ref first so effects take "same-source detail
+    // change" path (respecting touched).
+    const appliedSource = spec.sources[0];
+    const appliedKind: SourceKind = appliedSource?.kind ?? "public_api";
+    if (appliedKind === "public_api" && appliedSource?.provider && appliedSource.dataset) {
+      lastIdentitySourceRef.current = `public_api:${appliedSource.provider}:${appliedSource.dataset}`;
+    } else if (appliedKind === "url" && appliedSource?.endpoint) {
+      const identity = identityFromUrl(appliedSource.endpoint);
+      lastIdentitySourceRef.current = identity.datasetId ? `url:${identity.datasetId}` : lastIdentitySourceRef.current;
+    }
+    setDraft((current) => applyBuildSpecToDraft(base ?? current, spec));
+  }
+
   function handleApplyYaml(text: string) {
     try {
-      const spec = fromYamlText(text);
-      // YAML Apply is explicit authoring (#250 amendment 2), so applyBuildSpecToDraft sets
-      // all *Touched to true — but Public API/URL identity effects only check provider/dataset/
-      // endpoint changes to judge "source changed", so if we don't sync lastIdentitySourceRef
-      // to YAML's source first, they'll misfire as sourceChanged and overwrite just-set explicit
-      // metadata (#283 follow-up review §6). Sync ref first so effects take "same-source detail
-      // change" path (respecting touched).
-      const appliedSource = spec.sources[0];
-      const appliedKind: SourceKind = appliedSource?.kind ?? "public_api";
-      if (appliedKind === "public_api" && appliedSource?.provider && appliedSource.dataset) {
-        lastIdentitySourceRef.current = `public_api:${appliedSource.provider}:${appliedSource.dataset}`;
-      } else if (appliedKind === "url" && appliedSource?.endpoint) {
-        const identity = identityFromUrl(appliedSource.endpoint);
-        lastIdentitySourceRef.current = identity.datasetId ? `url:${identity.datasetId}` : lastIdentitySourceRef.current;
-      }
-      setDraft((current) => applyBuildSpecToDraft(current, spec));
+      applySpec(fromYamlText(text));
       setYamlEditError(undefined);
     } catch (cause) {
       if (cause instanceof YamlSyntaxError) {
@@ -403,18 +430,20 @@ export function AddDataPage() {
   }
 
   function restoreDraft() {
+    setDraftAvailable(false);
     const saved = loadAddDataDraft();
-    if (!saved) {
-      clearAddDataDraft();
-      setDraftAvailable(false);
+    if (saved) {
+      setDraft(saved);
       return;
     }
-    setDraft(saved);
-    setDraftAvailable(false);
+    clearAddDataDraft();
+    const spec = takeFormDraftSpec();
+    if (spec) applySpec(spec, INITIAL_DRAFT);
   }
 
   function discardDraft() {
     clearAddDataDraft();
+    discardFormDraft();
     setDraftAvailable(false);
   }
 
@@ -444,6 +473,12 @@ export function AddDataPage() {
         description={t("addData.page.desc")}
       />
 
+      {openedSavedSpecName ? (
+        <Card variant="dashed" className="p-4">
+          <p className="text-sm text-foreground">{t("addData.savedSpecOpened", { name: openedSavedSpecName })}</p>
+        </Card>
+      ) : null}
+
       {draftAvailable ? (
         <Card variant="dashed" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-foreground">{t("addData.draft.prompt")}</p>
@@ -456,7 +491,8 @@ export function AddDataPage() {
 
       <Card>
         <Stepper
-          steps={STEP_IDS.map((id) => ({ id, label: t(`addData.steps.${id}`) }))}
+          label={t("addData.stepper.label")}
+          steps={STEP_IDS.map((id) => ({ id, label: t(`addData.stepper.${id}`) }))}
           current={step}
           onStepClick={setStep}
         />
@@ -465,27 +501,29 @@ export function AddDataPage() {
       <Card>
         {step === 0 ? <SourceStep selected={draft.sourceKind} onSelect={selectSource} /> : null}
 
-        {step === 1 ? (
-          <ConfigureStep
-            draft={draft}
-            updateDraft={updateDraft}
-            catalog={catalog}
-            providerConfigured={providerConfigured}
-            onConnectProvider={handleConnectProvider}
-            upload={upload}
-            onUploadFile={handleUploadFile}
-            specError={specResult.error}
-            // Show canonical spec drawable from current draft regardless of submit-readiness
-            // (including sentinel fail-closed) (#283 follow-up review §3) — even if specResult.spec
-            // is empty due to sentinel, YAML edit area must not disappear so user can replace
-            // sentinel with real value and re-Apply.
-            yamlText={editableSpec ? toYamlText(editableSpec) : ""}
-            yamlEditError={yamlEditError}
-            onApplyYaml={handleApplyYaml}
-          />
+        {step === 0 && draft.sourceKind ? (
+          <div className="mt-6 border-t border-border pt-6">
+            <ConfigureStep
+              draft={draft}
+              updateDraft={updateDraft}
+              catalog={catalog}
+              providerConfigured={providerConfigured}
+              onConnectProvider={handleConnectProvider}
+              upload={upload}
+              onUploadFile={handleUploadFile}
+              specError={specResult.error}
+              // Show canonical spec drawable from current draft regardless of submit-readiness
+              // (including sentinel fail-closed) (#283 follow-up review §3) — even if specResult.spec
+              // is empty due to sentinel, YAML edit area must not disappear so user can replace
+              // sentinel with real value and re-Apply.
+              yamlText={editableSpec ? toYamlText(editableSpec) : ""}
+              yamlEditError={yamlEditError}
+              onApplyYaml={handleApplyYaml}
+            />
+          </div>
         ) : null}
 
-        {step === 2 ? (
+        {step === 1 ? (
           <PreviewValidationStep
             preview={preview}
             limit={draft.previewLimit}
@@ -501,7 +539,7 @@ export function AddDataPage() {
           />
         ) : null}
 
-        {step === 3 ? (
+        {step === 2 ? (
           <ReviewBuildStep
             draft={draft}
             spec={specResult.spec}

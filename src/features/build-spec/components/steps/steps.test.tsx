@@ -15,7 +15,6 @@ import { ParamsStep } from "./ParamsStep";
 import { PreviewStep } from "./PreviewStep";
 import { ReviewStep } from "./ReviewStep";
 import { SourceStep } from "./SourceStep";
-import { TemplateStep } from "./TemplateStep";
 import { initialValues, type BuildFormValues, type CatalogState, type PreviewState, type ValidationState } from "@/features/build-spec/newBuildModel";
 import type { BuildJob } from "@/features/runs/useBuildJob";
 import type { CatalogDataset } from "@/shared/lib/builderApi";
@@ -53,21 +52,6 @@ const idleJob: BuildJob = {
 };
 
 const validated: ValidationState = { status: "validated", isValid: true, errors: [] };
-
-describe("TemplateStep", () => {
-  it("카탈로그를 불러오는 동안에도 템플릿 목록을 숨기지 않는다", () => {
-    render(<TemplateStep catalog={{ status: "loading", providers: [] }} onSelect={vi.fn()} />);
-    expect(screen.getByRole("heading", { level: 3 })).toBeInTheDocument();
-    expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
-  });
-
-  it("카탈로그 오류를 alert 으로 알린다", () => {
-    render(
-      <TemplateStep catalog={{ status: "error", providers: [], error: "연결 실패" }} onSelect={vi.fn()} />,
-    );
-    expect(screen.getByRole("alert")).toHaveTextContent("연결 실패");
-  });
-});
 
 describe("IdentityStep", () => {
   it("dataset id/제목/설명 입력을 모두 그린다", () => {

@@ -27,6 +27,8 @@ export interface StepperProps {
   onStepClick?: (index: number) => void;
   /** additional className */
   className?: string;
+  /** accessible name of the step list */
+  label?: string;
 }
 
 function resolveState(index: number, current: number, errorSteps: number[]): StepState {
@@ -55,12 +57,13 @@ export function Stepper({
   errorSteps = [],
   onStepClick,
   className,
+  label,
 }: StepperProps) {
   // if current is out of bounds (e.g., terminal value after last stage), clamp to last stage
   // prevent issue where no stage is marked current and aria-current disappears(#74).
   const clampedCurrent = steps.length === 0 ? 0 : Math.min(Math.max(current, 0), steps.length - 1);
   return (
-    <ol className={cn("flex w-full items-center gap-2 overflow-x-auto", className)}>
+    <ol aria-label={label} className={cn("flex w-full items-center gap-2 overflow-x-auto", className)}>
       {steps.map((step, index) => {
         const state = resolveState(index, clampedCurrent, errorSteps);
         const clickable = Boolean(onStepClick) && index < clampedCurrent;

@@ -1,5 +1,5 @@
 /**
- * Add Data step 1 — Source selection (#250).
+ * Create table step 1 — Configure: the source choice, above its settings (#250, #534).
  *
  * Directly follows the 3-card layout from Prototype
  * (`kpubdata_ui_prototype_v1.html`'s `addData()`/`source-card`):
