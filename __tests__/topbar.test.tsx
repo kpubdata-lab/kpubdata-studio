@@ -1,7 +1,7 @@
 /**
  * The topbar is breadcrumb + search + Ask KPubData + account (#523).
  *
- * Before this the topbar carried an AI search box, an Assistant button with a hard-coded
+ * Before this the topbar carried an AI search box, an AI button with a hard-coded
  * label, a language toggle and an avatar link, and the sidebar carried a theme select.
  * AI took two of the four slots. These tests pin the new shape by behaviour: one AI
  * entry point, a search that navigates and never opens the assistant, and language and
@@ -57,7 +57,8 @@ describe("topbar (#523)", () => {
     expect(within(header).getAllByRole("button", { name: /Ask KPubData/ })).toHaveLength(1);
     expect(within(header).queryByRole("search")).not.toBeInTheDocument();
     expect(within(header).queryByRole("searchbox")).not.toBeInTheDocument();
-    // The button's visible label is translated, not a hard-coded "Assistant".
+    // The button's visible label is translated, not the hard-coded retired label.
+    // stale-ui-ignore: asserts the retired label is gone (#531).
     expect(within(header).queryByText("Assistant")).not.toBeInTheDocument();
     expect(within(header).getByText("Ask KPubData")).toBeInTheDocument();
   });

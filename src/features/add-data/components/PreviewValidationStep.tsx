@@ -119,7 +119,7 @@ export function PreviewValidationStep({
 
       {previews.length > 1 ? (
         <div className="space-y-2">
-          <div role="tablist" aria-label="Preview source" className="flex flex-wrap gap-2">
+          <div role="tablist" aria-label={t("addData.preview.sourceTabs")} className="flex flex-wrap gap-2">
             {perSource.map(({ source: s, state }, i) => (
               <button
                 key={s.source_key}
@@ -160,9 +160,9 @@ export function PreviewValidationStep({
                   value={String(limit)}
                   onChange={(e) => onChangeLimit(Number(e.target.value) as PreviewLimit)}
                 >
-                  <option value="5">5 rows</option>
-                  <option value="10">10 rows</option>
-                  <option value="20">20 rows</option>
+                  <option value="5">{t("labels.rows", { count: 5 })}</option>
+                  <option value="10">{t("labels.rows", { count: 10 })}</option>
+                  <option value="20">{t("labels.rows", { count: 20 })}</option>
                 </Select>
                 <Select
                   aria-label={t("addData.preview.sampleModeLabel")}
@@ -170,8 +170,8 @@ export function PreviewValidationStep({
                   value={sampleMode}
                   onChange={(e) => onChangeSampleMode(e.target.value as PreviewSampleMode)}
                 >
-                  <option value="first">first</option>
-                  <option value="random">random</option>
+                  <option value="first">{t("addData.preview.sampleFirst")}</option>
+                  <option value="random">{t("addData.preview.sampleRandom")}</option>
                 </Select>
                 <Select
                   aria-label={t("addData.preview.columnScopeLabel")}
@@ -219,8 +219,8 @@ export function PreviewValidationStep({
                     <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="text-xs uppercase text-muted-foreground">
-                          <th className="py-1 pr-3">Row</th>
-                          <th className="py-1 pr-3">Column</th>
+                          <th className="py-1 pr-3">{t("labels.row")}</th>
+                          <th className="py-1 pr-3">{t("labels.column")}</th>
                           <th className="py-1 pr-3">{t("addData.preview.diffBefore")}</th>
                           <th className="py-1 pr-3">{t("addData.preview.diffAfter")}</th>
                           <th className="py-1 pr-3">{t("addData.preview.diffTransform")}</th>
@@ -300,11 +300,11 @@ function ValidationPanel({ source }: { source: PreviewSource }) {
   const { t } = useTranslation();
   const overall = summarizeChecksPassed(source.quality_results);
   const buckets: Array<{ label: string; summary: ReturnType<typeof summarizeChecksPassed> }> = [
-    { label: "Schema", summary: qualityBucket(source, isSchemaCategory) },
-    { label: "Missing", summary: qualityBucket(source, isMissingCategory) },
-    { label: "Duplicate", summary: qualityBucket(source, isDuplicateCategory) },
-    { label: "Type", summary: typeBucket(source) },
-    { label: "Range", summary: qualityBucket(source, isRangeCategory) },
+    { label: t("labels.schema"), summary: qualityBucket(source, isSchemaCategory) },
+    { label: t("labels.missing"), summary: qualityBucket(source, isMissingCategory) },
+    { label: t("labels.duplicate"), summary: qualityBucket(source, isDuplicateCategory) },
+    { label: t("labels.type"), summary: typeBucket(source) },
+    { label: t("labels.range"), summary: qualityBucket(source, isRangeCategory) },
   ];
   const issues = warnOrFailResults(source.quality_results);
 
@@ -316,7 +316,7 @@ function ValidationPanel({ source }: { source: PreviewSource }) {
       ) : (
         <div className="flex items-center gap-2">
           <span className="text-2xl font-semibold">{overall.pass} / {overall.evaluated}</span>
-          <span className="text-xs text-muted-foreground">checks passed</span>
+          <span className="text-xs text-muted-foreground">{t("addData.preview.checksPassed")}</span>
         </div>
       )}
       <div className="space-y-1.5">

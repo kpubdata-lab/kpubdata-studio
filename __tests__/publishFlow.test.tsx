@@ -123,7 +123,7 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     let resolveReadiness!: (value: Response) => void;
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise<Response>((resolve) => { resolveReadiness = resolve; })));
     renderPublish();
-    expect(screen.getByText("Builder readiness").parentElement?.parentElement).toHaveTextContent("다시 확인");
+    expect(screen.getByText("KPubData Builder readiness").parentElement?.parentElement).toHaveTextContent("다시 확인");
     await act(() => resolveReadiness(response(200, { ...READY, warnings: [{ code: "notice", message: "검토 권장" }] })));
     expect(await screen.findByText("Builder 게시 준비 완료")).toBeInTheDocument();
     expect(screen.getByText("검토 권장")).toBeInTheDocument();

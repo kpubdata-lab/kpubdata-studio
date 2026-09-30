@@ -11,15 +11,14 @@ import { Card } from "@/shared/ui";
 
 interface SourceOption {
   kind: SourceKind;
-  title: string;
-  /** i18n key for description text (`addData.source.kind.*`) — don't hardcode strings (#350). */
+  /** i18n key for the title (`addData.source.kindTitle.*`) and description (`addData.source.kind.*`) — don't hardcode strings (#350, #531). */
   descriptionKey: string;
 }
 
 const SOURCE_OPTIONS: SourceOption[] = [
-  { kind: "public_api", title: "Public API", descriptionKey: "publicApi" },
-  { kind: "file", title: "File Upload", descriptionKey: "file" },
-  { kind: "url", title: "URL / REST API", descriptionKey: "url" },
+  { kind: "public_api", descriptionKey: "publicApi" },
+  { kind: "file", descriptionKey: "file" },
+  { kind: "url", descriptionKey: "url" },
 ];
 
 export interface SourceStepProps {
@@ -48,7 +47,7 @@ export function SourceStep({ selected, onSelect }: SourceStepProps) {
               variant={selected === option.kind ? "success" : "default"}
               className="h-full transition hover:border-accent/50 hover:shadow-md"
             >
-              <p className="text-base font-semibold tracking-tight">{option.title}</p>
+              <p className="text-base font-semibold tracking-tight">{t(`addData.source.kindTitle.${option.descriptionKey}`)}</p>
               <p className="mt-1 text-sm text-muted-foreground">{t(`addData.source.kind.${option.descriptionKey}`)}</p>
             </Card>
           </button>

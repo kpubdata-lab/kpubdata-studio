@@ -67,10 +67,10 @@ const PIPELINE_STAGES = ["Bronze", "Validate", "Silver", "Gold"] as const;
  * do not fabricate fake granular progress.
  */
 function pipelineStageStatus(jobStatus: BuildJobStatus): string {
-  if (jobStatus === "succeeded") return "Done";
+  if (jobStatus === "succeeded") return i18n.t("labels.done");
   if (jobStatus === "failed") return i18n.t("addData.review.stageAborted");
   if (jobStatus === "running") return i18n.t("addData.review.stageRunning");
-  return "Pending";
+  return i18n.t("labels.pending");
 }
 
 export function ReviewBuildStep({
@@ -120,7 +120,7 @@ export function ReviewBuildStep({
         </Card>
         <Card className="p-4">
           <p className="text-xs font-semibold uppercase text-muted-foreground">{t("addData.review.previewLabel")}</p>
-          <p className="mt-1 text-base font-semibold">{previewLimit} rows · {previewSampleMode}</p>
+          <p className="mt-1 text-base font-semibold">{t("labels.rows", { count: previewLimit })} · {previewSampleMode}</p>
           <p className="text-xs text-muted-foreground">
             {previewSources.length > 0
               ? previewSources.length > 1
@@ -179,7 +179,7 @@ export function ReviewBuildStep({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="space-y-3">
-          <p className="text-sm font-semibold">Table creation plan</p>
+          <p className="text-sm font-semibold">{t("addData.review.planTitle")}</p>
           <dl className="divide-y divide-border text-sm">
             {[
               [t("addData.review.planSource"), sourceSummary(draft)],
@@ -226,11 +226,11 @@ export function ReviewBuildStep({
             </div>
           ) : null}
           <div className="border-t border-border pt-3">
-            <p className="text-sm font-semibold">Pipeline</p>
+            <p className="text-sm font-semibold">{t("labels.pipeline")}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
               <div className="rounded-lg border border-border bg-card px-3 py-2">
-                <p className="text-muted-foreground">Source</p>
-                <p className="font-semibold">{jobStatus === "succeeded" ? "Done" : "Ready"}</p>
+                <p className="text-muted-foreground">{t("labels.source")}</p>
+                <p className="font-semibold">{jobStatus === "succeeded" ? t("labels.done") : t("labels.ready")}</p>
               </div>
               {PIPELINE_STAGES.map((stage) => (
                 <span key={stage} className="flex items-center gap-2">

@@ -35,7 +35,7 @@ function BrandPanel() {
     <section className="hidden min-h-screen flex-col bg-sidebar px-8 py-10 text-sidebar-foreground lg:flex lg:w-[48%] lg:px-12 xl:px-16" aria-label={t("auth.page.introLabel")}>
       <img alt="KPubData Studio" className="w-[160px] self-start xl:w-[192px]" src={darkLogoUrl} />
       <div className="my-auto max-w-xl">
-        <p className="text-xs font-semibold tracking-[0.16em] text-sidebar-muted">PUBLIC DATA → AI-READY DATASET</p>
+        <p className="text-xs font-semibold tracking-[0.16em] text-sidebar-muted">{t("auth.page.tagline")}</p>
         <h1 className="mt-5 max-w-xl break-keep text-balance text-4xl font-semibold leading-tight tracking-tight text-sidebar-active-foreground xl:text-5xl">
           {t("auth.page.introTitle")}
         </h1>
@@ -101,7 +101,7 @@ export function LoginPage() {
             <img alt="KPubData Studio" className="w-[160px] max-w-full" src={lightLogoUrl} />
           </div>
           <div className="mb-7">
-            <p className="text-xs font-semibold tracking-[0.16em] text-accent-subtle-foreground">WELCOME</p>
+            <p className="text-xs font-semibold tracking-[0.16em] text-accent-subtle-foreground">{t("auth.page.eyebrow")}</p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t("auth.page.welcome")}</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">{t("auth.page.welcomeDesc")}</p>
           </div>

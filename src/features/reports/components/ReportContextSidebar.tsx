@@ -50,18 +50,18 @@ export function ReportContextSidebar({
   return (
     <aside className="flex flex-col gap-4">
       <Card>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Report Context</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("reports.contextSidebar.title")}</p>
         <div className="mt-2 divide-y divide-border">
-          <Row label="Table" value={report.datasetId} />
-          <Row label="Base Run" value={report.baseRunId} />
-          {sourceKeys.length > 0 ? <Row label="Source" value={sourceKeys.join(", ")} /> : null}
-          <Row label="BuildSpec digest" value={report.buildSpecDigest ?? "N/A"} />
+          <Row label={t("labels.table")} value={report.datasetId} />
+          <Row label={t("reports.contextSidebar.baseRun")} value={report.baseRunId} />
+          {sourceKeys.length > 0 ? <Row label={t("labels.source")} value={sourceKeys.join(", ")} /> : null}
+          <Row label={t("reports.contextSidebar.specDigest")} value={report.buildSpecDigest ?? "N/A"} />
           <Row label={t("reports.contextSidebar.evidenceFetchedAt")} value={formatDateTime(report.evidenceFetchedAt)} />
         </div>
       </Card>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Evidence Status</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("reports.contextSidebar.evidenceStatus")}</p>
         <EvidenceStatusBanner
           result={staleness}
           loading={stalenessLoading}
@@ -72,7 +72,7 @@ export function ReportContextSidebar({
 
       {qualityCounts ? (
         <Card>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quality</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("labels.quality")}</p>
           <div className="mt-2 divide-y divide-border">
             <Row label="PASS" value={String(qualityCounts.pass)} />
             <Row label="WARN" value={String(qualityCounts.warn)} />
@@ -83,7 +83,7 @@ export function ReportContextSidebar({
       ) : null}
 
       <Card>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assistant</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("reports.contextSidebar.askKpubdata")}</p>
         <div className="mt-2 divide-y divide-border">
           <Row label={t("reports.contextSidebar.assistantBlocks")} value={t("reports.contextSidebar.countUnit", { count: assistantBlockCount })} />
           <Row

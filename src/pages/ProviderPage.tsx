@@ -478,7 +478,7 @@ export function ProviderPage() {
                 ) : showCredentialForm ? (
                   <div className="mt-4 space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2" htmlFor="provider-credential-input">API Key</label>
+                      <label className="block text-sm font-medium mb-2" htmlFor="provider-credential-input">{t("labels.apiKey")}</label>
                       <input
                         autoComplete="off"
                         id="provider-credential-input"

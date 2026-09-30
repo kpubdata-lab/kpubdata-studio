@@ -116,18 +116,38 @@ const testFiles = git("ls-files")
 const current = [...after].filter((v) => v.length >= MIN_LENGTH).sort((a, b) => b.length - a.length);
 const WORD = /[A-Za-z0-9_]/;
 
+// A current value is blanked with as many placeholder characters as it had, so positions
+// still line up with the original text: the identifier check below reads the original.
+// Blanking with one character turned `isAssistantDemoAvailable` into `isAssistant\0…`
+// once "Demo…" was a current value, and a removed "Assistant" matched inside it (#531).
 function withoutCurrentValues(source) {
   let out = source;
-  for (const value of current) if (out.includes(value)) out = out.split(value).join("\u0000");
+  for (const value of current) if (out.includes(value)) out = out.split(value).join("\u0000".repeat(value.length));
   return out;
 }
 
-function occursOutsideIdentifier(source, value) {
+// A test that asserts a retired word is *gone* — or a gate's own fixture — has to name
+// it. `stale-ui-ignore: <reason>` on the line, or on the line above, exempts that line.
+const IGNORE_MARKER = /stale-ui-ignore/;
+
+function withoutIgnoredLines(source) {
+  const lines = source.split("\n");
+  return lines
+    .map((line, index) => {
+      let above = index - 1;
+      while (above >= 0 && lines[above].trim() === "") above--;
+      const marked = IGNORE_MARKER.test(line) || (above >= 0 && IGNORE_MARKER.test(lines[above]));
+      return marked ? " ".repeat(line.length) : line;
+    })
+    .join("\n");
+}
+
+function occursOutsideIdentifier(source, value, original = source) {
   const extendsLeft = WORD.test(value[0]);
   const extendsRight = WORD.test(value[value.length - 1]);
   for (let i = source.indexOf(value); i !== -1; i = source.indexOf(value, i + 1)) {
-    const left = source[i - 1];
-    const right = source[i + value.length];
+    const left = original[i - 1];
+    const right = original[i + value.length];
     if (extendsLeft && left !== undefined && WORD.test(left)) continue;
     if (extendsRight && right !== undefined && WORD.test(right)) continue;
     return true;
@@ -137,8 +157,9 @@ function occursOutsideIdentifier(source, value) {
 
 const stale = new Map();
 for (const file of testFiles) {
-  const source = withoutCurrentValues(readFileSync(join(REPO, file), "utf8"));
-  const hits = removed.filter((value) => occursOutsideIdentifier(source, value));
+  const original = withoutIgnoredLines(readFileSync(join(REPO, file), "utf8"));
+  const source = withoutCurrentValues(original);
+  const hits = removed.filter((value) => occursOutsideIdentifier(source, value, original));
   if (hits.length) stale.set(file, hits);
 }
 

@@ -121,8 +121,8 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("renders five tabs, with no AI tab (#421)", async () => {
     renderDetail();
-    const tablist = await screen.findByRole("tablist", { name: "Table detail tabs" });
-    for (const label of ["Overview", "Schema", "Preview", "Quality", "Runs"]) {
+    const tablist = await screen.findByRole("tablist", { name: "테이블 상세 탭" });
+    for (const label of ["개요", "스키마", "미리보기", "품질", "Runs"]) {
       expect(within(tablist).getByRole("tab", { name: label })).toBeInTheDocument();
     }
     expect(within(tablist).queryByRole("tab", { name: "AI" })).not.toBeInTheDocument();
@@ -141,7 +141,7 @@ describe("Dataset Detail P0 (#253)", () => {
     ["/tables/population?source=kosis__population&tab=quality", "N/A"],
   ])("shows actual scoped quality without inventing a score: %s", async (path, expected) => {
     renderDetail(path);
-    const panel = await screen.findByRole("tabpanel", { name: "Quality" });
+    const panel = await screen.findByRole("tabpanel", { name: "품질" });
     expect((await within(panel).findAllByText(expected)).length).toBeGreaterThan(0);
     expect(within(panel).queryByText(/score/i)).not.toBeInTheDocument();
   });
@@ -210,7 +210,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
     const drawer = await findAssistant();
     expect(within(drawer).getByText("air-2026-08-14")).toBeInTheDocument();
-    expect(await screen.findByRole("tabpanel", { name: "Overview" })).toBeInTheDocument();
+    expect(await screen.findByRole("tabpanel", { name: "개요" })).toBeInTheDocument();
   });
 
   it("a saved ?tab=ai link does not overwrite an explicit valid run/source/stage (A1)", async () => {
@@ -263,7 +263,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     expect(within(passport).getByText("air-quality")).toBeInTheDocument();
     expect(within(passport).getByText("sha256:air14")).toBeInTheDocument();
     // Schema/Artifact는 selected stage detail의 별도 비동기 조회(getBuildStageDetail) 결과라 좀 더 늦게 반영된다.
-    expect(await within(passport).findByText("2 columns")).toBeInTheDocument();
+    expect(await within(passport).findByText("컬럼 2개")).toBeInTheDocument();
     expect(await within(passport).findByText("parquet")).toBeInTheDocument();
     expect(within(passport).getByText("PASS")).toBeInTheDocument();
   });

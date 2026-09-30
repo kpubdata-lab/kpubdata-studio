@@ -28,7 +28,7 @@
       "inCatalog": "카탈로그에서 “{{query}}” 검색",
       "close": "검색 닫기",
       "ask": "Ask KPubData: “{{query}}”",
-      "askHint": "어시스턴트",
+      "askHint": "AI",
       "loading": "테이블과 소스를 불러오는 중…",
       "loadFailed": "테이블 또는 소스 일부를 불러오지 못했습니다.",
       "groups": {
@@ -163,7 +163,20 @@
       "publish": "게시",
       "analyze": "이 Run 분석",
       "title": "갱신 상세",
-      "back": "← 갱신 이력"
+      "back": "← 갱신 이력",
+      "pipelineTitle": "Pipeline / Stage Progress",
+      "qualityCheckpoint": "Quality checkpoint",
+      "availability": "availability: {{value}}",
+      "actualVsThreshold": "actual {{actual}} / threshold {{threshold}}",
+      "failureEvidence": "Failure evidence",
+      "failedStages": "failed stage: {{failed}} · last completed stage: {{completed}}",
+      "stageUnknown": "unknown",
+      "stageNone": "none",
+      "builderError": "KPubData Builder error: {{error}}",
+      "runEvents": "Run Events",
+      "specSnapshot": "BuildSpec snapshot",
+      "digest": "digest: {{digest}}",
+      "actualVsThresholdFailed": "actual {{actual}} vs threshold {{threshold}}"
     },
     "stage": {
       "forbidden": "이 Run의 Stage Progress를 조회할 권한이 없습니다.",
@@ -599,7 +612,9 @@
       "unknownError": "Query 실행 중 알 수 없는 오류가 발생했습니다.",
       "mockUnsupported": "mock 모드에서는 Query 실행을 지원하지 않습니다. VITE_USE_REAL_BUILDER=true로 실제 KPubData Builder에 연결하세요.",
       "stageMismatch": "현재 화면 stage({{current}})와 Generated SQL의 stage({{proposed}})가 다릅니다.",
-      "stageNone": "없음"
+      "stageNone": "없음",
+      "generatedSql": "Generated SQL",
+      "suggestedActions": "Suggested Actions"
     },
     "queryError": {
       "unsafe_query": "SQL 구문 오류 또는 허용되지 않은 쿼리입니다.",
@@ -1022,7 +1037,8 @@
       "cancel": "취소",
       "buildSucceeded": "테이블 생성 완료 (run {{runId}})",
       "buildCancelled": "실행이 취소되었습니다.",
-      "interrupted": "요청을 중단했습니다. 서버 실행 결과는 확인되지 않았습니다."
+      "interrupted": "요청을 중단했습니다. 서버 실행 결과는 확인되지 않았습니다.",
+      "planTitle": "Table creation plan"
     },
     "preview": {
       "title": "Preview · 검증",
@@ -1056,7 +1072,11 @@
       "sampleFooter": "{{total}}건 중 {{shown}}건 표시 · {{columns}}개 컬럼",
       "validationTitle": "검증 결과 (Validation)",
       "notEvaluated": "Not evaluated / N/A — 이 preview에서 평가된 quality check가 없습니다.",
-      "qualityLink": "상세 Quality 보기"
+      "qualityLink": "상세 Quality 보기",
+      "sourceTabs": "Preview source",
+      "sampleFirst": "first",
+      "sampleRandom": "random",
+      "checksPassed": "checks passed"
     },
     "configure": {
       "title": "가져오기 설정",
@@ -1109,7 +1129,9 @@
       "exportLegend": "스냅샷 파일 형식 (최소 1개)",
       "outputPathLabel": "출력 경로 (선택)",
       "canonicalTitle": "Canonical BuildSpec (GUI ↔ YAML)",
-      "applyYaml": "YAML 적용"
+      "applyYaml": "YAML 적용",
+      "endpointLabel": "Endpoint",
+      "editorForm": "Form"
     },
     "steps": {
       "source": "데이터 선택",
@@ -1168,6 +1190,11 @@
         "publicApi": "Provider를 선택하고 인증·조회조건을 설정합니다.",
         "file": "CSV/JSON/JSONL/Parquet 파일을 업로드합니다.",
         "url": "HTTPS GET endpoint를 직접 입력합니다(P0: Auth 없음)."
+      },
+      "kindTitle": {
+        "publicApi": "Public API",
+        "file": "File Upload",
+        "url": "URL / REST API"
       }
     },
     "credential": {
@@ -1263,7 +1290,10 @@
       "run": "Run"
     },
     "runLookupUnsupportedTitle": "이 Builder 는 오래된 run 을 찾을 수 없습니다",
-    "runLookupUnsupportedBody": "run `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다."
+    "runLookupUnsupportedBody": "run `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다.",
+    "passportTitle": "Data Passport",
+    "runValue": "Run {{id}}",
+    "columnCount": "컬럼 {{count}}개"
   },
   "buildPublish": {
     "statusQueued": "대기 중",
@@ -1309,7 +1339,14 @@
     "noAutoRetry": "자동 재시도하지 마세요.",
     "abortedTitle": "응답 대기를 중단했습니다.",
     "abortedBody": "브라우저 요청만 중단했으며 원격 게시 작업을 취소한 것은 아닙니다. 게시 결과는 확인되지 않았습니다.",
-    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 KPubData Builder에 저장해야 게시할 수 있습니다."
+    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 KPubData Builder에 저장해야 게시할 수 있습니다.",
+    "readinessTitle": "KPubData Builder readiness",
+    "blockers": "Blockers",
+    "warnings": "Warnings",
+    "destinationLabel": "Hugging Face destination",
+    "publisher": "Publisher",
+    "snapshotFiles": "Snapshot files",
+    "reference": "Reference:"
   },
   "settings": {
     "page": {
@@ -1330,7 +1367,7 @@
     },
     "privacy": {
       "title": "프라이버시 고지",
-      "llm": "어시스턴트 기능을 사용하면 대화 내용이 사용자가 설정한 외부 LLM 제공자(OpenAI 등)로 전송됩니다. API 키와 비용은 사용자 부담입니다.",
+      "llm": "Ask KPubData 를 사용하면 대화 내용이 사용자가 설정한 외부 LLM 제공자(OpenAI 등)로 전송됩니다. API 키와 비용은 사용자 부담입니다.",
       "noPublic": "공용 API 키를 VITE_* 환경변수로 주입하지 마세요 — 번들에 평문으로 포함됩니다.",
       "scrub": "시크릿 스크러빙(#206)이 sourceParams의 서비스 키를 자동 마스킹하지만, 대화에 직접 입력하는 민감 정보는 마스킹되지 않습니다."
     },
@@ -1360,7 +1397,8 @@
       "customBaseUrl": "사용자 지정 Base URL",
       "persistOn": "브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요.",
       "persistOff": "브라우저 저장: 꺼짐(메모리 전용). Ask KPubData 화면에서 명시적으로 켤 수 있습니다."
-    }
+    },
+    "builderBaseUrl": "KPubData Builder API base URL"
   },
   "auth": {
     "page": {
@@ -1383,7 +1421,9 @@
       "google": "Google로 계속하기",
       "or": "또는",
       "emailLogin": "KPubData 계정으로 로그인",
-      "loginFail": "로그인에 실패했습니다. 잠시 후 다시 시도해주세요."
+      "loginFail": "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.",
+      "tagline": "PUBLIC DATA → AI-READY TABLES",
+      "eyebrow": "WELCOME"
     },
     "oidc": {
       "errorTitle": "OIDC 인증 설정에 문제가 있습니다.",
@@ -1646,7 +1686,10 @@
       "otherContext": "참고 분석 · 현재 Report의 기준 테이블/run과 다릅니다(자동으로 합치지 않음).",
       "generatedAt": "생성 시각 {{at}}",
       "reason": "판단 근거: {{reason}}",
-      "linkedEvidence": "연결된 Evidence: {{refs}}"
+      "linkedEvidence": "연결된 Evidence: {{refs}}",
+      "stage": "Stage: {{stage}}",
+      "provider": "provider {{provider}}",
+      "model": "model {{model}}"
     },
     "assistantPanel": {
       "preset": {
@@ -1749,7 +1792,12 @@
       "pendingNotes": "대기 중인 참고 노트",
       "countUnit": "{{count}}개",
       "noteUnit": "{{count}}건",
-      "none": "없음"
+      "none": "없음",
+      "title": "Report Context",
+      "baseRun": "Base Run",
+      "specDigest": "BuildSpec digest",
+      "evidenceStatus": "Evidence Status",
+      "askKpubdata": "Ask KPubData"
     },
     "provenance": {
       "builder": "Builder Evidence",
@@ -2564,6 +2612,55 @@
     "view": "보기",
     "more": "{{snapshot}} 작업 더 보기",
     "runDetail": "실행 상세",
-    "editSpec": "스펙 편집·갱신"
+    "editSpec": "스펙 편집·갱신",
+    "run": {
+      "validationSummary": "Validation summary",
+      "evaluatedChecks": "evaluated checks",
+      "recentIssues": "Recent quality issues",
+      "recentRuns": "Recent Runs",
+      "selected": "selected"
+    }
+  },
+  "labels": {
+    "run": "Run",
+    "source": "Source",
+    "stage": "Stage",
+    "provider": "Provider",
+    "table": "Table",
+    "column": "Column",
+    "type": "Type",
+    "status": "Status",
+    "updated": "Updated",
+    "rule": "Rule",
+    "result": "Result",
+    "actual": "Actual",
+    "threshold": "Threshold",
+    "missing": "Missing",
+    "quality": "Quality",
+    "output": "Output",
+    "runId": "Run ID",
+    "target": "Target",
+    "destination": "Destination",
+    "message": "Message",
+    "metrics": "Metrics",
+    "row": "Row",
+    "schemaDrift": "Schema Drift",
+    "validation": "Validation",
+    "pipeline": "Pipeline",
+    "schema": "Schema",
+    "duplicate": "Duplicate",
+    "range": "Range",
+    "runs": "Runs",
+    "public": "Public",
+    "private": "Private",
+    "done": "Done",
+    "ready": "Ready",
+    "pending": "Pending",
+    "rows": "{{count}} rows",
+    "idValue": "ID: {{id}}",
+    "latest": "(latest)",
+    "yes": "yes",
+    "no": "no",
+    "apiKey": "API Key"
   }
 }

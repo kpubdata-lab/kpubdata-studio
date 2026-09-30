@@ -105,11 +105,12 @@ function GoldStageBox({
  * completed/failed.
  */
 function OutputBox({ detail }: { detail: StageDetailEntry | undefined }) {
+  const { t } = useTranslation();
   const data = pickStageDetail(detail, "gold");
   const exports = data?.exports ?? [];
   return (
     <div className="flex min-w-32 flex-col gap-1 rounded-md border border-dashed border-border p-2">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Output</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("labels.output")}</span>
       <span className="text-xs text-muted-foreground">
         {exports.length > 0 ? exports.map((item) => item.kind).join(" · ") : "—"}
       </span>
@@ -127,7 +128,7 @@ export function SourcePipelineRow({ source, details }: { source: RunStageEntry; 
   return (
     <div className="rounded-lg border border-border p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Source</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("labels.source")}</span>
         <span className="font-mono text-xs">{source.source_key}</span>
       </div>
       <div className="mt-2 flex flex-wrap items-start gap-1">

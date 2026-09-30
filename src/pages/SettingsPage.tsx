@@ -109,7 +109,7 @@ export function SettingsPage() {
           </span>
         </div>
         <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-4">
-          <p className="text-sm font-medium">Builder API base URL</p>
+          <p className="text-sm font-medium">{t("settings.builderBaseUrl")}</p>
           <code className="mt-3 block break-all text-sm text-accent-subtle-foreground">
             {API_BASE}
           </code>

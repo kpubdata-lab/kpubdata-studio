@@ -178,6 +178,41 @@ describe("stale UI literal gate", () => {
     expect(runGate("HEAD~1").code).toBe(0);
   });
 
+  it("ignores a removed word inside an identifier even when a current value follows it (#531)", () => {
+    // `SyntheticWidgetsPanelTextOpen`: blanking the current "PanelTextOpen" used to leave
+    // `SyntheticWidgets\0`, and the removed "SyntheticWidgets" matched as a word.
+    const dir = join(repo, "src/shared/i18n/locales");
+    const write = (nav: Record<string, string>) => {
+      for (const locale of ["en", "ko"]) writeFileSync(join(dir, `${locale}.json`), `${JSON.stringify({ nav }, null, 2)}\n`);
+    };
+    write({ a: "SyntheticWidgets", b: "PanelTextOpen" });
+    git(["add", "-A"]);
+    git(["commit", "-qm", "two words"]);
+    write({ a: "SyntheticGadgets", b: "PanelTextOpen" });
+    writeFileSync(join(repo, "__tests__/home.test.tsx"), "const open = SyntheticWidgetsPanelTextOpen();\n");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "rename word"]);
+
+    expect(runGate("HEAD~1").code).toBe(0);
+  });
+
+  it("exempts a line marked stale-ui-ignore, and only that line (#531)", () => {
+    writeLocales("SyntheticWidgets");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "word"]);
+    writeLocales("SyntheticGadgets");
+    const marked = '// stale-ui-ignore: asserts the retired word is gone\nexpect(queryByText("SyntheticWidgets")).toBeNull();\n';
+    writeFileSync(join(repo, "__tests__/home.test.tsx"), marked);
+    git(["add", "-A"]);
+    git(["commit", "-qm", "absence"]);
+    expect(runGate("HEAD~1").code).toBe(0);
+
+    writeFileSync(join(repo, "__tests__/home.test.tsx"), `${marked}\ngetByText("SyntheticWidgets");\n`);
+    git(["add", "-A"]);
+    git(["commit", "-qm", "and a real assertion"]);
+    expect(runGate("HEAD~2").code).toBe(1);
+  });
+
   it("skips rather than fails when the base ref is missing", () => {
     const { code, out } = runGate("origin/does-not-exist");
     expect(code).toBe(0);

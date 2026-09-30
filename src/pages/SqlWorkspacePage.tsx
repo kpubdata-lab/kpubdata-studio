@@ -158,9 +158,9 @@ function RunWorkspace() {
             </select>
           </label>
           <label className="text-xs font-semibold text-muted-foreground">
-            Stage
+            {t("labels.stage")}
             <select
-              aria-label="Stage"
+              aria-label={t("labels.stage")}
               className={selectClassName}
               onChange={(event) => update({ stage: event.target.value })}
               value={stage}
@@ -174,9 +174,9 @@ function RunWorkspace() {
           </label>
           {sources.length > 1 ? (
             <label className="text-xs font-semibold text-muted-foreground">
-              Source
+              {t("labels.source")}
               <select
-                aria-label="Source"
+                aria-label={t("labels.source")}
                 className={selectClassName}
                 onChange={(event) => update({ source: event.target.value })}
                 value={source}

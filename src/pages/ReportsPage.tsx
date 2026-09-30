@@ -168,7 +168,7 @@ export function ReportsPage() {
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <div className="min-w-[220px]">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="report-dataset">
-                Dataset
+                {t("labels.table")}
               </label>
               <Select
                 id="report-dataset"
@@ -186,7 +186,7 @@ export function ReportsPage() {
             </div>
             <div className="min-w-[220px]">
               <label className="text-xs font-medium text-muted-foreground" htmlFor="report-run">
-                Run
+                {t("labels.run")}
               </label>
               <Select
                 id="report-run"
