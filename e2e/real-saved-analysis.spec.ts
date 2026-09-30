@@ -1,6 +1,9 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage } from "./helpers";
 
+/** Every regex metacharacter escaped, backslash included (CodeQL js/incomplete-sanitization). */
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
  * Tables → SQL → save → refresh → re-run against a real KPubData Builder (#417, @real-builder).
  *
@@ -114,7 +117,7 @@ test("테이블 → SQL → 저장 → 갱신 → 저장된 분석 재실행이 
   await expect(heading).toBeVisible({ timeout: 30_000 });
   const card = heading.locator("xpath=ancestor::div[contains(concat(' ', normalize-space(@class), ' '), ' flex-col ')][1]");
   await card.getByRole("button", { name: /^(다시 실행|Run again)$/ }).click();
-  await expect(card.getByText(new RegExp(`^${LOGICAL_NAME.replace(/\./g, "\\.")}@${saved} · rev \\d+$`))).toBeVisible({
+  await expect(card.getByText(new RegExp(`^${escapeRegExp(LOGICAL_NAME)}@${escapeRegExp(saved)} · rev \\d+$`))).toBeVisible({
     timeout: 30_000,
   });
   await expect(card.getByText(refreshed)).toHaveCount(0);
