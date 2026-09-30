@@ -1,18 +1,21 @@
 /**
  * Common PageHeader component.
  *
- * Unify "eyebrow label + title + description + right action" pattern repeated at
- * page top.
+ * A compact header — title, optional metadata line, optional one-line description and a
+ * right-aligned action area — so the object and the work area fill the first viewport
+ * (#522). There is no eyebrow label above the title: the topbar breadcrumb already says
+ * where the user is, and the page title is the largest text on screen (20px/600,
+ * docs/brand/VISUAL_IDENTITY.md section 4).
  */
 import type { ReactNode } from "react";
 import { cn } from "./cn";
 
 export interface PageHeaderProps {
-  /** small uppercase label above title (e.g., "Runs") */
-  eyebrow?: string;
   /** page title */
   title: string;
-  /** auxiliary description below title */
+  /** short metadata under the title — identifiers, run ids, counts (12px) */
+  meta?: ReactNode;
+  /** optional one-line description; longer text is truncated */
   description?: ReactNode;
   /** right-aligned action area (buttons etc) */
   actions?: ReactNode;
@@ -26,14 +29,14 @@ export interface PageHeaderProps {
 }
 
 /**
- * Render page heading (label/title/description/action) in consistent layout.
+ * Render the page heading (title/meta/description/actions) in a compact layout.
  *
- * @param props - eyebrow/title/description/actions.
+ * @param props - title/meta/description/actions.
  * @returns Page header element.
  */
 export function PageHeader({
-  eyebrow,
   title,
+  meta,
   description,
   actions,
   className,
@@ -43,22 +46,35 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 md:flex-row md:items-end md:justify-between",
+        "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
         className,
       )}
     >
-      <div>
-        {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-subtle-foreground">
-            {eyebrow}
+      <div className="min-w-0">
+        <Heading
+          className={cn(
+            "break-words",
+            level === 1 ? "text-page-title" : "text-sm font-semibold",
+          )}
+        >
+          {title}
+        </Heading>
+        {meta ? (
+          <p data-slot="page-meta" className="mt-0.5 break-words text-meta text-muted-foreground">
+            {meta}
           </p>
         ) : null}
-        <Heading className="mt-2 text-3xl font-semibold tracking-tight">{title}</Heading>
         {description ? (
-          <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
+          <p
+            data-slot="page-description"
+            className="mt-0.5 truncate text-sm text-muted-foreground"
+            title={typeof description === "string" ? description : undefined}
+          >
+            {description}
+          </p>
         ) : null}
       </div>
-      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
   );
 }

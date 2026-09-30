@@ -174,7 +174,6 @@ export function WorkspacePage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow="Workspace"
         title={t("workspace.title")}
         description={t("workspace.desc")}
       />
@@ -189,7 +188,7 @@ export function WorkspacePage() {
       </Card>
 
       <section className="flex flex-col gap-3">
-        <PageHeader eyebrow="Recent Work" title={t("workspace.recentTitle")} className="mb-0" level={2} />
+        <PageHeader title={t("workspace.recentTitle")} className="mb-0" level={2} />
 
         {datasetsState.status === "error" ? (
           <ErrorState
@@ -251,7 +250,6 @@ export function WorkspacePage() {
 
       <section className="flex flex-col gap-3">
         <PageHeader
-          eyebrow="Saved BuildSpecs"
           title={t("workspace.savedSpecs")}
           className="mb-0"
           level={2}

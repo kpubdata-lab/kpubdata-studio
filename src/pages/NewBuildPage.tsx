@@ -326,7 +326,6 @@ export function NewBuildPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow={isEditMode ? t("newBuild.page.eyebrowEdit") : t("newBuild.page.eyebrowNew")}
         title={isEditMode ? t("newBuild.page.titleEdit", { title: baseSpec?.title || buildId }) : t("newBuild.page.titleNew")}
         description={
           isEditMode

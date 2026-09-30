@@ -309,7 +309,6 @@ function EmptyWorkspaceHome({ userId }: { userId: string | null }) {
   return (
     <>
       <PageHeader
-        eyebrow={t("home.hero.eyebrow")}
         title={t("home.hero.title")}
         description={t("home.hero.desc")}
         actions={<Button variant="ghost" size="sm" onClick={resetFirstRunTour}>{t("home.hero.tour")}</Button>}
@@ -427,7 +426,6 @@ function ExistingUserHome({
   return (
     <>
       <PageHeader
-        eyebrow={t("home.dashboard.eyebrow")}
         title={t("home.dashboard.title")}
         description={t("home.dashboard.desc")}
         actions={userId ? <Button variant="secondary" onClick={() => resetFirstRunTour(userId)}>{t("home.dashboard.guide")}</Button> : undefined}
@@ -531,7 +529,7 @@ function RecentBuildsSection({
   const { t } = useTranslation();
   return (
     <section>
-      <PageHeader eyebrow={t("home.recent.eyebrow")} title={t("home.recent.title")} className="mb-4" level={2} />
+      <PageHeader title={t("home.recent.title")} className="mb-4" level={2} />
       <Card className="p-0">
         {loading ? (
           <div className="px-6 py-4 space-y-3">
@@ -586,7 +584,7 @@ function QualitySection({ state }: { state: RecentQualityState }) {
   const { t } = useTranslation();
   return (
     <section>
-      <PageHeader eyebrow={t("home.quality.eyebrow")} title={t("home.quality.title")} className="mb-4" level={2} />
+      <PageHeader title={t("home.quality.title")} className="mb-4" level={2} />
       <Card className="p-0">
         {state.phase === "loading" ? (
           <div className="space-y-3 px-6 py-5">

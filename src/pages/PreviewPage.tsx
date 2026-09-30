@@ -17,7 +17,6 @@ export function PreviewPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow={t("previewPage.eyebrow")}
         title={t("previewPage.title")}
         description={t("previewPage.desc")}
       />

@@ -105,7 +105,6 @@ export function MonitoringPage() {
     return (
       <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader
-          eyebrow="Monitoring"
           title={t("monitoringPage.title")}
           description={t("monitoringPage.desc")}
         />
@@ -120,7 +119,6 @@ export function MonitoringPage() {
   return (
     <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow="Monitoring"
         title={t("monitoringPage.title")}
         description={t("monitoringPage.desc")}
         actions={

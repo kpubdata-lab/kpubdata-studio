@@ -440,7 +440,6 @@ export function AddDataPage() {
     // sm+ sticky becomes static (#6-B not applicable) so keep existing desktop margin.
     <main className="flex flex-1 flex-col gap-6 px-5 pt-8 pb-28 sm:px-8 sm:pb-8 lg:px-10 lg:pt-10 lg:pb-10">
       <PageHeader
-        eyebrow="Add Data"
         title={t("addData.page.title")}
         description={t("addData.page.desc")}
       />

@@ -13,7 +13,6 @@ export function ValidatePage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow={t("validatePage.eyebrow")}
         title={t("validatePage.title")}
         description={t("validatePage.desc")}
       />
