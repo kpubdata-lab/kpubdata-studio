@@ -2,6 +2,9 @@
  * Provider screen (`/provider`) — Provider Connection·Credential + Settings combined (#259).
  *
  * Issue #259: combines Provider credential/connection management with Settings.
+ * Issue #538: providers are one table (`features/provider/ConnectionsTable`) —
+ * Provider, Authentication, Configured, Last test, Action — and the credential panel
+ * for the provider picked in it sits below. No key text, raw or masked, is in the table.
  *
  * Truthfulness principle (F01, builder ADR 0012):
  * - The `configured` flag in the GET /providers summary is the **effective provider
@@ -41,6 +44,7 @@ import {
   Skeleton,
 } from "@/shared/ui";
 import { describeCredentialReadiness } from "@/shared/lib/providerStatus";
+import { ConnectionsTable } from "@/features/provider/ConnectionsTable";
 
 /**
  * Trust the `returnTo` query param only when it is a safe internal path
@@ -57,8 +61,6 @@ export function isSafeReturnTo(value: string | null): value is string {
 
 interface ProviderConfig {
   id: string;
-  name: string;
-  description: string;
   /** Whether this provider requires a user credential (GET /providers). */
   requiresCredential: boolean;
   /**
@@ -108,12 +110,8 @@ export function isCredentialStoreUnavailable(cause: unknown): boolean {
 function mapProviderSummary(summary: ProviderSummary): ProviderConfig {
   return {
     id: summary.provider,
-    name: summary.provider,
     requiresCredential: summary.requires_credential,
     summaryConfigured: summary.configured,
-    description: summary.requires_credential
-      ? i18n.t("provider.status.needsCred")
-      : i18n.t("provider.status.noCred"),
   };
 }
 
@@ -324,27 +322,16 @@ export function ProviderPage() {
   const userCredentialConfigured =
     credentialMeta.status === "loaded" && credentialMeta.configured;
 
-  // The provider status badge reflects credential readiness, not a generic
-  // live probe (#S-provider-probe). Actual Dataset API usability is confirmed
-  // by Preview. `userCredentialConfigured` is only knowable for the currently
-  // selected provider, so it is not passed to list badges (summary
-  // `configured` only).
-  const readinessToneClass: Record<"success" | "warning" | "neutral", string> = {
-    success: "bg-status-success-subtle text-status-success",
-    warning: "bg-status-warning-subtle text-status-warning",
-    neutral: "bg-muted text-muted-foreground",
-  };
-  const getReadinessPresentation = (
-    provider: ProviderConfig,
-    userConfigured?: boolean,
-  ) => {
-    const readiness = describeCredentialReadiness({
-      requiresCredential: provider.requiresCredential,
-      summaryConfigured: provider.summaryConfigured,
-      userCredentialConfigured: userConfigured,
-    });
-    return { className: readinessToneClass[readiness.tone], label: readiness.label, detail: readiness.detail };
-  };
+  // Readiness of the selected provider, now that this user's own key is known. It is
+  // credential readiness, not a generic live probe (#S-provider-probe); Preview
+  // confirms that a dataset actually works. The table only knows the summary.
+  const selectedReadiness = selectedProvider
+    ? describeCredentialReadiness({
+        requiresCredential: selectedProvider.requiresCredential,
+        summaryConfigured: selectedProvider.summaryConfigured,
+        userCredentialConfigured,
+      })
+    : null;
   const canRegisterCredential =
     !!selectedProvider &&
     selectedProvider.requiresCredential &&
@@ -373,93 +360,46 @@ export function ProviderPage() {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section className="lg:col-span-1">
-          <PageHeader title={t("provider.page.headerTitle")} className="mb-4" level={2} />
-          <Card className="p-0">
-            {loading ? (
-              <div className="p-6 space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 rounded-full" />
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="mt-1 h-3 w-1/2" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : providers.length === 0 ? (
-              <EmptyState
-                title={t("provider.page.emptyTitle")}
-                description={t("provider.page.emptyDesc")}
-              />
-            ) : (
-              <ul>
-                {providers.map((provider) => (
-                  <li
-                    key={provider.id}
-                    className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition hover:bg-muted/50 ${
-                      selectedProvider?.id === provider.id ? "bg-muted/50" : ""
-                    }`}
-                    onClick={() => handleProviderSelect(provider)}
-                  >
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-lg font-semibold">
-                      {provider.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{provider.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            getReadinessPresentation(provider).className
-                          }`}
-                        >
-                          {getReadinessPresentation(provider).label}
-                        </span>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+      <section aria-labelledby="connections-title" className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold text-foreground" id="connections-title">
+          {t("provider.page.headerTitle")}
+        </h2>
+        {loading ? (
+          <Skeleton className="h-32 w-full" />
+        ) : providers.length === 0 ? (
+          <Card>
+            <EmptyState
+              title={t("provider.page.emptyTitle")}
+              description={t("provider.page.emptyDesc")}
+            />
           </Card>
-        </section>
+        ) : (
+          <ConnectionsTable
+            onSelect={(id) => {
+              const provider = providers.find((candidate) => candidate.id === id);
+              if (provider) handleProviderSelect(provider);
+            }}
+            rows={providers}
+            selectedId={selectedProvider?.id ?? null}
+          />
+        )}
+        <p className="text-xs text-muted-foreground">{t("provider.table.lastTestNote")}</p>
+      </section>
 
-        <section className="lg:col-span-2">
-          {!selectedProvider ? (
-            <Card>
-              <EmptyState
-                title={t("provider.page.selectTitle")}
-                description={t("provider.page.selectDesc")}
-              />
-            </Card>
-          ) : (
-            <div className="space-y-6">
+      {selectedProvider ? (
+        <section aria-labelledby="credential-title" className="flex flex-col gap-2">
               <Card>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold">{t("provider.detail.connStatus")}</h3>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-semibold text-foreground" id="credential-title">
+                      {t("provider.detail.credTitle")} — <span className="font-mono">{selectedProvider.id}</span>
+                    </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {getReadinessPresentation(selectedProvider, userCredentialConfigured).detail}
+                      <span className="font-medium text-foreground">{selectedReadiness?.label}</span>
+                      {" — "}
+                      {selectedReadiness?.detail}
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      getReadinessPresentation(selectedProvider, userCredentialConfigured).className
-                    }`}
-                  >
-                    {getReadinessPresentation(selectedProvider, userCredentialConfigured).label}
-                  </span>
-                </div>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  {t("provider.detail.scopeNote")}
-                </p>
-              </Card>
-
-              <Card>
-                <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">{t("provider.detail.credTitle")}</h4>
                   {userCredentialConfigured ? (
                     <Button size="sm" variant="danger" onClick={handleCredentialDelete}>
                       {t("provider.detail.delete")}
@@ -495,8 +435,10 @@ export function ProviderPage() {
                 ) : showCredentialForm ? (
                   <div className="mt-4 space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">API Key</label>
+                      <label className="block text-sm font-medium mb-2" htmlFor="provider-credential-input">API Key</label>
                       <input
+                        autoComplete="off"
+                        id="provider-credential-input"
                         type="password"
                         className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
                         placeholder={t("provider.detail.keyPlaceholder")}
@@ -556,11 +498,12 @@ export function ProviderPage() {
                     {t("provider.detail.needsCredNote")}
                   </p>
                 )}
+                <p className="mt-4 text-xs text-muted-foreground">
+                  {t("provider.detail.scopeNote")}
+                </p>
               </Card>
-            </div>
-          )}
         </section>
-      </div>
+      ) : null}
 
       <ApplicationGuideCard />
     </main>
@@ -583,22 +526,16 @@ function getMockProviders(): ProviderConfig[] {
   return [
     {
       id: "datago",
-      name: "데이터고",
-      description: "대한민국 대표 공공데이터 포털",
       requiresCredential: true,
       summaryConfigured: false,
     },
     {
       id: "kosis",
-      name: "KOSIS",
-      description: "한국 통계청 통계포털",
       requiresCredential: true,
       summaryConfigured: true,
     },
     {
       id: "g2b",
-      name: "G2B",
-      description: "국가과학기술정보원",
       requiresCredential: true,
       summaryConfigured: false,
     },
