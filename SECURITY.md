@@ -36,9 +36,12 @@ anything that makes published data violate its provider's terms.
 
 ## Supported versions
 
-Only the latest release of each component receives fixes. Version and tag are
-being reconciled (kpubdata-builder#690); until that lands, report against a
-commit SHA rather than a version number.
+Only the latest release receives fixes. Studio and KPubData Builder ship as one
+application under one version
+([kpubdata ADR 0004](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0004-versioning-and-release.md)),
+so report the release you looked at — the tag, such as `v0.4.0` — and, if you know
+it, the version Builder reported in `GET /version`. For code on `main` that has not
+been released yet, give the commit SHA.
 
 ## Known limits, stated deliberately
 
