@@ -18,11 +18,12 @@
  * - The screen keeps the two axes separate: (1) effective credential readiness
  *   (summary configured), (2) existence of a user-saved credential (the basis for
  *   masked value display and deletion).
- * - The generic Provider probe (`POST /providers/{provider}/test`,
- *   `GET .../status`) is unreliable — it calls an arbitrary first Dataset without
- *   required parameters. This screen never surfaces probe results as "connection
- *   success"; actual usability is confirmed by Previewing a chosen Dataset
- *   (#S-provider-probe).
+ * - `POST /providers/{provider}/test` is reliable since kpubdata-builder#842: it calls a
+ *   dataset whose required parameters are declared and that needs no application, and
+ *   answers `not_testable` when there is none. Each row has a Test action, and the
+ *   principal's `last_test` from GET /providers fills the Last test column. It is still a
+ *   provider-level check; a chosen Dataset's usability is confirmed by its Preview
+ *   (#S-provider-probe). `GET .../status` is not used.
  */
 import { useTranslation } from "react-i18next";
 import { ApplicationGuideCard } from "@/features/onboarding/ApplicationGuideCard";
@@ -33,7 +34,9 @@ import {
   ApiError,
   builderApi,
   isRealBuilderEnabled,
+  type ProviderLastTest,
   type ProviderSummary,
+  type ProviderTestResponse,
 } from "@/shared/lib/builderApi";
 import {
   Card,
@@ -69,6 +72,8 @@ interface ProviderConfig {
    * whether the user saved a credential.
    */
   summaryConfigured: boolean;
+  /** `last_test` from GET /providers; `undefined` when the Builder does not send it. */
+  lastTest?: ProviderLastTest | null;
 }
 
 interface CredentialForm {
@@ -112,6 +117,18 @@ function mapProviderSummary(summary: ProviderSummary): ProviderConfig {
     id: summary.provider,
     requiresCredential: summary.requires_credential,
     summaryConfigured: summary.configured,
+    lastTest: summary.last_test,
+  };
+}
+
+/** The test result as the `last_test` Builder now remembers for this principal (#842). */
+export function lastTestFromResponse(response: ProviderTestResponse): ProviderLastTest {
+  return {
+    status: response.status,
+    checked_at: response.checked_at,
+    error_category: response.error_category ?? null,
+    response_code: response.response_code ?? null,
+    dataset: response.dataset ?? null,
   };
 }
 
@@ -146,6 +163,7 @@ export function ProviderPage() {
   const selectedProviderIdRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
 
   const loadProviders = useCallback(async () => {
     setLoading(true);
@@ -231,6 +249,29 @@ export function ProviderPage() {
     },
     [],
   );
+
+  /**
+   * Runs one provider's connection test and shows its result as that row's last test.
+   * Builder stores the same result, so the next GET /providers agrees with it.
+   */
+  const handleProviderTest = async (id: string) => {
+    setTestingId(id);
+    setError(null);
+    try {
+      const provider = providers.find((candidate) => candidate.id === id);
+      const lastTest = isRealBuilderEnabled()
+        ? lastTestFromResponse(await builderApi.testProviderConnection(id))
+        : mockLastTest(provider);
+      const apply = (candidate: ProviderConfig) =>
+        candidate.id === id ? { ...candidate, lastTest } : candidate;
+      setProviders((current) => current.map(apply));
+      setSelectedProvider((current) => (current ? apply(current) : current));
+    } catch {
+      setError(i18n.t("provider.errors.testFail", { provider: id }));
+    } finally {
+      setTestingId(null);
+    }
+  };
 
   const handleProviderSelect = (provider: ProviderConfig) => {
     // Selection changes are reflected in the ref synchronously — the
@@ -379,8 +420,10 @@ export function ProviderPage() {
               const provider = providers.find((candidate) => candidate.id === id);
               if (provider) handleProviderSelect(provider);
             }}
+            onTest={(id) => void handleProviderTest(id)}
             rows={providers}
             selectedId={selectedProvider?.id ?? null}
+            testingId={testingId}
           />
         )}
         <p className="text-xs text-muted-foreground">{t("provider.table.lastTestNote")}</p>
@@ -522,22 +565,43 @@ function mockCredentialMeta(provider: ProviderConfig): CredentialMetaState {
   };
 }
 
+/** Mock/demo mode has no Builder to call: a configured provider connects, others need a key. */
+function mockLastTest(provider: ProviderConfig | undefined): ProviderLastTest {
+  const ready = !provider || !provider.requiresCredential || provider.summaryConfigured;
+  return {
+    status: ready ? "connected" : "not_configured",
+    checked_at: new Date().toISOString(),
+    error_category: null,
+    response_code: null,
+    dataset: null,
+  };
+}
+
 function getMockProviders(): ProviderConfig[] {
   return [
     {
       id: "datago",
       requiresCredential: true,
       summaryConfigured: false,
+      lastTest: null,
     },
     {
       id: "kosis",
       requiresCredential: true,
       summaryConfigured: true,
+      lastTest: {
+        status: "connected",
+        checked_at: "2026-09-01T09:30:00+09:00",
+        error_category: null,
+        response_code: null,
+        dataset: null,
+      },
     },
     {
       id: "g2b",
       requiresCredential: true,
       summaryConfigured: false,
+      lastTest: null,
     },
   ];
 }

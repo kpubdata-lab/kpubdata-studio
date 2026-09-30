@@ -3,9 +3,8 @@
  *
  * - real mode는 GET /providers를 canonical source로 쓰고, 실패를 mock 성공으로
  *   위장하지 않는다(명시적 error + 빈 목록).
- * - generic Provider probe(POST /test · GET /status)는 임의의 첫 Dataset을 필수
- *   파라미터 없이 호출하므로 신뢰할 수 없어 화면에서 제거됐다 — 실제 사용 가능
- *   여부는 Preview가 확인한다(#S-provider-probe).
+ * - The provider test (POST /test) runs only from a row's Test action
+ *   (kpubdata-builder#842); selecting a provider never calls it or GET /status.
  * - "사용자 저장 credential" 유무/마스킹은 GET /providers/{provider}/credential
  *   메타데이터로만 판정한다 — GET /providers 요약의 `configured`(effective provider
  *   configuration)와 분리한다.
@@ -65,7 +64,7 @@ describe("ProviderPage real mode (#S01)", () => {
     expect(screen.getByText("등록된 Provider가 없습니다")).toBeInTheDocument();
   });
 
-  it("does NOT call the generic Provider probe (POST /test or GET /status)", async () => {
+  it("does NOT call the provider test (POST /test or GET /status) just by selecting a provider", async () => {
     vi.spyOn(builderApi, "listProviders").mockResolvedValue({
       providers: [{ provider: "datago", requires_credential: true, configured: true }],
     });
@@ -80,7 +79,7 @@ describe("ProviderPage real mode (#S01)", () => {
     renderPage();
     fireEvent.click(await screen.findByText("datago"));
 
-    // credential readiness만 표시하고 generic live probe 버튼은 없다.
+    // Selecting shows credential readiness; the test runs only from the Test action.
     expect(await screen.findByText("dg••••99")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "연결 테스트" })).not.toBeInTheDocument();
     expect(statusSpy).not.toHaveBeenCalled();

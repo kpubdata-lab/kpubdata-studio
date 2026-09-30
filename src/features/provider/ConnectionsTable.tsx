@@ -5,16 +5,21 @@
  * - Configured is credential readiness from the summary (`describeCredentialReadiness`):
  *   ready is plain text, a missing key is a badge (#524). Whether *this user* saved a key
  *   is only known for the selected provider, so the list never claims it.
- * - Last test is `—`: GET /providers records no test, and the generic probe
- *   (`POST /providers/{provider}/test`) calls an arbitrary first dataset without its
- *   required parameters, so its result is not shown as a connection result
- *   (#S-provider-probe, kpubdata-builder#842).
+ * - Last test is this principal's `last_test` from GET /providers (kpubdata-builder#842):
+ *   null means never tested, an absent field (a Builder before #842) reads `—`.
+ *   `not_testable` and `not_configured` say nothing about the key, so they are quiet
+ *   text, never a failure badge; only `failed` is a badge.
+ * - Test calls `POST /providers/{provider}/test`, which since kpubdata-builder#842 calls a
+ *   dataset whose required parameters are all declared and needs no application — so its
+ *   result is a provider connection result. Preview still decides a chosen dataset.
  * - No key text is ever rendered here — not even the masked one.
  */
 import { useTranslation } from "react-i18next";
 
+import { formatDateTime } from "@/features/datasets/model";
+import type { ProviderLastTest } from "@/shared/lib/builderApi";
 import { providerLabel } from "@/shared/lib/providerLabels";
-import { describeCredentialReadiness } from "@/shared/lib/providerStatus";
+import { describeCredentialReadiness, describeProviderProbe } from "@/shared/lib/providerStatus";
 import { Button, cn } from "@/shared/ui";
 import { ActionableStatus, MissingStatus, NormalStatus } from "@/shared/ui/StatusState";
 
@@ -22,6 +27,8 @@ export interface ConnectionRow {
   id: string;
   requiresCredential: boolean;
   summaryConfigured: boolean;
+  /** `last_test` from GET /providers; `undefined` when the Builder does not send it. */
+  lastTest?: ProviderLastTest | null;
 }
 
 function Th({ children, className }: { children: string; className?: string }) {
@@ -47,14 +54,56 @@ function Configured({ row }: { row: ConnectionRow }) {
   return <NormalStatus className={readiness.tone === "neutral" ? "text-muted-foreground" : undefined}>{readiness.label}</NormalStatus>;
 }
 
+function LastTest({ row }: { row: ConnectionRow }) {
+  const { t } = useTranslation();
+  if (row.lastTest === undefined) return <MissingStatus label={t("provider.table.lastTestMissing")} />;
+  if (row.lastTest === null) {
+    return <NormalStatus className="text-muted-foreground">{t("provider.table.neverTested")}</NormalStatus>;
+  }
+  const test = row.lastTest;
+  const presentation = describeProviderProbe({
+    status: test.status,
+    errorCategory: test.error_category ?? undefined,
+    responseCode: test.response_code ?? undefined,
+    credentialConfigured: row.summaryConfigured,
+  });
+  const hint = [presentation.title, presentation.detail].filter(Boolean).join(" — ") || undefined;
+  const label =
+    presentation.tone === "error" || presentation.tone === "warning" ? (
+      <ActionableStatus className="whitespace-nowrap" tone={presentation.tone === "error" ? "failure" : "warning"}>
+        {presentation.label}
+      </ActionableStatus>
+    ) : (
+      <NormalStatus className={presentation.tone === "neutral" ? "text-muted-foreground" : undefined}>
+        {presentation.label}
+      </NormalStatus>
+    );
+  return (
+    <div data-last-test={test.status} title={hint}>
+      {label}
+      <p className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+        {formatDateTime(test.checked_at)}
+        {test.dataset ? <span className="font-mono"> · {test.dataset}</span> : null}
+      </p>
+      {hint && presentation.tone !== "success" ? <p className="sr-only">{hint}</p> : null}
+    </div>
+  );
+}
+
 export function ConnectionsTable({
   rows,
   selectedId,
   onSelect,
+  onTest,
+  testingId,
 }: {
   rows: ConnectionRow[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** Runs `POST /providers/{provider}/test` for one provider. */
+  onTest: (id: string) => void;
+  /** The provider whose test is in flight, if any. */
+  testingId: string | null;
 }) {
   const { t } = useTranslation();
   const caption = t("provider.table.caption");
@@ -66,7 +115,7 @@ export function ConnectionsTable({
       role="region"
       tabIndex={0}
     >
-      <table className="w-full min-w-[640px] border-collapse text-left text-[13px]">
+      <table className="w-full min-w-[720px] border-collapse text-left text-[13px]">
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-border bg-muted/50">
           <tr>
@@ -99,9 +148,22 @@ export function ConnectionsTable({
                   <Configured row={row} />
                 </td>
                 <td className="px-3 py-2">
-                  <MissingStatus label={t("provider.table.lastTestMissing")} />
+                  <LastTest row={row} />
                 </td>
-                <td className="px-3 py-2 text-right">
+                <td className="whitespace-nowrap px-3 py-2 text-right">
+                  <Button
+                    aria-label={`${t("provider.table.test")} — ${row.id}`}
+                    className="mr-2"
+                    disabled={testingId !== null}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onTest(row.id);
+                    }}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    {testingId === row.id ? t("provider.table.testing") : t("provider.table.test")}
+                  </Button>
                   <Button
                     aria-label={`${t("provider.table.manage")} — ${row.id}`}
                     aria-pressed={selected}
