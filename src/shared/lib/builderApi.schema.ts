@@ -374,10 +374,21 @@ export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
 
 /** GET /providers — runtime Provider list and current principal's configured status(#492).
  *  Contains no credential plaintext (the server sends only booleans). */
+/** The principal's last connection test of a provider (kpubdata-builder#842). */
+export const providerLastTestSchema = z.object({
+  status: z.enum(["connected", "failed", "not_configured", "not_testable"]),
+  checked_at: z.string(),
+  error_category: z.string().nullable(),
+  response_code: z.number().int().nullable(),
+  dataset: z.string().nullable(),
+});
+
 export const providerSummarySchema = z.object({
   provider: z.string(),
   requires_credential: z.boolean(),
   configured: z.boolean(),
+  /** Absent from a Builder before kpubdata-builder#842; null when never tested. */
+  last_test: providerLastTestSchema.nullable().optional(),
 });
 
 export const providersResponseSchema = z.object({
@@ -387,8 +398,12 @@ export const providersResponseSchema = z.object({
 /** POST /providers/{provider}/test, GET /providers/{provider}/status common response. */
 export const providerTestResponseSchema = z.object({
   provider: z.string(),
-  status: z.enum(["connected", "failed", "not_configured"]),
+  // `not_testable` (kpubdata-builder#842): no dataset can be called without guessing a
+  // parameter. It says nothing about the key.
+  status: z.enum(["connected", "failed", "not_configured", "not_testable"]),
   configured: z.boolean(),
+  /** The dataset a `connected` test called (kpubdata-builder#842). */
+  dataset: z.string().optional(),
   latency_ms: z.number().int().nonnegative(),
   checked_at: z.string(),
   error_category: z.enum(["auth", "network", "timeout", "provider", "unknown"]).optional(),

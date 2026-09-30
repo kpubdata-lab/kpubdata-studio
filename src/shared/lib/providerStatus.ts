@@ -21,7 +21,12 @@ const t = (key: string, params?: Record<string, unknown>): string =>
   i18n.t(`provider.status.${key}`, params ?? {});
 
 
-export type ProviderProbeStatus = "connected" | "failed" | "not_configured" | "unknown";
+export type ProviderProbeStatus =
+  | "connected"
+  | "failed"
+  | "not_configured"
+  | "not_testable"
+  | "unknown";
 export type ProviderProbeTone = "success" | "warning" | "error" | "neutral";
 
 export interface ProviderProbeInput {
@@ -152,6 +157,16 @@ export function describeProviderProbe(input: ProviderProbeInput): ProviderProbeP
   }
   if (input.status === "unknown") {
     return { tone: "neutral", label: t("probe.unknown"), title: null, detail: null };
+  }
+  if (input.status === "not_testable") {
+    // Builder could not pick a dataset to call without guessing (kpubdata-builder#842):
+    // neither a success nor a failure of the key.
+    return {
+      tone: "neutral",
+      label: t("probe.notTestable"),
+      title: t("probe.notTestableTitle"),
+      detail: t("probe.notTestableDetail"),
+    };
   }
   // status === "failed"
   const needsPermissionCheck = Boolean(input.credentialConfigured) && input.responseCode === 403;
