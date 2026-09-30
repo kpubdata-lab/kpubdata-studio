@@ -198,6 +198,49 @@ describe("Home on a warehouse (#527)", () => {
   });
 });
 
+describe("Home reads recent snapshots from the table list summary (kpubdata-builder#841)", () => {
+  it("asks no table detail when the list summarises each current snapshot; the run is then —", async () => {
+    const details: string[] = [];
+    const summarised = [
+      {
+        table_id: "t1",
+        logical_name: "air.v2.datago",
+        current_snapshot_id: "snap_a",
+        revision: 1,
+        current_snapshot: { snapshot_id: "snap_a", row_count: 1234, committed_at: "2026-09-01T00:00:00Z", coverage: null },
+        dataset_id: "air.v2",
+      },
+      {
+        table_id: "t2",
+        logical_name: "water.kma",
+        current_snapshot_id: "snap_w",
+        revision: 1,
+        current_snapshot: { snapshot_id: "snap_w", row_count: null, committed_at: "2026-09-03T00:00:00Z", coverage: null },
+        dataset_id: "water",
+      },
+      { table_id: "t3", logical_name: "fresh.y", current_snapshot_id: null, revision: 0, current_snapshot: null, dataset_id: "fresh" },
+    ];
+    handlers();
+    mswServer.use(
+      http.get(`${API_BASE}/warehouse/tables`, () => HttpResponse.json({ tables: summarised })),
+      http.get(`${API_BASE}/warehouse/tables/:name`, ({ params }) => {
+        details.push(String(params.name));
+        return HttpResponse.json({ code: "not_found", message: "gone" }, { status: 404 });
+      }),
+    );
+    renderHome();
+
+    await waitFor(() => expect(within(section("최근 스냅샷")).getAllByRole("row")).toHaveLength(3));
+    const [, water, air] = within(within(section("최근 스냅샷")).getByRole("table")).getAllByRole("row");
+    expect(water).toHaveTextContent("snap_w");
+    expect(air).toHaveTextContent("1,234");
+    // The dataset id Builder sent (it contains a dot) decides the link, not a split name.
+    expect(within(air).getByRole("link", { name: "air.v2.datago" })).toHaveAttribute("href", "/tables/air.v2?source=datago");
+    expect(air.querySelectorAll("td")[4].querySelector('[data-status="missing"]')).not.toBeNull();
+    expect(details).toEqual([]);
+  });
+});
+
 describe("Home without a warehouse (#527)", () => {
   it("keeps recent runs and says in one line why there are no snapshots or analyses", async () => {
     handlers({ warehouse: false });

@@ -976,7 +976,8 @@
       "committed": "Committed",
       "run": "Run",
       "empty": "No snapshot has been committed yet.",
-      "error": "Could not load recent snapshots."
+      "error": "Could not load recent snapshots.",
+      "runMissing": "Run: the table list's snapshot summary does not name it — Table Detail does"
     },
     "analyses": {
       "title": "Recent analyses",

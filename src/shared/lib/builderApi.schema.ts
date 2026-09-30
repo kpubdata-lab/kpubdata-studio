@@ -1172,16 +1172,6 @@ export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
  * `warehouse_not_configured`; Studio then keeps the run-based query path.
  */
 
-export const warehouseTableSchema = z.object({
-  table_id: z.string(),
-  /** `<dataset_id>.<source_key>` — the name a query uses. */
-  logical_name: z.string(),
-  current_snapshot_id: z.string().nullable(),
-  revision: z.number().int().nonnegative(),
-});
-
-export const warehouseTableListResponseSchema = z.object({ tables: z.array(warehouseTableSchema) });
-
 /**
  * Whether the fetch behind a snapshot collected what the provider reported (builder#816,
  * contract 1.42.0). A status this Studio does not know is kept as text and read as unknown.
@@ -1196,6 +1186,37 @@ export const snapshotCoverageSchema = z.object({
     observed_at: z.string(),
   }),
 });
+
+/**
+ * A table's current snapshot as `GET /warehouse/tables` summarises it (kpubdata-builder#841,
+ * contract 1.47.0). A value the catalog does not have is null, never 0.
+ */
+export const warehouseCurrentSnapshotSchema = z.object({
+  snapshot_id: z.string(),
+  row_count: z.number().int().nonnegative().nullable(),
+  committed_at: z.string().nullable(),
+  coverage: snapshotCoverageSchema.nullable(),
+});
+
+export const warehouseTableSchema = z.object({
+  table_id: z.string(),
+  /** `<dataset_id>.<source_key>` — the name a query uses. */
+  logical_name: z.string(),
+  current_snapshot_id: z.string().nullable(),
+  revision: z.number().int().nonnegative(),
+  /**
+   * The current snapshot summarised (#841): absent from an older Builder (read the table's
+   * detail instead), null before the first commit.
+   */
+  current_snapshot: warehouseCurrentSnapshotSchema.nullable().optional(),
+  /**
+   * The dataset the table was built for (#841): absent from an older Builder, null when
+   * Builder cannot read it. Not to be derived by splitting `logical_name` when sent.
+   */
+  dataset_id: z.string().nullable().optional(),
+});
+
+export const warehouseTableListResponseSchema = z.object({ tables: z.array(warehouseTableSchema) });
 
 export const warehouseSnapshotSchema = z.object({
   snapshot_id: z.string(),
@@ -1421,6 +1442,7 @@ export const createAnalysisResponseSchema = z.object({
 export const analysisDeletedResponseSchema = z.object({ analysis_id: z.string(), deleted: z.literal(true) });
 
 export type WarehouseTable = z.infer<typeof warehouseTableSchema>;
+export type WarehouseCurrentSnapshot = z.infer<typeof warehouseCurrentSnapshotSchema>;
 export type WarehouseTableDetailResponse = z.infer<typeof warehouseTableDetailResponseSchema>;
 export type WarehouseSnapshot = z.infer<typeof warehouseSnapshotSchema>;
 export type WarehouseQueryRequest = z.infer<typeof warehouseQueryRequestSchema>;

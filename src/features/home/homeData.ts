@@ -3,12 +3,13 @@
  * analyses and connection problems — all read from contract fields, nothing inferred.
  *
  * - Attention comes from each dataset's `status_axes` (`GET /datasets`).
- * - Recent snapshots are each warehouse table's current snapshot
- *   (`GET /warehouse/tables/{name}`, four at a time), newest commit first. builder#841
- *   asks for the snapshot summary in the table list, which would remove those requests.
+ * - Recent snapshots are each warehouse table's current snapshot, newest commit first,
+ *   from the `GET /warehouse/tables` summary (kpubdata-builder#841); an older Builder's
+ *   tables are read from `GET /warehouse/tables/{name}`, four at a time.
  * - Connection problems group the tables whose Access axis needs action by provider.
  */
 import { kindOf } from "@/features/datasets/components/StatusAxes";
+import { tableOwner, type CurrentSnapshot } from "@/features/datasets/tableList";
 import { type DatasetSummary, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
 import { warehouseApi } from "@/features/sql/warehouseApi";
 import type { DatasetStatusAxes } from "@/shared/lib/builderApi.schema";
@@ -54,37 +55,42 @@ export function connectionProblems(datasets: DatasetSummary[]): ConnectionProble
 
 export interface RecentSnapshot {
   logicalName: string;
-  snapshot: WarehouseSnapshot;
-}
-
-/** `<dataset_id>.<source_key>`, split at the last dot as the SQL Workspace does. */
-export function splitTableName(logicalName: string): { datasetId: string; sourceKey: string } | null {
-  const dot = logicalName.lastIndexOf(".");
-  if (dot <= 0 || dot === logicalName.length - 1) return null;
-  return { datasetId: logicalName.slice(0, dot), sourceKey: logicalName.slice(dot + 1) };
+  /** The table's dataset and source, when known (see `tableOwner`). */
+  owner: { datasetId: string; sourceKey: string } | null;
+  /**
+   * The current snapshot. `run_id` and `created_at` come only from a table's detail — the
+   * list summary (kpubdata-builder#841) does not carry them — so they may be absent.
+   */
+  snapshot: CurrentSnapshot & Partial<Pick<WarehouseSnapshot, "run_id" | "created_at">>;
 }
 
 /**
- * The current snapshots of `tables`, newest commit first, at most `limit`. A table whose
- * detail request fails is left out rather than shown with guessed values.
+ * The current snapshots of `tables`, newest commit first, at most `limit`. They come from
+ * the list summary (#841); only a table an older Builder lists without one is read from
+ * its detail, four at a time. A table whose detail request fails is left out rather than
+ * shown with guessed values.
  */
 export async function loadRecentSnapshots(tables: WarehouseTable[], limit: number, signal?: AbortSignal): Promise<RecentSnapshot[]> {
-  const committed = tables.filter((table) => table.current_snapshot_id !== null);
   const found: RecentSnapshot[] = [];
+  const needDetail: WarehouseTable[] = [];
+  for (const table of tables) {
+    if (table.current_snapshot) found.push({ logicalName: table.logical_name, owner: tableOwner(table), snapshot: table.current_snapshot });
+    else if (table.current_snapshot === undefined && table.current_snapshot_id !== null) needDetail.push(table);
+  }
   let next = 0;
   async function worker() {
-    while (next < committed.length) {
-      const table = committed[next++];
+    while (next < needDetail.length) {
+      const table = needDetail[next++];
       try {
         const detail = await warehouseApi().getWarehouseTable(table.logical_name, signal);
         const snapshot = detail.snapshots.find((item) => item.snapshot_id === table.current_snapshot_id);
-        if (snapshot) found.push({ logicalName: table.logical_name, snapshot });
+        if (snapshot) found.push({ logicalName: table.logical_name, owner: tableOwner(table), snapshot });
       } catch (cause) {
         if (signal?.aborted) throw cause;
       }
     }
   }
-  await Promise.all(Array.from({ length: Math.min(4, committed.length) }, worker));
-  const time = (entry: RecentSnapshot) => Date.parse(entry.snapshot.committed_at ?? entry.snapshot.created_at) || 0;
+  await Promise.all(Array.from({ length: Math.min(4, needDetail.length) }, worker));
+  const time = (entry: RecentSnapshot) => Date.parse(entry.snapshot.committed_at ?? entry.snapshot.created_at ?? "") || 0;
   return found.sort((a, b) => time(b) - time(a)).slice(0, limit);
 }
