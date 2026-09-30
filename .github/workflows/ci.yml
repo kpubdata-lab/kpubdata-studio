@@ -92,10 +92,17 @@ jobs:
     #
     # 실 Builder 기동이 필요한 @real-builder 스펙은 playwright.config.ts 의 grep 이
     # 이미 걷어낸다 — 이 잡은 mock 모드 vite dev 서버만 띄운다(webServer 설정).
-    # 브라우저는 chromium 하나만 받는다: 두 project(desktop/mobile) 모두 chromium 이라
-    # 나머지를 받아봐야 설치 시간만 늘어난다.
+    #
+    # The job runs in the Playwright image for the installed @playwright/test (#585), so
+    # Chromium, its system libraries and fonts come from the image rather than from
+    # whatever ubuntu-latest carries that week — the screenshot baselines (#532) are
+    # rendered in the same image. Keep the tag equal to the package version;
+    # __tests__/e2eContainerImage.test.ts fails when they drift apart.
     name: E2E (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -113,11 +120,13 @@ jobs:
           npm_config_cache: ${{ runner.temp }}/.npm-cache
           npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-
+      # Browsers are not downloaded: the image already holds them (PLAYWRIGHT_BROWSERS_PATH).
       - name: Run E2E
         run: npm run test:e2e
+        env:
+          # The container runs as root while Actions sets HOME to /github/home, which
+          # root does not own; Playwright's CI recipe points HOME back at /root.
+          HOME: /root
 
       # 실패 시 trace(playwright.config.ts 의 retain-on-failure)를 남겨야 CI 로그만
       # 보고 원인을 추측하지 않아도 된다.
