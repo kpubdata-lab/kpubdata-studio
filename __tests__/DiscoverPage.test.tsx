@@ -35,7 +35,7 @@ describe("DiscoverPage", () => {
     expect(await screen.findByRole("link", { name: "테이블 만들기" })).toHaveAttribute("href", "/add");
   });
 
-  it("loads the mock catalog and renders dataset cards with provider labels and counts", async () => {
+  it("loads the mock catalog and renders dataset rows with provider labels and counts", async () => {
     renderDiscover();
 
     expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
@@ -48,11 +48,11 @@ describe("DiscoverPage", () => {
     await screen.findByText("대기오염 정보");
 
     // air_quality: requires_service_key=true → 배지가 있어야 한다.
-    const requiresKeyCard = screen.getByText("대기오염 정보").closest("[class*='rounded-xl']") as HTMLElement;
+    const requiresKeyCard = screen.getByText("대기오염 정보").closest("tr") as HTMLElement;
     expect(within(requiresKeyCard).getByText("서비스 키 필요")).toBeInTheDocument();
 
     // dur_product_info: requires_service_key=false → 배지가 없어야 한다.
-    const noKeyCard = screen.getByText("DUR 품목정보").closest("[class*='rounded-xl']") as HTMLElement;
+    const noKeyCard = screen.getByText("DUR 품목정보").closest("tr") as HTMLElement;
     expect(within(noKeyCard).queryByText("서비스 키 필요")).not.toBeInTheDocument();
   });
 
@@ -101,11 +101,11 @@ describe("DiscoverPage", () => {
     expect(await screen.findByText("조건에 맞는 소스 데이터셋이 없습니다")).toBeInTheDocument();
   });
 
-  it("navigates to /add with provider and dataset query params when starting from a card", async () => {
+  it("navigates to /add with provider and dataset query params when starting from a row", async () => {
     renderDiscover();
     await screen.findByText("대기오염 정보");
 
-    const startButtons = screen.getAllByRole("button", { name: "이 데이터로 시작하기" });
+    const startButtons = screen.getAllByRole("button", { name: /^이 데이터로 시작하기/ });
     fireEvent.click(startButtons[0]);
 
     expect(navigateMock).toHaveBeenCalledWith(
