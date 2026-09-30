@@ -1756,7 +1756,12 @@
       "schemaBothFailed": "Both the silver and gold schema lookups failed.",
       "schemaNotReached": "This source has not reached a stage that produces a schema.",
       "mockNoOutput": "Mock/demo mode does not provide real output evidence for this run.",
-      "baseRunMissing": "The base run is not in this table's run list (deleted or inaccessible)."
+      "baseRunMissing": "The base run is not in this table's run list (deleted or inaccessible).",
+      "refRun": "Run {{runId}}",
+      "refQuality": "Quality",
+      "refSchema": "Schema · {{sourceKey}}",
+      "refStage": "Stage · {{sourceKey}}",
+      "refOutput": "Output"
     },
     "staleness": {
       "lookupFailed": "The lookup failed.",
@@ -2140,8 +2145,8 @@
   },
   "assistantChat": {
     "llmFailed": "The LLM call failed.",
-    "needsKey": "Enter an LLM API key in Settings to use the assistant. (BYOK)",
-    "title": "BuildSpec assistant",
+    "needsKey": "Enter an LLM API key in Settings to use Ask KPubData. (BYOK)",
+    "title": "Ask KPubData · BuildSpec",
     "reset": "Clear conversation",
     "hint": "Ask about spec errors, suggested fixes, or which data source to use.",
     "placeholder": "Type your question…",
@@ -2158,7 +2163,11 @@
       "silverDone": "Silver complete",
       "bronzeDone": "Bronze complete",
       "someNotRun": "Some stages have not run",
-      "noStage": "No stage available"
+      "noStage": "No stage available",
+      "labelUnavailable": "Unavailable",
+      "labelMixedFailed": "Mixed / Failed",
+      "labelFailed": "Failed",
+      "labelMixedPartial": "Mixed / Partial"
     },
     "errors": {
       "datasetNotFound": "The requested table could not be found.",
@@ -2173,7 +2182,7 @@
   "validatePage": {
     "eyebrow": "Validate",
     "title": "Validation results",
-    "desc": "Check what is required and ask the assistant for suggested fixes.",
+    "desc": "Check what is required and use Ask KPubData for suggested fixes.",
     "emptyTitle": "Validation happens inside the Create Table flow",
     "emptyDesc": "Field-level errors and fix guidance appear in the Validate & run step of the Create Table wizard.",
     "cta": "Create table"
@@ -2206,7 +2215,16 @@
     "formatRequired": "Choose a file format.",
     "endpointRequired": "Enter an endpoint.",
     "httpsOnly": "Only URLs starting with https:// are allowed.",
-    "urlFormats": "URL sources support only csv, json and jsonl."
+    "urlFormats": "URL sources support only csv, json and jsonl.",
+    "aliasEmpty": "Alias cannot be empty.",
+    "providerRequired": "Choose a provider.",
+    "sourceDatasetRequired": "Choose a source dataset.",
+    "exportFormatRequired": "Export format is required.",
+    "datasetIdRequired": "Table ID (dataset_id) is required.",
+    "titleRequired": "Title is required.",
+    "descriptionRequired": "Description is required.",
+    "sourcesRequired": "At least one source is required.",
+    "exportsRequired": "Select at least one export format."
   },
   "preview": {
     "unknownSourceError": "Unknown source error",

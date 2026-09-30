@@ -148,21 +148,21 @@ export function buildEvidenceRefs(evidence: ReportEvidenceBundle): ReportEvidenc
     refs.push({ kind: "dataset", id: evidence.datasetId, label: evidence.dataset.value.title });
   }
   if (evidence.run.ok) {
-    refs.push({ kind: "run", id: evidence.runId, label: `Run ${evidence.runId}` });
+    refs.push({ kind: "run", id: evidence.runId, label: i18n.t("reports.evidence.refRun", { runId: evidence.runId }) });
   }
   if (evidence.quality.ok) {
-    refs.push({ kind: "quality", id: evidence.runId, label: "Quality" });
+    refs.push({ kind: "quality", id: evidence.runId, label: i18n.t("reports.evidence.refQuality") });
   }
   for (const [sourceKey, schema] of Object.entries(evidence.schemas)) {
-    if (schema.origin !== "unavailable") refs.push({ kind: "schema", id: sourceKey, label: `Schema · ${sourceKey}` });
+    if (schema.origin !== "unavailable") refs.push({ kind: "schema", id: sourceKey, label: i18n.t("reports.evidence.refSchema", { sourceKey }) });
   }
   if (evidence.stages.ok) {
     for (const source of evidence.stages.value.sources) {
-      refs.push({ kind: "stage", id: source.source_key, label: `Stage · ${source.source_key}` });
+      refs.push({ kind: "stage", id: source.source_key, label: i18n.t("reports.evidence.refStage", { sourceKey: source.source_key }) });
     }
   }
   if (evidence.output.ok) {
-    refs.push({ kind: "output", id: evidence.runId, label: "Output" });
+    refs.push({ kind: "output", id: evidence.runId, label: i18n.t("reports.evidence.refOutput") });
   }
   return refs;
 }
