@@ -20,6 +20,7 @@ import { builderApi, type WarehouseSnapshot, type WarehouseTable } from "@/share
 import { Button, Card, PageHeader } from "@/shared/ui";
 
 import { QueryError, ResultTable } from "./ResultTable";
+import { coverageCounts, coverageOf } from "./snapshotCoverage";
 import { queryWarehouse, saveAnalysis, type WarehouseOutcome } from "./warehouse";
 
 const DEFAULT_SQL = "SELECT *\nFROM dataset\nLIMIT 100";
@@ -31,6 +32,25 @@ const fieldClassName =
 /** `table@snapshot · rev N` — what a result read. */
 export function pinnedLabel(table: string, snapshotId: string, revision?: number): string {
   return `${table}@${snapshotId}${revision === undefined ? "" : ` · rev ${revision}`}`;
+}
+
+/** The selected snapshot's coverage; for `current`, the table's current snapshot (#417). */
+function SnapshotCoverageNote({ snapshot }: { snapshot: WarehouseSnapshot | undefined }) {
+  const { t } = useTranslation();
+  if (!snapshot) return null;
+  const word = coverageOf(snapshot);
+  const counts = coverageCounts(snapshot);
+  return (
+    <p
+      className={`text-xs ${word === "complete" ? "text-muted-foreground" : "font-semibold text-amber-700 dark:text-amber-300"}`}
+      data-coverage={word}
+      data-testid="snapshot-coverage"
+    >
+      {t(`sql.coverage.${word}`, { snapshot: snapshot.snapshot_id })}
+      {counts ? ` ${t("sql.coverage.counts", counts)}` : ""}
+      {snapshot.coverage?.reasons.length ? ` (${snapshot.coverage.reasons.join(", ")})` : ""}
+    </p>
+  );
 }
 
 export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
@@ -45,6 +65,9 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState<"run" | "save" | null>(null);
   const [outcome, setOutcome] = useState<WarehouseOutcome | null>(null);
+
+  const currentId = tables.find((item) => item.logical_name === table)?.current_snapshot_id ?? null;
+  const selectedSnapshot = (snapshots ?? []).find((item) => item.snapshot_id === (snapshot === CURRENT ? currentId : snapshot));
 
   function update(next: Record<string, string | null>) {
     const merged = new URLSearchParams(params);
@@ -144,11 +167,13 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
                 <option disabled={item.state !== "committed"} key={item.snapshot_id} value={item.snapshot_id}>
                   {item.snapshot_id}
                   {item.row_count === null ? "" : ` · ${t("sql.rows", { count: item.row_count })}`}
+                  {` · ${t(`statusAxes.value.completeness.${coverageOf(item)}`)}`}
                   {item.state === "committed" ? "" : ` · ${item.state}`}
                 </option>
               ))}
             </select>
           </label>
+          <SnapshotCoverageNote snapshot={selectedSnapshot} />
           <p className="text-xs text-muted-foreground">{t("sql.currentNote")}</p>
           <p className="text-xs text-muted-foreground">{t("sql.oneTable")}</p>
         </Card>
