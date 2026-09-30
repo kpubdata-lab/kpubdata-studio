@@ -3,8 +3,9 @@
  * legacy `?run=<id>`) — #255, #535.
  *
  * The list is one filterable table (Run ID, Table, Status, Started, Duration, Snapshot);
- * search and the status filter live in the URL (`?q=&status=`), so coming back from a
- * detail keeps them. A row opens `/refresh-jobs/:id`, where the run-centred diagnostics
+ * search, the status filter and the table filter live in the URL (`?q=&status=&table=`),
+ * so coming back from a detail keeps them. The table filter lists the tables the loaded
+ * runs name (kpubdata-builder#844) and is left out when the Builder names none. A row opens `/refresh-jobs/:id`, where the run-centred diagnostics
  * live: stage progress, failure evidence, spec digest and the event log (RunDetailPanel).
  * Studio never recalculates or guesses values returned by Builder (#246 principle).
  *
@@ -15,7 +16,13 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 
 import { getBuildQuality, listBuildStages } from "@/features/datasets/api";
-import { matchesSearch, matchesStatusFilter, type RunStatusFilter } from "@/features/runs/model";
+import {
+  matchesSearch,
+  matchesStatusFilter,
+  matchesTableFilter,
+  runTables,
+  type RunStatusFilter,
+} from "@/features/runs/model";
 import { isTerminalBuilderStatus, listBuilds } from "@/features/runs/api";
 import { getBuildSpecSnapshot } from "@/features/runs/api/runDetail";
 import { useAsync, type AsyncState } from "@/features/runs/asyncState";
@@ -37,6 +44,15 @@ import { Card, ErrorState, LinkButton, PageHeader, Select, SkeletonTable, TermHe
 const LIST_LIMIT = 100;
 
 const STATUS_FILTERS: RunStatusFilter[] = ["all", "succeeded", "failed", "running", "queued", "cancelled"];
+
+/**
+ * Whether the browser shows the refresh list rather than run `runId`'s detail. Only a
+ * browser path under `/refresh-jobs` counts, so an in-memory router is never judged by it.
+ */
+export function leftDetail(browserPath: string, runId: string): boolean {
+  if (!browserPath.includes("/refresh-jobs")) return false;
+  return !browserPath.endsWith(`/refresh-jobs/${encodeURIComponent(runId)}`);
+}
 
 export function BuildsPage() {
   const { t } = useTranslation();
@@ -75,7 +91,9 @@ export function BuildsPage() {
   const requestedStatus = searchParams.get("status") as RunStatusFilter | null;
   const statusFilter: RunStatusFilter = requestedStatus && STATUS_FILTERS.includes(requestedStatus) ? requestedStatus : "all";
 
-  function setListParam(key: "q" | "status", value: string) {
+  const tableFilter = searchParams.get("table") ?? "";
+
+  function setListParam(key: "q" | "status" | "table", value: string) {
     const next = new URLSearchParams(searchParams);
     if (value && value !== "all") next.set(key, value);
     else next.delete(key);
@@ -84,9 +102,15 @@ export function BuildsPage() {
 
   const items = listState.status === "loaded" ? listState.data : [];
   const visible = useMemo(
-    () => items.filter((item) => matchesSearch(item, query) && matchesStatusFilter(item, statusFilter)),
-    [items, query, statusFilter],
+    () =>
+      items.filter(
+        (item) =>
+          matchesSearch(item, query) && matchesStatusFilter(item, statusFilter) && matchesTableFilter(item, tableFilter),
+      ),
+    [items, query, statusFilter, tableFilter],
   );
+  // Only runs from a Builder that names their table (kpubdata-builder#844) can be filtered by it.
+  const tables = useMemo(() => runTables(items), [items]);
 
   const selectedListItem = items.find((item) => item.id === selectedRunId) ?? null;
   const outOfListScope = Boolean(selectedRunId) && listState.status === "loaded" && !selectedListItem;
@@ -133,9 +157,13 @@ export function BuildsPage() {
   // only treat failedStage as safe context when exactly one source fails (#255 §2).
   useEffect(() => {
     if (!selectedRunId) return;
+    // The router renders navigations in a transition, so a detail's loads can finish after
+    // Back has already moved the browser to the list. Its search-only replace would then land
+    // on the list URL and drop its filters; skip it once the browser has left this detail.
+    if (pathRunId && leftDetail(window.location.pathname, pathRunId)) return;
     const next = normalizeBuildContextSearch(searchParams, specState, stagesState);
     if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
-  }, [selectedRunId, specState, stagesState, searchParams, setSearchParams]);
+  }, [selectedRunId, pathRunId, specState, stagesState, searchParams, setSearchParams]);
 
   // Criteria for determining run doesn't exist: out of list scope AND stage query returns 404.
   // (stage endpoint can query any run_id directly regardless of list limit, making it a more reliable signal)
@@ -235,6 +263,21 @@ export function BuildsPage() {
             </option>
           ))}
         </Select>
+        {tables.length > 0 ? (
+          <Select
+            aria-label={t("builds.search.tableFilterAria")}
+            className="sm:w-56"
+            onChange={(event) => setListParam("table", event.target.value)}
+            value={tableFilter}
+          >
+            <option value="">{t("builds.search.allTables")}</option>
+            {tables.map((table) => (
+              <option key={table.id} value={table.id}>
+                {table.label}
+              </option>
+            ))}
+          </Select>
+        ) : null}
       </div>
 
       {listState.status === "loading" ? (

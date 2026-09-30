@@ -2,10 +2,11 @@
  * Refresh history as one table (#535): Run ID, Table, Status, Started, Duration and
  * Snapshot, one row per run from `GET /builds`.
  *
- * `GET /builds` returns run id, status and the two timestamps only. The table a run
- * refreshed and the snapshot it produced are not in it, so those cells are `—` with the
- * reason, never guessed (kpubdata-builder#844). Duration is finished minus started, and
- * `—` when either is missing. The run id is the keyboard path to the detail; clicking
+ * Since kpubdata-builder#844 each run names the table it refreshed (`dataset_title`,
+ * `dataset_id`) and the snapshot it committed (`snapshot_id`, or `snapshots` when it
+ * committed several). An older Builder omits them and the cells stay `—` with the reason;
+ * a run that committed nothing reads "None" — nothing is guessed. Duration is finished
+ * minus started, and `—` when either is missing. The run id is the keyboard path to the detail; clicking
  * anywhere on the row does the same with a pointer.
  */
 import type { ReactNode } from "react";
@@ -15,7 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { formatDateTime } from "@/features/datasets/model";
 import type { BuildListItem } from "@/shared/lib/types";
 import { StatusBadge, cn } from "@/shared/ui";
-import { MissingStatus } from "@/shared/ui/StatusState";
+import { MissingStatus, NormalStatus } from "@/shared/ui/StatusState";
 
 function Th({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -34,6 +35,61 @@ export function durationSeconds(item: Pick<BuildListItem, "startedAt" | "finishe
 
 export function refreshDetailHref(runId: string): string {
   return `/refresh-jobs/${encodeURIComponent(runId)}`;
+}
+
+/** Table Detail of the run's table. */
+export function tableHref(datasetId: string): string {
+  return `/tables/${encodeURIComponent(datasetId)}`;
+}
+
+function TableCell({ item }: { item: BuildListItem }) {
+  const { t } = useTranslation();
+  const datasetId = item.datasetId ?? null;
+  if (datasetId === null) {
+    if (item.title) return <span className="text-foreground">{item.title}</span>;
+    return (
+      <MissingStatus
+        label={item.datasetId === undefined ? t("builds.table.tableMissing") : t("builds.table.tableUnreadable")}
+      />
+    );
+  }
+  return (
+    <div className="min-w-0">
+      <Link
+        className="text-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={(event) => event.stopPropagation()}
+        to={tableHref(datasetId)}
+      >
+        {item.title ?? <span className="font-mono text-xs">{datasetId}</span>}
+      </Link>
+      {item.title ? <p className="break-all font-mono text-xs text-muted-foreground">{datasetId}</p> : null}
+    </div>
+  );
+}
+
+function SnapshotCell({ item }: { item: BuildListItem }) {
+  const { t } = useTranslation();
+  if (item.snapshotId) return <span className="break-all font-mono text-xs text-foreground">{item.snapshotId}</span>;
+  const committed = item.snapshots ?? [];
+  if (committed.length > 0) {
+    return (
+      <ul aria-label={t("builds.table.snapshotsCount", { count: committed.length })} className="flex flex-col gap-0.5">
+        {committed.map((entry) => (
+          <li className="break-all font-mono text-xs" key={`${entry.logicalName}@${entry.snapshotId}`}>
+            <span className="text-foreground">{entry.snapshotId}</span>{" "}
+            <span className="text-muted-foreground">{entry.logicalName}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  if (item.snapshotId === undefined) return <MissingStatus label={t("builds.table.snapshotMissing")} />;
+  // Builder said the run committed no snapshot that still exists: a known "none".
+  return (
+    <NormalStatus className="text-muted-foreground">
+      <span title={t("builds.table.snapshotNoneHint")}>{t("builds.table.snapshotNone")}</span>
+    </NormalStatus>
+  );
 }
 
 export function RefreshHistoryTable({ items }: { items: BuildListItem[] }) {
@@ -79,8 +135,8 @@ export function RefreshHistoryTable({ items }: { items: BuildListItem[] }) {
                     {item.id}
                   </Link>
                 </td>
-                <td className="px-3 py-2 text-foreground">
-                  {item.title ?? <MissingStatus label={t("builds.table.tableMissing")} />}
+                <td className="px-3 py-2">
+                  <TableCell item={item} />
                 </td>
                 <td className="px-3 py-2">
                   <StatusBadge status={item.status} />
@@ -92,7 +148,7 @@ export function RefreshHistoryTable({ items }: { items: BuildListItem[] }) {
                   {seconds === null ? <MissingStatus /> : t("builds.table.seconds", { count: seconds })}
                 </td>
                 <td className="px-3 py-2">
-                  <MissingStatus label={t("builds.table.snapshotMissing")} />
+                  <SnapshotCell item={item} />
                 </td>
               </tr>
             );

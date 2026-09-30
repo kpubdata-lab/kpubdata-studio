@@ -231,4 +231,16 @@ export interface BuildListItem {
   startedAt: string | null;
   /** execution end time ISO string (null if null or omitted by Builder) */
   finishedAt: string | null;
+  /**
+   * The table (dataset id) the run refreshed (kpubdata-builder#844). `undefined` when the
+   * Builder does not send it, `null` when it could not read it.
+   */
+  datasetId?: string | null;
+  /**
+   * The one warehouse snapshot the run committed (#844). `undefined` when not sent, `null`
+   * when it committed none or several (see `snapshots`).
+   */
+  snapshotId?: string | null;
+  /** Every snapshot the run committed that still exists, by table (#844). */
+  snapshots?: { logicalName: string; snapshotId: string }[];
 }

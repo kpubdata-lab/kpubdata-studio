@@ -118,6 +118,41 @@ describe("listBuilds (#95, #153)", () => {
       });
     });
 
+    it("maps the table and snapshot of each run, keeping 'not sent' apart from null (kpubdata-builder#844)", async () => {
+      vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+      const fetchMock = vi.fn().mockResolvedValue(
+        mockResponse(200, {
+          builds: [
+            {
+              run_id: "run_named",
+              status: "ok",
+              started_at: null,
+              finished_at: null,
+              dataset_id: "air-quality",
+              dataset_title: "Air quality",
+              snapshot_id: "snap_012",
+              snapshots: [{ logical_name: "air-quality.datago__air", snapshot_id: "snap_012" }],
+            },
+            { run_id: "run_old_builder", status: "ok" },
+          ],
+        }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const [named, old] = await listBuilds();
+
+      expect(named).toMatchObject({
+        title: "Air quality",
+        datasetId: "air-quality",
+        snapshotId: "snap_012",
+        snapshots: [{ logicalName: "air-quality.datago__air", snapshotId: "snap_012" }],
+      });
+      expect(old.title).toBeNull();
+      expect(old.datasetId).toBeUndefined();
+      expect(old.snapshotId).toBeUndefined();
+      expect(old.snapshots).toBeUndefined();
+    });
+
     it("correctly maps Builder status to BuildRunStatus", async () => {
       vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
       const fetchMock = vi.fn().mockResolvedValue(

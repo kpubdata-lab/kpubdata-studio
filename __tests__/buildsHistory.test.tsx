@@ -27,13 +27,13 @@ afterEach(() => {
 describe("Builds run history (#12, #255 master-detail)", () => {
   it("renders rows with status badges and lets the user select a run", async () => {
     renderBuilds();
-    expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "대기오염 정보" })).toBeInTheDocument();
     expect(screen.getAllByText("성공").length).toBeGreaterThan(0); // succeeded badges
     // "실패"는 상태 필터 <option>에도 나타나므로 배지(span)로만 좁혀서 확인한다.
     expect(screen.getAllByText("실패", { selector: "span" }).length).toBeGreaterThan(0);
 
     // Clicking a row opens that run's detail at /refresh-jobs/:id (#535).
-    fireEvent.click(screen.getByText("대기오염 정보"));
+    fireEvent.click(screen.getByRole("row", { name: /air-quality-20260621/ }));
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
     });
@@ -43,14 +43,14 @@ describe("Builds run history (#12, #255 master-detail)", () => {
 
   it("filters the history by title/id search", async () => {
     renderBuilds();
-    await screen.findByText("대기오염 정보");
+    await screen.findByRole("link", { name: "대기오염 정보" });
 
     fireEvent.change(screen.getByLabelText("Run 검색"), { target: { value: "병용" } });
 
     await waitFor(() => {
-      expect(screen.queryByText("대기오염 정보")).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "대기오염 정보" })).not.toBeInTheDocument();
     });
-    expect(screen.getByText("병용금기 품목정보")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "병용금기 품목정보" })).toBeInTheDocument();
   });
 
   it("shows an error state with retry when listing fails (#71)", async () => {
@@ -66,7 +66,7 @@ describe("Builds run history (#12, #255 master-detail)", () => {
     // 재시도하면 실제 목록을 다시 불러온다.
     spy.mockResolvedValueOnce(realBuilds);
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
-    expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "대기오염 정보" })).toBeInTheDocument();
   });
 });
 

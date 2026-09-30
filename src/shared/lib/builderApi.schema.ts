@@ -521,6 +521,31 @@ export const datasetsResponseSchema = z.object({
   total: z.number().int().nonnegative().optional(),
 });
 
+/**
+ * One run in GET /builds (builder #250). `dataset_id`, `dataset_title`, `snapshot_id` and
+ * `snapshots` (kpubdata-builder#844) are absent from an older Builder, so all optional:
+ * absent means "not sent", null means the Builder could not read it or nothing committed.
+ */
+export const buildSummarySchema = z.object({
+  run_id: z.string(),
+  status: z.enum(["ok", "failed", "cancelled"]),
+  started_at: z.string().nullable().optional(),
+  finished_at: z.string().nullable().optional(),
+  dataset_id: z.string().nullable().optional(),
+  dataset_title: z.string().nullable().optional(),
+  snapshot_id: z.string().nullable().optional(),
+  snapshots: z
+    .array(z.object({ logical_name: z.string(), snapshot_id: z.string() }))
+    .optional(),
+});
+
+export const buildsResponseSchema = z.object({
+  builds: z.array(buildSummarySchema),
+});
+
+export type BuildSummary = z.infer<typeof buildSummarySchema>;
+export type BuildsResponse = z.infer<typeof buildsResponseSchema>;
+
 export const datasetRunSummarySchema = z.object({
   run_id: z.string(),
   status: z.enum(["ok", "failed", "cancelled"]),
