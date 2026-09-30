@@ -6,6 +6,9 @@ repo_name: "yeongseon/kpubdata-studio"
 theme:
   name: material
   custom_dir: overrides
+  # Brand symbol on the header and the tab (#425); copies of assets/logo, kept in docs_dir.
+  logo: brand/assets/logo.svg
+  favicon: brand/assets/favicon.svg
   language: ko
   palette:
     primary: deep purple

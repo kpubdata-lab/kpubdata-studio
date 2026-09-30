@@ -8,7 +8,9 @@
 | 이름 | HEX | 용도 |
 | :-- | :-- | :-- |
 | Charcoal | `#18181B` | K 상단 형태(라이트), 하단 data layer |
-| Indigo | `#5B5BD6` | 우측 diamond, "Studio" 워드마크 |
+| Indigo | `#5B5BD6` | 우측 diamond |
+| Studio suffix (light) | `#71717A` | 라이트 락업의 "Studio" (#425) |
+| Studio suffix (dark) | `#94A3B8` | 다크 락업의 "Studio" (#425) |
 | Light Indigo | `#818CF8` | 상단 data layer |
 | Dark UI Background | `#0F172A` | 다크 UI 배경(참고) |
 | White | `#FFFFFF` | K 상단 형태(다크), 앱 아이콘 배경 |
@@ -51,6 +53,17 @@
 - 브라우저 파비콘: `favicon.svg` / `favicon-32.png` / `favicon-16.png`
 - 앱 아이콘: `kpubdata-app-icon-1024.png`
 
+## Suffix 규칙 개정 (#425, 2026-09-30)
+승인 락업은 "Studio" 를 Indigo 로 강조했다. [시각 정체성](../../../docs/brand/VISUAL_IDENTITY.md) §2 는
+제품군 이름 `KPubData` 가 주인공이고 `Studio` 는 작고 약해야 한다고 정했다. 그래서 가로·세로 락업의
+**"Studio" 패스 색만** 중립색으로 바꿨다 — 라이트 `#71717A`, 다크 `#94A3B8`. 심볼, 워드마크 형태·비율·위치는
+그대로다(`Studio` 는 원래도 `KPubData` 의 약 57% 크기). 심볼 전용 자산(symbol·sidebar·favicon·앱 아이콘)은
+바뀌지 않았다.
+
+PNG 는 SVG 에서 만든다: `node scripts/render-brand-png.mjs` (Playwright Chromium). SVG 를 고치면 다시 실행해
+함께 커밋한다. GitHub social preview(`assets/logo/social/github-social-preview.png`, 1280×640)도 같은
+스크립트가 만든다 — 저장소 Settings → Social preview 에 올리는 것은 소유자 작업이다.
+
 ## 금지
-로고 재디자인, 형태·비율·레이어 위치 변경, 회전, gradient/glow/shadow/3D 추가,
+로고 재디자인(위 suffix 색 개정 외), 형태·비율·레이어 위치 변경, 회전, gradient/glow/shadow/3D 추가,
 다른 Indigo나 Emerald 계열 사용, 심볼에 "K" 글자 삽입, 파비콘에 텍스트 삽입.
