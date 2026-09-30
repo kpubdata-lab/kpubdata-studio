@@ -2273,6 +2273,19 @@
       "partial": "스냅샷 {{snapshot}}: 부분 — 원천이 보고한 것보다 적게 받았습니다.",
       "unknown": "스냅샷 {{snapshot}}: 수집 범위 알 수 없음 — 완전하다는 기록이 없습니다.",
       "counts": "받은 {{fetched}}행 / 보고 {{reported}}행."
+    },
+    "binding": "바인딩",
+    "tableInFrom": "KPubData Builder 는 선택한 테이블을 `dataset` 으로만 읽습니다. 실행 전에 {{names}} 대신 `FROM dataset` 을 쓰세요.",
+    "explorerFallback": "테이블 탐색기와 스냅샷 고정은 웨어하우스가 있는 KPubData Builder 에서 쓸 수 있습니다. 여기서는 실행(run)의 테이블을 직접 질의합니다.",
+    "explorer": {
+      "title": "테이블 탐색기",
+      "empty": "커밋된 테이블이 없습니다.",
+      "hint": "테이블 → 소스 → 컬럼. 소스를 고르면 `dataset` 이 그것을 읽고, 컬럼을 고르면 편집기 커서 위치에 넣습니다. 실행은 하지 않습니다.",
+      "insertHint": "편집기 커서 위치에 넣기",
+      "loadingColumns": "컬럼을 불러오는 중…",
+      "noSnapshot": "커밋된 스냅샷이 없습니다.",
+      "noColumns": "컬럼이 없습니다.",
+      "columnsError": "컬럼을 불러오지 못했습니다."
     }
   },
   "admin": {

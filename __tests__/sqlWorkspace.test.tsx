@@ -43,6 +43,14 @@ describe("SQL Workspace (#417)", () => {
     expect(screen.getByRole("button", { name: /실행/ })).toBeDisabled();
   });
 
+  it("says in one line that the table explorer needs a warehouse (#528)", async () => {
+    renderAt("/sql");
+    expect(await screen.findByTestId("explorer-fallback")).toHaveTextContent(
+      "테이블 탐색기와 스냅샷 고정은 웨어하우스가 있는 KPubData Builder 에서 쓸 수 있습니다.",
+    );
+    expect(screen.queryByRole("tree")).not.toBeInTheDocument();
+  });
+
   it("asks which source when the run has several, and names the snapshot it read", async () => {
     renderAt("/sql?table=air-quality");
     const source = await screen.findByRole("combobox", { name: "Source" });
