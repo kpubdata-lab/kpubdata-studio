@@ -1,32 +1,33 @@
 /**
- * Monitoring screen (`/monitoring`) — system resource·Build statistics monitoring (#264, #302, #303).
+ * Monitoring screen (`/monitoring`) — KPubData Builder health and the last 24 hours of
+ * refreshes (#264, #302, #303, #539).
  *
- * This file handles only state·polling·tab assembly; display components separated
- * to `features/monitoring/components/*` (#303).
+ * One page, read top to bottom: Builder API, Queue, Workers and the Snapshot store as
+ * key-value rows, then refresh counts for the window, then the recent refreshes. The
+ * panels live in `features/monitoring/components/HealthPanels.tsx`; this file handles
+ * state, polling and the "refresh every 30 seconds" option.
  *
  * Conforms to Builder #516 actual contract (#302):
  * - GET /monitoring/summary + GET /monitoring/builds?window=24h&bucket=hour parallel calls
  * - In real integration mode, errors are not masked as mock (prevents false success)
- * - 401/403 distinguished as "unauthorized" status (based on ApiError.status).
+ * - 401/403 is one line saying the page needs permission, not an empty screen (#539).
  */
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, PageHeader, Button, ErrorState } from "@/shared/ui";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { PageHeader, Button, Skeleton } from "@/shared/ui";
 import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
-import type {
-  MonitoringData,
-  MonitoringLoadingState,
-  MonitoringTab,
-} from "@/features/monitoring/model";
+import type { MonitoringData, MonitoringLoadingState } from "@/features/monitoring/model";
 import { getMockMonitoringData } from "@/features/monitoring/api/mockData";
-import { SystemResourcesTab } from "@/features/monitoring/components/SystemResourcesTab";
-import { BuildStatisticsTab } from "@/features/monitoring/components/BuildStatisticsTab";
-import { RecentRunsTab } from "@/features/monitoring/components/RecentRunsTab";
+import {
+  BuilderHealthPanel,
+  RecentRefreshesTable,
+  RefreshStatsPanel,
+} from "@/features/monitoring/components/HealthPanels";
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 
 export function MonitoringPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<MonitoringTab>("system");
+  const autoRefreshId = useId();
   const [loading, setLoading] = useState<MonitoringLoadingState>("idle");
   const [unauthorized, setUnauthorized] = useState(false);
   const [data, setData] = useState<MonitoringData | null>(null);
@@ -99,110 +100,74 @@ export function MonitoringPage() {
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, []);
 
-  const toggleAutoRefresh = () => setAutoRefresh((prev) => !prev);
+
+  const main = "flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10";
 
   if (unauthorized) {
     return (
-      <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader
-          title={t("monitoringPage.title")}
-          description={t("monitoringPage.desc")}
-        />
-        <ErrorState
-          title={t("monitoringPage.forbiddenTitle")}
-          message={t("monitoringPage.forbiddenDesc")}
-        />
+      <main className={main}>
+        <PageHeader title={t("monitoringPage.title")} />
+        <p className="text-sm text-muted-foreground" role="status">
+          <strong className="font-medium text-foreground">{t("monitoringPage.forbiddenTitle")}</strong> — {t("monitoringPage.forbidden")}
+        </p>
       </main>
     );
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <main className={main}>
       <PageHeader
         title={t("monitoringPage.title")}
+        meta={
+          lastRefreshTime
+            ? t("monitoringPage.lastUpdate", {
+                at: lastRefreshTime.toLocaleTimeString(
+                  i18n.language?.startsWith("en") ? "en-US" : "ko-KR",
+                ),
+              })
+            : t("monitoringPage.loading")
+        }
         description={t("monitoringPage.desc")}
         actions={
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {lastRefreshTime
-                ? t("monitoringPage.lastUpdate", {
-                    at: lastRefreshTime.toLocaleTimeString(
-                      i18n.language?.startsWith("en") ? "en-US" : "ko-KR",
-                    ),
-                  })
-                : t("monitoringPage.loading")}
-            </span>
-            <Button
-              variant={autoRefresh ? "primary" : "secondary"}
-              size="sm"
-              onClick={toggleAutoRefresh}
-              type="button"
-            >
-              {autoRefresh ? t("monitoringPage.autoRefreshOn") : t("monitoringPage.autoRefreshOff")}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => fetchMonitoringData()}
-              type="button"
-            >
+          <>
+            <label className="flex items-center gap-2 text-sm text-foreground" htmlFor={autoRefreshId}>
+              <input
+                checked={autoRefresh}
+                className="h-4 w-4 accent-accent"
+                id={autoRefreshId}
+                onChange={(event) => setAutoRefresh(event.target.checked)}
+                type="checkbox"
+              />
+              {t("monitoringPage.autoRefresh")}
+            </label>
+            <Button variant="secondary" size="sm" onClick={() => fetchMonitoringData()} type="button">
               {t("monitoringPage.refresh")}
             </Button>
-          </div>
+          </>
         }
       />
 
-      {data?.summary.status === "degraded" && (
-        <Card variant="error">
-          <p className="font-semibold">{t("monitoringPage.degradedTitle")}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {t("monitoringPage.degradedDesc")}
-          </p>
-        </Card>
-      )}
+      {data?.summary.status === "degraded" ? (
+        <p className="text-sm text-status-warning" role="status">
+          {t("monitoringPage.degraded")}
+        </p>
+      ) : null}
 
-      <div className="flex gap-1 border-b border-border">
-        <button
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "system"
-              ? "border-b-2 border-accent text-accent-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-          onClick={() => setActiveTab("system")}
-          type="button"
-        >
-          System Resources
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "builds"
-              ? "border-b-2 border-accent text-accent-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-          onClick={() => setActiveTab("builds")}
-          type="button"
-        >
-          Build Statistics
-        </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "recent-runs"
-              ? "border-b-2 border-accent text-accent-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-          onClick={() => setActiveTab("recent-runs")}
-          type="button"
-        >
-          Recent Runs
-        </button>
-      </div>
-
-      {activeTab === "system" ? (
-        <SystemResourcesTab loading={loading} summary={data?.summary} />
-      ) : activeTab === "builds" ? (
-        <BuildStatisticsTab loading={loading} builds={data?.builds} />
+      {loading === "error" ? (
+        <p className="text-sm text-status-failure" role="alert">
+          {t("monitoring.error.title")} — {t("monitoring.error.retry")}
+        </p>
+      ) : !data ? (
+        <div aria-busy="true" className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-40 w-full" />
+        </div>
       ) : (
-        <RecentRunsTab loading={loading} runs={data?.builds?.recent_runs} />
+        <>
+          <BuilderHealthPanel summary={data.summary} />
+          <RefreshStatsPanel builds={data.builds} />
+          <RecentRefreshesTable runs={data.builds.recent_runs} />
+        </>
       )}
     </main>
   );
