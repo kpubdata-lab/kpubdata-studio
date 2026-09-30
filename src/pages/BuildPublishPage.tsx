@@ -194,7 +194,7 @@ export function BuildPublishPage() {
         </dl>
         <p className="mt-3 text-xs text-muted-foreground">{t("buildPublish.exactRunNote")}</p>
         {runContext.status === "error" ? (
-          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">{t("buildPublish.datasetLoadWarn")}</p>
+          <p className="mt-1 text-xs text-status-warning">{t("buildPublish.datasetLoadWarn")}</p>
         ) : null}
       </Card>
 
@@ -204,7 +204,7 @@ export function BuildPublishPage() {
           <Button variant="secondary" size="sm" disabled={readiness.status === "loading" || publish.status === "publishing"} onClick={() => setReadinessVersion((value) => value + 1)}>{t("buildPublish.recheck")}</Button>
         </div>
         {readiness.status === "loading" ? <Skeleton className="mt-4 h-20 w-full" /> : null}
-        {readiness.status === "error" ? <div className="mt-4" role="alert"><p className="text-sm text-red-700 dark:text-red-300">{readiness.message}</p></div> : null}
+        {readiness.status === "error" ? <div className="mt-4" role="alert"><p className="text-sm text-status-failure">{readiness.message}</p></div> : null}
         {readiness.status === "loaded" ? (
           <div className="mt-4 space-y-4">
             <p className="text-sm font-medium">
@@ -236,10 +236,10 @@ export function BuildPublishPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
           <label className="text-sm font-medium">Hugging Face destination
             <input aria-label="Hugging Face destination" className={`mt-2 ${inputClassName}`} placeholder="owner/dataset" value={destination} disabled={publish.status === "publishing"} onChange={(event) => updateDestination(event.target.value)} />
-            <span className={`mt-1 block text-xs ${destinationError ? "text-red-700 dark:text-red-300" : "text-muted-foreground"}`}>{destinationError ?? t("buildPublish.destinationHint")}</span>
+            <span className={`mt-1 block text-xs ${destinationError ? "text-status-failure" : "text-muted-foreground"}`}>{destinationError ?? t("buildPublish.destinationHint")}</span>
           </label>
           <label className="flex items-center gap-3 self-center rounded-lg border border-border p-4 text-sm">
-            <input aria-label={t("buildPublish.privateLabel")} type="checkbox" checked={isPrivate} disabled={publish.status === "publishing"} onChange={(event) => updatePrivate(event.target.checked)} className="h-4 w-4 accent-emerald-600" />
+            <input aria-label={t("buildPublish.privateLabel")} type="checkbox" checked={isPrivate} disabled={publish.status === "publishing"} onChange={(event) => updatePrivate(event.target.checked)} className="h-4 w-4 accent-status-success" />
             <span><strong className="block">{t("buildPublish.privateLabel")}</strong><span className="text-xs text-muted-foreground">{t("buildPublish.privateDefault")}</span></span>
           </label>
         </div>
@@ -248,7 +248,7 @@ export function BuildPublishPage() {
       {!confirmation ? (
         <Button className="self-start" disabled={!canReview} onClick={() => setConfirmation(request)}>{t("buildPublish.review")}</Button>
       ) : (
-        <Card className="border-emerald-300 dark:border-emerald-900" aria-label={t("buildPublish.confirmTitle")}>
+        <Card className="border-status-success-border" aria-label={t("buildPublish.confirmTitle")}>
           <h2 className="text-sm font-semibold">{t("buildPublish.confirmTitle")}</h2>
           <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
             <div><dt className="text-muted-foreground">Run ID</dt><dd className="font-mono">{runId}</dd></div>
@@ -273,7 +273,7 @@ export function BuildPublishPage() {
             <div><dt className="text-muted-foreground">Publisher</dt><dd>{publish.result.publisher}</dd></div>
             <div><dt className="text-muted-foreground">Snapshot files</dt><dd>{publish.result.artifact_count}</dd></div>
           </dl>
-          <div className="mt-4 break-all text-sm">Reference: {isSafePublishReference(publish.result.reference) ? <a href={publish.result.reference} target="_blank" rel="noreferrer" className="text-emerald-700 underline dark:text-emerald-300">{publish.result.reference}</a> : <span>{publish.result.reference}</span>}</div>
+          <div className="mt-4 break-all text-sm">Reference: {isSafePublishReference(publish.result.reference) ? <a href={publish.result.reference} target="_blank" rel="noreferrer" className="text-status-success underline">{publish.result.reference}</a> : <span>{publish.result.reference}</span>}</div>
         </Card>
       ) : null}
       {publish.status === "failed" ? <Card variant="error" role="alert"><strong>{t("buildPublish.publishFailed")}</strong><p className="mt-2 text-sm">{publish.failure?.message}</p>{publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}</Card> : null}
@@ -283,5 +283,5 @@ export function BuildPublishPage() {
 }
 
 function IssueList({ title, issues, tone }: { title: string; issues: PublishReadinessResponse["blockers"]; tone: "error" | "warning" }) {
-  return <div><h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3><ul className="mt-2 space-y-2">{issues.map((issue, index) => <li key={`${issue.code}-${index}`} className={`rounded-lg px-3 py-2 text-sm ${tone === "error" ? "bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-200" : "bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"}`}><span className="font-mono text-xs">{issue.code}</span><span className="ml-2">{issue.message}</span></li>)}</ul></div>;
+  return <div><h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3><ul className="mt-2 space-y-2">{issues.map((issue, index) => <li key={`${issue.code}-${index}`} className={`rounded-lg px-3 py-2 text-sm ${tone === "error" ? "bg-status-failure-subtle text-status-failure" : "bg-status-warning-subtle text-status-warning"}`}><span className="font-mono text-xs">{issue.code}</span><span className="ml-2">{issue.message}</span></li>)}</ul></div>;
 }

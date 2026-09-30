@@ -16,7 +16,7 @@ describe("Button", () => {
     render(<Button variant="danger">삭제</Button>);
     const btn = screen.getByRole("button", { name: "삭제" });
     expect(btn).toHaveAttribute("type", "button");
-    expect(btn).toHaveClass("bg-red-600");
+    expect(btn).toHaveClass("bg-status-failure-solid");
   });
 
   it("is disabled and busy while loading", () => {

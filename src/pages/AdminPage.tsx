@@ -59,7 +59,7 @@ export function AdminPage() {
           <Card>
             <h2 className="text-sm font-semibold">{t("admin.policyTitle")}</h2>
             {config.status === "loading" ? <Skeleton className="mt-3 h-12 w-full" /> : null}
-            {config.status === "error" ? <p className="mt-3 text-sm text-red-700 dark:text-red-300" role="alert">{config.message}</p> : null}
+            {config.status === "error" ? <p className="mt-3 text-sm text-status-failure" role="alert">{config.message}</p> : null}
             {config.status === "loaded" ? (
               <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
                 <Policy name="ENFORCE_OWNERSHIP" on={config.data.enforce_ownership} note={t("admin.enforceOwnership")} />
@@ -78,7 +78,7 @@ export function AdminPage() {
               <p className="mt-1 text-xs text-muted-foreground">{t("admin.runsNote")}</p>
             </div>
             {runs.status === "loading" ? <Skeleton className="m-5 h-24" /> : null}
-            {runs.status === "error" ? <p className="px-5 py-3 text-sm text-red-700 dark:text-red-300" role="alert">{runs.message}</p> : null}
+            {runs.status === "error" ? <p className="px-5 py-3 text-sm text-status-failure" role="alert">{runs.message}</p> : null}
             {runs.status === "loaded" ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

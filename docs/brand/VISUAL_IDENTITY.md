@@ -124,8 +124,8 @@ Verification)** 에서 사람이 답하고, 답을 이 표에 적는다.
 
 프로토타입이 먼저다. 앱에 옮기는 것은 리뷰를 통과한 뒤의 일이고, 그때 할 것:
 
-- `src/globals.css` 에 상태 토큰(`--status-*`)을 추가하고 `amber-*` · `emerald-*` 직접 사용을
-  토큰으로 바꾼다
+- ~~`src/globals.css` 에 상태 토큰(`--status-*`)을 추가하고 `amber-*` · `emerald-*` 직접 사용을
+  토큰으로 바꾼다~~ — 반영됨. `__tests__/statusTokensGate.test.ts` 가 원시 색 클래스를 막는다
 - 배지를 "축 + 단어" 형태로 통일한다
 - ~~새 wordmark 자산이 나오면 사이드바 로고를 교체한다~~ — 사이드바가 같은 SVG 를 써서 함께 바뀌었다
 - 그 뒤 `npm run screenshots` 로 스크린샷 baseline 을 다시 만든다 — **앱 화면이 바뀌지 않은

@@ -19,7 +19,7 @@ export function TableRowsPanel({ table, snapshot }: { table: string; snapshot: s
       <Card className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm font-semibold">{t("dataTable.browseTitle")}</span>
         {state.status === "error" ? (
-          <span className="text-sm text-red-700 dark:text-red-300" role="alert">
+          <span className="text-sm text-status-failure" role="alert">
             {t("dataTable.browseError", { message: state.message })}
           </span>
         ) : null}
@@ -37,7 +37,7 @@ export function TableRowsPanel({ table, snapshot }: { table: string; snapshot: s
         {t("dataTable.pinned", { snapshot: snapshot_id })}
       </p>
       {state.status === "error" ? (
-        <p className="text-sm text-red-700 dark:text-red-300" role="alert">
+        <p className="text-sm text-status-failure" role="alert">
           {t("dataTable.browseError", { message: state.message })}
         </p>
       ) : null}

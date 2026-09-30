@@ -111,7 +111,7 @@ export function PreviewValidationStep({
       {isStale && preview.status === "loaded" ? (
         <p
           role="status"
-          className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+          className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-xs text-status-warning"
         >
           {t("addData.preview.stale")}
         </p>
@@ -138,7 +138,7 @@ export function PreviewValidationStep({
             ))}
           </div>
           {mixed ? (
-            <p role="status" className="text-xs text-amber-700 dark:text-amber-300">
+            <p role="status" className="text-xs text-status-warning">
               {t("addData.preview.mixed")}
             </p>
           ) : null}
@@ -201,7 +201,7 @@ export function PreviewValidationStep({
               source.diff_available ? (
                 <div className="space-y-2">
                   {source.diff_truncated ? (
-                    <p role="alert" className="text-xs text-amber-700 dark:text-amber-300">
+                    <p role="alert" className="text-xs text-status-warning">
                       {t("addData.preview.diffTruncated", {
                         cells: source.transform_summary?.changed_cells ?? 0,
                         rows: source.transform_summary?.changed_rows ?? 0,
@@ -231,8 +231,8 @@ export function PreviewValidationStep({
                           <tr key={i} className="border-t border-border">
                             <td className="py-1 pr-3">{d.row}</td>
                             <td className="py-1 pr-3 font-medium">{d.column}</td>
-                            <td className="py-1 pr-3 text-red-700 dark:text-red-300">{String(d.before)}</td>
-                            <td className="py-1 pr-3 text-emerald-700 dark:text-emerald-300">{String(d.after)}</td>
+                            <td className="py-1 pr-3 text-status-failure">{String(d.before)}</td>
+                            <td className="py-1 pr-3 text-status-success">{String(d.after)}</td>
                             <td className="py-1 pr-3 text-muted-foreground">{d.transform ?? "—"}</td>
                           </tr>
                         ))}

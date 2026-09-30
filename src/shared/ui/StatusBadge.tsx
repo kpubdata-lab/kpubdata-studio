@@ -34,17 +34,17 @@ interface StatusMeta {
 const STATUS_META: Record<StatusValue, StatusMeta> = {
   new: { labelKey: "new", className: "bg-muted text-muted-foreground" },
   draft: { labelKey: "draft", className: "bg-muted text-muted-foreground" },
-  dirty: { labelKey: "dirty", className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
+  dirty: { labelKey: "dirty", className: "bg-status-warning-subtle text-status-warning" },
   validated: { labelKey: "validated", className: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300" },
-  invalid: { labelKey: "invalid", className: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300" },
+  invalid: { labelKey: "invalid", className: "bg-status-failure-subtle text-status-failure" },
   queued: { labelKey: "queued", className: "bg-muted text-muted-foreground" },
   running: { labelKey: "running", className: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300" },
-  cancelling: { labelKey: "cancelling", className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
-  succeeded: { labelKey: "succeeded", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
-  failed: { labelKey: "failed", className: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300" },
+  cancelling: { labelKey: "cancelling", className: "bg-status-warning-subtle text-status-warning" },
+  succeeded: { labelKey: "succeeded", className: "bg-status-success-subtle text-status-success" },
+  failed: { labelKey: "failed", className: "bg-status-failure-subtle text-status-failure" },
   cancelled: { labelKey: "cancelled", className: "bg-muted text-muted-foreground" },
   publishing: { labelKey: "publishing", className: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300" },
-  published: { labelKey: "published", className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
+  published: { labelKey: "published", className: "bg-status-success-subtle text-status-success" },
 };
 
 /** neutral badge style for unknown status values */

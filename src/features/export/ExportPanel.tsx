@@ -118,7 +118,7 @@ export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot:
         {t("export.create")}
       </Button>
       {error ? (
-        <p className="text-sm text-red-700 dark:text-red-300" role="alert">
+        <p className="text-sm text-status-failure" role="alert">
           {error}
         </p>
       ) : null}
@@ -134,7 +134,7 @@ export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot:
               {terms.status === "declared" ? (
                 <span className="text-foreground">{[terms.license_name ?? terms.license, terms.attribution].filter(Boolean).join(" · ")}</span>
               ) : (
-                <span className="font-semibold text-amber-700 dark:text-amber-300">{t("export.termsUnknown", { status: terms.status })}</span>
+                <span className="font-semibold text-status-warning">{t("export.termsUnknown", { status: terms.status })}</span>
               )}
             </li>
             {manifest.output.values_altered.length ? (

@@ -67,7 +67,7 @@ export function RunListPanel({
       </div>
 
       {hiddenByFilter ? (
-        <p className="rounded-md bg-amber-100 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+        <p className="rounded-md bg-status-warning-subtle px-3 py-2 text-xs text-status-warning">
           {t("builds.search.outOfScope")}
         </p>
       ) : null}

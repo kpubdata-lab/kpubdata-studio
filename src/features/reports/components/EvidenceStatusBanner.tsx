@@ -17,8 +17,8 @@ const COPY: Record<EvidenceStalenessResult["status"], { titleKey: string; tone: 
 
 const TONE_CLASS: Record<"default" | "warn" | "error", string> = {
   default: "border-border bg-card",
-  warn: "border-amber-300 bg-amber-50 dark:border-amber-900/60 dark:bg-amber-950/30",
-  error: "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30",
+  warn: "border-status-warning-border bg-status-warning-subtle",
+  error: "border-status-failure-border bg-status-failure-subtle",
 };
 
 export function EvidenceStatusBanner({

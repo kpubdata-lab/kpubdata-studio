@@ -101,7 +101,7 @@ export function AssistantRunAnalysis({ onClose, onAskMore }: AssistantRunAnalysi
                       warning + EvidenceSection presentation as AssistantContent.
                       Distinct from the status === "error" ErrorNotice above. */}
                   {turn.error?.kind === "hallucinated_refs" ? (
-                    <p role="alert" className="text-[11px] text-amber-700 dark:text-amber-400">
+                    <p role="alert" className="text-[11px] text-status-warning">
                       {turn.error.message}
                     </p>
                   ) : null}

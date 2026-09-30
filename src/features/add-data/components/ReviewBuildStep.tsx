@@ -143,7 +143,7 @@ export function ReviewBuildStep({
           </p>
           {quality ? <QualityBadge status={quality.status} /> : <p className="text-xs text-muted-foreground">{t("addData.review.noQuality")}</p>}
           {previewsSummary.mixed ? (
-            <p role="status" className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+            <p role="status" className="mt-1 text-xs text-status-warning">
               {t("addData.review.mixedShort")}
             </p>
           ) : null}
@@ -157,7 +157,7 @@ export function ReviewBuildStep({
 
       {isStale ? (
         <Card variant="error" className="p-4">
-          <p role="alert" className="text-sm text-red-800 dark:text-red-200">
+          <p role="alert" className="text-sm text-status-failure">
             {t("addData.review.staleWarning")}
           </p>
         </Card>
@@ -165,7 +165,7 @@ export function ReviewBuildStep({
 
       {!validation.valid && validation.status === "validated" ? (
         <Card variant="error" className="p-4">
-          <ul className="space-y-1 text-sm text-red-800 dark:text-red-200">
+          <ul className="space-y-1 text-sm text-status-failure">
             {validation.errors.map((err, i) => (
               <li key={i} role="alert">{err}</li>
             ))}
@@ -174,7 +174,7 @@ export function ReviewBuildStep({
       ) : null}
 
       {specError ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">{specError}</p>
+        <p role="alert" className="text-sm text-status-failure">{specError}</p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -271,7 +271,7 @@ export function ReviewBuildStep({
           <span className="text-sm text-accent-subtle-foreground">{t("addData.review.buildSucceeded", { runId })}</span>
         ) : null}
         {jobStatus === "failed" ? (
-          <span role="alert" className="text-sm text-red-700 dark:text-red-300">{jobError}</span>
+          <span role="alert" className="text-sm text-status-failure">{jobError}</span>
         ) : null}
         {jobStatus === "cancelled" ? (
           <span className="text-sm text-muted-foreground">{t("addData.review.buildCancelled")}</span>

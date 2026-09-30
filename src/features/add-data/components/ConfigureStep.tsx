@@ -93,7 +93,7 @@ export function ConfigureStep({
               <p className="text-sm text-muted-foreground">{t("addData.configure.catalogLoading")}</p>
             ) : null}
             {catalog.status === "error" ? (
-              <p role="alert" className="text-sm text-red-700 dark:text-red-300">{catalog.error}</p>
+              <p role="alert" className="text-sm text-status-failure">{catalog.error}</p>
             ) : null}
             {catalog.status === "loaded" && catalog.providers.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("addData.configure.noProviders")}</p>
@@ -191,7 +191,7 @@ export function ConfigureStep({
                     <li key={p.name} className="text-muted-foreground">
                       <span className="font-medium text-foreground">{p.name}</span>
                       {p.required ? (
-                        <span className="ml-1 font-medium text-red-600 dark:text-red-400">{t("addData.configure.required")}</span>
+                        <span className="ml-1 font-medium text-status-failure">{t("addData.configure.required")}</span>
                       ) : (
                         <span className="ml-1">{t("addData.configure.optional")}</span>
                       )}
@@ -299,7 +299,7 @@ export function ConfigureStep({
             <p className="text-xs text-muted-foreground">{t("addData.configure.formatFirst")}</p>
           ) : null}
           {upload.status === "uploading" ? <p className="text-sm text-muted-foreground">{t("addData.configure.uploading")}</p> : null}
-          {upload.status === "error" ? <p role="alert" className="text-sm text-red-700 dark:text-red-300">{upload.error}</p> : null}
+          {upload.status === "error" ? <p role="alert" className="text-sm text-status-failure">{upload.error}</p> : null}
           {upload.status === "done" && draft.file.uploadId ? (
             <p className="text-sm text-accent-subtle-foreground">
               {t("addData.configure.uploadDone", {
@@ -424,7 +424,7 @@ export function ConfigureStep({
                       : draft.exportFormats.filter((f) => f !== format);
                     updateDraft({ exportFormats: next });
                   }}
-                  className="h-4 w-4 accent-emerald-600"
+                  className="h-4 w-4 accent-status-success"
                 />
                 <span className="text-sm font-medium capitalize">{format}</span>
               </label>
@@ -439,7 +439,7 @@ export function ConfigureStep({
       </div>
 
       {specError ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">{specError}</p>
+        <p role="alert" className="text-sm text-status-failure">{specError}</p>
       ) : null}
 
       <details className="group border-t border-border pt-4">
@@ -475,7 +475,7 @@ export function ConfigureStep({
             <div className="space-y-2">
               <Textarea mono rows={14} value={yamlDraft} onChange={(e) => setYamlDraft(e.target.value)} />
               {yamlEditError ? (
-                <p role="alert" className="text-sm text-red-700 dark:text-red-300">{yamlEditError}</p>
+                <p role="alert" className="text-sm text-status-failure">{yamlEditError}</p>
               ) : null}
               <Button size="sm" onClick={() => onApplyYaml(yamlDraft)}>{t("addData.configure.applyYaml")}</Button>
             </div>

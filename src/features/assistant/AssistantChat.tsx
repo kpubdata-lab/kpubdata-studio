@@ -121,7 +121,7 @@ ${contextSpec ? "현재 스펙은 첨부된 구조화 컨텍스트를 참고하�
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-status-failure">{error}</p>}
 
       <div className="flex gap-2">
         <Textarea

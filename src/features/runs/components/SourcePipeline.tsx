@@ -27,9 +27,9 @@ export function MultiSourceOutcomeBadge({
   const { t } = useTranslation();
   if (outcome === "unavailable") return null;
   const meta = {
-    all_succeeded: { label: t("builds.outcome.allSucceeded"), className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300" },
-    partial: { label: t("builds.outcome.partial"), className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300" },
-    all_failed: { label: t("builds.outcome.allFailed"), className: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300" },
+    all_succeeded: { label: t("builds.outcome.allSucceeded"), className: "bg-status-success-subtle text-status-success" },
+    partial: { label: t("builds.outcome.partial"), className: "bg-status-warning-subtle text-status-warning" },
+    all_failed: { label: t("builds.outcome.allFailed"), className: "bg-status-failure-subtle text-status-failure" },
   }[outcome];
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta.className}`}>{meta.label}</span>;
 }
@@ -131,17 +131,17 @@ export function SourcePipelineRow({ source, details }: { source: RunStageEntry; 
         <span className="font-mono text-xs">{source.source_key}</span>
       </div>
       <div className="mt-2 flex flex-wrap items-start gap-1">
-        <div className={source.bronze.status === "failed" ? "rounded-md ring-2 ring-red-400 dark:ring-red-500" : undefined}>
+        <div className={source.bronze.status === "failed" ? "rounded-md ring-2 ring-status-failure" : undefined}>
           <BronzeStageBox state={source.bronze} detail={details[stageDetailKey(source.source_key, "bronze")]} />
           {unreached.bronze ? <p className="mt-1 text-[11px] text-muted-foreground">{t("builds.data.unreached")}</p> : null}
         </div>
         <PipelineArrow />
-        <div className={source.silver.status === "failed" ? "rounded-md ring-2 ring-red-400 dark:ring-red-500" : undefined}>
+        <div className={source.silver.status === "failed" ? "rounded-md ring-2 ring-status-failure" : undefined}>
           <SilverStageBox state={source.silver} detail={details[stageDetailKey(source.source_key, "silver")]} />
           {unreached.silver ? <p className="mt-1 text-[11px] text-muted-foreground">{t("builds.data.unreached")}</p> : null}
         </div>
         <PipelineArrow />
-        <div className={source.gold.status === "failed" ? "rounded-md ring-2 ring-red-400 dark:ring-red-500" : undefined}>
+        <div className={source.gold.status === "failed" ? "rounded-md ring-2 ring-status-failure" : undefined}>
           <GoldStageBox state={source.gold} detail={details[stageDetailKey(source.source_key, "gold")]} />
           {unreached.gold ? <p className="mt-1 text-[11px] text-muted-foreground">{t("builds.data.unreached")}</p> : null}
         </div>

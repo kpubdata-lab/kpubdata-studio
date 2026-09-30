@@ -57,13 +57,13 @@ export function BuildStatisticsTab({
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("monitoring.builds.success")}</span>
-          <span className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400">
+          <span className="text-2xl font-semibold text-status-success">
             {totals.success}
           </span>
         </Card>
         <Card className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{t("monitoring.builds.failed")}</span>
-          <span className="text-2xl font-semibold text-red-600 dark:text-red-400">
+          <span className="text-2xl font-semibold text-status-failure">
             {totals.failed}
           </span>
         </Card>
@@ -111,11 +111,11 @@ function BuildChart({ buckets }: { buckets: MonitoringBucket[] }) {
         <h3 className="text-lg font-semibold">{t("monitoring.builds.bucketTitle")}</h3>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="h-3 w-3 bg-emerald-500 dark:bg-emerald-600" />
+            <div className="h-3 w-3 bg-status-success-solid" />
             <span>{t("monitoring.builds.success")}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-3 w-3 bg-red-500 dark:bg-red-600" />
+            <div className="h-3 w-3 bg-status-failure-solid" />
             <span>{t("monitoring.builds.failed")}</span>
           </div>
           <div className="flex items-center gap-1">
@@ -145,11 +145,11 @@ function BuildChart({ buckets }: { buckets: MonitoringBucket[] }) {
               >
                 <div className="flex gap-0.5 items-end h-[180px] bg-muted/30 rounded-t relative">
                   <div
-                    className="flex-1 bg-emerald-500 dark:bg-emerald-600 transition-all duration-300 hover:bg-emerald-400 dark:hover:bg-emerald-500 rounded-b-sm"
+                    className="flex-1 bg-status-success-solid transition-all duration-300 hover:bg-status-success-solid rounded-b-sm"
                     style={{ height: `${successHeight}%` }}
                   />
                   <div
-                    className="flex-1 bg-red-500 dark:bg-red-600 transition-all duration-300 hover:bg-red-400 dark:hover:bg-red-500 rounded-b-sm"
+                    className="flex-1 bg-status-failure-solid transition-all duration-300 hover:bg-status-failure-solid rounded-b-sm"
                     style={{ height: `${failedHeight}%` }}
                   />
                   <div

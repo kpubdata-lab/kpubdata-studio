@@ -27,7 +27,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         "w-full rounded-lg border bg-card px-3 py-2 text-sm text-foreground transition",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0",
         invalid
-          ? "border-red-400 focus-visible:ring-red-500 dark:border-red-700"
+          ? "border-status-failure focus-visible:ring-status-failure"
           : "border-input focus-visible:ring-ring",
         className,
       )}

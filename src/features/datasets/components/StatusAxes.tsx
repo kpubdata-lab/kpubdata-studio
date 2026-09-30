@@ -15,9 +15,9 @@ import { cn } from "@/shared/ui/cn";
 type Tone = "success" | "warning" | "failure" | "neutral";
 
 const TONE_CLASS: Record<Tone, string> = {
-  success: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  warning: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-  failure: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+  success: "bg-status-success-subtle text-status-success",
+  warning: "bg-status-warning-subtle text-status-warning",
+  failure: "bg-status-failure-subtle text-status-failure",
   neutral: "bg-muted text-muted-foreground",
 };
 

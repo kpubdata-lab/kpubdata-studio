@@ -116,12 +116,12 @@ export function ApiKeySetup() {
         </label>
       </div>
       {!isDefaultBaseUrl ? (
-        <p className="text-xs text-amber-700 dark:text-amber-400" role="alert">
+        <p className="text-xs text-status-warning" role="alert">
           {t("assistant.byok.baseUrlWarning")} <code>{draftBaseUrl || baseUrl}</code>
         </p>
       ) : null}
       {!baseUrlSafe && baseUrlError ? (
-        <p className="text-xs text-red-700 dark:text-red-300" role="alert">
+        <p className="text-xs text-status-failure" role="alert">
           {baseUrlError}
         </p>
       ) : null}
@@ -155,7 +155,7 @@ export function ErrorNotice({ error, onRetry }: { error: AssistantErrorState; on
     stale_context: "assistant.turnStatus.staleContext",
   };
   return (
-    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+    <div role="alert" className="rounded-lg border border-status-failure-border bg-status-failure-subtle px-3 py-2 text-xs text-status-failure">
       {message[error.kind]}
       {onRetry ? (
         <Button className="ml-2" size="sm" variant="ghost" onClick={onRetry}>
@@ -202,7 +202,7 @@ function QueryResultView({ query }: { query: AssistantQueryState }) {
   }
   if (query.status === "error") {
     return (
-      <p role="alert" className="mt-2 text-xs text-red-700 dark:text-red-300">
+      <p role="alert" className="mt-2 text-xs text-status-failure">
         {QUERY_ERROR_LABEL[query.code] ?? query.message} ({query.message})
       </p>
     );
@@ -302,7 +302,7 @@ function ActionCard({
         (() => {
           const preview = session.previewPatch(turn.id, index);
           if (!preview) return null;
-          if (!preview.ok) return <p className="mt-2 text-red-700 dark:text-red-300">{preview.reason}</p>;
+          if (!preview.ok) return <p className="mt-2 text-status-failure">{preview.reason}</p>;
           return (
             <div className="mt-2 rounded-lg border border-border p-2">
               <SpecDiff before={preview.before} after={preview.after} />
@@ -333,11 +333,11 @@ function ActionCard({
           </Button>
         ) : null}
         {state.status === "applying" ? <span className="text-muted-foreground">{t("assistant.action.applying")}</span> : null}
-        {state.status === "applied" ? <span className="text-emerald-700 dark:text-emerald-400">{state.message}</span> : null}
+        {state.status === "applied" ? <span className="text-status-success">{state.message}</span> : null}
         {state.status === "rejected" ? <span className="text-muted-foreground">{t("assistant.action.rejected")}</span> : null}
-        {state.status === "error" ? <span className="text-red-700 dark:text-red-300">{state.message}</span> : null}
+        {state.status === "error" ? <span className="text-status-failure">{state.message}</span> : null}
         {isStale && (state.status === "pending_approval" || state.status === "approved") ? (
-          <span className="text-amber-700 dark:text-amber-400">{t("assistant.action.staleCantRun")}</span>
+          <span className="text-status-warning">{t("assistant.action.staleCantRun")}</span>
         ) : null}
       </div>
     </div>
@@ -450,7 +450,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
   const { t } = useTranslation();
   const stale = session.isStale(turn);
 
-  if (collapsed) return <button type="button" aria-expanded="false" onClick={onToggle} className="flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-left text-xs hover:bg-muted"><span>{turn.status === "ok" ? t("assistant.turn.ok") : turn.status === "error" ? t("assistant.turn.error") : t("assistant.turn.running")}</span><span className="truncate font-medium">{turn.question}</span>{stale ? <span className="ml-auto shrink-0 text-amber-700">{t("assistant.turn.stale")}</span> : null}</button>;
+  if (collapsed) return <button type="button" aria-expanded="false" onClick={onToggle} className="flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-left text-xs hover:bg-muted"><span>{turn.status === "ok" ? t("assistant.turn.ok") : turn.status === "error" ? t("assistant.turn.error") : t("assistant.turn.running")}</span><span className="truncate font-medium">{turn.question}</span>{stale ? <span className="ml-auto shrink-0 text-status-warning">{t("assistant.turn.stale")}</span> : null}</button>;
 
   return (
     <div className="space-y-2">
@@ -466,7 +466,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
           </p>
         ) : null}
         {stale ? (
-          <p className="mb-1.5 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+          <p className="mb-1.5 inline-block rounded-full bg-status-warning-subtle px-2 py-0.5 text-[10px] font-semibold text-status-warning">
             {t("assistant.turn.staleBadge")}
           </p>
         ) : null}
@@ -487,7 +487,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
             <MarkdownContent>{turn.response.answer}</MarkdownContent>
 
             {turn.error?.kind === "hallucinated_refs" ? (
-              <p role="alert" className="text-[11px] text-amber-700 dark:text-amber-400">
+              <p role="alert" className="text-[11px] text-status-warning">
                 {turn.error.message}
               </p>
             ) : null}

@@ -11,9 +11,9 @@ import { lastOkRunEvent, summarizeEventMetrics } from "@/features/runs/model";
 import type { BuildEvent } from "@/shared/lib/builderApi";
 
 const STATUS_STYLES: Record<BuildEvent["status"], string> = {
-  ok: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  warn: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-  fail: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+  ok: "bg-status-success-subtle text-status-success",
+  warn: "bg-status-warning-subtle text-status-warning",
+  fail: "bg-status-failure-subtle text-status-failure",
 };
 
 function EventStatusBadge({ status }: { status: BuildEvent["status"] }) {
@@ -65,7 +65,7 @@ export function EventTimeline({ events }: { events: BuildEvent[] }) {
               <tr
                 key={`${event.seq}-${event.event}`}
                 className={`border-b border-border last:border-0 ${
-                  event.status === "fail" ? "bg-red-50 dark:bg-red-950/20" : ""
+                  event.status === "fail" ? "bg-status-failure-subtle" : ""
                 }`}
               >
                 <td className="whitespace-nowrap py-2 pr-3 align-top text-xs text-muted-foreground">

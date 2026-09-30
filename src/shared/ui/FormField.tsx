@@ -69,7 +69,7 @@ export function FormField({
         {required ? (
           <>
             {/* visual asterisk hidden from assistive tech; screen reader reads '(required)'. */}
-            <span aria-hidden="true" className="ml-0.5 text-red-600">
+            <span aria-hidden="true" className="ml-0.5 text-status-failure">
               *
             </span>
             <span className="sr-only">{t("formField.required")}</span>

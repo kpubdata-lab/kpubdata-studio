@@ -31,7 +31,7 @@ export function VersionMismatchBanner() {
 
   return (
     <div
-      className="flex items-start gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+      className="flex items-start gap-3 border-b border-status-warning-border bg-status-warning-subtle px-4 py-2 text-sm text-status-warning"
       role="status"
     >
       <p className="flex-1">
@@ -40,7 +40,7 @@ export function VersionMismatchBanner() {
       </p>
       <button
         aria-label={t("versionCheck.dismiss")}
-        className="shrink-0 rounded px-2 hover:bg-amber-100 dark:hover:bg-amber-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="shrink-0 rounded px-2 hover:bg-status-warning-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         onClick={dismiss}
         type="button"
       >

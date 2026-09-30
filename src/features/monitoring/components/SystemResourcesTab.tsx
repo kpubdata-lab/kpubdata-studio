@@ -71,8 +71,8 @@ function SystemHealthCard({
 
   const statusColor =
     api.availability === "unavailable" || status === "degraded"
-      ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-      : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300";
+      ? "bg-status-warning-subtle text-status-warning"
+      : "bg-status-success-subtle text-status-success";
 
   return (
     <Card>
@@ -181,10 +181,10 @@ function ArtifactStoreCard({ stats }: { stats: MonitoringArtifactStoreStats }) {
 
   const statusColor =
     stats.availability === "available"
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+      ? "bg-status-success-subtle text-status-success"
       : stats.availability === "partial"
-      ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
-      : "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300";
+      ? "bg-status-warning-subtle text-status-warning"
+      : "bg-status-failure-subtle text-status-failure";
 
   return (
     <Card>

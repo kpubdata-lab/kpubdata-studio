@@ -26,11 +26,11 @@ const selectClassName =
   "h-9 rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 const stageSummaryClass = {
-  bronze: "bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200",
+  bronze: "bg-status-warning-subtle text-status-warning",
   silver: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
-  gold: "bg-yellow-100 text-yellow-900 dark:bg-yellow-950/50 dark:text-yellow-200",
-  warning: "bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200",
-  failed: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+  gold: "bg-status-warning-subtle text-status-warning",
+  warning: "bg-status-warning-subtle text-status-warning",
+  failed: "bg-status-failure-subtle text-status-failure",
   muted: "bg-muted text-muted-foreground",
 } as const;
 

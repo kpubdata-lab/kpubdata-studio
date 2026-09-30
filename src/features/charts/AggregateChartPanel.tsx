@@ -211,7 +211,7 @@ export function AggregateChartPanel({
         {t("charts.draw")}
       </Button>
       {error ? (
-        <p className="text-sm text-red-700 dark:text-red-300" role="alert">
+        <p className="text-sm text-status-failure" role="alert">
           {t("charts.failed", { message: error })}
         </p>
       ) : null}

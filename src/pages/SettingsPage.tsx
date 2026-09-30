@@ -133,7 +133,7 @@ export function SettingsPage() {
                 </span>
               </div>
               {!isBuilderApiCompatible(connection.apiVersion) ? (
-                <p role="alert" className="text-sm text-amber-700 dark:text-amber-400">
+                <p role="alert" className="text-sm text-status-warning">
                   {t("settings.conn.mismatch", { api: connection.apiVersion, min: MIN_BUILDER_API_VERSION })}
                 </p>
               ) : null}
@@ -141,7 +141,7 @@ export function SettingsPage() {
           ) : connection.status === "error" ? (
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status="failed" />
-              <span className="text-red-700 dark:text-red-300">{connection.error}</span>
+              <span className="text-status-failure">{connection.error}</span>
             </div>
           ) : null}
         </div>
@@ -157,7 +157,7 @@ export function SettingsPage() {
         </p>
         <div className="mt-3 space-y-2 text-sm text-muted-foreground">
           <p>{t("settings.privacy.llm")}</p>
-          <p className="text-amber-700 dark:text-amber-400">
+          <p className="text-status-warning">
             {t("settings.privacy.noPublic")}
           </p>
           <p>
@@ -244,7 +244,7 @@ function ProviderCredentialSection({
         ) : state.status === "loading" ? (
           <p className="text-muted-foreground">{t("settings.providers.loading")}</p>
         ) : state.status === "error" ? (
-          <p className="text-red-700 dark:text-red-300">{state.message}</p>
+          <p className="text-status-failure">{state.message}</p>
         ) : (
           <div className="space-y-3">
             <p className="text-muted-foreground">
@@ -276,7 +276,7 @@ function ProviderConfiguredBadge({ provider, configured }: { provider: string; c
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
         configured
-          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+          ? "bg-status-success-subtle text-status-success"
           : "bg-muted text-muted-foreground"
       }`}
     >
@@ -313,21 +313,21 @@ function AssistantByokSection() {
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
               isConfigured
-                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
-                : "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                ? "bg-status-success-subtle text-status-success"
+                : "bg-status-warning-subtle text-status-warning"
             }`}
           >
             {isConfigured ? t("settings.byok.keySet") : t("settings.byok.keyUnset")}
           </span>
           {isConfigured && model ? <span className="text-muted-foreground">{model}</span> : null}
           {isConfigured && !isDefaultBaseUrl ? (
-            <span className="text-amber-700 dark:text-amber-400" title={resolvedBaseUrl}>
+            <span className="text-status-warning" title={resolvedBaseUrl}>
               {t("settings.byok.customBaseUrl")}
             </span>
           ) : null}
         </div>
         {persistToStorage ? (
-          <p className="text-amber-700 dark:text-amber-400">{t("settings.byok.persistOn")}</p>
+          <p className="text-status-warning">{t("settings.byok.persistOn")}</p>
         ) : (
           <p className="text-muted-foreground">{t("settings.byok.persistOff")}</p>
         )}

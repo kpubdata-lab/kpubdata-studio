@@ -74,7 +74,7 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
         {caption}
         <span data-testid="row-total">{totalText(t, rowTotal, paging?.offset)}</span>
-        {truncated ? <span className="font-semibold text-amber-700 dark:text-amber-300">{t("dataTable.truncated")}</span> : null}
+        {truncated ? <span className="font-semibold text-status-warning">{t("dataTable.truncated")}</span> : null}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">

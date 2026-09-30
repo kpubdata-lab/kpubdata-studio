@@ -28,12 +28,12 @@ export function runStatusLabel(status: string): { label: string; className: stri
     case "succeeded":
       return {
         label: i18n.t("monitoring.runStatus.succeeded"),
-        className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+        className: "bg-status-success-subtle text-status-success",
       };
     case "failed":
       return {
         label: i18n.t("monitoring.runStatus.failed"),
-        className: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+        className: "bg-status-failure-subtle text-status-failure",
       };
     case "running":
       return {
@@ -48,7 +48,7 @@ export function runStatusLabel(status: string): { label: string; className: stri
     case "queued":
       return {
         label: i18n.t("monitoring.runStatus.queued"),
-        className: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+        className: "bg-status-warning-subtle text-status-warning",
       };
     default:
       return { label: status, className: "bg-muted text-muted-foreground" };
