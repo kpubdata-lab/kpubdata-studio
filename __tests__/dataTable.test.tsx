@@ -6,7 +6,7 @@ import { http, HttpResponse } from "msw";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
 import { DataTable, totalStatusOf } from "@/features/data-table/DataTable";
@@ -14,6 +14,10 @@ import { rowsRequest, useWarehouseRows } from "@/features/data-table/useWarehous
 import { ResultTable } from "@/features/sql/ResultTable";
 import { API_BASE } from "@/shared/config/env";
 import { warehouseRowsResponseSchema, type WarehouseRowsResponse } from "@/shared/lib/builderApi.schema";
+
+// These talk to the Builder over HTTP (MSW); in mock mode the demo warehouse would answer (#530).
+beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 

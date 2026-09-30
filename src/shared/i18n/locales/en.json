@@ -2278,6 +2278,11 @@
       "noSnapshot": "No committed snapshot.",
       "noColumns": "No columns.",
       "columnsError": "Could not load the columns."
+    },
+    "demoWarehouse": {
+      "needsBuilder": "The demo has no KPubData Builder, so it does not run queries, aggregates, exports or saved analyses. Connect a Builder to run them.",
+      "tableNotFound": "The demo has no table named {{name}}.",
+      "snapshotNotFound": "The demo has no committed snapshot of {{name}} with that id."
     }
   },
   "admin": {

@@ -10,6 +10,7 @@ import { http, HttpResponse } from "msw";
 import { mswServer } from "../vitest.setup";
 import { API_BASE } from "@/shared/config/env";
 import { SqlWorkspacePage } from "@/pages/SqlWorkspacePage";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 function Where() {
   const { search } = useLocation();
@@ -31,6 +32,10 @@ beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "false"));
 afterEach(() => vi.unstubAllEnvs());
 
 describe("SQL Workspace (#417)", () => {
+  // The run-based workspace: a deployment without a warehouse (#530).
+  beforeEach(() => {
+    hideDemoWarehouse();
+  });
   it("does not run anything until the person asks", async () => {
     renderAt("/sql?table=air-quality");
     await screen.findByRole("option", { name: /air-2026-08-14 \(최신\)/ });

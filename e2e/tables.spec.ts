@@ -4,7 +4,7 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
 /**
  * Tables on a Builder with a warehouse (#525), in a real browser.
  *
- * The dev server runs in mock mode, which has no warehouse, so this spec turns the real
+ * The dev server runs in mock mode, whose demo warehouse is not this fixture, so this spec turns the real
  * Builder path on through the runtime config (`/config.js`) and answers the Builder
  * calls itself. What it checks is what jsdom cannot: a row opens from the keyboard alone,
  * and at 390px the wide table scrolls inside its card, not the page.

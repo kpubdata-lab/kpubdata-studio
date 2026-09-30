@@ -31,8 +31,13 @@ vi.mock("@/features/datasets/api", async (importActual) => {
 });
 
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
-beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "false"));
+beforeEach(() => {
+  vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+  // The run-based Table Detail: a deployment without a warehouse (#530).
+  hideDemoWarehouse();
+});
 
 describe("silver sample on Table Detail (#484)", () => {
   it("shows decimal_string values exactly as sent", async () => {

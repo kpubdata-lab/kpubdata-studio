@@ -14,7 +14,8 @@
 import { Fragment, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { builderApi, type ColumnWireInfo, type WarehouseTable } from "@/shared/lib/builderApi";
+import { type ColumnWireInfo, type WarehouseTable } from "@/shared/lib/builderApi";
+import { warehouseApi } from "./warehouseApi";
 import { cn } from "@/shared/ui";
 
 /** A column as listed: its name, and its logical type when the Builder described it. */
@@ -109,7 +110,7 @@ export function TableExplorer({
       return;
     }
     setColumns((prev) => ({ ...prev, [key]: { status: "loading" } }));
-    builderApi
+    warehouseApi()
       .warehouseRows({ table, snapshot, page_size: 1, count: "none" })
       .then((page) => setColumns((prev) => ({ ...prev, [key]: { status: "loaded", columns: columnsOf(page.columns, page.column_meta) } })))
       .catch(() => setColumns((prev) => ({ ...prev, [key]: { status: "error" } })));

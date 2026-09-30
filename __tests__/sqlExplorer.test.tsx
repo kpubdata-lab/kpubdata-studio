@@ -8,12 +8,16 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
 import { referencedTableNames } from "@/features/sql/tableReferences";
 import { WarehouseWorkspace } from "@/features/sql/WarehouseWorkspace";
 import { API_BASE } from "@/shared/config/env";
+
+// These talk to the Builder over HTTP (MSW); in mock mode the demo warehouse would answer (#530).
+beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 const TABLES = [
   { table_id: "t1", logical_name: "air_quality.datago__air", current_snapshot_id: "snap_3", revision: 3 },

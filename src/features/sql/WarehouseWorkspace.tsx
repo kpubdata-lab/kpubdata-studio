@@ -17,7 +17,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AggregateChartPanel } from "@/features/charts/AggregateChartPanel";
 import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
 import { ExportPanel } from "@/features/export/ExportPanel";
-import { builderApi, type QueryResponse, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { type QueryResponse, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { warehouseApi } from "./warehouseApi";
 import { Button, Card, PageHeader } from "@/shared/ui";
 
 import { QueryError, ResultTable } from "./ResultTable";
@@ -123,7 +124,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
     if (!table) return;
     const controller = new AbortController();
     setSnapshots(null);
-    builderApi
+    warehouseApi()
       .getWarehouseTable(table, controller.signal)
       .then((detail) => setSnapshots(detail.snapshots))
       .catch(() => !controller.signal.aborted && setSnapshots([]));
@@ -134,7 +135,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   useEffect(() => {
     if (!analysisId) return;
     const controller = new AbortController();
-    builderApi
+    warehouseApi()
       .listAnalyses(controller.signal)
       .then(({ analyses }) => {
         const found = analyses.find((item) => item.analysis_id === analysisId);

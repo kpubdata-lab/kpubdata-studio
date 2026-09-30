@@ -13,7 +13,8 @@
  * snapshot columns.
  */
 import { detectWarehouse } from "@/features/sql/warehouse";
-import { builderApi, type DatasetSummary, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { type DatasetSummary, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 
 import { listDatasets, mapWithConcurrency } from "./api";
 
@@ -48,7 +49,7 @@ export function splitLogicalName(logicalName: string): { datasetId: string; sour
 async function currentSnapshotOf(table: WarehouseTable, signal?: AbortSignal): Promise<WarehouseSnapshot | null | undefined> {
   if (table.current_snapshot_id === null) return null;
   try {
-    const detail = await builderApi.getWarehouseTable(table.logical_name, signal);
+    const detail = await warehouseApi().getWarehouseTable(table.logical_name, signal);
     return detail.snapshots.find((snapshot) => snapshot.snapshot_id === table.current_snapshot_id);
   } catch (cause) {
     if (signal?.aborted) throw cause;

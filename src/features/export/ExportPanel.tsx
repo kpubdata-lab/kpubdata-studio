@@ -12,7 +12,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { saveBlobAsFile } from "@/features/artifacts/api";
-import { ApiError, builderApi, type WarehouseExport } from "@/shared/lib/builderApi";
+import { ApiError, type WarehouseExport } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 import { Button, Card } from "@/shared/ui";
 
 const field =
@@ -49,7 +50,7 @@ export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot:
     setDone(null);
     try {
       setDone(
-        await builderApi.createWarehouseExport({
+        await warehouseApi().createWarehouseExport({
           table,
           snapshot,
           sql,
@@ -69,7 +70,7 @@ export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot:
     setBusy("download");
     setError(null);
     try {
-      const { blob, filename } = await builderApi.downloadWarehouseExport(item.export_id);
+      const { blob, filename } = await warehouseApi().downloadWarehouseExport(item.export_id);
       saveBlobAsFile(blob, filename);
     } catch (cause) {
       setError(describeRefusal(cause, t));

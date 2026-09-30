@@ -11,9 +11,9 @@ import { useTranslation } from "react-i18next";
 
 import { DataTable } from "@/features/data-table/DataTable";
 import {
-  builderApi,
   type WarehouseAggregateResponse,
 } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 import { encodingsOf } from "@/shared/lib/cellValue";
 import { Button, Card } from "@/shared/ui";
 
@@ -92,7 +92,7 @@ export function AggregateChartPanel({
     setError(null);
     try {
       setResult({
-        response: await builderApi.warehouseAggregate(
+        response: await warehouseApi().warehouseAggregate(
           aggregateRequest(spec, snapshot),
         ),
         spec,

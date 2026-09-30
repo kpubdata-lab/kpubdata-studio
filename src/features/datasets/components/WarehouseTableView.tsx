@@ -27,7 +27,6 @@ import { coverageCounts, coverageOf } from "@/features/sql/snapshotCoverage";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { i18n } from "@/shared/i18n";
 import {
-  builderApi,
   type BuildQualityResponse,
   type DatasetDetailResponse,
   type DatasetRunSummary,
@@ -35,6 +34,7 @@ import {
   type WarehouseSnapshot,
   type WarehouseTable,
 } from "@/shared/lib/builderApi";
+import { warehouseApi } from "@/features/sql/warehouseApi";
 import type { WarehouseTableDetailResponse } from "@/shared/lib/builderApi.schema";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton } from "@/shared/ui";
 import { ActionableStatus, MissingStatus, NormalStatus, UnknownStatus } from "@/shared/ui/StatusState";
@@ -95,7 +95,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
   const detail = useAsync<WarehouseTableDetailResponse>(
     logicalName,
     true,
-    (signal) => builderApi.getWarehouseTable(logicalName, signal),
+    (signal) => warehouseApi().getWarehouseTable(logicalName, signal),
     "tableDetail.errors.table",
   );
 
@@ -369,7 +369,7 @@ function SchemaTab({ table, snapshot }: { table: string; snapshot: string }) {
   const page = useAsync<WarehouseRowsResponse>(
     `${table}@${snapshot}`,
     true,
-    (signal) => builderApi.warehouseRows({ table, snapshot, page_size: 1, count: "none" }, signal),
+    (signal) => warehouseApi().warehouseRows({ table, snapshot, page_size: 1, count: "none" }, signal),
     "tableDetail.errors.schema",
   );
   if (page.status === "error") return <ErrorState title={t("tableDetail.errors.schema")} message={page.error} />;

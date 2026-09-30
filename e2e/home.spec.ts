@@ -4,7 +4,7 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
 /**
  * Home on a Builder with a warehouse (#527), in a real browser.
  *
- * The dev server runs in mock mode, which has no warehouse, so this spec turns the real
+ * The dev server runs in mock mode, whose demo warehouse is not this fixture, so this spec turns the real
  * Builder path on through the runtime config (`/config.js`) and answers the Builder calls
  * itself. It checks what jsdom cannot: at 390px the first screen has no KPI wall and no
  * sideways scroll, and a table that needs attention opens from the keyboard in one step.

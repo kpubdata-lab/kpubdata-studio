@@ -22,7 +22,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
 
       expect(summary).toContain("대기질 통합 데이터");
       expect(summary).toContain("air-2026-08-14");
-      expect(summary).toContain("data.go.kr");
+      expect(summary).toContain("datago");
       expect(summary).toContain("kma");
       expect(summary).toContain("failed");
     });

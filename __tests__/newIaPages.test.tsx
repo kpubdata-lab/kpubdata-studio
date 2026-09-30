@@ -12,6 +12,7 @@ import { ProviderPage } from "@/pages/ProviderPage";
 import { QualityPage } from "@/pages/QualityPage";
 import { ReportsPage } from "@/pages/ReportsPage";
 import { WorkspacePage } from "@/pages/WorkspacePage";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 function renderPage(element: ReactNode) {
   return render(<MemoryRouter>{element}</MemoryRouter>);
@@ -75,6 +76,8 @@ describe("새 IA placeholder 화면 (#247)", () => {
   });
 
   it("Dataset Detail loads the dataset identified by the route param", async () => {
+    // The run-based view: a deployment without a warehouse (#530).
+    hideDemoWarehouse();
     render(
       <MemoryRouter initialEntries={["/tables/air-quality"]}>
         <Routes>

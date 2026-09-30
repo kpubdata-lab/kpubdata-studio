@@ -9,6 +9,7 @@ import { AssistantPage } from "@/pages/AssistantPage";
 import { API_BASE } from "@/shared/config/env";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { mswServer } from "../vitest.setup";
+import { hideDemoWarehouse } from "./support/noWarehouse";
 
 // 클라이언트가 실제로 부르는 base와 동일해야 한다(로컬 .env.local이 127.0.0.1로
 // 덮어써도 msw 핸들러가 매칭되도록 하드코딩 대신 API_BASE에서 파생).
@@ -42,6 +43,7 @@ afterEach(() => {
 
 describe("HomePage (mock deployment, no warehouse)", () => {
   it("leads with tables that need attention, then recent runs, and says why there are no snapshots (#527)", async () => {
+    hideDemoWarehouse();
     render(
       <MemoryRouter>
         <HomePage />

@@ -8,13 +8,17 @@ import { fileURLToPath } from "node:url";
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
 import { ExportPanel } from "@/features/export/ExportPanel";
 import { saveBlobAsFile } from "@/features/artifacts/api";
 import { API_BASE } from "@/shared/config/env";
 import { setAuthTokenProvider } from "@/shared/lib/builderApi";
+
+// These talk to the Builder over HTTP (MSW); in mock mode the demo warehouse would answer (#530).
+beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
+afterEach(() => vi.unstubAllEnvs());
 
 vi.mock("@/features/artifacts/api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/features/artifacts/api")>()),
