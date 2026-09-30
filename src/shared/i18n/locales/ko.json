@@ -1129,7 +1129,8 @@
       "reenterParams": "Provider·소스 데이터셋·테이블 ID·제목은 채웠습니다. 요청 파라미터를 다시 입력하세요. 초안은 테이블을 만들거나 삭제할 때까지 남아 있습니다.",
       "discardKept": "초안 삭제",
       "savedCorrupt": "저장한 초안이 손상되어 열 수 없어 삭제했습니다.",
-      "askCorrupt": "Ask KPubData 초안이 손상되어 열 수 없어 삭제했습니다."
+      "askCorrupt": "Ask KPubData 초안이 손상되어 열 수 없어 삭제했습니다.",
+      "inputKept": "입력하던 내용은 저장한 초안으로 보관했습니다. 위 안내에서 열면 다시 이어서 편집할 수 있습니다."
     },
     "nav": {
       "back": "이전",
