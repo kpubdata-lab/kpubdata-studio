@@ -45,7 +45,8 @@ async function stubBuilder(page: Page) {
   await page.route((url) => url.origin === API, async (route) => {
     const url = new URL(route.request().url());
     const json = (body: unknown) => route.fulfill({ contentType: "application/json", body: JSON.stringify(body) });
-    if (url.pathname === "/datasets") return json({ datasets: [DATASET] });
+    // A second table the warehouse has nothing for: its cells are `—` with screen-reader text.
+    if (url.pathname === "/datasets") return json({ datasets: [DATASET, { ...DATASET, dataset_id: "weather", title: "기상" }] });
     if (url.pathname === "/warehouse/tables") return json({ tables: [TABLE] });
     if (url.pathname === `/warehouse/tables/${TABLE.logical_name}`) return json({ ...TABLE, snapshots: [SNAPSHOT] });
     // Anything else (version, admin probe, the detail page) behaves as a Builder that is not there.

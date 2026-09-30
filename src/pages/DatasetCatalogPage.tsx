@@ -129,7 +129,7 @@ export function DatasetCatalogPage() {
         ) : visibleRows.length === 0 ? (
           <EmptyState title={t("catalog.noMatch.title")} description={t("catalog.noMatch.desc")} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-[13px] leading-[18px]">
               <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                 <tr>
