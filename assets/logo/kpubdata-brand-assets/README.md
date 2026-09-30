@@ -54,7 +54,7 @@
 - 앱 아이콘: `kpubdata-app-icon-1024.png`
 
 ## Suffix 규칙 개정 (#425, 2026-09-30)
-승인 락업은 "Studio" 를 Indigo 로 강조했다. [시각 정체성](../../../docs/brand/VISUAL_IDENTITY.md) §2 는
+승인 락업은 "Studio" 를 Indigo 로 강조했다. [시각 정체성](https://github.com/yeongseon/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md) §2 는
 제품군 이름 `KPubData` 가 주인공이고 `Studio` 는 작고 약해야 한다고 정했다. 그래서 가로·세로 락업의
 **"Studio" 패스 색만** 중립색으로 바꿨다 — 라이트 `#71717A`, 다크 `#94A3B8`. 심볼, 워드마크 형태·비율·위치는
 그대로다(`Studio` 는 원래도 `KPubData` 의 약 57% 크기). 심볼 전용 자산(symbol·sidebar·favicon·앱 아이콘)은
