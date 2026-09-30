@@ -19,6 +19,7 @@
     "test:coverage": "vitest run --coverage",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "test:e2e": "playwright test",
+    "test:e2e:update-visual": "docker run --rm --ipc=host -v \"$PWD\":/work -v /work/node_modules -w /work -e CI=1 mcr.microsoft.com/playwright:v1.63.0-noble sh -c 'npm ci --no-audit --no-fund && npx playwright test e2e/visual.spec.ts --project=desktop-chromium --update-snapshots; status=$?; chown -R \"$(stat -c %u:%g package.json)\" e2e/visual.spec.ts-snapshots; exit $status'",
     "test:e2e:real": "node scripts/run-real-e2e.mjs",
     "i18n:coverage": "node scripts/i18n-coverage.mjs",
     "i18n:check": "node scripts/i18n-coverage.mjs --check",

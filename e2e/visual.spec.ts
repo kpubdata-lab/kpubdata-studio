@@ -14,12 +14,30 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
  * from the demo fixtures (#530); the clock, time zone and locale are fixed; animations
  * and the caret are off; each screen waits for its data before the shot. The baselines
  * live next to this file (`visual.spec.ts-snapshots/`) and are Linux Chromium renders.
- * `maxDiffPixelRatio` absorbs anti-aliasing between machines, not layout changes: a moved
- * section or a new card changes far more than 1% of the page.
+ * `maxDiffPixels` is an absolute budget for anti-aliasing, far below one status badge
+ * (about 80x20 px), so a badge changing colour or a moved section fails. The spec never
+ * retries: a shot that differs on the first try is a real difference or a flaky screen,
+ * and both should be seen.
  *
- * To update after an intended change: `CI=1 npx playwright test e2e/visual.spec.ts
- * --update-snapshots`, on Linux, and review the new images in the PR.
+ * Off Linux the spec is skipped — a macOS or Windows render never matches, and a missing
+ * baseline would be written next to the Linux ones. `UPDATE_VISUAL=1` runs it anyway.
+ *
+ * The 390px shots are the desktop-chromium project at a 390px viewport: they check layout
+ * at phone width, not touch input or a phone's device pixel ratio.
+ *
+ * To update after an intended change, on any OS with Docker:
+ *
+ *   npm run test:e2e:update-visual
+ *
+ * It runs this spec with `--update-snapshots` in `mcr.microsoft.com/playwright:v1.63.0-noble`,
+ * the image for the installed `@playwright/test`, so the fonts and Chromium are the same
+ * wherever it runs. Review the new images in the PR. A pull request that bumps
+ * `@playwright/test` changes Chromium: bump the image tag in `package.json` to match and
+ * refresh the baselines in the same pull request.
  */
+
+/** Anti-aliasing budget per shot; a status badge alone is about 1,600 px. */
+const MAX_DIFF_PIXELS = 200;
 
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900 },
@@ -77,10 +95,12 @@ const SCREENS: Screen[] = [
 ];
 
 test.use({ locale: "ko-KR", timezoneId: "Asia/Seoul", colorScheme: "light" });
+test.describe.configure({ retries: 0 });
 
 test.beforeEach(async ({ page }, testInfo) => {
   // One project renders every viewport; the mobile project would only repeat the shots.
   test.skip(testInfo.project.name !== "desktop-chromium", "baselines are taken once, at fixed viewports");
+  test.skip(process.platform !== "linux" && !process.env.UPDATE_VISUAL, "baselines are Linux Chromium renders; see the header for updating them");
   await prepareCleanPage(page);
   // Relative times ("3 days ago") and "today" must not drift with the calendar.
   await page.clock.setFixedTime(new Date("2026-08-15T03:00:00Z"));
@@ -104,7 +124,7 @@ for (const viewport of VIEWPORTS) {
         fullPage: true,
         animations: "disabled",
         caret: "hide",
-        maxDiffPixelRatio: 0.01,
+        maxDiffPixels: MAX_DIFF_PIXELS,
       });
       await expectNoPageErrors(errors);
     });
