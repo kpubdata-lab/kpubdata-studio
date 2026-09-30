@@ -18,7 +18,7 @@ import { cn } from "@/shared/ui/cn";
 import { ActionableStatus, MissingStatus, NormalStatus, UnknownStatus, type ActionTone } from "@/shared/ui/StatusState";
 
 const AXES = ["health", "completeness", "refresh", "access", "maturity"] as const;
-type Axis = (typeof AXES)[number];
+export type Axis = (typeof AXES)[number];
 
 export type AxisKind = { kind: "normal" } | { kind: "actionable"; tone: ActionTone } | { kind: "unknown" } | { kind: "missing" };
 
@@ -32,6 +32,32 @@ export function kindOf(axis: Axis, value: string | undefined): AxisKind {
   if (value === "unknown") return { kind: "unknown" };
   if (axis === "maturity" || NORMAL.has(value)) return { kind: "normal" };
   return { kind: "actionable", tone: FAILURE.has(value) ? "failure" : "warning" };
+}
+
+/** The axes of a table that need a person's action, in display order. Maturity never does. */
+export function actionableAxes(axes: Partial<DatasetStatusAxes> | undefined): Axis[] {
+  if (!axes) return [];
+  return AXES.filter((axis) => kindOf(axis, axes[axis]).kind === "actionable");
+}
+
+/**
+ * One axis on its own — a table cell, where the column header already names the axis.
+ * A badge still carries the axis with its word, so it reads the same out of context.
+ */
+export function AxisValue({ axes, axis }: { axes: Partial<DatasetStatusAxes> | undefined; axis: Axis }) {
+  const { t } = useTranslation();
+  const value = axes?.[axis];
+  const shown = kindOf(axis, value);
+  if (shown.kind === "actionable") {
+    return (
+      <ActionableStatus axis={t(`statusAxes.axis.${axis}`)} tone={shown.tone}>
+        {t(`statusAxes.value.${axis}.${value}`)}
+      </ActionableStatus>
+    );
+  }
+  if (shown.kind === "normal") return <NormalStatus>{t(`statusAxes.value.${axis}.${value}`)}</NormalStatus>;
+  if (shown.kind === "unknown") return <UnknownStatus />;
+  return <MissingStatus />;
 }
 
 export function StatusAxes({ axes, className }: { axes: Partial<DatasetStatusAxes> | undefined; className?: string }) {
