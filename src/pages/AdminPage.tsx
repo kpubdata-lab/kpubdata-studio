@@ -45,7 +45,7 @@ export function AdminPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
-      <PageHeader eyebrow="Admin" title={t("admin.title")} description={t("admin.desc")} />
+      <PageHeader title={t("admin.title")} description={t("admin.desc")} />
 
       {!real ? (
         <Card variant="dashed" className="text-sm">{t("admin.mock")}</Card>

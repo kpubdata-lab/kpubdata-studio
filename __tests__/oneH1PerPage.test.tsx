@@ -4,6 +4,9 @@
  * The page header used to be an `<h2>` and the topbar a breadcrumb `<nav>`, so no app
  * page had a top-level heading. Each route is mounted through the app's own route tree,
  * as the browser would reach it, and the count is taken once the page has settled.
+ *
+ * The same pass checks that nothing sits above the h1 in its header — the eyebrow label
+ * the compact header dropped (#522).
  */
 import { act, render, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
@@ -54,6 +57,8 @@ describe("one h1 per page (#485)", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
     expect([...container.querySelectorAll("h1")].map((h) => h.textContent)).toHaveLength(1);
+    // The page title leads its header: no eyebrow label sits above it (#522).
+    expect(container.querySelector("h1")?.previousElementSibling?.textContent ?? null).toBeNull();
     unmount();
   });
 });

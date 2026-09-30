@@ -254,17 +254,17 @@ export function DatasetDetailPage() {
   }, [stageDetailState.data]);
 
   if (core.status === "loading") {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader eyebrow="Table" title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
+    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
   }
 
   if (core.status === "error" || !core.dataset || !core.runs) {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader eyebrow="Table" title={datasetId || t("datasetDetail.fallbackTitle")} /><ErrorState title={t("datasetDetail.loadErrorTitle")} message={core.error} /></main>;
+    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId || t("datasetDetail.fallbackTitle")} /><ErrorState title={t("datasetDetail.loadErrorTitle")} message={core.error} /></main>;
   }
 
   if (invalidRun) {
     return (
       <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
-        <PageHeader eyebrow="Table" title={core.dataset.title} description={core.dataset.dataset_id} />
+        <PageHeader title={core.dataset.title} meta={<span className="font-mono">{core.dataset.dataset_id}</span>} />
         <Card variant="error" role="alert"><p className="font-semibold">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunTitle" : requested.status === "error" ? "datasetDetail.runCheckFailedTitle" : requested.status === "unsupported" ? "datasetDetail.runLookupUnsupportedTitle" : "datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunBody" : requested.status === "error" ? "datasetDetail.runCheckFailedBody" : requested.status === "unsupported" ? "datasetDetail.runLookupUnsupportedBody" : "datasetDetail.invalidRunBody", { run: requestedRun, version: RUN_LOOKUP_API_VERSION })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
       </main>
     );
@@ -273,9 +273,8 @@ export function DatasetDetailPage() {
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
-        eyebrow="Table"
         title={core.dataset.title}
-        description={<><span className="block font-mono text-xs">{core.dataset.dataset_id}</span><span className="mt-1 block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Run {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
+        meta={<><span className="block font-mono">{core.dataset.dataset_id}</span><span className="block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · Run {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? " (latest)" : ""}</span></>}
         actions={<><span title={t("datasetDetail.stageStatusTitle", { source: selectedSource || "—", stage: selectedStage })} className="inline-flex items-center gap-2 rounded-full bg-accent-subtle px-3 py-1 text-xs font-semibold capitalize text-accent-subtle-foreground"><span>{selectedStage}</span><span className="font-normal">{sourceStageEntry?.[selectedStage].status ?? "unavailable"}</span></span><QualityBadge status={validation} /><Button size="sm" variant="secondary" aria-haspopup="dialog" onClick={askAboutThis}>{t("datasetDetail.askAboutThis")}</Button><LinkButton size="sm" variant="secondary" to={`/refresh-jobs/${encodeURIComponent(selectedRunId)}/edit`}>{t("tableActions.refresh")}</LinkButton><LinkButton size="sm" to={`/sql?${new URLSearchParams({ table: core.dataset.dataset_id, run: selectedRunId, stage: selectedStage === "bronze" ? "silver" : selectedStage, ...(selectedSource ? { source: selectedSource } : {}) })}`}>{t("tableActions.query")}</LinkButton><LinkButton size="sm" to={`/refresh-jobs/${encodeURIComponent(selectedRunId)}/publish?dataset=${encodeURIComponent(core.dataset.dataset_id)}`}>{t("datasetDetail.publishRun")}</LinkButton></>}
       />
       <StatusAxes axes={core.dataset.status_axes} />

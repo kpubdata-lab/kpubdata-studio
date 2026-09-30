@@ -125,7 +125,6 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
-        eyebrow="SQL"
         title={t("sql.title")}
         description={t("sql.desc")}
         actions={

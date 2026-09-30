@@ -98,7 +98,6 @@ export function DatasetCatalogPage() {
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
-        eyebrow="Data"
         title={t("nav.datasets")}
         description={t("catalog.page.desc")}
         actions={<LinkButton to="/add">{t("tableActions.create")}</LinkButton>}

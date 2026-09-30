@@ -93,7 +93,6 @@ export function SettingsPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow={t("settings.page.eyebrow")}
         title={t("settings.page.title")}
         description={t("settings.page.desc")}
       />

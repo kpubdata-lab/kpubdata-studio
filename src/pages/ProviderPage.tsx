@@ -353,7 +353,6 @@ export function ProviderPage() {
   return (
     <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow="Provider"
         title={t("provider.page.title")}
         description={t("provider.page.desc")}
         actions={<LinkButton to="/settings">{t("provider.page.settings")}</LinkButton>}
@@ -376,7 +375,7 @@ export function ProviderPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="lg:col-span-1">
-          <PageHeader eyebrow="Providers" title={t("provider.page.headerTitle")} className="mb-4" level={2} />
+          <PageHeader title={t("provider.page.headerTitle")} className="mb-4" level={2} />
           <Card className="p-0">
             {loading ? (
               <div className="p-6 space-y-3">

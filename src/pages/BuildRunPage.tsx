@@ -43,7 +43,6 @@ export function BuildRunPage() {
   return (
     <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
-        eyebrow={t("buildRun.eyebrow")}
         title={t("buildRun.title", { id: buildId || t("buildRun.fallbackId") })}
         description={t("buildRun.desc")}
         actions={
