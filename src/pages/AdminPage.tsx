@@ -1,23 +1,39 @@
 /**
- * Administration (#409) — the live policy and every owner's runs, metadata only.
+ * Administration (#409) — the live policy, every owner's runs (metadata only), and the
+ * users of the Builder sign-up ledger with approval (kpubdata-builder#785).
  *
  * Reached from the menu only by an administrator, but the page does not rely on that:
  * each request is the Builder's decision, and a 403 is shown as "not an administrator"
  * rather than an empty page. Nothing here carries a credential — the Builder's admin
  * responses are strict schemas without one, and an owner is an irreversible hash.
- * Users and sign-up approval wait for an Builder API (kpubdata-builder#785).
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatDateTime } from "@/features/datasets/model";
-import { ApiError, builderApi, isRealBuilderEnabled, type AdminConfigResponse, type AdminRunsResponse } from "@/shared/lib/builderApi";
+import { UsersSection } from "@/features/admin/UsersSection";
+import {
+  ApiError,
+  builderApi,
+  isRealBuilderEnabled,
+  type AdminConfigResponse,
+  type AdminRunsResponse,
+  type AdminUser,
+  type AdminUsersResponse,
+} from "@/shared/lib/builderApi";
 import { Card, PageHeader, Skeleton } from "@/shared/ui";
 
-type Load<T> = { status: "loading" } | { status: "forbidden" } | { status: "error"; message: string } | { status: "loaded"; data: T };
+type Load<T> =
+  | { status: "loading" }
+  | { status: "forbidden" }
+  | { status: "unsupported" }
+  | { status: "error"; message: string }
+  | { status: "loaded"; data: T };
 
 function toLoad<T>(cause: unknown): Load<T> {
   if (cause instanceof ApiError && cause.status === 403) return { status: "forbidden" };
+  // A Builder older than the sign-up ledger (contract 1.54) has no such route.
+  if (cause instanceof ApiError && cause.status === 404) return { status: "unsupported" };
   return { status: "error", message: cause instanceof Error ? cause.message : String(cause) };
 }
 
@@ -26,6 +42,7 @@ export function AdminPage() {
   const real = isRealBuilderEnabled();
   const [config, setConfig] = useState<Load<AdminConfigResponse>>({ status: "loading" });
   const [runs, setRuns] = useState<Load<AdminRunsResponse>>({ status: "loading" });
+  const [users, setUsers] = useState<Load<AdminUsersResponse>>({ status: "loading" });
 
   useEffect(() => {
     if (!real) return;
@@ -38,10 +55,24 @@ export function AdminPage() {
       .adminRuns(50, controller.signal)
       .then((data) => setRuns({ status: "loaded", data }))
       .catch((cause: unknown) => !controller.signal.aborted && setRuns(toLoad(cause)));
+    builderApi
+      .adminUsers(undefined, controller.signal)
+      .then((data) => setUsers({ status: "loaded", data }))
+      .catch((cause: unknown) => !controller.signal.aborted && setUsers(toLoad(cause)));
     return () => controller.abort();
   }, [real]);
 
-  const forbidden = config.status === "forbidden" || runs.status === "forbidden";
+  const forbidden = config.status === "forbidden" || runs.status === "forbidden" || users.status === "forbidden";
+
+  const replaceUser = (updated: AdminUser) =>
+    setUsers((current) =>
+      current.status === "loaded"
+        ? {
+            status: "loaded",
+            data: { ...current.data, users: current.data.users.map((user) => (user.user_id === updated.user_id ? updated : user)) },
+          }
+        : current,
+    );
 
   return (
     <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
@@ -106,10 +137,21 @@ export function AdminPage() {
               </div>
             ) : null}
           </Card>
+
+          <Card className="overflow-hidden p-0">
+            <div className="border-b border-border px-5 py-3">
+              <h2 className="text-sm font-semibold">{t("admin.users.title")}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">{t("admin.users.note")}</p>
+            </div>
+            {users.status === "loading" ? <Skeleton className="m-5 h-24" /> : null}
+            {users.status === "unsupported" ? (
+              <p className="px-5 py-3 text-sm text-muted-foreground">{t("admin.users.unsupported")}</p>
+            ) : null}
+            {users.status === "error" ? <p className="px-5 py-3 text-sm text-status-failure" role="alert">{users.message}</p> : null}
+            {users.status === "loaded" ? <UsersSection onChange={replaceUser} users={users.data.users} /> : null}
+          </Card>
         </>
       )}
-
-      <p className="text-xs text-muted-foreground">{t("admin.usersLater")}</p>
     </main>
   );
 }

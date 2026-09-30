@@ -106,7 +106,7 @@
     "monitoring": "Run and system monitoring",
     "settings": "Studio settings",
     "sql": "Query a table snapshot",
-    "admin": "Policy and all runs (administrators)",
+    "admin": "Policy, all runs and sign-up approval (administrators)",
     "analyses": "Queries kept with their snapshot"
   },
   "builds": {
@@ -2316,7 +2316,36 @@
     "colOwner": "Owner (hash)",
     "colStarted": "Started",
     "colFinished": "Finished",
-    "usersLater": "Listing users and approving sign-ups waits for an Builder API (kpubdata-builder#785); until then use the identity provider's admin console."
+    "users": {
+      "title": "Users and sign-up approval",
+      "note": "Everyone who has signed in through OIDC, from KPubData Builder's sign-up ledger. A user is an irreversible hash and a display name — no credential or token is kept or shown.",
+      "tableLabel": "Users",
+      "unsupported": "This KPubData Builder has no sign-up ledger (it needs contract 1.54 or later).",
+      "empty": "No OIDC user has signed in yet. A deployment without OIDC has no sign-ups to approve.",
+      "pendingCount": "{{n}} awaiting approval",
+      "nonePending": "Nobody is awaiting approval.",
+      "colName": "Name",
+      "colId": "User (hash)",
+      "colFirstSeen": "First sign-in",
+      "colLastSeen": "Last seen",
+      "colDecided": "Decided",
+      "colActions": "Actions",
+      "byAllowlist": "Allowlist",
+      "byAdmin": "The deciding administrator (hash)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveLabel": "Approve {{name}}",
+      "rejectLabel": "Reject {{name}}",
+      "confirmApprove": "Approve {{name}}? They can build and query from their next request.",
+      "confirmReject": "Reject {{name}}? KPubData Builder refuses their requests from then on, even if an allowlist admits them.",
+      "decisionForbidden": "KPubData Builder refused this decision (403). Only an administrator can approve or reject a sign-up.",
+      "decisionNotFound": "KPubData Builder has no user {{name}} (404). The list may be out of date.",
+      "status": {
+        "pending": "Pending approval",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
+    }
   },
   "statusAxes": {
     "label": "Table status",

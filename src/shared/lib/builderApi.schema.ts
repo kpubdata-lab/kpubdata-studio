@@ -1065,9 +1065,36 @@ export const adminRunsResponseSchema = z.object({
   count: z.number().int().nonnegative(),
 });
 
+/**
+ * The Builder sign-up ledger (builder#785, contract 1.54+). An entry is an irreversible
+ * id, a display name (the verified email) and the decision — the Builder stores no token
+ * or credential, and anything else it might send is stripped here.
+ */
+export const adminUserStatusSchema = z.enum(["pending", "approved", "rejected"]);
+
+export const adminUserSchema = z.object({
+  /** Irreversible hash of issuer and subject — not an identity. */
+  user_id: z.string(),
+  display_name: z.string().nullable(),
+  status: adminUserStatusSchema,
+  first_seen_at: z.string(),
+  last_seen_at: z.string(),
+  decided_at: z.string().nullable(),
+  /** `allowlist`, or the deciding administrator's owner id. */
+  decided_by: z.string().nullable(),
+});
+
+export const adminUsersResponseSchema = z.object({
+  users: z.array(adminUserSchema),
+  count: z.number().int().nonnegative(),
+});
+
 export type AdminConfigResponse = z.infer<typeof adminConfigResponseSchema>;
 export type AdminRun = z.infer<typeof adminRunSchema>;
 export type AdminRunsResponse = z.infer<typeof adminRunsResponseSchema>;
+export type AdminUserStatus = z.infer<typeof adminUserStatusSchema>;
+export type AdminUser = z.infer<typeof adminUserSchema>;
+export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
 
 /*
  * ============================================
