@@ -1127,7 +1127,9 @@
       "discardAll": "Delete both",
       "openFailed": "The Ask KPubData draft could not open as it was: {{error}}",
       "reenterParams": "Its provider, source dataset, table id and title are filled in. Enter the request parameters again. The draft is kept until you create the table or delete it.",
-      "discardKept": "Delete draft"
+      "discardKept": "Delete draft",
+      "savedCorrupt": "The saved draft was damaged and could not be opened, so it was deleted.",
+      "askCorrupt": "The Ask KPubData draft was damaged and could not be opened, so it was deleted."
     },
     "nav": {
       "back": "Back",
