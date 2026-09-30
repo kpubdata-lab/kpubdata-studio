@@ -1,21 +1,21 @@
 /**
  * Define Studio common app shell and navigation layout.
  *
- * Manages left grouped sidebar, top header (Assistant search, Assistant button, avatar),
- * theme switching, mobile overlay, and global Assistant drawer mount in one place;
+ * Manages the left grouped sidebar, the topbar (breadcrumb on the left; search, Ask
+ * KPubData and the account menu on the right, #523), theme application, the mobile
+ * overlay and the global Ask KPubData drawer mount in one place;
  * actual route content is injected via `Outlet`. Menu structure follows
  * `kpubdata_ui_prototype_v1.html` IA (WORKSPACE/DATA/AI/SYSTEM) (#247).
  */
 import { useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { LanguageSwitcher } from "@/shared/i18n/LanguageSwitcher";
-import { useAuthStore } from "@/features/auth/store";
 import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
-import { AssistantSearchInput } from "@/features/assistant/AssistantSearchInput";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { VersionMismatchBanner } from "@/features/version-check/VersionMismatchBanner";
+import { AccountMenu } from "./AccountMenu";
 import { crumbsFor } from "./breadcrumb";
+import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
 
 const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
@@ -263,20 +263,6 @@ function navigationClassName({ isActive }: { isActive: boolean }) {
 }
 
 /**
- * Extract single initial for avatar from logged-in email.
- *
- * Before login or when email is missing, show "?" to indicate "not yet signed in".
- * Actual avatar menu/profile screen will inherit this state in #263
- * (Email/Password Auth).
- *
- * @param email - Logged-in user email (null if missing).
- * @returns Single character to display in avatar.
- */
-function avatarInitial(email: string | null): string {
-  return email ? email.charAt(0).toUpperCase() : "?";
-}
-
-/**
  * App shell component applied to all Studio pages.
  *
  * @returns Complete layout including sidebar, header, content slot, and global
@@ -290,15 +276,18 @@ export function Layout() {
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
   const isDesktopSidebarCollapsed = useUIStore((state) => state.isDesktopSidebarCollapsed);
   const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
-  const setTheme = useUIStore((state) => state.setTheme);
   const theme = useUIStore((state) => state.theme);
   const toggleMobileSidebar = useUIStore((state) => state.toggleMobileSidebar);
   const toggleDesktopSidebarCollapsed = useUIStore(
     (state) => state.toggleDesktopSidebarCollapsed,
   );
-  const email = useAuthStore((state) => state.email);
   const { pathname } = useLocation();
   const crumbs = crumbsFor(pathname, t);
+  const searchDestinations: SearchDestination[] = [
+    ...navGroups.flatMap((group) => group.items),
+    { to: "/connections", label: t("nav.provider"), description: t("navDescription.provider") },
+    { to: "/settings", label: t("nav.settings"), description: t("navDescription.settings") },
+  ];
 
   useEffect(() => {
     void ensureAdminChecked();
@@ -341,9 +330,9 @@ export function Layout() {
             data-tour="sidebar"
             id="app-sidebar"
           className={[
-            "fixed inset-y-0 left-0 z-40 flex w-72 shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground transition-all lg:static lg:translate-x-0",
+            "fixed inset-y-0 left-0 z-40 flex w-sidebar shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground transition-all lg:static lg:translate-x-0",
             isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full",
-            isDesktopSidebarCollapsed ? "lg:w-20 lg:px-2" : "lg:w-72",
+            isDesktopSidebarCollapsed ? "lg:w-20 lg:px-2" : "lg:w-sidebar",
           ].join(" ")}
         >
           <div className="flex items-start justify-between gap-3 pb-5">
@@ -449,27 +438,6 @@ export function Layout() {
               </NavLink>
             </div>
           </nav>
-
-          <div
-            className={[
-              "mt-4 rounded-lg border border-sidebar-border bg-sidebar-hover p-3",
-              isDesktopSidebarCollapsed ? "lg:sr-only" : "",
-            ].join(" ")}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium">{t("layout.theme")}</p>
-              <select
-                aria-label={t("layout.selectTheme")}
-                className="rounded-lg border border-sidebar-border bg-sidebar px-2.5 py-1.5 text-sm text-sidebar-foreground"
-                onChange={(event) => setTheme(event.target.value as "system" | "light" | "dark")}
-                value={theme}
-              >
-                <option value="system">System</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-            </div>
-          </div>
         </aside>
 
         <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-0">
@@ -507,40 +475,26 @@ export function Layout() {
                 </nav>
               </div>
 
-               {/* Without min-w-0 here, this group loses its minimum-width protection,
-                   shrinking smaller than its content (Assistant button/avatar) in
-                   flex-shrink calculation — those non-truncate buttons overflow and
-                   collide with left subtitle (390px width, UI audit #6-A). Removing
-                   min-w-0 prevents this group from shrinking below its min-content,
-                   letting the left group's truncated title shrink instead. */}
-              <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
-                <AssistantSearchInput />
+              {/* Without min-w-0 here, this group keeps its min-content width, so the
+                  left group's truncating breadcrumb shrinks instead and the buttons never
+                  overlap it (390px width, UI audit #6-A). One AI entry point — Ask
+                  KPubData — next to a search that is navigation only (#523). */}
+              <div className="flex flex-1 items-center justify-end gap-2">
+                <CommandSearch destinations={searchDestinations} />
 
                 <button
                   aria-haspopup="dialog"
                   aria-label={t("layout.openAssistant")}
                   data-tour="assistant-helper"
-                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   onClick={openAssistantDrawer}
                   type="button"
                 >
                   <span aria-hidden="true">✨</span>
-                  <span className="hidden sm:inline">Assistant</span>
+                  <span className="hidden sm:inline">{t("layout.askKpubdata")}</span>
                 </button>
 
-                <LanguageSwitcher />
-
-
-                 {/* Avatar entry point — will expand to actual profile/logout menu in #263
-                      (#247). */}
-                <Link
-                  aria-label={email ? t("layout.goToSettingsFor", { email }) : t("layout.loginRequiredSettings")}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-sm font-semibold text-foreground hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  title={email ?? t("layout.loginRequired")}
-                  to="/settings"
-                >
-                  {avatarInitial(email)}
-                </Link>
+                <AccountMenu />
               </div>
             </div>
           </header>

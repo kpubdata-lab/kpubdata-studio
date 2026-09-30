@@ -1,3 +1,7 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -132,12 +136,12 @@ describe("Layout desktop sidebar collapse (#247)", () => {
     renderLayout();
     const aside = screen.getByRole("navigation", { name: "주 메뉴" }).closest("aside")!;
 
-    expect(aside.className).toContain("lg:w-72");
+    expect(aside.className).toContain("lg:w-sidebar");
 
     fireEvent.click(screen.getByRole("button", { name: "사이드바 접기" }));
 
     expect(aside.className).toContain("lg:w-20");
-    expect(aside.className).not.toContain("lg:w-72");
+    expect(aside.className).not.toContain("lg:w-sidebar");
     // 사이드바 링크는 collapsed 상태에서도 여전히 접근 가능해야 한다(텍스트는 시각적으로만 숨김).
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
     const homeLink = within(nav).getByRole("link", { name: "홈" });
@@ -157,7 +161,7 @@ describe("Layout desktop sidebar collapse (#247)", () => {
     expect(aside.className).toContain("lg:w-20");
 
     fireEvent.click(screen.getByRole("button", { name: "사이드바 펼치기" }));
-    expect(aside.className).toContain("lg:w-72");
+    expect(aside.className).toContain("lg:w-sidebar");
     expect(aside.className).not.toContain("lg:w-20");
   });
 
@@ -173,5 +177,13 @@ describe("Layout desktop sidebar collapse (#247)", () => {
     fireEvent.click(screen.getByRole("button", { name: "사이드바 열기/닫기" }));
     expect(useUIStore.getState().isMobileSidebarOpen).toBe(true);
     expect(useUIStore.getState().isDesktopSidebarCollapsed).toBe(true);
+  });
+});
+
+describe("Layout sidebar width (#523)", () => {
+  it("is the 232px shell token, so result tables keep the width", () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "src", "globals.css"), "utf8");
+    // 14.5rem at the 16px root size is 232px — the warehouse prototype's shell column.
+    expect(css).toMatch(/--spacing-sidebar:\s*14\.5rem;/);
   });
 });

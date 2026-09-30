@@ -1,7 +1,7 @@
 /**
  * Assistant conversation session (#256).
  *
- * `AssistantDrawer`, `/assistant` page, and top `AssistantSearchInput` all share this single hook —
+ * `AssistantDrawer` and the `/assistant` page share this single hook —
  * don't create new assistant system, reuse existing `features/assistant` (BYOK provider/config,
  * scrubSecrets). Conversation turn state in zustand singleton store, so closing/opening drawer
  * (and navigating to `/assistant` page) continues same conversation.
@@ -465,7 +465,7 @@ export function useAssistantSession(): UseAssistantSessionResult {
     [setActionState],
   );
 
-  // Top search bar (AssistantSearchInput) left question for consumption. AssistantDrawer and `/assistant` page may mount
+  // A screen (Run detail, Quality, …) left a seeded question for consumption. AssistantDrawer and `/assistant` page may mount
   // simultaneously (both use this hook); atomic pop from consumeSeed() ensures ask() called exactly once —
   // prevents same question executing twice.
   useEffect(() => {

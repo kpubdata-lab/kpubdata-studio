@@ -219,3 +219,11 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
+
+/*
+ * Shell dimensions (#523). The sidebar is narrow so a result table gets the width;
+ * `w-sidebar` reads this. The warehouse prototype's shell grid uses the same 232px.
+ */
+@theme {
+  --spacing-sidebar: 14.5rem;
+}

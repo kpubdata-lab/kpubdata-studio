@@ -82,13 +82,4 @@ describe("global Ask KPubData drawer (#247)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 닫기" }));
     expect(screen.queryByRole("dialog", { name: "Ask KPubData" })).not.toBeInTheDocument();
   });
-
-  it("opens the drawer when the topbar search is submitted", () => {
-    renderLayoutAt("/");
-    const searchInput = screen.getByLabelText("Ask KPubData 에 자연어로 데이터 물어보기");
-    fireEvent.change(searchInput, { target: { value: "서울 대기오염 데이터셋 찾아줘" } });
-    fireEvent.submit(searchInput.closest("form")!);
-
-    expect(screen.getByRole("dialog", { name: "Ask KPubData" })).toBeInTheDocument();
-  });
 });

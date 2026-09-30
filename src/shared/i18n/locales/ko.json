@@ -6,14 +6,39 @@
     "expandSidebar": "사이드바 펼치기",
     "collapseSidebar": "사이드바 접기",
     "theme": "테마",
-    "selectTheme": "테마 선택",
     "toggleSidebar": "사이드바 열기/닫기",
     "openAssistant": "Ask KPubData 열기",
-    "goToSettingsFor": "{{email}} 설정으로 이동",
-    "loginRequiredSettings": "로그인이 필요합니다 — 설정으로 이동",
-    "loginRequired": "로그인이 필요합니다",
     "breadcrumb": "현재 위치",
-    "mainNav": "주 메뉴"
+    "mainNav": "주 메뉴",
+    "askKpubdata": "Ask KPubData",
+    "themeMode": {
+      "system": "시스템",
+      "light": "라이트",
+      "dark": "다크"
+    },
+    "search": {
+      "open": "페이지·테이블 검색",
+      "button": "검색",
+      "shortcut": "⌘K",
+      "dialog": "검색",
+      "inputLabel": "페이지·테이블 검색",
+      "placeholder": "페이지로 이동하거나 테이블 이름으로 검색…",
+      "page": "페이지",
+      "inTables": "테이블에서 “{{query}}” 검색",
+      "inCatalog": "카탈로그에서 “{{query}}” 검색",
+      "close": "검색 닫기"
+    },
+    "account": {
+      "open": "계정 메뉴",
+      "openFor": "{{email}} 계정 메뉴",
+      "title": "계정",
+      "signedInAs": "로그인 계정",
+      "notSignedIn": "로그인하지 않았습니다",
+      "language": "언어",
+      "help": "도움말 (문서)",
+      "signOut": "로그아웃",
+      "signIn": "로그인"
+    }
   },
   "reportEditor": {
     "untitled": "제목 없음",
@@ -72,10 +97,6 @@
     "sql": "테이블 스냅샷에 SQL 질의",
     "admin": "정책과 전체 실행 (관리자)",
     "analyses": "스냅샷과 함께 보관한 질의"
-  },
-  "languageSwitcher": {
-    "toggle": "언어 전환",
-    "switchTo": "{{language}}로 전환"
   },
   "builds": {
     "statusFilter": {
@@ -621,10 +642,6 @@
     },
     "scrub": {
       "unknownPlaceholder": "알 수 없는 시크릿 플레이스홀더가 포함되어 있습니다."
-    },
-    "search": {
-      "label": "Ask KPubData 에 자연어로 데이터 물어보기",
-      "placeholder": "Ask KPubData 에 데이터에 대해 물어보세요…"
     },
     "session": {
       "actionRejected": "사용자가 이 action을 거부했습니다.",
