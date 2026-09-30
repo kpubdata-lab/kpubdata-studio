@@ -102,7 +102,14 @@ export const buildResponseSchema = z.discriminatedUnion("status", [
  *
  * `cancelling`/`cancelled` are reserved vocabulary ahead of builder #481
  * cooperative cancellation (no endpoint currently causes the transition).
- * `response` is the final build response body of a successful job.
+ *
+ * `response` is whatever body the job's build produced — the contract types it only as
+ * `object | null` (#603). A succeeded job may carry a minimal `{run_id, status}`, and a
+ * job that failed before a build body existed carries an error body such as
+ * `{error: "provider client unavailable"}`. Requiring the full `POST /build` shape here
+ * rejected those jobs, so the poll reported a schema mismatch instead of the job's
+ * `status`/`error`. Consumers narrow it with `buildJobResponseSchema`, which checks only
+ * what they read. The contract's "success only" wording is kpubdata-builder#921.
  */
 export const buildJobSchema = z.object({
   run_id: z.string(),
@@ -110,11 +117,24 @@ export const buildJobSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   created_by: z.string().nullable().optional(),
-  response: buildResponseSchema.nullable().optional(),
+  response: z.record(z.string(), z.unknown()).nullable().optional(),
   error: z.string().nullable().optional(),
 });
 
+/**
+ * The parts of a job's `response` Studio reads, each optional (#603).
+ *
+ * Only the fields that decide a partial failure are checked: the body's `status`, its
+ * top-level `error` and each outcome's `error`. Anything else in the body is ignored.
+ */
+export const buildJobResponseSchema = z.object({
+  status: z.string().optional(),
+  error: z.string().nullable().optional(),
+  outcomes: z.array(z.object({ error: z.string().nullable().optional() })).optional(),
+});
+
 export type BuildJob = z.infer<typeof buildJobSchema>;
+export type BuildJobResponse = z.infer<typeof buildJobResponseSchema>;
 
 /**
  * GET /artifacts/{run_id} response schema
@@ -978,11 +998,13 @@ export const monitoringQueueSchema = z.object({
   total: z.number().int().nullable(),
 });
 
+// The contract's MonitoringWorkerStatus sends null for the counts when the pool is
+// unavailable (#607, found by the contract drift check) — never 0 in disguise.
 export const monitoringWorkersSchema = z.object({
   availability: monitoringAvailabilitySchema,
-  active: z.number().int(),
-  capacity: z.number().int(),
-  utilization: z.number(),
+  active: z.number().int().nullable(),
+  capacity: z.number().int().nullable(),
+  utilization: z.number().nullable(),
 });
 
 export const monitoringArtifactStoreSchema = z.object({

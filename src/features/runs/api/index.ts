@@ -8,7 +8,8 @@
 import { i18n } from "@/shared/i18n";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import { serializeSpec } from "@/features/build-spec/specMapping";
-import { builderApi, isRealBuilderEnabled, type BuildSummary } from "@/shared/lib/builderApi";
+import { builderApi, isRealBuilderEnabled, type BuildJob, type BuildSummary } from "@/shared/lib/builderApi";
+import { buildJobResponseSchema } from "@/shared/lib/builderApi.schema";
 import { DEMO_DATASETS, type DemoDataset } from "@/shared/lib/demoDatasets";
 import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
 
@@ -185,6 +186,20 @@ async function runAsyncBuild(
     onJobStatus?.(polled.status),
   );
 
+  return buildRunFromJob(job, spec, startedAt);
+}
+
+/**
+ * Decide a terminal async job's BuildRun (#603).
+ *
+ * The job's own `status` and `error` decide first: a failed job shows Builder's reason,
+ * whatever its `response` holds. A succeeded job's `response` is contract-typed only as
+ * `object | null`, so it is narrowed to the fields read here — a body that says
+ * `status: "failed"` is a partial failure (same wire as sync /build 502), reported with
+ * priority topmost error → outcomes[].error → default message (#75). A body without a
+ * usable shape (absent, null, minimal `{run_id, status: "ok"}`) leaves the job succeeded.
+ */
+export function buildRunFromJob(job: BuildJob, spec: BuildSpec, startedAt: string): BuildRun {
   const finishedAt = job.updated_at;
   // run_id is authoritative from server response (same as submitted but unified from
   // response).
@@ -192,6 +207,8 @@ async function runAsyncBuild(
   if (job.status === "cancelled") {
     return { id: finalRunId, spec, status: "cancelled", startedAt, finishedAt };
   }
+  const parsed = job.response ? buildJobResponseSchema.safeParse(job.response) : null;
+  const body = parsed?.success ? parsed.data : null;
   if (job.status === "failed") {
     return {
       id: finalRunId,
@@ -199,26 +216,13 @@ async function runAsyncBuild(
       status: "failed",
       startedAt,
       finishedAt,
-      error: job.error ?? i18n.t("runs.build.jobFailed"),
+      error: job.error || body?.error || i18n.t("runs.build.jobFailed"),
     };
   }
-  const response = job.response;
-  // Successful job's final build response can be partial failure
-  // (status: "failed", same wire as 502) — distinguish terminal failure from
-  // partial-result, with priority: topmost error → outcomes[].error → default
-  // message (#75), same as sync /build 502.
-  if (response && response.status !== "ok") {
-    const outcomeReason = response.outcomes.find((outcome) => outcome.error)?.error;
-    const reason =
-      response.error || outcomeReason || i18n.t("runs.build.someSourcesFailed");
-    return {
-      id: finalRunId,
-      spec,
-      status: "failed",
-      startedAt,
-      finishedAt,
-      error: reason,
-    };
+  if (body?.status !== undefined && body.status !== "ok") {
+    const outcomeReason = body.outcomes?.find((outcome) => outcome.error)?.error;
+    const reason = body.error || outcomeReason || i18n.t("runs.build.someSourcesFailed");
+    return { id: finalRunId, spec, status: "failed", startedAt, finishedAt, error: reason };
   }
   return { id: finalRunId, spec, status: "succeeded", startedAt, finishedAt };
 }
