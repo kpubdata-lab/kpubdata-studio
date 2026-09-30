@@ -1120,7 +1120,14 @@
     "draft": {
       "prompt": "There is a saved draft. Continue editing it?",
       "restore": "Restore",
-      "discard": "Discard"
+      "discard": "Discard",
+      "promptBoth": "Two drafts are waiting: one you saved here and one Ask KPubData made. Open one — the other is deleted.",
+      "restoreSaved": "Open saved draft",
+      "restoreAsk": "Open Ask KPubData draft",
+      "discardAll": "Delete both",
+      "openFailed": "The Ask KPubData draft could not open as it was: {{error}}",
+      "reenterParams": "Its provider, source dataset, table id and title are filled in. Enter the request parameters again. The draft is kept until you create the table or delete it.",
+      "discardKept": "Delete draft"
     },
     "nav": {
       "back": "Back",

@@ -28,7 +28,7 @@ import { ReviewBuildStep } from "@/features/add-data/components/ReviewBuildStep"
 import { SourceStep } from "@/features/add-data/components/SourceStep";
 import { getSavedSpec } from "@/features/workspace/savedSpecs";
 import { clearAddDataDraft, hasAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
-import { discardFormDraft, hasFormDraft, takeFormDraftSpec } from "@/features/add-data/formDraft";
+import { discardFormDraft, hasFormDraft, takeFormDraftSpec, type FormDraftResult } from "@/features/add-data/formDraft";
 import { checkRequiredParams } from "@/features/add-data/requiredParams";
 import { findDataset, identityFromCatalog, identityFromFilename, identityFromUrl } from "@/features/add-data/identity";
 import {
@@ -43,6 +43,7 @@ import {
   type PreviewSampleMode,
 } from "@/features/add-data/model";
 import { BuildSpecShapeError, YamlSyntaxError, fromYamlText, toYamlText } from "@/features/build-spec/yamlText";
+import type { BuildFormValues } from "@/features/build-spec/newBuildModel";
 import type { BuildSpec, SourceKind } from "@/shared/lib/types";
 import { previewBuildDetailed } from "@/features/preview/api";
 import { useBuildJob } from "@/features/runs/useBuildJob";
@@ -53,6 +54,27 @@ import { Button, Card, PageHeader, Stepper } from "@/shared/ui";
 // Labels must follow screen language, so create at render time, not as constants.
 const STEP_IDS = ["configure", "preview", "create"] as const;
 
+
+/**
+ * What the form can use of an Ask KPubData draft that did not become a spec: the source and
+ * the table's identity, with empty parameters to type again. Every value set here counts
+ * as chosen, so the catalog's identity sync does not overwrite it.
+ */
+function draftFromFormValues(values: BuildFormValues): AddDataDraft {
+  return {
+    ...INITIAL_DRAFT,
+    sourceKind: "public_api",
+    publicApi: { provider: values.provider, dataset: values.sourceDataset, sourceParams: "{}" },
+    datasetId: values.datasetId,
+    title: values.title,
+    description: values.description,
+    datasetIdTouched: values.datasetId !== "",
+    titleTouched: values.title !== "",
+    descriptionTouched: values.description !== "",
+    exportFormats: values.exportFormats.length > 0 ? values.exportFormats : INITIAL_DRAFT.exportFormats,
+    outputPath: values.outputPath,
+  };
+}
 
 export function AddDataPage() {
   const { t } = useTranslation();
@@ -74,8 +96,12 @@ export function AddDataPage() {
     { status: "idle", valid: false, errors: [] },
   );
   const [yamlEditError, setYamlEditError] = useState<string>();
-  // Either this flow's own draft or a form-shaped one Ask KPubData left (formDraft.ts).
-  const [draftAvailable, setDraftAvailable] = useState(() => hasAddDataDraft() || hasFormDraft());
+  // This flow's own draft and a form-shaped one Ask KPubData left (formDraft.ts). When
+  // both wait, the banner makes the person pick one and removes the other.
+  const [waitingDrafts, setWaitingDrafts] = useState(() => ({ saved: hasAddDataDraft(), ask: hasFormDraft() }));
+  // Why the Ask KPubData draft could not become a spec. The draft stays in storage until
+  // the table is created or the person discards it (#534 review).
+  const [formDraftError, setFormDraftError] = useState<string | null>(null);
   const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
@@ -429,22 +455,49 @@ export function AddDataPage() {
     setDraftSaved(true);
   }
 
-  function restoreDraft() {
-    setDraftAvailable(false);
+  /** Open this flow's own saved draft; a waiting Ask KPubData draft is the one not chosen. */
+  function restoreSavedDraft() {
+    setWaitingDrafts({ saved: false, ask: false });
+    if (waitingDrafts.ask) discardFormDraft();
     const saved = loadAddDataDraft();
-    if (saved) {
-      setDraft(saved);
+    if (saved) setDraft(saved);
+    else clearAddDataDraft();
+  }
+
+  /** Open the Ask KPubData draft; a waiting saved draft of this flow is the one not chosen. */
+  function restoreAskDraft() {
+    setWaitingDrafts({ saved: false, ask: false });
+    if (waitingDrafts.saved) clearAddDataDraft();
+    openFormDraft(takeFormDraftSpec());
+  }
+
+  /**
+   * A draft that became a spec opens whole. One that could not keeps what the form can use
+   * — provider, dataset, table id, title — and says why, so the parameters are typed again
+   * instead of the draft vanishing.
+   */
+  function openFormDraft(result: FormDraftResult | null) {
+    if (!result) return;
+    if ("spec" in result) {
+      applySpec(result.spec, INITIAL_DRAFT);
       return;
     }
-    clearAddDataDraft();
-    const spec = takeFormDraftSpec();
-    if (spec) applySpec(spec, INITIAL_DRAFT);
+    setDraft(draftFromFormValues(result.values));
+    if (result.values.provider && result.values.sourceDataset) {
+      lastIdentitySourceRef.current = `public_api:${result.values.provider}:${result.values.sourceDataset}`;
+    }
+    setFormDraftError(result.error);
   }
 
   function discardDraft() {
     clearAddDataDraft();
     discardFormDraft();
-    setDraftAvailable(false);
+    setWaitingDrafts({ saved: false, ask: false });
+  }
+
+  function discardFailedFormDraft() {
+    discardFormDraft();
+    setFormDraftError(null);
   }
 
   const specResult = buildSpecFromDraft(draft);
@@ -457,9 +510,11 @@ export function AddDataPage() {
   useEffect(() => {
     if (job.status === "succeeded" && job.run) {
       clearAddDataDraft();
+      // The Ask KPubData draft that could not open whole was kept for this table; it is done.
+      if (formDraftError !== null) discardFormDraft();
       navigate(`/refresh-jobs/${encodeURIComponent(job.run.id)}`);
     }
-  }, [job.status, job.run, navigate]);
+  }, [job.status, job.run, navigate, formDraftError]);
 
   return (
     // Sticky bottom actions (Prev/Draft Save/Next, below) are sticky only on sm<, and even
@@ -479,13 +534,32 @@ export function AddDataPage() {
         </Card>
       ) : null}
 
-      {draftAvailable ? (
+      {waitingDrafts.saved && waitingDrafts.ask ? (
+        <Card variant="dashed" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-foreground">{t("addData.draft.promptBoth")}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={restoreSavedDraft}>{t("addData.draft.restoreSaved")}</Button>
+            <Button size="sm" variant="secondary" onClick={restoreAskDraft}>{t("addData.draft.restoreAsk")}</Button>
+            <Button size="sm" variant="ghost" onClick={discardDraft}>{t("addData.draft.discardAll")}</Button>
+          </div>
+        </Card>
+      ) : waitingDrafts.saved || waitingDrafts.ask ? (
         <Card variant="dashed" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-foreground">{t("addData.draft.prompt")}</p>
           <div className="flex gap-2">
-            <Button size="sm" onClick={restoreDraft}>{t("addData.draft.restore")}</Button>
+            <Button size="sm" onClick={waitingDrafts.saved ? restoreSavedDraft : restoreAskDraft}>{t("addData.draft.restore")}</Button>
             <Button size="sm" variant="ghost" onClick={discardDraft}>{t("addData.draft.discard")}</Button>
           </div>
+        </Card>
+      ) : null}
+
+      {formDraftError !== null ? (
+        <Card variant="error" role="alert" className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1 text-sm">
+            <p className="font-medium">{t("addData.draft.openFailed", { error: formDraftError })}</p>
+            <p>{t("addData.draft.reenterParams")}</p>
+          </div>
+          <Button size="sm" variant="ghost" onClick={discardFailedFormDraft}>{t("addData.draft.discardKept")}</Button>
         </Card>
       ) : null}
 

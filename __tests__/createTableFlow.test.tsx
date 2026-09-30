@@ -11,7 +11,9 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { CreateTableRedirect } from "@/app/createTableRedirect";
-import { saveDraft } from "@/features/build-spec/draftStorage";
+import { hasAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
+import { INITIAL_DRAFT } from "@/features/add-data/model";
+import { hasDraft, saveDraft } from "@/features/build-spec/draftStorage";
 import { createSavedSpec } from "@/features/workspace/savedSpecs";
 import { AddDataPage } from "@/pages/AddDataPage";
 import { NewBuildPage } from "@/pages/NewBuildPage";
@@ -143,6 +145,90 @@ describe("one table creation flow (#534)", () => {
 
     expect(screen.getByRole("button", { name: /Public API/ })).toHaveAttribute("aria-pressed", "true");
     expect(await screen.findByText("대기 초안")).toBeInTheDocument();
+  });
+
+  describe("an Ask KPubData draft that cannot become a spec is kept, not lost (#534 review)", () => {
+    const askDraft = {
+      datasetId: "air-draft",
+      title: "대기 초안",
+      description: "초안 설명",
+      provider: "datago",
+      sourceDataset: "air_quality",
+      sourceParams: "{}",
+      outputPath: "artifacts/builds/air-draft",
+      exportFormats: ["jsonl"],
+    };
+
+    it("a draft whose parameters were redacted in storage: load → draft still there and error shown", async () => {
+      saveDraft({ ...askDraft, sourceParams: JSON.stringify({ serviceKey: "__KPD_PARAMS_SECRET_REDACTED__" }) });
+
+      renderAt("/add");
+      fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
+
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent("시크릿이 포함된 파라미터 값이 제거되었습니다");
+      expect(alert).toHaveTextContent("요청 파라미터를 다시 입력하세요");
+      expect(hasDraft()).toBe(true);
+      // What the form can use is filled in; the parameters are asked for again.
+      expect(screen.getByRole("button", { name: /Public API/ })).toHaveAttribute("aria-pressed", "true");
+      expect(await screen.findByText("대기 초안")).toBeInTheDocument();
+    });
+
+    it("a partial draft: load → draft still there and error shown", async () => {
+      saveDraft({ ...askDraft, sourceDataset: "", sourceParams: "{\"pageNo\": " });
+
+      renderAt("/add");
+      fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
+
+      const message = await screen.findByText(/Ask KPubData 초안을 그대로 열 수 없습니다/);
+      expect(message.closest("[role='alert']")).toHaveTextContent("요청 파라미터를 다시 입력하세요");
+      expect(hasDraft()).toBe(true);
+    });
+
+    it("deleting the kept draft from the error removes it", async () => {
+      saveDraft({ ...askDraft, sourceParams: JSON.stringify({ serviceKey: "__KPD_PARAMS_SECRET_REDACTED__" }) });
+
+      renderAt("/add");
+      fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
+      fireEvent.click(within(await screen.findByRole("alert")).getByRole("button", { name: "초안 삭제" }));
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(hasDraft()).toBe(false);
+    });
+
+    it("a draft that becomes a spec is removed once opened", async () => {
+      saveDraft(askDraft);
+
+      renderAt("/add");
+      fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
+
+      expect(await screen.findByText("대기 초안")).toBeInTheDocument();
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(hasDraft()).toBe(false);
+    });
+  });
+
+  it("with a saved draft and an Ask KPubData draft, opening one deletes the other", async () => {
+    saveAddDataDraft({ ...INITIAL_DRAFT, sourceKind: "file" });
+    saveDraft({
+      datasetId: "air-draft",
+      title: "대기 초안",
+      description: "초안 설명",
+      provider: "datago",
+      sourceDataset: "air_quality",
+      sourceParams: "{}",
+      outputPath: "artifacts/builds/air-draft",
+      exportFormats: ["jsonl"],
+    });
+
+    renderAt("/add");
+    expect(await screen.findByText(/초안이 두 개 있습니다/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Ask KPubData 초안 열기" }));
+
+    expect(await screen.findByText("대기 초안")).toBeInTheDocument();
+    expect(hasAddDataDraft()).toBe(false);
+    expect(hasDraft()).toBe(false);
+    expect(screen.queryByText(/초안이 두 개 있습니다/)).not.toBeInTheDocument();
   });
 
   it("sends the edit page without a table to the creation flow", () => {
