@@ -25,13 +25,13 @@ describe("grouped sidebar navigation (#247)", () => {
     );
   });
 
-  it("groups the menu as DATA / ANALYZE / OPERATE, with no AI group (#421, #423)", () => {
+  it("groups the menu as 데이터 / 분석 / 운영 (DATA / ANALYZE / OPERATE), with no AI group (#421, #423, #588)", () => {
     renderLayoutAt("/");
 
     const nav = screen.getByRole("navigation", { name: "주 메뉴" });
-    // Group headings are the upper-case labels; exactly these three, in this order.
-    const headings = within(nav).getAllByText(/^[A-Z]+$/).map((node) => node.textContent);
-    expect(headings).toEqual(["DATA", "ANALYZE", "OPERATE"]);
+    // Group headings are the paragraphs above each group; exactly these three, in this order.
+    const headings = Array.from(nav.querySelectorAll(":scope > div > p")).map((node) => node.textContent);
+    expect(headings).toEqual(["데이터", "분석", "운영"]);
   });
 
   it("has no build-console destinations: creating a table is an action, not a menu item (#423)", () => {

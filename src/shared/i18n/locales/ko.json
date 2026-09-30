@@ -77,7 +77,7 @@
     "addBlock": "+ 사용자 작성 블록 추가"
   },
   "nav": {
-    "groupData": "DATA",
+    "groupData": "데이터",
     "home": "홈",
     "discover": "카탈로그",
     "workspace": "작업대",
@@ -88,8 +88,8 @@
     "provider": "연결",
     "monitoring": "모니터링",
     "settings": "설정",
-    "groupAnalyze": "ANALYZE",
-    "groupOperate": "OPERATE",
+    "groupAnalyze": "분석",
+    "groupOperate": "운영",
     "sql": "SQL Workspace",
     "admin": "관리",
     "analyses": "저장된 분석"
@@ -164,22 +164,22 @@
       "analyze": "이 Run 분석",
       "title": "갱신 상세",
       "back": "← 갱신 이력",
-      "pipelineTitle": "Pipeline / Stage Progress",
-      "qualityCheckpoint": "Quality checkpoint",
-      "availability": "availability: {{value}}",
-      "actualVsThreshold": "actual {{actual}} / threshold {{threshold}}",
-      "failureEvidence": "Failure evidence",
-      "failedStages": "failed stage: {{failed}} · last completed stage: {{completed}}",
-      "stageUnknown": "unknown",
-      "stageNone": "none",
-      "builderError": "KPubData Builder error: {{error}}",
-      "runEvents": "Run Events",
-      "specSnapshot": "BuildSpec snapshot",
-      "digest": "digest: {{digest}}",
-      "actualVsThresholdFailed": "actual {{actual}} vs threshold {{threshold}}"
+      "pipelineTitle": "파이프라인 / 단계 진행",
+      "qualityCheckpoint": "품질 점검",
+      "availability": "평가 가능 여부: {{value}}",
+      "actualVsThreshold": "실제값 {{actual}} / 기준값 {{threshold}}",
+      "failureEvidence": "실패 근거",
+      "failedStages": "실패한 단계: {{failed}} · 마지막 완료 단계: {{completed}}",
+      "stageUnknown": "알 수 없음",
+      "stageNone": "없음",
+      "builderError": "KPubData Builder 오류: {{error}}",
+      "runEvents": "실행 이벤트",
+      "specSnapshot": "BuildSpec 스냅샷",
+      "digest": "다이제스트: {{digest}}",
+      "actualVsThresholdFailed": "실제값 {{actual}}, 기준값 {{threshold}}"
     },
     "stage": {
-      "forbidden": "이 Run의 Stage Progress를 조회할 권한이 없습니다.",
+      "forbidden": "이 Run의 단계 진행을 조회할 권한이 없습니다.",
       "noneTitle": "Stage 정보가 없습니다",
       "noneDesc": "이 run에 알려진 source가 없습니다.",
       "noEvaluated": "평가된 check 없음"
@@ -197,12 +197,12 @@
       "perSource": "Source별 평가 현황",
       "noEvalResult": "평가된 결과 없음 (N/A)",
       "noWarnFail": "WARN/FAIL 결과가 없습니다.",
-      "drift": "Schema drift {{count}}건: {{kinds}}",
-      "viewCenter": "Quality Center에서 상세 보기"
+      "drift": "스키마 변경 {{count}}건: {{kinds}}",
+      "viewCenter": "품질 센터에서 상세 보기"
     },
     "events": {
       "failedCount": "{{count}}건 실패",
-      "note": "Stage Progress(#488)/Quality(#486)의 판정을 대체하지 않는 append-only evidence입니다.",
+      "note": "단계 진행(#488)/Quality(#486)의 판정을 대체하지 않는 append-only evidence입니다.",
       "notFound": "이 Run의 event timeline을 찾을 수 없습니다(404).",
       "forbidden": "이 Run의 event timeline을 조회할 권한이 없습니다.",
       "loadError": "Event timeline을 불러오지 못했습니다: {{error}}"
@@ -228,7 +228,7 @@
     },
     "table": {
       "caption": "갱신 이력",
-      "runId": "Run ID",
+      "runId": "실행 ID",
       "table": "테이블",
       "status": "상태",
       "started": "시작",
@@ -398,7 +398,7 @@
       "describe": {
         "openProvider": "Provider \"{{provider}}\" 화면 열기",
         "openBuild": "Run \"{{runId}}\" 상세 열기",
-        "openQuality": "Quality Center에서 \"{{datasetId}}\" 보기",
+        "openQuality": "품질 센터에서 \"{{datasetId}}\" 보기",
         "patchSpec": "run \"{{runId}}\"의 BuildSpec에 {{count}}건 변경 제안",
         "createDraft": "새 테이블 초안 만들기: {{title}}",
         "addReportBlock": "Report 참고 노트로 추가"
@@ -433,13 +433,13 @@
       "hintNoRun": "Run을 선택하면 Run 및 Stage 근거를 분석할 수 있습니다.",
       "hintMultiSource": "이 Run에는 source가 여러 개 있습니다. 분석할 source를 먼저 선택하세요.",
       "hintNoStage": "Run 전체를 분석 중입니다. SQL을 생성하려면 Silver 또는 Gold를 선택하세요.",
-      "hintBronze": "Bronze에서는 Generated SQL을 실행할 수 없습니다. Silver 또는 Gold를 선택하세요.",
+      "hintBronze": "Bronze에서는 생성된 SQL을 실행할 수 없습니다. Silver 또는 Gold를 선택하세요.",
       "hintSqlReady": "{{stage}} schema 기반 질문 및 SQL 생성 가능",
       "page": {
-        "home": "Home",
-        "discover": "Discover",
-        "workspace": "Workspace",
-        "add-data": "Add Data",
+        "home": "홈",
+        "discover": "카탈로그",
+        "workspace": "작업대",
+        "add-data": "테이블 만들기",
         "dataset-detail": "테이블 상세",
         "dataset-catalog": "테이블 카탈로그",
         "build-new": "테이블 만들기",
@@ -451,13 +451,13 @@
         "validate": "검증",
         "preview": "미리보기",
         "artifacts": "스냅샷 파일",
-        "builds": "Runs",
-        "quality": "Quality",
+        "builds": "갱신 이력",
+        "quality": "품질",
         "assistant": "Ask KPubData",
-        "reports": "Reports",
-        "provider": "Provider",
-        "monitoring": "Monitoring",
-        "settings": "Settings",
+        "reports": "리포트",
+        "provider": "연결",
+        "monitoring": "모니터링",
+        "settings": "설정",
         "sql": "SQL Workspace",
         "admin": "관리",
         "analyses": "저장된 분석"
@@ -483,14 +483,14 @@
     "demo": {
       "disclaimer": "[DEMO] mock 데이터 기반 예시 응답입니다 — 실제 분석 결과가 아닙니다.",
       "datasetStatus": "테이블 \"{{title}}\"({{datasetId}})의 최신 상태는 \"{{status}}\"입니다.",
-      "qualityReason": "[DEMO] Quality Center에서 이 run의 실제 rule 결과를 확인할 수 있습니다.",
+      "qualityReason": "[DEMO] 품질 센터에서 이 run의 실제 rule 결과를 확인할 수 있습니다.",
       "demoNote": "[DEMO] \"{{title}}\" 데모 분석 — mock 데이터 기반이며 실제 분석이 아닙니다.",
       "reportReason": "[DEMO] 이 데모 응답을 참고 노트로 Report에 남길 수 있습니다.",
       "noDataset": "현재 선택된 테이블이 없어 일반 안내만 제공합니다. 테이블을 선택하면 더 구체적인 데모를 볼 수 있습니다.",
       "noQuality": "평가된 Quality 결과가 없습니다.",
       "qualitySummary": "Quality 결과 요약: {{summary}}.",
-      "sqlNote": "Generated SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Builder 호출 없음).",
-      "stageHint": "위 Stage 선택에서 Silver 또는 Gold를 고르면 Generated SQL·Result Preview 데모도 함께 볼 수 있습니다."
+      "sqlNote": "생성된 SQL은 데모용 미리보기 조회입니다 — 실행하면 mock 결과가 표시됩니다(실제 Builder 호출 없음).",
+      "stageHint": "위 Stage 선택에서 Silver 또는 Gold를 고르면 생성된 SQL·Result Preview 데모도 함께 볼 수 있습니다."
     },
     "drawer": {
       "collapseLabel": "Ask KPubData 기본 너비로 보기",
@@ -570,7 +570,7 @@
       "rowsShown": "{{rows}}행 표시 · {{scope}} · {{ms}}ms",
       "truncated": "일부 결과만 표시 중(truncated)",
       "all": "전체 결과",
-      "copySql": "Generated SQL 복사",
+      "copySql": "생성된 SQL 복사",
       "copy": "복사",
       "run": "실행",
       "runningEllipsis": "실행 중…",
@@ -579,10 +579,10 @@
       "cancelled": "요청이 취소되었습니다.",
       "unknownError": "Query 실행 중 알 수 없는 오류가 발생했습니다.",
       "mockUnsupported": "mock 모드에서는 Query 실행을 지원하지 않습니다. VITE_USE_REAL_BUILDER=true로 실제 KPubData Builder에 연결하세요.",
-      "stageMismatch": "현재 화면 stage({{current}})와 Generated SQL의 stage({{proposed}})가 다릅니다.",
+      "stageMismatch": "현재 화면 stage({{current}})와 생성된 SQL의 stage({{proposed}})가 다릅니다.",
       "stageNone": "없음",
-      "generatedSql": "Generated SQL",
-      "suggestedActions": "Suggested Actions"
+      "generatedSql": "생성된 SQL",
+      "suggestedActions": "제안된 작업"
     },
     "queryError": {
       "unsafe_query": "SQL 구문 오류 또는 허용되지 않은 쿼리입니다.",
@@ -709,7 +709,7 @@
       "back": "첫 테이블 보기"
     },
     "header": {
-      "desc": "모든 테이블의 최근 갱신에서 조치가 필요한 품질 문제(WARN · FAIL · schema drift)를 한 표로 봅니다."
+      "desc": "모든 테이블의 최근 갱신에서 조치가 필요한 품질 문제(WARN · FAIL · 스키마 변경)를 한 표로 봅니다."
     },
     "assistantAnalyze": "이 문제 설명 보기",
     "rowsUnit": "행",
@@ -732,7 +732,7 @@
       "unavailable": "결과 없음(unavailable)"
     },
     "page": {
-      "title": "Quality Center",
+      "title": "품질 센터",
       "meta": "테이블 {{count}}개의 최근 갱신 기준"
     },
     "coverage": {
@@ -768,7 +768,7 @@
         "affected": "영향 행 / 검사 행",
         "snapshot": "스냅샷(run)"
       },
-      "drift": "Schema drift",
+      "drift": "스키마 변경",
       "notApplicable": "해당 없음",
       "tableLevel": "테이블 전체",
       "tableLevelTitle": "특정 컬럼이 아니라 테이블 전체에 대한 규칙입니다",
@@ -1044,10 +1044,10 @@
       "validationTitle": "검증 결과 (Validation)",
       "notEvaluated": "Not evaluated / N/A — 이 preview에서 평가된 quality check가 없습니다.",
       "qualityLink": "상세 Quality 보기",
-      "sourceTabs": "Preview source",
-      "sampleFirst": "first",
-      "sampleRandom": "random",
-      "checksPassed": "checks passed"
+      "sourceTabs": "미리 볼 소스",
+      "sampleFirst": "앞에서부터",
+      "sampleRandom": "무작위",
+      "checksPassed": "검사 통과"
     },
     "configure": {
       "title": "가져오기 설정",
@@ -1096,13 +1096,13 @@
       "datasetIdLabel": "테이블 ID",
       "titleLabel": "제목",
       "descriptionLabel": "설명",
-      "outputTitle": "Output",
+      "outputTitle": "출력",
       "exportLegend": "스냅샷 파일 형식 (최소 1개)",
       "outputPathLabel": "출력 경로 (선택)",
-      "canonicalTitle": "Canonical BuildSpec (GUI ↔ YAML)",
+      "canonicalTitle": "기준 BuildSpec (GUI ↔ YAML)",
       "applyYaml": "YAML 적용",
-      "endpointLabel": "Endpoint",
-      "editorForm": "Form"
+      "endpointLabel": "엔드포인트",
+      "editorForm": "폼"
     },
     "errors": {
       "catalog": "Builder catalog를 불러오지 못했습니다.",
@@ -1166,8 +1166,8 @@
         "url": "HTTPS GET endpoint를 직접 입력합니다(P0: Auth 없음)."
       },
       "kindTitle": {
-        "publicApi": "Public API",
-        "file": "File Upload",
+        "publicApi": "공공 API",
+        "file": "파일 업로드",
         "url": "URL / REST API"
       }
     },
@@ -1197,9 +1197,9 @@
     "fetchFailed": "Quality 조회 실패",
     "noEvaluated": "평가된 결과가 없습니다.",
     "viewQualityDetail": "상세 Quality 보기",
-    "viewInQualityCenter": "Quality Center에서 보기",
+    "viewInQualityCenter": "품질 센터에서 보기",
     "qualityNote": "평가 결과가 없으면 N/A이며 별도 점수를 계산하지 않습니다.",
-    "noDrift": "관찰된 schema drift가 없습니다.",
+    "noDrift": "관찰된 스키마 변경이 없습니다.",
     "noQualityTitle": "평가된 Quality 결과가 없습니다",
     "noQualityDesc": "N/A는 PASS가 아닙니다.",
     "runsNote": "이 테이블의 접근 가능한 run 이력입니다.",
@@ -1250,30 +1250,20 @@
     "previewNone": "미리보기 없음/지원되지 않음",
     "askAboutThis": "이 테이블에 대해 묻기",
     "labels": {
-      "rows": "Rows",
-      "columns": "Columns",
-      "validation": "Validation",
-      "updated": "Updated",
-      "stageResponse": "Builder stage response",
-      "lineage": "Lineage",
-      "source": "Source",
-      "stageDetail": "Stage Detail",
-      "status": "Status",
-      "available": "Available",
-      "providerSource": "Provider / Source",
-      "output": "Output",
-      "preview": "Preview",
-      "table": "Table",
-      "schema": "Schema",
-      "quality": "Quality",
-      "specDigest": "BuildSpec digest",
-      "snapshotFiles": "Snapshot files",
-      "run": "Run"
+      "rows": "행",
+      "columns": "컬럼",
+      "stageResponse": "KPubData Builder 단계 응답",
+      "lineage": "계보",
+      "stageDetail": "단계 상세",
+      "available": "사용 가능",
+      "providerSource": "제공자 / 소스",
+      "specDigest": "BuildSpec 다이제스트",
+      "snapshotFiles": "스냅샷 파일"
     },
     "runLookupUnsupportedTitle": "이 Builder 는 오래된 run 을 찾을 수 없습니다",
     "runLookupUnsupportedBody": "run `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다.",
-    "passportTitle": "Data Passport",
-    "runValue": "Run {{id}}",
+    "passportTitle": "데이터 여권",
+    "runValue": "실행 {{id}}",
     "columnCount": "컬럼 {{count}}개"
   },
   "buildPublish": {
@@ -1321,13 +1311,13 @@
     "abortedTitle": "응답 대기를 중단했습니다.",
     "abortedBody": "브라우저 요청만 중단했으며 원격 게시 작업을 취소한 것은 아닙니다. 게시 결과는 확인되지 않았습니다.",
     "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 KPubData Builder에 저장해야 게시할 수 있습니다.",
-    "readinessTitle": "KPubData Builder readiness",
-    "blockers": "Blockers",
-    "warnings": "Warnings",
-    "destinationLabel": "Hugging Face destination",
-    "publisher": "Publisher",
-    "snapshotFiles": "Snapshot files",
-    "reference": "Reference:"
+    "readinessTitle": "KPubData Builder 게시 준비 상태",
+    "blockers": "차단 사유",
+    "warnings": "경고",
+    "destinationLabel": "Hugging Face 게시 위치",
+    "publisher": "게시자",
+    "snapshotFiles": "스냅샷 파일",
+    "reference": "참조:"
   },
   "settings": {
     "page": {
@@ -1379,7 +1369,7 @@
       "persistOn": "브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요.",
       "persistOff": "브라우저 저장: 꺼짐(메모리 전용). Ask KPubData 화면에서 명시적으로 켤 수 있습니다."
     },
-    "builderBaseUrl": "KPubData Builder API base URL"
+    "builderBaseUrl": "KPubData Builder API 기본 URL"
   },
   "auth": {
     "page": {
@@ -1403,8 +1393,8 @@
       "or": "또는",
       "emailLogin": "KPubData 계정으로 로그인",
       "loginFail": "로그인에 실패했습니다. 잠시 후 다시 시도해주세요.",
-      "tagline": "PUBLIC DATA → AI-READY TABLES",
-      "eyebrow": "WELCOME"
+      "tagline": "공공데이터 → AI가 바로 쓰는 테이블",
+      "eyebrow": "환영합니다"
     },
     "oidc": {
       "errorTitle": "OIDC 인증 설정에 문제가 있습니다.",
@@ -1520,7 +1510,7 @@
         "runStatusUnknown": "해당 Run의 종료 상태는 확인할 수 없습니다."
       },
       "pipeline": {
-        "flow": "**{{sourceKey}}**\n\nSource → Bronze {{bronze}} → Silver {{silver}} → Gold {{gold}}",
+        "flow": "**{{sourceKey}}**\n\n소스 → Bronze {{bronze}} → Silver {{silver}} → Gold {{gold}}",
         "allCompleted": "`{{sourceKey}}`는 Bronze → Silver → Gold까지 모두 정상 처리되었습니다.",
         "failedAndSkipped": "`{{sourceKey}}`는 {{failedStage}} 단계에서 실패하여 {{skippedStage}} 단계가 실행되지 않았습니다.",
         "failed": "`{{sourceKey}}`는 {{stage}} 단계에서 실패했습니다.",
@@ -1547,7 +1537,7 @@
         "duplicatePass": "{{source}}의 중복률은 {{actual}}로 기준값 {{threshold}} 이내여서 {{verb}}했습니다.",
         "duplicateFail": "{{source}}의 중복률은 {{actual}}로 기준값 {{threshold}} 초과해 {{verb}}했습니다.",
         "unknownRule": "{{source}}의 `{{rule}}`{{column}} 결과는 {{verb}}입니다(실제값 {{actual}}, 기준값 {{threshold}}).{{detail}}",
-        "drift": "Schema drift: {{findings}}"
+        "drift": "스키마 변경: {{findings}}"
       },
       "schema": {
         "silver": "{{source}} Silver 결과에서는 {{columns}} 컬럼이 확인되었습니다.",
@@ -1575,12 +1565,12 @@
         "colItem": "항목",
         "colValue": "값",
         "rowDataset": "테이블",
-        "rowProviders": "Provider(s)",
-        "rowSources": "Sources",
+        "rowProviders": "제공자",
+        "rowSources": "소스",
         "rowRun": "기준 Run",
         "rowRunStatus": "Run 상태",
         "rowRunTimes": "Run 시작 / 종료",
-        "rowSpecDigest": "BuildSpec digest",
+        "rowSpecDigest": "BuildSpec 다이제스트",
         "rowUpdatedAt": "테이블 최종 갱신"
       },
       "pipeline": {
@@ -1595,21 +1585,21 @@
         "colActual": "실제값",
         "colThreshold": "기준값",
         "noneEvaluated": "평가된 규칙이 없습니다(evaluated_checks=0).",
-        "noDrift": "schema drift가 관찰되지 않았습니다.",
-        "driftTitle": "Schema drift"
+        "noDrift": "스키마 변경이 관찰되지 않았습니다.",
+        "driftTitle": "스키마 변경"
       },
       "schema": {
         "noSources": "Schema 정보를 불러올 source가 없습니다.",
-        "colColumn": "Column",
-        "colType": "Type",
-        "colNullable": "Nullable",
-        "colUnique": "Unique",
+        "colColumn": "컬럼",
+        "colType": "타입",
+        "colNullable": "Null 허용",
+        "colUnique": "고유",
         "goldNamesOnly": "(gold — column 이름만 제공, dtype 없음)"
       },
       "dataSummary": {
         "loadFailed": "Row count 정보를 불러오지 못했습니다: {{reason}}",
-        "totalLabel": "Total row count",
-        "colRowCount": "Row count",
+        "totalLabel": "전체 행 수",
+        "colRowCount": "행 수",
         "noBreakdown": "source별 row count 정보가 없습니다."
       },
       "output": {
@@ -1656,7 +1646,7 @@
         "quality": "3. 품질 진단",
         "schema": "4. 데이터 구조",
         "data_summary": "5. 데이터 규모",
-        "output": "6. Output"
+        "output": "6. 출력 파일"
       },
       "showDetail": "상세 근거 보기",
       "assistantTitle": "Ask KPubData 분석 · AI 작성",
@@ -1668,9 +1658,9 @@
       "generatedAt": "생성 시각 {{at}}",
       "reason": "판단 근거: {{reason}}",
       "linkedEvidence": "연결된 Evidence: {{refs}}",
-      "stage": "Stage: {{stage}}",
-      "provider": "provider {{provider}}",
-      "model": "model {{model}}"
+      "stage": "단계: {{stage}}",
+      "provider": "제공자 {{provider}}",
+      "model": "모델 {{model}}"
     },
     "assistantPanel": {
       "preset": {
@@ -1759,11 +1749,11 @@
       "schemaNotReached": "이 source는 아직 schema를 만들 수 있는 stage까지 진행되지 않았습니다.",
       "mockNoOutput": "mock/demo 모드에서는 이 run에 실제로 대응하는 output evidence를 제공하지 않습니다.",
       "baseRunMissing": "이 테이블의 run 목록에서 기준 run을 찾을 수 없습니다(삭제되었거나 접근할 수 없음).",
-      "refRun": "Run {{runId}}",
+      "refRun": "실행 {{runId}}",
       "refQuality": "품질",
-      "refSchema": "Schema · {{sourceKey}}",
-      "refStage": "Stage · {{sourceKey}}",
-      "refOutput": "Output"
+      "refSchema": "스키마 · {{sourceKey}}",
+      "refStage": "단계 · {{sourceKey}}",
+      "refOutput": "출력"
     },
     "staleness": {
       "lookupFailed": "조회에 실패했습니다.",
@@ -1779,14 +1769,14 @@
       "countUnit": "{{count}}개",
       "noteUnit": "{{count}}건",
       "none": "없음",
-      "title": "Report Context",
-      "baseRun": "Base Run",
-      "specDigest": "BuildSpec digest",
-      "evidenceStatus": "Evidence Status",
+      "title": "리포트 기준 정보",
+      "baseRun": "기준 실행",
+      "specDigest": "BuildSpec 다이제스트",
+      "evidenceStatus": "근거 상태",
       "askKpubdata": "Ask KPubData"
     },
     "provenance": {
-      "builder": "Builder Evidence",
+      "builder": "KPubData Builder 근거",
       "assistant": "AI 작성 · Ask KPubData",
       "user": "사용자 작성"
     }
@@ -1891,7 +1881,7 @@
     },
     "columns": {
       "source": "소스",
-      "provider": "Provider",
+      "provider": "제공자",
       "access": "접근",
       "maturity": "성숙도",
       "createdTables": "만든 테이블",
@@ -1979,7 +1969,7 @@
       "title": "최근 갱신",
       "seconds": "{{seconds}}초",
       "empty": "최근 24시간 동안 갱신이 없습니다.",
-      "runId": "Run ID",
+      "runId": "실행 ID",
       "status": "상태",
       "started": "시작",
       "duration": "소요 시간"
@@ -2053,13 +2043,13 @@
     "features": {
       "AddData": "테이블 만들기",
       "DatasetCatalog": "테이블 카탈로그",
-      "Discover": "Discover",
+      "Discover": "카탈로그",
       "Assistant": "Ask KPubData",
-      "Monitoring": "Monitoring",
+      "Monitoring": "모니터링",
       "Provider": "연결",
-      "Quality": "Quality",
-      "Reports": "Reports",
-      "Workspace": "Workspace",
+      "Quality": "품질",
+      "Reports": "리포트",
+      "Workspace": "작업대",
       "artifacts": "스냅샷 파일",
       "buildDetail": "실행 상세",
       "buildEdit": "BuildSpec 편집",
@@ -2449,9 +2439,9 @@
         "unknown": "알 수 없음"
       },
       "maturity": {
-        "stable": "Stable",
-        "beta": "Beta",
-        "experimental": "Experimental",
+        "stable": "안정",
+        "beta": "베타",
+        "experimental": "실험",
         "unknown": "알 수 없음"
       }
     }
@@ -2615,53 +2605,53 @@
     "runDetail": "실행 상세",
     "editSpec": "스펙 편집·갱신",
     "run": {
-      "validationSummary": "Validation summary",
-      "evaluatedChecks": "evaluated checks",
-      "recentIssues": "Recent quality issues",
-      "recentRuns": "Recent Runs",
-      "selected": "selected"
+      "validationSummary": "검증 요약",
+      "evaluatedChecks": "평가한 검사",
+      "recentIssues": "최근 품질 문제",
+      "recentRuns": "최근 실행",
+      "selected": "선택됨"
     }
   },
   "labels": {
-    "run": "Run",
-    "source": "Source",
-    "stage": "Stage",
-    "provider": "Provider",
-    "table": "Table",
-    "column": "Column",
-    "type": "Type",
-    "status": "Status",
-    "updated": "Updated",
-    "rule": "Rule",
-    "result": "Result",
-    "actual": "Actual",
-    "threshold": "Threshold",
-    "missing": "Missing",
-    "quality": "Quality",
-    "output": "Output",
-    "runId": "Run ID",
-    "target": "Target",
-    "destination": "Destination",
-    "message": "Message",
-    "metrics": "Metrics",
-    "row": "Row",
-    "schemaDrift": "Schema Drift",
-    "validation": "Validation",
-    "pipeline": "Pipeline",
-    "schema": "Schema",
-    "duplicate": "Duplicate",
-    "range": "Range",
-    "runs": "Runs",
-    "public": "Public",
-    "private": "Private",
-    "done": "Done",
-    "ready": "Ready",
-    "pending": "Pending",
-    "rows": "{{count}} rows",
+    "run": "실행",
+    "source": "소스",
+    "stage": "단계",
+    "provider": "제공자",
+    "table": "테이블",
+    "column": "컬럼",
+    "type": "타입",
+    "status": "상태",
+    "updated": "갱신 시각",
+    "rule": "규칙",
+    "result": "결과",
+    "actual": "실제값",
+    "threshold": "기준값",
+    "missing": "결측",
+    "quality": "품질",
+    "output": "출력",
+    "runId": "실행 ID",
+    "target": "대상",
+    "destination": "게시 위치",
+    "message": "메시지",
+    "metrics": "지표",
+    "row": "행",
+    "schemaDrift": "스키마 변경",
+    "validation": "검증",
+    "pipeline": "파이프라인",
+    "schema": "스키마",
+    "duplicate": "중복",
+    "range": "범위",
+    "runs": "실행 기록",
+    "public": "공개",
+    "private": "비공개",
+    "done": "완료",
+    "ready": "준비됨",
+    "pending": "대기 중",
+    "rows": "{{count}}행",
     "idValue": "ID: {{id}}",
-    "latest": "(latest)",
-    "yes": "yes",
-    "no": "no",
-    "apiKey": "API Key"
+    "latest": "(최신)",
+    "yes": "예",
+    "no": "아니요",
+    "apiKey": "API 키"
   }
 }

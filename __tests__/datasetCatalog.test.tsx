@@ -47,7 +47,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
   it("filters by any provider in a multi-source table", async () => {
     renderCatalog();
     await screen.findByText("air-quality");
-    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "kma" } });
+    fireEvent.change(screen.getByLabelText("제공자"), { target: { value: "kma" } });
     expect(screen.getByText("air-quality")).toBeInTheDocument();
     expect(screen.queryByText("population")).not.toBeInTheDocument();
   });
@@ -62,7 +62,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
     await screen.findByText("air-quality");
     expect(headers()).toEqual(["테이블", "상태", "완전성", "갱신", "마지막 갱신"]);
     expect(screen.getByText(/이 배포에는 warehouse 가 없어/)).toBeInTheDocument();
-    expect(screen.getAllByRole("combobox").map((select) => select.getAttribute("aria-label"))).toEqual(["Provider"]);
+    expect(screen.getAllByRole("combobox").map((select) => select.getAttribute("aria-label"))).toEqual(["제공자"]);
     expect(screen.queryByLabelText("Validation")).not.toBeInTheDocument();
   });
 

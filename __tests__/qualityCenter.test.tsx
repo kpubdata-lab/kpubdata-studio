@@ -53,7 +53,7 @@ describe("Quality Center across tables (#536)", () => {
     );
 
     const drift = within(table).getByRole("row", { name: /column_removed/ });
-    expect(within(drift).getByText("Schema drift").closest("[data-status]")).toHaveAttribute("data-status", "actionable");
+    expect(within(drift).getByText("스키마 변경").closest("[data-status]")).toHaveAttribute("data-status", "actionable");
 
     // PASS results are not issues.
     expect(within(table).queryByText("seoul__transport")).not.toBeInTheDocument();

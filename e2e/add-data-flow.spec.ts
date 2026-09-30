@@ -20,7 +20,7 @@ test("Public API source로 Source→Configure 단계가 진행된다", async ({ 
   await expect(page.getByRole("heading", { name: t("addData.source.title") })).toBeVisible();
 
   // Step 1 has 3 source kind cards — select Public API.
-  const publicApiCard = page.getByRole("button", { name: /Public API/ }).first();
+  const publicApiCard = page.getByRole("button", { name: /공공 API/ }).first();
   await expect(publicApiCard).toBeVisible();
   await publicApiCard.click();
 
@@ -42,7 +42,7 @@ test("File source 탭이 표시되고 업로드 UI가 존재한다", async ({ pa
   await expect(page.getByRole("heading", { name: t("addData.source.title") })).toBeVisible();
 
   // File entry point exists in Source kind selection.
-  const fileEntry = page.getByRole("button", { name: "File Upload" }).first();
+  const fileEntry = page.getByRole("button", { name: "파일 업로드" }).first();
   await expect(fileEntry).toBeVisible();
 
   await expectNoPageErrors(errors);

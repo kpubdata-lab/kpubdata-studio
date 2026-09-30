@@ -72,7 +72,7 @@ describe("DiscoverPage", () => {
     renderDiscover();
     await screen.findByText("대기오염 정보");
 
-    fireEvent.change(screen.getByLabelText("Provider"), { target: { value: "seoul" } });
+    fireEvent.change(screen.getByLabelText("제공자"), { target: { value: "seoul" } });
 
     await waitFor(() => {
       expect(screen.queryByText("대기오염 정보")).not.toBeInTheDocument();

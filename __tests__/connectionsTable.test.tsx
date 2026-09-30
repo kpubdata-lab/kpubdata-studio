@@ -99,7 +99,7 @@ describe("Connections table (#538)", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: "자격 증명 관리 — datago" }));
     fireEvent.click(await screen.findByRole("button", { name: "등록하기" }));
-    fireEvent.change(screen.getByLabelText("API Key"), { target: { value: RAW_KEY } });
+    fireEvent.change(screen.getByLabelText("API 키"), { target: { value: RAW_KEY } });
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
 
     await waitFor(() => expect(put).toHaveBeenCalledWith("datago", RAW_KEY));

@@ -7,7 +7,8 @@
  * aria-label `layout.homeLink`. One test happened to assert on that label and caught it.
  * Nothing would have caught the other 1,400.
  *
- * Three things are checked, and a missing key is a bug in all three:
+ * Four things are checked. The first three are a missing key; the fourth is a key that
+ * exists but was never translated:
  *
  *   1. A literal key — `t("a.b")` or `<Trans i18nKey="a.b">` — resolves in ko and in en.
  *   2. A computed key — `t(`a.b.${x}`)` — has its static prefix (`a.b`) present as a
@@ -15,6 +16,9 @@
  *      whole group can, and that is the failure that actually happens.
  *   3. ko and en hold the same set of keys. A key present in only one language is
  *      half-translated, and which half is missing decides who sees the raw key.
+ *   4. No ko value is the en value left in English (studio#588) — see
+ *      `ko-english-values.mjs`. The baseline is zero: every such value found when the
+ *      check was added was translated, so any new one fails.
  *
  * Keys are read with the TypeScript parser rather than a regular expression, because
  * `t(` also matches `format(`, `at(` and `split(` — a grep-based first draft reported
@@ -37,6 +41,8 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import ts from "typescript";
+
+import { englishKoValues } from "./ko-english-values.mjs";
 
 const SKIP_DIRS = new Set(["node_modules", "dist", "coverage", ".git"]);
 const SKIP_SUFFIX = [".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx", ".d.ts"];
@@ -78,8 +84,9 @@ function flatten(value, prefix, leaves, subtrees) {
 function loadLocale(lang) {
   const leaves = new Set();
   const subtrees = new Set();
-  flatten(JSON.parse(readFileSync(join(LOCALES, `${lang}.json`), "utf8")), "", leaves, subtrees);
-  return { leaves, subtrees };
+  const tree = JSON.parse(readFileSync(join(LOCALES, `${lang}.json`), "utf8"));
+  flatten(tree, "", leaves, subtrees);
+  return { tree, leaves, subtrees };
 }
 
 /** The part of a template literal before its first `${`, with the trailing dot removed. */
@@ -190,6 +197,11 @@ const onlyEn = [...en.leaves].filter((k) => !ko.leaves.has(k));
 for (const k of onlyKo) problems.push(`locales  "${k}" is in ko.json but not en.json`);
 for (const k of onlyEn) problems.push(`locales  "${k}" is in en.json but not ko.json`);
 
+const untranslated = englishKoValues(ko.tree, en.tree);
+for (const [k, value] of untranslated) {
+  problems.push(`locales  "${k}" is English in ko.json (${JSON.stringify(value)}) — translate it, or add a product name or format to KEPT_VALUES`);
+}
+
 if (problems.length) {
   console.error(`i18n key gate: ${problems.length} problem(s)\n`);
   for (const p of problems) console.error(`  ${p}`);
@@ -200,4 +212,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(`i18n key gate: every key resolves, and ko/en hold the same key set (${ko.leaves.size} keys).`);
+console.log(
+  `i18n key gate: every key resolves, ko/en hold the same key set (${ko.leaves.size} keys), ` +
+    `and no ko value is untranslated English (${untranslated.length}, baseline 0).`,
+);

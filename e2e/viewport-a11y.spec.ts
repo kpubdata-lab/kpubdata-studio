@@ -138,7 +138,7 @@ test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮�
   await page.goto("/add");
   await expect(page.getByRole("heading", { name: "데이터 추가" })).toBeVisible({ timeout: 10_000 });
 
-  await page.getByText("Public API").click();
+  await page.getByText("공공 API").click();
   await page.getByRole("button", { name: "다음" }).click();
   await page.locator("#add-data-provider").selectOption({ index: 1 });
   await page.locator("#add-data-dataset").selectOption({ index: 1 });

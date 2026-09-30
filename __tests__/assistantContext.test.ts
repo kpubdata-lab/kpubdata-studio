@@ -3,19 +3,19 @@ import { contextsMatch, resolveAssistantContext } from "@/features/assistant/con
 
 describe("resolveAssistantContext (#247, #256)", () => {
   it("labels the home route", () => {
-    expect(resolveAssistantContext("/").pageLabel).toBe("Home");
+    expect(resolveAssistantContext("/").pageLabel).toBe("홈");
     expect(resolveAssistantContext("/").context.page).toBe("home");
   });
 
   it("labels each top-level IA route", () => {
-    expect(resolveAssistantContext("/discover").pageLabel).toBe("Discover");
-    expect(resolveAssistantContext("/workspace").pageLabel).toBe("Workspace");
-    expect(resolveAssistantContext("/add").pageLabel).toBe("Add Data");
-    expect(resolveAssistantContext("/quality").pageLabel).toBe("Quality");
+    expect(resolveAssistantContext("/discover").pageLabel).toBe("카탈로그");
+    expect(resolveAssistantContext("/workspace").pageLabel).toBe("작업대");
+    expect(resolveAssistantContext("/add").pageLabel).toBe("테이블 만들기");
+    expect(resolveAssistantContext("/quality").pageLabel).toBe("품질");
     expect(resolveAssistantContext("/assistant").pageLabel).toBe("Ask KPubData");
-    expect(resolveAssistantContext("/reports").pageLabel).toBe("Reports");
-    expect(resolveAssistantContext("/connections").pageLabel).toBe("Provider");
-    expect(resolveAssistantContext("/monitoring").pageLabel).toBe("Monitoring");
+    expect(resolveAssistantContext("/reports").pageLabel).toBe("리포트");
+    expect(resolveAssistantContext("/connections").pageLabel).toBe("연결");
+    expect(resolveAssistantContext("/monitoring").pageLabel).toBe("모니터링");
   });
 
   it("extracts datasetId from a dataset detail route", () => {
