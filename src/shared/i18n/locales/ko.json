@@ -1917,15 +1917,13 @@
       "retry": "잠시 후 다시 시도해 주세요."
     },
     "api": {
-      "unavailable": "사용 불가",
       "degraded": "성능 저하",
       "healthy": "정상",
-      "latencyUnavailable": "Latency: 측정 불가",
-      "noSamples": "· 표본 없음"
+      "p95": "P95 지연",
+      "samples": "표본"
     },
     "measure": {
-      "unavailable": "측정 불가",
-      "measuring": "측정 중"
+      "unavailable": "측정 불가"
     },
     "queue": {
       "waiting": "대기 중",
@@ -1933,46 +1931,42 @@
       "total": "전체"
     },
     "workers": {
-      "active": "활성",
-      "capacity": "용량",
+      "active": "활성 / 용량",
       "utilization": "활용률"
     },
-    "store": {
-      "available": "정상",
-      "partial": "부분 가용",
-      "unavailable": "사용 불가",
-      "lastWrite": "마지막 쓰기: {{at}}",
-      "lastWriteNone": "마지막 쓰기: 없음"
-    },
     "builds": {
-      "emptyTitle": "실행 기록이 없습니다",
-      "emptyDesc": "아직 실행된 Run이 없습니다.",
       "success": "성공",
       "failed": "실패",
       "cancelled": "취소",
       "excluded": "일부 run이 권한 제한으로 집계에서 제외되었습니다 (제외 {{count}}건).",
-      "noBucketTitle": "데이터가 없습니다",
-      "noBucketDesc": "시간대별 실행 통계를 표시할 데이터가 없습니다.",
-      "bucketTitle": "시간대별 실행 통계",
-      "bucketTooltip": "{{at}}: 성공 {{success}}, 실패 {{failed}}, 취소 {{cancelled}}"
+      "title": "최근 24시간 갱신",
+      "aggregate": "집계",
+      "outcomes": "결과"
     },
     "recent": {
-      "emptyTitle": "최근 실행 이력이 없습니다",
-      "title": "최근 실행",
-      "desc": "최근 Run들의 상태와 결과를 확인할 수 있습니다.",
+      "title": "최근 갱신",
       "seconds": "{{seconds}}초",
-      "errorTitle": "데이터를 가져올 수 없습니다",
-      "errorRetry": "잠시 후 다시 시도해 주세요.",
-      "emptyDesc": "아직 실행된 Run이 없습니다.",
-      "emptyCta": "테이블 만들기",
-      "view": "보기"
+      "empty": "최근 24시간 동안 갱신이 없습니다.",
+      "runId": "Run ID",
+      "status": "상태",
+      "started": "시작",
+      "duration": "소요 시간"
     },
-    "runStatus": {
-      "succeeded": "성공",
-      "failed": "실패",
-      "running": "실행 중",
-      "cancelled": "취소됨",
-      "queued": "대기 중"
+    "health": {
+      "title": "KPubData Builder 상태",
+      "api": "KPubData Builder API",
+      "queue": "큐",
+      "workers": "워커",
+      "store": "스냅샷 저장소"
+    },
+    "availability": {
+      "available": "정상",
+      "partial": "부분 측정",
+      "unavailable": "측정 불가"
+    },
+    "store": {
+      "lastWrite": "마지막 쓰기",
+      "lastWriteNone": "없음"
     }
   },
   "publish": {
@@ -2110,16 +2104,14 @@
   },
   "monitoringPage": {
     "title": "시스템 모니터링",
-    "desc": "실행 이력과 시스템 리소스 상태를 실시간으로 확인합니다.",
-    "forbiddenTitle": "권한이 없습니다",
-    "forbiddenDesc": "모니터링 데이터를 조회하려면 로그인이 필요합니다.",
+    "desc": "KPubData Builder 의 상태와 최근 24시간 갱신을 확인합니다.",
     "lastUpdate": "마지막 업데이트: {{at}}",
     "loading": "데이터 로드 중...",
-    "autoRefreshOn": "자동 새로고침 ON",
-    "autoRefreshOff": "자동 새로고침 OFF",
     "refresh": "새로고침",
-    "degradedTitle": "시스템 상태 저하",
-    "degradedDesc": "일부 하위 시스템이 partial/unavailable 상태입니다. 각 카드의 상태 배지를 확인하세요."
+    "forbidden": "모니터링을 보려면 운영자 권한이 있는 계정으로 로그인하세요.",
+    "autoRefresh": "30초마다 새로고침",
+    "degraded": "KPubData Builder 상태 저하 — 아래에서 표시된 항목을 확인하세요.",
+    "forbiddenTitle": "권한이 없습니다"
   },
   "assistantChat": {
     "llmFailed": "LLM 호출에 실패했습니다.",

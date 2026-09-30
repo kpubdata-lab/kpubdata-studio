@@ -50,17 +50,20 @@ test("Workspace에 Saved BuildSpec 저장·새로고침 후 재노출된다 (#26
   await expectNoPageErrors(errors);
 });
 
-test("Monitoring이 mock 상태 카드를 렌더링한다 (#268 시나리오 8)", async ({ page }) => {
+test("Monitoring이 mock Builder 상태와 최근 갱신을 렌더링한다 (#268 시나리오 8, #539)", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   await page.goto("/monitoring");
   await expect(page.getByRole("heading", { name: "시스템 모니터링" })).toBeVisible();
-  await expect(page.getByText("Builder API")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "KPubData Builder 상태" })).toBeVisible();
 
-  // Recent Runs tab displays mock run list.
-  await page.getByRole("button", { name: "Recent Runs" }).click();
-  await expect(page.getByText("run-001")).toBeVisible();
+  // Recent refreshes are on the same page, no tab to open; a run id reaches its detail by keyboard.
+  const recent = page.getByRole("table", { name: "최근 갱신" });
+  const run = recent.getByRole("link", { name: "run-001" });
+  await run.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/refresh-jobs\/run-001$/);
 
   await expectNoPageErrors(errors);
 });

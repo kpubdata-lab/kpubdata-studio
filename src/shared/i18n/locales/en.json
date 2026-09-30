@@ -1917,15 +1917,13 @@
       "retry": "Please try again in a moment."
     },
     "api": {
-      "unavailable": "Unavailable",
       "degraded": "Degraded",
       "healthy": "Healthy",
-      "latencyUnavailable": "Latency: not measured",
-      "noSamples": "· no samples"
+      "p95": "P95 latency",
+      "samples": "Samples"
     },
     "measure": {
-      "unavailable": "Not measured",
-      "measuring": "Measuring"
+      "unavailable": "Not measured"
     },
     "queue": {
       "waiting": "Waiting",
@@ -1933,46 +1931,42 @@
       "total": "Total"
     },
     "workers": {
-      "active": "Active",
-      "capacity": "Capacity",
+      "active": "Active / capacity",
       "utilization": "Utilization"
     },
-    "store": {
-      "available": "Healthy",
-      "partial": "Partially available",
-      "unavailable": "Unavailable",
-      "lastWrite": "Last write: {{at}}",
-      "lastWriteNone": "Last write: none"
-    },
     "builds": {
-      "emptyTitle": "No run history",
-      "emptyDesc": "No run has happened yet.",
       "success": "Succeeded",
       "failed": "Failed",
       "cancelled": "Cancelled",
       "excluded": "Some runs were excluded from the aggregate for permission reasons ({{count}} excluded).",
-      "noBucketTitle": "No data",
-      "noBucketDesc": "There is no data to chart run statistics over time.",
-      "bucketTitle": "Runs over time",
-      "bucketTooltip": "{{at}}: {{success}} succeeded, {{failed}} failed, {{cancelled}} cancelled"
+      "title": "Refreshes in the last 24 hours",
+      "aggregate": "Aggregate",
+      "outcomes": "Outcomes"
     },
     "recent": {
-      "emptyTitle": "No recent runs",
-      "title": "Recent runs",
-      "desc": "Check the status and outcome of recent runs.",
+      "title": "Recent refreshes",
       "seconds": "{{seconds}}s",
-      "errorTitle": "Could not fetch the data",
-      "errorRetry": "Please try again in a moment.",
-      "emptyDesc": "No run has happened yet.",
-      "emptyCta": "Create table",
-      "view": "View"
+      "empty": "No refresh in the last 24 hours.",
+      "runId": "Run ID",
+      "status": "Status",
+      "started": "Started",
+      "duration": "Duration"
     },
-    "runStatus": {
-      "succeeded": "Succeeded",
-      "failed": "Failed",
-      "running": "Running",
-      "cancelled": "Cancelled",
-      "queued": "Queued"
+    "health": {
+      "title": "KPubData Builder health",
+      "api": "KPubData Builder API",
+      "queue": "Queue",
+      "workers": "Workers",
+      "store": "Snapshot store"
+    },
+    "availability": {
+      "available": "Healthy",
+      "partial": "Partially measured",
+      "unavailable": "Not measured"
+    },
+    "store": {
+      "lastWrite": "Last write",
+      "lastWriteNone": "none"
     }
   },
   "publish": {
@@ -2110,16 +2104,14 @@
   },
   "monitoringPage": {
     "title": "System monitoring",
-    "desc": "Watch run history and system resource status in real time.",
-    "forbiddenTitle": "No permission",
-    "forbiddenDesc": "Sign in to read monitoring data.",
+    "desc": "KPubData Builder health and the last 24 hours of refreshes.",
     "lastUpdate": "Last update: {{at}}",
     "loading": "Loading data...",
-    "autoRefreshOn": "Auto refresh ON",
-    "autoRefreshOff": "Auto refresh OFF",
     "refresh": "Refresh",
-    "degradedTitle": "System degraded",
-    "degradedDesc": "Some subsystems are partial or unavailable. Check the status badge on each card."
+    "forbidden": "Sign in with an operator account to view monitoring.",
+    "autoRefresh": "Refresh every 30 seconds",
+    "degraded": "KPubData Builder is degraded — check the flagged items below.",
+    "forbiddenTitle": "No permission"
   },
   "assistantChat": {
     "llmFailed": "The LLM call failed.",
