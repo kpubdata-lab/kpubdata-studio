@@ -102,8 +102,8 @@ export function DatasetCatalogPage() {
             <TextInput id="dataset-search" placeholder={t("catalog.searchPlaceholder")} value={query} onChange={(event) => updateParam("q", event.target.value)} />
           </div>
           <label className="min-w-36 flex-1 sm:flex-none">
-            <span className="sr-only">Provider</span>
-            <select aria-label="Provider" className={`w-full ${selectClassName}`} value={provider} onChange={(event) => updateParam("provider", event.target.value)}>
+            <span className="sr-only">{t("labels.provider")}</span>
+            <select aria-label={t("labels.provider")} className={`w-full ${selectClassName}`} value={provider} onChange={(event) => updateParam("provider", event.target.value)}>
               <option value="">{t("catalog.allProviders")}</option>
               {providerOptions.map((item) => (
                 <option key={item} value={item}>

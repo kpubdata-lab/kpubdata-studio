@@ -250,7 +250,7 @@ export function RunDetailPanel({
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Pipeline / Stage Progress</h3>
+          <h3 className="text-sm font-semibold">{t("builds.detail.pipelineTitle")}</h3>
           {stagesState.status === "loaded" ? <MultiSourceOutcomeBadge outcome={outcome} /> : null}
         </div>
         <div className="mt-3"><StageLegend /></div>
@@ -279,7 +279,7 @@ export function RunDetailPanel({
           // follow-up §6). The Quality card below is the authoritative
           // verdict — this summary just relays it without recomputation.
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Quality checkpoint</span>
+            <span className="font-medium text-foreground">{t("builds.detail.qualityCheckpoint")}</span>
             <QualityStateBadge state={qualityStatus ?? "NOT_EVALUATED"} />
             <span>
               {qualityChecksPassed.evaluated === 0
@@ -292,11 +292,11 @@ export function RunDetailPanel({
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">Quality</h3>
+          <h3 className="text-sm font-semibold">{t("labels.quality")}</h3>
           <div className="flex items-center gap-2">
             {qualityStatus ? <QualityStateBadge state={qualityStatus} /> : null}
             {qualityState.status === "loaded" ? (
-              <span className="text-xs text-muted-foreground">availability: {qualityState.data.availability}</span>
+              <span className="text-xs text-muted-foreground">{t("builds.detail.availability", { value: qualityState.data.availability })}</span>
             ) : null}
           </div>
         </div>
@@ -367,8 +367,7 @@ export function RunDetailPanel({
                     <span className="flex items-center gap-2">
                       <QualityBadge status={result.status.toUpperCase() as "WARN" | "FAIL"} />
                       <span className="font-mono text-muted-foreground">
-                        actual {formatQualityValue(result.rule, result.actual)} / threshold{" "}
-                        {formatQualityValue(result.rule, result.threshold)}
+                        {t("builds.detail.actualVsThreshold", { actual: formatQualityValue(result.rule, result.actual), threshold: formatQualityValue(result.rule, result.threshold) })}
                       </span>
                     </span>
                   </li>
@@ -396,27 +395,25 @@ export function RunDetailPanel({
 
       {failureEvidence.length > 0 || qualityFails.length > 0 ? (
         <Card variant="error">
-          <h3 className="text-sm font-semibold">Failure evidence</h3>
+          <h3 className="text-sm font-semibold">{t("builds.detail.failureEvidence")}</h3>
           {failureEvidence.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-2 text-sm">
               {failureEvidence.map((item) => (
                 <li key={item.sourceKey}>
-                  <strong>{item.sourceKey}</strong> — failed stage: {item.failedStage ?? "unknown"} · last completed stage:{" "}
-                  {item.lastCompletedStage ?? "none"}
+                  <strong>{item.sourceKey}</strong> — {t("builds.detail.failedStages", { failed: item.failedStage ?? t("builds.detail.stageUnknown"), completed: item.lastCompletedStage ?? t("builds.detail.stageNone") })}
                 </li>
               ))}
             </ul>
           ) : null}
           {listItem?.status === "failed" && live.kind === "job" && live.job.error ? (
-            <p className="mt-2 text-sm">Builder error: {live.job.error}</p>
+            <p className="mt-2 text-sm">{t("builds.detail.builderError", { error: live.job.error })}</p>
           ) : null}
           {qualityFails.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-1 text-sm">
               {qualityFails.map((result, index) => (
                 <li key={`${result.source_key}-${result.rule}-${index}`}>
                   FAIL · {result.source_key} · {result.category}/{result.rule}
-                  {result.column ? ` · column ${result.column}` : ""} · actual {JSON.stringify(result.actual)} vs threshold{" "}
-                  {JSON.stringify(result.threshold)}
+                  {result.column ? ` · ${t("labels.column")} ${result.column}` : ""} · {t("builds.detail.actualVsThresholdFailed", { actual: JSON.stringify(result.actual), threshold: JSON.stringify(result.threshold) })}
                 </li>
               ))}
             </ul>
@@ -428,7 +425,7 @@ export function RunDetailPanel({
         <Disclosure
           title={
             <span className="flex flex-1 flex-wrap items-center gap-2">
-              Run Events{eventsState.status === "loaded" ? ` (${events.length})` : ""}
+              {t("builds.detail.runEvents")}{eventsState.status === "loaded" ? ` (${events.length})` : ""}
               {failedEvents.length > 0 ? (
                 <span className="rounded-full bg-status-failure-subtle px-2 py-0.5 text-xs font-medium text-status-failure">
                   {t("builds.events.failedCount", { count: failedEvents.length })}
@@ -459,7 +456,7 @@ export function RunDetailPanel({
       </Card>
 
       <Card>
-        <Disclosure title="BuildSpec snapshot">
+        <Disclosure title={t("builds.detail.specSnapshot")}>
           {specState.status === "loading" || specState.status === "idle" ? (
             <Skeleton className="h-10 w-full" />
           ) : null}
@@ -471,7 +468,7 @@ export function RunDetailPanel({
             </p>
           ) : specState.status === "loaded" ? (
             <div className="text-sm">
-              <p className="text-xs text-muted-foreground">digest: {specState.data.spec_digest}</p>
+              <p className="text-xs text-muted-foreground">{t("builds.detail.digest", { digest: specState.data.spec_digest })}</p>
               {datasetId ? (
                 <Link
                   className="mt-2 inline-block text-xs font-medium text-accent-subtle-foreground underline"

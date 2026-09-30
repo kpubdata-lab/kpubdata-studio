@@ -314,7 +314,7 @@ export function ConfigureStep({
       {draft.sourceKind === "url" ? (
         <div className="space-y-4">
           <div className="section-title text-sm font-semibold text-muted-foreground">{t("addData.configure.urlTitle")}</div>
-          <FormField id="add-data-endpoint" label="Endpoint" required help={t("addData.configure.endpointHelp")}>
+          <FormField id="add-data-endpoint" label={t("addData.configure.endpointLabel")} required help={t("addData.configure.endpointHelp")}>
             {(field) => (
               <TextInput
                 {...field}
@@ -356,7 +356,7 @@ export function ConfigureStep({
         {draft.datasetId || draft.title ? (
           <Card variant="dashed" className="space-y-1 p-3">
             <p className="text-sm font-semibold">{draft.title || t("addData.configure.noTitle")}</p>
-            <p className="text-xs text-muted-foreground">ID: {draft.datasetId || "—"}</p>
+            <p className="text-xs text-muted-foreground">{t("labels.idValue", { id: draft.datasetId || "—" })}</p>
             {draft.description ? <p className="text-xs text-muted-foreground">{draft.description}</p> : null}
           </Card>
         ) : (
@@ -454,7 +454,7 @@ export function ConfigureStep({
               size="sm"
               onClick={() => setEditorMode("form")}
             >
-              Form
+              {t("addData.configure.editorForm")}
             </Button>
             <Button
               variant={editorMode === "yaml" ? "primary" : "secondary"}

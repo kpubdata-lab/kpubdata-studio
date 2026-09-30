@@ -50,11 +50,11 @@ export function EventTimeline({ events }: { events: BuildEvent[] }) {
         <thead>
           <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <th className="py-2 pr-3">{t("runs.timeline.time")}</th>
-            <th className="py-2 pr-3">Source</th>
-            <th className="py-2 pr-3">Stage</th>
+            <th className="py-2 pr-3">{t("labels.source")}</th>
+            <th className="py-2 pr-3">{t("labels.stage")}</th>
             <th className="py-2 pr-3">{t("runs.timeline.event")}</th>
-            <th className="py-2 pr-3">Message</th>
-            <th className="py-2">Metrics</th>
+            <th className="py-2 pr-3">{t("labels.message")}</th>
+            <th className="py-2">{t("labels.metrics")}</th>
           </tr>
         </thead>
         <tbody>

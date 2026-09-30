@@ -36,9 +36,9 @@ describe("global Ask KPubData drawer (#247)", () => {
     const dialog = screen.getByRole("dialog", { name: "Ask KPubData" });
     // PAGE는 프로토타입처럼 grid cell이 아니라 보조 캡션으로만 표시된다(#256 review).
     expect(within(dialog).getByText(/현재 Context · Quality/)).toBeInTheDocument();
-    // context bar는 프로토타입 구조(DATASET/RUN/STAGE/QUALITY)를 따른다.
-    expect(within(dialog).getByText("DATASET")).toBeInTheDocument();
-    expect(within(dialog).getByText("QUALITY")).toBeInTheDocument();
+    // The context bar follows the prototype (Table/Run/Stage/Quality); a table, never a bare "Dataset" (#531).
+    expect(within(dialog).getByText("Table")).toBeInTheDocument();
+    expect(within(dialog).getByText("Quality")).toBeInTheDocument();
   });
 
   it("closes on Escape", () => {

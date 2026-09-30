@@ -28,7 +28,7 @@
       "inCatalog": "Search the catalog for “{{query}}”",
       "close": "Close search",
       "ask": "Ask KPubData: “{{query}}”",
-      "askHint": "Assistant",
+      "askHint": "AI",
       "loading": "Loading tables and sources…",
       "loadFailed": "Some tables or sources could not be loaded.",
       "groups": {
@@ -161,7 +161,20 @@
       "publish": "Publish",
       "analyze": "Analyze run",
       "title": "Refresh detail",
-      "back": "← Refresh History"
+      "back": "← Refresh History",
+      "pipelineTitle": "Pipeline / Stage Progress",
+      "qualityCheckpoint": "Quality checkpoint",
+      "availability": "availability: {{value}}",
+      "actualVsThreshold": "actual {{actual}} / threshold {{threshold}}",
+      "failureEvidence": "Failure evidence",
+      "failedStages": "failed stage: {{failed}} · last completed stage: {{completed}}",
+      "stageUnknown": "unknown",
+      "stageNone": "none",
+      "builderError": "KPubData Builder error: {{error}}",
+      "runEvents": "Run Events",
+      "specSnapshot": "BuildSpec snapshot",
+      "digest": "digest: {{digest}}",
+      "actualVsThresholdFailed": "actual {{actual}} vs threshold {{threshold}}"
     },
     "stage": {
       "forbidden": "No permission to view stage progress for this run.",
@@ -556,7 +569,7 @@
     },
     "page": {
       "desc": "Uses the current screen, table, run and quality context to give evidence-based answers and the next action.",
-      "eyebrow": "Assistant",
+      "eyebrow": "AI help",
       "title": "Ask KPubData"
     },
     "parse": {
@@ -593,7 +606,9 @@
       "unknownError": "An unknown error occurred while running the query.",
       "mockUnsupported": "Query execution is not supported in mock mode. Set VITE_USE_REAL_BUILDER=true to connect to a real KPubData Builder.",
       "stageMismatch": "The current screen stage ({{current}}) differs from the Generated SQL stage ({{proposed}}).",
-      "stageNone": "none"
+      "stageNone": "none",
+      "generatedSql": "Generated SQL",
+      "suggestedActions": "Suggested Actions"
     },
     "queryError": {
       "unsafe_query": "SQL syntax error or disallowed query.",
@@ -1009,7 +1024,8 @@
       "cancel": "Cancel",
       "buildSucceeded": "Table created (run {{runId}})",
       "buildCancelled": "The run was cancelled.",
-      "interrupted": "The request was interrupted. The server-side run result is unknown."
+      "interrupted": "The request was interrupted. The server-side run result is unknown.",
+      "planTitle": "Table creation plan"
     },
     "preview": {
       "title": "Preview · validation",
@@ -1043,7 +1059,11 @@
       "sampleFooter": "Showing {{shown}} of {{total}} rows · {{columns}} columns",
       "validationTitle": "Validation",
       "notEvaluated": "Not evaluated / N/A — no quality check ran in this preview.",
-      "qualityLink": "Open Quality"
+      "qualityLink": "Open Quality",
+      "sourceTabs": "Preview source",
+      "sampleFirst": "first",
+      "sampleRandom": "random",
+      "checksPassed": "checks passed"
     },
     "configure": {
       "title": "Import Settings",
@@ -1096,7 +1116,9 @@
       "exportLegend": "Snapshot file formats (at least one)",
       "outputPathLabel": "Output path (optional)",
       "canonicalTitle": "Canonical BuildSpec (GUI ↔ YAML)",
-      "applyYaml": "Apply YAML"
+      "applyYaml": "Apply YAML",
+      "endpointLabel": "Endpoint",
+      "editorForm": "Form"
     },
     "steps": {
       "source": "Choose data",
@@ -1155,6 +1177,11 @@
         "publicApi": "Pick a provider and set up its credentials and query.",
         "file": "Upload a CSV, JSON, JSONL or Parquet file.",
         "url": "Enter an HTTPS GET endpoint yourself (P0: no auth)."
+      },
+      "kindTitle": {
+        "publicApi": "Public API",
+        "file": "File Upload",
+        "url": "URL / REST API"
       }
     },
     "credential": {
@@ -1250,7 +1277,10 @@
       "run": "Run"
     },
     "runLookupUnsupportedTitle": "This Builder cannot look up an older run",
-    "runLookupUnsupportedBody": "Run `{{run}}` is not in the newest page of runs, and this KPubData Builder is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Builder to open it. Did not switch to the latest run."
+    "runLookupUnsupportedBody": "Run `{{run}}` is not in the newest page of runs, and this KPubData Builder is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Builder to open it. Did not switch to the latest run.",
+    "tabsLabel": "Table detail tabs",
+    "passportTitle": "Data Passport",
+    "sampleTitle": "Sample data"
   },
   "buildPublish": {
     "statusQueued": "Queued",
@@ -1296,7 +1326,14 @@
     "noAutoRetry": "Do not retry automatically.",
     "abortedTitle": "Stopped waiting for the response.",
     "abortedBody": "Only the browser request was stopped — the remote publish was not cancelled. Its outcome is unknown.",
-    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Store your own with KPubData Builder to publish."
+    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Store your own with KPubData Builder to publish.",
+    "readinessTitle": "KPubData Builder readiness",
+    "blockers": "Blockers",
+    "warnings": "Warnings",
+    "destinationLabel": "Hugging Face destination",
+    "publisher": "Publisher",
+    "snapshotFiles": "Snapshot files",
+    "reference": "Reference:"
   },
   "settings": {
     "page": {
@@ -1317,7 +1354,7 @@
     },
     "privacy": {
       "title": "Privacy Notice",
-      "llm": "Using the assistant sends conversation content to the external LLM provider (OpenAI, etc.) configured by you. API keys and costs are your responsibility.",
+      "llm": "Using Ask KPubData sends conversation content to the external LLM provider (OpenAI, etc.) configured by you. API keys and costs are your responsibility.",
       "noPublic": "Do not inject public API keys via VITE_* environment variables — they are bundled in plaintext.",
       "scrub": "Secret scrubbing (#206) automatically masks service keys in sourceParams, but sensitive information typed directly into conversations is not masked."
     },
@@ -1347,7 +1384,8 @@
       "customBaseUrl": "Custom base URL",
       "persistOn": "Browser storage is on — the LLM API key is stored in this browser in plain text. An XSS attack could steal it, so turn it off on machines you do not trust.",
       "persistOff": "Browser storage: off (memory only). You can turn it on explicitly from the Ask KPubData screen."
-    }
+    },
+    "builderBaseUrl": "KPubData Builder API base URL"
   },
   "auth": {
     "page": {
@@ -1370,7 +1408,9 @@
       "google": "Continue with Google",
       "or": "or",
       "emailLogin": "Sign in with KPubData account",
-      "loginFail": "Sign-in failed. Please try again shortly."
+      "loginFail": "Sign-in failed. Please try again shortly.",
+      "tagline": "PUBLIC DATA → AI-READY TABLES",
+      "eyebrow": "WELCOME"
     },
     "oidc": {
       "errorTitle": "The OIDC configuration has a problem.",
@@ -1736,7 +1776,12 @@
       "pendingNotes": "Pending notes",
       "countUnit": "{{count}}",
       "noteUnit": "{{count}}",
-      "none": "None"
+      "none": "None",
+      "title": "Report Context",
+      "baseRun": "Base Run",
+      "specDigest": "BuildSpec digest",
+      "evidenceStatus": "Evidence Status",
+      "askKpubdata": "Ask KPubData"
     },
     "provenance": {
       "builder": "Builder Evidence",
@@ -2551,6 +2596,57 @@
     "view": "View",
     "more": "More actions for {{snapshot}}",
     "runDetail": "Run detail",
-    "editSpec": "Edit spec and refresh"
+    "editSpec": "Edit spec and refresh",
+    "run": {
+      "validationSummary": "Validation summary",
+      "evaluatedChecks": "evaluated checks",
+      "recentIssues": "Recent quality issues",
+      "recentRuns": "Recent Runs",
+      "selected": "selected"
+    }
+  },
+  "labels": {
+    "run": "Run",
+    "source": "Source",
+    "stage": "Stage",
+    "provider": "Provider",
+    "table": "Table",
+    "column": "Column",
+    "type": "Type",
+    "status": "Status",
+    "updated": "Updated",
+    "rule": "Rule",
+    "result": "Result",
+    "actual": "Actual",
+    "threshold": "Threshold",
+    "missing": "Missing",
+    "quality": "Quality",
+    "output": "Output",
+    "runId": "Run ID",
+    "target": "Target",
+    "destination": "Destination",
+    "message": "Message",
+    "metrics": "Metrics",
+    "row": "Row",
+    "schemaDrift": "Schema Drift",
+    "validation": "Validation",
+    "pipeline": "Pipeline",
+    "schema": "Schema",
+    "duplicate": "Duplicate",
+    "range": "Range",
+    "overview": "Overview",
+    "preview": "Preview",
+    "runs": "Runs",
+    "public": "Public",
+    "private": "Private",
+    "done": "Done",
+    "ready": "Ready",
+    "pending": "Pending",
+    "rows": "{{count}} rows",
+    "idValue": "ID: {{id}}",
+    "latest": "(latest)",
+    "yes": "yes",
+    "no": "no",
+    "apiKey": "API Key"
   }
 }

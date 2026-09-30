@@ -20,6 +20,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
 
+import { scanEnglish } from "./hardcoded-ui-text.mjs";
+
 const KOREAN = /[\u{AC00}-\u{D7AF}]/u;
 const SKIP_DIRS = new Set(["node_modules", "dist", "coverage", ".git"]);
 const SKIP_SUFFIX = [".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx", ".d.ts"];
@@ -146,6 +148,21 @@ for (const row of rows.slice(0, topN)) {
   console.log(`${String(row.count).padStart(5)}  ${row.file}`);
   if (!verbose) continue;
   for (const line of row.lines) console.log(`        ${line}: ${row.textLines[line - 1].trim().slice(0, 120)}`);
+}
+
+// English typed straight into a screen (#531): the same gate, for TSX text in English.
+// Every screen, content files included: their Korean is content, their English labels are not.
+const english = scanEnglish(ROOT);
+console.log(`English UI text hard-coded in TSX: ${english.length} (baseline 0)`);
+for (const hit of english.slice(0, verbose ? english.length : topN)) console.log(`        ${hit.slice(0, 140)}`);
+
+if (check && english.length > 0) {
+  console.error(
+    `\nFAIL: ${english.length} English UI string(s) are written directly in TSX.\n` +
+      `Move them to src/shared/i18n/locales/{ko,en}.json and reference them with t().\n` +
+      `If one is not UI text (code, a sample value), mark the line with \`// i18n-ignore: <reason>\`.`,
+  );
+  process.exit(1);
 }
 
 if (check && total > BASELINE) {

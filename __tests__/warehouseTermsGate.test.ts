@@ -25,6 +25,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { scanUiTexts } from "../scripts/hardcoded-ui-text.mjs";
+
 const LOCALES = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "shared", "i18n", "locales");
 
 /** Keys whose "dataset" is Hugging Face's term for a publish destination, not ours. */
@@ -147,5 +149,52 @@ describe("warehouse terminology gate — hard-coded TSX text (#485)", () => {
       '<p className="x">{t("run")}</p>',
     ].join("\n");
     expect(hardCodedOldTerms("f.tsx", source)).toEqual(["f.tsx:1: Build", "f.tsx:2: Artifacts"]);
+  });
+});
+
+/*
+ * Product names on screen (#531): the AI entry is "Ask KPubData" — never the retired
+ * standalone label — the old "Kubi" and "Refresh Jobs" are gone, and the Builder is "KPubData
+ * Builder" wherever a screen writes it directly. Locale values are checked for the first
+ * three; "the Builder" in a locale sentence, after the full name, stays allowed. The TSX
+ * text comes from the same scanner as the hard-coded English gate, with no exemptions.
+ */
+
+// stale-ui-ignore: the retired AI label this test checks is gone (#531).
+const RETIRED_AI_LABEL = "Assistant";
+const RETIRED_NAME = new RegExp(`\\bKubi\\b|\\b${RETIRED_AI_LABEL}\\b|\\bRefresh Jobs\\b`);
+const BARE_BUILDER = /(?<!KPubData )\bBuilder\b/;
+
+function retiredNames(entries: [string, string][]): string[] {
+  return entries.filter(([, value]) => RETIRED_NAME.test(value)).map(([key]) => key);
+}
+
+function productNameHits(texts: { file: string; line: number; text: string }[]): string[] {
+  return texts
+    .filter(({ text }) => RETIRED_NAME.test(text) || BARE_BUILDER.test(text))
+    .map(({ file, line, text }) => `${file}:${line}: ${text}`);
+}
+
+describe("product names on screen (#531)", () => {
+  it.each(["en", "ko"])("%s.json has no retired product name", (locale) => {
+    const entries = flatten(JSON.parse(readFileSync(join(LOCALES, `${locale}.json`), "utf8")));
+    expect(retiredNames(entries)).toEqual([]);
+  });
+
+  it("no screen writes a retired product name or a bare Builder in TSX text", () => {
+    expect(productNameHits(scanUiTexts(join(ROOT, "src")))).toEqual([]);
+  });
+
+  it("finds them in TSX text but allows KPubData Builder and Ask KPubData", () => {
+    const texts = [
+      ["a", RETIRED_AI_LABEL],
+      ["b", "Kubi 에게 묻기"],
+      ["c", "Refresh Jobs"],
+      ["d", "Builder readiness"],
+      ["e", "KPubData Builder readiness"],
+      ["f", "Ask KPubData"],
+    ].map(([file, text]) => ({ file, line: 1, text }));
+    expect(productNameHits(texts)).toEqual([`a:1: ${RETIRED_AI_LABEL}`, "b:1: Kubi 에게 묻기", "c:1: Refresh Jobs", "d:1: Builder readiness"]);
+    expect(retiredNames([["k", RETIRED_AI_LABEL], ["l", "Ask KPubData"]])).toEqual(["k"]);
   });
 });

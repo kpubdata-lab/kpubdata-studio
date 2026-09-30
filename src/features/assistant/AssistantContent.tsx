@@ -36,9 +36,9 @@ const getDemoQuestion = () => i18n.t("assistant.empty.demoQuestion");
 function ContextBar({ context, pageLabel, qualityLabel, sources, onContextChange }: { context: AssistantContext; pageLabel: string; qualityLabel: string; sources: string[]; onContextChange: (key: "stage" | "source", value?: string) => void }) {
   const { t } = useTranslation();
   const cells: { label: string; value: string }[] = [
-    { label: "DATASET", value: context.datasetId ?? "—" },
-    { label: "RUN", value: context.runId ?? "—" },
-    { label: "QUALITY", value: qualityLabel },
+    { label: t("labels.table"), value: context.datasetId ?? "—" },
+    { label: t("labels.run"), value: context.runId ?? "—" },
+    { label: t("labels.quality"), value: qualityLabel },
   ];
   // Stage evidence query requires run to exist, and for multi-source runs source must be determined
   // (if source not selected, evidence loader fails-closed stage — evidence.ts). Single-source
@@ -56,7 +56,7 @@ function ContextBar({ context, pageLabel, qualityLabel, sources, onContextChange
             </p>
           </div>
         ))}
-        <label className="rounded-lg border border-border bg-muted/40 px-2.5 py-2"><span className="block text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">STAGE</span><select aria-label={t("assistant.context.stageAria")} className="mt-0.5 w-full bg-transparent text-xs font-medium" value={context.stage ?? ""} onChange={(event) => onContextChange("stage", event.target.value || undefined)} disabled={stageSelectDisabled}><option value="">{context.runId ? t("assistant.context.stageAll") : t("assistant.context.stageDisabled")}</option><option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold">Gold</option></select></label>
+        <label className="rounded-lg border border-border bg-muted/40 px-2.5 py-2"><span className="block text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{t("labels.stage")}</span><select aria-label={t("assistant.context.stageAria")} className="mt-0.5 w-full bg-transparent text-xs font-medium" value={context.stage ?? ""} onChange={(event) => onContextChange("stage", event.target.value || undefined)} disabled={stageSelectDisabled}><option value="">{context.runId ? t("assistant.context.stageAll") : t("assistant.context.stageDisabled")}</option><option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold">Gold</option></select></label>
       </div>
       {context.runId && sources.length > 1 ? <label className="mt-2 block text-xs text-muted-foreground">{t("assistant.context.sourceLabel")}<select aria-label={t("assistant.context.sourceAria")} className="ml-2 rounded border border-input bg-card px-2 py-1 text-foreground" value={context.source ?? ""} onChange={(event) => onContextChange("source", event.target.value || undefined)}><option value="">{t("assistant.context.sourceFirst")}</option>{sources.map((source) => <option key={source} value={source}>{source}</option>)}</select></label> : null}
       <p className="mt-2 text-[11px] text-muted-foreground">{!context.runId ? t("assistant.context.hintNoRun") : sources.length > 1 && !context.source ? t("assistant.context.hintMultiSource") : !context.stage ? t("assistant.context.hintNoStage") : context.stage === "bronze" ? t("assistant.context.hintBronze") : t("assistant.context.hintSqlReady", { stage: context.stage === "gold" ? "Gold" : "Silver" })}</p>
@@ -86,7 +86,7 @@ export function ApiKeySetup() {
         </p>
       </div>
       <label className="block text-xs font-medium text-muted-foreground">
-        API Key
+        {t("labels.apiKey")}
         <input
           type="password"
           className="mt-1 h-9 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground"
@@ -496,7 +496,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
 
             {turn.response.generatedSql ? (
               <div className="min-w-0">
-                <div className="flex items-center justify-between gap-2"><p className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Generated SQL · {turn.response.generatedSql.stage}<TermHelp term="generatedSql" /></p><Button size="sm" variant="ghost" aria-label={t("assistant.query.copySql")} onClick={() => void navigator.clipboard?.writeText(turn.response!.generatedSql!.sql).catch(() => {})}>{t("assistant.query.copy")}</Button></div>
+                <div className="flex items-center justify-between gap-2"><p className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("assistant.query.generatedSql")} · {turn.response.generatedSql.stage}<TermHelp term="generatedSql" /></p><Button size="sm" variant="ghost" aria-label={t("assistant.query.copySql")} onClick={() => void navigator.clipboard?.writeText(turn.response!.generatedSql!.sql).catch(() => {})}>{t("assistant.query.copy")}</Button></div>
                 <pre className="mt-1 max-w-full overflow-x-auto whitespace-pre rounded-lg bg-muted/70 p-2 font-mono text-[11px]">{formatSqlForDisplay(turn.response.generatedSql.sql)}</pre>
                 <Button
                   size="sm"
@@ -512,7 +512,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
 
             {turn.response.suggestedActions.length > 0 ? (
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Suggested Actions</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("assistant.query.suggestedActions")}</p>
                 <div className="mt-1 space-y-1.5">
                   {turn.response.suggestedActions.map((action, index) => (
                     <ActionCard key={index} turn={turn} action={action} index={index} isStale={stale} session={session} />

@@ -131,9 +131,9 @@ export function DiscoverPage() {
             />
           </div>
           <label className="min-w-56 flex-1 sm:flex-none">
-            <span className="sr-only">Provider</span>
+            <span className="sr-only">{t("labels.provider")}</span>
             <select
-              aria-label="Provider"
+              aria-label={t("labels.provider")}
               className={`w-full ${selectClassName}`}
               value={provider}
               onChange={(event) => updateParam("provider", event.target.value)}

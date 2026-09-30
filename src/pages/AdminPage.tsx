@@ -115,7 +115,7 @@ export function AdminPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
                     <tr>
-                      <th className="px-4 py-2 font-semibold">Run</th>
+                      <th className="px-4 py-2 font-semibold">{t("labels.run")}</th>
                       <th className="px-4 py-2 font-semibold">{t("admin.colStatus")}</th>
                       <th className="px-4 py-2 font-semibold">{t("admin.colOwner")}</th>
                       <th className="px-4 py-2 font-semibold">{t("admin.colStarted")}</th>

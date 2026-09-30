@@ -186,10 +186,10 @@ export function BuildPublishPage() {
       <Card>
         <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("buildPublish.selectedRun")}</p>
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
-          <div><dt className="text-muted-foreground">Table</dt><dd>{datasetLabel || (runContext.status === "loading" ? t("buildPublish.checking") : t("buildPublish.unconfirmed"))}</dd></div>
-          <div><dt className="text-muted-foreground">Run ID</dt><dd className="break-all font-mono">{runId || "—"}</dd></div>
+          <div><dt className="text-muted-foreground">{t("labels.table")}</dt><dd>{datasetLabel || (runContext.status === "loading" ? t("buildPublish.checking") : t("buildPublish.unconfirmed"))}</dd></div>
+          <div><dt className="text-muted-foreground">{t("labels.runId")}</dt><dd className="break-all font-mono">{runId || "—"}</dd></div>
           <div><dt className="text-muted-foreground">{t("buildPublish.buildCompleted")}</dt><dd>{buildCompletionText}</dd></div>
-          <div><dt className="text-muted-foreground">Target</dt><dd>Hugging Face</dd></div>
+          <div><dt className="text-muted-foreground">{t("labels.target")}</dt><dd>Hugging Face</dd></div>
         </dl>
         <p className="mt-3 text-xs text-muted-foreground">{t("buildPublish.exactRunNote")}</p>
         {runContext.status === "error" ? (
@@ -199,7 +199,7 @@ export function BuildPublishPage() {
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-sm font-semibold">Builder readiness</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessNote")}</p></div>
+          <div><h2 className="text-sm font-semibold">{t("buildPublish.readinessTitle")}</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessNote")}</p></div>
           <Button variant="secondary" size="sm" disabled={readiness.status === "loading" || publish.status === "publishing"} onClick={() => setReadinessVersion((value) => value + 1)}>{t("buildPublish.recheck")}</Button>
         </div>
         {readiness.status === "loading" ? <Skeleton className="mt-4 h-20 w-full" /> : null}
@@ -217,8 +217,8 @@ export function BuildPublishPage() {
                   // blocker existing (UI audit #4).
                   : t("buildPublish.notReadyNoReason")}
             </p>
-            {readiness.data.blockers.length > 0 ? <IssueList title="Blockers" issues={readiness.data.blockers} tone="error" /> : null}
-            {readiness.data.warnings.length > 0 ? <IssueList title="Warnings" issues={readiness.data.warnings} tone="warning" /> : null}
+            {readiness.data.blockers.length > 0 ? <IssueList title={t("buildPublish.blockers")} issues={readiness.data.blockers} tone="error" /> : null}
+            {readiness.data.warnings.length > 0 ? <IssueList title={t("buildPublish.warnings")} issues={readiness.data.warnings} tone="warning" /> : null}
             {readiness.data.blockers.some((issue) => CREDENTIAL_BLOCKER_CODES.has(issue.code)) ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialNote")}</p> : null}
                         {/* credential_required differs from "nowhere"
                 (credential_unavailable) — it means more direct user actions
@@ -233,8 +233,8 @@ export function BuildPublishPage() {
         <h2 className="text-sm font-semibold">{t("buildPublish.settingsTitle")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.settingsNote")}</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
-          <label className="text-sm font-medium">Hugging Face destination
-            <input aria-label="Hugging Face destination" className={`mt-2 ${inputClassName}`} placeholder="owner/dataset" value={destination} disabled={publish.status === "publishing"} onChange={(event) => updateDestination(event.target.value)} />
+          <label className="text-sm font-medium">{t("buildPublish.destinationLabel")}
+            <input aria-label={t("buildPublish.destinationLabel")} className={`mt-2 ${inputClassName}`} placeholder="owner/dataset" value={destination} disabled={publish.status === "publishing"} onChange={(event) => updateDestination(event.target.value)} />
             <span className={`mt-1 block text-xs ${destinationError ? "text-status-failure" : "text-muted-foreground"}`}>{destinationError ?? t("buildPublish.destinationHint")}</span>
           </label>
           <label className="flex items-center gap-3 self-center rounded-lg border border-border p-4 text-sm">
@@ -250,10 +250,10 @@ export function BuildPublishPage() {
         <Card className="border-status-success-border" aria-label={t("buildPublish.confirmTitle")}>
           <h2 className="text-sm font-semibold">{t("buildPublish.confirmTitle")}</h2>
           <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-            <div><dt className="text-muted-foreground">Run ID</dt><dd className="font-mono">{runId}</dd></div>
-            <div><dt className="text-muted-foreground">Target</dt><dd>huggingface</dd></div>
-            <div><dt className="text-muted-foreground">Destination</dt><dd>{confirmation.destination}</dd></div>
-            <div><dt className="text-muted-foreground">{t("buildPublish.visibility")}</dt><dd>{confirmation.options?.private === false ? "Public" : "Private"}</dd></div>
+            <div><dt className="text-muted-foreground">{t("labels.runId")}</dt><dd className="font-mono">{runId}</dd></div>
+            <div><dt className="text-muted-foreground">{t("labels.target")}</dt><dd>huggingface</dd></div>
+            <div><dt className="text-muted-foreground">{t("labels.destination")}</dt><dd>{confirmation.destination}</dd></div>
+            <div><dt className="text-muted-foreground">{t("buildPublish.visibility")}</dt><dd>{confirmation.options?.private === false ? t("labels.public") : t("labels.private")}</dd></div>
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">{t("buildPublish.confirmNote")}</p>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -267,12 +267,12 @@ export function BuildPublishPage() {
         <Card variant="success" role="status">
           <div className="flex items-center gap-2"><StatusBadge status="published" /><strong>{t("buildPublish.publishedTitle")}</strong></div>
           <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-            <div><dt className="text-muted-foreground">Run ID</dt><dd className="font-mono">{publish.result.run_id}</dd></div>
-            <div><dt className="text-muted-foreground">Destination</dt><dd>{publish.result.destination}</dd></div>
-            <div><dt className="text-muted-foreground">Publisher</dt><dd>{publish.result.publisher}</dd></div>
-            <div><dt className="text-muted-foreground">Snapshot files</dt><dd>{publish.result.artifact_count}</dd></div>
+            <div><dt className="text-muted-foreground">{t("labels.runId")}</dt><dd className="font-mono">{publish.result.run_id}</dd></div>
+            <div><dt className="text-muted-foreground">{t("labels.destination")}</dt><dd>{publish.result.destination}</dd></div>
+            <div><dt className="text-muted-foreground">{t("buildPublish.publisher")}</dt><dd>{publish.result.publisher}</dd></div>
+            <div><dt className="text-muted-foreground">{t("buildPublish.snapshotFiles")}</dt><dd>{publish.result.artifact_count}</dd></div>
           </dl>
-          <div className="mt-4 break-all text-sm">Reference: {isSafePublishReference(publish.result.reference) ? <a href={publish.result.reference} target="_blank" rel="noreferrer" className="text-status-success underline">{publish.result.reference}</a> : <span>{publish.result.reference}</span>}</div>
+          <div className="mt-4 break-all text-sm">{t("buildPublish.reference")} {isSafePublishReference(publish.result.reference) ? <a href={publish.result.reference} target="_blank" rel="noreferrer" className="text-status-success underline">{publish.result.reference}</a> : <span>{publish.result.reference}</span>}</div>
         </Card>
       ) : null}
       {publish.status === "failed" ? <Card variant="error" role="alert"><strong>{t("buildPublish.publishFailed")}</strong><p className="mt-2 text-sm">{publish.failure?.message}</p>{publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}</Card> : null}
