@@ -26,7 +26,11 @@ import type { ColumnWireInfo } from "@/shared/lib/builderApi";
 import { cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
 import { Button, Card } from "@/shared/ui";
 
-export type TotalStatus = "exact" | "estimated" | "not_computed" | "unknown";
+/**
+ * How the total is known. `sample` is a stored sample with nothing behind it to page
+ * (a run's stage sample, #537): the footer says "N rows · sample" and claims no total.
+ */
+export type TotalStatus = "exact" | "estimated" | "not_computed" | "unknown" | "sample";
 
 export interface RowTotal {
   /** Rows on this page / in this result. */
@@ -135,6 +139,7 @@ function ColumnHeader({ column, meta, className }: { column: string; meta?: Part
 }
 
 function totalText(t: (key: string, options?: Record<string, unknown>) => string, rowTotal: RowTotal, offset?: number): string {
+  if (rowTotal.status === "sample") return t("dataTable.sample", { count: rowTotal.returned });
   const shown =
     offset === undefined || rowTotal.returned === 0
       ? t("dataTable.shown", { count: rowTotal.returned })

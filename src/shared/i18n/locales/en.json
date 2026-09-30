@@ -2469,7 +2469,8 @@
     "browseError": "Could not load rows: {{message}}",
     "shown": "{{count}} rows shown",
     "totalExact": "{{count}} rows in all (exact)",
-    "totalEstimated": "about {{count}} rows in all (estimated)"
+    "totalEstimated": "about {{count}} rows in all (estimated)",
+    "sample": "{{count}} rows · sample"
   },
   "charts": {
     "title": "Chart",
