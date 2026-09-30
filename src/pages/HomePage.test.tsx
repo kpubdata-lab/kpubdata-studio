@@ -233,11 +233,63 @@ describe("Home reads recent snapshots from the table list summary (kpubdata-buil
     await waitFor(() => expect(within(section("최근 스냅샷")).getAllByRole("row")).toHaveLength(3));
     const [, water, air] = within(within(section("최근 스냅샷")).getByRole("table")).getAllByRole("row");
     expect(water).toHaveTextContent("snap_w");
+    // A row count Builder sent as null is unknown (`—`), never 0.
+    const waterRows = water.querySelectorAll("td")[2];
+    expect(waterRows.querySelector('[data-status="missing"]')).not.toBeNull();
+    expect(waterRows).not.toHaveTextContent("0");
     expect(air).toHaveTextContent("1,234");
     // The dataset id Builder sent (it contains a dot) decides the link, not a split name.
     expect(within(air).getByRole("link", { name: "air.v2.datago" })).toHaveAttribute("href", "/tables/air.v2?source=datago");
     expect(air.querySelectorAll("td")[4].querySelector('[data-status="missing"]')).not.toBeNull();
     expect(details).toEqual([]);
+  });
+});
+
+describe("Home with a snapshot id but no summary (#587)", () => {
+  it("reads that table's detail once and shows its row", async () => {
+    const details: string[] = [];
+    const tables = [
+      {
+        table_id: "t1",
+        logical_name: "lost.kma",
+        current_snapshot_id: "snap_x",
+        revision: 1,
+        current_snapshot: null,
+        dataset_id: "lost",
+      },
+      { table_id: "t2", logical_name: "fresh.y", current_snapshot_id: null, revision: 0, current_snapshot: null, dataset_id: "fresh" },
+    ];
+    handlers();
+    mswServer.use(
+      http.get(`${API_BASE}/warehouse/tables`, () => HttpResponse.json({ tables })),
+      http.get(`${API_BASE}/warehouse/tables/:name`, ({ params }) => {
+        const name = String(params.name);
+        details.push(name);
+        return HttpResponse.json({
+          ...tables[0],
+          snapshots: [
+            {
+              snapshot_id: "snap_x",
+              run_id: "lost-run",
+              state: "committed",
+              row_count: 42,
+              created_at: "2026-09-02T00:00:00Z",
+              committed_at: "2026-09-02T00:00:00Z",
+              coverage: null,
+            },
+          ],
+        });
+      }),
+    );
+    renderHome();
+
+    await waitFor(() => expect(within(section("최근 스냅샷")).getAllByRole("row")).toHaveLength(2));
+    const [, lost] = within(within(section("최근 스냅샷")).getByRole("table")).getAllByRole("row");
+    expect(within(lost).getByRole("link", { name: "lost.kma" })).toHaveAttribute("href", "/tables/lost?source=kma");
+    expect(lost).toHaveTextContent("snap_x");
+    expect(lost).toHaveTextContent("42");
+    expect(lost).toHaveTextContent("lost-run");
+    expect(details).toEqual(["lost.kma"]);
   });
 });
 
