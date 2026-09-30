@@ -1,6 +1,8 @@
 /**
  * Chart a SQL result as it is (#500). A cut result is drawn as "based on the N rows
  * returned" — never as the top N, and never as a representative sample.
+ *
+ * An identifier column (builder#702) is offered as X only, never as Y (#582).
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,7 +11,7 @@ import type { QueryResponse } from "@/shared/lib/builderApi";
 import { encodingsOf } from "@/shared/lib/cellValue";
 import { Button } from "@/shared/ui";
 
-import { toPoints } from "./chartData";
+import { measureCandidates, toPoints } from "./chartData";
 import { scopeOfQueryResult } from "./chartScope";
 import { SimpleChart } from "./SimpleChart";
 
@@ -20,9 +22,12 @@ export function ResultChart({ result }: { result: QueryResponse }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<"bar" | "line">("bar");
+  const measures = measureCandidates(result.columns, result.column_meta);
   const [xColumn, setX] = useState(result.columns[0] ?? "");
-  const [yColumn, setY] = useState(
-    result.columns[1] ?? result.columns[0] ?? "",
+  const [chosenY, setY] = useState(
+    measures.find((column) => column !== result.columns[0]) ??
+      measures[0] ??
+      "",
   );
   if (result.columns.length === 0) return null;
   if (!open) {
@@ -33,13 +38,16 @@ export function ResultChart({ result }: { result: QueryResponse }) {
     );
   }
   const encodings = encodingsOf(result.column_meta);
-  const xMeta = result.column_meta?.find((column) => column.name === xColumn);
+  const yColumn = measures.includes(chosenY) ? chosenY : (measures[0] ?? "");
+  const metaOf = (name: string) =>
+    result.column_meta?.find((column) => column.name === name);
   const { points } = toPoints(
     result.rows,
     xColumn,
     yColumn,
     encodings,
-    xMeta?.logical_type,
+    metaOf(xColumn)?.logical_type,
+    metaOf(yColumn)?.logical_type,
   );
   return (
     <div className="space-y-2 rounded-lg border border-border p-3">
@@ -63,7 +71,7 @@ export function ResultChart({ result }: { result: QueryResponse }) {
             onChange={(event) => setY(event.target.value)}
             value={yColumn}
           >
-            {result.columns.map((column) => (
+            {measures.map((column) => (
               <option key={column}>{column}</option>
             ))}
           </select>
@@ -80,13 +88,17 @@ export function ResultChart({ result }: { result: QueryResponse }) {
           </select>
         </label>
       </div>
-      <SimpleChart
-        kind={kind}
-        points={points}
-        scope={scopeOfQueryResult(result)}
-        xLabel={xColumn}
-        yLabel={yColumn}
-      />
+      {measures.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{t("charts.noMeasure")}</p>
+      ) : (
+        <SimpleChart
+          kind={kind}
+          points={points}
+          scope={scopeOfQueryResult(result)}
+          xLabel={xColumn}
+          yLabel={yColumn}
+        />
+      )}
     </div>
   );
 }

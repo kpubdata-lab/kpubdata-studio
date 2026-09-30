@@ -201,6 +201,11 @@ export const previewColumnSchema = z.object({
   unique_count: z.number(),
   logical_type: z.string().optional(),
   wire_encoding: wireEncodingSchema.optional(),
+  // Column hints (builder#813, ADR 0019), sent more often since kpubdata code columns became
+  // identifiers (builder#702, 1.61.0). Kept, not stripped, so a screen can show them.
+  semantic: columnSemanticHintSchema.optional(),
+  display: columnDisplayHintSchema.optional(),
+  unit: columnUnitHintSchema.optional(),
 });
 
 // previewSourceSchema/previewResponseSchema depend on tableStatisticsSchema and qualityCheckResultSchema
@@ -613,6 +618,11 @@ export const silverColumnInfoSchema = z.object({
   // strict, which is why a 1.30.0 Builder needed Studio to ship first — #497.)
   logical_type: z.string().optional(),
   wire_encoding: wireEncodingSchema.optional(),
+  // Column hints (builder#813, ADR 0019), sent more often since kpubdata code columns became
+  // identifiers (builder#702, 1.61.0). Kept, not stripped, so a screen can show them.
+  semantic: columnSemanticHintSchema.optional(),
+  display: columnDisplayHintSchema.optional(),
+  unit: columnUnitHintSchema.optional(),
 });
 
 export const tableStatisticsSchema = z.object({

@@ -2507,6 +2507,7 @@
     "yAxis": "Y",
     "aria": "{{y}} by {{x}}",
     "missing": "no value",
+    "noMeasure": "No column can be drawn as a number — identifier (code) columns are text, not measures.",
     "missingCount": "{{count}} with no value — drawn as gaps, not 0",
     "fn": {
       "count_rows": "Row count",
