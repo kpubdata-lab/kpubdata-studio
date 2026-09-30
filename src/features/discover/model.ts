@@ -62,7 +62,7 @@ export function computeServiceKeyCount(entries: DiscoverEntry[]): number {
 }
 
 /**
- * What the catalog says about a 활용신청 (#529): `application` null or absent means Builder
+ * What the catalog says about a data-use application (#529): `application` null or absent means Builder
  * does not know — never "not required".
  */
 export function applicationState(entry: DiscoverEntry): "required" | "not_required" | "unknown" {

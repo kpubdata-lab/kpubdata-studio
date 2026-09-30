@@ -3,7 +3,7 @@
  * and quota can be read down a column instead of across cards.
  *
  * Every cell comes from a Builder contract field. `CatalogDataset` carries no institution
- * name, licence (공공누리) or maturity grade, so none is shown: maturity reads as unknown,
+ * name, licence (KOGL) or maturity grade, so none is shown: maturity reads as unknown,
  * and no institution or licence is guessed (kpubdata#617, #644 will add them). Whatever
  * the contract leaves out reads as unknown (`—`), never as "no" or 0.
  */
