@@ -56,7 +56,7 @@ describe("one table creation flow (#534)", () => {
 
   it("configures the source in the first step, without a separate source step", async () => {
     renderAt("/add");
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
 
     // Provider and dataset appear in the same step as the source choice.
     expect(await screen.findByLabelText(/제공자 \(Provider\)/)).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe("one table creation flow (#534)", () => {
 
   it("previews the logical table name from Builder's source key before creating", async () => {
     renderAt("/add");
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     fireEvent.change(await screen.findByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
     await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
@@ -103,7 +103,7 @@ describe("one table creation flow (#534)", () => {
     renderAt(`/refresh-jobs/new?savedSpecId=${entry.id}`);
 
     expect(await screen.findByText(/저장된 인구 스펙/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Public API/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /공공 API/ })).toHaveAttribute("aria-pressed", "true");
     expect(await screen.findByText("인구 통계")).toBeInTheDocument();
   });
 
@@ -124,8 +124,8 @@ describe("one table creation flow (#534)", () => {
     renderAt(`/add?savedSpecId=${entry.id}`);
 
     expect(await screen.findByText(/파일 스펙/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /File Upload/ })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /Public API/ })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: /파일 업로드/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /공공 API/ })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("offers an Ask KPubData draft on /add", async () => {
@@ -143,7 +143,7 @@ describe("one table creation flow (#534)", () => {
     renderAt("/add");
     fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
 
-    expect(screen.getByRole("button", { name: /Public API/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /공공 API/ })).toHaveAttribute("aria-pressed", "true");
     expect(await screen.findByText("대기 초안")).toBeInTheDocument();
   });
 
@@ -170,7 +170,7 @@ describe("one table creation flow (#534)", () => {
       expect(alert).toHaveTextContent("요청 파라미터를 다시 입력하세요");
       expect(hasDraft()).toBe(true);
       // What the form can use is filled in; the parameters are asked for again.
-      expect(screen.getByRole("button", { name: /Public API/ })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: /공공 API/ })).toHaveAttribute("aria-pressed", "true");
       expect(await screen.findByText("대기 초안")).toBeInTheDocument();
     });
 

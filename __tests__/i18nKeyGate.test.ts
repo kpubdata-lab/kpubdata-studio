@@ -8,12 +8,14 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { englishKoValues } from "../scripts/ko-english-values.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCRIPT = join(HERE, "..", "scripts", "check-i18n-keys.mjs");
@@ -143,5 +145,59 @@ describe("the i18n key gate", () => {
 
     expect(code).toBe(1);
     expect(out).toContain("could not be read");
+  });
+});
+
+/*
+ * Untranslated ko values (studio#588): #562 left 88 new ko values as the English text
+ * they were copied from, and no gate read the locale values. The check has to fail on
+ * the real locale files the moment one of them goes back to English.
+ */
+describe("the i18n key gate — ko values left in English (#588)", () => {
+  const LOCALES = join(HERE, "..", "src", "shared", "i18n", "locales");
+  const realKo = JSON.parse(readFileSync(join(LOCALES, "ko.json"), "utf8")) as Record<string, Record<string, string>>;
+  const realEn = JSON.parse(readFileSync(join(LOCALES, "en.json"), "utf8")) as Record<string, Record<string, string>>;
+
+  it("finds none in the real locale files", () => {
+    expect(englishKoValues(realKo, realEn)).toEqual([]);
+  });
+
+  it("fails on the real locale files when one ko value is reverted to its English", () => {
+    const reverted = structuredClone(realKo);
+    reverted.labels.status = realEn.labels.status;
+
+    expect(englishKoValues(reverted, realEn)).toEqual([["labels.status", "Status"]]);
+  });
+
+  it("fails the gate run and names the key", () => {
+    writeSource(`export const A = () => t("tableDetail.run.recentRuns");`);
+    writeLocales(
+      { tableDetail: { run: { recentRuns: "Recent Runs" } } },
+      { tableDetail: { run: { recentRuns: "Recent Runs" } } },
+    );
+
+    const { code, out } = runGate();
+
+    expect(code).toBe(1);
+    expect(out).toContain('"tableDetail.run.recentRuns" is English in ko.json');
+  });
+
+  it("reads through placeholders — `{{count}} rows` is still English", () => {
+    expect(englishKoValues({ rows: "{{count}} rows" }, { rows: "{{count}} rows" })).toEqual([["rows", "{{count}} rows"]]);
+  });
+
+  it("passes product names, formats, codes and values that differ from en", () => {
+    const values = {
+      ask: "Ask KPubData",
+      format: "CSV · JSON · SQL",
+      codes: "PASS / WARN / FAIL",
+      stages: "Bronze → Silver → Gold",
+      id: "ID: {{id}}",
+      mixed: "BuildSpec 스냅샷",
+      shortened: "Runs",
+    };
+    const en = { ...values, shortened: "Recent runs" };
+
+    expect(englishKoValues(values, en)).toEqual([]);
   });
 });

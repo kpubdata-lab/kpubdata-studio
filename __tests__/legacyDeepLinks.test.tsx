@@ -65,7 +65,7 @@ describe("router 딥링크 회귀 (#247)", () => {
     expect(await screen.findByRole("heading", { name: "데이터 탐색" })).toBeInTheDocument();
 
     await navigateTo("/quality");
-    expect(await screen.findByRole("heading", { name: "Quality Center" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "품질 센터" })).toBeInTheDocument();
 
     await navigateTo("/tables/air-quality");
     expect(await screen.findByRole("heading", { name: "대기질 통합 데이터" })).toBeInTheDocument();

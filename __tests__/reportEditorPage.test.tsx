@@ -137,7 +137,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
 
     await screen.findByTestId("block-assistant");
     expect(screen.getByText("Ask KPubData 분석 · AI 작성")).toBeInTheDocument();
-    expect(screen.getAllByText("Builder Evidence").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("KPubData Builder 근거").length).toBeGreaterThan(0);
     expect(screen.getByText("AI 작성 · Ask KPubData")).toBeInTheDocument();
   });
 
@@ -145,7 +145,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     renderReport(report.id);
 
-    const contextHeading = await screen.findByText("Report Context");
+    const contextHeading = await screen.findByText("리포트 기준 정보");
     const contextCard = contextHeading.parentElement as HTMLElement;
     expect(within(contextCard).getByText("air-quality")).toBeInTheDocument();
     expect(within(contextCard).getByText("air-2026-08-14")).toBeInTheDocument();
@@ -259,7 +259,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
-    expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("API 키")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Ask KPubData 에 질문하기")).not.toBeInTheDocument();
     expect(screen.queryByText("데모 질문 보내보기")).not.toBeInTheDocument();
   });
@@ -299,10 +299,10 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
-    expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("API 키")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "AI 설정" }));
-    expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+    expect(screen.getByLabelText("API 키")).toBeInTheDocument();
   });
 
   it("직접 질문하기를 누르면 기존 AssistantContent 채팅이 펼쳐지고, global Ask KPubData drawer는 열리지 않는다", async () => {

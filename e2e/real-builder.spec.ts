@@ -65,7 +65,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
 
   // 1) Source: File Upload select, proceed to Configure (SPA navigation — token preserved)
   await openCreateTable(page);
-  await page.getByRole("button", { name: "File Upload" }).first().click();
+  await page.getByRole("button", { name: "파일 업로드" }).first().click();
   await page.getByRole("button", { name: "다음" }).first().click();
 
   // 2) Configure: format csv + actual file upload (real Builder POST /uploads)
@@ -190,7 +190,7 @@ test("빌드 실패 게이트: 파일 없이는 다음 단계 진입이 막힌�
 
   // Select File Upload but don't upload file → next step blocked (#250 gate).
   await openCreateTable(page);
-  await page.getByRole("button", { name: "File Upload" }).first().click();
+  await page.getByRole("button", { name: "파일 업로드" }).first().click();
   await page.getByRole("button", { name: "다음" }).first().click();
   await expect(page.getByRole("heading", { name: "가져오기 설정" })).toBeVisible();
   // Still shows Configure step (progress blocked) or explicit error guidance.

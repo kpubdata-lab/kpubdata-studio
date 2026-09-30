@@ -47,9 +47,9 @@ describe("Refresh history (#535)", () => {
     expect(screen.getByRole("heading", { level: 1, name: "갱신 이력" })).toBeInTheDocument();
     const table = await screen.findByRole("table", { name: "갱신 이력" });
     const headers = within(table).getAllByRole("columnheader").map((cell) => cell.textContent);
-    expect(headers).toEqual(["Run ID", "테이블", "상태", "시작", "소요 시간", "스냅샷"]);
+    expect(headers).toEqual(["실행 ID", "테이블", "상태", "시작", "소요 시간", "스냅샷"]);
     expect(within(table).getAllByRole("row")).toHaveLength(3);
-    expect(screen.queryByText("Pipeline / Stage Progress")).not.toBeInTheDocument();
+    expect(screen.queryByText("파이프라인 / 단계 진행")).not.toBeInTheDocument();
   });
 
   it("shows what GET /builds does not send as —, and the duration from the two timestamps", async () => {

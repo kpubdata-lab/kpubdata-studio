@@ -64,7 +64,7 @@ describe("새 IA placeholder 화면 (#247)", () => {
 
   it("Quality Center is replaced with the real Builder-backed P0 screen (#254)", async () => {
     renderPage(<QualityPage />);
-    expect(await screen.findByRole("heading", { name: "Quality Center" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "품질 센터" })).toBeInTheDocument();
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 

@@ -53,7 +53,7 @@ function mockReadyFetch(publishResponse: Response = response(200, SUCCESS)) {
 
 async function fillAndConfirm() {
   await screen.findByText("Builder 게시 준비 완료");
-  fireEvent.change(screen.getByLabelText("Hugging Face destination"), { target: { value: "owner/dataset" } });
+  fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
   fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
   return screen.getByRole("button", { name: "게시 실행" });
 }
@@ -123,7 +123,7 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     let resolveReadiness!: (value: Response) => void;
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise<Response>((resolve) => { resolveReadiness = resolve; })));
     renderPublish();
-    expect(screen.getByText("KPubData Builder readiness").parentElement?.parentElement).toHaveTextContent("다시 확인");
+    expect(screen.getByText("KPubData Builder 게시 준비 상태").parentElement?.parentElement).toHaveTextContent("다시 확인");
     await act(() => resolveReadiness(response(200, { ...READY, warnings: [{ code: "notice", message: "검토 권장" }] })));
     expect(await screen.findByText("Builder 게시 준비 완료")).toBeInTheDocument();
     expect(screen.getByText("검토 권장")).toBeInTheDocument();
@@ -169,15 +169,15 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     await screen.findByText("Builder 게시 준비 완료");
     const review = screen.getByRole("button", { name: "최종 확인" });
     expect(review).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Hugging Face destination"), { target: { value: "bad" } });
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "bad" } });
     expect(review).toBeDisabled();
-    fireEvent.change(screen.getByLabelText("Hugging Face destination"), { target: { value: "owner/dataset" } });
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
     expect(review).toBeEnabled();
     fireEvent.click(screen.getByLabelText("비공개 Dataset"));
     fireEvent.click(review);
-    expect(screen.getByLabelText("게시 최종 확인")).toHaveTextContent("Public");
+    expect(screen.getByLabelText("게시 최종 확인")).toHaveTextContent("공개");
     fireEvent.click(screen.getByRole("button", { name: "설정 수정" }));
-    fireEvent.change(screen.getByLabelText("Hugging Face destination"), { target: { value: "owner/changed" } });
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/changed" } });
     expect(screen.queryByLabelText("게시 최종 확인")).not.toBeInTheDocument();
   });
 

@@ -58,7 +58,7 @@ describe("SQL Workspace (#417)", () => {
 
   it("asks which source when the run has several, and names the snapshot it read", async () => {
     renderAt("/sql?table=air-quality");
-    const source = await screen.findByRole("combobox", { name: "Source" });
+    const source = await screen.findByRole("combobox", { name: "소스" });
     expect(screen.getByRole("button", { name: /실행/ })).toBeDisabled();
 
     fireEvent.change(source, { target: { value: "datago__air" } });

@@ -80,7 +80,7 @@ describe("Add Data Workbench — Preview latest-request race (#283 후속 리뷰
     renderWizard();
     expect(screen.getByText("저장된 초안이 있습니다. 이어서 편집할까요?")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByLabelText("제공자 (Provider)");
     await screen.findByRole("option", { name: "datago" });

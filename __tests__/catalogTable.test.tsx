@@ -39,7 +39,7 @@ describe("Catalog comparison table (#529)", () => {
     const headers = within(grid)
       .getAllByRole("columnheader")
       .map((cell) => cell.textContent);
-    expect(headers).toEqual(["소스", "Provider", "접근", "성숙도", "만든 테이블", "일일 호출 한도", "시작"]);
+    expect(headers).toEqual(["소스", "제공자", "접근", "성숙도", "만든 테이블", "일일 호출 한도", "시작"]);
   });
 
   it("says what the contract says about access and quota, and unknown where it says nothing", async () => {

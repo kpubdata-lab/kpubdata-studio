@@ -111,7 +111,7 @@ describe("selected Run permission state (#255 P0)", () => {
       expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
     });
     expect(screen.getByText(/이 Run의 Quality 결과를 조회할 권한이 없습니다/)).toBeInTheDocument();
-    expect(screen.getByText(/이 Run의 Stage Progress를 조회할 권한이 없습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/이 Run의 단계 진행을 조회할 권한이 없습니다/)).toBeInTheDocument();
   });
 });
 
@@ -125,7 +125,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
     // schema_drift 1건이 있는 기존 mock fixture를 그대로 재사용한다(새 mock 의미를 만들지 않음).
     renderBuilds("/refresh-jobs?run=air-2026-08-14");
 
-    await waitFor(() => expect(screen.getByText("availability: partial")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("평가 가능 여부: partial")).toBeInTheDocument());
 
     // count 중심 요약 — PASS 상세 전체 나열이 아니라 count로 압축되어 있다.
     expect(screen.getByText("1 PASS")).toBeInTheDocument();
@@ -141,13 +141,13 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
 
     // WARN/FAIL 결과는 source/category/rule/column/actual/threshold를 함께 보여준다.
     expect(screen.getByText(/kma__weather · schema\/required_column · temperature/)).toBeInTheDocument();
-    expect(screen.getByText(/actual false \/ threshold true/)).toBeInTheDocument();
+    expect(screen.getByText(/실제값 false \/ 기준값 true/)).toBeInTheDocument();
 
     // schema drift는 별도 compact summary로 나온다.
-    expect(screen.getByText(/Schema drift 1건: column_removed/)).toBeInTheDocument();
+    expect(screen.getByText(/스키마 변경 1건: column_removed/)).toBeInTheDocument();
 
     // 현재 dataset/run context를 유지한 Quality Center 링크가 있다.
-    const link = screen.getByRole("link", { name: "Quality Center에서 상세 보기" });
+    const link = screen.getByRole("link", { name: "품질 센터에서 상세 보기" });
     expect(link).toHaveAttribute("href", expect.stringContaining("run=air-2026-08-14"));
   });
 
@@ -349,7 +349,7 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
     expect(screen.getByText("Bronze")).toBeInTheDocument();
     expect(screen.getByText("Silver")).toBeInTheDocument();
     expect(screen.getByText("Gold")).toBeInTheDocument();
-    expect(screen.getByText("Output")).toBeInTheDocument();
+    expect(screen.getByText("출력")).toBeInTheDocument();
     expect(screen.getAllByText("completed").length).toBe(3);
   });
 

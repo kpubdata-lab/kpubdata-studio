@@ -87,7 +87,7 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
   it("테이블 ID/제목/설명을 직접 입력하지 않아도 Provider→소스 데이터셋 선택만으로 Build까지 진행된다", async () => {
     renderWizard();
 
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
 
@@ -120,7 +120,7 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
 
   it("dataset 선택을 바꾸면 자동 생성된 metadata도 함께 갱신된다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
 
@@ -138,7 +138,7 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
 
   it("고급 설정에서 자동 생성값을 수정하면 그 값이 실제 제출에 반영된다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
@@ -162,7 +162,7 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
 describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1)", () => {
   it("metadata 수동 수정 후 query params만 바꾸면 수정값이 유지된다(같은 dataset의 세부 설정 변경)", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
@@ -180,7 +180,7 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
 
   it("metadata 수동 수정 후 dataset을 바꾸면 touched가 reset되고 새 dataset metadata가 적용된다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     // catalog option이 실제 DOM에 나타날 때까지 기다린 뒤에 provider를 선택한다
@@ -206,9 +206,9 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
 
   it("파일을 다른 파일로 교체하면 touched가 reset되고 새 filename identity가 적용된다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /File Upload/ }));
+    fireEvent.click(screen.getByRole("button", { name: /파일 업로드/ }));
     next();
-    await screen.findByText("파일 업로드");
+    await screen.findAllByText("파일 업로드");
     fireEvent.change(screen.getByLabelText(/Format/), { target: { value: "csv" } });
 
     const first = new File(["a,b\n1,2"], "first-file.csv", { type: "text/csv" });
@@ -230,22 +230,22 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
     // Source and its settings share the Configure step (#534).
-    await screen.findByLabelText(/Endpoint/);
+    await screen.findByLabelText(/엔드포인트/);
 
-    fireEvent.change(screen.getByLabelText(/Endpoint/), { target: { value: "https://api.example.org/v1/air-quality" } });
+    fireEvent.change(screen.getByLabelText(/엔드포인트/), { target: { value: "https://api.example.org/v1/air-quality" } });
     await screen.findByText(/ID: api-example-org-v1-air-quality/);
 
     await overrideIdentityInAdvancedSettings({ datasetId: "custom-id", title: "커스텀 제목" });
     expect(screen.getByText(/ID: custom-id/)).toBeInTheDocument();
 
     // 같은 endpoint의 query string만 바꾸면(같은 hostname/path) 수정값이 유지된다.
-    fireEvent.change(screen.getByLabelText(/Endpoint/), {
+    fireEvent.change(screen.getByLabelText(/엔드포인트/), {
       target: { value: "https://api.example.org/v1/air-quality?region=busan" },
     });
     expect(screen.getByText(/ID: custom-id/)).toBeInTheDocument();
 
     // hostname/path 자체가 바뀌면(다른 endpoint로 교체) touched가 reset된다.
-    fireEvent.change(screen.getByLabelText(/Endpoint/), { target: { value: "https://api.example.org/v2/weather" } });
+    fireEvent.change(screen.getByLabelText(/엔드포인트/), { target: { value: "https://api.example.org/v2/weather" } });
     await screen.findByText(/ID: api-example-org-v2-weather/);
     expect(screen.queryByText(/ID: custom-id/)).not.toBeInTheDocument();
     expect(screen.queryByText("커스텀 제목")).not.toBeInTheDocument();
@@ -253,7 +253,7 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
 
   it("source kind를 바꾸면 이전 source의 metadata가 잔존하지 않는다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
@@ -265,7 +265,7 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
     // Source and its settings share the Configure step (#534).
-    await screen.findByLabelText(/Endpoint/);
+    await screen.findByLabelText(/엔드포인트/);
 
     expect(screen.queryByText(/ID: custom-id/)).not.toBeInTheDocument();
     expect(screen.queryByText("커스텀 제목")).not.toBeInTheDocument();
@@ -278,7 +278,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
 
   async function gotoConfigurePublicApi(renderFn: typeof renderWizard = renderWizard) {
     const result = renderFn();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     await screen.findByRole("option", { name: "datago" });
@@ -408,7 +408,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
 describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리뷰 §6)", () => {
   it("YAML Apply로 넣은 custom dataset_id/title/description이 identity effect에 덮이지 않고, 그 뒤 실제 GUI dataset 선택에서는 touched가 reset된다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     await screen.findByRole("option", { name: "datago" });
@@ -419,7 +419,7 @@ describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리�
     await screen.findByText(/ID: datago-apt-trade/);
 
     // Canonical BuildSpec 패널을 열고 YAML 모드로 전환한다.
-    fireEvent.click(screen.getByText("Canonical BuildSpec (GUI ↔ YAML)"));
+    fireEvent.click(screen.getByText("기준 BuildSpec (GUI ↔ YAML)"));
     fireEvent.click(screen.getByRole("button", { name: "YAML" }));
 
     // dataset 자체를 air_quality로 바꾸면서(=provider/dataset 변경) custom metadata를
@@ -446,7 +446,7 @@ describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리�
 
     // 폼 모드로 돌아가 실제 GUI에서 다른 dataset을 선택하면 touched가 reset되고 새
     // catalog identity가 적용되어야 한다(기존 touched 정책 회귀 없음).
-    fireEvent.click(screen.getByRole("button", { name: "Form" }));
+    fireEvent.click(screen.getByRole("button", { name: "폼" }));
     fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
     expect(screen.getByText("아파트 실거래가")).toBeInTheDocument();
@@ -458,7 +458,7 @@ describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리�
 describe("Add Data Workbench — stale preview (#250 §2/§6)", () => {
   it("Preview 이후 source 설정이 바뀌면 Review에서 Build가 막힌다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
@@ -488,9 +488,9 @@ describe("Add Data Workbench — stale preview (#250 §2/§6)", () => {
 describe("Add Data Workbench — File source (#250, #498, amendment 2)", () => {
   it("파일 업로드 성공만으로 dataset identity가 자동 생성되고 별도 입력 없이 Build까지 진행된다", async () => {
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /File Upload/ }));
+    fireEvent.click(screen.getByRole("button", { name: /파일 업로드/ }));
     next();
-    await screen.findByText("파일 업로드");
+    await screen.findAllByText("파일 업로드");
 
     fireEvent.change(screen.getByLabelText(/Format/), { target: { value: "csv" } });
     const file = new File(["a,b\n1,2"], "2026 Apt Trades.csv", { type: "text/csv" });
@@ -516,12 +516,12 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
     // Source and its settings share the Configure step (#534).
-    await screen.findByLabelText(/Endpoint/);
+    await screen.findByLabelText(/엔드포인트/);
 
     expect(screen.getByLabelText(/인증 \(Auth\)/)).toHaveValue("없음 (Auth=None)");
     expect(screen.getByLabelText(/인증 \(Auth\)/)).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(/Endpoint/), {
+    fireEvent.change(screen.getByLabelText(/엔드포인트/), {
       target: { value: "https://api.example.org/v1/air-quality?region=busan" },
     });
 
@@ -544,9 +544,9 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
     // Source and its settings share the Configure step (#534).
-    await screen.findByLabelText(/Endpoint/);
+    await screen.findByLabelText(/엔드포인트/);
 
-    fireEvent.change(screen.getByLabelText(/Endpoint/), {
+    fireEvent.change(screen.getByLabelText(/엔드포인트/), {
       target: { value: "https://api.example.org/v1/air-quality?token=SECRETVALUE1234567890" },
     });
 
@@ -624,7 +624,7 @@ describe("Add Data Workbench — mixed/partial preview (#250 §3)", () => {
     );
 
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     // "제공자 연결" 텍스트 렌더는 catalog loaded를 보장하지 않는다 — catalog option이
@@ -694,7 +694,7 @@ describe("Add Data Workbench — Review == submission, 실제 run_id 사용 (rea
     );
 
     renderWizard();
-    fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
     fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });

@@ -63,7 +63,7 @@ function useAirQualityCatalog() {
 }
 
 async function selectAirQuality() {
-  fireEvent.click(screen.getByRole("button", { name: /Public API/ }));
+  fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
   next();
   await screen.findByText("API 사용 준비");
   // "API 사용 준비" heading은 catalog loading 중에도 렌더된다. 느린 러너(Node 20)에서

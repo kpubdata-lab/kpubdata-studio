@@ -122,7 +122,7 @@ describe("Dataset Detail P0 (#253)", () => {
   it("renders five tabs, with no AI tab (#421)", async () => {
     renderDetail();
     const tablist = await screen.findByRole("tablist", { name: "테이블 상세 탭" });
-    for (const label of ["개요", "스키마", "미리보기", "품질", "Runs"]) {
+    for (const label of ["개요", "스키마", "미리보기", "품질", "실행 기록"]) {
       expect(within(tablist).getByRole("tab", { name: label })).toBeInTheDocument();
     }
     expect(within(tablist).queryByRole("tab", { name: "AI" })).not.toBeInTheDocument();
@@ -168,7 +168,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("shows run history and links each run to build detail", async () => {
     renderDetail("/tables/air-quality?tab=builds");
-    const panel = await screen.findByRole("tabpanel", { name: "Runs" });
+    const panel = await screen.findByRole("tabpanel", { name: "실행 기록" });
     expect(within(panel).getByText(/air-2026-08-13/)).toBeInTheDocument();
     expect(within(panel).getAllByRole("link", { name: "보기" })[0]).toHaveAttribute("href", "/refresh-jobs/air-2026-08-14");
   });
@@ -248,7 +248,7 @@ describe("Dataset Detail P0 (#253)", () => {
 });
 
 async function findPassport() {
-  const heading = await screen.findByRole("heading", { name: "Data Passport" });
+  const heading = await screen.findByRole("heading", { name: "데이터 여권" });
   return heading.closest("[class*='rounded-xl']") as HTMLElement;
 }
 
@@ -286,7 +286,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     renderDetail();
     const passport = await findPassport();
     expect(await within(passport).findByText("sha256:air14")).toBeInTheDocument();
-    expect(within(passport).getByText("BuildSpec digest")).toBeInTheDocument();
+    expect(within(passport).getByText("BuildSpec 다이제스트")).toBeInTheDocument();
     expect(within(passport).queryByText(/^v\d/)).not.toBeInTheDocument();
   });
 
@@ -294,7 +294,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     renderDetail("/tables/population");
     await screen.findByLabelText("Run 선택");
     const passport = await findPassport();
-    const digestRow = within(passport).getByText("BuildSpec digest").closest("div")!;
+    const digestRow = within(passport).getByText("BuildSpec 다이제스트").closest("div")!;
     expect(within(digestRow).getByText("확인 불가")).toBeInTheDocument();
   });
 
@@ -302,7 +302,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     renderDetail("/tables/air-quality?stage=bronze");
     await screen.findByLabelText("Run 선택");
     const passport = await findPassport();
-    const schemaRow = within(passport).getByText("Schema").closest("div")!;
+    const schemaRow = within(passport).getByText("스키마").closest("div")!;
     expect(await within(schemaRow).findByText("제공되지 않음")).toBeInTheDocument();
   });
 
