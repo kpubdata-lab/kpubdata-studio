@@ -71,6 +71,33 @@ test("390x844에서 topbar breadcrumb이 Ask KPubData/avatar 버튼과 겹치지
   await expectNoPageErrors(errors);
 });
 
+test("390x844에서 계정 메뉴의 언어·테마가 동작하고 가로 스크롤이 생기지 않는다 (#523)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
+
+  await page.getByRole("button", { name: "계정 메뉴" }).click();
+  const menu = page.getByRole("dialog", { name: "계정" });
+  await expect(menu).toBeVisible();
+
+  await menu.getByLabel("테마").selectOption("dark");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  // The open menu stays inside the viewport: no page-level horizontal scroll.
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow, "horizontal overflow with the account menu open").toBeLessThanOrEqual(2);
+
+  await menu.getByLabel("언어").selectOption("en");
+  await expect(page.getByRole("button", { name: "Account menu" })).toBeVisible();
+
+  await expectNoPageErrors(errors);
+});
+
 test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮지 않는다 (UI audit #6-B)", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);

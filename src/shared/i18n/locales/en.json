@@ -6,14 +6,39 @@
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "theme": "Theme",
-    "selectTheme": "Select theme",
     "toggleSidebar": "Toggle sidebar",
     "openAssistant": "Open Ask KPubData",
-    "goToSettingsFor": "Go to settings for {{email}}",
-    "loginRequiredSettings": "Login required — go to settings",
-    "loginRequired": "Login required",
     "breadcrumb": "Current location",
-    "mainNav": "Main menu"
+    "mainNav": "Main menu",
+    "askKpubdata": "Ask KPubData",
+    "themeMode": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "search": {
+      "open": "Search pages and tables",
+      "button": "Search",
+      "shortcut": "⌘K",
+      "dialog": "Search",
+      "inputLabel": "Search pages and tables",
+      "placeholder": "Go to a page, or search tables by name…",
+      "page": "Page",
+      "inTables": "Search tables for “{{query}}”",
+      "inCatalog": "Search the catalog for “{{query}}”",
+      "close": "Close search"
+    },
+    "account": {
+      "open": "Account menu",
+      "openFor": "Account menu for {{email}}",
+      "title": "Account",
+      "signedInAs": "Signed in as",
+      "notSignedIn": "Not signed in",
+      "language": "Language",
+      "help": "Help (documentation)",
+      "signOut": "Sign out",
+      "signIn": "Sign in"
+    }
   },
   "reportEditor": {
     "untitled": "Untitled",
@@ -72,10 +97,6 @@
     "sql": "Query a table snapshot",
     "admin": "Policy and all runs (administrators)",
     "analyses": "Queries kept with their snapshot"
-  },
-  "languageSwitcher": {
-    "toggle": "Switch language",
-    "switchTo": "Switch to {{language}}"
   },
   "builds": {
     "statusFilter": {
@@ -621,10 +642,6 @@
     },
     "scrub": {
       "unknownPlaceholder": "It contains an unknown secret placeholder."
-    },
-    "search": {
-      "label": "Ask KPubData about your data in plain language",
-      "placeholder": "Ask KPubData about the data…"
     },
     "session": {
       "actionRejected": "The user rejected this action.",
