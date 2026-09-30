@@ -32,7 +32,8 @@ export interface SourceSnapshot {
   sourceKey: string;
   /**
    * `null`: the table has no committed snapshot yet. `undefined`: it has one, but the
-   * detail request failed or did not list it — not known, never "empty".
+   * detail request failed or did not list it, or the list summary names its id without
+   * the snapshot itself — not known, never "empty".
    */
   current: CurrentSnapshot | null | undefined;
 }
@@ -72,8 +73,13 @@ export function tableOwner(table: Pick<WarehouseTable, "logical_name" | "dataset
 /**
  * The current snapshot of a table: from the list summary when Builder sends it (#841),
  * otherwise from the table's detail.
+ *
+ * A summary of `null` with a `current_snapshot_id` set means Builder knows a snapshot was
+ * committed but could not find it in the catalog (#587). Studio treats that as unknown
+ * (`undefined`, shown as `—`), never as "no commit yet".
  */
 export async function currentSnapshotOf(table: WarehouseTable, signal?: AbortSignal): Promise<CurrentSnapshot | null | undefined> {
+  if (table.current_snapshot === null && table.current_snapshot_id !== null) return undefined;
   if (table.current_snapshot !== undefined) return table.current_snapshot;
   if (table.current_snapshot_id === null) return null;
   try {

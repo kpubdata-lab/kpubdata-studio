@@ -67,15 +67,18 @@ export interface RecentSnapshot {
 /**
  * The current snapshots of `tables`, newest commit first, at most `limit`. They come from
  * the list summary (#841); only a table an older Builder lists without one is read from
- * its detail, four at a time. A table whose detail request fails is left out rather than
- * shown with guessed values.
+ * its detail, four at a time — as is one whose summary is null while its id is set
+ * (#587), which Studio treats as unknown rather than uncommitted. A table whose detail
+ * request fails is left out rather than shown with guessed values.
  */
 export async function loadRecentSnapshots(tables: WarehouseTable[], limit: number, signal?: AbortSignal): Promise<RecentSnapshot[]> {
   const found: RecentSnapshot[] = [];
   const needDetail: WarehouseTable[] = [];
   for (const table of tables) {
     if (table.current_snapshot) found.push({ logicalName: table.logical_name, owner: tableOwner(table), snapshot: table.current_snapshot });
-    else if (table.current_snapshot === undefined && table.current_snapshot_id !== null) needDetail.push(table);
+    // A summary of `null` with an id set is unknown, not "no commit" (#587): Builder
+    // committed a snapshot it could not describe, so the detail is read once instead.
+    else if (table.current_snapshot_id !== null) needDetail.push(table);
   }
   let next = 0;
   async function worker() {
