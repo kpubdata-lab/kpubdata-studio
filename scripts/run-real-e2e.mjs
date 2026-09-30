@@ -7,16 +7,15 @@
  * 임시 기동하고, Studio를 VITE_USE_REAL_BUILDER=true로 띄운 Playwright
  * real 슈트(@real-builder)를 실행한다. 종료 시 Builder를 정리한다.
  *
- * 사용: node scripts/run-real-e2e.mjs [--builder-root <path>] [--replay-dir <path>] [--keep]
- * 기본 --builder-root는 ../kpubdata-builder. --replay-dir(또는 STUDIO_REPLAY_DIR)는 Builder 가
- * replay 모드로 읽을 fixture 디렉터리다. Studio 는 그 위치를 추측하지 않는다 — 다른 저장소의
- * 내부 구조에 기대지 않기 위해서다(#511). 주지 않으면 Public API 시나리오를 건너뛴다.
+ * Usage: node scripts/run-real-e2e.mjs [--builder-root <path>] [--replay-dir <path>] [--keep]
+ * The default --builder-root is ../kpubdata-builder.
  *
- * kpubdata 레포가 있으면 Builder를 **replay 모드**로 띄운다(KPUBDATA_MODE=replay).
- * 기록된 fixture를 재생하므로 Public API source도 외부 네트워크와 data.go.kr
- * 서비스키 없이 결정적으로 빌드된다 — 그 경로를 검증하는 스펙은
- * REAL_BUILDER_REPLAY가 설정될 때만 실행된다. 레포가 없으면 기존처럼
- * file source 시나리오만 돈다.
+ * Builder runs in its own replay mode (kpubdata-builder#837), so the public-API scenario
+ * builds from a recorded fixture without network access or a service key. By default
+ * `serve --replay` uses the fixtures Builder ships; --replay-dir (or STUDIO_REPLAY_DIR) passes
+ * a directory as `serve --replay-dir`. Studio sets no kpubdata variable and never looks
+ * inside another repository (#511, #541). A Builder checkout without replay support runs
+ * the file-source scenarios only.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, existsSync } from "node:fs";
@@ -32,12 +31,22 @@ const builderRoot = resolve(
 const replayIndex = args.indexOf("--replay-dir");
 const replayArg = replayIndex !== -1 ? args[replayIndex + 1] : process.env.STUDIO_REPLAY_DIR;
 const replayDir = replayArg ? resolve(replayArg) : null;
-const replayAvailable = replayDir !== null && existsSync(replayDir);
-
 if (!existsSync(join(builderRoot, "pyproject.toml"))) {
   console.error(`builder root not found: ${builderRoot} (pass --builder-root)`);
   process.exit(1);
 }
+if (replayDir !== null && !existsSync(replayDir)) {
+  console.error(`replay directory not found: ${replayDir}`);
+  process.exit(1);
+}
+
+// Ask Builder's CLI rather than its source tree: replay arrived in kpubdata-builder#837, and an
+// older checkout's `serve` does not know the flag.
+const serveHelp = spawnSync("uv", ["run", "--project", builderRoot, "kpubdata-builder", "serve", "--help"], {
+  encoding: "utf8",
+});
+const replayAvailable = serveHelp.status === 0 && serveHelp.stdout.includes("--replay");
+const replayArgs = !replayAvailable ? [] : replayDir !== null ? ["--replay-dir", replayDir] : ["--replay"];
 
 const port = "8902";
 const dataDir = mkdtempSync(join(tmpdir(), "kpubdata-real-e2e-"));
@@ -45,13 +54,24 @@ console.log(`[real-e2e] builder root: ${builderRoot}`);
 console.log(`[real-e2e] builder data: ${dataDir}`);
 console.log(
   replayAvailable
-    ? `[real-e2e] replay fixtures: ${replayDir}`
-    : `[real-e2e] no replay fixtures (--replay-dir / STUDIO_REPLAY_DIR) — Public API 시나리오는 건너뜁니다`,
+    ? `[real-e2e] builder replay: ${replayDir ?? "bundled fixtures"}`
+    : "[real-e2e] this Builder checkout has no replay mode (kpubdata-builder#837) — skipping the public-API scenario",
 );
 
 const builder = spawn(
   "uv",
-  ["run", "--project", builderRoot, "kpubdata-builder", "serve", "--output-dir", dataDir, "--port", port],
+  [
+    "run",
+    "--project",
+    builderRoot,
+    "kpubdata-builder",
+    "serve",
+    "--output-dir",
+    dataDir,
+    "--port",
+    port,
+    ...replayArgs,
+  ],
   {
     stdio: ["ignore", "pipe", "pipe"],
     env: {
@@ -59,15 +79,6 @@ const builder = spawn(
       KPUBDATA_BUILDER_DEV_MODE: "true",
       // Studio dev 서버(5174) 오리진 허용 — CORS는 default-deny(ADR 0006).
       KPUBDATA_BUILDER_ALLOWED_ORIGINS: "http://localhost:5174",
-      ...(replayAvailable
-        ? {
-            KPUBDATA_MODE: "replay",
-            KPUBDATA_REPLAY_DIR: replayDir,
-            // spec 실행기는 전송 계층에 닿기 전에 provider key를 요구한다. replay는
-            // 매칭에서 인증 파라미터를 제외하므로 값 자체는 의미가 없다.
-            KPUBDATA_DATAGO_API_KEY: process.env.KPUBDATA_DATAGO_API_KEY ?? "replay-dummy",
-          }
-        : {}),
     },
   },
 );

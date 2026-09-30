@@ -108,7 +108,7 @@ Builder rejects any OIDC token whose payload does not carry `email_verified: tru
 
 `npm run test:e2e:real` exercises the Studio → Builder ingestion → manifest data path **without** a running Keycloak. It is **not** an authentication test: both sides bypass auth in dev mode.
 
-The public-API scenario needs a replay fixture directory for Builder's replay mode: pass `npm run test:e2e:real -- --replay-dir <dir>` or set `STUDIO_REPLAY_DIR`. Studio does not look for it in another repository's checkout (#511); without it the scenario is skipped.
+The public-API scenario runs Builder in its own replay mode (kpubdata-builder#837): the runner starts `kpubdata-builder serve --replay`, which replays the fixtures Builder ships, so no network access or service key is needed. To use other recordings, pass `npm run test:e2e:real -- --replay-dir <dir>` or set `STUDIO_REPLAY_DIR`; the runner hands the directory to `serve --replay-dir`. Studio sets no kpubdata variable and does not look in another repository's checkout (#511, #541). A Builder checkout from before replay support skips the scenario.
 
 ```dotenv
 # Studio .env.local (do not commit)
