@@ -479,6 +479,7 @@ export type QueryRequest = schemas.QueryRequest;
 export type QueryResponse = schemas.QueryResponse;
 export type AdminConfigResponse = schemas.AdminConfigResponse;
 export type WarehouseTable = schemas.WarehouseTable;
+export type WarehouseCurrentSnapshot = schemas.WarehouseCurrentSnapshot;
 export type WarehouseSnapshot = schemas.WarehouseSnapshot;
 export type WarehouseQueryResponse = schemas.WarehouseQueryResponse;
 export type WarehouseRowsRequest = schemas.WarehouseRowsRequest;

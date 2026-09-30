@@ -1,22 +1,30 @@
 /**
  * The Tables list: each table with its current snapshot and its status axes (#525).
  *
- * Builder keeps the two halves in different places: the status axes come with
- * `GET /datasets`, and the current snapshot's row count and commit time only with
- * `GET /warehouse/tables/{name}`. A dataset has one warehouse table per source,
- * named `<dataset_id>.<source_key>`. This module joins them by that name and nothing
- * else — a value Builder did not send stays absent, and the page shows `—` for it.
- * builder#841 asks for the snapshot summary in the list itself, which would remove the
- * per-table detail requests.
+ * The status axes come with `GET /datasets`; the current snapshot's id, row count and
+ * commit time come with `GET /warehouse/tables` itself since kpubdata-builder#841
+ * (`current_snapshot`, and `dataset_id` naming the dataset a table was built for), so
+ * the list needs no call per table. A dataset has one warehouse table per source.
+ *
+ * An older Builder omits both fields: its tables are joined by `<dataset_id>.<source_key>`
+ * and each current snapshot is read from `GET /warehouse/tables/{name}`, four at a time,
+ * as before (#569). A value Builder did not send stays absent, and the page shows `—`.
  *
  * A deployment without a warehouse keeps today's list: the datasets alone, with no
  * snapshot columns.
  */
 import { detectWarehouse } from "@/features/sql/warehouse";
-import { type DatasetSummary, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { type DatasetSummary, type WarehouseTable } from "@/shared/lib/builderApi";
 import { warehouseApi } from "@/features/sql/warehouseApi";
 
 import { listDatasets, mapWithConcurrency } from "./api";
+
+/** The fields of a current snapshot the list shows: in the list summary and in the detail. */
+export interface CurrentSnapshot {
+  snapshot_id: string;
+  row_count: number | null;
+  committed_at: string | null;
+}
 
 /** One source table of a dataset, as the warehouse knows it. */
 export interface SourceSnapshot {
@@ -26,7 +34,7 @@ export interface SourceSnapshot {
    * `null`: the table has no committed snapshot yet. `undefined`: it has one, but the
    * detail request failed or did not list it — not known, never "empty".
    */
-  current: WarehouseSnapshot | null | undefined;
+  current: CurrentSnapshot | null | undefined;
 }
 
 export interface TableListRow extends DatasetSummary {
@@ -46,7 +54,27 @@ export function splitLogicalName(logicalName: string): { datasetId: string; sour
   return { datasetId: logicalName.slice(0, dot), sourceKey: logicalName.slice(dot + 1) };
 }
 
-async function currentSnapshotOf(table: WarehouseTable, signal?: AbortSignal): Promise<WarehouseSnapshot | null | undefined> {
+/**
+ * The dataset and source of a warehouse table. Builder's `dataset_id` wins when sent (a
+ * dataset id may contain a dot); null means Builder could not tell, and the table is not
+ * attributed. Only an older Builder that omits it is read by splitting the name.
+ */
+export function tableOwner(table: Pick<WarehouseTable, "logical_name" | "dataset_id">): { datasetId: string; sourceKey: string } | null {
+  if (table.dataset_id === undefined) return splitLogicalName(table.logical_name);
+  if (table.dataset_id === null) return null;
+  const prefix = `${table.dataset_id}.`;
+  const sourceKey = table.logical_name.startsWith(prefix)
+    ? table.logical_name.slice(prefix.length)
+    : (splitLogicalName(table.logical_name)?.sourceKey ?? table.logical_name);
+  return { datasetId: table.dataset_id, sourceKey };
+}
+
+/**
+ * The current snapshot of a table: from the list summary when Builder sends it (#841),
+ * otherwise from the table's detail.
+ */
+export async function currentSnapshotOf(table: WarehouseTable, signal?: AbortSignal): Promise<CurrentSnapshot | null | undefined> {
+  if (table.current_snapshot !== undefined) return table.current_snapshot;
   if (table.current_snapshot_id === null) return null;
   try {
     const detail = await warehouseApi().getWarehouseTable(table.logical_name, signal);
@@ -60,8 +88,8 @@ async function currentSnapshotOf(table: WarehouseTable, signal?: AbortSignal): P
 
 /**
  * The datasets, and — when there is a warehouse — each one's source tables with their
- * current snapshot. Detail requests are capped at four at a time, as the quality fan-out
- * this replaces was.
+ * current snapshot. Detail requests, needed only for an older Builder, are capped at four
+ * at a time.
  */
 export async function loadTableList(signal?: AbortSignal): Promise<TableList> {
   const [datasets, warehouse] = await Promise.all([listDatasets(50, signal), detectWarehouse(signal)]);
@@ -70,18 +98,17 @@ export async function loadTableList(signal?: AbortSignal): Promise<TableList> {
   }
 
   const listed = new Set(datasets.map((dataset) => dataset.dataset_id));
-  const owned = warehouse.tables.filter((table) => {
-    const name = splitLogicalName(table.logical_name);
-    return name !== null && listed.has(name.datasetId);
+  const owned = warehouse.tables.flatMap((table) => {
+    const owner = tableOwner(table);
+    return owner !== null && listed.has(owner.datasetId) ? [{ table, owner }] : [];
   });
-  const currents = await mapWithConcurrency(owned, 4, (table) => currentSnapshotOf(table, signal));
+  const currents = await mapWithConcurrency(owned, 4, ({ table }) => currentSnapshotOf(table, signal));
 
   const byDataset = new Map<string, SourceSnapshot[]>();
-  owned.forEach((table, index) => {
-    const name = splitLogicalName(table.logical_name)!;
-    const entries = byDataset.get(name.datasetId) ?? [];
-    entries.push({ logicalName: table.logical_name, sourceKey: name.sourceKey, current: currents[index] });
-    byDataset.set(name.datasetId, entries);
+  owned.forEach(({ table, owner }, index) => {
+    const entries = byDataset.get(owner.datasetId) ?? [];
+    entries.push({ logicalName: table.logical_name, sourceKey: owner.sourceKey, current: currents[index] });
+    byDataset.set(owner.datasetId, entries);
   });
 
   return {

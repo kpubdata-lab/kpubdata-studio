@@ -21,7 +21,6 @@ import {
   attentionAxes,
   connectionProblems,
   loadRecentSnapshots,
-  splitTableName,
   type RecentSnapshot,
 } from "@/features/home/homeData";
 import { listBuilds } from "@/features/runs/api";
@@ -226,8 +225,8 @@ function RecentSnapshots({ state }: { state: Loadable<RecentSnapshot[]> }) {
               </tr>
             </thead>
             <tbody>
-              {state.data.map(({ logicalName, snapshot }) => {
-                const name = splitTableName(logicalName);
+              {state.data.map(({ logicalName, owner, snapshot }) => {
+                const name = owner;
                 const href = name
                   ? `/tables/${encodeURIComponent(name.datasetId)}?${new URLSearchParams({ source: name.sourceKey })}`
                   : "/tables";
@@ -245,7 +244,10 @@ function RecentSnapshots({ state }: { state: Loadable<RecentSnapshot[]> }) {
                     <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
                       {snapshot.committed_at ? formatDateTime(snapshot.committed_at) : <MissingStatus />}
                     </td>
-                    <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{snapshot.run_id}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
+                      {/* The list summary (kpubdata-builder#841) does not name the run. */}
+                      {snapshot.run_id ?? <MissingStatus label={t("home.snapshots.runMissing")} />}
+                    </td>
                   </tr>
                 );
               })}

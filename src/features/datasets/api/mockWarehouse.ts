@@ -123,8 +123,22 @@ const DEMO_TABLES: DemoTable[] = [
 
 const BY_NAME = new Map(DEMO_TABLES.map((entry) => [entry.table.logical_name, entry] as const));
 
-/** `GET /warehouse/tables` in the demo. */
-export const MOCK_WAREHOUSE_TABLES: { tables: WarehouseTable[] } = { tables: DEMO_TABLES.map((entry) => entry.table) };
+/**
+ * `GET /warehouse/tables` in the demo, with each table's current snapshot summarised and
+ * its dataset named, as a Builder since kpubdata-builder#841 lists them.
+ */
+export const MOCK_WAREHOUSE_TABLES: { tables: WarehouseTable[] } = {
+  tables: DEMO_TABLES.map((entry) => {
+    const current = entry.snapshots.find((item) => item.snapshot_id === entry.table.current_snapshot_id);
+    return {
+      ...entry.table,
+      current_snapshot: current
+        ? { snapshot_id: current.snapshot_id, row_count: current.row_count, committed_at: current.committed_at, coverage: current.coverage ?? null }
+        : null,
+      dataset_id: entry.table.logical_name.slice(0, entry.table.logical_name.lastIndexOf(".")),
+    };
+  }),
+};
 
 /** `GET /warehouse/tables/{name}` in the demo, by logical name. */
 export const MOCK_WAREHOUSE_DETAILS: Record<string, WarehouseTableDetailResponse> = Object.fromEntries(
