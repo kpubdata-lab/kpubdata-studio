@@ -1006,7 +1006,7 @@
       "buildSucceeded": "테이블 생성 완료 (run {{runId}})",
       "buildCancelled": "실행이 취소되었습니다.",
       "interrupted": "요청을 중단했습니다. 서버 실행 결과는 확인되지 않았습니다.",
-      "planTitle": "Table creation plan",
+      "planTitle": "테이블 생성 계획",
       "logicalNameLabel": "만들어질 테이블 이름",
       "logicalNameAfterPreview": "최신 Preview 를 실행하면 표시됩니다.",
       "logicalNameNote": "테이블 ID 와 KPubData Builder Preview 가 알려 준 source key 입니다."
@@ -1756,7 +1756,12 @@
       "schemaBothFailed": "silver/gold schema 조회에 모두 실패했습니다.",
       "schemaNotReached": "이 source는 아직 schema를 만들 수 있는 stage까지 진행되지 않았습니다.",
       "mockNoOutput": "mock/demo 모드에서는 이 run에 실제로 대응하는 output evidence를 제공하지 않습니다.",
-      "baseRunMissing": "이 테이블의 run 목록에서 기준 run을 찾을 수 없습니다(삭제되었거나 접근할 수 없음)."
+      "baseRunMissing": "이 테이블의 run 목록에서 기준 run을 찾을 수 없습니다(삭제되었거나 접근할 수 없음).",
+      "refRun": "Run {{runId}}",
+      "refQuality": "품질",
+      "refSchema": "Schema · {{sourceKey}}",
+      "refStage": "Stage · {{sourceKey}}",
+      "refOutput": "Output"
     },
     "staleness": {
       "lookupFailed": "조회에 실패했습니다.",
@@ -2140,8 +2145,8 @@
   },
   "assistantChat": {
     "llmFailed": "LLM 호출에 실패했습니다.",
-    "needsKey": "어시스턴트를 사용하려면 Settings에서 LLM API 키를 입력하세요. (BYOK)",
-    "title": "BuildSpec 어시스턴트",
+    "needsKey": "Ask KPubData 를 사용하려면 Settings에서 LLM API 키를 입력하세요. (BYOK)",
+    "title": "Ask KPubData · BuildSpec",
     "reset": "대화 초기화",
     "hint": "스펙 오류 설명, 수정 제안, 데이터 소스 추천을 물어보세요.",
     "placeholder": "질문을 입력하세요…",
@@ -2158,7 +2163,11 @@
       "silverDone": "Silver 완료",
       "bronzeDone": "Bronze 완료",
       "someNotRun": "실행되지 않은 stage가 있음",
-      "noStage": "사용 가능한 stage 없음"
+      "noStage": "사용 가능한 stage 없음",
+      "labelUnavailable": "확인 불가",
+      "labelMixedFailed": "혼합 / 실패",
+      "labelFailed": "실패",
+      "labelMixedPartial": "혼합 / 일부 완료"
     },
     "errors": {
       "datasetNotFound": "요청한 테이블을 찾을 수 없습니다.",
@@ -2173,7 +2182,7 @@
   "validatePage": {
     "eyebrow": "검증",
     "title": "검증 결과",
-    "desc": "필요한 항목을 확인하고 어시스턴트에게 수정 제안을 물어보세요.",
+    "desc": "필요한 항목을 확인하고 Ask KPubData 로 수정 제안을 받아보세요.",
     "emptyTitle": "검증은 테이블 만들기 안에서 진행됩니다",
     "emptyDesc": "필드별 오류와 수정 가이드는 테이블 만들기 마법사의 '검증·실행' 단계에서 바로 확인할 수 있습니다.",
     "cta": "테이블 만들기"
@@ -2206,7 +2215,16 @@
     "formatRequired": "파일 포맷을 선택해주세요.",
     "endpointRequired": "Endpoint를 입력해주세요.",
     "httpsOnly": "https:// 로 시작하는 URL만 허용됩니다.",
-    "urlFormats": "URL 소스는 csv/json/jsonl 포맷만 지원합니다."
+    "urlFormats": "URL 소스는 csv/json/jsonl 포맷만 지원합니다.",
+    "aliasEmpty": "Alias는 비워 둘 수 없습니다.",
+    "providerRequired": "Provider를 선택해주세요.",
+    "sourceDatasetRequired": "소스 데이터셋을 선택해주세요.",
+    "exportFormatRequired": "Export 포맷이 필요합니다.",
+    "datasetIdRequired": "테이블 ID(dataset_id)를 입력해주세요.",
+    "titleRequired": "제목을 입력해주세요.",
+    "descriptionRequired": "설명을 입력해주세요.",
+    "sourcesRequired": "소스를 하나 이상 추가해주세요.",
+    "exportsRequired": "Export 포맷을 하나 이상 선택해주세요."
   },
   "preview": {
     "unknownSourceError": "원인을 알 수 없는 소스 오류",

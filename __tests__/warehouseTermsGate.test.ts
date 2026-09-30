@@ -156,17 +156,26 @@ describe("warehouse terminology gate — hard-coded TSX text (#485)", () => {
  * Product names on screen (#531): the AI entry is "Ask KPubData" — never the retired
  * standalone label — the old "Kubi" and "Refresh Jobs" are gone, and the Builder is "KPubData
  * Builder" wherever a screen writes it directly. Locale values are checked for the first
- * three; "the Builder" in a locale sentence, after the full name, stays allowed. The TSX
- * text comes from the same scanner as the hard-coded English gate, with no exemptions.
+ * three (the AI label also in lower case and Korean, #572); "the Builder" in a locale
+ * sentence, after the full name, stays allowed. The TSX text comes from the same scanner
+ * as the hard-coded English gate, with no exemptions.
  */
 
 // stale-ui-ignore: the retired AI label this test checks is gone (#531).
 const RETIRED_AI_LABEL = "Assistant";
 const RETIRED_NAME = new RegExp(`\\bKubi\\b|\\b${RETIRED_AI_LABEL}\\b|\\bRefresh Jobs\\b`);
 const BARE_BUILDER = /(?<!KPubData )\bBuilder\b/;
+/**
+ * In a locale value the retired label is also caught in lower case and in Korean (#572):
+ * "ask the assistant", or the Korean transliteration. Keys and identifiers
+ * (`assistantChat.title`, `openAssistant`) are code and keep the word; only the text a person reads is checked.
+ */
+const RETIRED_NAME_IN_VALUE = /\bassistants?\b|어시스턴트/i;
 
 function retiredNames(entries: [string, string][]): string[] {
-  return entries.filter(([, value]) => RETIRED_NAME.test(value)).map(([key]) => key);
+  return entries
+    .filter(([, value]) => RETIRED_NAME.test(value) || RETIRED_NAME_IN_VALUE.test(value))
+    .map(([key]) => key);
 }
 
 function productNameHits(texts: { file: string; line: number; text: string }[]): string[] {
@@ -196,5 +205,16 @@ describe("product names on screen (#531)", () => {
     ].map(([file, text]) => ({ file, line: 1, text }));
     expect(productNameHits(texts)).toEqual([`a:1: ${RETIRED_AI_LABEL}`, "b:1: Kubi 에게 묻기", "c:1: Refresh Jobs", "d:1: Builder readiness"]);
     expect(retiredNames([["k", RETIRED_AI_LABEL], ["l", "Ask KPubData"]])).toEqual(["k"]);
+  });
+
+  it("finds the retired label in a locale value in lower case and in Korean, but not in a key", () => {
+    expect(
+      retiredNames([
+        ["validate.desc", "Ask the assistant for suggested fixes."],
+        ["chat.title", "스펙 어시스턴트"],
+        ["assistantChat.needsKey", "Ask KPubData 를 사용하려면 LLM API 키를 입력하세요."],
+        ["openAssistant", "Open Ask KPubData"],
+      ]),
+    ).toEqual(["validate.desc", "chat.title"]);
   });
 });

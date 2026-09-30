@@ -48,7 +48,7 @@ export const sourceKindSchema = z.enum(["public_api", "file", "url"]);
 export const sourceFormatSchema = z.enum(["csv", "json", "jsonl", "parquet"]);
 
 /** upload_id format issued by `POST /uploads` (Builder #498: `upl_` + 32 hex chars). */
-export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, i18n.t("schemas.uploadIdFormat"));
+export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, { error: () => i18n.t("schemas.uploadIdFormat") });
 
 /**
  * schema validating fields that single source data reference must have (#250, #498).
@@ -65,7 +65,7 @@ export const sourceRefSchema = z
     provider: z.string().optional(),
     dataset: z.string().optional(),
     params: jsonRecordSchema,
-    alias: z.string().min(1, "Alias cannot be empty.").optional(),
+    alias: z.string().min(1, { error: () => i18n.t("schemas.aliasEmpty") }).optional(),
     schema: schemaContractSchema.optional(),
     uploadId: uploadIdSchema.optional(),
     format: sourceFormatSchema.optional(),
@@ -77,10 +77,10 @@ export const sourceRefSchema = z
     const kind = source.kind ?? "public_api";
     if (kind === "public_api") {
       if (!source.provider) {
-        ctx.addIssue({ code: "custom", path: ["provider"], message: "Provider is required." });
+        ctx.addIssue({ code: "custom", path: ["provider"], message: i18n.t("schemas.providerRequired") });
       }
       if (!source.dataset) {
-        ctx.addIssue({ code: "custom", path: ["dataset"], message: "Source dataset is required." });
+        ctx.addIssue({ code: "custom", path: ["dataset"], message: i18n.t("schemas.sourceDatasetRequired") });
       }
     } else if (kind === "file") {
       if (!source.uploadId) {
@@ -103,17 +103,17 @@ export const sourceRefSchema = z
 
 /** schema validating export target definition */
 export const exportTargetSchema = z.object({
-  format: z.string().min(1, "Export format is required."),
+  format: z.string().min(1, { error: () => i18n.t("schemas.exportFormatRequired") }),
   options: exportOptionsSchema.optional(),
 });
 
 /** schema validating entire spec structure generated from new build screen */
 export const buildSpecSchema = z.object({
-  datasetId: z.string().min(1, "Table ID (dataset_id) is required."),
-  title: z.string().min(1, "Title is required."),
-  description: z.string().min(1, "Description is required."),
-  sources: z.array(sourceRefSchema).min(1, "At least one source is required."),
-  exports: z.array(exportTargetSchema).min(1, "Select at least one export format."),
+  datasetId: z.string().min(1, { error: () => i18n.t("schemas.datasetIdRequired") }),
+  title: z.string().min(1, { error: () => i18n.t("schemas.titleRequired") }),
+  description: z.string().min(1, { error: () => i18n.t("schemas.descriptionRequired") }),
+  sources: z.array(sourceRefSchema).min(1, { error: () => i18n.t("schemas.sourcesRequired") }),
+  exports: z.array(exportTargetSchema).min(1, { error: () => i18n.t("schemas.exportsRequired") }),
   metadata: jsonRecordSchema,
   // canonical top-level fields not provided UI editing in Studio (publish/splits/pii/...)
   // bucket preserving through round-trip without loss (#250). see specMapping.ts.

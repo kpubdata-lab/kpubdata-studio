@@ -11,6 +11,10 @@
  * `placeholder`, `aria-label`, `alt` …). Parsed with the TypeScript scanner, so
  * comments, class names and code are never candidates.
  *
+ * A `.ts` module has no JSX but still reaches a screen (#572): a `label` kept in data a
+ * component renders, the `message` of a zod issue, the error string of a zod check
+ * (`.min(1, "…")`). Those shapes are read there too; mock and demo modules are skipped.
+ *
  * What is not: text inside `<code>`, `<kbd>`, `<pre>`, `<samp>` or `<style>`; a line
  * marked `i18n-ignore: <reason>` (or the line above it); and text made only of words
  * that are not translated — brand names, file formats, status codes Builder sends
@@ -37,6 +41,15 @@ export const SHOWN_PROPS = new Set([
   "actionLabel",
   "heading",
 ]);
+
+/**
+ * In a `.ts` module, where there is no JSX, the extra property that reaches a screen:
+ * the `message` of a zod issue (`ctx.addIssue({ message })`), shown as a form error.
+ */
+const TS_SHOWN_PROPS = new Set(["message"]);
+
+/** zod checks whose second argument is the error a person reads (`.min(1, "…")`). */
+const ZOD_CHECKS = new Set(["min", "max", "length", "regex", "refine", "email", "url", "startsWith", "endsWith", "includes", "nonempty"]);
 
 /** Elements whose text is code, not prose. */
 const CODE_ELEMENTS = new Set(["code", "kbd", "pre", "samp", "style"]);
@@ -114,7 +127,9 @@ function insideCode(node) {
  * The terminology gate reads these too, with no exemption.
  */
 export function uiTexts(file, source) {
-  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const plainTs = !file.endsWith(".tsx");
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, plainTs ? ts.ScriptKind.TS : ts.ScriptKind.TSX);
+  const propName = (node) => node.name.getText(sourceFile).replace(/^["']|["']$/g, "");
   const found = [];
   const add = (node, text) => {
     const trimmed = text.replace(/\s+/g, " ").trim();
@@ -148,10 +163,18 @@ export function uiTexts(file, source) {
     } else if (
       // `{ id: "overview", label: "Overview" }` — a label kept in a constant and rendered later.
       ts.isPropertyAssignment(node) &&
-      SHOWN_PROPS.has(node.name.getText(sourceFile).replace(/^["']|["']$/g, "")) &&
-      (ts.isStringLiteral(node.initializer) || ts.isNoSubstitutionTemplateLiteral(node.initializer))
+      (SHOWN_PROPS.has(propName(node)) || (plainTs && TS_SHOWN_PROPS.has(propName(node))))
     ) {
-      add(node.initializer, node.initializer.text);
+      leaves(node.initializer);
+    } else if (
+      // `z.string().min(1, "Alias cannot be empty.")` — a zod check's message.
+      plainTs &&
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      ZOD_CHECKS.has(node.expression.name.text) &&
+      node.arguments.length > 1
+    ) {
+      leaves(node.arguments[1]);
     }
     ts.forEachChild(node, visit);
   };
@@ -159,31 +182,43 @@ export function uiTexts(file, source) {
   return found;
 }
 
-/** English UI text in one TSX source that should be in the locale files. */
+/** English UI text in one `.tsx` or `.ts` source that should be in the locale files. */
 export function hardCodedEnglish(file, source) {
   const lines = source.split("\n");
   return uiTexts(file, source).filter(({ line, text }) => isEnglishProse(text) && !ignored(lines, line));
 }
 
-/** Every non-test `.tsx` file under `dir`, as paths relative to it. */
-function tsxFiles(dir, base = dir) {
+/**
+ * Mock and demo modules (`mockData.ts`, `demoDatasets.ts`, `demo.ts`): sample records
+ * standing in for what Builder or a user would send, not text Studio writes itself.
+ */
+const FIXTURE = /^(mock|demo)\w*\.ts$/;
+
+/**
+ * Every non-test `.tsx` and `.ts` source under `dir`, as paths relative to it. A `.ts`
+ * module has no JSX, but a label or a zod message written there still reaches a screen
+ * (#572), so it is read for the property and zod shapes `uiTexts` knows.
+ */
+function sourceFiles(dir, base = dir) {
   return readdirSync(dir).flatMap((name) => {
     const full = join(dir, name);
-    if (statSync(full).isDirectory()) return name === "node_modules" ? [] : tsxFiles(full, base);
-    return name.endsWith(".tsx") && !/\.(test|spec)\.tsx$/.test(name) ? [relative(base, full)] : [];
+    if (statSync(full).isDirectory()) return name === "node_modules" ? [] : sourceFiles(full, base);
+    return /\.tsx?$/.test(name) && !/\.d\.ts$/.test(name) && !/\.(test|spec)\.tsx?$/.test(name) && !FIXTURE.test(name)
+      ? [relative(base, full)]
+      : [];
   });
 }
 
 /** `file:line: text` for every English UI string hard-coded under `srcRoot`. */
 export function scanEnglish(srcRoot) {
-  return tsxFiles(srcRoot).flatMap((file) =>
+  return sourceFiles(srcRoot).flatMap((file) =>
     hardCodedEnglish(file, readFileSync(join(srcRoot, file), "utf8")).map((hit) => `${file}:${hit.line}: ${hit.text}`),
   );
 }
 
 /** `{ file, line, text }` for every piece of UI text under `srcRoot`, unfiltered. */
 export function scanUiTexts(srcRoot) {
-  return tsxFiles(srcRoot).flatMap((file) =>
+  return sourceFiles(srcRoot).flatMap((file) =>
     uiTexts(file, readFileSync(join(srcRoot, file), "utf8")).map((hit) => ({ file, ...hit })),
   );
 }

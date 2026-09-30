@@ -153,12 +153,12 @@ for (const row of rows.slice(0, topN)) {
 // English typed straight into a screen (#531): the same gate, for TSX text in English.
 // Every screen, content files included: their Korean is content, their English labels are not.
 const english = scanEnglish(ROOT);
-console.log(`English UI text hard-coded in TSX: ${english.length} (baseline 0)`);
+console.log(`English UI text hard-coded in TSX or TS: ${english.length} (baseline 0)`);
 for (const hit of english.slice(0, verbose ? english.length : topN)) console.log(`        ${hit.slice(0, 140)}`);
 
 if (check && english.length > 0) {
   console.error(
-    `\nFAIL: ${english.length} English UI string(s) are written directly in TSX.\n` +
+    `\nFAIL: ${english.length} English UI string(s) are written directly in TSX or TS.\n` +
       `Move them to src/shared/i18n/locales/{ko,en}.json and reference them with t().\n` +
       `If one is not UI text (code, a sample value), mark the line with \`// i18n-ignore: <reason>\`.`,
   );

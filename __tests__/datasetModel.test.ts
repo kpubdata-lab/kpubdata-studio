@@ -48,7 +48,7 @@ describe("Dataset stage/validation policy (#253)", () => {
     expect(summarizeDatasetStages({
       first: { bronze: "completed", silver: "completed", gold: "completed" },
       second: { bronze: "completed", silver: "failed", gold: "not_run" },
-    }).label).toBe("Mixed / Failed");
+    }).label).toBe("혼합 / 실패");
     expect(summarizeDatasetStages({
       first: { bronze: "completed", silver: "completed", gold: "unavailable" },
     }).label).toBe("Silver");
