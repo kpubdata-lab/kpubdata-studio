@@ -26,6 +26,10 @@ export default defineConfig({
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    // Mock mode ignores this. It lets a spec that turns the real-Builder path on through
+    // the runtime config (and stubs the Builder itself, e.g. sql-explorer) skip the OIDC
+    // login it cannot reach — dev builds only (#528).
+    env: { VITE_DEV_BYPASS_AUTH: "true" },
   },
   // @real-builder 스펙(실 Builder 기동 필요)은 기본 슈트에서 제외한다.
   grep: /^(?!.*@real-builder).*$/,

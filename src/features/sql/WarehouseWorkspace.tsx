@@ -1,27 +1,30 @@
 /**
  * SQL Workspace over committed warehouse tables (#417).
  *
- * Pick a table and a snapshot — `current` by default, resolved by the Builder when the
- * query starts — and run it yourself. The result names the snapshot it read. Saving
+ * Pick a table in the explorer (#528) and a snapshot — `current` by default, resolved by
+ * the Builder when the query starts — and run it yourself. The binding bar names what
+ * `dataset` reads; the explorer only edits the SQL, it never runs it. The result names the snapshot it read. Saving
  * runs the query once more through `POST /analyses`, which stores that concrete
  * snapshot id, so the saved analysis re-runs on the same input after a refresh.
  *
  * `?table=&snapshot=&analysis=` keeps the target in the URL; `analysis` loads a saved
  * analysis's SQL and binding (from Saved Analyses' "open in SQL Workspace").
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { AggregateChartPanel } from "@/features/charts/AggregateChartPanel";
 import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
 import { ExportPanel } from "@/features/export/ExportPanel";
-import { builderApi, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
+import { builderApi, type QueryResponse, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
 import { Button, Card, PageHeader } from "@/shared/ui";
 
 import { QueryError, ResultTable } from "./ResultTable";
 import { coverageCounts, coverageOf } from "./snapshotCoverage";
-import { queryWarehouse, saveAnalysis, type WarehouseOutcome } from "./warehouse";
+import { TableExplorer } from "./TableExplorer";
+import { referencedTableNames, sqlIdentifier } from "./tableReferences";
+import { queryWarehouse, saveAnalysis, type Pinned, type WarehouseOutcome } from "./warehouse";
 
 const DEFAULT_SQL = "SELECT *\nFROM dataset\nLIMIT 100";
 const CURRENT = "current";
@@ -53,6 +56,43 @@ function SnapshotCoverageNote({ snapshot }: { snapshot: WarehouseSnapshot | unde
   );
 }
 
+/**
+ * `dataset → <table> @ <snapshot>` — what the relation `dataset` reads (#528). `dataset`
+ * is the product's name for the bound table, not a limitation to hide.
+ */
+function BindingBar({ table, snapshot, currentId }: { table: string; snapshot: string; currentId: string | null }) {
+  const { t } = useTranslation();
+  const snapshotText = snapshot === CURRENT && table && currentId ? `${CURRENT} (${currentId})` : snapshot;
+  return (
+    <div
+      className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg border border-border bg-card px-3 py-2 text-xs"
+      data-testid="dataset-binding"
+    >
+      <span className="font-semibold text-muted-foreground">{t("sql.binding")}</span>
+      <code className="min-w-0 break-all font-mono text-foreground">
+        {`dataset → ${table || "—"}${table ? ` @ ${snapshotText}` : ""}`}
+      </code>
+    </div>
+  );
+}
+
+/** Rows · time · snapshot · rev · LIMIT — only what the Builder and the request said (#528). */
+function ResultFooter({ result, pinned }: { result: QueryResponse; pinned: Pinned }) {
+  const { t } = useTranslation();
+  const parts = [
+    t("sql.rows", { count: result.rows.length }) + (result.truncated ? ` (${t("sql.truncated")})` : ""),
+    `${result.execution_ms} ms`,
+    `snapshot ${pinned.snapshotId}`,
+    ...(pinned.revision === undefined ? [] : [`rev ${pinned.revision}`]),
+    ...(pinned.limit === undefined ? [] : [`LIMIT ${pinned.limit}`]),
+  ];
+  return (
+    <p className="break-all font-mono text-xs text-muted-foreground" data-testid="result-footer">
+      {parts.join(" · ")}
+    </p>
+  );
+}
+
 export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
@@ -65,6 +105,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState<"run" | "save" | null>(null);
   const [outcome, setOutcome] = useState<WarehouseOutcome | null>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const currentId = tables.find((item) => item.logical_name === table)?.current_snapshot_id ?? null;
   const selectedSnapshot = (snapshots ?? []).find((item) => item.snapshot_id === (snapshot === CURRENT ? currentId : snapshot));
@@ -107,6 +148,25 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   }, [analysisId]);
 
   const blocked = !table ? t("sql.needTable") : null;
+  const tableNamesInFrom = useMemo(
+    () => referencedTableNames(sql, tables.map((item) => item.logical_name)),
+    [sql, tables],
+  );
+
+  function selectTable(next: string) {
+    if (next !== table) update({ table: next, snapshot: null, analysis: null });
+  }
+
+  /** Put a column at the editor's cursor — and bind `dataset` to its table. Never runs. */
+  function insertColumn(columnTable: string, column: string) {
+    const text = sqlIdentifier(column);
+    const editor = editorRef.current;
+    const start = editor?.selectionStart ?? sql.length;
+    const end = editor?.selectionEnd ?? sql.length;
+    setSql((previous) => previous.slice(0, start) + text + previous.slice(end));
+    selectTable(columnTable);
+    requestAnimationFrame(() => editorRef.current?.setSelectionRange(start + text.length, start + text.length));
+  }
 
   async function run() {
     if (blocked || !sql.trim()) return;
@@ -134,24 +194,15 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
-        <Card className="flex flex-col gap-3 text-sm">
-          <label className="text-xs font-semibold text-muted-foreground">
-            {t("sql.table")}
-            <select
-              aria-label={t("sql.table")}
-              className={`font-mono ${fieldClassName}`}
-              onChange={(event) => update({ table: event.target.value, snapshot: null, analysis: null })}
-              value={table}
-            >
-              <option value="">{t("sql.pickTable")}</option>
-              {tables.map((item) => (
-                <option key={item.table_id} value={item.logical_name}>
-                  {item.logical_name}
-                </option>
-              ))}
-            </select>
-          </label>
+      <div className="grid gap-4 lg:grid-cols-[256px_minmax(0,1fr)]">
+        <Card className="flex min-w-0 flex-col gap-3 p-4 text-sm">
+          <TableExplorer
+            onInsertColumn={insertColumn}
+            onSelectTable={selectTable}
+            selectedSnapshot={snapshot}
+            selectedTable={table}
+            tables={tables}
+          />
           <label className="text-xs font-semibold text-muted-foreground">
             {t("sql.snapshotLabel")}
             <select
@@ -178,6 +229,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
         </Card>
 
         <div className="flex min-w-0 flex-col gap-3">
+          <BindingBar currentId={currentId} snapshot={snapshot} table={table} />
           <label className="sr-only" htmlFor="sql-editor">
             {t("sql.editor")}
           </label>
@@ -188,12 +240,16 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
             onKeyDown={(event) => {
               if ((event.metaKey || event.ctrlKey) && event.key === "Enter") void run();
             }}
+            ref={editorRef}
             spellCheck={false}
             value={sql}
           />
-          <p className="text-xs text-muted-foreground">
-            {blocked ?? t("sql.fromDataset", { target: `${table}@${snapshot}` })}
-          </p>
+          {tableNamesInFrom.length > 0 ? (
+            <p className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-xs text-status-warning" role="note">
+              {t("sql.tableInFrom", { names: tableNamesInFrom.join(", ") })}
+            </p>
+          ) : null}
+          {blocked ? <p className="text-xs text-muted-foreground">{blocked}</p> : null}
 
           <div className="flex flex-wrap items-end gap-2">
             <label className="min-w-56 flex-1 text-xs font-semibold text-muted-foreground">
@@ -235,6 +291,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
                 result={outcome.result}
                 target={pinnedLabel(outcome.pinned.table, outcome.pinned.snapshotId, outcome.pinned.revision)}
               />
+              <ResultFooter pinned={outcome.pinned} result={outcome.result} />
             </>
           ) : null}
         </div>

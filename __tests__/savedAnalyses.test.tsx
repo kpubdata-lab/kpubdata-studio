@@ -98,7 +98,7 @@ describe("saved analyses against a warehouse (#417)", () => {
     const engine = fakeEngine();
     const router = renderApp("/sql");
 
-    fireEvent.change(await screen.findByRole("combobox", { name: "테이블" }), { target: { value: TABLE } });
+    fireEvent.click(await screen.findByRole("treeitem", { name: TABLE }));
     await screen.findByRole("option", { name: /s2 · 10행/ });
     fireEvent.click(screen.getByRole("button", { name: /실행 ⌘/ }));
     expect(await screen.findByText(`${TABLE}@s2 · rev 2`)).toBeInTheDocument();

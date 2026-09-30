@@ -35,20 +35,28 @@ export async function detectWarehouse(signal?: AbortSignal): Promise<WarehouseAv
   }
 }
 
+/**
+ * The row cap Studio sends with every warehouse query (#528). It equals the contract's
+ * default, but sending it makes the cap a fact the result footer can state.
+ */
+export const WAREHOUSE_ROW_LIMIT = 100;
+
 /** What a result read: table and concrete snapshot, with the revision when the Builder said. */
 export interface Pinned {
   table: string;
   snapshotId: string;
   revision?: number;
+  /** The row cap the request carried. */
+  limit?: number;
 }
 
 export type WarehouseOutcome =
   | { status: "success"; result: QueryResponse; pinned: Pinned; saved?: SavedAnalysis }
   | { status: "error"; code: string; message: string };
 
-function fromResponse(response: WarehouseQueryResponse): WarehouseOutcome {
+function fromResponse(response: WarehouseQueryResponse, limit?: number): WarehouseOutcome {
   const { logical_name, snapshot_id, revision } = response.snapshot;
-  return { status: "success", result: response.result, pinned: { table: logical_name, snapshotId: snapshot_id, revision } };
+  return { status: "success", result: response.result, pinned: { table: logical_name, snapshotId: snapshot_id, revision, limit } };
 }
 
 export async function queryWarehouse(
@@ -58,7 +66,8 @@ export async function queryWarehouse(
   signal?: AbortSignal,
 ): Promise<WarehouseOutcome> {
   try {
-    return fromResponse(await builderApi.warehouseQuery({ table, snapshot, sql }, signal));
+    const limit = WAREHOUSE_ROW_LIMIT;
+    return fromResponse(await builderApi.warehouseQuery({ table, snapshot, sql, limit }, signal), limit);
   } catch (cause) {
     return classifyQueryError(cause);
   }
@@ -73,13 +82,14 @@ export async function saveAnalysis(
   signal?: AbortSignal,
 ): Promise<WarehouseOutcome> {
   try {
-    const { analysis, result } = await builderApi.createAnalysis({ name, table, snapshot, sql }, signal);
+    const limit = WAREHOUSE_ROW_LIMIT;
+    const { analysis, result } = await builderApi.createAnalysis({ name, table, snapshot, sql, limit }, signal);
     const binding = analysis.bindings[0];
     return {
       status: "success",
       saved: analysis,
       result,
-      pinned: { table: binding?.table ?? table, snapshotId: binding?.snapshot_id ?? snapshot },
+      pinned: { table: binding?.table ?? table, snapshotId: binding?.snapshot_id ?? snapshot, limit },
     };
   } catch (cause) {
     return classifyQueryError(cause);

@@ -2257,6 +2257,19 @@
       "partial": "Snapshot {{snapshot}}: partial — fewer rows were fetched than the source reported.",
       "unknown": "Snapshot {{snapshot}}: coverage unknown — nothing records it as complete.",
       "counts": "Fetched {{fetched}} / reported {{reported}}."
+    },
+    "binding": "Binding",
+    "tableInFrom": "KPubData Builder reads the selected table only as `dataset`. Before running, use `FROM dataset` instead of {{names}}.",
+    "explorerFallback": "The table explorer and snapshot pinning need a KPubData Builder with a warehouse. Here you query a run's table directly.",
+    "explorer": {
+      "title": "Table explorer",
+      "empty": "No committed tables.",
+      "hint": "Table → Source → Column. Picking a source binds `dataset` to it; picking a column inserts it at the editor's cursor. Nothing runs.",
+      "insertHint": "Insert at the editor's cursor",
+      "loadingColumns": "Loading columns…",
+      "noSnapshot": "No committed snapshot.",
+      "noColumns": "No columns.",
+      "columnsError": "Could not load the columns."
     }
   },
   "admin": {

@@ -196,6 +196,9 @@ function RunWorkspace() {
             </p>
           ) : null}
           <p className="text-xs text-muted-foreground">{t("sql.oneTable")}</p>
+          <p className="text-xs text-muted-foreground" data-testid="explorer-fallback">
+            {t("sql.explorerFallback")}
+          </p>
         </Card>
 
         <div className="flex min-w-0 flex-col gap-3">
