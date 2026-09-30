@@ -38,6 +38,19 @@ export async function listDatasets(limit = 50, signal?: AbortSignal): Promise<Da
   return MOCK_DATASETS.datasets.slice(0, limit);
 }
 
+/** One page of tables with Builder's `total` (undefined when this Builder does not send it). */
+export async function listDatasetsPage(
+  limit = 50,
+  signal?: AbortSignal,
+): Promise<{ datasets: DatasetSummary[]; total: number | undefined }> {
+  if (isRealBuilderEnabled()) {
+    const response = await builderApi.listDatasets(limit, signal);
+    return { datasets: response.datasets, total: response.total };
+  }
+  throwIfAborted(signal);
+  return { datasets: MOCK_DATASETS.datasets.slice(0, limit), total: MOCK_DATASETS.total ?? MOCK_DATASETS.datasets.length };
+}
+
 export async function getDataset(datasetId: string, signal?: AbortSignal): Promise<DatasetDetailResponse> {
   if (isRealBuilderEnabled()) return builderApi.getDataset(datasetId, signal);
   throwIfAborted(signal);

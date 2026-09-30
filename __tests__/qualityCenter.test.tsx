@@ -1,7 +1,15 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+/**
+ * Quality Center: actionable quality issues across tables in one table (#536).
+ *
+ * Mock fixture: air-quality's latest run has a FAIL and a schema drift finding and is
+ * partial, population's latest run evaluated nothing, transport's latest run all passed.
+ */
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QualityPage } from "@/pages/QualityPage";
+
+const CAPTION = "테이블별 조치가 필요한 품질 문제";
 
 function LocationProbe() {
   const location = useLocation();
@@ -22,242 +30,117 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-describe("Quality Center P0 (#254)", () => {
-  it("defaults to the first dataset and its latest run", async () => {
+describe("Quality Center across tables (#536)", () => {
+  it("lists WARN/FAIL results and schema drift from every table's latest refresh in one table", async () => {
     renderQuality();
-    expect(await screen.findByLabelText("테이블 선택")).toHaveValue("air-quality");
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
+
+    const table = await screen.findByRole("table", { name: CAPTION });
+    const headers = within(table).getAllByRole("columnheader").map((cell) => cell.textContent);
+    expect(headers).toEqual(["테이블", "소스", "규칙", "컬럼", "상태", "실제값 / 기준", "영향 행 / 검사 행", "스냅샷(run)"]);
+
+    const fail = within(table).getByRole("row", { name: /required_column/ });
+    expect(fail).toHaveTextContent("대기질 통합 데이터");
+    expect(fail).toHaveTextContent("kma__weather");
+    expect(fail).toHaveTextContent("temperature");
+    expect(within(fail).getByText("FAIL").closest("[data-status]")).toHaveAttribute("data-status", "actionable");
+    expect(within(fail).getByRole("link", { name: "air-2026-08-14" })).toHaveAttribute("href", "/refresh-jobs/air-2026-08-14");
+    expect(within(fail).getByRole("link", { name: "대기질 통합 데이터" })).toHaveAttribute(
+      "href",
+      "/tables/air-quality?run=air-2026-08-14&source=kma__weather&tab=quality",
+    );
+
+    const drift = within(table).getByRole("row", { name: /column_removed/ });
+    expect(within(drift).getByText("Schema drift").closest("[data-status]")).toHaveAttribute("data-status", "actionable");
+
+    // PASS results are not issues.
+    expect(within(table).queryByText("seoul__transport")).not.toBeInTheDocument();
   });
 
-  it("shows availability=partial explicitly instead of hiding it or reporting PASS", async () => {
+  it("has no KPI cards, legend or run/source/stage pickers — that is Table Detail's Quality tab", async () => {
     renderQuality();
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
-    expect(await screen.findByText("partial")).toBeInTheDocument();
-  });
-
-  it("aggregates Checks Passed across sources (not just the first source) and shows the real denominator", async () => {
-    renderQuality();
-    // air-2026-08-14: datago__air has 1 PASS, kma__weather has 1 FAIL => 1/2, not 1/1.
-    expect(await screen.findByText("1 / 2")).toBeInTheDocument();
-  });
-
-  it("shows N/A (not 0% or PASS) when evaluated_checks is 0", async () => {
-    renderQuality("/quality?dataset=population");
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("population-2026-08-13"));
-    expect(await screen.findByText("평가 없음")).toBeInTheDocument();
-    expect(await screen.findByText("unavailable")).toBeInTheDocument();
-    const naValues = screen.getAllByText("N/A");
-    expect(naValues.length).toBeGreaterThan(0);
-  });
-
-  it("shows a real no-rule empty state distinct from the all-pass empty state", async () => {
-    renderQuality("/quality?dataset=population");
-    expect(await screen.findByText("평가된 quality check가 없습니다")).toBeInTheDocument();
-  });
-
-  it("shows the all-pass empty state (distinct from no-rule) when every evaluated check passed", async () => {
-    renderQuality("/quality?dataset=transport");
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("transport-2026-08-12"));
-    expect(await screen.findByText("WARN/FAIL이 없습니다")).toBeInTheDocument();
-    expect(screen.queryByText("평가된 quality check가 없습니다")).not.toBeInTheDocument();
-  });
-
-  it("lists WARN/FAIL findings with real dataset fields and keeps the source visible", async () => {
-    renderQuality();
-    const heading = await screen.findByText("Recent quality issues");
-    const card = heading.closest("div")!.parentElement!;
-    expect(within(card).getByText("kma__weather")).toBeInTheDocument();
-    expect(within(card).getByText("schema · required_column")).toBeInTheDocument();
-  });
-
-  it("does not silently fall back to latest run for an invalid run in the URL", async () => {
-    renderQuality("/quality?dataset=air-quality&run=missing-run");
-    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
-    expect(screen.getByTestId("location")).toHaveTextContent("run=missing-run");
-  });
-
-  it("does not silently fall back for an invalid source in the URL", async () => {
-    renderQuality("/quality?dataset=air-quality&source=missing-source");
-    expect(await screen.findByRole("alert")).toHaveTextContent("존재하지 않습니다");
-  });
-
-  it("blocks result rendering for an invalid source and offers a reset", async () => {
-    renderQuality("/quality?dataset=air-quality&source=missing-source");
-    expect(await screen.findByText("잘못된 source 필터입니다")).toBeInTheDocument();
+    await screen.findByRole("table", { name: CAPTION });
     expect(screen.queryByText("Checks Passed")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "전체 소스로 초기화" }));
-    await waitFor(() => expect(screen.getByTestId("location")).not.toHaveTextContent("source="));
-    expect(await screen.findByText("Checks Passed")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Run 선택")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Source 선택")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("상태")).toBeInTheDocument();
+    expect(screen.getByLabelText("테이블")).toBeInTheDocument();
+    expect(screen.getByLabelText("분류")).toBeInTheDocument();
   });
 
-  it("hides the Dataset Detail link for the all-sources context and shows it once a source is selected", async () => {
-    renderQuality("/quality?dataset=air-quality");
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
-    expect(screen.queryByRole("link", { name: "Table Detail에서 보기" })).not.toBeInTheDocument();
-
-    // Source select는 stagesState가 "loaded"될 때까지 disabled 상태다 — 이 대기 없이 바로
-    // fireEvent.change를 보내면(느린 러너에서는 stagesState 로딩이 아직 끝나지 않아) change가
-    // 씹혀 selectedSource가 절대 바뀌지 않고 아래 findByRole만 타임아웃하는 flaky 실패로 이어진다.
-    const sourceSelect = screen.getByLabelText("Source 선택");
-    await waitFor(() => expect(sourceSelect).toBeEnabled());
-
-    fireEvent.change(sourceSelect, { target: { value: "kma__weather" } });
-    const link = await screen.findByRole("link", { name: "Table Detail에서 보기" });
-    expect(link).toHaveAttribute("href", expect.stringContaining("source=kma__weather"));
-  });
-
-  it("keeps dataset/run/source context in the URL when the user changes filters", async () => {
+  it("does not count a refresh with nothing evaluated (N/A) as passed", async () => {
     renderQuality();
-    const sourceSelect = await screen.findByLabelText("Source 선택");
-    await waitFor(() => expect(sourceSelect).toBeEnabled());
-    fireEvent.change(sourceSelect, { target: { value: "kma__weather" } });
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=kma__weather"));
-
-    const runSelect = screen.getByLabelText("Run 선택");
-    fireEvent.change(runSelect, { target: { value: "air-2026-08-13" } });
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("run=air-2026-08-13"));
+    const coverage = await screen.findByTestId("quality-coverage");
+    expect(coverage).toHaveTextContent("테이블 3개 — 조치 필요 1 · 통과 1 · 평가 안 됨(N/A) 1 · 읽지 못함 0");
+    const notEvaluated = screen.getByText(/평가 결과가 없는 최근 갱신/);
+    expect(within(notEvaluated).getByRole("link", { name: "행정구역별 인구" })).toHaveAttribute("href", "/tables/population?tab=quality");
+    expect(screen.getByText(/일부 결과만 있는 갱신/)).toHaveTextContent("대기질 통합 데이터");
   });
 
-  it("scopes Checks Passed to the selected source only, with its own denominator", async () => {
+  it("filters by status, table and category and keeps the filters in the URL", async () => {
     renderQuality();
-    const sourceSelect = await screen.findByLabelText("Source 선택");
-    await waitFor(() => expect(sourceSelect).toBeEnabled());
-    fireEvent.change(sourceSelect, { target: { value: "kma__weather" } });
-    // kma__weather alone: 0 pass / 1 evaluated (fail).
-    await waitFor(() => expect(screen.getByText("0 / 1")).toBeInTheDocument());
+    const table = await screen.findByRole("table", { name: CAPTION });
+    expect(within(table).getAllByRole("row")).toHaveLength(3);
+
+    fireEvent.change(screen.getByLabelText("상태"), { target: { value: "drift" } });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("status=drift"));
+    expect(within(screen.getByRole("table", { name: CAPTION })).getAllByRole("row")).toHaveLength(2);
+    expect(screen.getByRole("row", { name: /column_removed/ })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("상태"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("분류"), { target: { value: "schema" } });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("category=schema"));
+    expect(screen.getByRole("row", { name: /required_column/ })).toBeInTheDocument();
+    expect(screen.queryByRole("row", { name: /column_removed/ })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("테이블"), { target: { value: "transport" } });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("dataset=transport"));
+    expect(screen.getByText("필터에 맞는 품질 문제가 없습니다.")).toBeInTheDocument();
   });
 
-  it("links Recent Quality Issues rows to the global Ask KPubData drawer without running real diagnosis", async () => {
-    const { useUIStore } = await import("@/shared/hooks/useUIStore");
-    act(() => useUIStore.setState({ isAssistantDrawerOpen: false }));
-    renderQuality();
-    const buttons = await screen.findAllByRole("button", { name: "이 문제 설명 보기" });
-    expect(buttons.length).toBeGreaterThan(0);
-    act(() => fireEvent.click(buttons[0]));
-    expect(useUIStore.getState().isAssistantDrawerOpen).toBe(true);
+  it("points an older run from a link to Table Detail instead of silently showing the latest", async () => {
+    renderQuality("/quality?dataset=air-quality&run=air-2026-08-13&source=kma__weather");
+    const note = await screen.findByRole("note");
+    expect(note).toHaveTextContent("air-2026-08-13");
+    expect(within(note).getByRole("link")).toHaveAttribute("href", "/tables/air-quality?run=air-2026-08-13&source=kma__weather&tab=quality");
+    expect(screen.getByLabelText("테이블")).toHaveValue("air-quality");
   });
 
-  it("shows an empty dataset picker distinctly from a loading or errored dataset list", async () => {
-    vi.doMock("@/features/datasets/api", async () => {
-      const actual = await vi.importActual<typeof import("@/features/datasets/api")>("@/features/datasets/api");
-      return { ...actual, listDatasets: vi.fn().mockResolvedValue([]) };
-    });
-    vi.resetModules();
-    const { QualityPage: FreshQualityPage } = await import("@/pages/QualityPage");
-    render(<MemoryRouter initialEntries={["/quality"]}><FreshQualityPage /></MemoryRouter>);
-    expect(await screen.findByText("테이블이 없습니다")).toBeInTheDocument();
-    vi.doUnmock("@/features/datasets/api");
-    vi.resetModules();
+  it("says so when the table in the URL is not one Builder listed", async () => {
+    renderQuality("/quality?dataset=missing-table");
+    expect(await screen.findByRole("alert")).toHaveTextContent("missing-table");
   });
 });
 
-describe("Quality Center: current-run success survives a Trend/history failure (#254 §6)", () => {
+describe("Quality Center: failures are shown, never swallowed into 'no issues' (#254 §6)", () => {
   afterEach(() => {
     vi.doUnmock("@/features/datasets/api");
     vi.resetModules();
   });
 
-  it("keeps the current-run KPIs visible even if getDatasetQualityHistory fails", async () => {
+  it("counts a table whose quality could not be read as such, not as clean", async () => {
     vi.doMock("@/features/datasets/api", async () => {
       const actual = await vi.importActual<typeof import("@/features/datasets/api")>("@/features/datasets/api");
+      const { ApiError } = await import("@/shared/lib/builderApi");
       return {
         ...actual,
-        getDatasetQualityHistory: vi.fn().mockRejectedValue(new Error("history unavailable")),
+        getBuildQuality: vi.fn((runId: string, signal?: AbortSignal) =>
+          runId === "transport-2026-08-12" ? Promise.reject(new ApiError(403, "forbidden")) : actual.getBuildQuality(runId, signal),
+        ),
       };
     });
     vi.resetModules();
     const { QualityPage: FreshQualityPage } = await import("@/pages/QualityPage");
     render(<MemoryRouter initialEntries={["/quality"]}><FreshQualityPage /></MemoryRouter>);
 
-    // Trend card surfaces its own failure...
-    expect(await screen.findByText(/이력을 불러오지 못했습니다/)).toBeInTheDocument();
-    // ...while the current-run Checks Passed KPI (independent fetch) still renders real data.
-    expect(await screen.findByText("1 / 2")).toBeInTheDocument();
-  });
-});
-
-describe("Quality Center: review follow-ups (#254 issue review comment)", () => {
-  it("shows the full Dataset/Run/Source/Stage context next to Rule pass rate, not just the source", async () => {
-    renderQuality();
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14"));
-    const heading = await screen.findByText("Rule pass rate");
-    const card = heading.parentElement!;
-    expect(within(card).getByText(/Table: 대기질 통합 데이터/)).toBeInTheDocument();
-    expect(within(card).getByText(/Run: air-2026-08-14/)).toBeInTheDocument();
-    expect(within(card).getByText(/Source: 전체 소스/)).toBeInTheDocument();
+    expect(await screen.findByTestId("quality-coverage")).toHaveTextContent("통과 0 · 평가 안 됨(N/A) 1 · 읽지 못함 1");
+    expect(screen.getByRole("alert")).toHaveTextContent("품질 결과를 읽지 못한 테이블: 대중교통 운행 현황");
   });
 
-  it("breaks quality results down per source instead of only reporting the first source's numbers", async () => {
-    renderQuality();
-    const heading = await screen.findByText("Source별 검사 현황");
-    const card = heading.parentElement!;
-    expect(within(card).getByText("datago__air")).toBeInTheDocument();
-    expect(within(card).getByText(/1 \/ 1 PASS/)).toBeInTheDocument();
-    expect(within(card).getByText("kma__weather")).toBeInTheDocument();
-    expect(within(card).getByText(/FAIL 1/)).toBeInTheDocument();
-  });
-
-  it("shows validated_rows (검사 행 수) per run in the Trend table", async () => {
-    renderQuality();
-    const rows = await screen.findAllByText("1,200행");
-    expect(rows.length).toBeGreaterThan(0);
-  });
-
-  it("formats a ratio-named rule's actual/threshold as a percentage, not a bare 0.08", async () => {
-    renderQuality("/quality?dataset=air-quality&run=air-2026-08-13");
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-13"));
-    expect(await screen.findByText("8.0%")).toBeInTheDocument();
-    expect(screen.getByText("5.0%")).toBeInTheDocument();
-    expect(screen.queryByText("0.08")).not.toBeInTheDocument();
-  });
-
-  it("shows affected/evaluated row counts with an explicit 행 unit instead of bare numbers", async () => {
-    renderQuality("/quality?dataset=air-quality&run=air-2026-08-13");
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-13"));
-    expect(await screen.findByText(/16행 \/ 200행/)).toBeInTheDocument();
-  });
-
-  it("lets a Recent Quality Issues row navigate straight to the Build that produced it", async () => {
-    renderQuality();
-    const heading = await screen.findByText("Recent quality issues");
-    const card = heading.closest("div")!.parentElement!;
-    const link = within(card).getByRole("link", { name: "Run 보기" });
-    expect(link).toHaveAttribute("href", "/refresh-jobs/air-2026-08-14");
-  });
-});
-
-describe("Quality Center: API/permission errors are shown, never silently swallowed into 'no issues' (#254 §6)", () => {
-  afterEach(() => {
-    vi.doUnmock("@/features/datasets/api");
-    vi.resetModules();
-  });
-
-  it("surfaces a current-run quality fetch failure as an explicit error, not an empty/PASS state", async () => {
+  it("surfaces a table list failure distinctly from an empty list", async () => {
     vi.doMock("@/features/datasets/api", async () => {
       const actual = await vi.importActual<typeof import("@/features/datasets/api")>("@/features/datasets/api");
       const { ApiError } = await import("@/shared/lib/builderApi");
-      return {
-        ...actual,
-        getBuildQuality: vi.fn().mockRejectedValue(new ApiError(403, "접근 권한이 없습니다. 관리자에게 권한을 요청하세요. (재로그인으로 해결되지 않습니다)")),
-      };
-    });
-    vi.resetModules();
-    const { QualityPage: FreshQualityPage } = await import("@/pages/QualityPage");
-    render(<MemoryRouter initialEntries={["/quality"]}><FreshQualityPage /></MemoryRouter>);
-
-    expect(await screen.findByText("Quality 결과를 불러오지 못했습니다")).toBeInTheDocument();
-    expect(screen.getByText(/접근 권한이 없습니다/)).toBeInTheDocument();
-    // A 403 must not be presented as "no issues found" / an implicit PASS.
-    expect(screen.queryByText("WARN/FAIL이 없습니다")).not.toBeInTheDocument();
-    expect(screen.queryByText("1 / 2")).not.toBeInTheDocument();
-  });
-
-  it("surfaces a dataset list fetch failure distinctly from an empty dataset list", async () => {
-    vi.doMock("@/features/datasets/api", async () => {
-      const actual = await vi.importActual<typeof import("@/features/datasets/api")>("@/features/datasets/api");
-      const { ApiError } = await import("@/shared/lib/builderApi");
-      return { ...actual, listDatasets: vi.fn().mockRejectedValue(new ApiError(500, "서버 내부 오류가 발생했습니다.")) };
+      return { ...actual, listDatasetsPage: vi.fn().mockRejectedValue(new ApiError(500, "서버 내부 오류가 발생했습니다.")) };
     });
     vi.resetModules();
     const { QualityPage: FreshQualityPage } = await import("@/pages/QualityPage");

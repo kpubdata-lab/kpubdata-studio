@@ -688,99 +688,23 @@
       "notEvaluated": "Not evaluated"
     },
     "rows": "{{count}} rows",
-    "noRules": "No evaluated rules",
     "errors": {
-      "datasets": "Failed to load tables",
-      "runs": "Failed to load runs.",
-      "history": "Failed to load quality history.",
-      "stages": "Failed to load stage status.",
-      "quality": "Failed to load quality results."
+      "datasets": "Failed to load tables"
     },
-    "allSources": "All sources",
-    "loading": "Loading tables...",
+    "loading": "Loading quality results for each table.",
     "empty": {
       "title": "No tables",
       "desc": "Create a table first to see quality results.",
       "action": "Go to Add Data"
     },
     "wrongDataset": {
-      "title": "Cannot access the selected table.",
       "desc": "Table `{{id}}` in the URL is not in the accessible table list.",
       "back": "View first table"
     },
-    "wrongRun": {
-      "title": "That run was not found.",
-      "desc": "Run `{{id}}` in the URL is not a run of this table. Did not auto-switch to latest run.",
-      "forbiddenTitle": "You do not have access to that run.",
-      "forbiddenDesc": "Run `{{id}}` belongs to this table but to another user. Did not auto-switch to latest run.",
-      "checkFailedTitle": "Could not check that run.",
-      "checkFailedDesc": "KPubData Builder could not be asked about run `{{id}}`. Try again shortly.",
-      "back": "View latest run",
-      "unsupportedTitle": "This Builder cannot look up an older run",
-      "unsupportedDesc": "Run `{{id}}` is not in the newest page of runs, and this KPubData Builder is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Builder to open it. Did not switch to the latest run."
-    },
     "header": {
-      "desc": "Shows actual validation outcomes (PASS/WARN/FAIL) and per-rule issues instead of scores."
+      "desc": "Quality issues that need attention — WARN, FAIL and schema drift — in every table's latest refresh, in one table."
     },
     "assistantAnalyze": "Explain this issue",
-    "selectors": {
-      "dataset": "Select table",
-      "run": "Select run",
-      "source": "Select source",
-      "stage": "Select stage",
-      "stageOption": "(context)"
-    },
-    "scope": {
-      "desc": "Builder evaluation results for the currently selected Table · Run · Source · Stage scope.",
-      "viewDetail": "View in Table Detail"
-    },
-    "failed": {
-      "title": "Failed to load quality results"
-    },
-    "wrongSource": {
-      "title": "Invalid source filter",
-      "desc": "Source `{{id}}` in the URL does not exist in the selected run. Results are not shown until a valid source is selected.",
-      "reset": "Reset to all sources"
-    },
-    "metrics": {
-      "noRulesSub": "No evaluated rules",
-      "scopeBase": "within {{scope}}",
-      "schemaSub": "{{evaluated}} rules evaluated · {{drift}} drift"
-    },
-    "assistantQuestion": "Analyze why the \"{{category}} · {{rule}}\" rule is {{status}} and how to fix it.",
-    "perSource": {
-      "title": "Per-source checks",
-      "desc": "Shown per source so the \"All sources\" total does not mask partially evaluated sources.",
-      "noResult": "No evaluated result (N/A)"
-    },
-    "history": {
-      "fail": "Failed to load history: {{error}}",
-      "empty": "No quality history available for this table.",
-      "cols": {
-        "run": "Run",
-        "time": "Time",
-        "distribution": "Distribution",
-        "evaluated": "Evaluated",
-        "rows": "Rows checked",
-        "passRate": "Pass rate"
-      },
-      "buildFailed": " · Run failed",
-      "note": "Rule composition may differ per run — do not compare as simple scores."
-    },
-    "rules": {
-      "context": "Current context: {{context}}",
-      "noRules": "No evaluated rules (N/A).",
-      "contextWarnFail": "Current context: {{context}} · WARN/FAIL only (PASS hidden)",
-      "emptyTitle": "No evaluated quality checks",
-      "emptyDesc": "evaluated_checks = 0. Rules may not be configured or not yet evaluated.",
-      "allPassTitle": "No WARN/FAIL",
-      "allPassDesc": "All evaluated results in the current context are PASS.",
-      "viewBuild": "View Run"
-    },
-    "drift": {
-      "context": "Current context: {{context}} · Shown separately from general quality rules.",
-      "empty": "No baseline or not checked — no schema drift observed (not treated as PASS)."
-    },
     "rowsUnit": " rows",
     "model": {
       "rows": "{{count}} rows",
@@ -801,7 +725,49 @@
       "unavailable": "No result (unavailable)"
     },
     "page": {
-      "title": "Quality Center"
+      "title": "Quality Center",
+      "meta": "Latest refresh of {{count}} tables"
+    },
+    "coverage": {
+      "line": "{{tables}} tables — {{issues}} need attention · {{passed}} passed · {{notEvaluated}} not evaluated (N/A) · {{failed}} could not be read",
+      "more": "(the first {{shown}} of KPubData Builder's {{total}} tables)",
+      "partial": "Refreshes with partial results:",
+      "notEvaluated": "Latest refreshes with nothing evaluated (N/A — not counted as passed):",
+      "failed": "Tables whose quality could not be read:"
+    },
+    "legacyRun": {
+      "text": "This screen reads each table's latest refresh only. Run `{{run}}` from the link is not the latest —",
+      "link": "view that run in the table's Quality tab"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "table": "Table",
+      "allTables": "All tables",
+      "category": "Category",
+      "allCategories": "All categories"
+    },
+    "issues": {
+      "caption": "Quality issues that need attention, by table",
+      "cols": {
+        "table": "Table",
+        "source": "Source",
+        "rule": "Rule",
+        "column": "Column",
+        "status": "Status",
+        "actualThreshold": "Actual / threshold",
+        "affected": "Affected / evaluated rows",
+        "snapshot": "Snapshot (run)"
+      },
+      "drift": "Schema drift",
+      "notApplicable": "n/a",
+      "tableLevel": "whole table",
+      "tableLevelTitle": "The rule applies to the whole table, not one column",
+      "none": "No quality issue needs attention. Tables not evaluated or not read are listed below.",
+      "noneFiltered": "No quality issue matches the filters."
+    },
+    "selectors": {
+      "stageOption": "(context)"
     }
   },
   "provider": {
