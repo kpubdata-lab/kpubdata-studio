@@ -102,6 +102,8 @@ export function AddDataPage() {
   // Why the Ask KPubData draft could not become a spec. The draft stays in storage until
   // the table is created or the person discards it (#534 review).
   const [formDraftError, setFormDraftError] = useState<string | null>(null);
+  // A draft that was chosen but could not be read (not JSON, an old shape) — it was removed.
+  const [corruptDraft, setCorruptDraft] = useState<"saved" | "ask" | null>(null);
   const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
@@ -455,20 +457,42 @@ export function AddDataPage() {
     setDraftSaved(true);
   }
 
-  /** Open this flow's own saved draft; a waiting Ask KPubData draft is the one not chosen. */
+  /**
+   * Open this flow's own saved draft; a waiting Ask KPubData draft is the one not chosen.
+   * The saved draft is read first: when it is unreadable it is removed, the Ask KPubData
+   * draft stays offered and a notice says why nothing opened (#589).
+   */
   function restoreSavedDraft() {
+    const saved = loadAddDataDraft();
+    if (!saved) {
+      clearAddDataDraft();
+      setWaitingDrafts((current) => ({ ...current, saved: false }));
+      setCorruptDraft("saved");
+      return;
+    }
     setWaitingDrafts({ saved: false, ask: false });
     if (waitingDrafts.ask) discardFormDraft();
-    const saved = loadAddDataDraft();
-    if (saved) setDraft(saved);
-    else clearAddDataDraft();
+    setCorruptDraft(null);
+    setDraft(saved);
   }
 
-  /** Open the Ask KPubData draft; a waiting saved draft of this flow is the one not chosen. */
+  /**
+   * Open the Ask KPubData draft; a waiting saved draft of this flow is the one not chosen.
+   * Like the saved draft, an unreadable Ask KPubData draft is removed without taking the
+   * other one with it (#589).
+   */
   function restoreAskDraft() {
+    const result = takeFormDraftSpec();
+    if (!result) {
+      // loadDraft already removed the unreadable draft.
+      setWaitingDrafts((current) => ({ ...current, ask: false }));
+      setCorruptDraft("ask");
+      return;
+    }
     setWaitingDrafts({ saved: false, ask: false });
     if (waitingDrafts.saved) clearAddDataDraft();
-    openFormDraft(takeFormDraftSpec());
+    setCorruptDraft(null);
+    openFormDraft(result);
   }
 
   /**
@@ -490,6 +514,7 @@ export function AddDataPage() {
   }
 
   function discardDraft() {
+    setCorruptDraft(null);
     clearAddDataDraft();
     discardFormDraft();
     setWaitingDrafts({ saved: false, ask: false });
@@ -551,6 +576,14 @@ export function AddDataPage() {
             <Button size="sm" variant="ghost" onClick={discardDraft}>{t("addData.draft.discard")}</Button>
           </div>
         </Card>
+      ) : null}
+
+      {corruptDraft !== null ? (
+        <div role="status" className="rounded-xl border border-status-warning-border bg-status-warning-subtle p-4">
+          <p className="text-sm text-foreground">
+            {corruptDraft === "saved" ? t("addData.draft.savedCorrupt") : t("addData.draft.askCorrupt")}
+          </p>
+        </div>
       ) : null}
 
       {formDraftError !== null ? (

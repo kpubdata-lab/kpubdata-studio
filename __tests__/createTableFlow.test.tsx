@@ -231,6 +231,51 @@ describe("one table creation flow (#534)", () => {
     expect(screen.queryByText(/초안이 두 개 있습니다/)).not.toBeInTheDocument();
   });
 
+  describe("a corrupt draft is removed without taking the other one with it (#589)", () => {
+    const askDraft = {
+      datasetId: "air-draft",
+      title: "대기 초안",
+      description: "초안 설명",
+      provider: "datago",
+      sourceDataset: "air_quality",
+      sourceParams: "{}",
+      outputPath: "artifacts/builds/air-draft",
+      exportFormats: ["jsonl"],
+    };
+
+    it("an Ask KPubData draft that is not JSON is cleared once opened and not offered again", async () => {
+      localStorage.setItem("kpubdata-studio:new-build-draft", "{not json");
+
+      const first = renderAt("/add");
+      fireEvent.click(await screen.findByRole("button", { name: "불러오기" }));
+
+      expect(await screen.findByText(/Ask KPubData 초안이 손상되어/)).toBeInTheDocument();
+      expect(hasDraft()).toBe(false);
+      expect(screen.queryByRole("button", { name: "불러오기" })).not.toBeInTheDocument();
+      first.unmount();
+
+      renderAt("/add");
+      expect(screen.queryByText("저장된 초안이 있습니다. 이어서 편집할까요?")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "불러오기" })).not.toBeInTheDocument();
+    });
+
+    it("choosing a corrupt saved draft keeps the Ask KPubData draft and says the saved one was damaged", async () => {
+      localStorage.setItem("kpubdata-studio:add-data-draft", "{not json");
+      saveDraft(askDraft);
+
+      renderAt("/add");
+      fireEvent.click(await screen.findByRole("button", { name: "저장한 초안 열기" }));
+
+      expect(await screen.findByText(/저장한 초안이 손상되어/)).toBeInTheDocument();
+      expect(hasDraft()).toBe(true);
+      expect(hasAddDataDraft()).toBe(false);
+      // The Ask KPubData draft is still offered and still opens.
+      fireEvent.click(screen.getByRole("button", { name: "불러오기" }));
+      expect(await screen.findByText("대기 초안")).toBeInTheDocument();
+      expect(screen.queryByText(/저장한 초안이 손상되어/)).not.toBeInTheDocument();
+    });
+  });
+
   it("sends the edit page without a table to the creation flow", () => {
     renderAt("/edit-without-id");
     expect(screen.getByTestId("location")).toHaveTextContent("/add");

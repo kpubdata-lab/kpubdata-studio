@@ -51,9 +51,9 @@ export function saveDraft<T>(value: T, key: string = ownedStorageKey(DRAFT_KEY))
 /**
  * Load a saved draft. Returns null when absent or corrupted.
  *
- * If the envelope version differs from the current version, or if the data fails
- * schema validation (when a validator is provided), treat the value as
- * corrupted, remove it, and return null.
+ * If the stored value is not JSON, the envelope version differs from the current
+ * version, or the data fails schema validation (when a validator is provided), treat
+ * the value as corrupted, remove it, and return null.
  *
  * @param validator - Optional zod schema to validate the data. If omitted, only the version is checked.
  * @param key - Optional draft storage key. Defaults to the New Build Wizard key.
@@ -71,7 +71,15 @@ export function loadDraft<T>(
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw) as unknown;
+    } catch {
+      // Not JSON at all: as corrupted as a version or schema mismatch, so clear it too.
+      // Otherwise `hasDraft` stays true and a draft nobody can open is offered forever (#589).
+      clearDraft(key);
+      return null;
+    }
     if (
       !parsed ||
       typeof parsed !== "object" ||

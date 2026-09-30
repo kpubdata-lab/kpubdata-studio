@@ -33,9 +33,10 @@ describe("draftStorage", () => {
     expect(hasDraft()).toBe(false);
   });
 
-  it("returns null on corrupted data", () => {
+  it("returns null on corrupted data and clears it, like a version or schema mismatch (#589)", () => {
     localStorage.setItem(DRAFT_KEY, "{not json");
     expect(loadDraft()).toBeNull();
+    expect(hasDraft()).toBe(false);
   });
 
   it("wraps the saved value in a versioned envelope (#84)", () => {
