@@ -1,6 +1,10 @@
 /**
  * Browse a warehouse table page by page, on one pinned snapshot (#499).
+ *
+ * `autoStart` loads the first page on mount — Table Detail's Preview (#526), where the
+ * rows are the point of the tab; the SQL Workspace waits for a click.
  */
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button, Card } from "@/shared/ui";
@@ -8,10 +12,18 @@ import { Button, Card } from "@/shared/ui";
 import { DataTable, totalStatusOf } from "./DataTable";
 import { useWarehouseRows } from "./useWarehouseRows";
 
-export function TableRowsPanel({ table, snapshot }: { table: string; snapshot: string }) {
+export function TableRowsPanel({ table, snapshot, autoStart = false }: { table: string; snapshot: string; autoStart?: boolean }) {
   const { t } = useTranslation();
   const rows = useWarehouseRows(table, snapshot);
   const { state } = rows;
+  const { start } = rows;
+  const idle = state.status === "idle";
+
+  useEffect(() => {
+    if (autoStart && idle) void start();
+    // `start` is a new function every render; the first page is wanted once per table/snapshot.
+  }, [autoStart, idle, table, snapshot]);
+
   const page = "page" in state ? state.page : undefined;
 
   if (!page) {

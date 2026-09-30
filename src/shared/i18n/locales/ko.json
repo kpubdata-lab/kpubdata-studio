@@ -2460,5 +2460,62 @@
     "missing": "KPubData Builder가 이 값을 제공하지 않았습니다",
     "notEvaluated": "평가 안 됨",
     "axesMissing": "테이블 상태: KPubData Builder가 제공하지 않았습니다"
+  },
+  "tableDetail": {
+    "runView": {
+      "noWarehouse": "이 배포에는 warehouse 가 없어 실행(run) 기준으로 보여 줍니다.",
+      "noSnapshot": "이 테이블에는 아직 커밋된 스냅샷이 없어 실행(run) 기준으로 보여 줍니다."
+    },
+    "errors": {
+      "table": "테이블의 스냅샷을 불러오지 못했습니다",
+      "runs": "실행 기록을 불러오지 못했습니다.",
+      "schema": "스키마를 불러오지 못했습니다"
+    },
+    "attention": "조치가 필요한 상태",
+    "sourceTables": "소스 테이블",
+    "pastSnapshot": "과거 스냅샷을 보고 있습니다:",
+    "backToCurrent": "현재 스냅샷으로",
+    "tabsLabel": "테이블 상세 탭",
+    "tabs": {
+      "overview": "개요",
+      "schema": "스키마",
+      "preview": "미리보기",
+      "quality": "품질",
+      "snapshots": "스냅샷"
+    },
+    "snapshotMissing": "스냅샷 {{snapshot}} 을 이 테이블에서 찾을 수 없습니다.",
+    "notCommitted": "커밋된 스냅샷이 없습니다",
+    "notCommittedDesc": "이 소스 테이블은 아직 커밋된 적이 없습니다. 갱신이 끝나면 여기에 보입니다.",
+    "coverage": {
+      "label": "수집 범위",
+      "complete": "완전",
+      "partial": "부분"
+    },
+    "currentSnapshot": "현재 스냅샷",
+    "snapshot": "스냅샷",
+    "labels": {
+      "snapshot": "스냅샷",
+      "committedAt": "커밋 시각",
+      "rows": "행",
+      "revision": "리비전",
+      "run": "만든 실행(run)"
+    },
+    "status": "테이블 상태",
+    "sources": "원천",
+    "schemaNote": "이 스냅샷의 컬럼 {{count}}개 — 타입과 표시 이름·단위는 KPubData Builder 가 보낸 그대로입니다.",
+    "schema": {
+      "column": "컬럼",
+      "type": "타입",
+      "label": "표시 이름",
+      "unit": "단위"
+    },
+    "snapshotsNote": "이 소스 테이블의 스냅샷, 최신순. 과거 스냅샷은 여기서만 고릅니다.",
+    "actions": "작업",
+    "current": "현재",
+    "quarantined": "격리됨",
+    "view": "보기",
+    "more": "{{snapshot}} 작업 더 보기",
+    "runDetail": "실행 상세",
+    "editSpec": "스펙 편집·갱신"
   }
 }
