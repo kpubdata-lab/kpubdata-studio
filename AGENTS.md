@@ -8,12 +8,17 @@
 
 ## Mission
 
-Implement KPubData Studio: the UI shell and workflow interface for
-`kpubdata-builder`.
+Implement KPubData Studio: the visual workspace for KPubData Builder
+(`kpubdata-builder`).
 
 ## Ground rules
 
 - Studio does not reimplement builder logic.
+- Studio consumes only KPubData Builder's HTTP/OpenAPI contract. It never refers to
+  kpubdata's implementation details — modules, constants, fixtures, repository
+  paths — and treats the vocabulary Builder sends (status axes, catalog values) as
+  Builder's ([kpubdata ADR 0007](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0007-independence-rules.md)
+  Rules 8–9). `__tests__/kpubdataBoundary.test.ts` is the gate.
 - Keep UI state transitions explicit.
 - Generated specs must be portable.
 - Surface validation results and the manifest, do not bury them.

@@ -92,6 +92,10 @@
 - Reports saved before the assistant rename open again (#479). A stored `KUBI_INTERPRETATION` block is read as `ASSISTANT_INTERPRETATION` and written back under the new name on the next save; a block of a shape this version does not know keeps its text as user content instead of crashing the editor and the export (`## undefined`). Notes in the old `kpubdata-studio:kubi-report-inbox` and the assistant's old persisted `kpubdata-studio:kubi` state move to their new keys once, so returning visitors keep their notes and are not onboarded again. This reverses #449's "no migration": the GitHub Pages demo shares localStorage with earlier visitors, and the result was a crash, not lost data.
 - A cancelled run's event timeline parses again, and fetch progress is accepted (builder#648). The event-name schema lacked `run_cancelled`, which Builder has emitted for a cancelled async run since builder#481, so every cancelled run's timeline failed to parse. It now also accepts `source_fetch_progress`, which Builder emits after each `param_grid` combination.
 
+### Documentation
+
+- Docs follow the 2026-09-30 decisions (#584): AGENTS describes Studio as the visual workspace for KPubData Builder and adds the ground rule that Studio consumes only Builder's HTTP/OpenAPI contract and never kpubdata's implementation details (kpubdata ADR 0007 Rules 8–9, gated by `__tests__/kpubdataBoundary.test.ts`); SECURITY no longer says versions and tags are being reconciled.
+
 ### Security
 
 - The repository no longer tracks `.next/` and `next-env.d.ts` — 229 files of Next.js build output committed by accident with #402, in a project built with Vite (kpubdata-builder#691). A new `Security` workflow runs `npm audit` over `package-lock.json`, gitleaks over the full history and CodeQL, on every pull request and weekly; the history's reviewed findings (that build's per-build Next keys, and synthetic keys in redaction tests) are listed with their reasons in `.gitleaksignore`.
