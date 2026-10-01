@@ -839,6 +839,8 @@
       "saveFail": "Credential 저장에 실패했습니다",
       "deleteNoStore": "KPubData Builder에 자격 증명 저장소(master key)가 구성되어 있지 않아 삭제할 수 없습니다.",
       "deleteFail": "Credential 삭제에 실패했습니다",
+      "saveStorageDisabled": "이 KPubData Builder는 provider 키를 저장하지 않는 다중 사용자 배포라서 저장되지 않았습니다. 대신 이번 세션에만 키를 사용하세요. 키는 이 탭의 메모리에만 남고, 키가 필요한 요청마다 함께 전송됩니다.",
+      "keyUnsupported": "입력한 키를 그대로 보낼 수 없습니다. 쉼표, 줄바꿈, 라틴 문자 외의 문자를 지우고 다시 시도하세요.",
       "testFail": "{{provider}} 연결 테스트를 실행하지 못했습니다"
     },
     "page": {
@@ -861,6 +863,12 @@
       "loading": "자격 증명 상태를 불러오는 중…",
       "noStoreTitle": "자격 증명 저장소가 아직 구성되지 않았습니다",
       "noStoreBody": "KPubData Builder에 암호화된 자격 증명 저장소(master key)가 설정되어 있지 않아 사용자 자격 증명을 등록·조회할 수 없습니다. 이는 \"아직 자격 증명을 등록하지 않음\"과는 다른 상태입니다. 운영자가 KPubData Builder에 KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY를 설정한 뒤 다시 시도하세요.",
+      "perRequestTitle": "이 KPubData Builder는 provider 키를 저장하지 않습니다",
+      "perRequestBody": "다중 사용자 배포에서는 입력한 키를 서버나 브라우저 저장소에 저장하지 않고 이 탭의 메모리에만 둡니다. 키가 필요한 Preview, 빌드, 연결 테스트 요청마다 함께 전송되며, 페이지를 새로 고치거나 로그아웃하면 사라집니다.",
+      "useForSession": "이번 세션에 사용",
+      "enterSessionKey": "이번 세션에 쓸 키 입력",
+      "sessionKeyHeld": "이 provider의 키를 이번 세션 동안 보관 중입니다(표시하지 않음).",
+      "forgetSessionKey": "키 지우기",
       "keyPlaceholder": "API Key를 입력하세요",
       "save": "저장",
       "cancel": "취소",
