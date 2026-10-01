@@ -460,6 +460,9 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
   },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
+  getBuildArtifactFile: {
+    skip: "downloadArtifact saves the file as a blob; nothing parses card.json (builder#962 DatasetCard) yet — #700 maps it",
+  },
 };
 
 // --- Error responses (#701) ---
