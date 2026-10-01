@@ -2426,6 +2426,12 @@
     "policyUnsupported": "This KPubData Builder has no GET /admin/config (404): it predates the admin API, or Studio is pointed at the wrong path. This is not an empty policy.",
     "runsUnsupported": "This KPubData Builder has no GET /admin/runs (404): it predates the admin API, or Studio is pointed at the wrong path. This is not an empty run list.",
     "runsEmpty": "KPubData Builder has recorded no runs yet.",
+    "refresh": "Refresh",
+    "loadedAt": "Loaded {{at}}",
+    "runsShownAll": "Showing all {{n}} runs.",
+    "runsShownCapped": "Showing the latest {{n}} runs. There may be more — KPubData Builder does not report a total.",
+    "runsShowMore": "Show more (up to {{max}})",
+    "runsAtMax": "{{max}} is the most that can be shown at once.",
     "loadFailed": "KPubData Builder could not answer: {{message}}",
     "users": {
       "title": "Users and sign-up approval",
