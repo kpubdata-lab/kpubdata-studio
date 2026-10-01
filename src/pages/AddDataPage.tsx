@@ -410,7 +410,7 @@ export function AddDataPage() {
       const prerequisite = checkCredentialPrerequisite(selected, providerConfigured, draft.publicApi.provider);
       if (prerequisite.blocked) {
         const prerequisite = credentialPrerequisiteMessage();
-        const message = `${prerequisite.title} — ${prerequisite.body.replace("\n", " ")}`;
+        const message = `${prerequisite.title} — ${prerequisite.body.replace(/\n/g, " ")}`;
         setPreview({ status: "error", error: message });
         setValidation({ status: "validated", valid: false, errors: [message] });
         return;
