@@ -176,7 +176,7 @@ Dark 값 (`src/globals.css` 와 prototype `tokens.css` 가 같은 값을 쓴다)
 | 텍스트 | **4.5:1** |
 | 큰 텍스트(24px · 18.66px bold 이상) · 비텍스트(차트 마크 · focus ring · 아이콘) | **3:1** |
 
-> **아래 값은 #631 제안이고 owner 결정을 기다린다.** 결정이 다르면 토큰과 이 표를 함께 바꾼다.
+> **아래 값은 #631 에서 결정됐다(owner, 2026-10-01).** 값을 바꾸면 토큰·이 표·`brandV2Gate` 를 함께 바꾼다.
 
 | 용도 | 값 | 이유 |
 |---|---|---|
@@ -295,7 +295,7 @@ Brand v2 는 #425 를 폐기하지 않는다. 화면을 만드는 원칙은 남�
 |---|---|---|
 | 의도 · 규칙 | `DESIGN_CONCEPT.md` · 이 문서 | 반영 (#629) |
 | 심볼 · 자산 | `assets/logo/kpubdata-brand-assets/` SVG · PNG · social preview · 자산 README | 반영 (#633) |
-| 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` (light · dark) | 반영 — 대비 값은 #631 제안, owner 결정 대기 |
+| 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` (light · dark) | 반영 — 대비 값은 #631 결정 |
 | 화면 | prototype 다섯 화면 · `Layout` 사이드바 · 로그인/가입 · docs 테마 · favicon (`favicon.svg`) · README (`<picture>` light/dark) | 반영 |
 | 검증 | `brandLockupGate` · `visualTokensGate` (브랜드 ↔ 상태) · `brandV2Gate` (prototype ↔ 앱 drift, legacy 색, gradient, 팔레트, 대비) | 반영 |
 | 검증 | 앱 screenshot baseline (#532) | 대기 — baseline 은 #563 에 있다 (CI 컨테이너 #585 대기). Brand v2 light 를 기준으로 다시 만든다 |

@@ -25,7 +25,7 @@
  * `sidebar-*`) are kept as aliases so components need not change.
  * docs/prototype/warehouse/tokens.css carries the same values (__tests__/brandV2Gate.test.ts).
  * Contrast: text pairs 4.5:1, chart marks 3:1 — the values for secondary text and the
- * strong chart variants are the #631 proposal, pending the owner's decision.
+ * strong chart variants were decided in #631.
  */
 :root,
 :root[data-theme="light"] {

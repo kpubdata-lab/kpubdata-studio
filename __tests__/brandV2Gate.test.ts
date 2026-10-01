@@ -11,7 +11,7 @@
  * - The light sidebar is light, and only its active item is Brand Blue.
  * - Token pairs meet WCAG 2.1 AA: text 4.5:1, chart marks and the focus ring 3:1
  *   (docs/brand/VISUAL_IDENTITY.md §3.5). Secondary text `#5E6E84` and the strong chart
- *   variants are the #631 proposal, pending the owner's decision.
+ *   variants were decided in #631.
  *
  * Each check has a case below showing it fails on the thing it guards against.
  */

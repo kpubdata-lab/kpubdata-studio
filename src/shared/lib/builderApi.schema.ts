@@ -20,6 +20,14 @@ export const versionResponseSchema = z.object({
   api_version: z.string(),
   /** Application release (ADR 0004). Absent on Builders that predate it — not a mismatch (#430). */
   version: z.string().optional(),
+  /**
+   * Where this deployment takes publish credentials from (kpubdata-builder#938, 1.69.0):
+   * `request` — only the request's `X-Publish-Credential` header (multi-user); `stored` —
+   * only the requester's stored credential; `stored_or_server` — the stored one, else the
+   * server's. Absent on older Builders, and a value Studio does not know reads as absent,
+   * so either way the publish page falls back to inferring it from readiness (#637).
+   */
+  publish_credential: z.enum(["request", "stored", "stored_or_server"]).optional().catch(undefined),
 });
 
 /**
@@ -293,6 +301,7 @@ export const errorResponseSchema = z.union([
 
 // Type extraction (extracted from Zod schema to match TypeScript types)
 export type VersionResponse = z.infer<typeof versionResponseSchema>;
+export type PublishCredentialSource = NonNullable<VersionResponse["publish_credential"]>;
 export type ValidateValid = z.infer<typeof validateValidSchema>;
 export type ValidateInvalid = z.infer<typeof validateInvalidSchema>;
 export type ValidateError = z.infer<typeof validateErrorSchema>;
@@ -662,6 +671,13 @@ export const silverValidationResultSchema = z.object({
   problems: z.array(silverValidationProblemSchema),
 });
 
+/**
+ * Why a Silver stage detail came back with an empty `sample` on purpose (builder#688, #900;
+ * 1.65.0, 1.68.0). Absent when the sample was not withheld — an empty sample is then a
+ * table with no rows.
+ */
+export const sampleWithheldReasonSchema = z.enum(["redistribution_forbidden", "pii_declaration_unavailable"]);
+
 export const silverStageDetailResponseSchema = z.object({
   ...stageDetailBase,
   stage: z.literal("silver"),
@@ -669,6 +685,7 @@ export const silverStageDetailResponseSchema = z.object({
   schema: z.array(silverColumnInfoSchema),
   statistics: tableStatisticsSchema.nullable(),
   validation: silverValidationResultSchema.nullable(),
+  sample_withheld: sampleWithheldReasonSchema.optional(),
   sample: z.array(z.record(z.string(), z.json())),
 });
 
@@ -969,6 +986,7 @@ export type DatasetRunsResponse = z.infer<typeof datasetRunsResponseSchema>;
 export type RunStageEntry = z.infer<typeof runStageEntrySchema>;
 export type RunStagesResponse = z.infer<typeof runStagesResponseSchema>;
 export type StageDetailResponse = z.infer<typeof stageDetailResponseSchema>;
+export type SampleWithheldReason = z.infer<typeof sampleWithheldReasonSchema>;
 export type QualityCheckResult = z.infer<typeof qualityCheckResultSchema>;
 export type SchemaDriftFinding = z.infer<typeof schemaDriftFindingSchema>;
 export type QualityAvailability = z.infer<typeof qualityAvailabilitySchema>;
