@@ -201,6 +201,21 @@ export function BuildPublishPage() {
     setReadinessVersion((value) => value + 1);
   }
 
+  /**
+   * Starts the publish with the token captured here, then drops the token at once: the
+   * contract keeps it for the request only, and so does Studio, whatever the outcome
+   * (#615). Clearing at start rather than on completion means no outcome — success,
+   * failure, abort or an unmount mid-request — can leave it behind. Publishing again
+   * means entering the token and checking readiness again (`tokenStale`).
+   */
+  function startPublish(request: PublishRequest) {
+    const credential = publishCredentialFor(publishTokenRef.current);
+    publishTokenRef.current = "";
+    setPublishToken("");
+    if (credential) setTokenStale(true);
+    void publish.start(runId, request, credential);
+  }
+
   function updatePrivate(value: boolean) {
     setIsPrivate(value);
     setConfirmation(undefined);
@@ -311,7 +326,7 @@ export function BuildPublishPage() {
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">{t("buildPublish.confirmNote")}</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button loading={publish.status === "publishing"} disabled={!builderReady || tokenStale || Boolean(tokenError) || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => void publish.start(runId, confirmation, publishCredentialFor(publishToken))}>{t("buildPublish.publishNow")}</Button>
+            <Button loading={publish.status === "publishing"} disabled={!builderReady || tokenStale || Boolean(tokenError) || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => startPublish(confirmation)}>{t("buildPublish.publishNow")}</Button>
             {publish.status !== "publishing" ? <Button variant="secondary" onClick={() => setConfirmation(undefined)}>{t("buildPublish.editSettings")}</Button> : <Button variant="secondary" onClick={publish.stopWaiting}>{t("buildPublish.stopWaiting")}</Button>}
           </div>
         </Card>

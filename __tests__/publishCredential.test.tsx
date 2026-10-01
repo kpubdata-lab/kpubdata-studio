@@ -261,6 +261,63 @@ describe("BuildPublishPage in a multi-user deployment (#615)", () => {
   });
 });
 
+describe("BuildPublishPage drops the token once a publish starts (#615 review)", () => {
+  /** Ready with a token, destination filled and confirmed; returns the publish button. */
+  async function readyToPublish() {
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    return screen.getByRole("button", { name: "게시 실행" });
+  }
+
+  /** Readiness as a multi-user Builder answers it; the POST answers `post`. */
+  function fetchWithPost(post: () => Promise<Response>) {
+    return vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      if (init.method === "POST") return post();
+      const sent = (init.headers as Record<string, string>)[PUBLISH_CREDENTIAL_HEADER];
+      return Promise.resolve(response(200, sent ? READY : NEEDS_TOKEN));
+    });
+  }
+
+  function expectTokenGone(fetchMock: ReturnType<typeof vi.fn>) {
+    expect(screen.getByLabelText("Hugging Face 토큰")).toHaveValue("");
+    expect(document.body.innerHTML).not.toContain(TOKEN);
+    expectTokenNotPersisted(fetchMock);
+    // It was sent with the publish, then dropped.
+    expect(publishCalls(fetchMock).filter(([, init]) => init.method === "POST").map(headerOf)).toEqual([HEADER_VALUE]);
+    // Publishing again needs the token re-entered and readiness re-checked.
+    expect(screen.getByRole("button", { name: "게시 실행" })).toBeDisabled();
+    expect(screen.getByText("이 토큰으로 게시 준비 상태를 다시 확인하세요.")).toBeInTheDocument();
+  }
+
+  it.each([
+    ["502 publish_failed", () => Promise.resolve(response(502, { error: "publish failed", code: "publish_failed" }))],
+    ["409 blocked", () => Promise.resolve(response(409, { error: "blocked", blockers: NEEDS_TOKEN.blockers }))],
+    ["a network error", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ] as const)("clears the token after a publish that fails with %s", async (_label, post) => {
+    const fetchMock = fetchWithPost(post);
+    vi.stubGlobal("fetch", fetchMock);
+    fireEvent.click(await readyToPublish());
+
+    const failure = await screen.findByText("게시 실패");
+    expect(failure.closest("[role=alert]")?.textContent).not.toContain(TOKEN);
+    expectTokenGone(fetchMock);
+  });
+
+  it("clears the token after a successful publish", async () => {
+    const fetchMock = fetchWithPost(() => Promise.resolve(response(200, SUCCESS)));
+    vi.stubGlobal("fetch", fetchMock);
+    fireEvent.click(await readyToPublish());
+
+    await screen.findByText("Builder 게시 완료");
+    expectTokenGone(fetchMock);
+  });
+});
+
 describe("BuildPublishPage in a single-user deployment", () => {
   it("shows no token field and sends no header when Builder is ready", async () => {
     const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
