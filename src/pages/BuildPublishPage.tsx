@@ -1,7 +1,7 @@
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getBuild } from "@/features/runs/api/getBuild";
 import {
   describePublishFailure,
@@ -10,9 +10,13 @@ import {
   publishCredentialFor,
   validatePublishDestination,
   validatePublishToken,
+  type PublishIssue,
   type PublishReadinessResponse,
+  type PublishRedistributionRecord,
   type PublishRequest,
+  type RedistributionVerdict,
 } from "@/features/publish/api";
+import { describePublishIssue, redistributionLabel, type PublishIssueLink } from "@/features/publish/issues";
 import { usePublishJob } from "@/features/publish/usePublishJob";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -78,6 +82,22 @@ function acceptsRequestCredential(source: PublishCredentialSource | null): boole
   return source !== "stored" && source !== "stored_or_server";
 }
 
+/**
+ * The one readiness blocker this page itself can clear (#639). Readiness is computed for
+ * the target's default options, which never confirm non-commercial use, so a
+ * `non_commercial` build always reports `non_commercial_unconfirmed`; the confirmation
+ * checkbox answers it, and Builder checks the request's options again on POST.
+ */
+const CONFIRMABLE_BLOCKER = "non_commercial_unconfirmed";
+
+/** Where a blocker's next step points, for this run. */
+function issueLinkPath(link: PublishIssueLink, runId: string): string {
+  const base = `/refresh-jobs/${encodeURIComponent(runId)}`;
+  if (link === "editSpec") return `${base}/edit`;
+  if (link === "openArtifacts") return `${base}/artifacts`;
+  return base;
+}
+
 /** Wait for Builder's `/version` once per page load; nothing to wait for in demo mode. */
 function credentialSourceKnown(): Promise<void> {
   return isRealBuilderEnabled() ? ensureVersionChecked() : Promise.resolve();
@@ -96,6 +116,9 @@ export function BuildPublishPage() {
   const [readinessVersion, setReadinessVersion] = useState(0);
   const [destination, setDestination] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
+  // The publisher's non-commercial confirmation (#639): offered only for a
+  // `non_commercial` verdict and sent as `options.confirm_non_commercial`.
+  const [confirmNonCommercial, setConfirmNonCommercial] = useState(false);
   const [confirmation, setConfirmation] = useState<PublishRequest>();
   // The requester's own publish token (#615): React state only — never localStorage,
   // sessionStorage, the URL or a log — gone when the page unmounts or reloads. The ref
@@ -108,6 +131,9 @@ export function BuildPublishPage() {
   // Where Builder takes the publish credential from (`GET /version`, contract 1.69.0).
   const credentialSource = useVersionCheckStore((state) => state.publishCredential);
   const requestCredential = acceptsRequestCredential(credentialSource);
+
+  // A confirmation belongs to one run's terms; another run asks again.
+  useEffect(() => setConfirmNonCommercial(false), [runId]);
 
   useEffect(() => {
     if (!runId) {
@@ -197,8 +223,23 @@ export function BuildPublishPage() {
 
   const destinationError = validatePublishDestination(destination);
   const tokenError = validatePublishToken(publishToken);
-  const builderReady = readiness.status === "loaded" && readiness.data.ready && readiness.data.blockers.length === 0;
-  const canReview = Boolean(runId && builderReady && !destinationError && !tokenError && !tokenStale && publish.status !== "publishing");
+  const redistribution = readiness.status === "loaded" ? readiness.data.redistribution ?? null : null;
+  const nonCommercial = redistribution?.verdict === "non_commercial";
+  const nonCommercialConfirmed = nonCommercial && confirmNonCommercial;
+  // Blockers still standing once the page's own confirmation is taken into account.
+  const blockers = readiness.status === "loaded"
+    ? readiness.data.blockers.filter((issue) => !(nonCommercialConfirmed && issue.code === CONFIRMABLE_BLOCKER))
+    : [];
+  // Unknown terms allow only a private publish; Builder refuses a public one
+  // (`redistribution_unknown`), so the page does not offer it.
+  const publicRefused = redistribution?.verdict === "unknown" && !isPrivate;
+  const builderReady =
+    readiness.status === "loaded" &&
+    blockers.length === 0 &&
+    // ready:false with no blocker at all stays not ready (UI audit #4); ready:false whose
+    // only blocker the confirmation cleared is ready.
+    (readiness.data.ready || readiness.data.blockers.length > 0);
+  const canReview = Boolean(runId && builderReady && !publicRefused && !destinationError && !tokenError && !tokenStale && publish.status !== "publishing");
   const credentialRequired =
     readiness.status === "loaded" && readiness.data.blockers.some((issue) => issue.code === "credential_required");
   // Builder 1.69.0 says where it takes the credential from (#637): `request` asks for a
@@ -219,8 +260,10 @@ export function BuildPublishPage() {
   const request = useMemo<PublishRequest>(() => ({
     target: "huggingface",
     destination,
-    options: { private: isPrivate },
-  }), [destination, isPrivate]);
+    options: nonCommercialConfirmed
+      ? { private: isPrivate, confirm_non_commercial: true }
+      : { private: isPrivate },
+  }), [destination, isPrivate, nonCommercialConfirmed]);
 
   function updateDestination(value: string) {
     setDestination(value);
@@ -262,6 +305,12 @@ export function BuildPublishPage() {
     publish.reset();
   }
 
+  function updateConfirmNonCommercial(value: boolean) {
+    setConfirmNonCommercial(value);
+    setConfirmation(undefined);
+    publish.reset();
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
@@ -295,7 +344,7 @@ export function BuildPublishPage() {
             <p className="text-sm font-medium">
               {builderReady
                 ? t("buildPublish.readyLabel")
-                : readiness.data.blockers.length > 0
+                : blockers.length > 0
                   ? t("buildPublish.blockedLabel")
                   // ready:false with empty blockers ("empty card") must not
                   // be mis-asserted as "has a blocker" — Builder not
@@ -303,8 +352,15 @@ export function BuildPublishPage() {
                   // blocker existing (UI audit #4).
                   : t("buildPublish.notReadyNoReason")}
             </p>
-            {readiness.data.blockers.length > 0 ? <IssueList title={t("buildPublish.blockers")} issues={readiness.data.blockers} tone="error" /> : null}
-            {readiness.data.warnings.length > 0 ? <IssueList title={t("buildPublish.warnings")} issues={readiness.data.warnings} tone="warning" /> : null}
+            {redistribution ? <RedistributionSummary verdict={redistribution} /> : null}
+            {blockers.length > 0 ? <IssueList title={t("buildPublish.blockers")} issues={blockers} tone="error" runId={runId} /> : null}
+            {readiness.data.warnings.length > 0 ? <IssueList title={t("buildPublish.warnings")} issues={readiness.data.warnings} tone="warning" runId={runId} /> : null}
+            {nonCommercial ? (
+              <label className="flex items-start gap-3 rounded-lg border border-border p-4 text-sm">
+                <input aria-label={t("publish.redistribution.confirmLabel")} type="checkbox" checked={confirmNonCommercial} disabled={publish.status === "publishing"} onChange={(event) => updateConfirmNonCommercial(event.target.checked)} className="mt-0.5 h-4 w-4 accent-status-success" />
+                <span><strong className="block">{t("publish.redistribution.confirmLabel")}</strong><span className="text-xs text-muted-foreground">{t("publish.redistribution.confirmHint")}</span></span>
+              </label>
+            ) : null}
             {readiness.data.blockers.some((issue) => CREDENTIAL_BLOCKER_CODES.has(issue.code)) ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialNote")}</p> : null}
                         {/* credential_required differs from "nowhere"
                 (credential_unavailable) — it means more direct user actions
@@ -351,6 +407,8 @@ export function BuildPublishPage() {
             <span><strong className="block">{t("buildPublish.privateLabel")}</strong><span className="text-xs text-muted-foreground">{t("buildPublish.privateDefault")}</span></span>
           </label>
         </div>
+        {publicRefused ? <p className="mt-3 text-xs text-status-failure" role="alert">{t("publish.redistribution.unknownPublicNote")}</p> : null}
+        {nonCommercial && !isPrivate ? <p className="mt-3 text-xs text-status-warning">{t("publish.redistribution.nonCommercialPublicNote")}</p> : null}
       </Card>
 
       {!confirmation ? (
@@ -363,10 +421,11 @@ export function BuildPublishPage() {
             <div><dt className="text-muted-foreground">{t("labels.target")}</dt><dd>huggingface</dd></div>
             <div><dt className="text-muted-foreground">{t("labels.destination")}</dt><dd>{confirmation.destination}</dd></div>
             <div><dt className="text-muted-foreground">{t("buildPublish.visibility")}</dt><dd>{confirmation.options?.private === false ? t("labels.public") : t("labels.private")}</dd></div>
+            {nonCommercial ? <div><dt className="text-muted-foreground">{t("publish.redistribution.title")}</dt><dd>{confirmation.options?.confirm_non_commercial ? t("publish.redistribution.confirmed") : t("publish.redistribution.notConfirmed")}</dd></div> : null}
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">{t("buildPublish.confirmNote")}</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button loading={publish.status === "publishing"} disabled={!builderReady || tokenStale || Boolean(tokenError) || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => startPublish(confirmation)}>{t("buildPublish.publishNow")}</Button>
+            <Button loading={publish.status === "publishing"} disabled={!builderReady || publicRefused || tokenStale || Boolean(tokenError) || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => startPublish(confirmation)}>{t("buildPublish.publishNow")}</Button>
             {publish.status !== "publishing" ? <Button variant="secondary" onClick={() => setConfirmation(undefined)}>{t("buildPublish.editSettings")}</Button> : <Button variant="secondary" onClick={publish.stopWaiting}>{t("buildPublish.stopWaiting")}</Button>}
           </div>
         </Card>
@@ -382,14 +441,78 @@ export function BuildPublishPage() {
             <div><dt className="text-muted-foreground">{t("buildPublish.snapshotFiles")}</dt><dd>{publish.result.artifact_count}</dd></div>
           </dl>
           <div className="mt-4 break-all text-sm">{t("buildPublish.reference")} {isSafePublishReference(publish.result.reference) ? <a href={publish.result.reference} target="_blank" rel="noreferrer" className="text-status-success underline">{publish.result.reference}</a> : <span>{publish.result.reference}</span>}</div>
+          {publish.result.redistribution ? <PublishedTerms record={publish.result.redistribution} /> : null}
         </Card>
       ) : null}
-      {publish.status === "failed" ? <Card variant="error" role="alert"><strong>{t("buildPublish.publishFailed")}</strong><p className="mt-2 text-sm">{publish.failure?.message}</p>{publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}</Card> : null}
+      {publish.status === "failed" ? (
+        <Card variant="error" role="alert">
+          <strong>{t("buildPublish.publishFailed")}</strong>
+          <p className="mt-2 text-sm">{publish.failure?.message}</p>
+          {publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}
+          {publish.failure?.kind === "redistribution_blocked" && publish.failure.redistribution ? <div className="mt-4"><RedistributionSummary verdict={publish.failure.redistribution} /></div> : null}
+          {publish.failure?.blockers?.length ? <div className="mt-4"><IssueList title={t("buildPublish.blockers")} issues={publish.failure.blockers} tone="error" runId={runId} /></div> : null}
+        </Card>
+      ) : null}
       {publish.status === "aborted" ? <Card role="status"><strong>{t("buildPublish.abortedTitle")}</strong><p className="mt-2 text-sm text-muted-foreground">{t("buildPublish.abortedBody")}</p></Card> : null}
     </div>
   );
 }
 
-function IssueList({ title, issues, tone }: { title: string; issues: PublishReadinessResponse["blockers"]; tone: "error" | "warning" }) {
-  return <div><h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3><ul className="mt-2 space-y-2">{issues.map((issue, index) => <li key={`${issue.code}-${index}`} className={`rounded-lg px-3 py-2 text-sm ${tone === "error" ? "bg-status-failure-subtle text-status-failure" : "bg-status-warning-subtle text-status-warning"}`}><span className="font-mono text-xs">{issue.code}</span><span className="ml-2">{issue.message}</span></li>)}</ul></div>;
+/**
+ * Blockers or warnings, each with Studio's own sentence and next step for its code
+ * (#644). Builder's message stays visible underneath as the specific detail; a code
+ * Studio does not know is a generic blocker that names the code.
+ */
+function IssueList({ title, issues, tone, runId }: { title: string; issues: PublishIssue[]; tone: "error" | "warning"; runId: string }) {
+  const { t } = useTranslation();
+  return (
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <ul className="mt-2 space-y-2">
+        {issues.map((issue, index) => {
+          const described = describePublishIssue(issue);
+          return (
+            <li key={`${issue.code}-${index}`} data-issue-code={issue.code} className={`rounded-lg px-3 py-2 text-sm ${tone === "error" ? "bg-status-failure-subtle text-status-failure" : "bg-status-warning-subtle text-status-warning"}`}>
+              <p className="font-medium">{described.message}</p>
+              <p className="mt-1 text-xs">
+                {described.action}
+                {described.link ? <> <Link to={issueLinkPath(described.link, runId)} className="underline">{t(`publish.issueLinks.${described.link}`)}</Link></> : null}
+              </p>
+              <p className="mt-1 text-xs opacity-80"><span className="font-mono">{issue.code}</span><span className="ml-2">{issue.message}</span></p>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** The sources' redistribution verdict (#639): the build's, then each source's reason. */
+function RedistributionSummary({ verdict }: { verdict: RedistributionVerdict }) {
+  const { t } = useTranslation();
+  return (
+    <section aria-label={t("publish.redistribution.title")} className="rounded-lg border border-border p-4 text-sm">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("publish.redistribution.title")}</h3>
+      <p className="mt-2 font-medium">{t("publish.redistribution.verdict", { verdict: redistributionLabel(verdict.verdict) })}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t(`publish.redistribution.explain.${verdict.verdict}`)}</p>
+      {verdict.sources.length > 0 ? (
+        <ul className="mt-2 space-y-1 text-xs">
+          {verdict.sources.map((source) => (
+            <li key={source.source}>{t("publish.redistribution.source", { source: source.source, verdict: redistributionLabel(source.verdict), reason: source.reason })}</li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+/** The terms a successful publish went out under, as Builder recorded them (#651). */
+function PublishedTerms({ record }: { record: PublishRedistributionRecord }) {
+  const { t } = useTranslation();
+  return (
+    <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+      <div><dt className="text-muted-foreground">{t("publish.redistribution.publishedUnder")}</dt><dd>{redistributionLabel(record.verdict)}{record.verdict === "non_commercial" ? ` · ${record.confirm_non_commercial ? t("publish.redistribution.confirmed") : t("publish.redistribution.notConfirmed")}` : ""}</dd></div>
+      <div><dt className="text-muted-foreground">{t("publish.redistribution.kpubdataVersion")}</dt><dd className="font-mono">{record.kpubdata_version ?? t("publish.redistribution.versionUnknown")}</dd></div>
+    </dl>
+  );
 }

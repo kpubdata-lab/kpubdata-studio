@@ -2073,7 +2073,134 @@
       "notFound": "The selected run could not be found in KPubData Builder.",
       "network": "No response from KPubData Builder. The remote publish result was not confirmed.",
       "mismatch": "The run or target in KPubData Builder's response does not match the request.",
-      "invalidCredential": "The publish token is not in a form KPubData Builder accepts. Check the token and enter it again."
+      "invalidCredential": "The publish token is not in a form KPubData Builder accepts. Check the token and enter it again.",
+      "redistributionBlocked": "KPubData Builder refused the publish because of the sources' redistribution terms. See the reasons below."
+    },
+    "issues": {
+      "run_not_terminal": {
+        "message": "The run has not finished yet (queued, running or cancelling).",
+        "action": "Wait for the run to finish, then check again."
+      },
+      "run_failed": {
+        "message": "The run ended with an error, so there is nothing to publish.",
+        "action": "Open the run to see what failed, fix it and run it again."
+      },
+      "run_cancelled": {
+        "message": "The run was cancelled before it finished.",
+        "action": "Run the table again, then publish the new run."
+      },
+      "gold_unavailable": {
+        "message": "The run has no successful Gold output to publish.",
+        "action": "Open the run and check its Gold stage; run it again if it did not complete."
+      },
+      "artifact_missing": {
+        "message": "A Gold file the run's manifest lists is missing on KPubData Builder.",
+        "action": "Check the run's snapshot files, then run the table again to rebuild them."
+      },
+      "artifact_invalid": {
+        "message": "A Gold file the run's manifest lists could not be resolved safely, so KPubData Builder refuses to publish it.",
+        "action": "Check the run's snapshot files, then run the table again to rebuild them."
+      },
+      "license_missing": {
+        "message": "The table's spec declares no licence, and a table cannot be published without one.",
+        "action": "Edit the spec, declare the licence and run the table again."
+      },
+      "pii_allow_with_publish": {
+        "message": "The spec's PII policy is \"allow\", and a spec that lets personal data through cannot be published.",
+        "action": "Edit the spec, choose a PII policy that masks or drops personal data, and run the table again."
+      },
+      "credential_unavailable": {
+        "message": "No publish credential is available for this target.",
+        "action": "Ask a KPubData Builder operator to configure one, or store your own publish credential."
+      },
+      "credential_required": {
+        "message": "This deployment publishes only with your own publish credential.",
+        "action": "Follow the credential guidance below, then check again."
+      },
+      "local_publish_root_unconfigured": {
+        "message": "The local publish target has no publish root configured on KPubData Builder.",
+        "action": "Ask a KPubData Builder operator to set KPUBDATA_BUILDER_LOCAL_PUBLISH_ROOT."
+      },
+      "destination_outside_publish_root": {
+        "message": "The local destination lies outside KPubData Builder's publish root.",
+        "action": "Choose a destination inside the publish root."
+      },
+      "kaggle_metadata_missing": {
+        "message": "The run has no Kaggle packaging (`dataset-metadata.json`) to publish.",
+        "action": "This is a Kaggle packaging problem: check the table's Kaggle export and run it again."
+      },
+      "kaggle_metadata_ambiguous": {
+        "message": "The run has more than one Kaggle packaging, so KPubData Builder cannot tell which to publish.",
+        "action": "This is a Kaggle packaging problem: keep one Kaggle export in the spec and run the table again."
+      },
+      "kaggle_metadata_unreadable": {
+        "message": "The run's `dataset-metadata.json` cannot be read or has no id.",
+        "action": "This is a Kaggle packaging problem: check the table's Kaggle export and run it again."
+      },
+      "kaggle_destination_mismatch": {
+        "message": "The Kaggle packaging's `id` differs from the destination.",
+        "action": "Publish to the `id` the packaging names, or change the Kaggle export and run the table again."
+      },
+      "redistribution_forbidden": {
+        "message": "A source's terms forbid redistribution, so this table cannot be published anywhere.",
+        "action": "Nothing on this page can change that. Remove the source, or use the data inside KPubData Builder only."
+      },
+      "redistribution_unknown": {
+        "message": "A source's terms are not known, and unknown terms are not permission to publish publicly.",
+        "action": "Publish privately (keep the private setting on), or wait until the source's terms are declared."
+      },
+      "non_commercial_unconfirmed": {
+        "message": "A source allows non-commercial use only, and you have not confirmed that this publish is for that use.",
+        "action": "Tick \"I agree to the non-commercial terms\" below, then publish."
+      },
+      "non_commercial_marker_missing": {
+        "message": "A public publish of non-commercial data needs a non-commercial licence on the table (for example cc-by-nc-4.0).",
+        "action": "Publish privately, or edit the spec to declare a non-commercial licence and run the table again."
+      },
+      "destination_public": {
+        "message": "The source terms allow only a private publish, but the destination already exists and is public. Publishing does not change its visibility.",
+        "action": "Choose a new or private destination."
+      },
+      "destination_visibility_unknown": {
+        "message": "The source terms allow only a private publish, and KPubData Builder could not read whether the destination is public.",
+        "action": "Check that the destination exists and your token can read it, or choose a new destination, then try again."
+      },
+      "unknown": {
+        "message": "KPubData Builder reported a blocker Studio does not know: {{code}}.",
+        "action": "Read KPubData Builder's message below and resolve it, then check again."
+      }
+    },
+    "issueLinks": {
+      "editSpec": "Edit spec",
+      "openRun": "Open run",
+      "openArtifacts": "Open snapshot files"
+    },
+    "issueDetail": "KPubData Builder: {{message}}",
+    "redistribution": {
+      "title": "Redistribution terms",
+      "verdict": "Verdict: {{verdict}}",
+      "values": {
+        "allowed": "Allowed",
+        "non_commercial": "Non-commercial only",
+        "unknown": "Unknown",
+        "forbidden": "Forbidden"
+      },
+      "explain": {
+        "allowed": "Every source's terms allow redistribution.",
+        "non_commercial": "A source allows non-commercial use only. Publishing needs your confirmation, and a public publish also needs a non-commercial licence on the table.",
+        "unknown": "A source's terms are not known. KPubData Builder publishes this table only privately, to a destination that is not already public.",
+        "forbidden": "A source's terms forbid redistribution. KPubData Builder does not publish this table."
+      },
+      "source": "{{source}}: {{verdict}} — {{reason}}",
+      "confirmLabel": "I agree to the non-commercial terms",
+      "confirmHint": "I confirm that this table is published for non-commercial use only, as its sources' terms require. KPubData Builder records this confirmation with the publish.",
+      "unknownPublicNote": "A source's terms are unknown, so KPubData Builder refuses a public publish. Keep the private setting on.",
+      "nonCommercialPublicNote": "A public publish of non-commercial data also needs a non-commercial licence (for example cc-by-nc-4.0) on the table, or KPubData Builder refuses it.",
+      "confirmed": "Non-commercial use confirmed",
+      "notConfirmed": "Not confirmed",
+      "publishedUnder": "Published under",
+      "kpubdataVersion": "kpubdata release",
+      "versionUnknown": "unknown"
     }
   },
   "status": {
