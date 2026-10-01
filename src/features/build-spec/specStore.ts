@@ -105,7 +105,10 @@ function writeEnvelope(envelope: SpecStoreEnvelope): void {
  */
 export function redactSpecForStorage(spec: BuildSpec): BuildSpec {
   return {
-    ...spec,
+    // The same top-level rule as the Add Data draft and the Review display copy: `metadata`,
+    // `exports[].options` and `extra` (#623, #626). Spread first so the redacted sources
+    // below replace the spec's own.
+    ...redactSpecTopLevel(spec),
     sources: spec.sources.map((source) => {
       const safe: SourceRef = {
         ...source,
@@ -118,10 +121,6 @@ export function redactSpecForStorage(spec: BuildSpec): BuildSpec {
       }
       return safe;
     }),
-    // Shared with the Add Data draft and the Review display copy (#623). `exports[].options`
-    // is not redacted here yet, so this store's output is unchanged; see `redactSpecTopLevel`.
-    metadata: redactSpecMetadata(spec.metadata),
-    ...(spec.extra ? { extra: redactSpecExtra(spec.extra) } : {}),
   };
 }
 
@@ -146,8 +145,7 @@ export function redactExportOptions(exports: BuildSpec["exports"]): BuildSpec["e
 /**
  * Redacted copy of a spec's own (non-source) fields that may hold credentials: `metadata`,
  * `exports[].options` and the top-level `extra` (#616, #623). The Add Data draft
- * (`canonicalBase`) and the Review display copy apply it as a whole; the run spec store uses
- * the same `metadata`/`extra` helpers. A restored `[REDACTED]` in any of them fails closed
+ * (`canonicalBase`), the Review display copy and the run spec store all apply it (#626). A restored `[REDACTED]` in any of them fails closed
  * through `jsonValueHasRedactedSecret`. The argument is not modified.
  */
 export function redactSpecTopLevel<T extends Pick<BuildSpec, "metadata" | "exports" | "extra">>(spec: T): T {
