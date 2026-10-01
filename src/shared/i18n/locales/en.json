@@ -2209,6 +2209,45 @@
       "publishedUnder": "Published under",
       "kpubdataVersion": "kpubdata release",
       "versionUnknown": "unknown"
+    },
+    "card": {
+      "title": "Data card to be published",
+      "note": "The data card (card.json) KPubData Builder wrote for each Gold output. Publishing uploads it as the README.",
+      "demo": "Demo mode has no real run, so there is no data card to show.",
+      "listError": "Could not load the data card. KPubData Builder still checks it in publish readiness.",
+      "none": {
+        "title": "This run has no data card",
+        "desc": "It was built before KPubData Builder wrote cards. Run the table again; the new run's Gold output carries its card."
+      },
+      "outputTitle": "Gold output {{key}}",
+      "outputError": "Could not read this card.",
+      "refused": {
+        "redistribution_forbidden": "The source terms forbid redistribution, so KPubData Builder does not hand out the card file.",
+        "declared_pii_withheld": "KPubData Builder withholds this file because of declared personal information columns.",
+        "pii_declaration_unavailable": "KPubData Builder withholds this file because the source's personal information declaration could not be read."
+      },
+      "sections": {
+        "provenance": "Provenance",
+        "processing": "Processing",
+        "personalInformation": "Personal information"
+      },
+      "sourceHeading": "Source {{source}}",
+      "fields": {
+        "attribution": "Attribution",
+        "sourceUrl": "Source URL",
+        "licence": "Licence",
+        "collectedAt": "Collected"
+      },
+      "empty": "Empty · blocks publishing",
+      "licenceMismatchAxis": "Licence",
+      "licenceMismatch": "differs from the catalogue",
+      "providerDeclares": "KPubData catalogue declares: {{licence}}",
+      "licenceMismatchNote": "The licence in this run's spec differs from the one the KPubData catalogue declares for this source. The card records both. Check which is right before publishing.",
+      "noProcessing": "No processing",
+      "noProcessingFor": "{{source}}: no processing",
+      "joinLabel": "Join",
+      "verbatimNote": "Each sentence is KPubData Builder's own text, which the published README carries as is.",
+      "httpStatus": "HTTP status {{status}}"
     }
   },
   "status": {

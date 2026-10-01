@@ -2209,6 +2209,45 @@
       "publishedUnder": "게시 조건",
       "kpubdataVersion": "kpubdata 릴리스",
       "versionUnknown": "알 수 없음"
+    },
+    "card": {
+      "title": "게시될 데이터 카드",
+      "note": "KPubData Builder가 Gold 출력마다 만든 데이터 카드(card.json)입니다. 게시하면 이 내용이 README로 함께 올라갑니다.",
+      "demo": "데모 모드에는 실제 Run이 없어 데이터 카드를 보여 줄 수 없습니다.",
+      "listError": "데이터 카드를 불러오지 못했습니다. 게시 준비 상태는 KPubData Builder가 따로 확인합니다.",
+      "none": {
+        "title": "이 Run에는 데이터 카드가 없습니다",
+        "desc": "KPubData Builder가 카드를 만들기 전에 실행된 Run입니다. 테이블을 다시 실행하면 새 Run의 Gold 출력에 카드가 생깁니다."
+      },
+      "outputTitle": "Gold 출력 {{key}}",
+      "outputError": "이 카드를 읽지 못했습니다.",
+      "refused": {
+        "redistribution_forbidden": "소스 이용 조건이 재배포를 금지해 KPubData Builder가 카드 파일을 내보내지 않습니다.",
+        "declared_pii_withheld": "선언된 개인정보 열 때문에 KPubData Builder가 이 파일을 내보내지 않습니다.",
+        "pii_declaration_unavailable": "소스의 개인정보 선언을 읽지 못해 KPubData Builder가 이 파일을 내보내지 않습니다."
+      },
+      "sections": {
+        "provenance": "출처",
+        "processing": "처리 과정",
+        "personalInformation": "개인정보"
+      },
+      "sourceHeading": "소스 {{source}}",
+      "fields": {
+        "attribution": "제공 기관 표시",
+        "sourceUrl": "출처 URL",
+        "licence": "라이선스",
+        "collectedAt": "수집 일시"
+      },
+      "empty": "비어 있음 · 게시가 막힙니다",
+      "licenceMismatchAxis": "라이선스",
+      "licenceMismatch": "카탈로그 선언과 다름",
+      "providerDeclares": "KPubData 카탈로그 선언: {{licence}}",
+      "licenceMismatchNote": "이 Run의 명세에 적은 라이선스가 KPubData 카탈로그가 이 소스에 선언한 라이선스와 다릅니다. 카드에는 두 라이선스가 모두 기록됩니다. 게시 전에 어느 쪽이 맞는지 확인하세요.",
+      "noProcessing": "처리 없음",
+      "noProcessingFor": "{{source}}: 처리 없음",
+      "joinLabel": "결합",
+      "verbatimNote": "각 항목의 문장은 게시되는 README에 그대로 들어가는 KPubData Builder의 원문입니다.",
+      "httpStatus": "HTTP 상태 {{status}}"
     }
   },
   "status": {
