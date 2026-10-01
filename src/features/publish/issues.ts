@@ -14,7 +14,7 @@
 import { i18n } from "@/shared/i18n";
 import type { PublishIssue, RedistributionValue } from "@/shared/lib/builderApi";
 
-/** Every `PublishIssue.code` in the contract's `x-codes` (builder contract 1.70.0). */
+/** Every `PublishIssue.code` in the contract's `x-codes` (builder contract 1.71.0). */
 export const PUBLISH_ISSUE_CODES = [
   "run_not_terminal",
   "run_failed",
@@ -38,6 +38,8 @@ export const PUBLISH_ISSUE_CODES = [
   "non_commercial_marker_missing",
   "destination_public",
   "destination_visibility_unknown",
+  "card_missing",
+  "card_incomplete",
 ] as const;
 
 export type PublishIssueCode = (typeof PUBLISH_ISSUE_CODES)[number];
@@ -64,6 +66,8 @@ const ISSUE_LINKS: Partial<Record<PublishIssueCode, PublishIssueLink>> = {
   license_missing: "editSpec",
   pii_allow_with_publish: "editSpec",
   non_commercial_marker_missing: "editSpec",
+  card_missing: "openRun",
+  card_incomplete: "editSpec",
 };
 
 export interface PublishIssueDescription {

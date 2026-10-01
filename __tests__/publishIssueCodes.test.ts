@@ -1,15 +1,13 @@
 /**
  * Every publish blocker code has a localized message and next step (#644).
  *
- * The codes come from the Builder contract's `PublishIssue.code` `x-codes` when
- * `BUILDER_CONTRACT` points at it (CI checks out Builder's main, as for the drift test),
- * and from Studio's checked-in `PUBLISH_ISSUE_CODES` otherwise. With the contract, the
- * checked-in list must also equal it, so a code Builder adds fails here until Studio
- * describes it.
+ * The codes are Studio's checked-in `PUBLISH_ISSUE_CODES`. Against Builder's contract
+ * (`BUILDER_CONTRACT`), the same checks run in `src/shared/lib/contractDrift.test.ts`,
+ * which CI's `Builder contract drift` job runs against Builder's main: there the list
+ * must equal the contract's `x-codes`, and every contract code needs a ko and en entry.
+ * When `BUILDER_CONTRACT` is set here too, this file checks the contract's codes.
  */
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { parse } from "yaml";
 import {
   PUBLISH_ISSUE_CODES,
   REDISTRIBUTION_ISSUE_CODES,
@@ -18,39 +16,25 @@ import {
 import { i18n } from "@/shared/i18n";
 import en from "@/shared/i18n/locales/en.json";
 import ko from "@/shared/i18n/locales/ko.json";
-
-type Locale = { publish?: { issues?: Record<string, { message?: unknown; action?: unknown } | undefined> } };
+import { contractIssueCodes, contractIssueCodesOf, issueCodeDrift, missingIssueEntries } from "./support/publishIssueCoverage";
 
 const contractPath = process.env.BUILDER_CONTRACT;
-
-function contractCodes(path: string): string[] {
-  const contract = parse(readFileSync(path, "utf-8")) as {
-    components: { schemas: { PublishIssue: { properties: { code: { "x-codes": Record<string, string> } } } } };
-  };
-  return Object.keys(contract.components.schemas.PublishIssue.properties.code["x-codes"]);
-}
-
-/** `lang:code.field` for every code whose message or next step is missing or empty. */
-function missingEntries(codes: readonly string[], locales: Record<string, Locale>): string[] {
-  const missing: string[] = [];
-  for (const [lang, locale] of Object.entries(locales)) {
-    for (const code of codes) {
-      const entry = locale.publish?.issues?.[code];
-      for (const field of ["message", "action"] as const) {
-        const value = entry?.[field];
-        if (typeof value !== "string" || value.trim() === "") missing.push(`${lang}:${code}.${field}`);
-      }
-    }
-  }
-  return missing;
-}
-
-const codes: readonly string[] = contractPath ? contractCodes(contractPath) : PUBLISH_ISSUE_CODES;
+const missingEntries = missingIssueEntries;
+const codes: readonly string[] = contractPath ? contractIssueCodes(contractPath) : PUBLISH_ISSUE_CODES;
 
 describe("publish issue codes (#644)", () => {
-  it("covers the contract's 22 codes", () => {
-    expect(codes).toHaveLength(22);
-    if (contractPath) expect([...PUBLISH_ISSUE_CODES].sort()).toEqual([...codes].sort());
+  it("lists each code once, and the contract's codes when it is given", () => {
+    expect(new Set(PUBLISH_ISSUE_CODES).size).toBe(PUBLISH_ISSUE_CODES.length);
+    expect(PUBLISH_ISSUE_CODES.length).toBeGreaterThan(0);
+    if (contractPath) expect(issueCodeDrift(PUBLISH_ISSUE_CODES, codes)).toEqual([]);
+  });
+
+  it("reports a code the contract adds or drops", () => {
+    expect(issueCodeDrift(["a", "b"], ["a", "b"])).toEqual([]);
+    expect(issueCodeDrift(["a"], ["a", "card_missing"])).toEqual(["+card_missing"]);
+    expect(issueCodeDrift(["a", "old"], ["a"])).toEqual(["-old"]);
+    const contract = { components: { schemas: { PublishIssue: { properties: { code: { "x-codes": { a: "x", b: "y" } } } } } } };
+    expect(contractIssueCodesOf(contract)).toEqual(["a", "b"]);
   });
 
   it("has a ko and an en message and next step for every code", () => {

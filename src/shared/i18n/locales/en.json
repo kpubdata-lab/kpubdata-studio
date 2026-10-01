@@ -2165,6 +2165,14 @@
         "message": "The source terms allow only a private publish, and KPubData Builder could not read whether the destination is public.",
         "action": "Check that the destination exists and your token can read it, or choose a new destination, then try again."
       },
+      "card_missing": {
+        "message": "The run's Gold output has no data card (`card.json`): it was built before KPubData Builder wrote cards.",
+        "action": "Run the table again; the new run's Gold output carries its card. Then publish that run."
+      },
+      "card_incomplete": {
+        "message": "A required section of the run's data card is empty (provenance, processing or personal information).",
+        "action": "KPubData Builder's message below names the empty section. Fill in what it comes from in the spec (for example the licence or source URL) and run the table again."
+      },
       "unknown": {
         "message": "KPubData Builder reported a blocker Studio does not know: {{code}}.",
         "action": "Read KPubData Builder's message below and resolve it, then check again."

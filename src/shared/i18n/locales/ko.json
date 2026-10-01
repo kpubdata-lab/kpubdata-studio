@@ -2165,6 +2165,14 @@
         "message": "소스 이용 조건상 비공개 게시만 가능한데, KPubData Builder가 게시 위치의 공개 여부를 확인할 수 없습니다.",
         "action": "게시 위치가 있는지, 토큰으로 읽을 수 있는지 확인하거나 새 게시 위치를 고른 뒤 다시 시도하세요."
       },
+      "card_missing": {
+        "message": "Run의 Gold 출력에 데이터 카드(`card.json`)가 없습니다. KPubData Builder가 카드를 만들기 전에 실행된 Run입니다.",
+        "action": "테이블을 다시 실행하면 새 Run의 Gold 출력에 카드가 생깁니다. 그 Run을 게시하세요."
+      },
+      "card_incomplete": {
+        "message": "Run의 데이터 카드에서 필수 절(출처, 가공, 개인정보)이 비어 있습니다.",
+        "action": "아래 KPubData Builder 메시지가 비어 있는 절의 이름을 알려 줍니다. 스펙에서 해당 내용(예: 라이선스, 출처 URL)을 채운 뒤 테이블을 다시 실행하세요."
+      },
       "unknown": {
         "message": "Studio가 모르는 차단 사유를 KPubData Builder가 보냈습니다: {{code}}.",
         "action": "아래 KPubData Builder 메시지를 읽고 해결한 뒤 다시 확인하세요."
