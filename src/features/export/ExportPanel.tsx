@@ -24,9 +24,28 @@ const field =
 /** A refusal, in the words the person needs: what blocked it and that nothing was kept. */
 export function describeRefusal(cause: unknown, t: (key: string, options?: Record<string, unknown>) => string): string {
   if (cause instanceof ApiError) {
-    const details = (cause.details ?? {}) as { code?: string; error?: string; findings?: Array<{ column?: string; kind?: string; count?: number }> };
+    const details = (cause.details ?? {}) as {
+      code?: string;
+      error?: string;
+      findings?: Array<{ column?: string; kind?: string; count?: number }>;
+      columns?: unknown;
+      dataset?: unknown;
+    };
     const code = details.code ?? details.error;
     if (code === "export_forbidden_by_license") return t("export.refused.license");
+    // builder#688: the source terms forbid redistribution, so no result leaves Builder (#640).
+    if (code === "redistribution_forbidden") return t("export.refused.redistribution");
+    // builder#900: declared PII held unmasked; the body names the columns, never a value.
+    if (code === "declared_pii_withheld") {
+      const columns = Array.isArray(details.columns) ? details.columns.filter((column) => typeof column === "string").join(", ") : "";
+      return columns ? t("export.refused.declaredPii", { columns }) : t("export.refused.declaredPiiUnnamed");
+    }
+    // builder#900 (503): the PII declaration could not be read, so the read fails closed.
+    if (code === "pii_declaration_unavailable") {
+      return typeof details.dataset === "string" && details.dataset
+        ? t("export.refused.piiDeclarationUnavailable", { dataset: details.dataset })
+        : t("export.refused.piiDeclarationUnavailableUnnamed");
+    }
     if (code === "export_blocked_pii") {
       const findings = (details.findings ?? []).map((finding) => `${finding.column} (${finding.kind}, ${finding.count})`).join(", ");
       return t("export.refused.pii", { findings });

@@ -21,6 +21,7 @@ import { i18n } from "@/shared/i18n";
 import { API_BASE } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
+import { providerKeyHeaders } from "./providerKeys";
 import { z } from "zod";
 
 /**
@@ -101,7 +102,8 @@ interface RequestOptions {
   skipAuth?: boolean;
   /**
    * Extra request headers for this request only. Never logged and never part of an
-   * error: a request-scoped credential (`X-Publish-Credential`, #615) travels here.
+   * error: a request-scoped credential (`X-Publish-Credential`, #615; `X-Provider-Key`,
+   * #652) travels here.
    */
   headers?: Record<string, string>;
 }
@@ -521,7 +523,6 @@ export type BuildEventStageName = schemas.BuildEventStageName;
 export type BuildEvent = schemas.BuildEvent;
 export type BuildEventsResponse = schemas.BuildEventsResponse;
 
-/** client wrapping Builder service endpoint. */
 /**
  * Request header carrying the requester's own publish credential (kpubdata-builder#925,
  * contract 1.67.0): `<VARIABLE>=<value>`, the same form as `X-Provider-Key`. A multi-user
@@ -545,6 +546,14 @@ export function publishCredentialHeaders(
   return token ? { [PUBLISH_CREDENTIAL_HEADER]: `HF_TOKEN=${token}` } : {};
 }
 
+/**
+ * Client wrapping Builder service endpoints.
+ *
+ * Provider keys held for this page load (`providerKeys`, #652) ride in `X-Provider-Key`
+ * on exactly the calls that build a provider client — `/preview`, `/build`, `/builds`,
+ * `/providers/{provider}/test` and `/status` — and on no other route. Nothing is held in a
+ * single-user deployment, so those calls send no such header there.
+ */
 export const builderApi = {
   /** GET /warehouse/tables — the caller's committed tables; 404 when there is no warehouse (builder#797). */
   listWarehouseTables: (signal?: AbortSignal) =>
@@ -670,7 +679,7 @@ export const builderApi = {
   ) =>
     apiFetch(
       "/preview",
-      { method: "POST", body: { spec: specYaml, ...options }, signal },
+      { method: "POST", body: { spec: specYaml, ...options }, signal, headers: providerKeyHeaders() },
       schemas.previewResponseSchema,
     ),
 
@@ -683,6 +692,7 @@ export const builderApi = {
         body: runId ? { spec: specYaml, run_id: runId } : { spec: specYaml },
         signal,
         retries: 0,
+        headers: providerKeyHeaders(),
       },
       schemas.buildResponseSchema,
     ),
@@ -696,6 +706,7 @@ export const builderApi = {
         body: runId ? { spec: specYaml, run_id: runId } : { spec: specYaml },
         signal,
         retries: 0,
+        headers: providerKeyHeaders(),
       },
       schemas.buildJobSchema,
     ),
@@ -952,7 +963,7 @@ export const builderApi = {
   testProviderConnection: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/test`,
-      { method: "POST", signal, retries: 0 },
+      { method: "POST", signal, retries: 0, headers: providerKeyHeaders() },
       schemas.providerTestResponseSchema,
     ),
 
@@ -964,7 +975,7 @@ export const builderApi = {
   getProviderStatus: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/status`,
-      { signal, retries: 1 },
+      { signal, retries: 1, headers: providerKeyHeaders() },
       schemas.providerTestResponseSchema,
     ),
 

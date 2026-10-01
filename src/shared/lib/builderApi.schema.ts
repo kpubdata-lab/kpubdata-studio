@@ -683,6 +683,8 @@ export const silverStageDetailResponseSchema = z.object({
   stage: z.literal("silver"),
   row_count: z.number().int().nullable(),
   schema: z.array(silverColumnInfoSchema),
+  /** Declared PII columns masked in `sample` (builder#900, 1.68.0). Absent when none was. */
+  masked_columns: z.array(z.string()).optional(),
   statistics: tableStatisticsSchema.nullable(),
   validation: silverValidationResultSchema.nullable(),
   sample_withheld: sampleWithheldReasonSchema.optional(),
@@ -759,6 +761,11 @@ export const previewSourceSchema = z.object({
   diffs: z.array(previewDiffItemSchema),
   transform_summary: previewTransformSummarySchema.nullable(),
   diff_truncated: z.boolean(),
+  /**
+   * Declared PII columns masked in `sample`, `source_sample` and `diffs` (builder#900,
+   * 1.68.0): text holds the mask token, any other dtype null. Absent when none was masked.
+   */
+  masked_columns: z.array(z.string()).optional(),
 });
 
 /**
@@ -948,6 +955,12 @@ export const queryResponseSchema = z.object({
   rows: z.array(z.record(z.string(), jsonQueryValueSchema)),
   truncated: z.boolean(),
   execution_ms: z.number().int().nonnegative(),
+  /**
+   * `stage: silver` only (builder#900, 1.68.0): the query ran on a copy of the Silver table
+   * with these declared PII columns masked. Absent when none was masked; Gold is masked
+   * where it is built and does not name its columns here.
+   */
+  masked_columns: z.array(z.string()).optional(),
 });
 
 /** Builder `/query` error response: includes client-branch `code` unlike other endpoints. */
@@ -960,11 +973,21 @@ export const queryErrorCodeSchema = z.enum([
   "query_timeout",
   "query_execution_failed",
   "invalid_request",
+  // builder#688 (1.65.0): the source terms forbid redistribution; the data stays in Builder.
+  "redistribution_forbidden",
+  // builder#900 (1.68.0): a file holds declared PII unmasked (names the `columns`).
+  "declared_pii_withheld",
+  // builder#900 (1.68.0, 503): the kpubdata PII declaration could not be read (names the `dataset`).
+  "pii_declaration_unavailable",
 ]);
 
 export const queryErrorResponseSchema = z.object({
   error: z.string(),
   code: queryErrorCodeSchema.optional(),
+  /** `declared_pii_withheld`: the declared columns held unmasked. Names only. */
+  columns: z.array(z.string()).optional(),
+  /** `pii_declaration_unavailable`: the dataset whose declaration was unreadable. */
+  dataset: z.string().optional(),
 });
 
 export type QueryStage = z.infer<typeof queryStageSchema>;

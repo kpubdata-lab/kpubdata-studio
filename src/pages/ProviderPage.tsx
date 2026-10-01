@@ -24,6 +24,15 @@
  *   principal's `last_test` from GET /providers fills the Last test column. It is still a
  *   provider-level check; a chosen Dataset's usability is confirmed by its Preview
  *   (#S-provider-probe). `GET .../status` is not used.
+ *
+ * Multi-user deployment (#652, kpubdata-builder#683, contract 1.56.0): Builder stores no
+ * provider key — `PUT .../credential` answers 403 `credential_storage_disabled` — and wants
+ * the key with each request in `X-Provider-Key`. The contract has no provider-specific mode
+ * signal, but `GET /version`'s `publish_credential` is `request` exactly in a multi-user
+ * deployment (both follow builder's `multi_user_mode()`), so that value — or, from a
+ * Builder that does not say, the 403 itself — switches this panel from "save" to "use
+ * for this session": the key is held in memory only (`shared/lib/providerKeys`) and the
+ * Builder calls that need it carry it. A single-user deployment is unchanged.
  */
 import { useTranslation } from "react-i18next";
 import { ApplicationGuideCard } from "@/features/onboarding/ApplicationGuideCard";
@@ -47,7 +56,13 @@ import {
   Skeleton,
 } from "@/shared/ui";
 import { describeCredentialReadiness } from "@/shared/lib/providerStatus";
+import {
+  forgetProviderKey,
+  holdProviderKey,
+  useProviderKeyHeld,
+} from "@/shared/lib/providerKeys";
 import { ConnectionsTable } from "@/features/provider/ConnectionsTable";
+import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 
 /**
  * Trust the `returnTo` query param only when it is a safe internal path
@@ -111,6 +126,16 @@ export function isCredentialStoreUnavailable(cause: unknown): boolean {
   return (cause.details as { error?: unknown }).error === "credential store is not configured";
 }
 
+/**
+ * Builder's refusal to store a provider key (#652, contract 1.56.0): a multi-user
+ * deployment takes keys only per request, in `X-Provider-Key`.
+ */
+export function isCredentialStorageDisabled(cause: unknown): boolean {
+  if (!(cause instanceof ApiError) || cause.status !== 403) return false;
+  if (!cause.details || typeof cause.details !== "object" || Array.isArray(cause.details)) return false;
+  return (cause.details as { code?: unknown }).code === "credential_storage_disabled";
+}
+
 /** Convert the Builder GET /providers summary to a screen model (connection state filled by a separate status check). */
 function mapProviderSummary(summary: ProviderSummary): ProviderConfig {
   return {
@@ -164,6 +189,17 @@ export function ProviderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
+  // Builder refused to store a key (403 `credential_storage_disabled`) — the fallback
+  // signal when `GET /version` does not say where keys come from.
+  const [storageRefused, setStorageRefused] = useState(false);
+  // `request` ⇔ multi-user deployment (see the module comment), where keys are per request.
+  const deploymentCredentialSource = useVersionCheckStore((state) => state.publishCredential);
+  const keysPerRequest = deploymentCredentialSource === "request" || storageRefused;
+  const selectedKeyHeld = useProviderKeyHeld(selectedProvider?.id);
+
+  useEffect(() => {
+    if (isRealBuilderEnabled()) void ensureVersionChecked();
+  }, []);
 
   const loadProviders = useCallback(async () => {
     setLoading(true);
@@ -296,9 +332,35 @@ export function ProviderPage() {
     if (match) handleProviderSelect(match);
   }, [providers, loading, providerParam]);
 
+  /**
+   * Hold the typed key for this page load instead of storing it (multi-user deployment).
+   * Nothing is sent now; the Builder calls that need it carry it in `X-Provider-Key`.
+   */
+  const handleUseKeyForSession = () => {
+    if (!selectedProvider || !selectedProvider.requiresCredential) return;
+    setError(null);
+    if (!holdProviderKey(selectedProvider.id, credentialForm.credential)) {
+      setError(i18n.t("provider.errors.keyUnsupported"));
+      return;
+    }
+    setCredentialForm({ credential: "" });
+    setShowCredentialForm(false);
+    setJustSavedCredential(true);
+  };
+
+  const handleForgetSessionKey = () => {
+    if (!selectedProvider) return;
+    forgetProviderKey(selectedProvider.id);
+    setJustSavedCredential(false);
+  };
+
   const handleCredentialSubmit = async () => {
     if (!selectedProvider || !credentialForm.credential) return;
     if (!selectedProvider.requiresCredential) return;
+    if (keysPerRequest) {
+      handleUseKeyForSession();
+      return;
+    }
     const provider = selectedProvider;
     setError(null);
     try {
@@ -324,6 +386,15 @@ export function ProviderPage() {
         await loadCredentialMeta(provider);
       }
     } catch (cause) {
+      if (isCredentialStorageDisabled(cause)) {
+        // Multi-user deployment: keep the typed key in the open form so the next action —
+        // use it for this session — is one click away. Nothing was stored.
+        setStorageRefused(true);
+        if (selectedProviderIdRef.current === provider.id) {
+          setError(i18n.t("provider.errors.saveStorageDisabled"));
+        }
+        return;
+      }
       if (selectedProviderIdRef.current !== provider.id) return;
       setError(
         isCredentialStoreUnavailable(cause)
@@ -360,8 +431,11 @@ export function ProviderPage() {
 
   // Whether the user personally saved a credential (the sole basis for the
   // delete button and masked-value display).
-  const userCredentialConfigured =
-    credentialMeta.status === "loaded" && credentialMeta.configured;
+  // In a multi-user deployment nothing is stored, so a key held for this session is the
+  // user's own key.
+  const userCredentialConfigured = keysPerRequest
+    ? selectedKeyHeld
+    : credentialMeta.status === "loaded" && credentialMeta.configured;
 
   // Readiness of the selected provider, now that this user's own key is known. It is
   // credential readiness, not a generic live probe (#S-provider-probe); Preview
@@ -443,7 +517,7 @@ export function ProviderPage() {
                       {selectedReadiness?.detail}
                     </p>
                   </div>
-                  {userCredentialConfigured ? (
+                  {keysPerRequest ? null : userCredentialConfigured ? (
                     <Button size="sm" variant="danger" onClick={handleCredentialDelete}>
                       {t("provider.detail.delete")}
                     </Button>
@@ -458,6 +532,64 @@ export function ProviderPage() {
                   <p className="mt-4 text-sm text-muted-foreground">
                     {t("provider.detail.noCredNote")}
                   </p>
+                ) : keysPerRequest ? (
+                  <div className="mt-4 space-y-4">
+                    <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                      <p className="font-medium text-foreground">{t("provider.detail.perRequestTitle")}</p>
+                      <p className="mt-2">{t("provider.detail.perRequestBody")}</p>
+                    </div>
+                    {selectedKeyHeld ? (
+                      <div className="flex flex-wrap items-center gap-3 text-sm">
+                        <span className="text-foreground">{t("provider.detail.sessionKeyHeld")}</span>
+                        <Button size="sm" variant="secondary" onClick={handleForgetSessionKey}>
+                          {t("provider.detail.forgetSessionKey")}
+                        </Button>
+                        {justSavedCredential && safeReturnTo ? (
+                          <LinkButton to={safeReturnTo}>{t("provider.detail.backToData")}</LinkButton>
+                        ) : null}
+                      </div>
+                    ) : showCredentialForm ? (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2" htmlFor="provider-credential-input">{t("labels.apiKey")}</label>
+                          <input
+                            autoComplete="off"
+                            id="provider-credential-input"
+                            type="password"
+                            className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+                            placeholder={t("provider.detail.keyPlaceholder")}
+                            value={credentialForm.credential}
+                            onChange={(e) =>
+                              setCredentialForm({ ...credentialForm, credential: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={handleUseKeyForSession}
+                            disabled={!credentialForm.credential}
+                          >
+                            {t("provider.detail.useForSession")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              setShowCredentialForm(false);
+                              setCredentialForm({ credential: "" });
+                            }}
+                          >
+                            {t("provider.detail.cancel")}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button size="sm" onClick={() => setShowCredentialForm(true)}>
+                        {t("provider.detail.enterSessionKey")}
+                      </Button>
+                    )}
+                  </div>
                 ) : credentialMeta.status === "loading" || credentialMeta.status === "idle" ? (
                   <p className="mt-4 text-sm text-muted-foreground">
                     {t("provider.detail.loading")}

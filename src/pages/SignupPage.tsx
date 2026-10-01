@@ -4,9 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { keycloakLogin } from "@/features/auth/keycloak";
 import { getSafeReturnTo } from "@/features/auth/returnTo";
 import { getOidcConfig } from "@/shared/config/env";
-import { Button, Card } from "@/shared/ui";
-
-const lightLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_light.svg", import.meta.url).href;
+import { BrandLogo, Button, Card } from "@/shared/ui";
 
 export function SignupPage() {
   const { t } = useTranslation();
@@ -17,7 +15,10 @@ export function SignupPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-5 py-12">
       <div className="w-full max-w-md text-center">
-        <img alt="KPubData Studio" className="mx-auto mb-7 h-8 w-auto" src={lightLogoUrl} />
+        {/* Light logo by default, the dark one only under the dark theme (#628). */}
+        <div className="mb-7 flex justify-center">
+          <BrandLogo className="h-8 w-auto" />
+        </div>
         <Card>
         <h1 className="text-2xl font-semibold tracking-tight">{t("auth.signup.title")}</h1>
         <p className="mt-3 text-sm text-muted-foreground">

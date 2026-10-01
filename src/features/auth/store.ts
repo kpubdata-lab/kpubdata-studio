@@ -10,6 +10,8 @@
  * same regardless of which provider authenticated the user.
  */
 import { create } from "zustand";
+
+import { forgetAllProviderKeys } from "@/shared/lib/providerKeys";
 import type { AuthProviderId, AuthSession } from "./types";
 
 /**
@@ -74,5 +76,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   setOidcIdentity: ({ email, name, userId }) =>
     set({ token: null, email, name, userId, providerId: "keycloak" }),
   setOidcStatus: (oidcStatus) => set({ oidcStatus }),
-  clear: () => set({ token: null, email: null, name: null, userId: null, providerId: null }),
+  clear: () => {
+    // Provider keys held for this page load belong to the signed-in user (#652).
+    forgetAllProviderKeys();
+    set({ token: null, email: null, name: null, userId: null, providerId: null });
+  },
 }));

@@ -1,36 +1,43 @@
 /**
- * Brand colour and status colour stay apart (studio#425).
+ * Brand colour and status colour stay apart (studio#425, Brand v2 #628).
  *
- * docs/brand/VISUAL_IDENTITY.md §3.2: if success is painted in the brand indigo, the
- * brand comes to mean "success". The tokens live in the prototype stylesheet until
- * the app adopts them, so that is what this reads. Warning, stale and partial share
- * amber on purpose — which is why every badge must also carry a word.
+ * docs/brand/VISUAL_IDENTITY.md §3.2: if success is painted in a brand colour, the brand
+ * comes to mean "success" — Fresh Mint especially, which is green-blue. Every brand, data
+ * and secondary token (the chart-strong variants included) must differ from every
+ * `--status-*` value, in the app (`src/globals.css`) and in the prototype stylesheet, light
+ * and dark. Warning, stale and partial share amber on purpose — which is why every badge
+ * must also carry a word.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-const DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "prototype", "warehouse");
-const CSS = readFileSync(join(DIR, "tokens.css"), "utf8");
+import { PROTOTYPE_CSS, ROOT, THEMES, block, type Tokens } from "./support/brandTokens";
 
-const BRAND = ["--brand-primary", "--brand-subtle", "--brand-ink", "--data-accent"];
+const DIR = join(ROOT, "docs", "prototype", "warehouse");
+
+const BRAND = [
+  "--brand-primary",
+  "--brand-subtle",
+  "--brand-ink",
+  "--brand-secondary",
+  "--brand-secondary-strong",
+  "--data-accent",
+  "--data-accent-strong",
+  "--accent",
+  "--accent-subtle",
+];
+const REQUIRED_BRAND = ["--brand-primary", "--brand-secondary", "--brand-secondary-strong", "--data-accent", "--data-accent-strong"];
 const STATUS = ["--status-success", "--status-warning", "--status-failure", "--status-unknown"];
 
-/** Custom properties declared in the first block whose selector matches. */
-function tokens(css: string, selector: string): Map<string, string> {
-  const start = css.indexOf(`${selector} {`);
-  if (start === -1) return new Map();
-  const body = css.slice(start, css.indexOf("}", start));
-  return new Map([...body.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim().toLowerCase()]));
-}
-
-/** Status tokens whose value equals a brand token's value. */
-function collisions(values: Map<string, string>): string[] {
-  const brand = new Set(BRAND.map((name) => values.get(name)).filter(Boolean));
-  return STATUS.filter((name) => brand.has(values.get(name)));
+/** `name = value` for each brand token whose (resolved) value equals some `--status-*` value. */
+function collisions(values: Tokens): string[] {
+  const status = new Map([...values].filter(([name]) => name.startsWith("--status-")).map(([name, value]) => [value, name]));
+  return BRAND.filter((name) => values.has(name) && status.has(values.get(name)!)).map(
+    (name) => `${name} = ${status.get(values.get(name)!)}`,
+  );
 }
 
 /**
@@ -49,15 +56,22 @@ function wordlessBadges(html: string): string[] {
   return [...words.filter((word) => word === ""), ...Array<string>(Math.max(unmatched, 0)).fill("")];
 }
 
-describe("visual tokens gate (#425)", () => {
-  it.each([":root", ':root[data-theme="dark"]'])("%s: no status colour equals a brand colour", (selector) => {
-    const values = tokens(CSS, selector);
-    for (const name of STATUS) expect(values.has(name), `${selector} ${name}`).toBe(true);
+describe("visual tokens gate (#425, #628)", () => {
+  const sets: Array<[string, Tokens]> = [
+    ["app light", THEMES.app.light],
+    ["app dark", THEMES.app.dark],
+    ["app system dark", THEMES.app.systemDark],
+    ["prototype light", THEMES.prototype.light],
+    ["prototype dark", THEMES.prototype.dark],
+  ];
+
+  it.each(sets)("%s: no brand, data or secondary colour equals a status colour", (_, values) => {
+    for (const name of [...STATUS, ...REQUIRED_BRAND]) expect(values.has(name), name).toBe(true);
     expect(collisions(values)).toEqual([]);
   });
 
   it("stale and partial are amber like warning, so they must be told apart by label", () => {
-    const light = tokens(CSS, ":root");
+    const light = block(PROTOTYPE_CSS, ":root {");
     expect(light.get("--status-stale")).toBe("var(--status-warning)");
     expect(light.get("--status-partial")).toBe("var(--status-warning)");
   });
@@ -69,13 +83,23 @@ describe("visual tokens gate (#425)", () => {
   });
 
   describe("the checks fail when they should", () => {
-    it("sees a status token painted in the brand colour", () => {
+    it("sees a status token painted in a brand colour", () => {
       const values = new Map([
-        ["--brand-primary", "#5b5bd6"],
-        ["--status-success", "#5b5bd6"],
+        ["--brand-primary", "#2563eb"],
+        ["--status-success", "#2563eb"],
         ["--status-failure", "#b91c1c"],
       ]);
-      expect(collisions(values)).toEqual(["--status-success"]);
+      expect(collisions(values)).toEqual(["--brand-primary = --status-success"]);
+    });
+
+    it("sees Fresh Mint, or its chart variant, used as success", () => {
+      const values = new Map([
+        ["--brand-secondary", "#14b8a6"],
+        ["--brand-secondary-strong", "#0d9488"],
+        ["--status-success", "#15803d"],
+        ["--status-success-solid", "#0d9488"],
+      ]);
+      expect(collisions(values)).toEqual(["--brand-secondary-strong = --status-success-solid"]);
     });
 
     it("sees a badge with no word", () => {
