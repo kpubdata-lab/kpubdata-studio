@@ -65,7 +65,7 @@ export function AnalysesPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader title={t("analyses.title")} description={t("analyses.desc")} actions={<LinkButton to="/sql">{t("analyses.newQuery")}</LinkButton>} />
 
       {list.status === "loading" ? <Skeleton className="h-32 w-full" /> : null}
@@ -123,6 +123,6 @@ export function AnalysesPage() {
             );
           })
         : null}
-    </main>
+    </div>
   );
 }

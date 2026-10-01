@@ -10,6 +10,8 @@
     "openAssistant": "Ask KPubData 열기",
     "breadcrumb": "현재 위치",
     "mainNav": "주 메뉴",
+    "skipToContent": "본문 바로가기",
+    "documentTitle": "{{page}} · KPubData Studio",
     "askKpubdata": "Ask KPubData",
     "themeMode": {
       "system": "시스템",

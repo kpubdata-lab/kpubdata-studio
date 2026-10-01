@@ -453,7 +453,7 @@ export function ProviderPage() {
     credentialMeta.status === "loaded";
 
   return (
-    <main className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("provider.page.title")}
         description={t("provider.page.desc")}
@@ -681,7 +681,7 @@ export function ProviderPage() {
       ) : null}
 
       <ApplicationGuideCard />
-    </main>
+    </div>
   );
 }
 

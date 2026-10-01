@@ -93,7 +93,7 @@ export function DatasetDetailPage() {
   }, [datasetId]);
 
   if (mode.status === "loading") {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
+    return <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></div>;
   }
   if (mode.status === "snapshot") return <WarehouseTableView datasetId={datasetId} tables={mode.tables} />;
   return <RunDetailView note={t(`tableDetail.runView.${mode.reason}`)} />;
@@ -295,24 +295,24 @@ function RunDetailView({ note }: { note: string }) {
   }, [stageDetailState.data]);
 
   if (core.status === "loading") {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></main>;
+    return <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} /><Card><Skeleton className="h-40 w-full" /></Card></div>;
   }
 
   if (core.status === "error" || !core.dataset || !core.runs) {
-    return <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId || t("datasetDetail.fallbackTitle")} /><ErrorState title={t("datasetDetail.loadErrorTitle")} message={core.error} /></main>;
+    return <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"><PageHeader title={datasetId || t("datasetDetail.fallbackTitle")} /><ErrorState title={t("datasetDetail.loadErrorTitle")} message={core.error} /></div>;
   }
 
   if (invalidRun) {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader title={core.dataset.title} meta={<span className="font-mono">{core.dataset.dataset_id}</span>} />
         <Card variant="error" role="alert"><p className="font-semibold">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunTitle" : requested.status === "error" ? "datasetDetail.runCheckFailedTitle" : requested.status === "unsupported" ? "datasetDetail.runLookupUnsupportedTitle" : "datasetDetail.invalidRunTitle")}</p><p className="mt-2 text-sm">{t(requested.status === "forbidden" ? "datasetDetail.forbiddenRunBody" : requested.status === "error" ? "datasetDetail.runCheckFailedBody" : requested.status === "unsupported" ? "datasetDetail.runLookupUnsupportedBody" : "datasetDetail.invalidRunBody", { run: requestedRun, version: RUN_LOOKUP_API_VERSION })}</p><Button className="mt-4" variant="secondary" onClick={() => updateContext({ run: null, source: null, stage: null })}>{t("datasetDetail.viewLatest")}</Button></Card>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={core.dataset.title}
         meta={<><span className="block font-mono">{core.dataset.dataset_id}</span><span className="block">{core.dataset.sources.map((source) => source.provider).join(", ")} · {selectedSource || t("datasetDetail.sourceLoading")} · {t("labels.run")} {selectedRunId}{selectedRunId === core.dataset.latest_run_id ? ` ${t("labels.latest")}` : ""}</span></>}
@@ -363,7 +363,7 @@ function RunDetailView({ note }: { note: string }) {
         {selectedTab === "quality" ? <QualityTab state={qualityState} status={validation} results={selectedQualityResults} drift={selectedDrift} datasetId={datasetId} runId={selectedRunId} source={selectedSource} stage={selectedStage} /> : null}
         {selectedTab === "builds" ? <BuildsTab runs={core.runs} selectedRunId={selectedRunId} /> : null}
       </section>
-    </main>
+    </div>
   );
 }
 

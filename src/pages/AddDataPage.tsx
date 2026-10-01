@@ -579,7 +579,7 @@ export function AddDataPage() {
     // (390px width, UI audit #6-B) — short page heights can hide last field/button behind bar.
     // sm< only: add generous bottom margin (≈63px) so always fully scrollable to escape —
     // sm+ sticky becomes static (#6-B not applicable) so keep existing desktop margin.
-    <main className="flex flex-1 flex-col gap-6 px-5 pt-8 pb-28 sm:px-8 sm:pb-8 lg:px-10 lg:pt-10 lg:pb-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 pt-8 pb-28 sm:px-8 sm:pb-8 lg:px-10 lg:pt-10 lg:pb-10">
       <PageHeader
         title={t("addData.page.title")}
         description={t("addData.page.desc")}
@@ -715,6 +715,6 @@ export function AddDataPage() {
           </div>
         </div>
       </Card>
-    </main>
+    </div>
   );
 }

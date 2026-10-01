@@ -263,7 +263,7 @@ export function BuildPublishPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("buildPublish.title", { name: datasetLabel || runId || "Run" })}
         description={t("buildPublish.desc")}
@@ -386,7 +386,7 @@ export function BuildPublishPage() {
       ) : null}
       {publish.status === "failed" ? <Card variant="error" role="alert"><strong>{t("buildPublish.publishFailed")}</strong><p className="mt-2 text-sm">{publish.failure?.message}</p>{publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}</Card> : null}
       {publish.status === "aborted" ? <Card role="status"><strong>{t("buildPublish.abortedTitle")}</strong><p className="mt-2 text-sm text-muted-foreground">{t("buildPublish.abortedBody")}</p></Card> : null}
-    </main>
+    </div>
   );
 }
 
