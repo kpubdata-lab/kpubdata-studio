@@ -105,17 +105,17 @@ export function MonitoringPage() {
 
   if (unauthorized) {
     return (
-      <main className={main}>
+      <div className={main}>
         <PageHeader title={t("monitoringPage.title")} />
         <p className="text-sm text-muted-foreground" role="status">
           <strong className="font-medium text-foreground">{t("monitoringPage.forbiddenTitle")}</strong> — {t("monitoringPage.forbidden")}
         </p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={main}>
+    <div className={main}>
       <PageHeader
         title={t("monitoringPage.title")}
         meta={
@@ -169,6 +169,6 @@ export function MonitoringPage() {
           <RecentRefreshesTable runs={data.builds.recent_runs} />
         </>
       )}
-    </main>
+    </div>
   );
 }

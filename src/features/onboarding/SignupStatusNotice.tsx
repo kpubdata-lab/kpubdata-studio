@@ -25,7 +25,7 @@ const TITLE_TONE: Record<SignupBlock, string> = {
 export function SignupStatusNotice({ block }: { block: SignupBlock }) {
   const { t } = useTranslation();
   return (
-    <main className="flex flex-1 flex-col items-center px-5 py-10 sm:px-8 lg:px-10" data-signup-block={block}>
+    <div className="flex flex-1 flex-col items-center px-5 py-10 sm:px-8 lg:px-10" data-signup-block={block}>
       <div className={cn("w-full max-w-xl rounded-xl border p-6", TONE[block])} role={block === "rejected" ? "alert" : "status"}>
         <h1 className={cn("text-xl font-semibold tracking-tight", TITLE_TONE[block])}>{t(`signupStatus.${block}.title`)}</h1>
         <p className="mt-3 text-sm leading-6 text-foreground">{t(`signupStatus.${block}.desc`)}</p>
@@ -36,6 +36,6 @@ export function SignupStatusNotice({ block }: { block: SignupBlock }) {
           </Button>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

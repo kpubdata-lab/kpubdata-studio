@@ -41,7 +41,7 @@ export function BuildRunPage() {
     live.kind === "job" ? live.job.status : build?.status;
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("buildRun.title", { id: buildId || t("buildRun.fallbackId") })}
         description={t("buildRun.desc")}
@@ -96,6 +96,6 @@ export function BuildRunPage() {
           {t("buildRun.editSpec")}
         </LinkButton>
       </div>
-    </main>
+    </div>
   );
 }

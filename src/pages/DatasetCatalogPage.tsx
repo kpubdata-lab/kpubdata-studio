@@ -101,7 +101,7 @@ export function DatasetCatalogPage() {
   ];
 
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader title={t("nav.datasets")} description={t("catalog.page.desc")} actions={<LinkButton to="/add">{t("tableActions.create")}</LinkButton>} />
 
       <Card className="min-w-0 overflow-hidden p-0">
@@ -219,7 +219,7 @@ export function DatasetCatalogPage() {
           </div>
         ) : null}
       </Card>
-    </main>
+    </div>
   );
 }
 

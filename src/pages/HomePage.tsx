@@ -75,7 +75,7 @@ export function HomePage() {
 
   const warehouseKnown = warehouse.status !== "loading";
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={t("home.dashboard.title")}
         description={t("home.dashboard.desc")}
@@ -99,7 +99,7 @@ export function HomePage() {
           <ConnectionAttention datasets={datasets} />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -107,7 +107,7 @@ export function HomePage() {
 function StartHome() {
   const { t } = useTranslation();
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader title={t("home.hero.title")} description={t("home.hero.desc")} />
       <section className="grid gap-4 lg:grid-cols-2">
         <Card className="flex flex-col items-start gap-2">
@@ -125,7 +125,7 @@ function StartHome() {
           </LinkButton>
         </Card>
       </section>
-    </main>
+    </div>
   );
 }
 
