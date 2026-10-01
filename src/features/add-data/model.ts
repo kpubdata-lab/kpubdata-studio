@@ -14,7 +14,7 @@ import { identityFromUrl } from "@/features/add-data/identity";
 import { endpointHasRedactedSecret, redactUrlEndpoint, urlHasUserinfo } from "@/features/add-data/urlRedaction";
 import { jsonValueHasRedactedSecret, redactSourceParamsObject, sourceParamsHasRedactedSecret } from "@/features/add-data/paramsRedaction";
 import { buildSpecSchema } from "@/shared/lib/schemas";
-import { redactSpecExtra } from "@/features/build-spec/specStore";
+import { redactSpecTopLevel } from "@/features/build-spec/specStore";
 import type { BuildSpec, JsonValue, SourceFormat, SourceKind, SourceRef } from "@/shared/lib/types";
 import { i18n } from "@/shared/i18n";
 
@@ -352,15 +352,17 @@ export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): Add
  */
 /**
  * Display-only — create copy of canonical BuildSpec with url source endpoint,
- * public_api source params, every source's `extra` (#601) and the spec's own
- * `extra` (#616) replaced by secret-redacted versions (PR #283 review
+ * public_api source params, every source's `extra` (#601), the spec's own
+ * `extra` (#616), `metadata` and `exports[].options` (#623) replaced by secret-redacted versions (PR #283 review
  * response, Epic #246, follow-up review §1). Used only in Review screen's "actual
  * canonical BuildSpec to be submitted" preview; actual Builder submission uses spec
  * from `buildSpecFromDraft` result directly, not via this function.
  */
 export function redactBuildSpecForDisplay(spec: BuildSpec): BuildSpec {
   return {
-    ...spec,
+    // `metadata`, `exports[].options` and the spec's own `extra` (#616, #623) get the rule
+    // the draft and the run spec store share.
+    ...redactSpecTopLevel(spec),
     sources: spec.sources.map((rawSource) => {
       // Unmodelled source keys (`extra`, #601) may carry credentials too.
       const source = rawSource.extra
@@ -372,8 +374,6 @@ export function redactBuildSpecForDisplay(spec: BuildSpec): BuildSpec {
       const { params } = redactSourceParamsObject(source.params ?? {});
       return { ...source, params };
     }),
-    // Unmodelled spec keys (#616) get the run spec store's rule.
-    ...(spec.extra ? { extra: redactSpecExtra(spec.extra) } : {}),
   };
 }
 

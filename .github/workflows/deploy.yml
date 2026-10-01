@@ -15,9 +15,15 @@ on:
 permissions:
   contents: read
 
+# Pages deploys from main share one group and never cancel a deploy in progress.
+# Every other run (pull request, manual dispatch) only builds, so it gets a group of its
+# own ref: a pull request run waiting behind another run in the shared group was
+# replaced and cancelled with no job, and `build` is a required check, so the pull
+# request stayed BLOCKED (#586). A newer push to the same pull request still cancels
+# the older one's run, which reports on a head that is no longer the pull request's.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'push' && 'pages' || format('pages-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
