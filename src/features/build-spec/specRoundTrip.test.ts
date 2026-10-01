@@ -12,9 +12,11 @@ import { fromYamlText, toYamlText } from "./yamlText";
 import { fromBuilderSpec, serializeSpec, toBuilderSpec, type BuilderSpec } from "./specMapping";
 import { toBuildSpec, toFormValues } from "./newBuildModel";
 import { loadBuildSpec, saveBuildSpec } from "./specStore";
-import { applyBuildSpecToDraft, buildSpecFromDraft, INITIAL_DRAFT } from "@/features/add-data/model";
+import { applyBuildSpecToDraft, buildSpecFromDraft, INITIAL_DRAFT, redactBuildSpecForDisplay } from "@/features/add-data/model";
+import { PARAMS_REDACTED_SENTINEL } from "@/features/add-data/paramsRedaction";
 import { loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
 import { buildSpecSchema } from "@/shared/lib/schemas";
+import { i18n } from "@/shared/i18n";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const UPLOAD_ID = `upl_${"0".repeat(32)}`;
@@ -202,6 +204,44 @@ describe("Add Data: YAML apply → form edit → submitted payload (#601)", () =
     const result = buildSpecFromDraft(restored!);
     expect(result.error).toBeUndefined();
     expectPreserved(result.spec as BuildSpec);
+  });
+});
+
+describe("Add Data: credentials inside source extra never leave memory (#601)", () => {
+  const SECRET = "super-secret-value-601-draft";
+  /** Every source kind with a credential in its unmodelled keys, beside a plain one. */
+  function specWithSecretExtra(): BuildSpec {
+    const spec = fromYamlText(YAML);
+    spec.sources = spec.sources.map((source) => ({
+      ...source,
+      extra: { ...source.extra, auth: { serviceKey: SECRET }, region: "kr" },
+    }));
+    return spec;
+  }
+
+  it("draft save redacts source extra, and the restored draft fails closed", () => {
+    saveAddDataDraft(applyBuildSpecToDraft(INITIAL_DRAFT, specWithSecretExtra()));
+    expect(JSON.stringify(localStorage)).not.toContain(SECRET);
+
+    const restored = loadAddDataDraft();
+    expect(restored).not.toBeNull();
+    for (const source of restored!.canonicalBase!.sources) {
+      expect(source.extra).toMatchObject({ auth: { serviceKey: PARAMS_REDACTED_SENTINEL }, region: "kr" });
+    }
+    // The placeholder is never submitted as the credential: the user must enter it again.
+    const result = buildSpecFromDraft(restored!);
+    expect(result.spec).toBeUndefined();
+    expect(result.error).toBe(i18n.t("addData.model.unresolvedPlaceholder"));
+  });
+
+  it("the Review preview redacts source extra but keeps the submitted spec intact", () => {
+    const spec = specWithSecretExtra();
+    const shown = redactBuildSpecForDisplay(spec);
+    expect(JSON.stringify(shown)).not.toContain(SECRET);
+    for (const source of shown.sources) {
+      expect(source.extra).toMatchObject({ auth: { serviceKey: PARAMS_REDACTED_SENTINEL }, region: "kr" });
+    }
+    expect(spec.sources[0].extra).toMatchObject({ auth: { serviceKey: SECRET } });
   });
 });
 

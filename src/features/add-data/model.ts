@@ -350,8 +350,9 @@ export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): Add
  * no new Preview call needed, so excluded from signature.
  */
 /**
- * Display-only — create copy of canonical BuildSpec with url source endpoint and
- * public_api source params replaced by secret-redacted versions (PR #283 review
+ * Display-only — create copy of canonical BuildSpec with url source endpoint,
+ * public_api source params and every source's `extra` (#601) replaced by
+ * secret-redacted versions (PR #283 review
  * response, Epic #246, follow-up review §1). Used only in Review screen's "actual
  * canonical BuildSpec to be submitted" preview; actual Builder submission uses spec
  * from `buildSpecFromDraft` result directly, not via this function.
@@ -359,7 +360,11 @@ export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): Add
 export function redactBuildSpecForDisplay(spec: BuildSpec): BuildSpec {
   return {
     ...spec,
-    sources: spec.sources.map((source) => {
+    sources: spec.sources.map((rawSource) => {
+      // Unmodelled source keys (`extra`, #601) may carry credentials too.
+      const source = rawSource.extra
+        ? { ...rawSource, extra: redactSourceParamsObject(rawSource.extra).params }
+        : rawSource;
       if (source.kind === "url" && source.endpoint) {
         return { ...source, endpoint: redactUrlEndpoint(source.endpoint).endpoint };
       }
