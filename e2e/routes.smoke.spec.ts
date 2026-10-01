@@ -17,6 +17,9 @@ const ROUTES: Array<{ path: string; heading: RegExp | string }> = [
   { path: "/refresh-jobs", heading: /갱신 이력|Refresh History/ },
   { path: "/workspace", heading: "작업대" },
   { path: "/connections", heading: "데이터 제공 기관 연결" },
+  { path: "/reports", heading: "리포트" },
+  // A report id that is not stored renders the editor's not-found state, not a crash (#668).
+  { path: "/reports/missing-report", heading: "Report를 찾을 수 없습니다" },
   { path: "/monitoring", heading: "시스템 모니터링" },
   { path: "/settings", heading: "환경 설정" },
   { path: "/login", heading: /로그인/ },
