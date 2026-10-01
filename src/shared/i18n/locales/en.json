@@ -2612,6 +2612,36 @@
       "declaredPiiUnnamed": "Refused: it holds declared personal-data columns unmasked. Nothing was kept — leave those columns out or read Gold.",
       "piiDeclarationUnavailable": "Refused to be safe: the personal-data declaration of {{dataset}} could not be checked. Nothing was kept — try again later.",
       "piiDeclarationUnavailableUnnamed": "Refused to be safe: the source's personal-data declaration could not be checked. Nothing was kept — try again later."
+    },
+    "history": {
+      "title": "My exports",
+      "note": "Exports KPubData Builder still keeps for you, newest first. Builder deletes each one when it expires (24 hours after it was made); download or delete it before then.",
+      "refresh": "Refresh",
+      "empty": "No unexpired exports.",
+      "loadFailed": "Could not load your exports: {{message}}",
+      "meta": "{{format}} · {{rows}} rows · created {{created}} · expires {{expires}}",
+      "delete": "Delete",
+      "confirmDelete": "Delete the export of {{table}} ({{id}})? Builder deletes its file too; this cannot be undone.",
+      "deleteFailed": "Could not delete the export: {{message}}",
+      "gone": "That export is no longer in KPubData Builder, so it was removed from the list.",
+      "state": {
+        "completed": "Ready",
+        "pending": "In progress",
+        "expired": "Expired",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      },
+      "reason": {
+        "expired": "Expired: Builder has deleted its file, so it can no longer be downloaded. Export the query again.",
+        "failed": "Failed: Builder did not finish this export, so there is no file. Export the query again.",
+        "cancelled": "Cancelled: the export was stopped before it finished, so there is no file.",
+        "pending": "Builder is still writing this export; refresh to see when it is ready."
+      },
+      "refused": {
+        "unavailable": "Builder's file for this export is missing or no longer matches its digest, so it was not sent. Export the query again.",
+        "redistribution": "The source's terms forbid redistribution ({{sources}}), so KPubData Builder does not release this export's file.",
+        "redistributionUnnamed": "The source's terms forbid redistribution, so KPubData Builder does not release this export's file."
+      }
     }
   },
   "statusState": {
