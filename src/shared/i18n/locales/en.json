@@ -53,7 +53,8 @@
       "help": "Help (documentation)",
       "signOut": "Sign out",
       "signIn": "Sign in"
-    }
+    },
+    "demoModeDesc": "Demo mode: every screen shows sample data, not a real KPubData Builder."
   },
   "reportEditor": {
     "untitled": "Untitled",
@@ -1925,7 +1926,9 @@
       "maturity": "Maturity",
       "createdTables": "Tables made",
       "quota": "Daily quota",
-      "start": "Start"
+      "start": "Start",
+      "representation": "Format",
+      "operations": "Supported operations"
     },
     "access": {
       "keyNotRequired": "No service key",
@@ -1941,7 +1944,23 @@
       "errorTitle": "Could not load the table list"
     },
     "maturityUnknownTitle": "The Builder catalog sends no maturity grade",
-    "quotaUnknownTitle": "The Builder catalog does not state a call limit"
+    "quotaUnknownTitle": "The Builder catalog does not state a call limit",
+    "representation": {
+      "api_json": "API response (JSON)",
+      "api_xml": "API response (XML)",
+      "file_csv": "CSV file",
+      "file_excel": "Excel file",
+      "sheet": "Spreadsheet",
+      "other": "Unclassified format"
+    },
+    "operations": {
+      "list": "List rows",
+      "get": "Get one record",
+      "schema": "Schema",
+      "raw": "Raw response",
+      "download": "File download",
+      "none": "No operation information"
+    }
   },
   "catalog": {
     "page": {
@@ -1970,7 +1989,12 @@
     },
     "attentionOnly": "Needs attention only",
     "notCommitted": "Not committed yet",
-    "noWarehouse": "This deployment has no warehouse, so snapshots and row counts are not shown. Refresh times come from the latest run."
+    "noWarehouse": "This deployment has no warehouse, so snapshots and row counts are not shown. Refresh times come from the latest run.",
+    "empty": {
+      "title": "No tables yet",
+      "desc": "Nothing has been built yet. Add data turns a source into your first table.",
+      "action": "Add data"
+    }
   },
   "monitoring": {
     "error": {
@@ -2957,6 +2981,19 @@
       "credentialLocal": "Studio found a value that looks like a credential in the spec and sent nothing",
       "demoConflict": "the document is at revision {{current}}"
     }
+  },
+  "signupStatus": {
+    "pending": {
+      "title": "Your sign-up is waiting for approval",
+      "desc": "You are signed in, but KPubData Builder shows nothing to this account until an administrator approves it. That is why no screen can load data yet.",
+      "next": "Ask your administrator to approve the account, then choose Check again."
+    },
+    "rejected": {
+      "title": "Your sign-up was rejected",
+      "desc": "An administrator rejected this account's sign-up, so KPubData Builder refuses every request from it.",
+      "next": "If you think this is a mistake, contact your administrator."
+    },
+    "checkAgain": "Check again"
   },
   "runHistory": {
     "scopeMore": "The latest {{count}} runs (asked for up to {{limit}}). Older runs may exist.",
