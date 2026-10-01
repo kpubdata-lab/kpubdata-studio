@@ -2479,6 +2479,8 @@
     "runsShownCapped": "최근 실행 {{n}}건을 표시합니다. 더 있을 수 있습니다 — KPubData Builder 는 전체 개수를 알려주지 않습니다.",
     "runsShowMore": "더 보기 (최대 {{max}}건)",
     "runsAtMax": "한 번에 볼 수 있는 최대 {{max}}건입니다.",
+    "runsShownOfTotal": "실행 {{n}} / {{total}}건을 표시합니다.",
+    "runsAtMaxOfTotal": "한 번에 볼 수 있는 최대 {{max}}건입니다 — 이전 실행 {{left}}건은 표시되지 않습니다.",
     "loadFailed": "KPubData Builder 가 응답하지 못했습니다: {{message}}",
     "users": {
       "title": "사용자 · 가입 승인",

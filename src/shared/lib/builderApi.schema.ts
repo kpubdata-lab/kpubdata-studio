@@ -1207,7 +1207,10 @@ export const adminRunSchema = z.object({
 
 export const adminRunsResponseSchema = z.object({
   runs: z.array(adminRunSchema),
+  /** Runs in this response — `len(runs)` after `limit`, not a total. */
   count: z.number().int().nonnegative(),
+  /** Runs before `limit` (kpubdata-builder#948, contract 1.73.0); absent from an older Builder. */
+  total: z.number().int().nonnegative().optional(),
 });
 
 /**
