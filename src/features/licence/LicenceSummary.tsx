@@ -19,7 +19,7 @@ import type { RunLicenceState } from "./useRunLicence";
 
 const KIND_CLASS: Record<Exclude<LicenceKind, "undeclared">, string> = {
   spdx: "border-border text-muted-foreground",
-  kogl: "border-accent bg-accent-subtle text-accent-subtle-foreground",
+  kogl: "border-brand-primary bg-brand-subtle text-brand-text",
   other: "border-border border-dashed text-muted-foreground",
 };
 
@@ -87,7 +87,7 @@ function LinkValue({ link }: { link: string | null }) {
     );
   }
   return (
-    <a className="break-all text-accent-subtle-foreground underline underline-offset-2" href={link} rel="noopener noreferrer" target="_blank">
+    <a className="break-all text-brand-text underline underline-offset-2" href={link} rel="noopener noreferrer" target="_blank">
       {link}
       <span className="sr-only"> {t("licence.opensInNewTab")}</span>
     </a>

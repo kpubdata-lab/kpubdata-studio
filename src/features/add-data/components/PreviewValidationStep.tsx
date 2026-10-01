@@ -130,7 +130,7 @@ export function PreviewValidationStep({
                 onClick={() => setActiveIndex(i)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
                   i === safeIndex
-                    ? "border-accent bg-accent text-accent-foreground"
+                    ? "border-brand-primary bg-brand-primary text-brand-primary-foreground"
                     : "border-border bg-muted text-muted-foreground"
                 }`}
               >

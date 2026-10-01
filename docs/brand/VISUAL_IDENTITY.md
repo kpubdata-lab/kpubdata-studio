@@ -163,8 +163,8 @@ Dark 값 (`src/globals.css` 와 prototype `tokens.css` 가 같은 값을 쓴다)
 | 본문 | `--foreground` | `#E8EAED` |
 | 보조 텍스트 | `--muted-foreground` | `#9AA3AE` |
 | 버튼(fill) | `--brand-primary` | `#2563EB` + 흰 글자 — light 와 같다 |
-| 파랑 텍스트 · active · focus | `--accent-subtle-foreground` · `--sidebar-active-foreground` · `--ring` | `#60A5FA` |
-| active 배경 | `--sidebar-active` · `--accent-subtle` | `#1E2836` |
+| 파랑 텍스트 · active · focus | `--brand-text` · `--sidebar-active-foreground` · `--ring` | `#60A5FA` |
+| active 배경 | `--sidebar-active` · `--brand-subtle` | `#1E2836` |
 | 차트 | `--data-accent-strong` · `--brand-secondary-strong` | `#06B6D4` · `#14B8A6` (dark 표면에서는 원래 색이 3:1 을 넘는다) |
 
 상태 토큰의 dark 값은 #425 그대로다.
@@ -189,6 +189,22 @@ Dark 값 (`src/globals.css` 와 prototype `tokens.css` 가 같은 값을 쓴다)
   background · card · muted · sidebar 위에서 4.5:1, 차트 강한 변형과 focus ring 을 background · card 위에서 3:1.
   기준 미달 값을 넣으면 실패하는 음성 테스트가 함께 있다.
 - 차트 마크는 `--data-accent-strong` / `--brand-secondary-strong` 를 쓴다 (`SimpleChart`). Cyan · Mint 원래 값은 차트 마크에 쓰지 않는다.
+
+### 3.6 앱 토큰 이름 (#667)
+
+앱(`src/globals.css`)은 역할 이름만 쓴다. Brand v1 의 `accent` 하나에 상호작용 · 선택 · 링크를 몰아넣던 이름은 없앴다.
+
+| 역할 | 토큰 · Tailwind | 예전 이름 (쓰지 않는다) |
+|---|---|---|
+| 상호작용 fill · 선택 테두리 · tour 강조 | `--brand-primary` · `bg-brand-primary` · `border-brand-primary` | `--accent` · `bg-accent` |
+| 그 위 글자 | `--brand-primary-foreground` · `text-brand-primary-foreground` | `--accent-foreground` |
+| 선택 항목 tint | `--brand-subtle` · `bg-brand-subtle` | `--accent-subtle` |
+| 파랑 텍스트 (링크 · 선택 label) | `--brand-text` · `text-brand-text` | `--accent-subtle-foreground` |
+| 차트 · 데이터 마크 | `--data-accent-strong` · `--brand-secondary-strong` | `accent` |
+
+- `--ring` (focus ring) 과 `--sidebar-*` (사이드바 영역) 는 shadcn/Tailwind 의 역할 이름이고 값은 Brand v2 라 그대로 둔다.
+- Tailwind 의 `accent-*` 유틸리티(체크박스 `accent-color`)는 색 이름이 아니라 속성이다 — `accent-brand-primary` 처럼 역할 토큰과 함께 쓴다.
+- `__tests__/brandV2Gate.test.ts` 가 예전 이름이 `src/` 의 CSS 변수나 Tailwind 클래스로 돌아오면 실패한다.
 
 ## 4. 타이포그래피
 
@@ -295,9 +311,9 @@ Brand v2 는 #425 를 폐기하지 않는다. 화면을 만드는 원칙은 남�
 |---|---|---|
 | 의도 · 규칙 | `DESIGN_CONCEPT.md` · 이 문서 | 반영 (#629) |
 | 심볼 · 자산 | `assets/logo/kpubdata-brand-assets/` SVG · PNG · social preview · 자산 README | 반영 (#633) |
-| 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` (light · dark) | 반영 — 대비 값은 #631 결정 |
+| 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` (light · dark) | 반영 — 대비 값은 #631 결정, v1 이름(`accent*`) 제거 #667 |
 | 화면 | prototype 다섯 화면 · `Layout` 사이드바 · 로그인/가입 · docs 테마 · favicon (`favicon.svg`) · README (`<picture>` light/dark) | 반영 |
-| 검증 | `brandLockupGate` · `visualTokensGate` (브랜드 ↔ 상태) · `brandV2Gate` (prototype ↔ 앱 drift, legacy 색, gradient, 팔레트, 대비) | 반영 |
+| 검증 | `brandLockupGate` · `visualTokensGate` (브랜드 ↔ 상태) · `brandV2Gate` (prototype ↔ 앱 drift, legacy 색 · v1 토큰 이름, gradient, 팔레트, 대비) | 반영 |
 | 검증 | 앱 screenshot baseline (#532) | 대기 — baseline 은 #563 에 있다 (CI 컨테이너 #585 대기). Brand v2 light 를 기준으로 다시 만든다 |
 
 그 사이 코드와 이 문서가 다르면, **이 문서가 목표이고 코드는 아직 옮겨지지 않은 것**이다.

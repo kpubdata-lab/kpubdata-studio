@@ -202,7 +202,7 @@ export function BuildsPage() {
           <Card variant="error" role="alert">
             <p className="font-semibold">{t("builds.run.notFoundTitle", { id: selectedRunId })}</p>
             <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.notFoundDesc", { limit: LIST_LIMIT })}</p>
-            <button className="mt-4 text-sm font-medium text-accent-subtle-foreground underline" onClick={clearSelection} type="button">
+            <button className="mt-4 text-sm font-medium text-brand-text underline" onClick={clearSelection} type="button">
               {t("builds.run.clearSelection")}
             </button>
           </Card>
@@ -210,7 +210,7 @@ export function BuildsPage() {
           <Card variant="error" role="alert">
             <p className="font-semibold">{t("builds.run.forbiddenTitle", { id: selectedRunId })}</p>
             <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.forbiddenDesc", { limit: LIST_LIMIT })}</p>
-            <button className="mt-4 text-sm font-medium text-accent-subtle-foreground underline" onClick={clearSelection} type="button">
+            <button className="mt-4 text-sm font-medium text-brand-text underline" onClick={clearSelection} type="button">
               {t("builds.run.clearSelection")}
             </button>
           </Card>

@@ -29,7 +29,7 @@ export function ErrorFallback() {
       <button
         type="button"
         onClick={() => window.location.reload()}
-        className="inline-flex items-center justify-center rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground shadow-sm transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex items-center justify-center rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-medium text-brand-primary-foreground shadow-sm transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {i18n.t("errorBoundary.global.reload")}
       </button>
@@ -108,7 +108,7 @@ function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: 
       <button
         type="button"
         onClick={onRetry}
-        className="inline-flex items-center justify-center rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground shadow-sm transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex items-center justify-center rounded-lg bg-brand-primary px-5 py-2.5 text-sm font-medium text-brand-primary-foreground shadow-sm transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {i18n.t("errorBoundary.feature.retry")}
       </button>

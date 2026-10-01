@@ -60,7 +60,7 @@ function Rule({ row }: { row: IssueRow }) {
 export function QualityIssuesTable({ rows }: { rows: IssueRow[] }) {
   const { t } = useTranslation();
   const caption = t("quality.issues.caption");
-  const link = "text-accent-subtle-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  const link = "text-brand-text underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
   const notApplicable = <NotEvaluatedStatus className="font-sans">{t("quality.issues.notApplicable")}</NotEvaluatedStatus>;
   return (
     // Wider than a phone: the table scrolls inside this region, never the page.

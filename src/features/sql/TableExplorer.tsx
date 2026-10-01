@@ -208,7 +208,7 @@ export function TableExplorer({
                 className={cn(
                   "flex min-h-8 cursor-pointer items-center gap-1.5 py-1 pr-2 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted",
                   item.level === 1 ? "pl-2" : item.level === 2 ? "pl-5" : "pl-10",
-                  item.kind === "table" && item.table === selectedTable && "bg-accent-subtle text-accent-subtle-foreground",
+                  item.kind === "table" && item.table === selectedTable && "bg-brand-subtle text-brand-text",
                 )}
                 data-kind={item.kind}
                 onClick={() => activate(item)}

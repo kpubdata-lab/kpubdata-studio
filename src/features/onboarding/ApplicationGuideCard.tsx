@@ -102,7 +102,7 @@ export function ApplicationGuideCard() {
                       <td className="px-3 py-2">
                         {isWebUrl(group.url) ? (
                           <a
-                            className="font-medium text-accent-subtle-foreground underline"
+                            className="font-medium text-brand-text underline"
                             href={group.url}
                             rel="noreferrer"
                             target="_blank"

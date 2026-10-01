@@ -174,7 +174,7 @@ function AttentionTables({ datasets }: { datasets: Loadable<DatasetSummary[]> })
     <Section
       title={t("home.attention.title")}
       action={
-        <Link className="text-xs text-accent-subtle-foreground underline-offset-2 hover:underline" to="/tables?attention=1">
+        <Link className="text-xs text-brand-text underline-offset-2 hover:underline" to="/tables?attention=1">
           {t("home.attention.viewAll", { count: flagged.length })}
         </Link>
       }
@@ -233,7 +233,7 @@ function RecentSnapshots({ state }: { state: Loadable<RecentSnapshot[]> }) {
                 return (
                   <tr className="border-b border-border last:border-0" key={`${logicalName}@${snapshot.snapshot_id}`}>
                     <td className="px-4 py-2">
-                      <Link className="font-mono text-accent-subtle-foreground underline-offset-2 hover:underline" to={href}>
+                      <Link className="font-mono text-brand-text underline-offset-2 hover:underline" to={href}>
                         {logicalName}
                       </Link>
                     </td>
@@ -302,7 +302,7 @@ function RecentAnalyses({ state }: { state: Loadable<{ analyses: SavedAnalysis[]
     <Section
       title={t("home.analyses.title")}
       action={
-        <Link className="text-xs text-accent-subtle-foreground underline-offset-2 hover:underline" to="/analyses">
+        <Link className="text-xs text-brand-text underline-offset-2 hover:underline" to="/analyses">
           {t("home.analyses.viewAll")}
         </Link>
       }

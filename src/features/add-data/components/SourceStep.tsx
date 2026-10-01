@@ -45,7 +45,7 @@ export function SourceStep({ selected, onSelect }: SourceStepProps) {
           >
             <Card
               variant={selected === option.kind ? "success" : "default"}
-              className="h-full transition hover:border-accent/50 hover:shadow-md"
+              className="h-full transition hover:border-brand-primary/50 hover:shadow-md"
             >
               <p className="text-base font-semibold tracking-tight">{t(`addData.source.kindTitle.${option.descriptionKey}`)}</p>
               <p className="mt-1 text-sm text-muted-foreground">{t(`addData.source.kind.${option.descriptionKey}`)}</p>

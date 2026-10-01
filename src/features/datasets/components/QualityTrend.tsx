@@ -198,8 +198,8 @@ function PassRate({ run }: { run: DatasetQualityHistoryEntry }) {
 
 /**
  * Pass rate over the fetched runs, oldest on the left. A run without a rate leaves a gap — the
- * line breaks there instead of dropping to 0. The marks use the chart accent token
- * (`accent` today; `data-accent-strong` once Brand v2, #635, lands).
+ * line breaks there instead of dropping to 0. The marks use the Brand v2 chart token
+ * `data-accent-strong`, which keeps 3:1 against the card (#631).
  */
 function PassRateSparkline({ runs }: { runs: DatasetQualityHistoryEntry[] }) {
   const { t } = useTranslation();
@@ -244,10 +244,10 @@ function PassRateSparkline({ runs }: { runs: DatasetQualityHistoryEntry[] }) {
         <line x1={pad} x2={width - pad} y1={pad} y2={pad} stroke="currentColor" strokeOpacity={0.3} strokeDasharray="2 3" />
         <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="currentColor" strokeOpacity={0.3} />
         {segments.map((d, index) => (
-          <path key={index} d={d} className="stroke-accent" fill="none" strokeWidth={2} strokeLinejoin="round" />
+          <path key={index} d={d} className="stroke-data-accent-strong" fill="none" strokeWidth={2} strokeLinejoin="round" />
         ))}
         {rated.map((point) => (
-          <circle key={point.run.run_id} cx={point.x} cy={point.y ?? 0} r={2.5} className="fill-accent" data-point={point.run.run_id} />
+          <circle key={point.run.run_id} cx={point.x} cy={point.y ?? 0} r={2.5} className="fill-data-accent-strong" data-point={point.run.run_id} />
         ))}
       </svg>
       <figcaption className="text-xs text-muted-foreground">
