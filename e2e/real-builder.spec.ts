@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { parse as parseYaml } from "yaml";
+import { fromBuilderSpec, serializeSpec, type BuilderSpec } from "../src/features/build-spec/specMapping";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./helpers";
 
 /**
@@ -257,6 +259,85 @@ test("alias 없는 Public API source 의 테이블을 목록에서 열면 현재
   await expect(page.getByTestId("row-total")).toBeVisible();
 
   await expectNoPageErrors(errors);
+});
+
+/**
+ * The same replay fixture, but `station` comes from `param_grid` (one combination, so the
+ * replayed call is unchanged) and the BuildSpec declares `dataTime` PII in `gold` (#601).
+ * If Studio's mapping drops `param_grid` the source fails for a missing station; if it
+ * drops `gold`, Gold publishes the column unmasked.
+ */
+const PII_ROUND_TRIP_YAML = [
+  "dataset_id: dataset.cross_repo_pii_round_trip",
+  "title: Cross-repo PII round trip",
+  "description: BuildSpec에만 선언한 PII가 Studio 왕복 후에도 Gold에서 가려진다",
+  "sources:",
+  "  - provider: datago",
+  "    dataset: air_station",
+  "    alias: measurements",
+  "    params:",
+  "      term: daily",
+  "      page: 1",
+  "      page_size: 100",
+  "    param_grid:",
+  "      station: [강남구]",
+  "    gold:",
+  "      pii_columns: [dataTime]",
+  "exports:",
+  "  - kind: jsonl",
+  "    output_path: out/data.jsonl",
+].join("\n");
+
+test("BuildSpec 선언 PII가 Studio 편집→제출 왕복 뒤 Gold에서 가려진다 (#601) @real-builder", async ({
+  request,
+}) => {
+  test.skip(
+    !process.env.REAL_BUILDER_REPLAY,
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
+  );
+
+  // 1) Studio's own mapping: Builder YAML → Studio BuildSpec → a form edit → the payload
+  //    Studio submits (the same serializeSpec the Add Data and New Build flows use).
+  const loaded = fromBuilderSpec(parseYaml(PII_ROUND_TRIP_YAML) as BuilderSpec);
+  const edited = { ...loaded, title: "Cross-repo PII round trip (edited)" };
+  const payload = serializeSpec(edited);
+  expect(JSON.parse(payload)).toMatchObject({
+    title: "Cross-repo PII round trip (edited)",
+    sources: [{ param_grid: { station: ["강남구"] }, gold: { pii_columns: ["dataTime"] } }],
+  });
+
+  // 2) Real Builder builds it end to end.
+  const runId = `ui-pii-round-trip-${Date.now()}`;
+  const response = await request.post(`${BUILDER_URL}/build`, {
+    data: { spec: payload, run_id: runId },
+    timeout: 60_000,
+  });
+  const body = (await response.json()) as {
+    status?: string;
+    outcomes?: Array<{ error?: string | null; stages_completed?: string[] }>;
+  };
+  expect(body.status).toBe("ok");
+  expect(body.outcomes?.[0]?.error ?? null).toBeNull();
+  expect(body.outcomes?.[0]?.stages_completed).toEqual(["bronze", "silver", "gold"]);
+
+  // 3) The declaration reached Gold: the manifest records it as masked by the BuildSpec…
+  const manifestResponse = await request.get(`${BUILDER_URL}/builds/${runId}/manifest`);
+  expect(manifestResponse.ok()).toBeTruthy();
+  const manifest = (await manifestResponse.json()) as {
+    pii_masking?: Record<string, { masked?: Array<{ column: string; declared_by: string[] }>; unmasked?: unknown[] }>;
+  };
+  const masking = manifest.pii_masking?.["measurements"];
+  expect(masking?.masked).toEqual([expect.objectContaining({ column: "dataTime", declared_by: ["build_spec"] })]);
+  expect(masking?.unmasked).toEqual([]);
+
+  // 4) …and no published Gold row carries the raw value.
+  const rowsResponse = await request.post(`${BUILDER_URL}/warehouse/rows`, {
+    data: { table: "dataset.cross_repo_pii_round_trip.measurements", page_size: 100 },
+  });
+  expect(rowsResponse.ok()).toBeTruthy();
+  const rows = ((await rowsResponse.json()) as { rows?: Array<Record<string, unknown>> }).rows ?? [];
+  expect(rows.length).toBeGreaterThan(0);
+  expect(rows.every((row) => row["dataTime"] === "[masked]")).toBe(true);
 });
 
 test("빌드 실패 게이트: 파일 없이는 다음 단계 진입이 막힌다 @real-builder", async ({

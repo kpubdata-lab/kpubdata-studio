@@ -93,6 +93,42 @@ export interface SourceRef {
   endpoint?: string;
   /** used only in kind="url"; P0 allows GET only. */
   method?: "GET";
+  /**
+   * Builder `param_grid` (#613, contract 1.27.0): per-key value lists expanded into a
+   * cartesian product of list calls. Valid for kind="public_api". Studio does not edit it;
+   * it is carried through every round trip so the fetch scope never silently shrinks (#601).
+   */
+  paramGrid?: Record<string, JsonValue[]>;
+  /** Builder `gold` (#659, #689): Gold row/column limits and declared PII columns (#601). */
+  gold?: SourceGold;
+  /**
+   * Source-level contract fields Studio does not model yet (`SourceRef` is
+   * `additionalProperties: true`). Spread first by `toBuilderSpec`, so modeled fields win (#601).
+   */
+  extra?: Record<string, JsonValue>;
+}
+
+/** One `gold.filters` row (Builder contract `SourceRef.gold.filters[]`). */
+export interface SourceGoldFilter {
+  column: string;
+  op: "eq" | "ne" | "gt" | "ge" | "lt" | "le" | "in" | "not_null";
+  value?: JsonValue;
+}
+
+/**
+ * Builder `SourceRef.gold` (contract 1.64.0). Studio keeps camelCase names and maps them to
+ * snake_case in `specMapping.ts`. Every key is optional so a round trip writes back exactly
+ * the keys the original spec declared.
+ */
+export interface SourceGold {
+  /** Columns Gold keeps, in order. */
+  select?: string[];
+  /** Row filters applied before `select`. */
+  filters?: SourceGoldFilter[];
+  /** Silver columns this BuildSpec declares PII; masked in Gold by default (#689). */
+  piiColumns?: string[];
+  /** Declared PII columns published unmasked anyway (#689, #902). */
+  publishUnmasked?: string[];
 }
 
 export interface ExportTarget {

@@ -101,7 +101,13 @@ export function saveAddDataDraft(draft: AddDataDraft): void {
   const canonicalBase = draft.canonicalBase
     ? {
         ...draft.canonicalBase,
-        sources: draft.canonicalBase.sources.map((source) => {
+        sources: draft.canonicalBase.sources.map((rawSource) => {
+          // Source keys Studio does not model are kept in `extra` (#601) and may hold
+          // credentials (e.g. `auth.serviceKey`), so they get the same redaction as params.
+          // A restored sentinel then fails closed in buildSpecFromDraft.
+          const source = rawSource.extra
+            ? { ...rawSource, extra: redactSourceParamsObject(rawSource.extra).params }
+            : rawSource;
           if ((source.kind ?? "public_api") === "url" && source.endpoint) {
             return { ...source, endpoint: sanitizeUrlEndpointForStorage(source.endpoint) };
           }

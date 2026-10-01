@@ -110,6 +110,8 @@ export function redactSpecForStorage(spec: BuildSpec): BuildSpec {
       const safe: SourceRef = {
         ...source,
         params: redactSecrets(source.params ?? {}) as Record<string, JsonValue>,
+        // Unmodeled source keys (#601) cross the same persistence boundary as params.
+        ...(source.extra ? { extra: redactSecrets(source.extra) as Record<string, JsonValue> } : {}),
       };
       if (source.kind === "url" && source.endpoint) {
         safe.endpoint = redactUrlEndpoint(source.endpoint).endpoint;

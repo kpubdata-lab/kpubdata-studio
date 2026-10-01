@@ -34,11 +34,35 @@ export const jsonRecordSchema = z.record(z.string(), jsonValueSchema);
 /** export options allow arbitrary values (unknown) for string keys (aligned with ExportTarget.options contract) */
 export const exportOptionsSchema = z.record(z.string(), jsonValueSchema);
 
-/** source schema contract (VAL-1). 1:1 mapping with Builder sources[].schema. */
-export const schemaContractSchema = z.object({
+/**
+ * source schema contract (VAL-1). 1:1 mapping with Builder sources[].schema.
+ *
+ * Loose: Builder's `SchemaContract` also carries rename/read_as/null_tokens/coalesce/zfill/
+ * derived/... that Studio does not edit. A strict object would strip them on every parse
+ * (#601), changing Silver normalization on re-save.
+ */
+export const schemaContractSchema = z.looseObject({
   required: z.array(z.string()),
   dtypes: z.record(z.string(), z.string()),
   casts: z.record(z.string(), z.string()),
+});
+
+/** Builder `SourceRef.gold.filters[]` (contract 1.64.0). */
+export const sourceGoldFilterSchema = z.object({
+  column: z.string(),
+  op: z.enum(["eq", "ne", "gt", "ge", "lt", "le", "in", "not_null"]),
+  value: jsonValueSchema.optional(),
+});
+
+/**
+ * Builder `SourceRef.gold` (#659, #689; camelCase in Studio). Parsed so a saved or
+ * re-validated spec keeps its Gold limits and declared PII columns (#601).
+ */
+export const sourceGoldSchema = z.object({
+  select: z.array(z.string()).optional(),
+  filters: z.array(sourceGoldFilterSchema).optional(),
+  piiColumns: z.array(z.string()).optional(),
+  publishUnmasked: z.array(z.string()).optional(),
 });
 
 /** kind="public_api" (default) / file / url distinction(#498). */
@@ -72,6 +96,11 @@ export const sourceRefSchema = z
     encoding: z.string().optional(),
     endpoint: z.string().optional(),
     method: z.literal("GET").optional(),
+    // Builder `param_grid` (#613) — carried through, never edited (#601).
+    paramGrid: z.record(z.string(), z.array(jsonValueSchema)).optional(),
+    gold: sourceGoldSchema.optional(),
+    // Source-level contract fields Studio does not model (#601). See specMapping.ts.
+    extra: jsonRecordSchema.optional(),
   })
   .superRefine((source, ctx) => {
     const kind = source.kind ?? "public_api";

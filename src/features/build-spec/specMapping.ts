@@ -9,8 +9,19 @@
  *   - datasetId → dataset_id
  *   - exports[].format → exports[].kind (+ output_path derived)
  *   - sources fields (provider/dataset/params/alias) keep the same names.
+ *   - sources[].param_grid ↔ paramGrid, sources[].gold.{pii_columns,publish_unmasked}
+ *     ↔ gold.{piiColumns,publishUnmasked}; other source keys ride in `extra` (#601).
  */
-import type { BuildSpec, ExportTarget, JsonValue, SourceFormat, SourceKind } from "@/shared/lib/types";
+import type {
+  BuildSpec,
+  ExportTarget,
+  JsonValue,
+  SourceFormat,
+  SourceGold,
+  SourceGoldFilter,
+  SourceKind,
+  SourceRef,
+} from "@/shared/lib/types";
 
 /** Export target expected by Builder (snake_case). */
 interface BuilderExport {
@@ -41,6 +52,101 @@ interface BuilderSourceRef {
   encoding?: string;
   endpoint?: string;
   method?: "GET";
+  param_grid?: Record<string, JsonValue[]>;
+  gold?: BuilderSourceGold;
+}
+
+/** `SourceRef.gold` as Builder expects it (contract 1.64.0, #659, #689). */
+interface BuilderSourceGold {
+  select?: string[];
+  filters?: SourceGoldFilter[];
+  pii_columns?: string[];
+  publish_unmasked?: string[];
+}
+
+/** Source-level wire keys explicitly modeled below; anything else goes to `SourceRef.extra`. */
+const KNOWN_SOURCE_FIELDS = new Set([
+  "kind",
+  "provider",
+  "dataset",
+  "params",
+  "alias",
+  "schema",
+  "upload_id",
+  "format",
+  "encoding",
+  "endpoint",
+  "method",
+  "param_grid",
+  "gold",
+]);
+
+/** Studio `gold` → Builder `gold`. Writes back only the keys that were declared. */
+function toBuilderGold(gold: SourceGold): BuilderSourceGold {
+  return {
+    ...(gold.select !== undefined ? { select: gold.select } : {}),
+    ...(gold.filters !== undefined ? { filters: gold.filters } : {}),
+    ...(gold.piiColumns !== undefined ? { pii_columns: gold.piiColumns } : {}),
+    ...(gold.publishUnmasked !== undefined ? { publish_unmasked: gold.publishUnmasked } : {}),
+  };
+}
+
+/** Builder `gold` → Studio `gold`. */
+function fromBuilderGold(gold: BuilderSourceGold): SourceGold {
+  return {
+    ...(gold.select !== undefined ? { select: gold.select } : {}),
+    ...(gold.filters !== undefined ? { filters: gold.filters } : {}),
+    ...(gold.pii_columns !== undefined ? { piiColumns: gold.pii_columns } : {}),
+    ...(gold.publish_unmasked !== undefined ? { publishUnmasked: gold.publish_unmasked } : {}),
+  };
+}
+
+/** Studio source → Builder source. `extra` first, so modeled (form-edited) fields win. */
+function toBuilderSource(source: SourceRef): BuilderSourceRef {
+  return {
+    ...(source.extra ?? {}),
+    ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
+    ...(source.provider !== undefined ? { provider: source.provider } : {}),
+    ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
+    // Builder loader.py rejects `params` as a foreign field if it exists as a key in kind=file/url —
+    // send only for public_api (omit kind).
+    ...(!source.kind || source.kind === "public_api" ? { params: source.params } : {}),
+    ...(source.paramGrid !== undefined ? { param_grid: source.paramGrid } : {}),
+    ...(source.alias ? { alias: source.alias } : {}),
+    ...(source.schema ? { schema: source.schema } : {}),
+    ...(source.uploadId ? { upload_id: source.uploadId } : {}),
+    ...(source.format ? { format: source.format } : {}),
+    ...(source.encoding ? { encoding: source.encoding } : {}),
+    ...(source.endpoint ? { endpoint: source.endpoint } : {}),
+    ...(source.method ? { method: source.method } : {}),
+    ...(source.gold !== undefined ? { gold: toBuilderGold(source.gold) } : {}),
+  };
+}
+
+/** Builder source → Studio source. Unmodeled keys are kept in `extra`, not dropped (#601). */
+function fromBuilderSource(source: BuilderSourceRef): SourceRef {
+  const extra: Record<string, JsonValue> = {};
+  for (const [key, value] of Object.entries(source as unknown as Record<string, unknown>)) {
+    if (!KNOWN_SOURCE_FIELDS.has(key)) extra[key] = value as JsonValue;
+  }
+  return {
+    ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
+    ...(source.provider !== undefined ? { provider: source.provider } : {}),
+    ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
+    // file/url sources from wire have no params — Studio SourceRef.params is still
+    // required, so fill with empty object.
+    params: source.params ?? {},
+    ...(source.param_grid !== undefined ? { paramGrid: source.param_grid } : {}),
+    ...(source.alias ? { alias: source.alias } : {}),
+    ...(source.schema ? { schema: source.schema } : {}),
+    ...(source.upload_id ? { uploadId: source.upload_id } : {}),
+    ...(source.format ? { format: source.format } : {}),
+    ...(source.encoding ? { encoding: source.encoding } : {}),
+    ...(source.endpoint ? { endpoint: source.endpoint } : {}),
+    ...(source.method ? { method: source.method } : {}),
+    ...(source.gold !== undefined && source.gold !== null ? { gold: fromBuilderGold(source.gold) } : {}),
+    ...(Object.keys(extra).length > 0 ? { extra } : {}),
+  };
 }
 
 /** BuildSpec expected by Builder (snake_case). */
@@ -102,21 +208,7 @@ export function toBuilderSpec(spec: BuildSpec): BuilderSpec {
     dataset_id: spec.datasetId,
     title: spec.title,
     description: spec.description,
-    sources: spec.sources.map((source) => ({
-      ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
-      ...(source.provider !== undefined ? { provider: source.provider } : {}),
-      ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
-      // Builder loader.py rejects `params` as a foreign field if it exists as a key in kind=file/url —
-      // send only for public_api (omit kind).
-      ...(!source.kind || source.kind === "public_api" ? { params: source.params } : {}),
-      ...(source.alias ? { alias: source.alias } : {}),
-      ...(source.schema ? { schema: source.schema } : {}),
-      ...(source.uploadId ? { upload_id: source.uploadId } : {}),
-      ...(source.format ? { format: source.format } : {}),
-      ...(source.encoding ? { encoding: source.encoding } : {}),
-      ...(source.endpoint ? { endpoint: source.endpoint } : {}),
-      ...(source.method ? { method: source.method } : {}),
-    })),
+    sources: spec.sources.map(toBuilderSource),
     exports: spec.exports.map((target, index) => ({
       kind: target.format,
       output_path: deriveOutputPath(spec, target, index),
@@ -160,21 +252,7 @@ export function fromBuilderSpec(spec: BuilderSpec): BuildSpec {
     datasetId: spec.dataset_id,
     title: spec.title,
     description: spec.description,
-    sources: spec.sources.map((source) => ({
-      ...(source.kind && source.kind !== "public_api" ? { kind: source.kind } : {}),
-      ...(source.provider !== undefined ? { provider: source.provider } : {}),
-      ...(source.dataset !== undefined ? { dataset: source.dataset } : {}),
-      // file/url sources from wire have no params — Studio SourceRef.params is still
-      // required, so fill with empty object.
-      params: source.params ?? {},
-      ...(source.alias ? { alias: source.alias } : {}),
-      ...(source.schema ? { schema: source.schema } : {}),
-      ...(source.upload_id ? { uploadId: source.upload_id } : {}),
-      ...(source.format ? { format: source.format } : {}),
-      ...(source.encoding ? { encoding: source.encoding } : {}),
-      ...(source.endpoint ? { endpoint: source.endpoint } : {}),
-      ...(source.method ? { method: source.method } : {}),
-    })),
+    sources: spec.sources.map(fromBuilderSource),
     exports: spec.exports.map((e) => {
       // Builder output_path has no corresponding field in Studio ExportTarget, so store in options (#121).
       const options: Record<string, JsonValue> = { ...(e.options ?? {}) };
