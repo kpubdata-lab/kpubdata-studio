@@ -15,7 +15,11 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
  * and the caret are off; each screen waits for its data before the shot. The baselines
  * live next to this file (`visual.spec.ts-snapshots/`) and are Linux Chromium renders.
  * `maxDiffPixels` is an absolute budget for anti-aliasing, far below one status badge
- * (about 80x20 px), so a badge changing colour or a moved section fails. The spec never
+ * (about 80x20 px), so a badge changing colour or a moved section fails. `threshold` is how
+ * far apart two colours may be before a pixel counts as different at all: Playwright's
+ * default (0.2) reads indigo `#5B5BD6` and Brand Blue `#2563EB`, or a warning badge and a
+ * failure badge, as the same colour, so a colour-only change passed (#697). The baselines
+ * come from one pinned container, so the strict value holds. The spec never
  * retries: a shot that differs on the first try is a real difference or a flaky screen,
  * and both should be seen.
  *
@@ -38,6 +42,12 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
 
 /** Anti-aliasing budget per shot; a status badge alone is about 1,600 px. */
 const MAX_DIFF_PIXELS = 200;
+
+/**
+ * Per-pixel colour tolerance (pixelmatch's YIQ distance, 0-1). Playwright's default 0.2
+ * lets a status token swap through; 0.05 does not (#697).
+ */
+const COLOR_THRESHOLD = 0.05;
 
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900 },
@@ -125,6 +135,7 @@ for (const viewport of VIEWPORTS) {
         animations: "disabled",
         caret: "hide",
         maxDiffPixels: MAX_DIFF_PIXELS,
+        threshold: COLOR_THRESHOLD,
       });
       await expectNoPageErrors(errors);
     });
