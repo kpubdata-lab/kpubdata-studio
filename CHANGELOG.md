@@ -140,6 +140,7 @@
 
 ### Security
 
+- **`Secret scan (gitleaks)` no longer fails on another branch's commits** (#685). Without `--log-opts`, gitleaks runs `git log --all`, which — combined with `fetch-depth: 0` pulling in every remote branch — walked unmerged PR branches too, so a synthetic test key on someone else's open branch turned main's scan, and every other PR's scan, red. The job now scopes `--log-opts` to the run's own commits: a pull request scans `base..head`, a push to `main` scans `before..sha` (or just `sha` for a brand-new branch, where `before` is all zeros), and `schedule`/`workflow_dispatch` scan the default branch's full history only — never another branch. `.gitleaksignore` is unaffected.
 - The repository no longer tracks `.next/` and `next-env.d.ts` — 229 files of Next.js build output committed by accident with #402, in a project built with Vite (kpubdata-builder#691). A new `Security` workflow runs `npm audit` over `package-lock.json`, gitleaks over the full history and CodeQL, on every pull request and weekly; the history's reviewed findings (that build's per-build Next keys, and synthetic keys in redaction tests) are listed with their reasons in `.gitleaksignore`.
 
 ## v0.4.0 — 2026-09-28
