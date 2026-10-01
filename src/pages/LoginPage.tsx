@@ -103,7 +103,7 @@ export function LoginPage() {
             <BrandLogo className="w-[160px] max-w-full" />
           </div>
           <div className="mb-7">
-            <p className="text-xs font-semibold tracking-[0.16em] text-accent-subtle-foreground">{t("auth.page.eyebrow")}</p>
+            <p className="text-xs font-semibold tracking-[0.16em] text-brand-text">{t("auth.page.eyebrow")}</p>
             <h1 className="mt-3 text-3xl font-semibold tracking-tight">{t("auth.page.welcome")}</h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">{t("auth.page.welcomeDesc")}</p>
           </div>
@@ -155,7 +155,7 @@ export function LoginPage() {
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 {t("auth.page.noAccount")}{" "}
-                <Link to="/signup" className="font-medium text-accent-subtle-foreground underline">
+                <Link to="/signup" className="font-medium text-brand-text underline">
                   {t("auth.page.getAccount")}
                 </Link>
               </p>

@@ -94,7 +94,7 @@ export function AccountMenu() {
         aria-controls={open ? panelId : undefined}
         aria-expanded={open}
         aria-label={email ? t("layout.account.openFor", { email }) : t("layout.account.open")}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-sm font-semibold text-foreground hover:bg-accent-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-sm font-semibold text-foreground hover:bg-brand-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onClick={() => setOpen((current) => !current)}
         ref={buttonRef}
         title={email ?? t("layout.account.notSignedIn")}

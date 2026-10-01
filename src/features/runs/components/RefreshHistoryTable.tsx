@@ -128,7 +128,7 @@ export function RefreshHistoryTable({ items }: { items: BuildListItem[] }) {
               >
                 <td className="px-3 py-2">
                   <Link
-                    className="break-all font-mono text-xs text-accent-subtle-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="break-all font-mono text-xs text-brand-text underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={(event) => event.stopPropagation()}
                     to={refreshDetailHref(item.id)}
                   >

@@ -197,7 +197,7 @@ export function AssistantReportPanel({
             type="button"
             disabled={!canGenerate}
             onClick={() => generate(preset.question)}
-            className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-brand-primary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           >
             {preset.label}
           </button>

@@ -435,7 +435,7 @@ export function EvidenceSection({ turn }: { turn: AssistantTurn }) {
   const href = selected ? evidenceHref(turn, selected) : null;
   return <Disclosure title={rejected.length ? t("assistant.evidence.countRejected", { count: refs.length, rejected: rejected.length }) : t("assistant.evidence.count", { count: refs.length })}>
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-1.5">{refs.map((ref) => <button key={`${ref.kind}:${ref.id}`} type="button" aria-pressed={selected?.kind === ref.kind && selected.id === ref.id} onClick={() => setSelected(ref)} className="rounded-full border border-border bg-muted/40 px-2 py-1 text-[10px] hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{ref.label}</button>)}</div>
+      <div className="flex flex-wrap gap-1.5">{refs.map((ref) => <button key={`${ref.kind}:${ref.id}`} type="button" aria-pressed={selected?.kind === ref.kind && selected.id === ref.id} onClick={() => setSelected(ref)} className="rounded-full border border-border bg-muted/40 px-2 py-1 text-[10px] hover:border-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{ref.label}</button>)}</div>
       {selected ? <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs">
         <p className="font-semibold">{selected.label}</p>
         {detail ? <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">{detailEntries.map(([key, value]) => <div className="contents" key={key}><dt className="text-muted-foreground">{key}</dt><dd className="break-all">{value}</dd></div>)}</dl> : <p className="mt-1 text-muted-foreground">{t("assistant.evidence.detailUnavailable")}</p>}
@@ -467,7 +467,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
   return (
     <div className="space-y-2">
       {onToggle ? <div className="flex justify-end"><button type="button" aria-expanded="true" onClick={onToggle} className="text-[11px] font-medium text-muted-foreground hover:text-foreground">{t("assistant.turn.collapse")}</button></div> : null}
-      <div className="ml-auto max-w-[88%] rounded-lg bg-accent px-3 py-2 text-xs text-accent-foreground">
+      <div className="ml-auto max-w-[88%] rounded-lg bg-brand-primary px-3 py-2 text-xs text-brand-primary-foreground">
         {turn.question}
       </div>
 
@@ -655,7 +655,7 @@ export function AssistantContent({ compact = false }: AssistantContentProps) {
                 <button
                   key={question}
                   type="button"
-                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-accent hover:text-foreground"
+                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-brand-primary hover:text-foreground"
                   onClick={() => submit(question)}
                   disabled={!canSubmit}
                 >
@@ -705,7 +705,7 @@ export function AssistantContent({ compact = false }: AssistantContentProps) {
                 <button
                   key={question}
                   type="button"
-                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-accent hover:text-foreground"
+                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-brand-primary hover:text-foreground"
                   onClick={() => submit(question)}
                   disabled={!canSubmit}
                 >
@@ -718,7 +718,7 @@ export function AssistantContent({ compact = false }: AssistantContentProps) {
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("assistant.input.currentDataset")}</p>
               <Link
-                className="mt-1 block text-xs font-medium text-accent-subtle-foreground underline"
+                className="mt-1 block text-xs font-medium text-brand-text underline"
                 to={`/tables/${encodeURIComponent(session.liveContext.datasetId)}`}
               >
                 {t("assistant.input.openDataset", { id: session.liveContext.datasetId })}

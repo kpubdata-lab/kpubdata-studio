@@ -201,7 +201,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
           {sources.map((entry) => (
             <button
               aria-pressed={entry === selected}
-              className={`rounded-md border px-2 py-1 font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${entry === selected ? "border-accent bg-accent-subtle text-foreground" : "border-border text-muted-foreground hover:bg-muted"}`}
+              className={`rounded-md border px-2 py-1 font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${entry === selected ? "border-brand-primary bg-brand-subtle text-foreground" : "border-border text-muted-foreground hover:bg-muted"}`}
               key={entry.table.logical_name}
               onClick={() => update({ source: entry.sourceKey, snapshot: null })}
               type="button"
@@ -232,7 +232,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
               role="tab"
               aria-selected={tab === id}
               onClick={() => update({ tab: id === "overview" ? null : id })}
-              className={`whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium ${tab === id ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              className={`whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium ${tab === id ? "border-brand-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
               {t(`tableDetail.tabs.${id}`)}
             </button>
@@ -340,7 +340,7 @@ function OverviewTab({ dataset, snapshot, isCurrent, revision }: { dataset: Data
             {reasons.length > 0 ? <span className="mt-0.5 block font-mono text-xs text-muted-foreground">{reasons.join(", ")}</span> : null}
           </Definition>
           <Definition label={t("tableDetail.labels.run")}>
-            <Link className="font-mono text-accent-subtle-foreground underline-offset-2 hover:underline" to={`/refresh-jobs/${encodeURIComponent(snapshot.run_id)}`}>
+            <Link className="font-mono text-brand-text underline-offset-2 hover:underline" to={`/refresh-jobs/${encodeURIComponent(snapshot.run_id)}`}>
               {snapshot.run_id}
             </Link>
           </Definition>
@@ -453,7 +453,7 @@ function SnapshotsTab({
                   const committed = snapshot.state === "committed";
                   const run = encodeURIComponent(snapshot.run_id);
                   return (
-                    <tr className={`border-b border-border align-top last:border-0 ${snapshot.snapshot_id === viewedId ? "bg-accent-subtle" : ""}`} key={snapshot.snapshot_id}>
+                    <tr className={`border-b border-border align-top last:border-0 ${snapshot.snapshot_id === viewedId ? "bg-brand-subtle" : ""}`} key={snapshot.snapshot_id}>
                       <td className="px-4 py-2">
                         <span className="font-mono">{snapshot.snapshot_id}</span>
                         {snapshot.snapshot_id === currentId ? <span className="ml-2 text-xs text-muted-foreground">{t("tableDetail.current")}</span> : null}
@@ -484,13 +484,13 @@ function SnapshotsTab({
                             </summary>
                             <ul className="mt-1 space-y-1 whitespace-nowrap">
                               <li>
-                                <Link className="text-accent-subtle-foreground underline" to={`/refresh-jobs/${run}`}>{t("tableDetail.runDetail")}</Link>
+                                <Link className="text-brand-text underline" to={`/refresh-jobs/${run}`}>{t("tableDetail.runDetail")}</Link>
                               </li>
                               <li>
-                                <Link className="text-accent-subtle-foreground underline" to={`/refresh-jobs/${run}/edit`}>{t("tableDetail.editSpec")}</Link>
+                                <Link className="text-brand-text underline" to={`/refresh-jobs/${run}/edit`}>{t("tableDetail.editSpec")}</Link>
                               </li>
                               <li>
-                                <Link className="text-accent-subtle-foreground underline" to={`/refresh-jobs/${run}/publish?dataset=${encodeURIComponent(datasetId)}`}>{t("datasetDetail.publishRun")}</Link>
+                                <Link className="text-brand-text underline" to={`/refresh-jobs/${run}/publish?dataset=${encodeURIComponent(datasetId)}`}>{t("datasetDetail.publishRun")}</Link>
                               </li>
                             </ul>
                           </details>

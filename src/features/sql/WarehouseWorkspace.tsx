@@ -283,7 +283,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
               {outcome.saved ? (
                 <p className="text-sm" role="status">
                   {t("analyses.saved", { name: outcome.saved.name })}{" "}
-                  <Link className="font-medium text-accent-subtle-foreground underline" to="/analyses">
+                  <Link className="font-medium text-brand-text underline" to="/analyses">
                     {t("analyses.openList")}
                   </Link>
                 </p>

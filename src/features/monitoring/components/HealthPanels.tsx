@@ -212,7 +212,7 @@ export function RecentRefreshesTable({ runs }: { runs: MonitoringRecentRun[] }) 
                   <tr className="border-b border-border last:border-b-0 hover:bg-muted/40" key={run.run_id}>
                     <td className="px-3 py-2">
                       <Link
-                        className="break-all font-mono text-xs text-accent-subtle-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="break-all font-mono text-xs text-brand-text underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         to={`/refresh-jobs/${encodeURIComponent(run.run_id)}`}
                       >
                         {run.run_id}

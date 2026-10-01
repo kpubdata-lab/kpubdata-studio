@@ -291,7 +291,7 @@ export function ReviewBuildStep({
           <Button variant="secondary" onClick={onCancel}>{t("addData.review.cancel")}</Button>
         ) : null}
         {jobStatus === "succeeded" && runId ? (
-          <span className="text-sm text-accent-subtle-foreground">{t("addData.review.buildSucceeded", { runId })}</span>
+          <span className="text-sm text-brand-text">{t("addData.review.buildSucceeded", { runId })}</span>
         ) : null}
         {jobStatus === "failed" ? (
           <span role="alert" className="text-sm text-status-failure">{jobError}</span>

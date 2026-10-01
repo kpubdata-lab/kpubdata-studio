@@ -31,7 +31,7 @@ export function SignupPage() {
         ) : (
           <p className="mt-6 text-sm text-muted-foreground">{t("auth.signup.notReady")}</p>
         )}
-        <Link to="/login" className="mt-6 inline-block font-medium text-accent-subtle-foreground underline">
+        <Link to="/login" className="mt-6 inline-block font-medium text-brand-text underline">
           {t("auth.signup.backToLogin")}
         </Link>
         </Card>

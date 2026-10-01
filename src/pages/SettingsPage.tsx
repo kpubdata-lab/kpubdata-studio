@@ -110,7 +110,7 @@ export function SettingsPage() {
         </div>
         <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-4">
           <p className="text-sm font-medium">{t("settings.builderBaseUrl")}</p>
-          <code className="mt-3 block break-all text-sm text-accent-subtle-foreground">
+          <code className="mt-3 block break-all text-sm text-brand-text">
             {API_BASE}
           </code>
         </div>
@@ -118,7 +118,7 @@ export function SettingsPage() {
           {!realEnabled ? (
             <p className="text-muted-foreground">
               {t("settings.conn.mockNote")}{" "}
-              <code className="text-accent-subtle-foreground">VITE_USE_REAL_BUILDER=true</code>
+              <code className="text-brand-text">VITE_USE_REAL_BUILDER=true</code>
               {t("settings.conn.mockEnv")}
             </p>
           ) : connection.status === "checking" ? (
@@ -198,7 +198,7 @@ function AccountSection({
             </p>
             <Link
               to="/login"
-              className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
+              className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-brand-text hover:bg-muted"
             >
               {t("settings.account.login")}
             </Link>
@@ -232,7 +232,7 @@ function ProviderCredentialSection({
         </p>
         <Link
           to="/connections"
-          className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
+          className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-brand-text hover:bg-muted"
         >
           {t("settings.providers.manage")}
         </Link>
@@ -301,7 +301,7 @@ function AssistantByokSection() {
         </p>
         <Link
           to="/assistant"
-          className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-accent-subtle-foreground hover:bg-muted"
+          className="shrink-0 rounded-lg border border-border px-3 py-1 text-xs font-medium text-brand-text hover:bg-muted"
         >
           {t("settings.byok.configure")}
         </Link>

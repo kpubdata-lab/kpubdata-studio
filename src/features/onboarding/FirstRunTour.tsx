@@ -106,7 +106,7 @@ export function FirstRunTour({
   return createPortal(
     <>
       <div className="fixed inset-0 z-[80] bg-black/20" aria-hidden="true" />
-      {rect ? <div aria-hidden="true" className="pointer-events-none fixed z-[81] rounded-xl ring-4 ring-accent ring-offset-4 ring-offset-background" style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }} /> : null}
+      {rect ? <div aria-hidden="true" className="pointer-events-none fixed z-[81] rounded-xl ring-4 ring-brand-primary ring-offset-4 ring-offset-background" style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }} /> : null}
       <div
         ref={dialogRef}
         role="dialog"
@@ -116,7 +116,7 @@ export function FirstRunTour({
         className="fixed z-[82] rounded-xl border border-border bg-card p-5 text-foreground shadow-xl outline-none"
         style={{ left, top, width }}
       >
-        <p className="text-xs font-semibold text-accent-subtle-foreground">{step + 1} / {steps.length}</p>
+        <p className="text-xs font-semibold text-brand-text">{step + 1} / {steps.length}</p>
         <h2 id="onboarding-title" className="mt-1 text-base font-semibold">
           {t(`onboarding.steps.${steps[step].target}.title`)}
         </h2>

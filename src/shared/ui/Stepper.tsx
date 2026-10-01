@@ -40,7 +40,7 @@ function resolveState(index: number, current: number, errorSteps: number[]): Ste
 
 const STATE_CIRCLE: Record<StepState, string> = {
   upcoming: "border-border text-muted-foreground",
-  current: "border-accent bg-accent text-accent-foreground",
+  current: "border-brand-primary bg-brand-primary text-brand-primary-foreground",
   complete: "border-status-success bg-status-success-solid text-white",
   error: "border-status-failure bg-status-failure-solid text-white",
 };

@@ -204,7 +204,7 @@ export function QualityPage() {
         <p className="text-sm" role="note">
           {t("quality.legacyRun.text", { run: legacyRun })}{" "}
           <Link
-            className="text-accent-subtle-foreground underline"
+            className="text-brand-text underline"
             to={`/tables/${encodeURIComponent(filteredTable.datasetId)}?${new URLSearchParams({
               run: legacyRun ?? "",
               ...(searchParams.get("source") ? { source: searchParams.get("source") ?? "" } : {}),

@@ -200,16 +200,16 @@ export function RunDetailPanel({
           {listItem?.finishedAt ? <span className="text-xs text-muted-foreground">{t("builds.detail.finishedAt", { time: formatDateTime(listItem.finishedAt) })}</span> : null}
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/edit`}>
+          <Link className="text-xs font-medium text-brand-text underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/edit`}>
             {t("builds.detail.edit")}
           </Link>
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/run`}>
+          <Link className="text-xs font-medium text-brand-text underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/run`}>
             {t("builds.detail.run")}
           </Link>
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/artifacts`}>
+          <Link className="text-xs font-medium text-brand-text underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/artifacts`}>
             {t("builds.detail.artifacts")}
           </Link>
-          <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/publish`}>
+          <Link className="text-xs font-medium text-brand-text underline" to={`/refresh-jobs/${encodeURIComponent(runId)}/publish`}>
             {t("builds.detail.publish")}
           </Link>
           <Button
@@ -386,7 +386,7 @@ export function RunDetailPanel({
               </p>
             ) : null}
 
-            <Link className="text-xs font-medium text-accent-subtle-foreground underline" to={qualityCenterHref}>
+            <Link className="text-xs font-medium text-brand-text underline" to={qualityCenterHref}>
               {t("builds.quality.viewCenter")}
             </Link>
           </div>
@@ -471,7 +471,7 @@ export function RunDetailPanel({
               <p className="text-xs text-muted-foreground">{t("builds.detail.digest", { digest: specState.data.spec_digest })}</p>
               {datasetId ? (
                 <Link
-                  className="mt-2 inline-block text-xs font-medium text-accent-subtle-foreground underline"
+                  className="mt-2 inline-block text-xs font-medium text-brand-text underline"
                   to={`/tables/${encodeURIComponent(datasetId)}`}
                 >
                   {t("builds.spec.viewDataset", { id: datasetId })}

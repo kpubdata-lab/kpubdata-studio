@@ -21,8 +21,10 @@
  *
  * Roles are separate tokens: brand-primary (interaction), data-accent (data emphasis),
  * brand-secondary (Fresh Mint) and status-* never share a value. Light is the canonical
- * theme; dark is an alternative with the same hierarchy. Older names (`accent`,
- * `sidebar-*`) are kept as aliases so components need not change.
+ * theme; dark is an alternative with the same hierarchy. The Brand v1 catch-all interaction
+ * names are retired (#667) and must not come back (__tests__/brandV2Gate.test.ts):
+ * interaction is `brand-primary`, its tint `brand-subtle`, blue text `brand-text`.
+ * `--ring` and `--sidebar-*` are role names (focus ring, the sidebar region), not v1 colours.
  * docs/prototype/warehouse/tokens.css carries the same values (__tests__/brandV2Gate.test.ts).
  * Contrast: text pairs 4.5:1, chart marks 3:1 — the values for secondary text and the
  * strong chart variants were decided in #631.
@@ -32,6 +34,9 @@
   /* Brand (#628) — interaction, never a status. */
   --brand-primary: #2563eb;
   --brand-primary-foreground: #ffffff;
+  /* A tint behind selected items, and Brand Blue as text (links, selected labels). */
+  --brand-subtle: #eaf1fe;
+  --brand-text: var(--brand-primary);
   /* Data accent — data emphasis only, never a CTA. The strong variants are for chart
      marks, which need 3:1 against the surface (#631). */
   --data-accent: #06b6d4;
@@ -50,12 +55,6 @@
   --border: #e5e7e2;
   --input: #d5d9d2;
   --ring: var(--brand-primary);
-
-  /* Interaction aliases kept for existing components: `accent` is the brand primary. */
-  --accent: var(--brand-primary);
-  --accent-foreground: var(--brand-primary-foreground);
-  --accent-subtle: #eaf1fe;
-  --accent-subtle-foreground: var(--brand-primary);
 
   /* Light sidebar (#628 §9): neutral, and only the active item is blue. */
   --sidebar: #f1f4f4;
@@ -90,6 +89,8 @@
      #2563eb with white text; blue text on these surfaces uses the lighter #60a5fa. */
   --brand-primary: #2563eb;
   --brand-primary-foreground: #ffffff;
+  --brand-subtle: #1e2836;
+  --brand-text: #60a5fa;
   --data-accent: #06b6d4;
   --data-accent-strong: #06b6d4;
   --brand-secondary: #14b8a6;
@@ -103,10 +104,6 @@
   --border: #2e3238;
   --input: #3a3f46;
   --ring: #60a5fa;
-  --accent: var(--brand-primary);
-  --accent-foreground: var(--brand-primary-foreground);
-  --accent-subtle: #1e2836;
-  --accent-subtle-foreground: #60a5fa;
   --sidebar: #1a1d21;
   --sidebar-foreground: #e8eaed;
   --sidebar-muted: #9aa3ae;
@@ -139,6 +136,8 @@
        #2563eb with white text; blue text on these surfaces uses the lighter #60a5fa. */
     --brand-primary: #2563eb;
     --brand-primary-foreground: #ffffff;
+    --brand-subtle: #1e2836;
+    --brand-text: #60a5fa;
     --data-accent: #06b6d4;
     --data-accent-strong: #06b6d4;
     --brand-secondary: #14b8a6;
@@ -152,10 +151,6 @@
     --border: #2e3238;
     --input: #3a3f46;
     --ring: #60a5fa;
-    --accent: var(--brand-primary);
-    --accent-foreground: var(--brand-primary-foreground);
-    --accent-subtle: #1e2836;
-    --accent-subtle-foreground: #60a5fa;
     --sidebar: #1a1d21;
     --sidebar-foreground: #e8eaed;
     --sidebar-muted: #9aa3ae;
@@ -185,6 +180,8 @@
 @theme inline {
   --color-brand-primary: var(--brand-primary);
   --color-brand-primary-foreground: var(--brand-primary-foreground);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-text: var(--brand-text);
   --color-data-accent: var(--data-accent);
   --color-data-accent-strong: var(--data-accent-strong);
   --color-brand-secondary: var(--brand-secondary);
@@ -198,10 +195,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent-subtle: var(--accent-subtle);
-  --color-accent-subtle-foreground: var(--accent-subtle-foreground);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-muted: var(--sidebar-muted);
