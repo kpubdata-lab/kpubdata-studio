@@ -33,6 +33,8 @@
       "askHint": "AI",
       "loading": "테이블과 소스를 불러오는 중…",
       "loadFailed": "테이블 또는 소스 일부를 불러오지 못했습니다.",
+      "partialTables": "테이블 {{total}}개 중 처음 {{loaded}}개만 검색했습니다. 나머지는 “테이블에서 검색”으로 찾으세요.",
+      "partialTablesUnknown": "처음 {{loaded}}개 테이블만 검색했습니다. 더 있을 수 있으니 “테이블에서 검색”으로 찾으세요.",
       "groups": {
         "tables": "테이블",
         "sources": "소스",

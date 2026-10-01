@@ -33,6 +33,8 @@
       "askHint": "AI",
       "loading": "Loading tables and sources…",
       "loadFailed": "Some tables or sources could not be loaded.",
+      "partialTables": "Searched the first {{loaded}} of {{total}} tables. Use “Search tables” to see the rest.",
+      "partialTablesUnknown": "Searched the first {{loaded}} tables; there may be more. Use “Search tables” to see the rest.",
       "groups": {
         "tables": "Tables",
         "sources": "Sources",
