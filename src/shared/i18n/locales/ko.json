@@ -1293,7 +1293,7 @@
     "readyLabel": "Builder 게시 준비 완료",
     "blockedLabel": "Builder blocker가 있어 게시할 수 없습니다.",
     "notReadyNoReason": "KPubData Builder가 이 Run을 게시 준비되지 않음으로 판정했지만 구체적인 사유(blocker)를 제공하지 않았습니다.",
-    "credentialNote": "이 blocker는 source Provider credential이 아니라 publish 대상(Hugging Face/Kaggle) credential을 뜻합니다. Builder 배포 설정에 따라 서버 credential이 쓰이거나, 요청자 본인이 저장한 credential이 필요합니다. Studio는 어느 쪽도 입력받거나 저장하지 않습니다.",
+    "credentialNote": "이 blocker는 source Provider credential이 아니라 publish 대상(Hugging Face/Kaggle) credential을 뜻합니다. Builder 배포 설정에 따라 서버 credential, 본인이 저장한 credential, 또는 요청에 실어 보낸 토큰이 쓰입니다. Studio는 게시 토큰을 저장하지 않습니다.",
     "settingsTitle": "게시 설정",
     "settingsNote": "Readiness와 별개인 로컬 입력 검증입니다. Builder readiness는 destination이나 공개 설정을 검증하지 않습니다.",
     "destinationHint": "KPubData Builder가 허용하는 owner/dataset 식별자",
@@ -1311,14 +1311,20 @@
     "noAutoRetry": "자동 재시도하지 마세요.",
     "abortedTitle": "응답 대기를 중단했습니다.",
     "abortedBody": "브라우저 요청만 중단했으며 원격 게시 작업을 취소한 것은 아닙니다. 게시 결과는 확인되지 않았습니다.",
-    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 본인 credential을 KPubData Builder에 저장해야 게시할 수 있습니다.",
+    "credentialRequiredNote": "이 배포는 서버 publish credential을 빌려주지 않습니다. 아래에 본인 Hugging Face 토큰을 입력하고 다시 확인하세요.",
     "readinessTitle": "KPubData Builder 게시 준비 상태",
     "blockers": "차단 사유",
     "warnings": "경고",
     "destinationLabel": "Hugging Face 게시 위치",
     "publisher": "게시자",
     "snapshotFiles": "스냅샷 파일",
-    "reference": "참조:"
+    "reference": "참조:",
+    "credentialStillRequiredNote": "토큰을 보냈는데도 KPubData Builder가 credential을 요구합니다. 이 배포는 요청에 실은 토큰을 받지 않으니, 본인 publish credential을 KPubData Builder에 저장하세요.",
+    "tokenLabel": "Hugging Face 토큰",
+    "tokenHint": "이 화면의 메모리에만 두고, 게시 준비 확인과 게시 요청에만 실어 보냅니다. 저장하지 않으며, 화면을 떠나거나 새로고침하면 사라집니다.",
+    "tokenStale": "이 토큰으로 게시 준비 상태를 다시 확인하세요.",
+    "tokenCheck": "이 토큰으로 확인",
+    "tokenForget": "토큰 지우기"
   },
   "settings": {
     "page": {
@@ -2010,7 +2016,8 @@
       "forbidden": "이 Run을 게시할 권한이 없습니다.",
       "notFound": "선택한 Run을 KPubData Builder에서 찾을 수 없습니다.",
       "network": "Builder 응답을 받지 못했습니다. 원격 게시 결과는 확인되지 않았습니다.",
-      "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다."
+      "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다.",
+      "invalidCredential": "게시 토큰 형식을 KPubData Builder가 받지 않습니다. 토큰을 확인하고 다시 입력하세요."
     }
   },
   "status": {

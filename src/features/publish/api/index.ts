@@ -3,6 +3,7 @@ import {
   ApiError,
   builderApi,
   isRealBuilderEnabled,
+  type PublishCredential,
   type PublishErrorCode,
   type PublishReadinessResponse,
   type PublishRequest,
@@ -16,6 +17,7 @@ import { MOCK_PUBLISH_READINESS, mockPublishResult } from "./mockData";
 const t = (key: string): string => i18n.t(`publish.errors.${key}`);
 
 export type {
+  PublishCredential,
   PublishIssue,
   PublishReadinessResponse,
   PublishRequest,
@@ -32,6 +34,30 @@ export function validatePublishDestination(destination: string): string | undefi
     return t("destinationFormat");
   }
   return undefined;
+}
+
+/**
+ * A token `X-Publish-Credential` can carry: visible ASCII without a comma, which the
+ * header uses to separate values. Anything else is refused here, before a request, so a
+ * malformed token is neither sent nor echoed (#615).
+ */
+const PUBLISH_TOKEN = /^[\x21-\x2B\x2D-\x7E]+$/;
+
+/**
+ * Checks a publish token typed into the page. Empty is valid — no header is sent. The
+ * message never contains the token.
+ */
+export function validatePublishToken(token: string): string | undefined {
+  const trimmed = token.trim();
+  if (!trimmed) return undefined;
+  return PUBLISH_TOKEN.test(trimmed) ? undefined : t("invalidCredential");
+}
+
+/** The credential to send for `token`, or undefined when there is nothing to send. */
+export function publishCredentialFor(token: string): PublishCredential | undefined {
+  const trimmed = token.trim();
+  if (!trimmed || validatePublishToken(trimmed)) return undefined;
+  return { HF_TOKEN: trimmed };
 }
 
 function throwIfAborted(signal?: AbortSignal): void {
@@ -51,8 +77,9 @@ export async function getPublishReadiness(
   runId: string,
   target: PublishTarget = "huggingface",
   signal?: AbortSignal,
+  credential?: PublishCredential,
 ): Promise<PublishReadinessResponse> {
-  if (isRealBuilderEnabled()) return builderApi.getPublishReadiness(runId, target, signal);
+  if (isRealBuilderEnabled()) return builderApi.getPublishReadiness(runId, target, signal, credential);
   throwIfAborted(signal);
   const mock = MOCK_PUBLISH_READINESS[runId];
   if (!mock) throw new ApiError(404, t("readinessNotFound"));
@@ -63,8 +90,9 @@ export async function publishBuild(
   runId: string,
   request: PublishRequest,
   signal?: AbortSignal,
+  credential?: PublishCredential,
 ): Promise<PublishResponse> {
-  if (isRealBuilderEnabled()) return builderApi.publishBuild(runId, request, signal);
+  if (isRealBuilderEnabled()) return builderApi.publishBuild(runId, request, signal, credential);
   throwIfAborted(signal);
   const readiness = MOCK_PUBLISH_READINESS[runId];
   if (!readiness) throw new ApiError(404, t("runNotFound"));
@@ -74,7 +102,7 @@ export async function publishBuild(
   return mockPublishResult(runId, request.destination, request.options?.private ?? true);
 }
 
-export type PublishFailureKind = PublishErrorCode | "forbidden" | "not_found" | "network" | "invalid_request" | "readiness_changed" | "unknown";
+export type PublishFailureKind = PublishErrorCode | "invalid_publish_credential" | "forbidden" | "not_found" | "network" | "invalid_request" | "readiness_changed" | "unknown";
 
 export interface PublishFailure {
   kind: PublishFailureKind;
@@ -100,6 +128,10 @@ export function describePublishFailure(cause: unknown): PublishFailure {
     return { kind: "unknown", message: t("unknown") };
   }
 
+  // Builder never echoes the value (builder#925), and neither does this message.
+  if (cause.status === 400 && (cause.details as { code?: unknown } | undefined)?.code === "invalid_publish_credential") {
+    return { kind: "invalid_publish_credential", message: t("invalidCredential") };
+  }
   const code = errorCode(cause);
   if (code === "publish_in_progress") {
     return { kind: code, message: t("inProgress") };
