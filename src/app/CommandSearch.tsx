@@ -6,9 +6,11 @@
  * fits, the Tables and Catalog lists filtered by the query (`?q=`) are offered. Ask
  * KPubData appears only as the last option and is never the default one, so pressing
  * Enter on a search never starts a conversation. Opened with the button or ⌘K / Ctrl+K,
- * and usable with the keyboard alone.
+ * and usable with the keyboard alone: Tab stays inside the open dialog and Esc closes it
+ * wherever focus is (#654), and every way of closing it resets it the same way (#656).
  */
 import {
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -25,12 +27,12 @@ import { useUIStore } from "@/shared/hooks/useUIStore";
 
 import {
   loadSourceEntries,
-  loadTableEntries,
+  loadTableIndex,
   matchSources,
   matchTables,
   type Loadable,
   type SourceEntry,
-  type TableEntry,
+  type TableIndex,
 } from "./commandSearchIndex";
 
 export interface SearchDestination {
@@ -57,31 +59,64 @@ interface SearchResult {
 
 const GROUP_ORDER: GroupKey[] = ["tables", "sources", "pages", "filters", "ask"];
 
-/** Loads a list once, the first time the palette opens. */
-function useLazyList<T>(enabled: boolean, load: (signal: AbortSignal) => Promise<T[]>): Loadable<T> {
-  const [state, setState] = useState<Loadable<T> | null>(null);
-  const started = useRef(false);
+/**
+ * Loads a list each time the palette opens (#659), so tables made or renamed since the last
+ * open show up. A reload keeps the last loaded value until the new one arrives — and keeps
+ * it if the reload fails — so the results do not empty out and refill on every open.
+ */
+function useLazyList<V>(enabled: boolean, load: (signal: AbortSignal) => Promise<V>): Loadable<V> {
+  const [state, setState] = useState<Loadable<V>>({ status: "loading" });
 
   useEffect(() => {
-    if (!enabled || started.current) return;
-    started.current = true;
+    if (!enabled) return;
     const controller = new AbortController();
-    setState({ status: "loading" });
+    // A retry after a failure shows as loading again; a refresh of a loaded list does not.
+    setState((current) => (current.status === "error" ? { status: "loading" } : current));
     load(controller.signal)
-      .then((items) => setState({ status: "loaded", items }))
+      .then((value) => {
+        if (!controller.signal.aborted) setState({ status: "loaded", value });
+      })
       .catch(() => {
         if (controller.signal.aborted) return;
-        // Let a later open try again.
-        started.current = false;
-        setState({ status: "error" });
+        setState((current) => (current.status === "loaded" ? current : { status: "error" }));
       });
+    return () => controller.abort();
   }, [enabled, load]);
 
-  return state ?? { status: "loading" };
+  return state;
 }
 
-function itemsOf<T>(list: Loadable<T>): T[] {
-  return list.status === "loaded" ? list.items : [];
+function loadedValue<V>(list: Loadable<V>): V | undefined {
+  return list.status === "loaded" ? list.value : undefined;
+}
+
+const TABBABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Keeps Tab and Shift+Tab inside the dialog (#654), wrapping at either end. Focus that has
+ * left the dialog (a click on a non-focusable spot) comes back to its first element.
+ */
+function trapTab(event: KeyboardEvent, dialog: HTMLElement | null) {
+  if (!dialog) return;
+  const tabbable = Array.from(dialog.querySelectorAll<HTMLElement>(TABBABLE));
+  const first = tabbable[0];
+  const last = tabbable[tabbable.length - 1];
+  const current = document.activeElement;
+  if (!first || !last) {
+    event.preventDefault();
+    dialog.focus();
+    return;
+  }
+  if (!(current instanceof HTMLElement) || !dialog.contains(current)) {
+    event.preventDefault();
+    first.focus();
+  } else if (event.shiftKey && (current === first || current === dialog)) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && current === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 /**
@@ -97,24 +132,45 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
   const seedQuestion = useAssistantStore((state) => state.seedQuestion);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [active, setActive] = useState(0);
+  // The selection follows the result's key, not its position (#657): lists that finish
+  // loading insert hits ahead of what the user picked, and an index would then point at
+  // another row. null — or a key no longer among the results — means the first result.
+  const [activeKey, setActiveKey] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const listId = useId();
 
-  const tables = useLazyList<TableEntry>(open, loadTableEntries);
-  const sources = useLazyList<SourceEntry>(open, loadSourceEntries);
+  const tables = useLazyList<TableIndex>(open, loadTableIndex);
+  const sources = useLazyList<SourceEntry[]>(open, loadSourceEntries);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    setActiveKey(null);
+    triggerRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setOpen((current) => !current);
+        // Closing by shortcut resets the palette like every other way of closing (#656).
+        if (open) close();
+        else setOpen(true);
+        return;
+      }
+      if (!open) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+      } else if (event.key === "Tab") {
+        trapTab(event, dialogRef.current);
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [close, open]);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -124,7 +180,7 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
 
   const results = useMemo<SearchResult[]>(() => {
     const needle = trimmed.toLowerCase();
-    const tableHits: SearchResult[] = matchTables(itemsOf(tables), trimmed).map((entry) => ({
+    const tableHits: SearchResult[] = matchTables(loadedValue(tables)?.entries ?? [], trimmed).map((entry) => ({
       key: `table:${entry.datasetId}`,
       group: "tables",
       label: entry.title || entry.datasetId,
@@ -132,7 +188,7 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
       mono: true,
       to: `/tables/${encodeURIComponent(entry.datasetId)}`,
     }));
-    const sourceHits: SearchResult[] = matchSources(itemsOf(sources), trimmed).map((entry) => ({
+    const sourceHits: SearchResult[] = matchSources(loadedValue(sources) ?? [], trimmed).map((entry) => ({
       key: `source:${entry.provider}.${entry.name}`,
       group: "sources",
       label: entry.title || entry.name,
@@ -162,12 +218,10 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
     ];
   }, [destinations, sources, tables, t, trimmed]);
 
-  function close() {
-    setOpen(false);
-    setQuery("");
-    setActive(0);
-    triggerRef.current?.focus();
-  }
+  const activeIndex = Math.max(
+    0,
+    results.findIndex((result) => result.key === activeKey),
+  );
 
   function go(result: SearchResult | undefined) {
     if (!result) return;
@@ -184,13 +238,13 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
     const last = results.length - 1;
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setActive((index) => Math.min(index + 1, last));
+      setActiveKey(results[Math.min(activeIndex + 1, last)]?.key ?? null);
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
-      setActive((index) => Math.max(index - 1, 0));
+      setActiveKey(results[Math.max(activeIndex - 1, 0)]?.key ?? null);
     } else if (event.key === "Enter") {
       event.preventDefault();
-      go(results[active]);
+      go(results[activeIndex]);
     } else if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
@@ -198,9 +252,12 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
     }
   }
 
-  const activeId = results[active] ? `${listId}-${active}` : undefined;
+  const activeId = results[activeIndex] ? `${listId}-${activeIndex}` : undefined;
   const loading = trimmed !== "" && (tables.status === "loading" || sources.status === "loading");
   const failed = trimmed !== "" && (tables.status === "error" || sources.status === "error");
+  const tableIndex = loadedValue(tables);
+  // Said only when there is a query to search (#659): the palette searched some tables, not all.
+  const partial = trimmed !== "" && tableIndex !== undefined && !tableIndex.complete;
 
   const groupLabel: Record<GroupKey, string> = {
     tables: t("layout.search.groups.tables"),
@@ -246,8 +303,10 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
               <div
                 aria-label={t("layout.search.dialog")}
                 aria-modal="true"
-                className="relative w-full max-w-[560px] overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-xl"
+                className="relative w-full max-w-[560px] overflow-hidden rounded-lg border border-border bg-card text-card-foreground shadow-xl outline-none"
+                ref={dialogRef}
                 role="dialog"
+                tabIndex={-1}
               >
                 <input
                   aria-activedescendant={activeId}
@@ -258,7 +317,7 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
                   className="w-full border-b border-border bg-transparent px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
                   onChange={(event) => {
                     setQuery(event.target.value);
-                    setActive(0);
+                    setActiveKey(null);
                   }}
                   onKeyDown={onInputKeyDown}
                   placeholder={t("layout.search.placeholder")}
@@ -282,7 +341,7 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
                         </div>
                         <ul aria-labelledby={headingId} role="group">
                           {members.map(({ result, index }) => {
-                            const selected = index === active;
+                            const selected = index === activeIndex;
                             return (
                               <li
                                 aria-selected={selected}
@@ -293,7 +352,7 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
                                 id={`${listId}-${index}`}
                                 key={result.key}
                                 onClick={() => go(result)}
-                                onMouseEnter={() => setActive(index)}
+                                onMouseEnter={() => setActiveKey(result.key)}
                                 role="option"
                               >
                                 <span className="min-w-0 truncate">{result.label}</span>
@@ -308,9 +367,15 @@ export function CommandSearch({ destinations }: { destinations: SearchDestinatio
                     );
                   })}
                 </ul>
-                {loading || failed ? (
+                {loading || failed || partial ? (
                   <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground" role="status">
-                    {loading ? t("layout.search.loading") : t("layout.search.loadFailed")}
+                    {loading
+                      ? t("layout.search.loading")
+                      : failed
+                        ? t("layout.search.loadFailed")
+                        : tableIndex?.total !== undefined
+                          ? t("layout.search.partialTables", { loaded: tableIndex.entries.length, total: tableIndex.total })
+                          : t("layout.search.partialTablesUnknown", { loaded: tableIndex?.entries.length ?? 0 })}
                   </p>
                 ) : null}
               </div>
