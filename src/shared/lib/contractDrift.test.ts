@@ -32,6 +32,7 @@ import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
+import { PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
 
 type JsonSchema = {
@@ -651,6 +652,28 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
       (key) => key.startsWith(`${name}: `) && !rejected.includes(key.slice(name.length + 2)),
     );
     expect(stale, "listed in KNOWN_DRIFT but no longer failing — remove it").toEqual([]);
+  });
+
+  it("declares the X-Publish-Credential header Studio sends on readiness and publish (#615)", () => {
+    type Parameter = { $ref?: string; name?: string; in?: string };
+    const raw = contract as unknown as {
+      paths: Record<string, Record<string, { operationId?: string; parameters?: Parameter[] }>>;
+      components: { parameters?: Record<string, Parameter> };
+    };
+    const headersOf = (operationId: string): string[] => {
+      for (const operations of Object.values(raw.paths)) {
+        for (const operation of Object.values(operations)) {
+          if (operation?.operationId !== operationId) continue;
+          return (operation.parameters ?? [])
+            .map((p) => (p.$ref ? raw.components.parameters?.[p.$ref.split("/").pop() ?? ""] : p))
+            .filter((p): p is Parameter => p?.in === "header")
+            .map((p) => p.name ?? "");
+        }
+      }
+      return [];
+    };
+    expect(headersOf("getPublishReadiness")).toContain(PUBLISH_CREDENTIAL_HEADER);
+    expect(headersOf("publishBuild")).toContain(PUBLISH_CREDENTIAL_HEADER);
   });
 
   it("lists no KNOWN_DRIFT entry for a schema this check does not cover", () => {

@@ -1,0 +1,336 @@
+/**
+ * The request-scoped publish token (#615, kpubdata-builder#925, contract 1.67.0).
+ *
+ * In a multi-user deployment Builder publishes only with the requester's token sent in
+ * `X-Publish-Credential`. Studio keeps that token in memory only — these tests fail if it
+ * reaches storage, the URL, a request body, a log or an error message, if the header is
+ * missing from readiness or publish, or if it is sent when nothing was entered.
+ */
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
+import { describePublishFailure, publishCredentialFor, validatePublishToken } from "@/features/publish/api";
+import { BuildPublishPage } from "@/pages/BuildPublishPage";
+import {
+  ApiError,
+  builderApi,
+  PUBLISH_CREDENTIAL_HEADER,
+  publishCredentialHeaders,
+} from "@/shared/lib/builderApi";
+
+const TOKEN = "hf_test_token";
+const HEADER_VALUE = `HF_TOKEN=${TOKEN}`;
+
+const READY = { run_id: "run-7", target: "huggingface" as const, ready: true, blockers: [], warnings: [] };
+const NEEDS_TOKEN = {
+  ...READY,
+  ready: false,
+  blockers: [{
+    code: "credential_required",
+    message: "target 'huggingface' requires the requester's own credential, sent with this request in the X-Publish-Credential header",
+  }],
+};
+const SUCCESS = {
+  run_id: "run-7",
+  target: "huggingface" as const,
+  publisher: "huggingface",
+  destination: "owner/dataset",
+  reference: "https://huggingface.co/datasets/owner/dataset",
+  artifact_count: 3,
+  status: "ok",
+};
+
+function response(status: number, body: unknown): Response {
+  return { ok: status >= 200 && status < 300, status, text: async () => JSON.stringify(body) } as Response;
+}
+
+type Call = [string, RequestInit];
+
+function headerOf(call: Call): string | undefined {
+  return (call[1].headers as Record<string, string> | undefined)?.[PUBLISH_CREDENTIAL_HEADER];
+}
+
+/** The page also reads the run (`getBuild`); only publish readiness and publish count here. */
+function publishCalls(fetchMock: ReturnType<typeof vi.fn>): Call[] {
+  return (fetchMock.mock.calls as Call[]).filter(([url]) => String(url).includes("/publish"));
+}
+
+/** A multi-user Builder: credential_required until the header arrives, then ready. */
+function multiUserFetch() {
+  return vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+    const sent = (init.headers as Record<string, string>)[PUBLISH_CREDENTIAL_HEADER];
+    if (init.method === "POST") return Promise.resolve(response(sent ? 200 : 409, sent ? SUCCESS : { error: "blocked", blockers: NEEDS_TOKEN.blockers }));
+    return Promise.resolve(response(200, sent ? READY : NEEDS_TOKEN));
+  });
+}
+
+function renderPublish() {
+  return render(
+    <MemoryRouter initialEntries={["/refresh-jobs/run-7/publish"]}>
+      <Routes><Route path="/refresh-jobs/:buildId/publish" element={<BuildPublishPage />} /></Routes>
+    </MemoryRouter>,
+  );
+}
+
+const consoleSpies: MockInstance[] = [];
+
+beforeEach(() => {
+  vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+  localStorage.clear();
+  sessionStorage.clear();
+  for (const method of ["log", "info", "warn", "error", "debug"] as const) {
+    consoleSpies.push(vi.spyOn(console, method));
+  }
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  for (const spy of consoleSpies.splice(0)) spy.mockRestore();
+});
+
+/** The token is nowhere it could outlive the request (#410 rules, #615). */
+function expectTokenNotPersisted(fetchMock?: ReturnType<typeof vi.fn>) {
+  expect(JSON.stringify(localStorage)).not.toContain(TOKEN);
+  expect(JSON.stringify({ ...localStorage })).not.toContain(TOKEN);
+  expect(JSON.stringify({ ...sessionStorage })).not.toContain(TOKEN);
+  expect(window.location.href).not.toContain(TOKEN);
+  expect(document.cookie).not.toContain(TOKEN);
+  for (const spy of consoleSpies) expect(JSON.stringify(spy.mock.calls)).not.toContain(TOKEN);
+  for (const call of (fetchMock?.mock.calls ?? []) as Call[]) {
+    expect(call[0]).not.toContain(TOKEN);
+    expect(String(call[1].body ?? "")).not.toContain(TOKEN);
+  }
+}
+
+describe("X-Publish-Credential header (builderApi)", () => {
+  it("is HF_TOKEN=<token> when a token is given and absent when it is empty", () => {
+    expect(publishCredentialHeaders({ HF_TOKEN: TOKEN })).toEqual({ "X-Publish-Credential": HEADER_VALUE });
+    expect(publishCredentialHeaders({ HF_TOKEN: "  " })).toEqual({});
+    expect(publishCredentialHeaders(undefined)).toEqual({});
+  });
+
+  it("is sent on readiness and publish, never in the URL or the body", async () => {
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      Promise.resolve(response(200, init.method === "POST" ? SUCCESS : READY)));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await builderApi.getPublishReadiness("run-7", "huggingface", undefined, { HF_TOKEN: TOKEN });
+    await builderApi.publishBuild("run-7", { target: "huggingface", destination: "owner/dataset" }, undefined, { HF_TOKEN: TOKEN });
+
+    const calls = fetchMock.mock.calls as Call[];
+    expect(calls.map(headerOf)).toEqual([HEADER_VALUE, HEADER_VALUE]);
+    expect(calls[0][0]).toContain("/publish/readiness");
+    expect(calls[1][0]).toContain("/publish");
+    expectTokenNotPersisted(fetchMock);
+  });
+
+  it("is not sent without a credential", async () => {
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      Promise.resolve(response(200, init.method === "POST" ? SUCCESS : READY)));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await builderApi.getPublishReadiness("run-7", "huggingface");
+    await builderApi.publishBuild("run-7", { target: "huggingface", destination: "owner/dataset" });
+
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, undefined]);
+  });
+});
+
+describe("publish token validation", () => {
+  it("refuses what the header cannot carry, without echoing it", () => {
+    expect(validatePublishToken("")).toBeUndefined();
+    expect(validatePublishToken(TOKEN)).toBeUndefined();
+    for (const bad of ["hf_a,HF_TOKEN=hf_b", "hf test", "hf_토큰"]) {
+      const message = validatePublishToken(bad);
+      expect(message).toBeDefined();
+      expect(message).not.toContain(bad);
+      expect(publishCredentialFor(bad)).toBeUndefined();
+    }
+    expect(publishCredentialFor(` ${TOKEN} `)).toEqual({ HF_TOKEN: TOKEN });
+    expect(publishCredentialFor("")).toBeUndefined();
+  });
+
+  it("describes Builder's 400 invalid_publish_credential as a user message", () => {
+    const failure = describePublishFailure(new ApiError(400, "raw", {
+      error: "X-Publish-Credential must be '<VARIABLE>=<value>'",
+      code: "invalid_publish_credential",
+    }));
+    expect(failure.kind).toBe("invalid_publish_credential");
+    expect(failure.message).toContain("게시 토큰 형식");
+  });
+});
+
+describe("BuildPublishPage in a multi-user deployment (#615)", () => {
+  it("asks for a token on credential_required and sends it on readiness and publish only", async () => {
+    const fetchMock = multiUserFetch();
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+
+    expect(await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고 다시 확인하세요/)).toBeInTheDocument();
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined]);
+
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    expect(screen.getByLabelText("Hugging Face 토큰")).toHaveAttribute("type", "password");
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, HEADER_VALUE]);
+
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    fireEvent.click(screen.getByRole("button", { name: "게시 실행" }));
+    await screen.findByText("Builder 게시 완료");
+
+    const posts = publishCalls(fetchMock).filter(([, init]) => init.method === "POST");
+    expect(posts.map(headerOf)).toEqual([HEADER_VALUE]);
+    expectTokenNotPersisted(fetchMock);
+  });
+
+  it("requires a fresh check after the token changes", async () => {
+    vi.stubGlobal("fetch", multiUserFetch());
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    expect(screen.getByRole("button", { name: "최종 확인" })).toBeEnabled();
+
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: `${TOKEN}_2` } });
+    expect(screen.getByRole("button", { name: "최종 확인" })).toBeDisabled();
+    expect(screen.getByText("이 토큰으로 게시 준비 상태를 다시 확인하세요.")).toBeInTheDocument();
+  });
+
+  it("refuses a malformed token locally and never sends it", async () => {
+    const fetchMock = multiUserFetch();
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: `${TOKEN},HF_TOKEN=x` } });
+    expect(screen.getByRole("alert")).toHaveTextContent("게시 토큰 형식");
+    expect(screen.getByRole("button", { name: "이 토큰으로 확인" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "다시 확인" })).toBeDisabled();
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined]);
+  });
+
+  it("shows Builder's 400 invalid_publish_credential without the token", async () => {
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      Promise.resolve((init.headers as Record<string, string>)[PUBLISH_CREDENTIAL_HEADER]
+        ? response(400, { error: "X-Publish-Credential must be '<VARIABLE>=<value>'", code: "invalid_publish_credential" })
+        : response(200, NEEDS_TOKEN)));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("게시 토큰 형식을 KPubData Builder가 받지 않습니다");
+    expect(document.body.textContent).not.toContain(TOKEN);
+    // The field stays so the token can be corrected.
+    expect(screen.getByLabelText("Hugging Face 토큰")).toBeInTheDocument();
+    expectTokenNotPersisted(fetchMock);
+  });
+
+  it("says when a deployment still needs a stored credential after a token was sent", async () => {
+    // A single-user Builder that refuses the server credential ignores the header.
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(200, NEEDS_TOKEN)));
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    expect(await screen.findByText(/토큰을 보냈는데도 KPubData Builder가 credential을 요구합니다/)).toBeInTheDocument();
+  });
+
+  it("forgets the token and stops sending it", async () => {
+    const fetchMock = multiUserFetch();
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+
+    fireEvent.click(screen.getByRole("button", { name: "토큰 지우기" }));
+    expect(screen.getByLabelText("Hugging Face 토큰")).toHaveValue("");
+    fireEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+    await waitFor(() => expect(publishCalls(fetchMock)).toHaveLength(3));
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, HEADER_VALUE, undefined]);
+  });
+});
+
+describe("BuildPublishPage drops the token once a publish starts (#615 review)", () => {
+  /** Ready with a token, destination filled and confirmed; returns the publish button. */
+  async function readyToPublish() {
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    return screen.getByRole("button", { name: "게시 실행" });
+  }
+
+  /** Readiness as a multi-user Builder answers it; the POST answers `post`. */
+  function fetchWithPost(post: () => Promise<Response>) {
+    return vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      if (init.method === "POST") return post();
+      const sent = (init.headers as Record<string, string>)[PUBLISH_CREDENTIAL_HEADER];
+      return Promise.resolve(response(200, sent ? READY : NEEDS_TOKEN));
+    });
+  }
+
+  function expectTokenGone(fetchMock: ReturnType<typeof vi.fn>) {
+    expect(screen.getByLabelText("Hugging Face 토큰")).toHaveValue("");
+    expect(document.body.innerHTML).not.toContain(TOKEN);
+    expectTokenNotPersisted(fetchMock);
+    // It was sent with the publish, then dropped.
+    expect(publishCalls(fetchMock).filter(([, init]) => init.method === "POST").map(headerOf)).toEqual([HEADER_VALUE]);
+    // Publishing again needs the token re-entered and readiness re-checked.
+    expect(screen.getByRole("button", { name: "게시 실행" })).toBeDisabled();
+    expect(screen.getByText("이 토큰으로 게시 준비 상태를 다시 확인하세요.")).toBeInTheDocument();
+  }
+
+  it.each([
+    ["502 publish_failed", () => Promise.resolve(response(502, { error: "publish failed", code: "publish_failed" }))],
+    ["409 blocked", () => Promise.resolve(response(409, { error: "blocked", blockers: NEEDS_TOKEN.blockers }))],
+    ["a network error", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ] as const)("clears the token after a publish that fails with %s", async (_label, post) => {
+    const fetchMock = fetchWithPost(post);
+    vi.stubGlobal("fetch", fetchMock);
+    fireEvent.click(await readyToPublish());
+
+    const failure = await screen.findByText("게시 실패");
+    expect(failure.closest("[role=alert]")?.textContent).not.toContain(TOKEN);
+    expectTokenGone(fetchMock);
+  });
+
+  it("clears the token after a successful publish", async () => {
+    const fetchMock = fetchWithPost(() => Promise.resolve(response(200, SUCCESS)));
+    vi.stubGlobal("fetch", fetchMock);
+    fireEvent.click(await readyToPublish());
+
+    await screen.findByText("Builder 게시 완료");
+    expectTokenGone(fetchMock);
+  });
+});
+
+describe("BuildPublishPage in a single-user deployment", () => {
+  it("shows no token field and sends no header when Builder is ready", async () => {
+    const fetchMock = vi.fn().mockImplementation((_url: string, init: RequestInit) =>
+      Promise.resolve(response(200, init.method === "POST" ? SUCCESS : READY)));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText("Builder 게시 준비 완료");
+    expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    fireEvent.click(screen.getByRole("button", { name: "게시 실행" }));
+    await screen.findByText("Builder 게시 완료");
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, undefined]);
+  });
+});

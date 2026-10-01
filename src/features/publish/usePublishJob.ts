@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   describePublishFailure,
   publishBuild,
+  type PublishCredential,
   type PublishFailure,
   type PublishRequest,
   type PublishResponse,
@@ -14,7 +15,8 @@ export interface PublishJob {
   status: PublishJobStatus;
   result?: PublishResponse;
   failure?: PublishFailure;
-  start: (runId: string, request: PublishRequest) => Promise<void>;
+  /** `credential` is used for this request only and is not kept by the hook (#615). */
+  start: (runId: string, request: PublishRequest, credential?: PublishCredential) => Promise<void>;
   stopWaiting: () => void;
   reset: () => void;
 }
@@ -27,7 +29,7 @@ export function usePublishJob(): PublishJob {
   const inFlightRef = useRef(false);
   const operationRef = useRef(0);
 
-  const start = useCallback(async (runId: string, request: PublishRequest) => {
+  const start = useCallback(async (runId: string, request: PublishRequest, credential?: PublishCredential) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
     const operation = ++operationRef.current;
@@ -37,7 +39,7 @@ export function usePublishJob(): PublishJob {
     setFailure(undefined);
     setResult(undefined);
     try {
-      const response = await publishBuild(runId, request, controller.signal);
+      const response = await publishBuild(runId, request, controller.signal, credential);
       if (controller.signal.aborted || operation !== operationRef.current) return;
       if (response.run_id !== runId || response.target !== request.target) {
         setStatus("failed");

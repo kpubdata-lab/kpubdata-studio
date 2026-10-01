@@ -99,6 +99,11 @@ interface RequestOptions {
   retries?: number;
   /** Omit auth header (for unauthenticated endpoints like /healthz, #186). */
   skipAuth?: boolean;
+  /**
+   * Extra request headers for this request only. Never logged and never part of an
+   * error: a request-scoped credential (`X-Publish-Credential`, #615) travels here.
+   */
+  headers?: Record<string, string>;
 }
 
 /**
@@ -218,7 +223,7 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
   let response: Response | undefined;
   for (let attempt = 0; attempt <= retries; attempt++) {
     const { signal: combined, cleanup } = withTimeout(signal, timeoutMs);
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = { ...options.headers, "Content-Type": "application/json" };
     try {
       if (!options.skipAuth) {
         const token = (await authTokenProvider?.()) ?? null;
@@ -513,6 +518,29 @@ export type BuildEvent = schemas.BuildEvent;
 export type BuildEventsResponse = schemas.BuildEventsResponse;
 
 /** client wrapping Builder service endpoint. */
+/**
+ * Request header carrying the requester's own publish credential (kpubdata-builder#925,
+ * contract 1.67.0): `<VARIABLE>=<value>`, the same form as `X-Provider-Key`. A multi-user
+ * Builder publishes only with this header; a single-user Builder ignores it.
+ */
+export const PUBLISH_CREDENTIAL_HEADER = "X-Publish-Credential";
+
+/**
+ * A publish credential held in memory for one request (#615). Studio publishes only to
+ * Hugging Face, so only `HF_TOKEN` is modelled; Kaggle's pair is not a Studio target.
+ */
+export interface PublishCredential {
+  HF_TOKEN: string;
+}
+
+/** The `X-Publish-Credential` header for `credential`, or no header when it is empty. */
+export function publishCredentialHeaders(
+  credential: PublishCredential | undefined,
+): Record<string, string> {
+  const token = credential?.HF_TOKEN.trim();
+  return token ? { [PUBLISH_CREDENTIAL_HEADER]: `HF_TOKEN=${token}` } : {};
+}
+
 export const builderApi = {
   /** GET /warehouse/tables — the caller's committed tables; 404 when there is no warehouse (builder#797). */
   listWarehouseTables: (signal?: AbortSignal) =>
@@ -764,25 +792,44 @@ export const builderApi = {
       schemas.buildQualityResponseSchema,
     ),
 
-  /** GET /builds/{run_id}/publish/readiness — publication readiness computed by Builder. */
+  /**
+   * GET /builds/{run_id}/publish/readiness — publication readiness computed by Builder.
+   * `credential` is sent in `X-Publish-Credential`, never in the URL (#615).
+   */
   getPublishReadiness: (
     runId: string,
     target: schemas.PublishTarget,
     signal?: AbortSignal,
+    credential?: PublishCredential,
   ) => {
     const params = new URLSearchParams({ target });
     return apiFetch(
       `/builds/${encodeURIComponent(runId)}/publish/readiness?${params.toString()}`,
-      { signal, retries: 0 },
+      { signal, retries: 0, headers: publishCredentialHeaders(credential) },
       schemas.publishReadinessResponseSchema,
     );
   },
 
-  /** POST /builds/{run_id}/publish — remote side effect; client auto-retry forbidden. */
-  publishBuild: (runId: string, request: schemas.PublishRequest, signal?: AbortSignal) =>
+  /**
+   * POST /builds/{run_id}/publish — remote side effect; client auto-retry forbidden.
+   * `credential` is sent in `X-Publish-Credential`, never in the body (#615).
+   */
+  publishBuild: (
+    runId: string,
+    request: schemas.PublishRequest,
+    signal?: AbortSignal,
+    credential?: PublishCredential,
+  ) =>
     apiFetch(
       `/builds/${encodeURIComponent(runId)}/publish`,
-      { method: "POST", body: request, signal, retries: 0, timeoutMs: 0 },
+      {
+        method: "POST",
+        body: request,
+        signal,
+        retries: 0,
+        timeoutMs: 0,
+        headers: publishCredentialHeaders(credential),
+      },
       schemas.publishResponseSchema,
     ),
 

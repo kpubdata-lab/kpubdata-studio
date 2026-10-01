@@ -53,3 +53,18 @@ export function credentialPrerequisiteMessage(): CredentialPrerequisiteMessage {
     cta: i18n.t("addData.credential.cta"),
   };
 }
+
+/**
+ * The guidance as one line, for places that show a single error string (#620, #621).
+ *
+ * Every newline in the body becomes a space — not only the first — so a translation
+ * that gains another line still renders as one line.
+ */
+export function credentialPrerequisiteNotice(message: CredentialPrerequisiteMessage): string {
+  return `${message.title} — ${flattenNotice(message.body)}`;
+}
+
+/** Replace every newline with a space. */
+export function flattenNotice(body: string): string {
+  return body.replace(/\n/g, " ");
+}
