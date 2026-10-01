@@ -10,8 +10,7 @@
 
 > **Light theme is the canonical KPubData visual identity. Dark mode is an alternative user theme, not the brand itself.**
 
-Brand v2 는 이 문서부터 적용한다. 자산·토큰·화면은 아직 Brand v1 이다 —
-§8 적용 현황 을 본다.
+Brand v2 는 문서 · 자산 · 토큰 · 화면 순서로 적용한다 — §8 적용 현황 을 본다.
 
 ## 1. 목표
 
@@ -67,8 +66,7 @@ shadow · 3D · 회전 · K 안의 추가 문자 · favicon 의 텍스트. 승�
 | Dark 표면 | White `#FFFFFF` `KPubData` + `#94A3B8` suffix |
 | 제품명 반복 금지 | 한 화면에 제품명은 **사이드바 로고 한 번**. topbar 는 현재 위치(breadcrumb) 를 쓴다 (#423) |
 
-`__tests__/brandLockupGate.test.ts` 가 suffix 가 브랜드색으로 돌아가면 실패한다. 이 테스트는
-아직 Brand v1 색을 검사하고, 자산 교체와 함께 Brand v2 로 바뀐다 (#628).
+`__tests__/brandLockupGate.test.ts` 가 suffix 가 브랜드색(Blue · Cyan · Mint)으로 돌아가면 실패한다.
 
 ## 3. 색
 
@@ -80,12 +78,14 @@ shadow · 3D · 회전 · K 안의 추가 문자 · favicon 의 텍스트. 승�
 | Data Cyan | `--data-accent` | `#06B6D4` |
 | Fresh Mint | `--brand-secondary` | `#14B8A6` |
 | Ink | `--text-primary` | `#172033` |
-| Slate | `--text-secondary` | `#64748B` |
+| Slate | `--text-secondary` | `#64748B` (자산) · UI 텍스트는 `#5E6E84` — §3.5 |
 | Canvas | `--surface-page` | `#F7F8F3` |
 | Surface | `--surface-card` | `#FFFFFF` |
 | Border | `--border` | `#E5E7E2` |
 
 이 여덟 값이 Brand v2 의 전부다. 다른 브랜드 계열 색(Indigo · Violet · Emerald 등)을 더하지 않는다.
+대비 때문에 파생한 값(§3.5 의 Slate `#5E6E84`, 차트용 진한 변형, dark 의 파랑 텍스트)만 예외이고,
+`__tests__/brandV2Gate.test.ts` 가 토큰 소스의 채도 있는 색을 이 목록으로 제한한다.
 
 **색별 사용 규칙**
 
@@ -116,9 +116,9 @@ shadow · 3D · 회전 · K 안의 추가 문자 · favicon 의 텍스트. 승�
 
 - **모든 성공을 브랜드색으로 칠하지 않는다.** 특히 **Fresh Mint `#14B8A6` 는 success 가 아니다**.
   상태 토큰의 값은 `--brand-primary` · `--data-accent` · `--brand-secondary` 의 값과 **달라야 한다**.
-  지금 `__tests__/visualTokensGate.test.ts` 의 브랜드 목록은 `--brand-primary` · `--brand-subtle` · `--brand-ink` · `--data-accent` 뿐이고
-  `--brand-secondary` 는 아직 토큰에 없다 — 토큰 단계(§8)에서 Mint 토큰을 추가하면서 이 게이트가
-  `--brand-secondary` 까지 검사하도록 바뀐다.
+  `__tests__/visualTokensGate.test.ts` 가 앱(`src/globals.css`)과 prototype 의 light · dark 모두에서
+  `--brand-primary` · `--data-accent(-strong)` · `--brand-secondary(-strong)` 등 브랜드 토큰이 어떤
+  `--status-*` 값과도 같지 않은지 검사한다.
 - **Warning · Stale · Partial 은 같은 amber 여도 label 로 구분한다.** 배지는 항상 축과 단어를
   함께 쓴다(`Health Stale`, `Completeness Partial`). 색만으로 의미를 싣지 않는다.
 - **상태 축은 합치지 않는다** (TERMINOLOGY 상태 어휘). Health · Completeness · Refresh · Access ·
@@ -131,10 +131,11 @@ shadow · 3D · 회전 · K 안의 추가 문자 · favicon 의 텍스트. 승�
 |---|---|
 | Content canvas | Canvas `#F7F8F3` |
 | Card · 표 | Surface `#FFFFFF` + Border `#E5E7E2` |
-| Sidebar 배경 | **밝은 중립색** — `#F1F4F4` 기준 (Canvas 와 Border 사이에서 파생, 토큰 단계에서 확정) |
-| Sidebar 텍스트 · 아이콘 | Ink / Slate |
-| Sidebar active | **아주 옅은 파랑 배경**(Brand Blue tint) + Brand Blue 텍스트·아이콘 |
-| Sidebar hover | 중립 tint — 파랑을 쓰지 않는다 |
+| Sidebar 배경 | **밝은 중립색** `#F1F4F4` (`--sidebar`) |
+| Sidebar 텍스트 · 아이콘 | Ink `#172033` (`--sidebar-foreground`) · 그룹 이름은 Slate `#5E6E84` (`--sidebar-muted`) |
+| Sidebar active | **아주 옅은 파랑 배경** `#EAF1FE` (`--sidebar-active`) + Brand Blue 텍스트·아이콘 |
+| Sidebar hover | 중립 tint `#E6EAEA` (`--sidebar-hover`) — 파랑을 쓰지 않고 글자색도 바꾸지 않는다 |
+| 보조 표면 | `#F1F3EF` (`--muted`, 표 머리 등) · 입력 테두리 `#D5D9D2` (`--input`) |
 
 - canonical sidebar 는 **light surface** 다. `#0F172A` 같은 dark navy sidebar 는 canonical theme 에 쓰지 않는다.
 - active 항목에 solid Brand Blue 블록을 쓰지 않는다. 선택 상태만 파랑이다.
@@ -150,7 +151,44 @@ Dark mode 는 **지원하는 대체 테마**다. 브랜드를 대표하지 않�
 - 로고는 dark 표면에서만 dark 변형(White 단색 또는 White 워드마크)을 쓴다.
 - 스크린샷 baseline · README · social preview · visual review 의 **기준은 light** 다. dark 는 보조 baseline 이다.
 
-정확한 dark 값은 토큰 단계(#628)에서 `src/globals.css` 와 prototype `tokens.css` 에 같은 값으로 정하고 이 절에 기록한다.
+Dark 값 (`src/globals.css` 와 prototype `tokens.css` 가 같은 값을 쓴다):
+
+| 역할 | 토큰 | dark |
+|---|---|---|
+| 페이지 | `--background` | `#15171A` |
+| 카드 | `--card` | `#1C1F23` |
+| 보조 표면 | `--muted` | `#23272C` |
+| Sidebar | `--sidebar` | `#1A1D21` |
+| 경계 | `--border` | `#2E3238` |
+| 본문 | `--foreground` | `#E8EAED` |
+| 보조 텍스트 | `--muted-foreground` | `#9AA3AE` |
+| 버튼(fill) | `--brand-primary` | `#2563EB` + 흰 글자 — light 와 같다 |
+| 파랑 텍스트 · active · focus | `--accent-subtle-foreground` · `--sidebar-active-foreground` · `--ring` | `#60A5FA` |
+| active 배경 | `--sidebar-active` · `--accent-subtle` | `#1E2836` |
+| 차트 | `--data-accent-strong` · `--brand-secondary-strong` | `#06B6D4` · `#14B8A6` (dark 표면에서는 원래 색이 3:1 을 넘는다) |
+
+상태 토큰의 dark 값은 #425 그대로다.
+
+### 3.5 대비 (#631)
+
+| 대상 | 기준 (WCAG 2.1 AA) |
+|---|---|
+| 텍스트 | **4.5:1** |
+| 큰 텍스트(24px · 18.66px bold 이상) · 비텍스트(차트 마크 · focus ring · 아이콘) | **3:1** |
+
+> **아래 값은 #631 제안이고 owner 결정을 기다린다.** 결정이 다르면 토큰과 이 표를 함께 바꾼다.
+
+| 용도 | 값 | 이유 |
+|---|---|---|
+| 보조 텍스트 · 메타데이터 · 사이드바 그룹 이름 (`--muted-foreground`, `--sidebar-muted`) | Slate `#5E6E84` | Slate `#64748B` 는 Canvas 4.46:1 · Sidebar 4.30:1 로 텍스트 기준 미달. `#5E6E84` 는 White 5.20 · Canvas 4.87 · Sidebar 4.70 |
+| 차트 · 그래픽 마크 (`--data-accent-strong`, `--brand-secondary-strong`) | Cyan-600 `#0891B2` · Teal-600 `#0D9488` | Cyan `#06B6D4`(White 2.43) · Mint `#14B8A6`(2.49) 는 비텍스트 3:1 미달. 강한 변형은 White 3.68 · 3.74, Canvas 3.45 · 3.51 |
+| 로고 · 장식 | Blue · Cyan · Mint 원래 값 | 로고는 대비 요구 대상이 아니다 |
+
+- Brand Blue `#2563EB` 는 White 5.17 · Canvas 4.84 · Sidebar 4.67 · active 배경 `#EAF1FE` 4.56 으로 텍스트에 쓸 수 있다.
+- `__tests__/brandV2Gate.test.ts` 의 contrast gate 가 light · dark 토큰 쌍을 계산한다 — 본문 · 보조 텍스트 · 파랑 텍스트를
+  background · card · muted · sidebar 위에서 4.5:1, 차트 강한 변형과 focus ring 을 background · card 위에서 3:1.
+  기준 미달 값을 넣으면 실패하는 음성 테스트가 함께 있다.
+- 차트 마크는 `--data-accent-strong` / `--brand-secondary-strong` 를 쓴다 (`SimpleChart`). Cyan · Mint 원래 값은 차트 마크에 쓰지 않는다.
 
 ## 4. 타이포그래피
 
@@ -186,8 +224,7 @@ snap_019
 코드를 전면 수정하기 전에 화면 다섯 개를 먼저 만들었다 (#425, 백로그 §27). 정적 HTML 이고
 데이터는 예시다. 최종 브랜드 이름(`KPubData` · 카탈로그 · 테이블 · SQL Workspace · Ask KPubData)을 쓴다.
 
-**아래 스크린샷은 Brand v1(Indigo · dark sidebar) 이다.** 정보 구조는 그대로 두고, prototype
-토큰·화면 단계(#628)에서 Brand v2 로 다시 찍는다.
+아래 스크린샷은 Brand v2 (light sidebar) 로 다시 찍었다 (#628). 정보 구조는 그대로다.
 
 | 화면 | 파일 | 데스크톱 | 390px |
 |---|---|---|---|
@@ -256,11 +293,12 @@ Brand v2 는 #425 를 폐기하지 않는다. 화면을 만드는 원칙은 남�
 
 | 단계 | 대상 | 상태 |
 |---|---|---|
-| 의도 · 규칙 | `DESIGN_CONCEPT.md` · 이 문서 | 반영 |
-| 심볼 · 자산 | `assets/logo/kpubdata-brand-assets/` SVG · PNG · social preview · 자산 README | Brand v1 |
-| 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` | Brand v1 |
-| 화면 | prototype 다섯 화면 · `Layout` 사이드바 · 로그인/가입 · favicon · README · docs 테마 | Brand v1 |
-| 검증 | `brandLockupGate` · `visualTokensGate` 갱신, legacy colour gate, screenshot baseline | Brand v1 |
+| 의도 · 규칙 | `DESIGN_CONCEPT.md` · 이 문서 | 반영 (#629) |
+| 심볼 · 자산 | `assets/logo/kpubdata-brand-assets/` SVG · PNG · social preview · 자산 README | 반영 (#633) |
+| 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` (light · dark) | 반영 — 대비 값은 #631 제안, owner 결정 대기 |
+| 화면 | prototype 다섯 화면 · `Layout` 사이드바 · 로그인/가입 · docs 테마 · favicon (`favicon.svg`) · README (`<picture>` light/dark) | 반영 |
+| 검증 | `brandLockupGate` · `visualTokensGate` (브랜드 ↔ 상태) · `brandV2Gate` (prototype ↔ 앱 drift, legacy 색, gradient, 팔레트, 대비) | 반영 |
+| 검증 | 앱 screenshot baseline (#532) | 대기 — baseline 은 #563 에 있다 (CI 컨테이너 #585 대기). Brand v2 light 를 기준으로 다시 만든다 |
 
 그 사이 코드와 이 문서가 다르면, **이 문서가 목표이고 코드는 아직 옮겨지지 않은 것**이다.
 새 화면이나 수정은 Indigo · dark sidebar 를 새로 늘리지 않는다.

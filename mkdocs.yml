@@ -6,13 +6,16 @@ repo_name: "yeongseon/kpubdata-studio"
 theme:
   name: material
   custom_dir: overrides
-  # Brand symbol on the header and the tab (#425); copies of assets/logo, kept in docs_dir.
+  # Brand symbol on the header and the tab (#425, #628); copies of assets/logo, kept in docs_dir.
   logo: brand/assets/logo.svg
   favicon: brand/assets/favicon.svg
   language: ko
+  # Brand v2 (#628): a white header (light-first, the brand colour is not a wide fill) with
+  # Brand Blue links and accent from stylesheets/brand.css. `blue` is Material's nearest
+  # named accent; brand.css pins it to #2563EB.
   palette:
-    primary: deep purple
-    accent: deep purple
+    primary: white
+    accent: blue
   features:
     - navigation.tabs
     - navigation.sections
@@ -77,3 +80,6 @@ markdown_extensions:
 # (#34). extra_javascript 문자열 항목은 integrity 속성을 실을 수 없기 때문이다.
 extra_javascript:
   - javascripts/mermaid.js
+
+extra_css:
+  - stylesheets/brand.css

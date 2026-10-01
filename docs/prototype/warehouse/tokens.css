@@ -1,29 +1,42 @@
 /*
- * KPubData visual tokens for the warehouse prototypes (#425).
- * docs/brand/VISUAL_IDENTITY.md explains each role. The rule this file exists to hold:
- * brand colour and status colour are different tokens with different values, so
- * "indigo" never comes to mean "success". __tests__/visualTokensGate.test.ts checks it.
+ * KPubData visual tokens for the warehouse prototypes — Brand v2 (#628, was #425).
+ * docs/brand/VISUAL_IDENTITY.md explains each role. These are the same values as
+ * src/globals.css (the app's names differ: --surface-page is --background and so on);
+ * __tests__/brandV2Gate.test.ts fails if the two drift. Brand colour and status colour are
+ * different tokens with different values, so a brand colour never comes to mean "success"
+ * (__tests__/visualTokensGate.test.ts).
  */
 
 :root {
   /* Brand — identity and interaction, never a status. */
-  --brand-primary: #5b5bd6;
+  --brand-primary: #2563eb;
   --brand-primary-foreground: #ffffff;
-  --brand-subtle: #eeeeff;
-  --brand-ink: #18181b;
+  --brand-subtle: #eaf1fe;
+  --brand-text: #2563eb;
+  --brand-ink: #172033;
 
-  /* Data accent — highlights in data itself (charts, the column in focus). */
-  --data-accent: #818cf8;
+  /* Data accent — highlights in data itself (charts, the column in focus). The strong
+     variants are for chart marks, which need 3:1 against the surface (#631). */
+  --data-accent: #06b6d4;
+  --data-accent-strong: #0891b2;
+  /* Fresh Mint — secondary brand/data accent. Never success. */
+  --brand-secondary: #14b8a6;
+  --brand-secondary-strong: #0d9488;
 
-  /* Neutral surfaces. */
-  --surface-page: #fafafa;
+  /* Neutral surfaces. The sidebar is light; only its active item is blue. */
+  --surface-page: #f7f8f3;
   --surface-card: #ffffff;
-  --surface-muted: #f4f4f5;
-  --surface-sidebar: #0f172a;
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
-  --border: #e4e4e7;
+  --surface-muted: #f1f3ef;
+  --surface-sidebar: #f1f4f4;
+  --sidebar-text: #172033;
+  --sidebar-muted: #5e6e84;
+  --sidebar-hover: #e6eaea;
+  --sidebar-active: #eaf1fe;
+  --sidebar-active-text: #2563eb;
+  --text-primary: #172033;
+  --text-secondary: #5e6e84;
+  --text-muted: #5e6e84;
+  --border: #e5e7e2;
 
   /* Status — one axis each; warning, stale and partial share amber and differ by label. */
   --status-success: #15803d;
@@ -56,19 +69,28 @@
 }
 
 :root[data-theme="dark"] {
-  --brand-primary: #818cf8;
-  --brand-primary-foreground: #0b1020;
-  --brand-subtle: #1e1b4b;
+  --brand-primary: #2563eb;
+  --brand-primary-foreground: #ffffff;
+  --brand-subtle: #1e2836;
+  --brand-text: #60a5fa;
   --brand-ink: #ffffff;
-  --data-accent: #a5b4fc;
-  --surface-page: #09090b;
-  --surface-card: #111113;
-  --surface-muted: #18181b;
-  --surface-sidebar: #0b1220;
-  --text-primary: #fafafa;
-  --text-secondary: #d4d4d8;
-  --text-muted: #a1a1aa;
-  --border: #27272a;
+  --data-accent: #06b6d4;
+  --data-accent-strong: #06b6d4;
+  --brand-secondary: #14b8a6;
+  --brand-secondary-strong: #14b8a6;
+  --surface-page: #15171a;
+  --surface-card: #1c1f23;
+  --surface-muted: #23272c;
+  --surface-sidebar: #1a1d21;
+  --sidebar-text: #e8eaed;
+  --sidebar-muted: #9aa3ae;
+  --sidebar-hover: #23272c;
+  --sidebar-active: #1e2836;
+  --sidebar-active-text: #60a5fa;
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa3ae;
+  --text-muted: #9aa3ae;
+  --border: #2e3238;
   --status-success: #4ade80;
   --status-success-subtle: #052e16;
   --status-warning: #fbbf24;
@@ -85,16 +107,16 @@ a { color: inherit; text-decoration: none; }
 code, .mono { font: var(--text-code); }
 
 .shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
-.sidebar { background: var(--surface-sidebar); color: #cbd5e1; padding: 16px 12px; display: flex; flex-direction: column; gap: 18px; }
+.sidebar { background: var(--surface-sidebar); color: var(--sidebar-text); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 18px; }
 .sidebar .logo { display: block; padding: 4px 8px 8px; }
 .sidebar .logo img { height: 28px; }
-.sidebar .group-label { font: 600 11px/16px var(--font-sans); letter-spacing: .08em; color: #94a3b8; padding: 0 8px 6px; margin-top: 16px; }
+.sidebar .group-label { font: 600 11px/16px var(--font-sans); letter-spacing: .08em; color: var(--sidebar-muted); padding: 0 8px 6px; margin-top: 16px; }
 .sidebar a { display: block; padding: 7px 10px; border-radius: 6px; font-size: 13px; }
-.sidebar a:hover { background: #111c32; }
-.sidebar a.active { background: #293354; color: #fff; }
-.sidebar a.soon { color: #64748b; pointer-events: none; }
+.sidebar a:hover { background: var(--sidebar-hover); }
+.sidebar a.active { background: var(--sidebar-active); color: var(--sidebar-active-text); font-weight: 600; }
+.sidebar a.soon { color: var(--sidebar-muted); pointer-events: none; }
 .sidebar a.soon::after { content: " · 예정"; font-size: 11px; }
-.sidebar .bottom { margin-top: auto; border-top: 1px solid #1e293b; padding-top: 10px; }
+.sidebar .bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 10px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 24px; border-bottom: 1px solid var(--border); background: var(--surface-card); }
 .crumbs { display: flex; gap: 6px; font-size: 13px; color: var(--text-muted); min-width: 0; }
@@ -148,9 +170,9 @@ tr:last-child td { border-bottom: 0; }
 .tag { font: var(--text-meta); color: var(--text-secondary); background: var(--surface-muted); border-radius: 4px; padding: 1px 6px; }
 .muted { color: var(--text-muted); font: var(--text-meta); }
 .sql { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 12px; font: var(--text-code); white-space: pre; overflow-x: auto; margin: 0; }
-.kw { color: var(--brand-primary); font-weight: 600; }
+.kw { color: var(--brand-text); font-weight: 600; }
 .bar { height: 6px; background: var(--surface-muted); border-radius: 3px; overflow: hidden; }
-.bar > span { display: block; height: 100%; background: var(--data-accent); }
+.bar > span { display: block; height: 100%; background: var(--data-accent-strong); }
 .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
 .tabs a { padding: 8px 12px; font-size: 13px; color: var(--text-muted); border-bottom: 2px solid transparent; }
 .tabs a.on { color: var(--text-primary); border-bottom-color: var(--brand-primary); }
@@ -159,7 +181,7 @@ dl.kv dt { color: var(--text-muted); }
 dl.kv dd { margin: 0; }
 .filters { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--border); }
 .chip { height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 14px; font: var(--text-meta); line-height: 26px; color: var(--text-secondary); background: var(--surface-card); }
-.chip.on { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-subtle); }
+.chip.on { border-color: var(--brand-primary); color: var(--brand-text); background: var(--brand-subtle); }
 
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }

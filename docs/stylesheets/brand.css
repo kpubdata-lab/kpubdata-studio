@@ -1,0 +1,9 @@
+/*
+ * Brand v2 (#628) on the docs site. The header is white, not Brand Blue: a blue bar would
+ * paint a wide area in the brand colour (VISUAL_IDENTITY §3.1) and hide the K's blue stem.
+ * Brand Blue is kept for links and the accent, as in the app. Same value as src/globals.css.
+ */
+:root {
+  --md-accent-fg-color: #2563eb;
+  --md-typeset-a-color: #2563eb;
+}

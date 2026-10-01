@@ -17,38 +17,54 @@
 }
 
 /*
- * 시맨틱 디자인 토큰.
+ * Semantic design tokens — Brand v2 (#628, docs/brand/VISUAL_IDENTITY.md §3).
  *
- * 모던 SaaS 대시보드(Linear/Vercel 계열) 룩을 위해 중립 팔레트 + 에메랄드 강조를
- * 시맨틱 토큰으로 정의한다. 각 토큰은 light/dark 두 값을 모두 가진다.
- *  - background/foreground: 페이지 바탕/기본 텍스트
- *  - card/card-foreground: 카드·패널 표면
- *  - muted/muted-foreground: 보조 배경과 보조 텍스트
- *  - border: 얇고 선명한 경계선
- *  - accent(에메랄드): 상호작용·강조 요소
+ * Roles are separate tokens: brand-primary (interaction), data-accent (data emphasis),
+ * brand-secondary (Fresh Mint) and status-* never share a value. Light is the canonical
+ * theme; dark is an alternative with the same hierarchy. Older names (`accent`,
+ * `sidebar-*`) are kept as aliases so components need not change.
+ * docs/prototype/warehouse/tokens.css carries the same values (__tests__/brandV2Gate.test.ts).
+ * Contrast: text pairs 4.5:1, chart marks 3:1 — the values for secondary text and the
+ * strong chart variants are the #631 proposal, pending the owner's decision.
  */
 :root,
 :root[data-theme="light"] {
-  --background: #fafafa;
-  --foreground: #18181b;
+  /* Brand (#628) — interaction, never a status. */
+  --brand-primary: #2563eb;
+  --brand-primary-foreground: #ffffff;
+  /* Data accent — data emphasis only, never a CTA. The strong variants are for chart
+     marks, which need 3:1 against the surface (#631). */
+  --data-accent: #06b6d4;
+  --data-accent-strong: #0891b2;
+  /* Fresh Mint — secondary brand/data accent. Never success. */
+  --brand-secondary: #14b8a6;
+  --brand-secondary-strong: #0d9488;
+
+  /* Neutral surfaces. */
+  --background: #f7f8f3;
+  --foreground: #172033;
   --card: #ffffff;
-  --card-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #6366f1;
-  --accent: #5b5bd6;
-  --accent-foreground: #ffffff;
-  --accent-subtle: #eeeeff;
-  --accent-subtle-foreground: #4338ca;
-  --sidebar: #0f172a;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-muted: #94a3b8;
-  --sidebar-border: #1e293b;
-  --sidebar-hover: #111c32;
-  --sidebar-active: #293354;
-  --sidebar-active-foreground: #ffffff;
+  --card-foreground: #172033;
+  --muted: #f1f3ef;
+  --muted-foreground: #5e6e84;
+  --border: #e5e7e2;
+  --input: #d5d9d2;
+  --ring: var(--brand-primary);
+
+  /* Interaction aliases kept for existing components: `accent` is the brand primary. */
+  --accent: var(--brand-primary);
+  --accent-foreground: var(--brand-primary-foreground);
+  --accent-subtle: #eaf1fe;
+  --accent-subtle-foreground: var(--brand-primary);
+
+  /* Light sidebar (#628 §9): neutral, and only the active item is blue. */
+  --sidebar: #f1f4f4;
+  --sidebar-foreground: #172033;
+  --sidebar-muted: #5e6e84;
+  --sidebar-border: #e5e7e2;
+  --sidebar-hover: #e6eaea;
+  --sidebar-active: #eaf1fe;
+  --sidebar-active-foreground: var(--brand-primary);
 
   /* Status (#425, docs/brand/VISUAL_IDENTITY.md §3.2) — never the brand colour. */
   --status-success: #15803d;
@@ -70,26 +86,35 @@
 }
 
 :root[data-theme="dark"] {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #111113;
-  --card-foreground: #fafafa;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #818cf8;
-  --accent: #6366f1;
-  --accent-foreground: #ffffff;
-  --accent-subtle: #1e1b4b;
-  --accent-subtle-foreground: #c7d2fe;
-  --sidebar: #0b1220;
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-muted: #94a3b8;
-  --sidebar-border: #1e293b;
-  --sidebar-hover: #111c32;
-  --sidebar-active: #293354;
-  --sidebar-active-foreground: #ffffff;
+  /* Neutral charcoal, no pure black, almost no navy (#628 §10). Brand Blue fills keep
+     #2563eb with white text; blue text on these surfaces uses the lighter #60a5fa. */
+  --brand-primary: #2563eb;
+  --brand-primary-foreground: #ffffff;
+  --data-accent: #06b6d4;
+  --data-accent-strong: #06b6d4;
+  --brand-secondary: #14b8a6;
+  --brand-secondary-strong: #14b8a6;
+  --background: #15171a;
+  --foreground: #e8eaed;
+  --card: #1c1f23;
+  --card-foreground: #e8eaed;
+  --muted: #23272c;
+  --muted-foreground: #9aa3ae;
+  --border: #2e3238;
+  --input: #3a3f46;
+  --ring: #60a5fa;
+  --accent: var(--brand-primary);
+  --accent-foreground: var(--brand-primary-foreground);
+  --accent-subtle: #1e2836;
+  --accent-subtle-foreground: #60a5fa;
+  --sidebar: #1a1d21;
+  --sidebar-foreground: #e8eaed;
+  --sidebar-muted: #9aa3ae;
+  --sidebar-border: #2a2e34;
+  --sidebar-hover: #23272c;
+  --sidebar-active: #1e2836;
+  --sidebar-active-foreground: #60a5fa;
+
   --status-success: #4ade80;
   --status-success-subtle: #052e16;
   --status-success-border: #166534;
@@ -110,27 +135,34 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --card: #111113;
-    --card-foreground: #fafafa;
-    --muted: #18181b;
-    --muted-foreground: #a1a1aa;
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #818cf8;
-    --accent: #6366f1;
-    --accent-foreground: #ffffff;
-    --accent-subtle: #1e1b4b;
-    --accent-subtle-foreground: #c7d2fe;
-    --sidebar: #0b1220;
-    --sidebar-foreground: #cbd5e1;
-    --sidebar-muted: #94a3b8;
-    --sidebar-border: #1e293b;
-    --sidebar-hover: #111c32;
-    --sidebar-active: #293354;
-    --sidebar-active-foreground: #ffffff;
-
+    /* Neutral charcoal, no pure black, almost no navy (#628 §10). Brand Blue fills keep
+       #2563eb with white text; blue text on these surfaces uses the lighter #60a5fa. */
+    --brand-primary: #2563eb;
+    --brand-primary-foreground: #ffffff;
+    --data-accent: #06b6d4;
+    --data-accent-strong: #06b6d4;
+    --brand-secondary: #14b8a6;
+    --brand-secondary-strong: #14b8a6;
+    --background: #15171a;
+    --foreground: #e8eaed;
+    --card: #1c1f23;
+    --card-foreground: #e8eaed;
+    --muted: #23272c;
+    --muted-foreground: #9aa3ae;
+    --border: #2e3238;
+    --input: #3a3f46;
+    --ring: #60a5fa;
+    --accent: var(--brand-primary);
+    --accent-foreground: var(--brand-primary-foreground);
+    --accent-subtle: #1e2836;
+    --accent-subtle-foreground: #60a5fa;
+    --sidebar: #1a1d21;
+    --sidebar-foreground: #e8eaed;
+    --sidebar-muted: #9aa3ae;
+    --sidebar-border: #2a2e34;
+    --sidebar-hover: #23272c;
+    --sidebar-active: #1e2836;
+    --sidebar-active-foreground: #60a5fa;
     --status-success: #4ade80;
     --status-success-subtle: #052e16;
     --status-success-border: #166534;
@@ -151,6 +183,12 @@
 }
 
 @theme inline {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-foreground: var(--brand-primary-foreground);
+  --color-data-accent: var(--data-accent);
+  --color-data-accent-strong: var(--data-accent-strong);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-strong: var(--brand-secondary-strong);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
