@@ -8,5 +8,5 @@
      Arms: 16 units wide horizontally, ~13.3 perpendicular, slope 24:16.
      Gap between stem and arm tip: 4 units (1 px at 16 px). The lower arm starts 6 units
      under the upper one so no background seam shows where they meet. Flat fills only. -->
-<path d="M8 8H20V56H8Z" fill="#2563EB"/><path d="M24 32L28 26H44L40 32L56 56H40Z" fill="#14B8A6"/><path d="M24 32L40 8H56L40 32Z" fill="#06B6D4"/>
+<path d="M8 8H20V56H8Z" fill="#172033"/><path d="M24 32L40 8H56L40 32L56 56H40Z" fill="#172033"/>
 </svg>
