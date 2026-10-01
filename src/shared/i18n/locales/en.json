@@ -238,7 +238,6 @@
       "tableMissing": "Table: not in KPubData Builder's run list",
       "snapshotMissing": "Snapshot: not in KPubData Builder's run list",
       "empty": "No refresh has been recorded yet.",
-      "scope": "The latest {{count}} (up to {{limit}} are loaded).",
       "tableUnreadable": "Table: KPubData Builder could not read this run's BuildSpec",
       "snapshotsCount": "Snapshots this run committed: {{count}}",
       "snapshotNone": "None",
@@ -2288,6 +2287,28 @@
     "mock": {
       "noSpecSnapshot": "Mock mode does not simulate a BuildSpec snapshot. Check it in real-integration mode.",
       "noRunEvents": "Mock mode does not simulate structured run events. Check them in real-integration mode."
+    },
+    "cancel": {
+      "action": "Cancel run",
+      "underWay": "Cancelling…",
+      "done": "Cancelled",
+      "confirm": "Cancel run {{id}}? A running refresh stops at its next safe stage boundary; what it has already written is kept. This cannot be undone.",
+      "accepted": "Cancellation requested — waiting for KPubData Builder to report the new status.",
+      "cancellingHint": "KPubData Builder stops the run at its next safe stage boundary.",
+      "refused": {
+        "forbidden": "You cannot cancel this run: it is not yours.",
+        "notFound": "KPubData Builder no longer has this run in its job registry, so it cannot be cancelled.",
+        "finished": "This run can no longer be cancelled: it has already finished.",
+        "failed": "The cancel request failed. Nothing was retried; try again if the run is still active."
+      }
+    },
+    "split": {
+      "title": "Split algorithm",
+      "unfamiliar": "Studio does not know this algorithm; it is shown as KPubData Builder recorded it.",
+      "legacy": "Not recorded in the manifest. KPubData Builder reads an older manifest's ratio split as shuffle-v1.",
+      "key": "Key split — membership follows the key, not an algorithm.",
+      "cannotTell": "Cannot tell: the manifest or the BuildSpec could not be read.",
+      "differs": "The previous run {{run}} split with {{algorithm}}. The split methods differ, so train/test membership may differ even with the same seed."
     }
   },
   "specDiff": {
@@ -2926,5 +2947,11 @@
       "credentialLocal": "Studio found a value that looks like a credential in the spec and sent nothing",
       "demoConflict": "the document is at revision {{current}}"
     }
+  },
+  "runHistory": {
+    "scopeMore": "The latest {{count}} runs (asked for up to {{limit}}). Older runs may exist.",
+    "scopeAll": "All {{count}} accessible runs are shown.",
+    "loadMore": "Show more (up to {{limit}})",
+    "moreFailed": "Could not load up to {{limit}} runs. KPubData Builder may refuse a very large limit — the list above is unchanged."
   }
 }

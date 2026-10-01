@@ -167,6 +167,10 @@ export const buildManifestResponseSchema = z.object({
   row_counts: z.record(z.string(), z.number().int()).optional(),
   inputs_fingerprint: z.string().nullable().optional(),
   created_by: z.string().nullable().optional(),
+  // What made the Gold ratio splits (builder#871, contract 1.70.0): `hash-sort-v2`, or a
+  // newer value this Studio does not know yet. An open string, shown as sent. Absent when
+  // no ratio split was declared, and in older manifests whose ratio splits are `shuffle-v1`.
+  split_algorithm: z.string().optional(),
 }).loose();
 
 /**

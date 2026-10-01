@@ -220,6 +220,8 @@ export interface BuildManifest {
   schema_summaries?: Record<string, ManifestSchemaSummary>;
   /** list of detailed provenance per source (fetch time/params/record count/checksum). undefined if not provided */
   provenance?: ManifestSourceProvenance[];
+  /** what made the Gold ratio splits (builder#871). Absent: no ratio split, or an older manifest's `shuffle-v1` */
+  split_algorithm?: string;
   /** preserve manifest fields that Builder provides additively without loss. */
 }
 

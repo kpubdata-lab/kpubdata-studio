@@ -27,6 +27,7 @@ import { WarehouseTableView } from "@/features/datasets/components/WarehouseTabl
 import { RunLicence } from "@/features/licence/LicenceSummary";
 import { useRunLicence } from "@/features/licence/useRunLicence";
 import { RUN_LOOKUP_API_VERSION, useRequestedRun } from "@/features/datasets/useRequestedRun";
+import { RUN_HISTORY_LIMIT, useRunHistoryPaging } from "@/features/datasets/runHistory";
 import { datasetTablesOf } from "@/features/datasets/warehouseTables";
 import {
   DATASET_STAGES,
@@ -128,7 +129,7 @@ function RunDetailView({ note }: { note: string }) {
   useEffect(() => {
     const controller = new AbortController();
     setCore({ status: "loading" });
-    Promise.all([getDataset(datasetId, controller.signal), listDatasetRuns(datasetId, 50, controller.signal)])
+    Promise.all([getDataset(datasetId, controller.signal), listDatasetRuns(datasetId, RUN_HISTORY_LIMIT, controller.signal)])
       .then(([dataset, runs]) => setCore({ status: "loaded", dataset, runs: runs.runs }))
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
@@ -137,15 +138,18 @@ function RunDetailView({ note }: { note: string }) {
     return () => controller.abort();
   }, [datasetId]);
 
+  // "Show more" replaces the first page with a larger one (#653); everything below reads it.
+  const history = useRunHistoryPaging(datasetId, core.runs);
+  const runs = history.runs;
   const requestedRun = searchParams.get("run");
   const selectedRunId = requestedRun || core.dataset?.latest_run_id || "";
   // Not being in the newest page does not make a run invalid (#418): Builder is asked
   // directly, and says whether it is this dataset's and the caller's.
-  const requested = useRequestedRun(datasetId, requestedRun, core.runs);
+  const requested = useRequestedRun(datasetId, requestedRun, runs);
   const invalidRun = requested.status === "not_found" || requested.status === "forbidden" || requested.status === "error" || requested.status === "unsupported";
   const runPending = requested.status === "loading";
   const runOptions =
-    requested.status === "available" && !requested.inPage && core.runs ? [...core.runs, requested.run] : core.runs;
+    requested.status === "available" && !requested.inPage && runs ? [...runs, requested.run] : runs;
 
   useEffect(() => {
     if (!selectedRunId || invalidRun || runPending) {
@@ -361,7 +365,7 @@ function RunDetailView({ note }: { note: string }) {
         {selectedTab === "schema" ? <SchemaTab state={stageDetailState} drift={selectedDrift} /> : null}
         {selectedTab === "preview" ? <PreviewTab state={stageDetailState} qualityState={qualityState} qualityStatus={validation} qualityResults={selectedQualityResults} onOpenQuality={() => updateContext({ tab: "quality" })} /> : null}
         {selectedTab === "quality" ? <QualityTab state={qualityState} status={validation} results={selectedQualityResults} drift={selectedDrift} datasetId={datasetId} runId={selectedRunId} source={selectedSource} stage={selectedStage} /> : null}
-        {selectedTab === "builds" ? <BuildsTab runs={core.runs} selectedRunId={selectedRunId} /> : null}
+        {selectedTab === "builds" ? <BuildsTab runs={runs ?? core.runs} selectedRunId={selectedRunId} paging={history} /> : null}
       </section>
     </main>
   );
