@@ -208,20 +208,20 @@ describe("Add Data: YAML apply → form edit → submitted payload (#601)", () =
 });
 
 describe("Add Data: credentials inside source extra never leave memory (#601)", () => {
-  const SECRET = "super-secret-value-601-draft";
+  const MARKER = "marker-value-601-draft";
   /** Every source kind with a credential in its unmodelled keys, beside a plain one. */
-  function specWithSecretExtra(): BuildSpec {
+  function specWithMarkedExtra(): BuildSpec {
     const spec = fromYamlText(YAML);
     spec.sources = spec.sources.map((source) => ({
       ...source,
-      extra: { ...source.extra, auth: { serviceKey: SECRET }, region: "kr" },
+      extra: { ...source.extra, auth: { serviceKey: MARKER }, region: "kr" },
     }));
     return spec;
   }
 
   it("draft save redacts source extra, and the restored draft fails closed", () => {
-    saveAddDataDraft(applyBuildSpecToDraft(INITIAL_DRAFT, specWithSecretExtra()));
-    expect(JSON.stringify(localStorage)).not.toContain(SECRET);
+    saveAddDataDraft(applyBuildSpecToDraft(INITIAL_DRAFT, specWithMarkedExtra()));
+    expect(JSON.stringify(localStorage)).not.toContain(MARKER);
 
     const restored = loadAddDataDraft();
     expect(restored).not.toBeNull();
@@ -235,13 +235,13 @@ describe("Add Data: credentials inside source extra never leave memory (#601)", 
   });
 
   it("the Review preview redacts source extra but keeps the submitted spec intact", () => {
-    const spec = specWithSecretExtra();
+    const spec = specWithMarkedExtra();
     const shown = redactBuildSpecForDisplay(spec);
-    expect(JSON.stringify(shown)).not.toContain(SECRET);
+    expect(JSON.stringify(shown)).not.toContain(MARKER);
     for (const source of shown.sources) {
       expect(source.extra).toMatchObject({ auth: { serviceKey: PARAMS_REDACTED_SENTINEL }, region: "kr" });
     }
-    expect(spec.sources[0].extra).toMatchObject({ auth: { serviceKey: SECRET } });
+    expect(spec.sources[0].extra).toMatchObject({ auth: { serviceKey: MARKER } });
   });
 });
 
