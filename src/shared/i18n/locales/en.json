@@ -10,6 +10,8 @@
     "openAssistant": "Open Ask KPubData",
     "breadcrumb": "Current location",
     "mainNav": "Main menu",
+    "skipToContent": "Skip to main content",
+    "documentTitle": "{{page}} · KPubData Studio",
     "askKpubdata": "Ask KPubData",
     "themeMode": {
       "system": "System",

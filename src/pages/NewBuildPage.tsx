@@ -271,7 +271,7 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("newBuild.page.titleEdit", { title: baseSpec?.title || buildId })}
         description={t("newBuild.page.descEdit")}
@@ -386,7 +386,7 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
           </div>
         </>
       )}
-    </main>
+    </div>
   );
 }
 

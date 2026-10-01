@@ -281,3 +281,30 @@ body {
     display: none !important;
   }
 }
+
+/*
+ * Reduced motion (#664). A person who asked the OS for less motion gets none: the
+ * skeleton and status-dot pulses, the button and assistant spinners, and the sidebar's
+ * slide all stop. The rule is unlayered and `!important`, so it outranks Tailwind's
+ * `animate-*` and `transition*` utilities without touching them. No information is lost:
+ * a spinner sits next to its loading text and a status dot next to its status label.
+ * Nothing in the app waits for an `animationend` or `transitionend` event.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Route focus (#662). After a navigation the page heading (or `<main>`) takes focus so a
+ * screen reader announces the page; it is not a control, so it draws no focus ring.
+ */
+h1[tabindex="-1"]:focus,
+main[tabindex="-1"]:focus {
+  outline: none;
+}
