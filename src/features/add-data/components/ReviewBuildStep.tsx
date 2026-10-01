@@ -117,7 +117,7 @@ export function ReviewBuildStep({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold tracking-tight">{t("addData.review.title")}</h3>
+      <h3 className="text-xl font-semibold tracking-tight focus:outline-none" data-step-heading tabIndex={-1}>{t("addData.review.title")}</h3>
 
       <div className="grid gap-3 sm:grid-cols-4">
         <Card className="p-4">

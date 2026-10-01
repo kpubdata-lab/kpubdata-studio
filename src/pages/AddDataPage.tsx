@@ -295,6 +295,17 @@ export function AddDataPage() {
     });
   }
 
+  // Move focus to the new step's heading whenever the step changes — by Next, Back or the
+  // Stepper (#669) — so a screen reader announces where the person now is instead of
+  // staying on the button that was pressed. The first render keeps the browser's focus.
+  const stepRegionRef = useRef<HTMLDivElement>(null);
+  const focusedStepRef = useRef(step);
+  useEffect(() => {
+    if (focusedStepRef.current === step) return;
+    focusedStepRef.current = step;
+    stepRegionRef.current?.querySelector<HTMLElement>("[data-step-heading]")?.focus();
+  }, [step]);
+
   function goNext() {
     if (step === 0 && (!draft.sourceKind || buildSpecFromDraft(draft).error)) return;
     setStep((s) => Math.min(s + 1, STEP_IDS.length - 1));
@@ -644,6 +655,7 @@ export function AddDataPage() {
       </Card>
 
       <Card>
+        <div ref={stepRegionRef}>
         {step === 0 ? <SourceStep selected={draft.sourceKind} onSelect={selectSource} /> : null}
 
         {step === 0 && draft.sourceKind ? (
@@ -704,6 +716,7 @@ export function AddDataPage() {
             onCancel={job.cancel}
           />
         ) : null}
+        </div>
 
         <div className="sticky bottom-0 z-10 -mx-6 -mb-6 mt-8 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-6 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:dark:bg-transparent">
           <Button variant="ghost" onClick={goBack} disabled={step === 0}>{t("addData.nav.back")}</Button>

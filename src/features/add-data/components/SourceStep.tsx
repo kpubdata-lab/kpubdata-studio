@@ -30,7 +30,7 @@ export function SourceStep({ selected, onSelect }: SourceStepProps) {
   const { t } = useTranslation();
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold tracking-tight">{t("addData.source.title")}</h3>
+      <h3 className="text-xl font-semibold tracking-tight focus:outline-none" data-step-heading tabIndex={-1}>{t("addData.source.title")}</h3>
       <p className="text-sm text-muted-foreground">
         {t("addData.source.desc")}
       </p>

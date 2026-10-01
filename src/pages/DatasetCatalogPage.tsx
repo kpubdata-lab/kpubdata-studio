@@ -137,6 +137,10 @@ export function DatasetCatalogPage() {
           <SkeletonTable rows={5} className="w-full" />
         ) : state.status === "error" ? (
           <ErrorState title={t("catalog.errors.listTitle")} message={state.error} onRetry={load} />
+        ) : rows.length === 0 ? (
+          // Nothing built yet is not "nothing matches": no filter can help, so say so and
+          // point at Add Data from inside the card (#666).
+          <EmptyState actionHref="/add" actionLabel={t("catalog.empty.action")} description={t("catalog.empty.desc")} title={t("catalog.empty.title")} />
         ) : visibleRows.length === 0 ? (
           <EmptyState title={t("catalog.noMatch.title")} description={t("catalog.noMatch.desc")} />
         ) : (

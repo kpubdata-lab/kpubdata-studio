@@ -2,7 +2,9 @@
  * Catalog sources as a comparison table (#529): one row per source, so Provider, Access
  * and quota can be read down a column instead of across cards.
  *
- * Every cell comes from a Builder contract field. `CatalogDataset` carries no institution
+ * Every cell comes from a Builder contract field. Format and supported operations are
+ * `representation` and `operations` (#670), so a person sees before adding a source whether
+ * it is an API call or a file and whether rows can be listed at all. `CatalogDataset` carries no institution
  * name, licence (KOGL) or maturity grade, so none is shown: maturity reads as unknown,
  * and no institution or licence is guessed (kpubdata#617, #644 will add them). Whatever
  * the contract leaves out reads as unknown (`—`), never as "no" or 0.
@@ -13,6 +15,7 @@ import { Link } from "react-router-dom";
 
 import { providerLabel } from "@/shared/lib/providerLabels";
 import { Button, cn } from "@/shared/ui";
+import { NormalStatus, UnknownStatus } from "@/shared/ui/StatusState";
 
 import { applicationState, sourceKey, type DiscoverEntry } from "./model";
 
@@ -70,6 +73,43 @@ function AccessCell({ entry }: { entry: DiscoverEntry }) {
   );
 }
 
+/** `other` is a value Builder has not mapped: unknown, never a format of its own. */
+function RepresentationCell({ entry }: { entry: DiscoverEntry }) {
+  const { t } = useTranslation();
+  const { representation } = entry.dataset;
+  if (representation === "other") {
+    return <UnknownStatus className="whitespace-nowrap">{t("discover.representation.other")}</UnknownStatus>;
+  }
+  return (
+    <NormalStatus className="whitespace-nowrap text-foreground">
+      <span title={representation}>{t(`discover.representation.${representation}`)}</span>
+    </NormalStatus>
+  );
+}
+
+/**
+ * An empty list means Builder has no operation metadata for the source (the contract sends
+ * an empty array when there is none), and an unmapped operation is left out — so empty reads as "no
+ * information", never as "nothing can be done".
+ */
+function OperationsCell({ entry }: { entry: DiscoverEntry }) {
+  const { t } = useTranslation();
+  const { operations } = entry.dataset;
+  if (operations.length === 0) {
+    return <UnknownStatus className="whitespace-nowrap">{t("discover.operations.none")}</UnknownStatus>;
+  }
+  return (
+    // A known value needs no action: plain text (StatusState `normal`), one operation a line.
+    <ul className="flex flex-col gap-0.5 text-foreground" data-status="normal">
+      {operations.map((operation) => (
+        <li className="whitespace-nowrap" key={operation} title={operation}>
+          {t(`discover.operations.${operation}`)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function CreatedTablesCell({ entry, created }: { entry: DiscoverEntry; created: CreatedTables }) {
   const { t } = useTranslation();
   if (created.status === "loading") return <span className="text-muted-foreground">{t("discover.created.loading")}</span>;
@@ -111,12 +151,14 @@ export function CatalogTable({
       role="region"
       tabIndex={0}
     >
-      <table className="w-full min-w-[880px] border-collapse text-left text-[13px]">
+      <table className="w-full min-w-[1080px] border-collapse text-left text-[13px]">
         <caption className="sr-only">{caption}</caption>
         <thead className="border-b border-border bg-muted/50">
           <tr>
             <Th>{t("discover.columns.source")}</Th>
             <Th>{t("discover.columns.provider")}</Th>
+            <Th>{t("discover.columns.representation")}</Th>
+            <Th>{t("discover.columns.operations")}</Th>
             <Th>{t("discover.columns.access")}</Th>
             <Th>{t("discover.columns.maturity")}</Th>
             <Th>{t("discover.columns.createdTables")}</Th>
@@ -136,6 +178,12 @@ export function CatalogTable({
               <td className="px-3 py-2">
                 <p className="text-foreground">{providerLabel(entry.provider)}</p>
                 <p className="font-mono text-xs text-muted-foreground">{entry.provider}</p>
+              </td>
+              <td className="px-3 py-2">
+                <RepresentationCell entry={entry} />
+              </td>
+              <td className="px-3 py-2">
+                <OperationsCell entry={entry} />
               </td>
               <td className="px-3 py-2">
                 <AccessCell entry={entry} />

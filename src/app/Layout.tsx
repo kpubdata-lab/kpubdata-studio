@@ -17,7 +17,10 @@ import { AccountMenu } from "./AccountMenu";
 import { crumbsFor } from "./breadcrumb";
 import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
-import { BrandLogo } from "@/shared/ui";
+import { SignupStatusNotice } from "@/features/onboarding/SignupStatusNotice";
+import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { useSignupStatusStore } from "@/shared/lib/signupStatus";
+import { BrandLogo, DemoBadge } from "@/shared/ui";
 
 
 interface NavItem {
@@ -273,6 +276,8 @@ export function Layout() {
   const { t } = useTranslation();
   const isAdmin = useAdminStore((state) => state.status === "admin");
   const navGroups = buildNavGroups(t, isAdmin);
+  const signupBlock = useSignupStatusStore((state) => state.block);
+  const demoMode = !isRealBuilderEnabled();
   const closeMobileSidebar = useUIStore((state) => state.closeMobileSidebar);
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
   const isDesktopSidebarCollapsed = useUIStore((state) => state.isDesktopSidebarCollapsed);
@@ -478,6 +483,16 @@ export function Layout() {
                   overlap it (390px width, UI audit #6-A). One AI entry point — Ask
                   KPubData — next to a search that is navigation only (#523). */}
               <div className="flex flex-1 items-center justify-end gap-2">
+                {/* Mock data on every screen, not only at login (#672): Providers and Admin
+                    otherwise read as a real deployment's state. shrink-0 keeps the badge whole
+                    and lets the search shrink around it at phone width. */}
+                {demoMode ? (
+                  <span className="inline-flex shrink-0" data-testid="demo-indicator" title={t("layout.demoModeDesc")}>
+                    <DemoBadge />
+                    <span className="sr-only">{t("layout.demoModeDesc")}</span>
+                  </span>
+                ) : null}
+
                 <CommandSearch destinations={searchDestinations} />
 
                 <button
@@ -499,7 +514,9 @@ export function Layout() {
 
           <VersionMismatchBanner />
 
-          <Outlet />
+          {/* A sign-up the ledger holds back answers every request with 403 (#658); one
+              explanation replaces the page rather than each page's generic error. */}
+          {signupBlock ? <SignupStatusNotice block={signupBlock} /> : <Outlet />}
         </div>
       </div>
 

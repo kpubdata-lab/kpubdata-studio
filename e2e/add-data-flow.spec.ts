@@ -62,3 +62,38 @@ test("Review 단계는 진입 전 단계를 거쳐야 한다(임의 진입 방�
 
   await expectNoPageErrors(errors);
 });
+
+test("키보드만으로 단계를 오갈 때 포커스가 새 단계 제목으로 옮겨간다 (#669)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  // Discover's start action preselects the source, so Configure is ready for Next.
+  await page.goto("/add?provider=datago&dataset=apt_trade");
+  const sourceHeading = page.getByRole("heading", { name: t("addData.source.title") });
+  await expect(sourceHeading).toBeVisible();
+  await expect(page.getByText(/ID: datago-apt-trade/)).toBeVisible();
+  // First load leaves focus where the browser put it.
+  await expect(sourceHeading).not.toBeFocused();
+
+  const next = page.getByRole("button", { name: t("addData.nav.next"), exact: true });
+  await next.focus();
+  await page.keyboard.press("Enter");
+  const previewHeading = page.getByRole("heading", { name: t("addData.preview.title") });
+  await expect(previewHeading).toBeFocused();
+
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: t("addData.review.title") })).toBeFocused();
+
+  await page.getByRole("button", { name: t("addData.nav.back"), exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(previewHeading).toBeFocused();
+
+  // Going back through the Stepper moves focus the same way.
+  const stepper = page.getByRole("list", { name: t("addData.stepper.label") });
+  await stepper.getByRole("button", { name: new RegExp(t("addData.stepper.configure")) }).focus();
+  await page.keyboard.press("Enter");
+  await expect(sourceHeading).toBeFocused();
+
+  await expectNoPageErrors(errors);
+});

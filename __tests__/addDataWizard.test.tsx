@@ -719,3 +719,30 @@ describe("Add Data Workbench — Review == submission, 실제 run_id 사용 (rea
     expect(capturedSpec).toEqual(reviewedSpec);
   });
 });
+
+describe("Add Data — focus follows the step (#669)", () => {
+  it("moves focus to the new step's heading on Next, Back and the Stepper, but not on first load", async () => {
+    renderWizardStrict();
+    const sourceHeading = screen.getByRole("heading", { name: "데이터 선택" });
+    expect(sourceHeading).not.toHaveFocus();
+
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
+    fireEvent.change(await screen.findByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
+    await screen.findByText(/ID: datago-apt-trade/);
+
+    next();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Preview · 검증" })).toHaveFocus());
+
+    next();
+    await waitFor(() => expect(screen.getByRole("heading", { name: "검토 · 테이블 만들기" })).toHaveFocus());
+
+    fireEvent.click(screen.getByRole("button", { name: "이전" }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Preview · 검증" })).toHaveFocus());
+
+    const stepper = screen.getByRole("list", { name: "테이블 만들기 단계" });
+    fireEvent.click(within(stepper).getByRole("button", { name: /구성/ }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: "데이터 선택" })).toHaveFocus());
+  });
+});
