@@ -2384,6 +2384,23 @@
       "needsBuilder": "The demo has no KPubData Builder, so it does not run queries, aggregates, exports or saved analyses. Connect a Builder to run them.",
       "tableNotFound": "The demo has no table named {{name}}.",
       "snapshotNotFound": "The demo has no committed snapshot of {{name}} with that id."
+    },
+    "blocked": {
+      "redistribution_forbidden": {
+        "title": "This data may not be redistributed, so its results cannot be shown",
+        "reason": "The source's terms forbid redistribution, so this data does not leave Builder through a query, preview or export. The query is not wrong; running it again gives the same answer.",
+        "next": "Check the source's terms of use, or use other data that may be redistributed."
+      },
+      "declared_pii_withheld": {
+        "title": "Declared personal-data columns cannot be shown unmasked",
+        "reason": "It holds columns the source declares as personal data, unmasked, so Builder did not let it out.",
+        "next": "Read the Gold stage instead: Gold serves declared personal data masked."
+      },
+      "pii_declaration_unavailable": {
+        "title": "The personal-data declaration could not be checked, so this was blocked to be safe",
+        "reason": "Builder could not read the source's personal-data declaration, so it does not know which columns are personal and refused the Silver or Bronze read.",
+        "next": "Try again later, or read the Gold stage, which is not affected."
+      }
     }
   },
   "admin": {
@@ -2522,7 +2539,15 @@
     "shown": "{{count}} rows shown",
     "totalExact": "{{count}} rows in all (exact)",
     "totalEstimated": "about {{count}} rows in all (estimated)",
-    "sample": "{{count}} rows · sample"
+    "sample": "{{count}} rows · sample",
+    "masked": {
+      "badge": "masked",
+      "explanation": "The source declares this column as personal data, so Builder masked it: text values arrive as [masked], any other type as empty (null).",
+      "note": "Personal-data columns masked: {{columns}}",
+      "value": "masked",
+      "cellToken": "Builder masked this value: it is declared personal data.",
+      "cellNull": "A masked column. A non-text value becomes empty (null) when masked, so it cannot be told apart from a value that was empty to begin with."
+    }
   },
   "charts": {
     "title": "Chart",
@@ -2581,7 +2606,12 @@
       "license": "The source's licence forbids changes (e.g. KOGL type 3 or 4), so it cannot be exported. Nothing was kept.",
       "pii": "Refused: values the PII policy does not let out: {{findings}}. Nothing was kept.",
       "limit": "Refused: over the row or size limit. Results are not cut, so nothing was kept — narrow the query or raise the limit.",
-      "other": "Export failed: {{message}}"
+      "other": "Export failed: {{message}}",
+      "redistribution": "The source's terms forbid redistribution, so it cannot be exported. Nothing was kept — check the source's terms, or use data that may be redistributed.",
+      "declaredPii": "Refused: it holds declared personal-data columns ({{columns}}) unmasked. Nothing was kept — leave those columns out or read Gold.",
+      "declaredPiiUnnamed": "Refused: it holds declared personal-data columns unmasked. Nothing was kept — leave those columns out or read Gold.",
+      "piiDeclarationUnavailable": "Refused to be safe: the personal-data declaration of {{dataset}} could not be checked. Nothing was kept — try again later.",
+      "piiDeclarationUnavailableUnnamed": "Refused to be safe: the source's personal-data declaration could not be checked. Nothing was kept — try again later."
     }
   },
   "statusState": {

@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
 import { SpecDiff } from "@/features/build-spec/components/SpecDiff";
+import { MaskedCell, MaskedColumnBadge, maskedSet } from "@/features/data-table/masked";
 import { useAssistConfig } from "@/features/assistant/config";
 import { Button, Card, Disclosure, TermHelp, Textarea } from "@/shared/ui";
 import { describeAction } from "./actions";
@@ -175,6 +176,10 @@ const QUERY_ERROR_LABEL: Record<string, string> = {
   query_busy: "assistant.queryError.query_busy",
   query_timeout: "assistant.queryError.query_timeout",
   query_execution_failed: "assistant.queryError.query_execution_failed",
+  // Policy blocks, not failures (#640): the same words as the SQL workspace.
+  redistribution_forbidden: "sql.blocked.redistribution_forbidden.title",
+  declared_pii_withheld: "sql.blocked.declared_pii_withheld.title",
+  pii_declaration_unavailable: "sql.blocked.pii_declaration_unavailable.title",
   network: "assistant.queryError.network",
   mock_mode: "assistant.queryError.mock_mode",
   unknown: "assistant.queryError.unknown",
@@ -191,7 +196,7 @@ export function formatQueryValue(value: unknown, encoding?: WireEncoding): strin
   return cellValue(encoding, value);
 }
 
-function QueryResultView({ query }: { query: AssistantQueryState }) {
+export function QueryResultView({ query }: { query: AssistantQueryState }) {
   const { t } = useTranslation();
   if (query.status === "idle") return null;
   if (query.status === "blocked") {
@@ -203,12 +208,14 @@ function QueryResultView({ query }: { query: AssistantQueryState }) {
   if (query.status === "error") {
     return (
       <p role="alert" className="mt-2 text-xs text-status-failure">
-        {QUERY_ERROR_LABEL[query.code] ?? query.message} ({query.message})
+        {QUERY_ERROR_LABEL[query.code] ? t(QUERY_ERROR_LABEL[query.code]) : query.message} ({query.message})
       </p>
     );
   }
   const { columns, rows, truncated, execution_ms } = query.result;
   const encodings = encodingsOf(query.result.column_meta);
+  // Declared PII Builder masked on a Silver query (builder#900, #641).
+  const masked = maskedSet(query.result.masked_columns);
   return (
     <div className="mt-2 space-y-1.5">
       <div className="overflow-x-auto rounded-lg border border-border">
@@ -217,7 +224,8 @@ function QueryResultView({ query }: { query: AssistantQueryState }) {
             <tr>
               {columns.map((column) => (
                 <th key={column} className="px-2.5 py-1.5 font-semibold">
-                  {column}
+                  <span className="block">{column}</span>
+                  {masked.has(column) ? <MaskedColumnBadge /> : null}
                 </th>
               ))}
             </tr>
@@ -227,7 +235,11 @@ function QueryResultView({ query }: { query: AssistantQueryState }) {
               <tr key={index} className="border-t border-border">
                 {columns.map((column) => (
                   <td key={column} className="px-2.5 py-1.5">
-                    {formatQueryValue(row[column], encodings.get(column))}
+                    {masked.has(column) ? (
+                      <MaskedCell fallback={formatQueryValue(row[column], encodings.get(column))} value={row[column]} />
+                    ) : (
+                      formatQueryValue(row[column], encodings.get(column))
+                    )}
                   </td>
                 ))}
               </tr>
