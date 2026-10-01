@@ -132,3 +132,65 @@ test("390px 에서 상태 배지는 한 줄이고, 테이블 이름·현재 스�
   expect(overflow, "/tables horizontal overflow at 390px").toBeLessThanOrEqual(2);
   await expectNoPageErrors(errors);
 });
+
+test("alias 없는 source 의 테이블은 목록에서 열어도 현재 스냅샷과 행이 보인다 (#602)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  // A public-API source without an alias is keyed `<provider>.<dataset>`, so the table's
+  // name has more than one dot after the dataset id.
+  const table = {
+    table_id: "t1",
+    logical_name: "air_quality.datago.air_station",
+    current_snapshot_id: "snap_3",
+    revision: 3,
+    current_snapshot: { snapshot_id: "snap_3", row_count: 4821, committed_at: SNAPSHOT.committed_at, coverage: null },
+    dataset_id: "air_quality",
+  };
+  const dataset = { ...DATASET, sources: [{ provider: "datago", dataset: "air_station", alias: "" }], run_count: 1 };
+  await page.route("**/config.js", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `window.__KPUBDATA_CONFIG__ = ${JSON.stringify({ useRealBuilder: "true", builderApiUrl: API })};`,
+    }),
+  );
+  await page.route((url) => url.origin === API, async (route) => {
+    const url = new URL(route.request().url());
+    const json = (body: unknown) => route.fulfill({ contentType: "application/json", body: JSON.stringify(body) });
+    if (url.pathname === "/datasets") return json({ datasets: [dataset] });
+    if (url.pathname === "/datasets/air_quality") return json(dataset);
+    if (url.pathname === "/datasets/air_quality/runs") {
+      return json({ dataset_id: "air_quality", runs: [{ run_id: "run-1", status: "ok", started_at: null, finished_at: null, spec_digest: null, created_by: null }] });
+    }
+    if (url.pathname === "/warehouse/tables") return json({ tables: [table] });
+    if (url.pathname === `/warehouse/tables/${table.logical_name}`) return json({ ...table, snapshots: [SNAPSHOT] });
+    if (url.pathname === "/warehouse/rows") {
+      return json({
+        snapshot: { table_id: "t1", logical_name: table.logical_name, snapshot_id: "snap_3", revision: 3 },
+        columns: ["station"],
+        column_meta: [{ name: "station", logical_type: "string", wire_encoding: "string" }],
+        rows: [{ station: "강남구" }],
+        order: [],
+        page: { offset: 0, page_size: 50, returned: 1, has_more: false, next_offset: null },
+        count: { status: "exact", value: 4821 },
+        execution_ms: 1,
+        startup_ms: 0,
+        engine_execution_ms: 1,
+      });
+    }
+    // Anything else (version, admin probe, quality) behaves as a Builder that is not there.
+    return route.abort("connectionrefused");
+  });
+
+  await page.goto("/tables");
+  const row = page.getByRole("link", { name: t("catalog.openDetail").replace("{{title}}", DATASET.title) });
+  await expect(row).toContainText("snap_3", { timeout: 10_000 });
+  await row.click();
+  await expect(page).toHaveURL(/\/tables\/air_quality$/);
+
+  await expect(page.getByRole("tabpanel")).toContainText("snap_3", { timeout: 10_000 });
+  await page.getByRole("tab", { name: t("tableDetail.tabs.preview") }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("강남구");
+
+  await expectNoPageErrors(errors);
+});

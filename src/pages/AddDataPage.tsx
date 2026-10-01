@@ -28,7 +28,7 @@ import { ReviewBuildStep } from "@/features/add-data/components/ReviewBuildStep"
 import { SourceStep } from "@/features/add-data/components/SourceStep";
 import { getSavedSpec } from "@/features/workspace/savedSpecs";
 import { clearAddDataDraft, hasAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
-import { discardFormDraft, hasFormDraft, takeFormDraftSpec, type FormDraftResult } from "@/features/add-data/formDraft";
+import { discardFormDraft, hasFormDraft, subscribeFormDraft, takeFormDraftSpec, type FormDraftResult } from "@/features/add-data/formDraft";
 import { checkRequiredParams } from "@/features/add-data/requiredParams";
 import { findDataset, identityFromCatalog, identityFromFilename, identityFromUrl } from "@/features/add-data/identity";
 import {
@@ -104,6 +104,8 @@ export function AddDataPage() {
   const [formDraftError, setFormDraftError] = useState<string | null>(null);
   // A draft that was chosen but could not be read (not JSON, an old shape) — it was removed.
   const [corruptDraft, setCorruptDraft] = useState<"saved" | "ask" | null>(null);
+  // Opening a draft over what was being typed keeps that input as this flow's saved draft (#604).
+  const [inputKept, setInputKept] = useState(false);
   const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
@@ -120,6 +122,14 @@ export function AddDataPage() {
   const updateDraft = useCallback((patch: Partial<AddDataDraft>) => {
     setDraft((current) => ({ ...current, ...patch }));
   }, []);
+
+  // Ask KPubData can approve a draft while this page is open: it saves the draft and
+  // navigates to `/add`, which does not mount the page again. Offer the draft as soon as it
+  // is written, and drop the offer when it is removed elsewhere (#604).
+  useEffect(
+    () => subscribeFormDraft(() => setWaitingDrafts((current) => ({ ...current, ask: hasFormDraft() }))),
+    [],
+  );
 
   // Source/config changed after preview → treat as stale (#250 §2, §6).
   const currentSignature = draftSignature(draft);
@@ -470,10 +480,25 @@ export function AddDataPage() {
       setCorruptDraft("saved");
       return;
     }
-    setWaitingDrafts({ saved: false, ask: false });
     if (waitingDrafts.ask) discardFormDraft();
+    const kept = keepCurrentInput();
+    setWaitingDrafts({ saved: kept, ask: false });
     setCorruptDraft(null);
     setDraft(saved);
+  }
+
+  /**
+   * Before a draft replaces the form, keep what was typed as this flow's saved draft, so
+   * opening a draft never throws input away; the banner then offers it back (#604).
+   * Nothing is kept when the form is still empty.
+   *
+   * @returns Whether the input was kept.
+   */
+  function keepCurrentInput(): boolean {
+    const hasInput = JSON.stringify(draft) !== JSON.stringify(INITIAL_DRAFT);
+    if (hasInput) saveAddDataDraft(draft);
+    setInputKept(hasInput);
+    return hasInput;
   }
 
   /**
@@ -489,9 +514,12 @@ export function AddDataPage() {
       setCorruptDraft("ask");
       return;
     }
-    setWaitingDrafts({ saved: false, ask: false });
     if (waitingDrafts.saved) clearAddDataDraft();
+    const kept = keepCurrentInput();
+    // A draft that did not become a spec stays in storage, but it is open now: not offered again.
+    setWaitingDrafts({ saved: kept, ask: false });
     setCorruptDraft(null);
+    setFormDraftError(null);
     openFormDraft(result);
   }
 
@@ -515,6 +543,7 @@ export function AddDataPage() {
 
   function discardDraft() {
     setCorruptDraft(null);
+    setInputKept(false);
     clearAddDataDraft();
     discardFormDraft();
     setWaitingDrafts({ saved: false, ask: false });
@@ -583,6 +612,12 @@ export function AddDataPage() {
           <p className="text-sm text-foreground">
             {corruptDraft === "saved" ? t("addData.draft.savedCorrupt") : t("addData.draft.askCorrupt")}
           </p>
+        </div>
+      ) : null}
+
+      {inputKept ? (
+        <div role="status" className="rounded-xl border border-border bg-muted/50 p-4">
+          <p className="text-sm text-foreground">{t("addData.draft.inputKept")}</p>
         </div>
       ) : null}
 

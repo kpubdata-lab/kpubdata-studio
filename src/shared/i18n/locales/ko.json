@@ -1129,7 +1129,8 @@
       "reenterParams": "Provider·소스 데이터셋·테이블 ID·제목은 채웠습니다. 요청 파라미터를 다시 입력하세요. 초안은 테이블을 만들거나 삭제할 때까지 남아 있습니다.",
       "discardKept": "초안 삭제",
       "savedCorrupt": "저장한 초안이 손상되어 열 수 없어 삭제했습니다.",
-      "askCorrupt": "Ask KPubData 초안이 손상되어 열 수 없어 삭제했습니다."
+      "askCorrupt": "Ask KPubData 초안이 손상되어 열 수 없어 삭제했습니다.",
+      "inputKept": "입력하던 내용은 저장한 초안으로 보관했습니다. 위 안내에서 열면 다시 이어서 편집할 수 있습니다."
     },
     "nav": {
       "back": "이전",
@@ -2366,6 +2367,11 @@
     "colOwner": "소유자 (해시)",
     "colStarted": "시작",
     "colFinished": "종료",
+    "cardForbidden": "KPubData Builder 가 이 요청을 거부했습니다 (403). 관리자만 볼 수 있습니다.",
+    "policyUnsupported": "이 KPubData Builder 에는 GET /admin/config 가 없습니다 (404). 관리 API 이전 버전이거나 Studio 가 잘못된 경로를 가리킵니다. 정책이 비어 있다는 뜻이 아닙니다.",
+    "runsUnsupported": "이 KPubData Builder 에는 GET /admin/runs 가 없습니다 (404). 관리 API 이전 버전이거나 Studio 가 잘못된 경로를 가리킵니다. 실행이 없다는 뜻이 아닙니다.",
+    "runsEmpty": "KPubData Builder 에 기록된 실행이 아직 없습니다.",
+    "loadFailed": "KPubData Builder 가 응답하지 못했습니다: {{message}}",
     "users": {
       "title": "사용자 · 가입 승인",
       "note": "OIDC 로 로그인한 모든 사용자, KPubData Builder 의 가입 원장에서 읽습니다. 사용자는 되돌릴 수 없는 해시와 표시 이름뿐 — 자격 증명이나 토큰은 저장되지도 표시되지도 않습니다.",
