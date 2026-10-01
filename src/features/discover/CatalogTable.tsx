@@ -24,7 +24,7 @@ export type CreatedTables =
   | { status: "error" }
   | { status: "loaded"; index: Map<string, string[]>; complete: boolean };
 
-const badge = "inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-medium";
+const badge = "inline-flex w-fit items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium";
 const WARNING = "bg-status-warning-subtle text-status-warning";
 const UNKNOWN = "bg-status-unknown-subtle text-status-unknown";
 const NEUTRAL = "bg-muted text-muted-foreground";
@@ -204,7 +204,14 @@ export function CatalogTable({
                 )}
               </td>
               <td className="px-3 py-2 text-right">
-                <Button aria-label={`${t("discover.startWith")} — ${entry.dataset.title}`} onClick={() => onStart(entry)} size="sm" variant="secondary">
+                {/* A squeezed column must not break the label one syllable a line (#698). */}
+                <Button
+                  aria-label={`${t("discover.startWith")} — ${entry.dataset.title}`}
+                  className="whitespace-nowrap"
+                  onClick={() => onStart(entry)}
+                  size="sm"
+                  variant="secondary"
+                >
                   {t("discover.start")}
                 </Button>
               </td>

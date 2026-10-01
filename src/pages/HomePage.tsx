@@ -83,7 +83,7 @@ export function HomePage() {
       />
       {warehouseKnown && !hasWarehouse ? <p className="text-xs text-muted-foreground">{t("home.noWarehouse")}</p> : null}
 
-      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="min-w-0 space-y-5">
           <AttentionTables datasets={datasets} />
           {!warehouseKnown ? (
@@ -213,15 +213,23 @@ function RecentSnapshots({ state }: { state: Loadable<RecentSnapshot[]> }) {
       ) : state.data.length === 0 ? (
         <Note>{t("home.snapshots.empty")}</Note>
       ) : (
-        <div className="relative overflow-x-auto">
+        // At 1440px every column fits (#698). Narrower, the table scrolls inside this
+        // region, never the page — the Catalog table's rule (#529) — and the region takes
+        // focus so the hidden columns are reachable from the keyboard.
+        <div
+          aria-label={t("home.snapshots.title")}
+          className="relative max-w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          role="region"
+          tabIndex={0}
+        >
           <table className="w-full min-w-[560px] text-left text-[13px] leading-[18px]">
-            <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
+            <thead className="whitespace-nowrap border-b border-border bg-muted/40 text-xs text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.table")}</th>
-                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.snapshot")}</th>
-                <th className="px-4 py-2 text-right font-medium" scope="col">{t("home.snapshots.rows")}</th>
-                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.committed")}</th>
-                <th className="px-4 py-2 font-medium" scope="col">{t("home.snapshots.run")}</th>
+                <th className="px-3 py-2 font-medium" scope="col">{t("home.snapshots.table")}</th>
+                <th className="px-3 py-2 font-medium" scope="col">{t("home.snapshots.snapshot")}</th>
+                <th className="px-3 py-2 text-right font-medium" scope="col">{t("home.snapshots.rows")}</th>
+                <th className="px-3 py-2 font-medium" scope="col">{t("home.snapshots.committed")}</th>
+                <th className="px-3 py-2 font-medium" scope="col">{t("home.snapshots.run")}</th>
               </tr>
             </thead>
             <tbody>
@@ -232,19 +240,19 @@ function RecentSnapshots({ state }: { state: Loadable<RecentSnapshot[]> }) {
                   : "/tables";
                 return (
                   <tr className="border-b border-border last:border-0" key={`${logicalName}@${snapshot.snapshot_id}`}>
-                    <td className="px-4 py-2">
+                    <td className="px-3 py-2">
                       <Link className="font-mono text-brand-text underline-offset-2 hover:underline" to={href}>
                         {logicalName}
                       </Link>
                     </td>
-                    <td className="px-4 py-2 font-mono">{snapshot.snapshot_id}</td>
-                    <td className="px-4 py-2 text-right tabular-nums">
+                    <td className="px-3 py-2 font-mono">{snapshot.snapshot_id}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">
                       {snapshot.row_count === null ? <MissingStatus /> : snapshot.row_count.toLocaleString("ko-KR")}
                     </td>
-                    <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
+                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
                       {snapshot.committed_at ? formatDateTime(snapshot.committed_at) : <MissingStatus />}
                     </td>
-                    <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
+                    <td className="px-3 py-2 font-mono text-xs text-muted-foreground">
                       {/* The list summary (kpubdata-builder#841) does not name the run. */}
                       {snapshot.run_id ?? <MissingStatus label={t("home.snapshots.runMissing")} />}
                     </td>
