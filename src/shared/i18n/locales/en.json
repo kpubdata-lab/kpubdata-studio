@@ -1265,7 +1265,14 @@
     "runLookupUnsupportedBody": "Run `{{run}}` is not in the newest page of runs, and this KPubData Builder is older than API {{version}}, which added looking a run up by id. It may exist — upgrade the Builder to open it. Did not switch to the latest run.",
     "passportTitle": "Data Passport",
     "runValue": "Run {{id}}",
-    "columnCount": "{{count}} columns"
+    "columnCount": "{{count}} columns",
+    "sampleWithheld": {
+      "title": "The sample is withheld by policy",
+      "redistributionReason": "This source's terms forbid redistribution, so its sample rows are not shown outside Builder. The table is not empty.",
+      "redistributionNext": "The Schema tab and the quality results still show this stage's structure and state.",
+      "piiReason": "This source's kpubdata PII declaration could not be read, so which columns to mask is not known and the sample is withheld to be safe. The table is not empty.",
+      "piiNext": "Open it again later. Once the declaration can be read, the sample is shown with its PII columns masked."
+    }
   },
   "buildPublish": {
     "statusQueued": "Queued",
@@ -1824,7 +1831,19 @@
     "meta": {
       "note": "Some metadata fields (record count, schema, source, etc.) in this run's manifest are"
     },
-    "mockNoDownload": "Mock mode does not simulate snapshot file downloads. Check them in real-integration mode."
+    "mockNoDownload": "Mock mode does not simulate snapshot file downloads. Check them in real-integration mode.",
+    "refusal": {
+      "title": "This file cannot be downloaded by policy",
+      "declaredPii": "This Bronze or Silver file holds the declared personal-data columns ({{columns}}) unmasked, so it cannot be downloaded.",
+      "declaredPiiNoColumns": "This Bronze or Silver file holds declared personal-data columns unmasked, so it cannot be downloaded.",
+      "declaredPiiNext": "The Gold files of the same run hold these columns masked: download a Gold file instead.",
+      "piiUnavailable": "The kpubdata PII declaration of {{dataset}} could not be checked, so this download is blocked to be safe.",
+      "piiUnavailableNoDataset": "This source's kpubdata PII declaration could not be checked, so this download is blocked to be safe.",
+      "piiUnavailableNext": "Try again later, or download a Gold file, which is not affected.",
+      "redistribution": "The source terms forbid redistribution, so this file cannot leave Builder.",
+      "redistributionSources": "The source terms forbid redistribution, so this file cannot leave Builder (sources that forbid it: {{sources}}).",
+      "redistributionNext": "Every file of this run, Gold included, is held back the same way. To redistribute, build from sources whose terms allow it."
+    }
   },
   "glossary": {
     "dataset": "A table is analysable data that KPubData creates from source datasets and manages as one unit. Each refresh adds a new snapshot.",

@@ -671,6 +671,13 @@ export const silverValidationResultSchema = z.object({
   problems: z.array(silverValidationProblemSchema),
 });
 
+/**
+ * Why a Silver stage detail came back with an empty `sample` on purpose (builder#688, #900;
+ * 1.65.0, 1.68.0). Absent when the sample was not withheld — an empty sample is then a
+ * table with no rows.
+ */
+export const sampleWithheldReasonSchema = z.enum(["redistribution_forbidden", "pii_declaration_unavailable"]);
+
 export const silverStageDetailResponseSchema = z.object({
   ...stageDetailBase,
   stage: z.literal("silver"),
@@ -678,6 +685,7 @@ export const silverStageDetailResponseSchema = z.object({
   schema: z.array(silverColumnInfoSchema),
   statistics: tableStatisticsSchema.nullable(),
   validation: silverValidationResultSchema.nullable(),
+  sample_withheld: sampleWithheldReasonSchema.optional(),
   sample: z.array(z.record(z.string(), z.json())),
 });
 
@@ -978,6 +986,7 @@ export type DatasetRunsResponse = z.infer<typeof datasetRunsResponseSchema>;
 export type RunStageEntry = z.infer<typeof runStageEntrySchema>;
 export type RunStagesResponse = z.infer<typeof runStagesResponseSchema>;
 export type StageDetailResponse = z.infer<typeof stageDetailResponseSchema>;
+export type SampleWithheldReason = z.infer<typeof sampleWithheldReasonSchema>;
 export type QualityCheckResult = z.infer<typeof qualityCheckResultSchema>;
 export type SchemaDriftFinding = z.infer<typeof schemaDriftFindingSchema>;
 export type QualityAvailability = z.infer<typeof qualityAvailabilitySchema>;
