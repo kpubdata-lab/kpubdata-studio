@@ -24,6 +24,7 @@ import { clearDraft, hasDraft, loadDraft, saveDraft } from "@/features/build-spe
 import { ownedStorageKey } from "@/features/auth/storageOwner";
 import { sanitizeUrlEndpointForStorage } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsObject, redactSourceParamsText } from "@/features/add-data/paramsRedaction";
+import { redactSpecExtra } from "@/features/build-spec/specStore";
 import { jsonRecordSchema, sourceFormatSchema, sourceKindSchema } from "@/shared/lib/schemas";
 import type { AddDataDraft } from "@/features/add-data/model";
 
@@ -113,6 +114,9 @@ export function saveAddDataDraft(draft: AddDataDraft): void {
           }
           return { ...source, params: redactSourceParamsObject(source.params ?? {}).params };
         }),
+        // Spec keys Studio does not model may hold credentials too (#616): redacted by the
+        // run spec store's rule, and a restored `[REDACTED]` fails closed in buildSpecFromDraft.
+        ...(draft.canonicalBase.extra ? { extra: redactSpecExtra(draft.canonicalBase.extra) } : {}),
       }
     : undefined;
   const safeDraft: AddDataDraft = {

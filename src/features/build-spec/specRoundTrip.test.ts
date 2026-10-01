@@ -245,6 +245,36 @@ describe("Add Data: credentials inside source extra never leave memory (#601)", 
   });
 });
 
+describe("Add Data: credentials inside the spec-level extra never leave memory (#616)", () => {
+  const MARKER = "marker-value-616-draft";
+  /** A spec whose own unmodelled keys carry a credential beside a plain value. */
+  function specWithMarkedTopLevelExtra(): BuildSpec {
+    const spec = fromYamlText(YAML);
+    spec.extra = { ...spec.extra, auth: { serviceKey: MARKER }, region: "kr" };
+    return spec;
+  }
+
+  it("draft save redacts the spec-level extra, and the restored draft fails closed", () => {
+    saveAddDataDraft(applyBuildSpecToDraft(INITIAL_DRAFT, specWithMarkedTopLevelExtra()));
+    expect(JSON.stringify(localStorage)).not.toContain(MARKER);
+
+    const restored = loadAddDataDraft();
+    expect(restored).not.toBeNull();
+    expect(restored!.canonicalBase!.extra).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, region: "kr" });
+    const result = buildSpecFromDraft(restored!);
+    expect(result.spec).toBeUndefined();
+    expect(result.error).toBe(i18n.t("addData.model.unresolvedPlaceholder"));
+  });
+
+  it("the Review preview redacts the spec-level extra but keeps the submitted spec intact", () => {
+    const spec = specWithMarkedTopLevelExtra();
+    const shown = redactBuildSpecForDisplay(spec);
+    expect(JSON.stringify(shown)).not.toContain(MARKER);
+    expect(shown.extra).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, region: "kr" });
+    expect(spec.extra).toMatchObject({ auth: { serviceKey: MARKER } });
+  });
+});
+
 describe("New Build form round trip keeps source contract fields (#601)", () => {
   it("toBuildSpec(toFormValues(spec), spec) keeps them and applies form edits", () => {
     const base = fromYamlText(YAML);

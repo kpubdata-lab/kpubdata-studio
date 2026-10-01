@@ -119,8 +119,18 @@ export function redactSpecForStorage(spec: BuildSpec): BuildSpec {
       return safe;
     }),
     metadata: redactSecrets(spec.metadata) as Record<string, JsonValue>,
-    ...(spec.extra ? { extra: redactSecrets(spec.extra) as Record<string, JsonValue> } : {}),
+    ...(spec.extra ? { extra: redactSpecExtra(spec.extra) } : {}),
   };
+}
+
+/**
+ * Redacted copy of a spec's top-level `extra` (keys Studio does not model), which may hold
+ * credentials. The one rule for it wherever a spec leaves memory: the run spec store, the
+ * Add Data draft and the Review display copy (#616). `[REDACTED]` left in a restored value
+ * fails closed through `jsonValueHasRedactedSecret`.
+ */
+export function redactSpecExtra(extra: Record<string, JsonValue>): Record<string, JsonValue> {
+  return redactSecrets(extra) as Record<string, JsonValue>;
 }
 
 /**
