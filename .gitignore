@@ -59,5 +59,10 @@ yarn-error.log*
 # Production build the csp e2e project serves (#663)
 /.csp-preview/
 
+# Screenshot baselines are Linux renders (e2e/visual.spec.ts); a macOS or Windows run
+# must not add its own next to them.
+e2e/**/*-darwin.png
+e2e/**/*-win32.png
+
 # Builder contract checkout used by the contract-drift CI job
 .builder/
