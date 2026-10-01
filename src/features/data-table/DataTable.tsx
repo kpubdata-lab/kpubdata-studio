@@ -14,6 +14,8 @@
  * - The footer says how many rows are shown and how many there are, and *how* that total
  *   is known: counted, estimated, not computed or unknown. A total that was not computed
  *   is never written as 0.
+ * - A column Builder names as masked declared PII (builder#900, #641) carries a marker in
+ *   its header, and its mask tokens read as "masked" rather than as data.
  *
  * Paging is the caller's (see `useWarehouseRows`): this component only draws the page it
  * is given and the controls it is handed. Scrolling faster is not the same as buffering
@@ -25,6 +27,8 @@ import { useTranslation } from "react-i18next";
 import type { ColumnWireInfo } from "@/shared/lib/builderApi";
 import { cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
 import { Button, Card } from "@/shared/ui";
+
+import { MaskedCell, MaskedColumnBadge, maskedSet } from "./masked";
 
 /**
  * How the total is known. `sample` is a stored sample with nothing behind it to page
@@ -61,6 +65,8 @@ export interface DataTableProps {
   paging?: DataTablePaging;
   /** Narrow cells for dense screens. */
   compact?: boolean;
+  /** Declared PII columns Builder masked on this read (`masked_columns`, builder#900). */
+  maskedColumns?: readonly string[];
 }
 
 /** A Builder total status, with anything this Studio does not know kept as unknown. */
@@ -68,8 +74,10 @@ export function totalStatusOf(status: string | undefined): TotalStatus {
   return status === "exact" || status === "estimated" || status === "not_computed" ? status : "unknown";
 }
 
-export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, caption, paging, compact }: DataTableProps) {
+export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, caption, paging, compact, maskedColumns }: DataTableProps) {
   const { t } = useTranslation();
+  const masked = maskedSet(maskedColumns);
+  const maskedShown = columns.filter((column) => masked.has(column));
   const encodings = encodingsOf(columnMeta);
   const meta = new Map((columnMeta ?? []).map((column) => [column.name, column]));
   const cell = compact ? "px-3 py-1.5" : "px-4 py-2";
@@ -79,13 +87,16 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
         {caption}
         <span data-testid="row-total">{totalText(t, rowTotal, paging?.offset)}</span>
         {truncated ? <span className="font-semibold text-status-warning">{t("dataTable.truncated")}</span> : null}
+        {maskedShown.length ? (
+          <span data-testid="masked-note">{t("dataTable.masked.note", { columns: maskedShown.join(", ") })}</span>
+        ) : null}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="bg-muted/60">
             <tr>
               {columns.map((column) => (
-                <ColumnHeader className={cell} column={column} key={column} meta={meta.get(column)} />
+                <ColumnHeader className={cell} column={column} key={column} masked={masked.has(column)} meta={meta.get(column)} />
               ))}
             </tr>
           </thead>
@@ -94,7 +105,11 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
               <tr className="border-t border-border" key={index}>
                 {columns.map((column) => (
                   <td className={`${cell} max-w-72 truncate font-mono text-xs`} key={column}>
-                    {cellValue(encodings.get(column), row[column])}
+                    {masked.has(column) ? (
+                      <MaskedCell fallback={cellValue(encodings.get(column), row[column])} value={row[column]} />
+                    ) : (
+                      cellValue(encodings.get(column), row[column])
+                    )}
                   </td>
                 ))}
               </tr>
@@ -116,7 +131,17 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
   );
 }
 
-function ColumnHeader({ column, meta, className }: { column: string; meta?: Partial<ColumnWireInfo>; className: string }) {
+function ColumnHeader({
+  column,
+  meta,
+  masked,
+  className,
+}: {
+  column: string;
+  meta?: Partial<ColumnWireInfo>;
+  masked: boolean;
+  className: string;
+}) {
   const { t } = useTranslation();
   const label = meta?.display?.label;
   const unit = meta?.unit;
@@ -134,6 +159,7 @@ function ColumnHeader({ column, meta, className }: { column: string; meta?: Part
           .filter(Boolean)
           .join(" · ")}
       </span>
+      {masked ? <MaskedColumnBadge /> : null}
     </th>
   );
 }
