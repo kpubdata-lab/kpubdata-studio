@@ -11,6 +11,7 @@ import { saveBlobAsFile } from "@/features/artifacts/api";
 import { ExportHistory, exportRowState } from "@/features/export/ExportHistory";
 import { WarehouseWorkspace } from "@/features/sql/WarehouseWorkspace";
 import { API_BASE } from "@/shared/config/env";
+import { i18n } from "@/shared/i18n";
 
 beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
 afterEach(() => {
@@ -176,7 +177,8 @@ describe("the export list (#648)", () => {
     render(<ExportHistory now={clock} />);
     await waitFor(() => expect(row("exp_1")).not.toBeNull());
     fireEvent.click(within(row("exp_1")!).getByRole("button", { name: /번들 내려받기/ }));
-    expect(await within(row("exp_1")!).findByRole("alert")).toHaveTextContent("재배포를 금지해(datago__air)");
+    // The same sentence the export panel shows for this refusal (#640), not a second wording.
+    expect(await within(row("exp_1")!).findByRole("alert")).toHaveTextContent(i18n.t("export.refused.redistribution"));
   });
 });
 

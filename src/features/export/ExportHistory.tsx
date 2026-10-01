@@ -52,18 +52,10 @@ function errorCode(cause: ApiError): string | undefined {
   return typeof code === "string" ? code : undefined;
 }
 
-/** Source keys the `redistribution` verdict names as forbidden (builder#688). */
-function forbiddenSources(details: unknown): string[] {
-  const redistribution = (details as { redistribution?: { sources?: unknown } } | null)?.redistribution;
-  const sources = redistribution?.sources;
-  if (!Array.isArray(sources)) return [];
-  return sources.flatMap((entry: unknown) => {
-    const { source, verdict } = (entry ?? {}) as { source?: unknown; verdict?: unknown };
-    return verdict === "forbidden" && typeof source === "string" && source ? [source] : [];
-  });
-}
-
-/** What a failed download means: the export expired or vanished, or policy holds it back. */
+/**
+ * What a failed download means: the export expired or vanished, its file is unavailable, or
+ * anything else, which `describeRefusal` words exactly as the export panel does.
+ */
 export type DownloadFailure = { kind: "expired" } | { kind: "gone" } | { kind: "message"; message: string };
 
 export function describeDownloadFailure(cause: unknown, t: Translate): DownloadFailure {
@@ -72,16 +64,8 @@ export function describeDownloadFailure(cause: unknown, t: Translate): DownloadF
     if (cause.status === 410 || code === "export_expired") return { kind: "expired" };
     if (cause.status === 404 && (code === "export_not_found" || code === undefined)) return { kind: "gone" };
     if (code === "export_unavailable") return { kind: "message", message: t("export.history.refused.unavailable") };
-    if (code === "redistribution_forbidden") {
-      const sources = forbiddenSources(cause.details);
-      return {
-        kind: "message",
-        message: sources.length
-          ? t("export.history.refused.redistribution", { sources: sources.join(", ") })
-          : t("export.history.refused.redistributionUnnamed"),
-      };
-    }
   }
+  // Policy refusals (403 `redistribution_forbidden` included) read the same as in the export panel.
   return { kind: "message", message: describeRefusal(cause, t) };
 }
 

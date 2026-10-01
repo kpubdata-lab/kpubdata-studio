@@ -2638,9 +2638,7 @@
         "pending": "Builder is still writing this export; refresh to see when it is ready."
       },
       "refused": {
-        "unavailable": "Builder's file for this export is missing or no longer matches its digest, so it was not sent. Export the query again.",
-        "redistribution": "The source's terms forbid redistribution ({{sources}}), so KPubData Builder does not release this export's file.",
-        "redistributionUnnamed": "The source's terms forbid redistribution, so KPubData Builder does not release this export's file."
+        "unavailable": "Builder's file for this export is missing or no longer matches its digest, so it was not sent. Export the query again."
       }
     }
   },
