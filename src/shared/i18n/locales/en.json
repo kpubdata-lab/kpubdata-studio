@@ -839,6 +839,8 @@
       "saveFail": "Failed to save credential",
       "deleteNoStore": "Cannot delete — Builder credential store (master key) is not configured.",
       "deleteFail": "Failed to delete credential",
+      "saveStorageDisabled": "This Builder does not store provider keys (multi-user deployment), so nothing was saved. Use the key for this session instead — it stays in this tab's memory and is sent with each request that needs it.",
+      "keyUnsupported": "This key cannot be sent as entered. Remove commas, line breaks and non-Latin characters, then try again.",
       "testFail": "Could not run the {{provider}} connection test"
     },
     "page": {
@@ -861,6 +863,12 @@
       "loading": "Loading credential status…",
       "noStoreTitle": "Credential store not configured",
       "noStoreBody": "KPubData Builder does not have an encrypted credential store (master key) configured, so user credentials cannot be registered or viewed. This is different from \"not yet registered\". Ask the operator to set KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY in KPubData Builder and try again.",
+      "perRequestTitle": "This Builder does not store provider keys",
+      "perRequestBody": "In this multi-user deployment a key you enter is kept only in this browser tab's memory — never saved on the server or in the browser — and sent with each preview, build and connection test that needs it. It is forgotten when you reload the page or sign out.",
+      "useForSession": "Use for this session",
+      "enterSessionKey": "Enter a key for this session",
+      "sessionKeyHeld": "A key for this provider is held for this session (not shown).",
+      "forgetSessionKey": "Forget key",
       "keyPlaceholder": "Enter API Key",
       "save": "Save",
       "cancel": "Cancel",
