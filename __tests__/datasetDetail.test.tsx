@@ -217,7 +217,9 @@ describe("Dataset Detail P0 (#253)", () => {
     renderDetail("/tables/air-quality?tab=ai&run=air-2026-08-13&source=datago__air&stage=silver");
 
     await findAssistant();
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Wait for the ?tab=ai rewrite itself rather than a fixed delay, which loses the race under
+    // a loaded test run (#679).
+    await waitFor(() => expect(screen.getByTestId("location").textContent ?? "").not.toContain("tab=ai"));
     const location = screen.getByTestId("location").textContent ?? "";
     expect(location).toContain("run=air-2026-08-13");
     expect(location).toContain("source=datago__air");
