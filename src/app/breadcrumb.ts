@@ -85,3 +85,17 @@ export function crumbsFor(pathname: string, t: Translate): Crumb[] {
   crumbs[crumbs.length - 1] = { label: last.label };
   return crumbs;
 }
+
+/**
+ * The document title for `pathname` (#662): the crumbs from the current page outwards,
+ * then the product name — `air-quality · Tables · KPubData Studio`. It is built from the
+ * same crumbs as the topbar, so the tab title and the breadcrumb never disagree, and every
+ * route gets its title from the locale files rather than from whichever page rendered.
+ */
+export function documentTitleFor(pathname: string, t: (key: string, options?: Record<string, unknown>) => string): string {
+  const page = crumbsFor(pathname, t)
+    .map((crumb) => crumb.label)
+    .reverse()
+    .join(" · ");
+  return t("layout.documentTitle", { page });
+}

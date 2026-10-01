@@ -80,7 +80,7 @@ export function AdminPage() {
     );
 
   return (
-    <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader title={t("admin.title")} description={t("admin.desc")} />
 
       {!real ? (
@@ -159,7 +159,7 @@ export function AdminPage() {
           </Card>
         </>
       )}
-    </main>
+    </div>
   );
 }
 

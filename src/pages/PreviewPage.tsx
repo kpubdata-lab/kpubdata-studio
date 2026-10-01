@@ -15,7 +15,7 @@ import { Card, EmptyState, PageHeader } from "@/shared/ui";
 export function PreviewPage() {
   const { t } = useTranslation();
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("previewPage.title")}
         description={t("previewPage.desc")}
@@ -29,6 +29,6 @@ export function PreviewPage() {
           actionHref="/add"
         />
       </Card>
-    </main>
+    </div>
   );
 }

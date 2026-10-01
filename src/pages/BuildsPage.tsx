@@ -188,7 +188,7 @@ export function BuildsPage() {
 
   if (selectedRunId) {
     return (
-      <main className={main}>
+      <div className={main}>
         <PageHeader
           title={t("builds.detail.title")}
           meta={<span className="font-mono">{selectedRunId}</span>}
@@ -226,12 +226,12 @@ export function BuildsPage() {
             live={live}
           />
         )}
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={main}>
+    <div className={main}>
       {/* App Shell topbar already has the global create CTA (#255 §1) — no action duplicated here. */}
       <PageHeader
         title={t("builds.page.title")}
@@ -298,6 +298,6 @@ export function BuildsPage() {
           {isRealBuilderEnabled() ? ` ${t("builds.kpi.completedOnlyHint")}` : null}
         </p>
       ) : null}
-    </main>
+    </div>
   );
 }

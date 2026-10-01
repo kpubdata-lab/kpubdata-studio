@@ -107,7 +107,7 @@ function RunWorkspace() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={t("sql.title")}
         description={t("sql.desc")}
@@ -223,7 +223,7 @@ function RunWorkspace() {
           <p className="text-xs text-muted-foreground">{t("sql.saveLater")}</p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -250,9 +250,9 @@ export function SqlWorkspacePage() {
 
   if (warehouse.status === "loading") {
     return (
-      <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+      <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
         <Skeleton className="h-40 w-full" />
-      </main>
+      </div>
     );
   }
   return warehouse.status === "available" ? <WarehouseWorkspace tables={warehouse.tables} /> : <RunWorkspace />;

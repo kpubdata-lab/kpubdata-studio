@@ -7,16 +7,17 @@
  * actual route content is injected via `Outlet`. Menu structure follows
  * `kpubdata_ui_prototype_v1.html` IA (WORKSPACE/DATA/AI/SYSTEM) (#247).
  */
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { AssistantDrawer } from "@/features/assistant/AssistantDrawer";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { VersionMismatchBanner } from "@/features/version-check/VersionMismatchBanner";
 import { AccountMenu } from "./AccountMenu";
-import { crumbsFor } from "./breadcrumb";
+import { crumbsFor, documentTitleFor } from "./breadcrumb";
 import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
+import { focusRouteTarget } from "./routeFocus";
 import { BrandLogo } from "@/shared/ui";
 
 
@@ -294,6 +295,31 @@ export function Layout() {
     void ensureAdminChecked();
   }, [pathname]);
 
+  // The tab title names the page, in the current language (#662). It is set on the first
+  // load as well, so a refreshed tab and a navigated one read the same.
+  useEffect(() => {
+    document.title = documentTitleFor(pathname, t);
+  }, [pathname, t]);
+
+  // After a client-side navigation, focus moves to the new page's heading so a screen
+  // reader announces it and the next Tab starts in the page (#662). The first render is
+  // a page load, not a navigation, and keeps the browser's own focus — so is a re-run of
+  // this effect for the same path (React's development double-invoke).
+  const mainRef = useRef<HTMLElement>(null);
+  const focusedPathRef = useRef<string | null>(null);
+  useEffect(() => {
+    const previous = focusedPathRef.current;
+    focusedPathRef.current = pathname;
+    if (previous === null || previous === pathname || !mainRef.current) return;
+    return focusRouteTarget(mainRef.current);
+  }, [pathname]);
+
+  /** The skip link moves focus without changing the URL's hash (#660). */
+  function skipToContent(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    mainRef.current?.focus();
+  }
+
   useEffect(() => {
     document.documentElement.dataset.theme = getResolvedTheme(theme);
   }, [theme]);
@@ -317,6 +343,16 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* First in the tab order and hidden until focused: past the sidebar and topbar
+          straight to the page (#660). */}
+      <a
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
+        data-testid="skip-to-content"
+        href="#main-content"
+        onClick={skipToContent}
+      >
+        {t("layout.skipToContent")}
+      </a>
       <div className="flex min-h-screen">
         {isMobileSidebarOpen ? (
           <button
@@ -499,7 +535,15 @@ export function Layout() {
 
           <VersionMismatchBanner />
 
-          <Outlet />
+          {/* The one main landmark: pages render inside it and never add their own (#660). */}
+          <main
+            className="flex min-w-0 flex-1 flex-col focus:outline-none"
+            id="main-content"
+            ref={mainRef}
+            tabIndex={-1}
+          >
+            <Outlet />
+          </main>
         </div>
       </div>
 

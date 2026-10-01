@@ -11,7 +11,7 @@ import { AssistantChat } from "@/features/assistant/AssistantChat";
 export function ValidatePage() {
   const { t } = useTranslation();
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("validatePage.title")}
         description={t("validatePage.desc")}
@@ -27,6 +27,6 @@ export function ValidatePage() {
       </Card>
 
       <AssistantChat />
-    </main>
+    </div>
   );
 }

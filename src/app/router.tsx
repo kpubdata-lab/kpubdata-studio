@@ -111,7 +111,7 @@ const WorkspacePage = lazy(() =>
 function PageFallback() {
   const { t } = useTranslation();
   return (
-    <main
+    <div
       role="status"
       aria-busy="true"
       className="flex flex-1 flex-col gap-4 px-5 py-8 sm:px-8 lg:px-10 lg:py-10"
@@ -120,7 +120,7 @@ function PageFallback() {
       <Skeleton className="h-8 w-64" />
       <Skeleton className="h-4 w-96" />
       <Skeleton className="h-64 w-full" />
-    </main>
+    </div>
   );
 }
 
