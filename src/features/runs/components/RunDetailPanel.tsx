@@ -29,7 +29,9 @@ import {
 import type { AsyncState } from "@/features/runs/asyncState";
 import { extractDatasetId, mapLiveStatus, normalizeBuildContextSearch } from "@/features/runs/buildContext";
 import { useStageDetails } from "@/features/runs/stageDetails";
+import { CancelRunButton } from "@/features/runs/components/CancelRunButton";
 import { EventTimeline } from "@/features/runs/components/EventTimeline";
+import { SplitAlgorithmCard } from "@/features/runs/components/SplitAlgorithmCard";
 import { AssistantRunAnalysis } from "@/features/runs/components/AssistantRunAnalysis";
 import {
   MultiSourceOutcomeBadge,
@@ -133,6 +135,9 @@ export function RunDetailPanel({
   const outcome = stagesState.status === "loaded" ? summarizeMultiSourceOutcome(sources) : "unavailable";
   const failureEvidence = stagesState.status === "loaded" ? collectFailureEvidence(sources) : [];
   const stageDetails = useStageDetails(runId, stagesState);
+  const goldHasSplits = Object.values(stageDetails).some(
+    (entry) => entry.status === "loaded" && entry.data.stage === "gold" && Boolean(entry.data.splits),
+  );
 
   // Never merge a Quality error (request failure) with Builder semantic
   // unavailable (a normal response with no result) into one state (#255
@@ -175,6 +180,8 @@ export function RunDetailPanel({
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-lg font-semibold tracking-tight">{listItem?.title ?? runId}</h2>
           <StatusBadge status={runStatus} />
+          {/* Only a job the live registry reports can be cancelled (#655); history has none. */}
+          {live.kind === "job" ? <div className="ml-auto"><CancelRunButton runId={runId} job={live.job} /></div> : null}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-xs text-muted-foreground">{runId}</span>
@@ -289,6 +296,8 @@ export function RunDetailPanel({
           </div>
         ) : null}
       </Card>
+
+      <SplitAlgorithmCard runId={runId} specState={specState} goldHasSplits={goldHasSplits} />
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
