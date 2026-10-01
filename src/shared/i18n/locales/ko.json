@@ -2843,5 +2843,60 @@
     "sparklineLabel": "run {{runs}}개의 통과율 추이(오래된 순), 통과율이 있는 run {{rated}}개",
     "sparklineCaption": "통과율, 오래된 순 → 최신 순",
     "sparklineGaps": "끊긴 구간은 평가된 검사가 없는 run입니다({{gaps}}개)."
+  },
+  "specRevisions": {
+    "title": "변경 이력",
+    "description": "스펙을 저장할 때마다 KPubData Builder가 새 리비전으로 남깁니다. 작성자와 시각은 Builder가 기록하며, credential은 저장하지 않습니다.",
+    "noDocId": "이 테이블 ID로는 변경 이력을 남길 수 없습니다(비어 있거나, 200자를 넘거나, '/'를 포함).",
+    "base": {
+      "loading": "최신 리비전을 확인하는 중입니다...",
+      "error": "최신 리비전을 확인하지 못했습니다: {{message}}",
+      "none": "아직 저장된 리비전이 없습니다. 처음 저장하면 리비전 1이 됩니다.",
+      "revision": "편집 기준: 리비전 {{revision}}"
+    },
+    "noteLabel": "변경 메모 (선택)",
+    "notePlaceholder": "무엇을 왜 바꿨는지 적어주세요",
+    "save": "리비전으로 저장",
+    "loadLatest": "최신 리비전 불러오기",
+    "cannotSave": "폼에 오류가 있어 지금은 저장할 수 없습니다. 오류를 고친 뒤 저장하세요.",
+    "notice": {
+      "saved": "저장했습니다 — 새 리비전 {{revision}}",
+      "reverted": "리비전 {{from}}의 내용으로 되돌렸습니다 — 새 리비전 {{revision}}. 폼에 그 내용을 불러왔습니다.",
+      "loaded": "리비전 {{revision}} 내용을 폼에 불러왔습니다. 이후 저장은 이 리비전을 기준으로 합니다.",
+      "unreadable": "리비전 {{revision}}의 스펙을 읽지 못해 폼에 불러오지 않았습니다.",
+      "conflictBadge": "저장 충돌",
+      "conflict": "다른 사람이 먼저 저장했습니다(현재 최신: 리비전 {{revision}}). 덮어쓰지 않도록 이번 저장은 반영되지 않았습니다. '최신 리비전 불러오기'로 최신 내용을 불러온 뒤 다시 수정해 저장하세요.",
+      "conflictUnknown": "다른 사람이 먼저 저장했습니다. 덮어쓰지 않도록 이번 저장은 반영되지 않았습니다. '최신 리비전 불러오기'로 최신 내용을 불러온 뒤 다시 수정해 저장하세요.",
+      "credentialBadge": "credential 포함",
+      "credential": "credential이 들어 있는 스펙은 변경 이력에 저장하지 않습니다. 파라미터에서 키 값을 지운 뒤 다시 저장하세요. ({{message}})",
+      "error": "저장하지 못했습니다: {{message}}"
+    },
+    "history": {
+      "title": "리비전 목록",
+      "loading": "변경 이력을 불러오는 중입니다...",
+      "error": "변경 이력을 불러오지 못했습니다: {{message}}",
+      "empty": "아직 변경 이력이 없습니다.",
+      "revision": "리비전 {{revision}}",
+      "latest": "최신",
+      "revertedFrom": "리비전 {{revision}}에서 되돌림",
+      "byline": "{{author}} · {{at}}",
+      "noNote": "메모 없음",
+      "revert": "이 리비전으로 되돌리기 (리비전 {{revision}})",
+      "confirmRevert": "리비전 {{revision}}의 내용으로 되돌릴까요? 그 내용으로 새 리비전이 만들어지고, 폼의 저장하지 않은 편집 내용은 사라집니다."
+    },
+    "audit": {
+      "title": "감사 로그 ({{count}}건)",
+      "label": "감사 로그",
+      "entry": "{{at}} · {{author}} · {{action}} · 리비전 {{revision}}",
+      "action": {
+        "save": "저장",
+        "revert": "되돌리기"
+      }
+    },
+    "errors": {
+      "saveFailed": "리비전을 저장하지 못했습니다.",
+      "credentialLocal": "Studio가 스펙에서 credential로 보이는 값을 찾아 요청을 보내지 않았습니다",
+      "demoConflict": "문서가 리비전 {{current}}에 있습니다"
+    }
   }
 }

@@ -48,6 +48,8 @@ import { ParamsStep } from "@/features/build-spec/components/steps/ParamsStep";
 import { PreviewStep } from "@/features/build-spec/components/steps/PreviewStep";
 import { ReviewStep } from "@/features/build-spec/components/steps/ReviewStep";
 import { SourceStep } from "@/features/build-spec/components/steps/SourceStep";
+import { SpecRevisionPanel } from "@/features/build-spec/components/SpecRevisionPanel";
+import { specRevisionDocId } from "@/features/build-spec/specRevisions";
 
 
 /**
@@ -167,6 +169,23 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
     validatedSnapshotRef.current = null;
     setStep(0);
   }, [isEditMode, build, buildLoading, reset]);
+
+  // Revisions are kept under the table id of the spec that was opened (#649), so editing
+  // the id in the form does not move the history.
+  const revisionDocId = useMemo(() => (build ? specRevisionDocId(build.spec) : null), [build]);
+
+  // A revision loaded from the history panel (latest, or a revert's result) replaces the
+  // form the same way the opened spec did, and clears results of the previous spec (#72).
+  function loadRevisionSpec(spec: BuildSpec) {
+    setBaseSpec(spec);
+    const blocked = editBlockReason(spec);
+    setEditBlocked(blocked);
+    if (blocked) return;
+    reset(toFormValues(spec));
+    setPreview({ status: "idle", rows: [], schema: {}, warnings: [] });
+    setValidation({ status: "idle", isValid: false, errors: [] });
+    validatedSnapshotRef.current = null;
+  }
 
   const draftStatus = validation.isValid ? "validated" : isDirty ? "dirty" : "new";
 
@@ -343,6 +362,11 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
             </Card>
 
             <aside className="space-y-5">
+              <SpecRevisionPanel
+                docId={revisionDocId}
+                spec={specPreview.spec}
+                onLoad={loadRevisionSpec}
+              />
               <Card>
                  {/* On mobile, save space with collapsed details. On desktop (xl), shown in
                      separate column and expanded as needed (§13). */}

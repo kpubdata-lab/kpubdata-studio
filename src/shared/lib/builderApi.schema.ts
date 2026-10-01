@@ -1615,3 +1615,58 @@ export type ColumnWireInfo = z.infer<typeof columnWireInfoSchema>;
 export type SavedAnalysis = z.infer<typeof savedAnalysisSchema>;
 export type CreateAnalysisRequest = z.infer<typeof createAnalysisRequestSchema>;
 export type CreateAnalysisResponse = z.infer<typeof createAnalysisResponseSchema>;
+
+// --- Document revisions (kpubdata-builder#820, contract 1.59.0) ---
+
+/** Kinds of document Builder keeps revisions of. */
+export const revisionKindSchema = z.enum(["spec", "annotation"]);
+
+/**
+ * One immutable revision (`DocumentRevision`). `author` and `created_at` are decided by
+ * Builder, never sent by Studio. `content` is absent in a history listing; a spec's is
+ * `{"yaml": "<BuildSpec YAML>"}`.
+ */
+export const documentRevisionSchema = z.object({
+  kind: revisionKindSchema,
+  doc_id: z.string(),
+  revision: z.number().int().min(1),
+  content: z.json().optional(),
+  note: z.string().nullable(),
+  author: z.string(),
+  created_at: z.string(),
+  reverted_from: z.number().int().nullable(),
+});
+
+/** `GET /revisions/{kind}/{doc_id}/history` — revisions oldest first, and the audit trail. */
+export const revisionHistoryResponseSchema = z.object({
+  revisions: z.array(documentRevisionSchema),
+  audit: z.array(
+    z.object({
+      revision: z.number().int(),
+      action: z.enum(["save", "revert"]),
+      author: z.string(),
+      at: z.string(),
+    }),
+  ),
+});
+
+/**
+ * `PUT /revisions/{kind}/{doc_id}` body. Author and time are the server's, so absent here.
+ * Studio only saves specs, whose content is `{"yaml": "<BuildSpec YAML>"}`.
+ */
+export interface SaveRevisionRequest {
+  content: { yaml: string };
+  expected_revision: number;
+  note?: string;
+  idempotency_key?: string;
+}
+
+/** `POST /revisions/{kind}/{doc_id}/revert` body. */
+export interface RevertRevisionRequest {
+  to_revision: number;
+  expected_revision: number;
+}
+
+export type RevisionKind = z.infer<typeof revisionKindSchema>;
+export type DocumentRevision = z.infer<typeof documentRevisionSchema>;
+export type RevisionHistoryResponse = z.infer<typeof revisionHistoryResponseSchema>;
