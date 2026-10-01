@@ -161,6 +161,8 @@ async function recoverFromUnauthorized(): Promise<boolean> {
 
 /** Default auto timeout (ms). Builder /build calls external APIs so set generously. */
 export const DEFAULT_TIMEOUT_MS = 30_000;
+/** Builder's profiling timeout is 60 s (builder#896); Studio waits a little longer for its answer. */
+export const PROFILE_TIMEOUT_MS = 75_000;
 
 /** Default retry count for network errors/5xx (additional count beyond initial attempt). */
 export const DEFAULT_RETRIES = 2;
@@ -486,6 +488,8 @@ export type AdminConfigResponse = schemas.AdminConfigResponse;
 export type WarehouseTable = schemas.WarehouseTable;
 export type WarehouseCurrentSnapshot = schemas.WarehouseCurrentSnapshot;
 export type WarehouseSnapshot = schemas.WarehouseSnapshot;
+export type ColumnProfile = schemas.ColumnProfile;
+export type SnapshotProfileResponse = schemas.SnapshotProfileResponse;
 export type WarehouseQueryResponse = schemas.WarehouseQueryResponse;
 export type WarehouseRowsRequest = schemas.WarehouseRowsRequest;
 export type WarehouseExportRequest = schemas.WarehouseExportRequest;
@@ -549,6 +553,20 @@ export const builderApi = {
   /** GET /warehouse/tables/{name} — one table and its readable snapshots, newest first. */
   getWarehouseTable: (name: string, signal?: AbortSignal) =>
     apiFetch(`/warehouse/tables/${encodeURIComponent(name)}`, { signal }, schemas.warehouseTableDetailResponseSchema),
+
+  /**
+   * GET /warehouse/tables/{name}/profile — the column profile of one snapshot (builder#817).
+   * Pass a concrete snapshot id: the profile must describe the snapshot on screen. Not
+   * retried: a 504 is remembered by Builder for 5 minutes, and a retry would only repeat it.
+   * Profiling has its own 60-second limit (builder#896), so Studio waits past it for Builder's
+   * own answer instead of giving up first.
+   */
+  getWarehouseTableProfile: (name: string, snapshot: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/warehouse/tables/${encodeURIComponent(name)}/profile?${new URLSearchParams({ snapshot })}`,
+      { signal, retries: 0, timeoutMs: PROFILE_TIMEOUT_MS },
+      schemas.snapshotProfileResponseSchema,
+    ),
 
   /** POST /warehouse/query — read-only SQL against a snapshot pinned at query start. */
   warehouseQuery: (request: schemas.WarehouseQueryRequest, signal?: AbortSignal) =>

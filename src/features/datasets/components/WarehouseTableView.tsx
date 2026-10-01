@@ -1,7 +1,7 @@
 /**
  * Table Detail on a warehouse: the table opens on its current committed snapshot (#526).
  *
- * Nothing has to be picked first. Overview, Schema, Preview and Quality all read the
+ * Nothing has to be picked first. Overview, Schema, Profile, Preview and Quality all read the
  * snapshot on screen — the current one, or a past one chosen in the Snapshots tab
  * (`?snapshot=`), which is the only place a past snapshot or run is chosen. The run that
  * produced a snapshot is shown as provenance, its id in monospace, never hidden.
@@ -11,8 +11,10 @@
  *
  * Every value is a contract field: the dataset (`GET /datasets/{id}`), the table and its
  * snapshots (`GET /warehouse/tables/{name}`), the snapshot's columns (`POST
- * /warehouse/rows`), and the producing run's quality (`GET /builds/{run}/quality`). What
- * Builder did not send is `—`.
+ * /warehouse/rows`), its column profile (`GET /warehouse/tables/{name}/profile`), the
+ * producing run's quality (`GET /builds/{run}/quality`) and the terms of use its BuildSpec
+ * declared (`GET /builds/{run}/spec`). What Builder did not send is `—`; a licence field the
+ * BuildSpec does not declare is unknown, never guessed.
  */
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,6 +24,8 @@ import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
 import { getBuildQuality, getDataset, listDatasetRuns } from "@/features/datasets/api";
 import { formatDateTime } from "@/features/datasets/model";
 import { sourceKeyOf } from "@/features/datasets/warehouseTables";
+import { RunLicence } from "@/features/licence/LicenceSummary";
+import { useRunLicence, type RunLicenceState } from "@/features/licence/useRunLicence";
 import { qualityResultsForSource, summarizeQuality } from "@/features/quality/model";
 import { coverageCounts, coverageOf } from "@/features/sql/snapshotCoverage";
 import { useUIStore } from "@/shared/hooks/useUIStore";
@@ -39,10 +43,11 @@ import type { WarehouseTableDetailResponse } from "@/shared/lib/builderApi.schem
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton } from "@/shared/ui";
 import { ActionableStatus, MissingStatus, NormalStatus, UnknownStatus } from "@/shared/ui/StatusState";
 
+import { ProfileTab } from "./ProfileTab";
 import { BuildsTab, QualityTab, type AsyncState } from "./RunPanels";
 import { AxisValue, StatusAxes, actionableAxes } from "./StatusAxes";
 
-const TABS = ["overview", "schema", "preview", "quality", "snapshots"] as const;
+const TABS = ["overview", "schema", "profile", "preview", "quality", "snapshots"] as const;
 type Tab = (typeof TABS)[number];
 
 /** Tabs a saved link may still carry from the run view. */
@@ -110,6 +115,8 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
 
   const quality = useAsync<BuildQualityResponse>(runId, tab === "quality" && Boolean(runId), (signal) => getBuildQuality(runId, signal), "datasetDetail.qualityErrorMsg");
   const runs = useAsync<{ runs: DatasetRunSummary[] }>(datasetId, tab === "snapshots", (signal) => listDatasetRuns(datasetId, 20, signal), "tableDetail.errors.runs");
+  // The terms are those of the run that produced the snapshot on screen, read only on Overview.
+  const licence = useRunLicence(tab === "overview" ? runId : "");
 
   function update(updates: Record<string, string | null>, replace = false) {
     const next = new URLSearchParams(searchParams);
@@ -268,9 +275,24 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
             <EmptyState title={t("tableDetail.notCommitted")} description={t("tableDetail.notCommittedDesc")} />
           </Card>
         ) : tab === "overview" ? (
-          <OverviewTab dataset={info} isCurrent={isCurrent} revision={isCurrent ? detail.data?.revision : undefined} snapshot={viewed} />
+          <OverviewTab
+            dataset={info}
+            isCurrent={isCurrent}
+            licence={licence}
+            onOpenProfile={() => update({ tab: "profile" })}
+            revision={isCurrent ? detail.data?.revision : undefined}
+            snapshot={viewed}
+          />
         ) : tab === "schema" ? (
           <SchemaTab snapshot={viewed.snapshot_id} table={logicalName} />
+        ) : tab === "profile" ? (
+          <ProfileTab
+            key={`${logicalName}@${viewed.snapshot_id}`}
+            onOpenTab={(id) => update({ tab: id === "overview" ? null : id })}
+            queryHref={queryHref}
+            snapshot={viewed.snapshot_id}
+            table={logicalName}
+          />
         ) : tab === "preview" ? (
           <TableRowsPanel autoStart key={`${logicalName}@${viewed.snapshot_id}`} snapshot={viewed.snapshot_id} table={logicalName} />
         ) : (
@@ -317,7 +339,21 @@ function RowCount({ value }: { value: number | null }) {
   return value === null ? <MissingStatus /> : <span className="tabular-nums">{value.toLocaleString("ko-KR")}</span>;
 }
 
-function OverviewTab({ dataset, snapshot, isCurrent, revision }: { dataset: DatasetDetailResponse; snapshot: WarehouseSnapshot; isCurrent: boolean; revision?: number }) {
+function OverviewTab({
+  dataset,
+  snapshot,
+  isCurrent,
+  revision,
+  licence,
+  onOpenProfile,
+}: {
+  dataset: DatasetDetailResponse;
+  snapshot: WarehouseSnapshot;
+  isCurrent: boolean;
+  revision?: number;
+  licence: RunLicenceState;
+  onOpenProfile: () => void;
+}) {
   const { t } = useTranslation();
   const counts = coverageCounts(snapshot);
   const reasons = snapshot.coverage?.reasons ?? [];
@@ -345,6 +381,9 @@ function OverviewTab({ dataset, snapshot, isCurrent, revision }: { dataset: Data
             </Link>
           </Definition>
         </dl>
+        <Button className="mt-4" onClick={onOpenProfile} size="sm" variant="secondary">
+          {t("profile.open")}
+        </Button>
       </Card>
       <Card>
         <h2 className="text-sm font-semibold">{t("tableDetail.status")}</h2>
@@ -358,6 +397,9 @@ function OverviewTab({ dataset, snapshot, isCurrent, revision }: { dataset: Data
             </li>
           ))}
         </ul>
+      </Card>
+      <Card className="lg:col-span-2">
+        <RunLicence runId={snapshot.run_id} state={licence} />
       </Card>
     </div>
   );

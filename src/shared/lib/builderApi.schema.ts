@@ -1283,6 +1283,75 @@ export const warehouseTableDetailResponseSchema = warehouseTableSchema.extend({
   snapshots: z.array(warehouseSnapshotSchema),
 });
 
+/**
+ * A column's value range in a snapshot profile (builder#817). `exact` carries min/max over
+ * finite, non-null values sent by `wire_encoding`; `withheld_small_group` means fewer than
+ * `min_range_values` values exist, `no_values` none, `not_applicable` a column that is
+ * neither numeric nor temporal.
+ */
+export const columnRangeSchema = z.object({
+  status: z.enum(["exact", "withheld_small_group", "no_values", "not_applicable"]),
+  min: z.json().optional(),
+  max: z.json().optional(),
+  wire_encoding: z.enum(["number", "decimal_string", "string"]).optional(),
+  value_count: z.number().int().nonnegative().optional(),
+  excluded_count: z.number().int().nonnegative().optional(),
+});
+
+/**
+ * One column of a snapshot profile (builder#817, #896, #897). A `withheld` column — suspected
+ * personal data the BuildSpec does not accept — has only its name, types and sensitivity;
+ * every statistic is null.
+ */
+export const columnProfileSchema = z.object({
+  name: z.string(),
+  storage_type: z.string(),
+  logical_type: z.string(),
+  time_zone: z.string().nullable(),
+  sensitivity: z.object({
+    /** `not_detected` is not a guarantee: only value patterns and column names are checked. */
+    status: z.enum(["not_detected", "suspected", "allowed_by_spec"]),
+    kinds: z.array(z.string()),
+  }),
+  status: z.enum(["profiled", "withheld"]),
+  null_count: z.number().int().nonnegative().nullable(),
+  /** Null for an empty table or a withheld column — not 0. */
+  null_ratio: z.number().nullable(),
+  /** Float columns only; null otherwise. */
+  nan_count: z.number().int().nonnegative().nullable(),
+  /** Float columns only; null otherwise. */
+  infinite_count: z.number().int().nonnegative().nullable(),
+  range: columnRangeSchema.nullable(),
+});
+
+export const snapshotProfileSchema = z.object({
+  snapshot_id: z.string(),
+  artifact_digest: z.string(),
+  algorithm_version: z.number().int().min(1),
+  computed_at: z.string(),
+  scope: z.object({
+    mode: z.enum(["full"]),
+    sampled: z.boolean(),
+    sample_size: z.number().int().nonnegative().nullable(),
+  }),
+  accuracy: z.enum(["exact"]),
+  /** A range over fewer finite values than this is withheld. */
+  min_range_values: z.number().int().min(1),
+  row_count: z.number().int().nonnegative(),
+  columns: z.array(columnProfileSchema),
+});
+
+/** GET /warehouse/tables/{name}/profile (builder#817, contract 1.46.0): one pinned snapshot's column profile. */
+export const snapshotProfileResponseSchema = z.object({
+  snapshot: z.object({
+    table_id: z.string(),
+    logical_name: z.string(),
+    snapshot_id: z.string(),
+    revision: z.number().int().nonnegative(),
+  }),
+  profile: snapshotProfileSchema,
+});
+
 export const warehouseQueryRequestSchema = z.object({
   table: z.string().min(1),
   snapshot: z.string().min(1).optional(),
@@ -1507,6 +1576,10 @@ export type WarehouseTable = z.infer<typeof warehouseTableSchema>;
 export type WarehouseCurrentSnapshot = z.infer<typeof warehouseCurrentSnapshotSchema>;
 export type WarehouseTableDetailResponse = z.infer<typeof warehouseTableDetailResponseSchema>;
 export type WarehouseSnapshot = z.infer<typeof warehouseSnapshotSchema>;
+export type ColumnRange = z.infer<typeof columnRangeSchema>;
+export type ColumnProfile = z.infer<typeof columnProfileSchema>;
+export type SnapshotProfile = z.infer<typeof snapshotProfileSchema>;
+export type SnapshotProfileResponse = z.infer<typeof snapshotProfileResponseSchema>;
 export type WarehouseQueryRequest = z.infer<typeof warehouseQueryRequestSchema>;
 export type WarehouseQueryResponse = z.infer<typeof warehouseQueryResponseSchema>;
 export type WarehouseRowsRequest = z.infer<typeof warehouseRowsRequestSchema>;

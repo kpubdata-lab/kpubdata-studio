@@ -26,7 +26,7 @@ function strings(value: unknown): string[] {
 }
 
 /** Source keys whose own verdict is `forbidden`, from the `redistribution` record. */
-function forbiddenSources(redistribution: unknown): string[] {
+export function forbiddenSources(redistribution: unknown): string[] {
   if (!redistribution || typeof redistribution !== "object") return [];
   const sources = (redistribution as { sources?: unknown }).sources;
   if (!Array.isArray(sources)) return [];
