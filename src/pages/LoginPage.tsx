@@ -23,28 +23,30 @@ import { useAuthStore } from "@/features/auth/store";
 import { AuthError } from "@/features/auth/types";
 import { getOidcConfig } from "@/shared/config/env";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
-import { Button, Card, DemoBadge, ErrorMessage, FormField, TextInput } from "@/shared/ui";
+import { BrandLogo, Button, Card, DemoBadge, ErrorMessage, FormField, TextInput } from "@/shared/ui";
 
-const darkLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
-const lightLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_light.svg", import.meta.url).href;
-
-/** Brief product introduction shown on auth screen. */
+/**
+ * Brief product introduction shown on auth screen. Brand v2 (#628 §19): a light neutral
+ * panel by default, like the sidebar; the dark logo appears only under the dark theme.
+ */
 function BrandPanel() {
   const { t } = useTranslation();
   return (
-    <section className="hidden min-h-screen flex-col bg-sidebar px-8 py-10 text-sidebar-foreground lg:flex lg:w-[48%] lg:px-12 xl:px-16" aria-label={t("auth.page.introLabel")}>
-      <img alt="KPubData Studio" className="w-[160px] self-start xl:w-[192px]" src={darkLogoUrl} />
+    <section className="hidden min-h-screen flex-col border-r border-sidebar-border bg-sidebar px-8 py-10 text-sidebar-foreground lg:flex lg:w-[48%] lg:px-12 xl:px-16" aria-label={t("auth.page.introLabel")}>
+      <div className="self-start">
+        <BrandLogo className="w-[160px] xl:w-[192px]" />
+      </div>
       <div className="my-auto max-w-xl">
         <p className="text-xs font-semibold tracking-[0.16em] text-sidebar-muted">{t("auth.page.tagline")}</p>
-        <h1 className="mt-5 max-w-xl break-keep text-balance text-4xl font-semibold leading-tight tracking-tight text-sidebar-active-foreground xl:text-5xl">
+        <h1 className="mt-5 max-w-xl break-keep text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground xl:text-5xl">
           {t("auth.page.introTitle")}
         </h1>
-        <p className="mt-6 max-w-lg text-base leading-7 text-sidebar-foreground">
+        <p className="mt-6 max-w-lg text-base leading-7 text-muted-foreground">
           {t("auth.page.introDesc")}
         </p>
         <div aria-hidden="true" className="mt-8 flex flex-wrap gap-2">
           {["Source", "BuildSpec", "Preview", "Validate", "Build", "Quality", "AI"].map((item) => (
-            <span className="rounded-full border border-sidebar-border bg-sidebar-hover px-3 py-1.5 text-xs font-medium text-sidebar-foreground" key={item}>{item}</span>
+            <span className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-sidebar-foreground" key={item}>{item}</span>
           ))}
         </div>
       </div>
@@ -98,7 +100,7 @@ export function LoginPage() {
       <section className="flex min-h-screen flex-1 items-center justify-center px-5 py-12 sm:px-8 lg:px-12" aria-label={t("auth.page.loginLabel")}>
         <div className="w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <img alt="KPubData Studio" className="w-[160px] max-w-full" src={lightLogoUrl} />
+            <BrandLogo className="w-[160px] max-w-full" />
           </div>
           <div className="mb-7">
             <p className="text-xs font-semibold tracking-[0.16em] text-accent-subtle-foreground">{t("auth.page.eyebrow")}</p>

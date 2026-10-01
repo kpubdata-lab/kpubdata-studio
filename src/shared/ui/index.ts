@@ -24,4 +24,5 @@ export { Disclosure, type DisclosureProps } from "./Disclosure";
 export { HelpTooltip, type HelpTooltipProps } from "./HelpTooltip";
 export { TermHelp } from "./TermHelp";
 export { StageLegend, QualityLegend } from "./StatusLegend";
+export { BrandLogo, type BrandLogoProps } from "./BrandLogo";
 export { cn, type ClassValue } from "./cn";
