@@ -19,6 +19,10 @@
  *   types narrower than the contract (`BuildJob.response`, #603), or a missing `null`.
  * - every named response example in the contract's `fixtures/responses.json`, as sent
  *   and with an unknown field added, parses with the schema Studio reads it with.
+ * - every named error example there (`error_fixtures`, contract 1.72.0+) is read by the
+ *   Studio code that handles its code — `current_revision` of a revision conflict, the
+ *   sign-up ledger's 403, a publish 409, a policy refusal — or is listed in
+ *   `ERROR_READERS` as one Studio deliberately shows only as its message (#701).
  *
  * A contract form the sampler does not understand is reported, never passed silently.
  * Known drift waits in `KNOWN_DRIFT` with its issue; an entry that stops failing must
@@ -32,8 +36,15 @@ import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
-import { PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
+import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
+import { revisionErrorOutcome } from "@/features/build-spec/specRevisions";
+import { profileRefusal } from "@/features/datasets/profileRefusal";
+import { describePublishFailure } from "@/features/publish/api";
+import { classifyQueryError } from "@/features/sql/api";
+import { asInvalidDetails } from "@/features/validation/api";
+import { httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
+import { clearSignupBlock, useSignupStatusStore } from "./signupStatus";
 
 type JsonSchema = {
   type?: string | string[];
@@ -451,6 +462,372 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
 };
 
+// --- Error responses (#701) ---
+
+/**
+ * One named non-2xx example of the contract (`error_fixtures`, builder#953). An example of
+ * an operation's own response names the operation; one of a shared response
+ * (`components.responses`, e.g. `SignupNotApproved`) names that response instead.
+ */
+type ErrorFixture = {
+  operation_id?: string;
+  response?: string;
+  status: number;
+  example: string;
+  current: unknown;
+  with_additive_fields: unknown;
+};
+
+/** The contract version whose fixtures file first carries `error_fixtures` (builder#953). */
+const ERROR_FIXTURES_SINCE = "1.72.0";
+
+/** `a` compared with `b` as dotted numeric versions: negative, zero or positive. */
+function compareVersions(a: string, b: string): number {
+  const left = a.split(".").map(Number);
+  const right = b.split(".").map(Number);
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const diff = (left[index] ?? 0) - (right[index] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+/**
+ * The error examples of a fixtures file, or why the file is wrong. A file that declares
+ * a contract version from before `error_fixtures` may leave it out; a later one must carry
+ * a non-empty list, so a contract that dropped it cannot pass on nothing.
+ */
+function errorFixturesOf(file: { contract_version?: unknown; error_fixtures?: unknown }): {
+  fixtures: ErrorFixture[];
+  problem: string | null;
+} {
+  const version = typeof file.contract_version === "string" ? file.contract_version : null;
+  if (version === null || !/^\d+(\.\d+)*$/.test(version)) {
+    return { fixtures: [], problem: `contract_version ${JSON.stringify(file.contract_version)} is not a version` };
+  }
+  const required = compareVersions(version, ERROR_FIXTURES_SINCE) >= 0;
+  if (file.error_fixtures === undefined) {
+    return { fixtures: [], problem: required ? `contract ${version} has no error_fixtures (declared since ${ERROR_FIXTURES_SINCE})` : null };
+  }
+  if (!Array.isArray(file.error_fixtures)) return { fixtures: [], problem: "error_fixtures is not a list" };
+  if (required && file.error_fixtures.length === 0) {
+    return { fixtures: [], problem: `contract ${version} has an empty error_fixtures` };
+  }
+  return { fixtures: file.error_fixtures as ErrorFixture[], problem: null };
+}
+
+/** `ERROR_READERS` key of an error example: `<operation or shared response> <status> <example>`. */
+const errorFixtureKey = (fixture: ErrorFixture): string =>
+  `${fixture.operation_id ?? fixture.response ?? "?"} ${fixture.status} ${fixture.example}`;
+
+/** `label: expected X, got Y` when they differ. */
+function differs(label: string, actual: unknown, expected: unknown): string[] {
+  return Object.is(actual, expected) ? [] : [`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`];
+}
+
+/** The sign-up block the request layer records for one error response (#693). */
+function signupBlockRecorded(status: number, body: unknown): unknown {
+  clearSignupBlock();
+  httpError(status, body);
+  const { block } = useSignupStatusStore.getState();
+  clearSignupBlock();
+  return block;
+}
+
+/** `describePublishFailure` of one error response, as the publish page and job see it. */
+const publishKind = (status: number, body: unknown) => describePublishFailure(httpError(status, body)).kind;
+
+/** A query refusal: `queryErrorResponseSchema` parses it and the SQL workspace reads its code. */
+function queryCode(status: number, body: unknown, code: string): string[] {
+  const parsed = schemas.queryErrorResponseSchema.safeParse(body);
+  return [
+    ...(parsed.success ? [] : [`queryErrorResponseSchema: ${parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`]),
+    ...differs("classifyQueryError code", classifyQueryError(httpError(status, body)).code, code),
+  ];
+}
+
+const publishReader = (kind: string): ErrorReader => ({
+  reader: "describePublishFailure (features/publish/api)",
+  check: (status, body) => differs("kind", publishKind(status, body), kind),
+});
+
+type ErrorReader = {
+  /** The Studio code that reads the body. */
+  reader: string;
+  /** What Studio misreads in this body; empty when it reads it as the contract means. */
+  check: (status: number, body: unknown) => string[];
+};
+
+/** An example Studio shows only as its message. `code` is the code it carries and Studio ignores. */
+type NotHandled = { notHandled: string; code?: string };
+
+const MESSAGE_ONLY = "shown as its `error` message (httpError → formatApiErrorMessage); Studio reads nothing else from it";
+
+/**
+ * Every named error example of the contract, keyed by `errorFixtureKey`: the Studio code
+ * that reads it, or why Studio shows it only as its message. An example missing here fails
+ * the test, as does an entry the contract no longer has, and a not-handled example that
+ * gains a code — Studio must decide whether to read a new code, not meet it unannounced.
+ */
+const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
+  "validateSpec 400 MissingSources": {
+    reader: "asInvalidDetails (features/validation/api)",
+    check: (_status, body) =>
+      (asInvalidDetails(body)?.problems.length ?? 0) > 0 ? [] : ["asInvalidDetails: no problems read from the body"],
+  },
+  "validateSpec 400 MalformedYaml": { notHandled: MESSAGE_ONLY },
+  "previewBuild 400 InvalidLimit": { notHandled: `${MESSAGE_ONLY}; Studio always sends a valid limit` },
+  "createBuild 400 UnsafeRunId": { notHandled: `${MESSAGE_ONLY}; Studio submits through submitBuild` },
+  "createBuild 502 ProviderFetchFailed": {
+    notHandled: "shown as its message: extractErrorMessage reads `error`, else `outcomes[].error`",
+  },
+  "listBuildArtifacts 404 RunNotFound": { notHandled: MESSAGE_ONLY },
+  "getBuildArtifactFile 403 DeclaredPiiWithheld": {
+    reader: "artifactDownloadRefusal (features/artifacts/downloadRefusal, #643)",
+    check: (status, body) => {
+      const refusal = artifactDownloadRefusal(httpError(status, body));
+      return [
+        ...differs("refusal code", refusal?.code, "declared_pii_withheld"),
+        ...(refusal?.code === "declared_pii_withheld" && refusal.columns.length > 0 ? [] : ["refusal: no columns read"]),
+      ];
+    },
+  },
+  "getBuildManifest 404 ManifestNotFound": { notHandled: MESSAGE_ONLY },
+  "getBuildSpecSnapshot 404 SnapshotNotFound": { notHandled: `${MESSAGE_ONLY}; the run page treats any 404 as no snapshot` },
+  "listBuilds 400 InvalidLimit": { notHandled: `${MESSAGE_ONLY}; Studio always sends a valid limit` },
+  "getDataset 404 DatasetNotFound": { notHandled: MESSAGE_ONLY },
+  "listDatasetRuns 404 DatasetNotFound": { notHandled: MESSAGE_ONLY },
+  "getPublishReadiness 400 UnsupportedTarget": publishReader("invalid_request"),
+  "publishBuild 400 InvalidDestination": publishReader("invalid_request"),
+  "publishBuild 400 UnknownOption": publishReader("invalid_request"),
+  "publishBuild 400 InvalidPublishCredential": publishReader("invalid_publish_credential"),
+  // A 409 without a code: readiness changed between the check and the publish. Its
+  // `blockers` are not read yet (#677 shows them).
+  "publishBuild 409 Blocked": publishReader("readiness_changed"),
+  "publishBuild 409 InProgress": publishReader("publish_in_progress"),
+  "publishBuild 409 UnknownState": publishReader("publish_state_unknown"),
+  "publishBuild 409 Conflict": publishReader("publish_conflict"),
+  "publishBuild 502 RemoteFailure": publishReader("publish_failed"),
+  "getBuildStageDetail 400 MissingSource": { notHandled: `${MESSAGE_ONLY}; Studio always sends the source` },
+  "getDatasetQualityHistory 404 DatasetNotFound": { notHandled: MESSAGE_ONLY },
+  "getBuildQuality 404 RunNotFound": { notHandled: MESSAGE_ONLY },
+  "queryBuiltDataset 400 UnsafeQuery": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "unsafe_query") },
+  "queryBuiltDataset 400 InvalidContext": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "invalid_context") },
+  "queryBuiltDataset 403 Forbidden": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "forbidden") },
+  "queryBuiltDataset 404 ArtifactUnavailable": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "artifact_unavailable") },
+  "queryBuiltDataset 429 QueryBusy": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "query_busy") },
+  "queryBuiltDataset 504 QueryTimeout": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "query_timeout") },
+  "saveRevision 409 RevisionConflict": {
+    reader: "revisionErrorOutcome (features/build-spec/specRevisions, #682)",
+    check: (status, body) => revisionConflictProblems(status, body),
+  },
+  "revertRevision 409 RevisionConflict": {
+    reader: "revisionErrorOutcome (features/build-spec/specRevisions, #682)",
+    check: (status, body) => revisionConflictProblems(status, body),
+  },
+  "SignupNotApproved 403 SignupPending": {
+    reader: "httpError → noteSignupBlock (shared/lib/signupStatus, #693)",
+    check: (status, body) => differs("sign-up block", signupBlockRecorded(status, body), "pending"),
+  },
+  "SignupNotApproved 403 SignupRejected": {
+    reader: "httpError → noteSignupBlock (shared/lib/signupStatus, #693)",
+    check: (status, body) => differs("sign-up block", signupBlockRecorded(status, body), "rejected"),
+  },
+  "Unauthorized 401 MissingOrInvalidApiKey": {
+    notHandled: "apiFetch acts on the 401 status (re-authenticates once, #189); the body is only its message",
+  },
+  "PiiDeclarationUnavailable 503 PiiDeclarationUnavailable": {
+    reader: "artifactDownloadRefusal, profileRefusal and classifyQueryError (#640, #643)",
+    check: (status, body) => {
+      const download = artifactDownloadRefusal(httpError(status, body));
+      const profile = profileRefusal(httpError(status, body));
+      return [
+        ...differs("download refusal", download?.code === "pii_declaration_unavailable" ? download.dataset !== null : download?.code, true),
+        ...differs("profile refusal", profile?.code === "pii_declaration_unavailable" ? profile.dataset !== null : profile?.code, true),
+        ...queryCode(status, body, "pii_declaration_unavailable"),
+      ];
+    },
+  },
+  "RedistributionForbidden 403 RedistributionForbidden": {
+    reader: "artifactDownloadRefusal, profileRefusal and classifyQueryError (#640, #643)",
+    check: (status, body) => {
+      const download = artifactDownloadRefusal(httpError(status, body));
+      const profile = profileRefusal(httpError(status, body));
+      return [
+        ...differs("download refusal", download?.code === "redistribution_forbidden" ? download.sources.length > 0 : download?.code, true),
+        ...differs("profile refusal", profile?.code === "redistribution_forbidden" ? profile.sources.length > 0 : profile?.code, true),
+        ...queryCode(status, body, "redistribution_forbidden"),
+      ];
+    },
+  },
+};
+
+/** A revision conflict must reach the screen with the revision to reload (#682). */
+function revisionConflictProblems(status: number, body: unknown): string[] {
+  const outcome = revisionErrorOutcome(httpError(status, body));
+  if (outcome.status !== "conflict") return [`outcome: expected "conflict", got ${JSON.stringify(outcome.status)}`];
+  return Number.isInteger(outcome.currentRevision) ? [] : ["currentRevision: not read from the body"];
+}
+
+/** Error examples `ERROR_READERS` does not list, and listed ones the examples no longer have. */
+function errorReaderCoverage(fixtures: ErrorFixture[], readers: Record<string, unknown> = ERROR_READERS) {
+  const keys = new Set(fixtures.map(errorFixtureKey));
+  return {
+    unlisted: [...keys].filter((key) => !(key in readers)).sort(),
+    stale: Object.keys(readers).filter((key) => !keys.has(key)).sort(),
+  };
+}
+
+/**
+ * What Studio misreads in one error example, as sent and with an added field. Every
+ * example's message is checked; a read one is also checked by its reader, and a not-handled
+ * one must carry no code other than the one its entry names.
+ */
+function errorFixtureProblems(fixture: ErrorFixture): string[] {
+  const entry = ERROR_READERS[errorFixtureKey(fixture)];
+  if (!entry) return [`${errorFixtureKey(fixture)}: not in ERROR_READERS`];
+  const problems: string[] = [];
+  for (const [form, body] of [["current", fixture.current], ["with_additive_fields", fixture.with_additive_fields]] as const) {
+    const error = (body as { error?: unknown } | null)?.error;
+    if (typeof error === "string") problems.push(...differs(`${form}: message`, httpError(fixture.status, body).message, error));
+    if ("notHandled" in entry) {
+      const code = (body as { code?: unknown } | null)?.code;
+      if (code !== entry.code) {
+        problems.push(`${form}: carries code ${JSON.stringify(code)} that its not-handled entry does not name — read it or list it`);
+      }
+      continue;
+    }
+    problems.push(...entry.check(fixture.status, body).map((line) => `${form}: ${line}`));
+  }
+  clearSignupBlock();
+  return problems;
+}
+
+/** The contract 1.72.0 examples the checks below rewrite, so they run without a checkout. */
+const SAMPLE_ERROR_FIXTURES: ErrorFixture[] = [
+  {
+    operation_id: "saveRevision",
+    status: 409,
+    example: "RevisionConflict",
+    current: { error: "the document is at revision 2", code: "revision_conflict", current_revision: 2 },
+    with_additive_fields: { error: "the document is at revision 2", code: "revision_conflict", current_revision: 2, future_optional_field: "x" },
+  },
+  {
+    response: "SignupNotApproved",
+    status: 403,
+    example: "SignupPending",
+    current: { error: "this account's sign-up is waiting for an administrator's approval", code: "signup_pending" },
+    with_additive_fields: { error: "this account's sign-up is waiting for an administrator's approval", code: "signup_pending", future_optional_field: "x" },
+  },
+  {
+    response: "SignupNotApproved",
+    status: 403,
+    example: "SignupRejected",
+    current: { error: "this account's sign-up was rejected", code: "signup_rejected" },
+    with_additive_fields: { error: "this account's sign-up was rejected", code: "signup_rejected", future_optional_field: "x" },
+  },
+  {
+    operation_id: "listBuildArtifacts",
+    status: 404,
+    example: "RunNotFound",
+    current: { error: "run not found: missing-run" },
+    with_additive_fields: { error: "run not found: missing-run", future_optional_field: "x" },
+  },
+];
+
+/** `fixture` with `edit` applied to both of its bodies — a contract change, simulated. */
+function mutated(fixture: ErrorFixture, edit: (body: Record<string, unknown>) => Record<string, unknown>): ErrorFixture {
+  return {
+    ...fixture,
+    current: edit({ ...(fixture.current as Record<string, unknown>) }),
+    with_additive_fields: edit({ ...(fixture.with_additive_fields as Record<string, unknown>) }),
+  };
+}
+
+/** Rename `from` to `to` in a body, keeping its value. */
+const renamed = (from: string, to: string) => (body: Record<string, unknown>) => {
+  const { [from]: value, ...rest } = body;
+  return { ...rest, [to]: value };
+};
+
+/** Replace the body's `code`. */
+const recoded = (code: string) => (body: Record<string, unknown>) => ({ ...body, code });
+
+/** The negative checks, against whichever examples they are given (inline or the contract's). */
+function errorFixtureNegativeChecks(fixtures: () => ErrorFixture[]) {
+  const find = (key: string) => {
+    const fixture = fixtures().find((entry) => errorFixtureKey(entry) === key);
+    expect(fixture, key).toBeDefined();
+    return fixture as ErrorFixture;
+  };
+
+  it("reads current_revision from a revision conflict, and fails when the contract renames it", () => {
+    const conflict = find("saveRevision 409 RevisionConflict");
+    expect(errorFixtureProblems(conflict)).toEqual([]);
+    expect(errorFixtureProblems(mutated(conflict, renamed("current_revision", "latest_revision")))).toEqual([
+      "current: currentRevision: not read from the body",
+      "with_additive_fields: currentRevision: not read from the body",
+    ]);
+  });
+
+  it.each([
+    ["SignupNotApproved 403 SignupPending", "signup_waiting", "pending"],
+    ["SignupNotApproved 403 SignupRejected", "signup_denied", "rejected"],
+  ])("reads %s as a sign-up block, and fails when the contract renames its code", (key, newCode, block) => {
+    const fixture = find(key);
+    expect(errorFixtureProblems(fixture)).toEqual([]);
+    expect(errorFixtureProblems(mutated(fixture, recoded(newCode)))).toEqual([
+      `current: sign-up block: expected "${block}", got null`,
+      `with_additive_fields: sign-up block: expected "${block}", got null`,
+    ]);
+  });
+
+  it("fails when an example Studio shows only as its message gains a code", () => {
+    const fixture = mutated(find("listBuildArtifacts 404 RunNotFound"), recoded("run_archived"));
+    expect(errorFixtureProblems(fixture)).toEqual([
+      'current: carries code "run_archived" that its not-handled entry does not name — read it or list it',
+      'with_additive_fields: carries code "run_archived" that its not-handled entry does not name — read it or list it',
+    ]);
+  });
+
+  it("fails on an error example ERROR_READERS does not list", () => {
+    const unknown = { ...find("listBuildArtifacts 404 RunNotFound"), example: "RunArchived", status: 410 };
+    expect(errorFixtureProblems(unknown)).toEqual(["listBuildArtifacts 410 RunArchived: not in ERROR_READERS"]);
+    expect(errorReaderCoverage([...fixtures(), unknown]).unlisted).toEqual(["listBuildArtifacts 410 RunArchived"]);
+  });
+}
+
+describe("error fixture checks (#701)", () => {
+  // Always runs, on inline 1.72.0 examples: shows each check fails on what it guards.
+  errorFixtureNegativeChecks(() => SAMPLE_ERROR_FIXTURES);
+
+  it("requires error_fixtures from the contract version that introduced them", () => {
+    expect(errorFixturesOf({ contract_version: "1.71.0" })).toEqual({ fixtures: [], problem: null });
+    expect(errorFixturesOf({ contract_version: "1.72.0" }).problem).toBe(
+      "contract 1.72.0 has no error_fixtures (declared since 1.72.0)",
+    );
+    expect(errorFixturesOf({ contract_version: "1.100.0" }).problem).toBe(
+      "contract 1.100.0 has no error_fixtures (declared since 1.72.0)",
+    );
+    expect(errorFixturesOf({ contract_version: "2.0.0", error_fixtures: [] }).problem).toBe(
+      "contract 2.0.0 has an empty error_fixtures",
+    );
+    expect(errorFixturesOf({ contract_version: "1.72.0", error_fixtures: {} }).problem).toBe("error_fixtures is not a list");
+    expect(errorFixturesOf({}).problem).toBe("contract_version undefined is not a version");
+    expect(errorFixturesOf({ contract_version: "1.72.0", error_fixtures: SAMPLE_ERROR_FIXTURES })).toEqual({
+      fixtures: SAMPLE_ERROR_FIXTURES,
+      problem: null,
+    });
+  });
+
+  it("reports listed examples the contract no longer has", () => {
+    expect(errorReaderCoverage(SAMPLE_ERROR_FIXTURES, { "saveRevision 409 RevisionConflict": {}, "gone 400 Old": {} })).toEqual({
+      unlisted: ["SignupNotApproved 403 SignupPending", "SignupNotApproved 403 SignupRejected", "listBuildArtifacts 404 RunNotFound"],
+      stale: ["gone 400 Old"],
+    });
+  });
+});
+
 describe("contract response sampler", () => {
   // Always runs: shows the check itself fails on a Studio schema stricter than the contract.
   const components: Record<string, JsonSchema> = {
@@ -740,5 +1117,38 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
         }
       },
     );
+  });
+
+  describe("named error examples (contract/fixtures/responses.json error_fixtures, #701)", () => {
+    const fixturePath = contractPath ? join(dirname(contractPath), "fixtures", "responses.json") : "";
+    const file =
+      fixturePath && existsSync(fixturePath)
+        ? (JSON.parse(readFileSync(fixturePath, "utf-8")) as { contract_version?: unknown; error_fixtures?: unknown })
+        : {};
+    const { fixtures: errorFixtures, problem } = errorFixturesOf(file);
+
+    it(`are present when the contract is ${ERROR_FIXTURES_SINCE} or later`, () => {
+      expect(problem).toBeNull();
+    });
+
+    it("are each read by Studio or listed as not handled, and every listed one exists", () => {
+      // Before 1.72.0 the file has none; there is nothing to compare ERROR_READERS with.
+      if (errorFixtures.length === 0) return;
+      const { unlisted, stale } = errorReaderCoverage(errorFixtures);
+      expect(unlisted, "error examples Studio neither reads nor lists as not handled — add them to ERROR_READERS").toEqual([]);
+      expect(stale, "listed in ERROR_READERS but no longer in the contract — remove them").toEqual([]);
+    });
+
+    it.each(errorFixtures.map((fixture) => [errorFixtureKey(fixture), fixture] as const))(
+      "%s: Studio reads it as the contract means, as sent and with an added field",
+      (_label, fixture) => {
+        expect(errorFixtureProblems(fixture)).toEqual([]);
+      },
+    );
+
+    // The contract's own examples, rewritten the way a breaking rename would.
+    describe.skipIf(errorFixtures.length === 0)("rewritten", () => {
+      errorFixtureNegativeChecks(() => errorFixtures);
+    });
   });
 });

@@ -350,9 +350,10 @@ export async function apiFetch<T>(
 /**
  * The error for one non-2xx Builder response — every request path builds it here, so a
  * sign-up ledger refusal (403 `signup_pending`/`signup_rejected`, #658) is recorded once
- * for the app shell whichever call met it first.
+ * for the app shell whichever call met it first. Exported so the contract drift check can
+ * read Builder's error examples through the same path (#701).
  */
-function httpError(status: number, parsed: unknown): ApiError {
+export function httpError(status: number, parsed: unknown): ApiError {
   noteSignupBlock(status, parsed);
   return new ApiError(status, formatApiErrorMessage(status, parsed), parsed);
 }
