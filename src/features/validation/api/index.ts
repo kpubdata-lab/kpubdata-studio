@@ -10,7 +10,7 @@ import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builder
 import type { BuildSpec } from "@/shared/lib/types";
 
 /** Determines whether ApiError.details is Builder's invalid response ({status, problems}). */
-function asInvalidDetails(details: unknown): { problems: string[] } | null {
+export function asInvalidDetails(details: unknown): { problems: string[] } | null {
   if (details && typeof details === "object" && "status" in details) {
     const record = details as { status?: unknown; problems?: unknown };
     if (record.status === "invalid") {
