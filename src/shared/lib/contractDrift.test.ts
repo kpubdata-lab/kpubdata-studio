@@ -951,6 +951,12 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
   const studio = schemas as unknown as Record<string, z.ZodType>;
   const responseNames = responseSchemaNames(contract);
 
+  /** Whether the contract declares an operation with this id. */
+  const operationExists = (operationId: string): boolean =>
+    Object.values(contract.paths ?? {}).some((operations) =>
+      (Object.values(operations) as { operationId?: string }[]).some((operation) => operation?.operationId === operationId),
+    );
+
   /** The contract's `$ref` response schema name for an operation's 2xx response. */
   const operationSchemaName = (operationId: string): string | null => {
     for (const operations of Object.values(contract.paths ?? {})) {
@@ -979,8 +985,10 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
 
   it("maps every OPERATION_SCHEMAS entry to a contract operation and a Studio schema", () => {
     const broken = Object.entries(OPERATION_SCHEMAS).filter(([operationId, mapped]) => {
+      // A skipped operation reads nothing, so its response need not be a named schema
+      // (getBuildArtifactFile's is a oneOf); it must still exist in the contract.
+      if (typeof mapped !== "string" && "skip" in mapped) return !operationExists(operationId);
       if (operationSchemaName(operationId) === null) return true;
-      if (typeof mapped !== "string" && "skip" in mapped) return false;
       return !((typeof mapped === "string" ? mapped : mapped.schema) in schemas);
     });
     expect(broken.map(([operationId]) => operationId)).toEqual([]);
