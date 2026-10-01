@@ -17,6 +17,7 @@ import {
   type RedistributionVerdict,
 } from "@/features/publish/api";
 import { describePublishIssue, redistributionLabel, type PublishIssueLink } from "@/features/publish/issues";
+import { DataCardPreview } from "@/features/publish/DataCardPreview";
 import { usePublishJob } from "@/features/publish/usePublishJob";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -393,6 +394,8 @@ export function BuildPublishPage() {
           </div>
         ) : null}
       </Card>
+
+      <DataCardPreview runId={runId} />
 
       <Card>
         <h2 className="text-sm font-semibold">{t("buildPublish.settingsTitle")}</h2>

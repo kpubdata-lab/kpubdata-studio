@@ -152,6 +152,39 @@ export const artifactsResponseSchema = z.object({
   files: z.array(z.string()),
 });
 
+/**
+ * One provenance entry of a dataset card (`DatasetCardSource`, contract 1.75.0, #646).
+ * `license_declared`, `license_provider` and `license_mismatch` are sent from 1.75.0; a
+ * card written before that lacks them, so they are optional here.
+ */
+export const datasetCardSourceSchema = z.object({
+  source: z.string(),
+  institution: z.string(),
+  url: z.string(),
+  license: z.string(),
+  collected_at: z.string(),
+  license_declared: z.string().nullable().optional(),
+  license_provider: z.string().nullable().optional(),
+  license_mismatch: z.boolean().optional(),
+});
+
+/**
+ * A Gold output's `card.json` (`DatasetCard`, kpubdata-builder#906/#955), served by
+ * `GET /artifacts/{run_id}/{file_path}` for `gold/<source>/card.json`. Read the
+ * structured fields rather than the sentences; `processing_declared` is sent from 1.75.0.
+ */
+export const datasetCardSchema = z.object({
+  card_version: z.number().int(),
+  title: z.string(),
+  provenance: z.array(datasetCardSourceSchema),
+  processing: z.array(z.string()),
+  processing_declared: z.boolean().optional(),
+  personal_information: z.string(),
+});
+
+export type DatasetCard = z.infer<typeof datasetCardSchema>;
+export type DatasetCardSource = z.infer<typeof datasetCardSourceSchema>;
+
 /** GET /builds/{run_id}/manifest response. Builder contract allows extension fields, so preserve them. */
 export const buildManifestResponseSchema = z.object({
   build_id: z.string(),
