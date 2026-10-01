@@ -1,21 +1,29 @@
 /**
- * The data card preview on the publish page (#646, kpubdata-builder#906, contract 1.71.0):
- * the card Builder wrote as `gold/<key>/card.json` is read through the artifact routes and
- * rendered section by section; a licence that differs from kpubdata's declaration is
- * flagged; an explicit "no transformation" is told apart from an empty section.
+ * The data card preview on the publish page (#646, kpubdata-builder#906/#955, contract
+ * 1.75.0): the card Builder wrote as `gold/<key>/card.json` (`DatasetCard`) is read through
+ * the artifact routes and rendered section by section; a licence that differs from
+ * kpubdata's declaration is flagged; an explicit "no transformation" is told apart from an
+ * empty section.
+ *
+ * A 1.75.0 card says both facts in fields (`license_mismatch`, `processing_declared`), and
+ * those win over the sentences. The 1.75.0 cases below word the sentences differently from
+ * what the fields say — the contract warns the wording may change — so reading the
+ * sentences instead of the fields fails them. Cards written before 1.75.0 (`SINGLE_CARD`,
+ * `JOINED_CARD`) lack the fields and go through the sentence fallback.
  */
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { cardPaths, classifyProcessingStep, splitCardLicence } from "@/features/publish/card";
+import { cardLicence, cardPaths, cardProcessing, classifyProcessingStep, splitCardLicence } from "@/features/publish/card";
+import { datasetCardSchema } from "@/shared/lib/builderApi.schema";
 import { BuildPublishPage } from "@/pages/BuildPublishPage";
 import en from "@/shared/i18n/locales/en.json";
 import ko from "@/shared/i18n/locales/ko.json";
 
 const READINESS = { run_id: "run-7", target: "huggingface", ready: true, blockers: [], warnings: [] };
 
-/** A card exactly as Builder's `card_sections` writes it (kpubdata-builder#906). */
+/** A card as Builder wrote it before contract 1.75.0 (kpubdata-builder#906): no structured fields. */
 const SINGLE_CARD = {
   card_version: 1,
   title: "Air quality",
@@ -46,6 +54,61 @@ const JOINED_CARD = {
     "Joined left and right (inner join)",
   ],
   personal_information: "",
+};
+
+/** 1.75.0: a mismatch the fields state, worded unlike the pre-1.75.0 sentence. */
+const FIELD_MISMATCH_CARD = {
+  card_version: 1,
+  title: "Air quality",
+  provenance: [
+    {
+      source: "airkorea.pm",
+      institution: "Korea Environment Corporation",
+      url: "https://www.data.go.kr/data/15073861/openapi.do",
+      license: "CC-BY-4.0 (the provider says KOGL-1)",
+      collected_at: "2026-09-30 12:00 UTC",
+      license_declared: "CC-BY-4.0",
+      license_provider: "KOGL-1",
+      license_mismatch: true,
+    },
+  ],
+  processing: ["Renamed v to value"],
+  processing_declared: true,
+  personal_information: "No column was declared personal information.",
+};
+
+/** 1.75.0: no mismatch and no processing, whatever the sentences look like. */
+const FIELD_PLAIN_CARD = {
+  card_version: 1,
+  title: "Survey",
+  provenance: [
+    {
+      source: "survey",
+      institution: "Example Institute",
+      url: "uploaded file",
+      license: "CC-BY-4.0; the provider declares: CC-BY-4.0 international",
+      collected_at: "2026-09-30 12:00 UTC",
+      license_declared: "CC-BY-4.0",
+      license_provider: "CC-BY-4.0 international",
+      license_mismatch: false,
+    },
+  ],
+  processing: ["Nothing was declared; values are kept."],
+  processing_declared: false,
+  personal_information: "No column was declared personal information.",
+};
+
+/** 1.75.0: a composed output — two provenance entries, ending with its join. */
+const FIELD_JOINED_CARD = {
+  card_version: 1,
+  title: "Joined",
+  provenance: [
+    { source: "left", institution: "A", url: "https://a.example", license: "KOGL-1", collected_at: "2026-09-30 12:00 UTC", license_declared: "KOGL-1", license_provider: null, license_mismatch: false },
+    { source: "right", institution: "B", url: "https://b.example", license: "KOGL-1", collected_at: "2026-09-30 12:00 UTC", license_declared: "KOGL-1", license_provider: null, license_mismatch: false },
+  ],
+  processing: ["left: Renamed SIDO to sido", "Combined left with right on sido (inner)"],
+  processing_declared: true,
+  personal_information: "No column was declared personal information.",
 };
 
 function json(status: number, body: unknown): Response {
@@ -105,19 +168,104 @@ describe("card.json reading (#646)", () => {
   });
 
   it("splits a licence that differs from the provider's declaration", () => {
-    expect(splitCardLicence("cc-by-4.0; the provider declares: KOGL type 1")).toEqual({ declared: "cc-by-4.0", provider: "KOGL type 1" });
-    expect(splitCardLicence("KOGL type 1")).toEqual({ declared: "KOGL type 1", provider: null });
+    expect(splitCardLicence("cc-by-4.0; the provider declares: KOGL type 1")).toEqual({ declared: "cc-by-4.0", provider: "KOGL type 1", mismatch: true });
+    expect(splitCardLicence("KOGL type 1")).toEqual({ declared: "KOGL type 1", provider: null, mismatch: false });
   });
 
   it("recognizes the explicit no-processing step, prefixed or not, and a join step", () => {
     expect(classifyProcessingStep("No transformation declared: values are as the source gave them.").kind).toBe("none");
     expect(classifyProcessingStep("right: No transformation declared: values are as the source gave them.")).toMatchObject({ kind: "none", source: "right" });
-    expect(classifyProcessingStep("Joined left and right (inner join)")).toMatchObject({ kind: "join", left: "left", right: "right", joinType: "inner" });
+    expect(classifyProcessingStep("Joined left and right (inner join)")).toEqual({ kind: "join", text: "Joined left and right (inner join)" });
     expect(classifyProcessingStep("Renamed SIDO to sido").kind).toBe("step");
   });
 });
 
-describe("publish page card preview (#646)", () => {
+describe("card fields (contract 1.75.0)", () => {
+  it("parses a card with and without the 1.75.0 fields, and refuses one missing a required section", () => {
+    expect(datasetCardSchema.parse(FIELD_MISMATCH_CARD).processing_declared).toBe(true);
+    expect(datasetCardSchema.parse(SINGLE_CARD).processing_declared).toBeUndefined();
+    expect(datasetCardSchema.parse(FIELD_JOINED_CARD).provenance[0].license_provider).toBeNull();
+    const { processing: _p, ...noProcessing } = SINGLE_CARD;
+    expect(datasetCardSchema.safeParse(noProcessing).success).toBe(false);
+  });
+
+  it("reads the licence from the fields when they are there, from the sentence otherwise", () => {
+    const fields = datasetCardSchema.parse(FIELD_MISMATCH_CARD).provenance[0];
+    expect(cardLicence(fields)).toEqual({ declared: "CC-BY-4.0", provider: "KOGL-1", mismatch: true });
+    const plain = datasetCardSchema.parse(FIELD_PLAIN_CARD).provenance[0];
+    expect(cardLicence(plain)?.mismatch).toBe(false);
+    const older = datasetCardSchema.parse(SINGLE_CARD).provenance[0];
+    expect(cardLicence(older)).toEqual({ declared: "cc-by-4.0", provider: "KOGL type 1", mismatch: true });
+  });
+
+  it("reads no processing and the join from the fields when they are there", () => {
+    expect(cardProcessing(datasetCardSchema.parse(FIELD_PLAIN_CARD))).toEqual({
+      kind: "steps",
+      steps: [{ kind: "none", source: null, text: "Nothing was declared; values are kept." }],
+    });
+    const joined = cardProcessing(datasetCardSchema.parse(FIELD_JOINED_CARD));
+    expect(joined.kind === "steps" && joined.steps.map((step) => step.kind)).toEqual(["step", "join"]);
+    expect(cardProcessing({ ...datasetCardSchema.parse(FIELD_PLAIN_CARD), processing: [] })).toEqual({ kind: "empty" });
+  });
+});
+
+describe("publish page card preview, 1.75.0 fields (#646)", () => {
+  it("flags the mismatch license_mismatch states, with license_declared and license_provider", async () => {
+    stubBuilder(["gold/airkorea.pm/card.json"], { "gold/airkorea.pm/card.json": FIELD_MISMATCH_CARD });
+    renderPublish();
+
+    const output = await screen.findByRole("region", { name: "Gold 출력 airkorea.pm" });
+    const licence = output.querySelector('[data-card-field="licence"]') as HTMLElement;
+    expect(within(licence).getByText("CC-BY-4.0")).toBeInTheDocument();
+    const badge = within(licence).getByText(ko.publish.card.licenceMismatch).closest("[data-status]");
+    expect(badge).toHaveAttribute("data-status", "actionable");
+    expect(badge).toHaveAttribute("data-tone", "warning");
+    expect(within(licence).getByText("KPubData 카탈로그 선언: KOGL-1")).toBeInTheDocument();
+    expect(output.querySelector('[data-processing="none"]')).toBeNull();
+  });
+
+  it("does not flag a licence whose license_mismatch is false, whatever its sentence", async () => {
+    stubBuilder(["gold/survey/card.json"], { "gold/survey/card.json": FIELD_PLAIN_CARD });
+    renderPublish();
+
+    const output = await screen.findByRole("region", { name: "Gold 출력 survey" });
+    expect(output.querySelector("[data-licence-mismatch]")).toBeNull();
+    expect(within(output).queryByText(ko.publish.card.licenceMismatch)).not.toBeInTheDocument();
+  });
+
+  it("says no processing when processing_declared is false, apart from an empty section", async () => {
+    stubBuilder(["gold/survey/card.json", "gold/empty/card.json"], {
+      "gold/survey/card.json": FIELD_PLAIN_CARD,
+      "gold/empty/card.json": { ...FIELD_PLAIN_CARD, processing: [] },
+    });
+    renderPublish();
+
+    const none = await screen.findByRole("region", { name: "Gold 출력 survey" });
+    const step = none.querySelector('[data-processing="none"]') as HTMLElement;
+    expect(step).not.toBeNull();
+    expect(within(step).getByText(ko.publish.card.noProcessing)).toHaveAttribute("data-status", "normal");
+    expect(within(step).getByText("Nothing was declared; values are kept.")).toBeInTheDocument();
+    expect(within(none).queryByText(ko.publish.card.empty)).not.toBeInTheDocument();
+
+    const empty = await screen.findByRole("region", { name: "Gold 출력 empty" });
+    expect(empty.querySelector('[data-processing="none"]')).toBeNull();
+    expect(within(empty).getByText(ko.publish.card.empty).closest("[data-status]")).toHaveAttribute("data-tone", "failure");
+  });
+
+  it("labels a composed output's last step as its join", async () => {
+    stubBuilder(["gold/joined/card.json"], { "gold/joined/card.json": FIELD_JOINED_CARD });
+    renderPublish();
+
+    const output = await screen.findByRole("region", { name: "Gold 출력 joined" });
+    const join = output.querySelector('[data-processing="join"]') as HTMLElement;
+    expect(within(join).getByText(ko.publish.card.joinLabel)).toBeInTheDocument();
+    expect(within(join).getByText("Combined left with right on sido (inner)")).toBeInTheDocument();
+    expect(output.querySelectorAll('[data-processing="join"]')).toHaveLength(1);
+    expect(within(output).getByText("left: Renamed SIDO to sido").closest("li")).toHaveAttribute("data-processing", "step");
+  });
+});
+
+describe("publish page card preview, pre-1.75.0 sentence fallback (#646)", () => {
   it("renders the real card response section by section", async () => {
     const fetchMock = stubBuilder(["manifest.json", "gold/airkorea.pm/card.json"], { "gold/airkorea.pm/card.json": SINGLE_CARD });
     renderPublish();
@@ -133,7 +281,7 @@ describe("publish page card preview (#646)", () => {
     expect(within(output).getByText(/No column was declared personal information/)).toBeInTheDocument();
   });
 
-  it("flags a licence that differs from kpubdata's declaration", async () => {
+  it("flags a licence that differs from the KPubData catalogue's declaration", async () => {
     stubBuilder(["gold/airkorea.pm/card.json"], { "gold/airkorea.pm/card.json": SINGLE_CARD });
     renderPublish();
 

@@ -1,7 +1,7 @@
 /**
  * The data card a publish will carry, shown before publishing (#646).
  *
- * Each Gold output's `card.json` (kpubdata-builder#906) is rendered section by section —
+ * Each Gold output's `card.json` (`DatasetCard`, kpubdata-builder#906/#955) is rendered section by section —
  * provenance, processing, personal information — with Builder's own sentences, because
  * those sentences are what the published README says. Studio adds only labels and three
  * marks the user has to see before publishing:
@@ -16,11 +16,12 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
-  classifyProcessingStep,
+  cardLicence,
+  cardProcessing,
   failureStatus,
   loadDataCards,
-  splitCardLicence,
   type CardOutput,
+  type CardProcessingStep,
   type DataCard,
   type DataCardSource,
 } from "@/features/publish/card";
@@ -133,8 +134,8 @@ function SectionHeading({ children }: { children: string }) {
 
 function CardSections({ card }: { card: DataCard }) {
   const { t } = useTranslation();
-  const provenance = card.provenance ?? [];
-  const processing = card.processing ?? [];
+  const provenance = card.provenance;
+  const processing = cardProcessing(card);
   return (
     <div>
       {filled(card.title) ? <p className="mt-1 text-sm text-muted-foreground">{card.title}</p> : null}
@@ -145,18 +146,18 @@ function CardSections({ card }: { card: DataCard }) {
       ) : (
         <div className="mt-2 space-y-3">
           {provenance.map((source, index) => (
-            <SourceProvenance key={`${source.source ?? ""}-${index}`} source={source} />
+            <SourceProvenance key={`${source.source}-${index}`} source={source} />
           ))}
         </div>
       )}
 
       <SectionHeading>{t("publish.card.sections.processing")}</SectionHeading>
-      {processing.length === 0 ? (
+      {processing.kind === "empty" ? (
         <p className="mt-2 text-sm"><EmptySection /></p>
       ) : (
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm" data-card-section="processing">
-          {processing.map((raw, index) => (
-            <ProcessingStep key={`${index}-${raw}`} step={raw} />
+          {processing.steps.map((step, index) => (
+            <ProcessingStep key={`${index}-${step.text}`} step={step} />
           ))}
         </ol>
       )}
@@ -172,10 +173,10 @@ function CardSections({ card }: { card: DataCard }) {
 
 function SourceProvenance({ source }: { source: DataCardSource }) {
   const { t } = useTranslation();
-  const licence = filled(source.license) ? splitCardLicence(source.license) : null;
+  const licence = cardLicence(source);
   return (
-    <div data-card-source={source.source ?? ""}>
-      <p className="text-sm font-medium">{t("publish.card.sourceHeading", { source: source.source ?? "—" })}</p>
+    <div data-card-source={source.source}>
+      <p className="text-sm font-medium">{t("publish.card.sourceHeading", { source: source.source || "—" })}</p>
       <dl className="mt-1 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[max-content_minmax(0,1fr)]">
         <dt className="text-muted-foreground">{t("publish.card.fields.attribution")}</dt>
         <dd>{filled(source.institution) ? source.institution : <EmptySection />}</dd>
@@ -196,10 +197,10 @@ function SourceProvenance({ source }: { source: DataCardSource }) {
           {licence ? (
             <>
               <span>{licence.declared}</span>
-              {licence.provider ? (
+              {licence.mismatch ? (
                 <span className="mt-1 flex flex-wrap items-center gap-2" data-licence-mismatch="true">
                   <ActionableStatus tone="warning" axis={t("publish.card.licenceMismatchAxis")}>{t("publish.card.licenceMismatch")}</ActionableStatus>
-                  <span className="text-xs">{t("publish.card.providerDeclares", { licence: licence.provider })}</span>
+                  {licence.provider ? <span className="text-xs">{t("publish.card.providerDeclares", { licence: licence.provider })}</span> : null}
                 </span>
               ) : null}
             </>
@@ -210,14 +211,13 @@ function SourceProvenance({ source }: { source: DataCardSource }) {
         <dt className="text-muted-foreground">{t("publish.card.fields.collectedAt")}</dt>
         <dd>{filled(source.collected_at) ? source.collected_at : <EmptySection />}</dd>
       </dl>
-      {licence?.provider ? <p className="mt-1 text-xs text-status-warning">{t("publish.card.licenceMismatchNote")}</p> : null}
+      {licence?.mismatch ? <p className="mt-1 text-xs text-status-warning">{t("publish.card.licenceMismatchNote")}</p> : null}
     </div>
   );
 }
 
-function ProcessingStep({ step }: { step: string }) {
+function ProcessingStep({ step: parsed }: { step: CardProcessingStep }) {
   const { t } = useTranslation();
-  const parsed = classifyProcessingStep(step);
   if (parsed.kind === "none") {
     return (
       <li data-processing="none">

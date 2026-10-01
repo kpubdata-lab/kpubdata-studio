@@ -1109,11 +1109,17 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
       expect(fixtures.length).toBeGreaterThan(0);
     });
 
-    /** The contract's response schema name for a fixture, when it is a plain `$ref`. */
+    /**
+     * The contract's response schema name for a fixture: a plain `$ref`, or the one `$ref`
+     * of a `oneOf` whose other members describe nothing (`getBuildArtifactFile`'s
+     * `DatasetCard` or any other JSON file, contract 1.75.0).
+     */
     const contractSchemaOf = (fixture: Fixture): string | null => {
       const operation = contract.paths?.[fixture.path]?.[fixture.method.toLowerCase()];
       const response = operation?.responses?.[String(fixture.status)];
-      const ref = response?.content?.["application/json"]?.schema?.$ref;
+      const schema = response?.content?.["application/json"]?.schema as { $ref?: string; oneOf?: { $ref?: string }[] } | undefined;
+      const refs = schema?.oneOf ? schema.oneOf.flatMap((member) => (member.$ref ? [member.$ref] : [])) : [schema?.$ref];
+      const ref = refs.length === 1 ? refs[0] : undefined;
       return ref?.startsWith("#/components/schemas/") ? ref.slice("#/components/schemas/".length) : null;
     };
 
