@@ -21,7 +21,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchCatalog, fetchProviderConfigured, uploadSourceFile } from "@/features/add-data/api";
-import { checkCredentialPrerequisite, credentialPrerequisiteMessage } from "@/features/add-data/credentialPrerequisite";
+import {
+  checkCredentialPrerequisite,
+  credentialPrerequisiteMessage,
+  credentialPrerequisiteNotice,
+} from "@/features/add-data/credentialPrerequisite";
 import { ConfigureStep, type CatalogState, type UploadState } from "@/features/add-data/components/ConfigureStep";
 import { PreviewValidationStep, type PreviewState } from "@/features/add-data/components/PreviewValidationStep";
 import { ReviewBuildStep } from "@/features/add-data/components/ReviewBuildStep";
@@ -409,8 +413,7 @@ export function AddDataPage() {
       // (§3). Reuse same check as Configure step banner.
       const prerequisite = checkCredentialPrerequisite(selected, providerConfigured, draft.publicApi.provider);
       if (prerequisite.blocked) {
-        const prerequisite = credentialPrerequisiteMessage();
-        const message = `${prerequisite.title} — ${prerequisite.body.replace(/\n/g, " ")}`;
+        const message = credentialPrerequisiteNotice(credentialPrerequisiteMessage());
         setPreview({ status: "error", error: message });
         setValidation({ status: "validated", valid: false, errors: [message] });
         return;
