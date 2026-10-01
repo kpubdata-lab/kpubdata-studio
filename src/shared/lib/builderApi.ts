@@ -522,6 +522,11 @@ export type BuildEventStatus = schemas.BuildEventStatus;
 export type BuildEventStageName = schemas.BuildEventStageName;
 export type BuildEvent = schemas.BuildEvent;
 export type BuildEventsResponse = schemas.BuildEventsResponse;
+export type RevisionKind = schemas.RevisionKind;
+export type DocumentRevision = schemas.DocumentRevision;
+export type RevisionHistoryResponse = schemas.RevisionHistoryResponse;
+export type SaveRevisionRequest = schemas.SaveRevisionRequest;
+export type RevertRevisionRequest = schemas.RevertRevisionRequest;
 
 /**
  * Request header carrying the requester's own publish credential (kpubdata-builder#925,
@@ -1022,6 +1027,59 @@ export const builderApi = {
       `/builds/${encodeURIComponent(runId)}/spec`,
       { signal },
       schemas.buildSpecSnapshotResponseSchema,
+    ),
+
+  /**
+   * PUT /revisions/{kind}/{doc_id} — save a document as a new immutable revision (builder#820).
+   *
+   * 409 `revision_conflict` (with `current_revision`) when another save came first; 400
+   * `credential_in_content` when the content carries a credential. The automatic retry on
+   * a network error or 5xx is safe because the body carries the same `idempotency_key`:
+   * Builder answers a repeat with the revision the first attempt made.
+   */
+  saveRevision: (
+    kind: schemas.RevisionKind,
+    docId: string,
+    request: schemas.SaveRevisionRequest,
+    signal?: AbortSignal,
+  ) =>
+    apiFetch(
+      `/revisions/${kind}/${encodeURIComponent(docId)}`,
+      { method: "PUT", body: request, signal },
+      schemas.documentRevisionSchema,
+    ),
+
+  /** GET /revisions/{kind}/{doc_id} — the latest revision; 404 when the document has none. */
+  getRevision: (kind: schemas.RevisionKind, docId: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/revisions/${kind}/${encodeURIComponent(docId)}`,
+      { signal },
+      schemas.documentRevisionSchema,
+    ),
+
+  /** GET /revisions/{kind}/{doc_id}/history — every revision (no content) and the audit trail. */
+  getRevisionHistory: (kind: schemas.RevisionKind, docId: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/revisions/${kind}/${encodeURIComponent(docId)}/history`,
+      { signal },
+      schemas.revisionHistoryResponseSchema,
+    ),
+
+  /**
+   * POST /revisions/{kind}/{doc_id}/revert — a new revision with an old one's content.
+   * Not retried: the request has no idempotency key, so a repeat after a lost answer
+   * would only meet a conflict with its own first attempt.
+   */
+  revertRevision: (
+    kind: schemas.RevisionKind,
+    docId: string,
+    request: schemas.RevertRevisionRequest,
+    signal?: AbortSignal,
+  ) =>
+    apiFetch(
+      `/revisions/${kind}/${encodeURIComponent(docId)}/revert`,
+      { method: "POST", body: request, signal, retries: 0 },
+      schemas.documentRevisionSchema,
     ),
 
    /**

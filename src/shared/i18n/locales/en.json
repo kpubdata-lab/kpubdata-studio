@@ -2871,5 +2871,60 @@
     "sparklineLabel": "Pass rate across {{runs}} runs, oldest to newest; {{rated}} with a rate",
     "sparklineCaption": "Pass rate, oldest → newest",
     "sparklineGaps": "Gaps are runs with no evaluated checks ({{gaps}})."
+  },
+  "specRevisions": {
+    "title": "Change history",
+    "description": "Every save of this spec is kept by KPubData Builder as a new revision. Builder records who saved it and when; credentials are never stored.",
+    "noDocId": "This table ID cannot hold a change history (it is empty, longer than 200 characters, or contains '/').",
+    "base": {
+      "loading": "Checking the latest revision...",
+      "error": "Could not check the latest revision: {{message}}",
+      "none": "No revision has been saved yet. The first save becomes revision 1.",
+      "revision": "Editing on top of revision {{revision}}."
+    },
+    "noteLabel": "Change note (optional)",
+    "notePlaceholder": "What changed, and why",
+    "save": "Save as revision",
+    "loadLatest": "Load latest revision",
+    "cannotSave": "The form has an error, so this spec cannot be saved yet. Fix it, then save.",
+    "notice": {
+      "saved": "Saved as revision {{revision}}.",
+      "reverted": "Reverted to the content of revision {{from}} as revision {{revision}}, and loaded it into the form.",
+      "loaded": "Loaded revision {{revision}} into the form. The next save builds on it.",
+      "unreadable": "Could not read the spec in revision {{revision}}, so the form was not changed.",
+      "conflictBadge": "Save conflict",
+      "conflict": "Someone else saved first; the latest revision is now {{revision}}. Nothing was saved, so their change is not overwritten. Use 'Load latest revision', then make your change again and save.",
+      "conflictUnknown": "Someone else saved first. Nothing was saved, so their change is not overwritten. Use 'Load latest revision', then make your change again and save.",
+      "credentialBadge": "Contains a credential",
+      "credential": "A spec carrying a credential is not kept in the change history. Remove the key value from the parameters and save again. ({{message}})",
+      "error": "Could not save: {{message}}"
+    },
+    "history": {
+      "title": "Revisions",
+      "loading": "Loading the change history...",
+      "error": "Could not load the change history: {{message}}",
+      "empty": "No changes have been recorded yet.",
+      "revision": "Revision {{revision}}",
+      "latest": "Latest",
+      "revertedFrom": "Reverted from revision {{revision}}",
+      "byline": "{{author}} · {{at}}",
+      "noNote": "No note",
+      "revert": "Revert to revision {{revision}}",
+      "confirmRevert": "Revert to revision {{revision}}? A new revision is made from its content, and unsaved edits in the form are discarded."
+    },
+    "audit": {
+      "title": "Audit log ({{count}})",
+      "label": "Audit log",
+      "entry": "{{at}} · {{author}} · {{action}} · revision {{revision}}",
+      "action": {
+        "save": "Save",
+        "revert": "Revert"
+      }
+    },
+    "errors": {
+      "saveFailed": "Could not save the revision.",
+      "credentialLocal": "Studio found a value that looks like a credential in the spec and sent nothing",
+      "demoConflict": "the document is at revision {{current}}"
+    }
   }
 }

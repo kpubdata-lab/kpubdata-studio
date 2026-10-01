@@ -43,6 +43,11 @@ const EXPECTED_OPERATIONS = [
   "getDatasetQualityHistory",
   "query",
   "getBuildSpecSnapshot",
+  // Document revisions (builder#820, #649).
+  "saveRevision",
+  "getRevision",
+  "getRevisionHistory",
+  "revertRevision",
   "getBuildEvents",
   "getMonitoringSummary",
   "getMonitoringBuilds",
