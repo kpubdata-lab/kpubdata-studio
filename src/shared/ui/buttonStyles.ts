@@ -12,7 +12,7 @@ export type ButtonSize = "sm" | "md" | "lg";
 
 const VARIANT_CLASS: Record<ButtonVariant, string> = {
   primary:
-    "bg-accent text-accent-foreground shadow-sm hover:brightness-110 active:brightness-95",
+    "bg-brand-primary text-brand-primary-foreground shadow-sm hover:brightness-110 active:brightness-95",
   secondary:
     "border border-border bg-card text-foreground hover:bg-muted",
   ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",

@@ -82,7 +82,7 @@ function CreatedTablesCell({ entry, created }: { entry: DiscoverEntry; created: 
     <ul className="flex flex-col gap-0.5">
       {ids.map((id) => (
         <li key={id}>
-          <Link className="break-all font-mono text-xs text-accent-subtle-foreground underline-offset-2 hover:underline" to={`/tables/${encodeURIComponent(id)}`}>
+          <Link className="break-all font-mono text-xs text-brand-text underline-offset-2 hover:underline" to={`/tables/${encodeURIComponent(id)}`}>
             {id}
           </Link>
         </li>

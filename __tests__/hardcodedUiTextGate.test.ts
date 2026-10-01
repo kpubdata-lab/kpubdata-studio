@@ -92,7 +92,7 @@ describe("hard-coded English UI text gate (#531)", () => {
         "// i18n-ignore: an example value, not a label",
         '<input placeholder="gpt-4o-mini" />',
         'const cls = "text-sm font-semibold";',
-        "<div className={`rounded border ${active ? \"bg-accent\" : \"bg-card\"}`} />",
+        "<div className={`rounded border ${active ? \"bg-brand-primary\" : \"bg-card\"}`} />",
         "<p>{`${provider}.${dataset}`}</p>",
       ].join("\n");
       expect(texts(source)).toEqual([]);

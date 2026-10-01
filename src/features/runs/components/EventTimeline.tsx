@@ -82,7 +82,7 @@ export function EventTimeline({ events }: { events: BuildEvent[] }) {
                     <span className="text-xs">{event.event}</span>
                     <EventStatusBadge status={event.status} />
                     {isLastOk ? (
-                      <span className="rounded-full bg-accent-subtle px-2 py-0.5 text-[10px] font-medium text-accent-subtle-foreground">
+                      <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-[10px] font-medium text-brand-text">
                         {t("runs.timeline.lastOk")}
                       </span>
                     ) : null}

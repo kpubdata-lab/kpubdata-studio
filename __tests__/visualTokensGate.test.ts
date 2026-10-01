@@ -21,15 +21,14 @@ const DIR = join(ROOT, "docs", "prototype", "warehouse");
 const BRAND = [
   "--brand-primary",
   "--brand-subtle",
+  "--brand-text",
   "--brand-ink",
   "--brand-secondary",
   "--brand-secondary-strong",
   "--data-accent",
   "--data-accent-strong",
-  "--accent",
-  "--accent-subtle",
 ];
-const REQUIRED_BRAND = ["--brand-primary", "--brand-secondary", "--brand-secondary-strong", "--data-accent", "--data-accent-strong"];
+const REQUIRED_BRAND = ["--brand-primary", "--brand-subtle", "--brand-text", "--brand-secondary", "--brand-secondary-strong", "--data-accent", "--data-accent-strong"];
 const STATUS = ["--status-success", "--status-warning", "--status-failure", "--status-unknown"];
 
 /** `name = value` for each brand token whose (resolved) value equals some `--status-*` value. */
@@ -90,6 +89,16 @@ describe("visual tokens gate (#425, #628)", () => {
         ["--status-failure", "#b91c1c"],
       ]);
       expect(collisions(values)).toEqual(["--brand-primary = --status-success"]);
+    });
+
+    it("sees Fresh Mint painted as success (#667)", () => {
+      const values = new Map([
+        ["--brand-primary", "#2563eb"],
+        ["--brand-secondary", "#15803d"],
+        ["--status-success", "#15803d"],
+        ["--status-failure", "#b91c1c"],
+      ]);
+      expect(collisions(values)).toEqual(["--brand-secondary = --status-success"]);
     });
 
     it("sees Fresh Mint, or its chart variant, used as success", () => {

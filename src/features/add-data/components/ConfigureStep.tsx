@@ -210,7 +210,7 @@ export function ConfigureStep({
                   href={application.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex text-sm font-medium text-accent-subtle-foreground underline underline-offset-2"
+                  className="inline-flex text-sm font-medium text-brand-text underline underline-offset-2"
                 >
                   {t("addData.configure.officialPage")}
                 </a>
@@ -291,7 +291,7 @@ export function ConfigureStep({
                   const file = e.target.files?.[0];
                   if (file) onUploadFile(file);
                 }}
-                className="block w-full text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-accent-foreground"
+                className="block w-full text-sm text-foreground file:mr-3 file:rounded-lg file:border-0 file:bg-brand-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-primary-foreground"
               />
             )}
           </FormField>
@@ -301,7 +301,7 @@ export function ConfigureStep({
           {upload.status === "uploading" ? <p className="text-sm text-muted-foreground">{t("addData.configure.uploading")}</p> : null}
           {upload.status === "error" ? <p role="alert" className="text-sm text-status-failure">{upload.error}</p> : null}
           {upload.status === "done" && draft.file.uploadId ? (
-            <p className="text-sm text-accent-subtle-foreground">
+            <p className="text-sm text-brand-text">
               {t("addData.configure.uploadDone", {
                 name: draft.file.filename ?? draft.file.uploadId,
                 bytes: draft.file.sizeBytes ?? 0,

@@ -133,7 +133,7 @@ export function MonitoringPage() {
             <label className="flex items-center gap-2 text-sm text-foreground" htmlFor={autoRefreshId}>
               <input
                 checked={autoRefresh}
-                className="h-4 w-4 accent-accent"
+                className="h-4 w-4 accent-brand-primary"
                 id={autoRefreshId}
                 onChange={(event) => setAutoRefresh(event.target.checked)}
                 type="checkbox"

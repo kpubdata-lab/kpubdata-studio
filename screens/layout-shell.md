@@ -20,7 +20,7 @@
 
 ## 상태 및 상호작용
 
-- 활성 내비게이션 항목은 `bg-accent-subtle` 배경으로 강조됩니다(`NavLink` active).
+- 활성 내비게이션 항목은 `bg-sidebar-active` 배경과 `text-sidebar-active-foreground` 글자로 강조됩니다(`NavLink` active).
 - 상단 헤더는 `sticky`로 스크롤 시 고정됩니다.
 - 모바일 뷰포트에서는 사이드바가 오버레이로 열리며, 오버레이 클릭 또는 `ESC` 키로 닫힙니다.
 - 테마 선택 값은 `data-theme` 속성으로 반영되어 Tailwind `dark:` 변형을 활성화합니다.

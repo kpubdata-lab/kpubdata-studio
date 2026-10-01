@@ -51,7 +51,7 @@ export function AssistantRunAnalysis({ onClose, onAskMore }: AssistantRunAnalysi
   }, [session.turns, session.isStale]);
 
   return (
-    <Card className="border-accent/50">
+    <Card className="border-brand-primary/50">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">{t("assistant.runAnalysis.title")}</h3>
         <button type="button" onClick={onClose} className="text-xs font-medium text-muted-foreground underline">

@@ -8,6 +8,9 @@
  * - No brand SVG uses a gradient.
  * - A saturated colour in a token source (`src/globals.css`, the prototype's `tokens.css`
  *   and pages) is one of the approved Brand v2 values; status tokens are their own system and are checked by `visualTokensGate`.
+ * - Brand v1's catch-all `accent` token names (#667) are gone from `src/` — as CSS custom
+ *   properties and as Tailwind colour classes. Interaction is `brand-primary`, its tint
+ *   `brand-subtle`, blue text `brand-text`, chart marks the `-strong` data tokens.
  * - The light sidebar is light, and only its active item is Brand Blue.
  * - Token pairs meet WCAG 2.1 AA: text 4.5:1, chart marks and the focus ring 3:1
  *   (docs/brand/VISUAL_IDENTITY.md §3.5). Secondary text `#5E6E84` and the strong chart
@@ -27,8 +30,8 @@ import { ROOT, THEMES, contrast, luminance, type Tokens } from "./support/brandT
 const DRIFT: Array<[prototype: string, app: string]> = [
   ["--brand-primary", "--brand-primary"],
   ["--brand-primary-foreground", "--brand-primary-foreground"],
-  ["--brand-subtle", "--accent-subtle"],
-  ["--brand-text", "--accent-subtle-foreground"],
+  ["--brand-subtle", "--brand-subtle"],
+  ["--brand-text", "--brand-text"],
   ["--data-accent", "--data-accent"],
   ["--data-accent-strong", "--data-accent-strong"],
   ["--brand-secondary", "--brand-secondary"],
@@ -95,6 +98,38 @@ export function legacyHits(file: string, source: string): string[] {
   return LEGACY.filter((hex) => lower.includes(hex)).map((hex) => `${file}: ${hex}`);
 }
 
+/**
+ * Brand v1 token names retired in #667. `accent` held every blue meaning at once
+ * (interaction, selection, links); Brand v2 splits it into role tokens.
+ */
+const V1_TOKENS = ["accent", "accent-foreground", "accent-subtle", "accent-subtle-foreground"];
+const V1_NAME = `(?:${[...V1_TOKENS].sort((a, b) => b.length - a.length).join("|")})`;
+/** `--accent…` or `--color-accent…` as a custom property, declared or read. */
+const V1_PROPERTY = new RegExp(`(?<![\\w-])--(?:color-)?${V1_NAME}(?![\\w-])`, "g");
+/**
+ * A Tailwind colour utility reading a v1 token: `bg-accent`, `hover:border-accent/50`,
+ * `file:text-accent-foreground`, `accent-accent` (accent-color). `accent-status-success`
+ * and `fill-data-accent-strong` are not v1 names and do not match.
+ */
+const V1_CLASS = new RegExp(
+  `(?<![\\w-])(?:[\\w-]+:)*(?:bg|text|border(?:-[xytrbl])?|ring(?:-offset)?|outline|stroke|fill|from|via|to|divide|decoration|shadow|caret|accent|placeholder)-${V1_NAME}(?:\\/\\d+)?(?![\\w-])`,
+  "g",
+);
+
+/** `file:line name` for each Brand v1 token name in the source. */
+export function v1TokenNames(file: string, source: string): string[] {
+  return source.split("\n").flatMap((line, index) =>
+    [...line.matchAll(V1_PROPERTY), ...line.matchAll(V1_CLASS)].map((m) => `${file}:${index + 1} ${m[0]}`),
+  );
+}
+
+/** Every file under `src/`, tracked or new (not ignored). */
+function srcFiles(): string[] {
+  return execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", "src"], { cwd: ROOT, encoding: "utf8" })
+    .split("\n")
+    .filter((file) => /\.(ts|tsx|js|jsx|css|html)$/.test(file));
+}
+
 /** Whether an SVG paints with a gradient (or a filter standing in for one). */
 export function hasGradient(svg: string): boolean {
   return /<(linear|radial)Gradient\b|gradient\(|<filter\b/i.test(svg);
@@ -153,6 +188,55 @@ describe("Brand v2 gate (#628)", () => {
     });
   });
 
+  describe("Brand v1 token names are gone from src/ (#667)", () => {
+    it("src/globals.css declares none of them", () => {
+      expect(v1TokenNames("src/globals.css", read("src/globals.css"))).toEqual([]);
+    });
+
+    it("no source reads one, as a CSS variable or a Tailwind class", () => {
+      const files = srcFiles();
+      expect(files.length).toBeGreaterThan(0);
+      expect(files.flatMap((file) => v1TokenNames(file, read(file)))).toEqual([]);
+    });
+
+    it("would catch a v1 name coming back", () => {
+      const css = [
+        "  --accent: var(--brand-primary);",
+        "  --color-accent-subtle: var(--accent-subtle);",
+        "  --brand-subtle: #eaf1fe;",
+      ].join("\n");
+      expect(v1TokenNames("f.css", css)).toEqual([
+        "f.css:1 --accent",
+        "f.css:2 --color-accent-subtle",
+        "f.css:2 --accent-subtle",
+      ]);
+      const tsx = [
+        '<a className="text-accent-subtle-foreground underline" />',
+        '<div className="hover:border-accent/50 file:bg-accent stroke-accent fill-accent ring-accent" />',
+        '<input className="accent-accent" />',
+      ].join("\n");
+      expect(v1TokenNames("f.tsx", tsx)).toEqual([
+        "f.tsx:1 text-accent-subtle-foreground",
+        "f.tsx:2 hover:border-accent/50",
+        "f.tsx:2 file:bg-accent",
+        "f.tsx:2 stroke-accent",
+        "f.tsx:2 fill-accent",
+        "f.tsx:2 ring-accent",
+        "f.tsx:3 accent-accent",
+      ]);
+    });
+
+    it("leaves the Brand v2 names and the accent-color utility alone", () => {
+      const tsx = [
+        '<a className="text-brand-text bg-brand-subtle border-brand-primary/50" />',
+        '<svg className="fill-data-accent-strong stroke-data-accent-strong" />',
+        '<input className="accent-status-success accent-brand-primary" />',
+        "  --data-accent: #06b6d4; --color-data-accent-strong: var(--data-accent-strong);",
+      ].join("\n");
+      expect(v1TokenNames("f.tsx", tsx)).toEqual([]);
+    });
+  });
+
   describe("brand SVGs are flat", () => {
     const dirs = ["assets/logo/kpubdata-brand-assets/svg", "docs/brand/assets"];
     it.each(dirs)("%s has no gradient", (dir) => {
@@ -202,16 +286,15 @@ const TEXT: Pair[] = [
   ...["--background", "--card", "--muted"].flatMap((bg): Pair[] => [
     ["--foreground", bg],
     ["--muted-foreground", bg],
-    ["--accent-subtle-foreground", bg],
+    ["--brand-text", bg],
   ]),
   ["--card-foreground", "--card"],
   ["--sidebar-foreground", "--sidebar"],
   ["--sidebar-foreground", "--sidebar-hover"],
   ["--sidebar-muted", "--sidebar"],
-  ["--accent-subtle-foreground", "--sidebar"],
-  ["--accent-subtle-foreground", "--accent-subtle"],
+  ["--brand-text", "--sidebar"],
+  ["--brand-text", "--brand-subtle"],
   ["--sidebar-active-foreground", "--sidebar-active"],
-  ["--accent-foreground", "--accent"],
   ["--brand-primary-foreground", "--brand-primary"],
 ];
 /** Brand Blue is the link and active text colour in the light theme. */

@@ -53,7 +53,7 @@ export function ReviewStep({
       ) : null}
       {validation.status === "validated" && validation.isValid ? (
         <Card variant="success" className="p-4">
-          <p className="text-sm font-medium text-accent-subtle-foreground">{t("newBuild.review.passed")}</p>
+          <p className="text-sm font-medium text-brand-text">{t("newBuild.review.passed")}</p>
         </Card>
       ) : null}
       {validation.errors.length > 0 ? (
@@ -79,7 +79,7 @@ export function ReviewStep({
           </Button>
         ) : null}
         {job.status === "succeeded" ? (
-          <span className="text-sm text-accent-subtle-foreground">
+          <span className="text-sm text-brand-text">
             {t("newBuild.review.success", { id: job.run?.id })}
           </span>
         ) : null}
@@ -105,7 +105,7 @@ export function ReviewStep({
       {saveSpecMessage ? (
         <p
           role={saveSpecMessage.type === "error" ? "alert" : undefined}
-          className={`text-sm ${saveSpecMessage.type === "error" ? "text-status-failure" : "text-accent-subtle-foreground"}`}
+          className={`text-sm ${saveSpecMessage.type === "error" ? "text-status-failure" : "text-brand-text"}`}
         >
           {saveSpecMessage.text}
         </p>
