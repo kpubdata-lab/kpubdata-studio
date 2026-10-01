@@ -22,6 +22,7 @@ import {
   summarizePreviewSources,
   warnOrFailResults,
 } from "@/features/quality/model";
+import { MaskedCell, MaskedColumnBadge, maskedSet } from "@/features/data-table/masked";
 import { QualityBadge } from "@/features/quality/QualityBadge";
 import type { PreviewResponse, PreviewSource } from "@/shared/lib/builderApi";
 import type { PreviewColumnView, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
@@ -263,13 +264,18 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
   const allColumns = source.schema.map((c) => c.name);
   const encodings = encodingsOf(source.schema);
   const cols = columnView === "all" ? allColumns : allColumns.slice(0, KEY_COLUMN_COUNT);
+  // Declared PII Builder masked in this sample (builder#900, #641) — only the columns it names.
+  const masked = maskedSet(source.masked_columns);
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="text-xs uppercase text-muted-foreground">
             {cols.map((c) => (
-              <th key={c} className="py-1 pr-3">{c}</th>
+              <th key={c} className="py-1 pr-3">
+                <span className="block">{c}</span>
+                {masked.has(c) ? <MaskedColumnBadge /> : null}
+              </th>
             ))}
           </tr>
         </thead>
@@ -278,7 +284,13 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
             <tr key={i} className="border-t border-border">
               {cols.map((c) => (
                 <td key={c} className="py-1 pr-3">
-                  {row[c] === null || row[c] === undefined ? <span className="text-muted-foreground">—</span> : cellValue(encodings.get(c), row[c])}
+                  {masked.has(c) ? (
+                    <MaskedCell fallback={cellValue(encodings.get(c), row[c])} value={row[c]} />
+                  ) : row[c] === null || row[c] === undefined ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    cellValue(encodings.get(c), row[c])
+                  )}
                 </td>
               ))}
             </tr>
@@ -292,6 +304,11 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
           columns: allColumns.length,
         })}
       </p>
+      {masked.size ? (
+        <p className="mt-1 text-xs text-muted-foreground" data-testid="masked-note">
+          {t("dataTable.masked.note", { columns: [...masked].join(", ") })}
+        </p>
+      ) : null}
     </div>
   );
 }

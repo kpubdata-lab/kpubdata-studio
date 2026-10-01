@@ -206,6 +206,9 @@ export type AssistantQueryState =
         | "query_busy"
         | "query_timeout"
         | "query_execution_failed"
+        | "redistribution_forbidden"
+        | "declared_pii_withheld"
+        | "pii_declaration_unavailable"
         | "network"
         | "mock_mode"
         | "unknown";
