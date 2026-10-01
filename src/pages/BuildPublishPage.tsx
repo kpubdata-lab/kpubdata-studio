@@ -1,13 +1,15 @@
 import { i18n } from "@/shared/i18n";
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getBuild } from "@/features/runs/api/getBuild";
 import {
   describePublishFailure,
   getPublishReadiness,
   isSafePublishReference,
+  publishCredentialFor,
   validatePublishDestination,
+  validatePublishToken,
   type PublishReadinessResponse,
   type PublishRequest,
 } from "@/features/publish/api";
@@ -18,7 +20,8 @@ import { Button, Card, PageHeader, Skeleton, StatusBadge } from "@/shared/ui";
 
 type ReadinessState =
   | { status: "loading" }
-  | { status: "loaded"; data: PublishReadinessResponse }
+  // `withToken`: whether this answer was computed with an `X-Publish-Credential` sent.
+  | { status: "loaded"; data: PublishReadinessResponse; withToken: boolean }
   | { status: "error"; message: string };
 
 /**
@@ -76,6 +79,13 @@ export function BuildPublishPage() {
   const [destination, setDestination] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
   const [confirmation, setConfirmation] = useState<PublishRequest>();
+  // The requester's own publish token (#615): React state only — never localStorage,
+  // sessionStorage, the URL or a log — gone when the page unmounts or reloads. The ref
+  // lets a readiness check read it without re-running on every keystroke.
+  const [publishToken, setPublishToken] = useState("");
+  const publishTokenRef = useRef("");
+  // The token changed since readiness was last checked, so that answer may not hold.
+  const [tokenStale, setTokenStale] = useState(false);
   const publish = usePublishJob();
 
   useEffect(() => {
@@ -122,14 +132,15 @@ export function BuildPublishPage() {
     setReadiness({ status: "loading" });
     setConfirmation(undefined);
     publish.reset();
-    getPublishReadiness(runId, "huggingface", controller.signal)
+    const credential = publishCredentialFor(publishTokenRef.current);
+    getPublishReadiness(runId, "huggingface", controller.signal, credential)
       .then((data) => {
         if (!active) return;
         if (data.run_id !== runId || data.target !== "huggingface") {
           setReadiness({ status: "error", message: i18n.t("buildPublish.readinessMismatch") });
           return;
         }
-        setReadiness({ status: "loaded", data });
+        setReadiness({ status: "loaded", data, withToken: credential !== undefined });
       })
       .catch((cause: unknown) => {
         if (!active || controller.signal.aborted) return;
@@ -155,8 +166,15 @@ export function BuildPublishPage() {
         : t("buildPublish.unconfirmed");
 
   const destinationError = validatePublishDestination(destination);
+  const tokenError = validatePublishToken(publishToken);
   const builderReady = readiness.status === "loaded" && readiness.data.ready && readiness.data.blockers.length === 0;
-  const canReview = Boolean(runId && builderReady && !destinationError && publish.status !== "publishing");
+  const canReview = Boolean(runId && builderReady && !destinationError && !tokenError && !tokenStale && publish.status !== "publishing");
+  const credentialRequired =
+    readiness.status === "loaded" && readiness.data.blockers.some((issue) => issue.code === "credential_required");
+  // A multi-user Builder answers `credential_required` until a token is sent; Studio
+  // cannot read the deployment mode (`GET /admin/config` is admin-only), so the field
+  // appears on that blocker and stays while a token is held or was just forgotten.
+  const showTokenField = credentialRequired || publishToken !== "" || tokenStale;
 
   const request = useMemo<PublishRequest>(() => ({
     target: "huggingface",
@@ -168,6 +186,19 @@ export function BuildPublishPage() {
     setDestination(value);
     setConfirmation(undefined);
     publish.reset();
+  }
+
+  function updatePublishToken(value: string) {
+    publishTokenRef.current = value;
+    setPublishToken(value);
+    setTokenStale(true);
+    setConfirmation(undefined);
+    publish.reset();
+  }
+
+  function recheckReadiness() {
+    setTokenStale(false);
+    setReadinessVersion((value) => value + 1);
   }
 
   function updatePrivate(value: boolean) {
@@ -200,7 +231,7 @@ export function BuildPublishPage() {
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><h2 className="text-sm font-semibold">{t("buildPublish.readinessTitle")}</h2><p className="mt-1 text-xs text-muted-foreground">{t("buildPublish.readinessNote")}</p></div>
-          <Button variant="secondary" size="sm" disabled={readiness.status === "loading" || publish.status === "publishing"} onClick={() => setReadinessVersion((value) => value + 1)}>{t("buildPublish.recheck")}</Button>
+          <Button variant="secondary" size="sm" disabled={readiness.status === "loading" || publish.status === "publishing" || Boolean(tokenError)} onClick={recheckReadiness}>{t("buildPublish.recheck")}</Button>
         </div>
         {readiness.status === "loading" ? <Skeleton className="mt-4 h-20 w-full" /> : null}
         {readiness.status === "error" ? <div className="mt-4" role="alert"><p className="text-sm text-status-failure">{readiness.message}</p></div> : null}
@@ -224,7 +255,30 @@ export function BuildPublishPage() {
                 (credential_unavailable) — it means more direct user actions
                 exist. The two codes carry different guidance; the same
                 guidance is never reused. */}
-            {readiness.data.blockers.some((issue) => issue.code === "credential_required") ? <p className="text-xs text-muted-foreground">{t("buildPublish.credentialRequiredNote")}</p> : null}
+            {credentialRequired ? <p className="text-xs text-muted-foreground">{t(readiness.withToken ? "buildPublish.credentialStillRequiredNote" : "buildPublish.credentialRequiredNote")}</p> : null}
+          </div>
+        ) : null}
+        {showTokenField ? (
+          <div className="mt-4 rounded-lg border border-border p-4">
+            <label className="text-sm font-medium">{t("buildPublish.tokenLabel")}
+              <input
+                aria-label={t("buildPublish.tokenLabel")}
+                type="password"
+                autoComplete="off"
+                spellCheck={false}
+                className={`mt-2 ${inputClassName}`}
+                placeholder="hf_…"
+                value={publishToken}
+                disabled={publish.status === "publishing"}
+                onChange={(event) => updatePublishToken(event.target.value)}
+              />
+            </label>
+            <p className={`mt-1 text-xs ${tokenError ? "text-status-failure" : "text-muted-foreground"}`} role={tokenError ? "alert" : undefined}>{tokenError ?? t("buildPublish.tokenHint")}</p>
+            {tokenStale && !tokenError ? <p className="mt-1 text-xs text-status-warning">{t("buildPublish.tokenStale")}</p> : null}
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Button size="sm" disabled={readiness.status === "loading" || publish.status === "publishing" || Boolean(tokenError) || !publishToken.trim()} onClick={recheckReadiness}>{t("buildPublish.tokenCheck")}</Button>
+              {publishToken ? <Button size="sm" variant="ghost" disabled={publish.status === "publishing"} onClick={() => updatePublishToken("")}>{t("buildPublish.tokenForget")}</Button> : null}
+            </div>
           </div>
         ) : null}
       </Card>
@@ -257,7 +311,7 @@ export function BuildPublishPage() {
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">{t("buildPublish.confirmNote")}</p>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button loading={publish.status === "publishing"} disabled={!builderReady || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => void publish.start(runId, confirmation)}>{t("buildPublish.publishNow")}</Button>
+            <Button loading={publish.status === "publishing"} disabled={!builderReady || tokenStale || Boolean(tokenError) || Boolean(validatePublishDestination(confirmation.destination))} onClick={() => void publish.start(runId, confirmation, publishCredentialFor(publishToken))}>{t("buildPublish.publishNow")}</Button>
             {publish.status !== "publishing" ? <Button variant="secondary" onClick={() => setConfirmation(undefined)}>{t("buildPublish.editSettings")}</Button> : <Button variant="secondary" onClick={publish.stopWaiting}>{t("buildPublish.stopWaiting")}</Button>}
           </div>
         </Card>

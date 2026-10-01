@@ -1293,7 +1293,7 @@
     "readyLabel": "KPubData Builder is ready to publish",
     "blockedLabel": "KPubData Builder reported blockers — publishing is not possible.",
     "notReadyNoReason": "KPubData Builder judged this run not ready to publish but gave no specific blocker.",
-    "credentialNote": "This blocker refers to a publish target credential (Hugging Face / Kaggle), not a source provider credential. Depending on how KPubData Builder is deployed it either uses the server credential or requires one you have stored yourself. Studio neither takes nor stores either.",
+    "credentialNote": "This blocker refers to a publish target credential (Hugging Face / Kaggle), not a source provider credential. Depending on how KPubData Builder is deployed it uses the server credential, one you have stored yourself, or a token sent with the request. Studio never stores a publish token.",
     "settingsTitle": "Publish settings",
     "settingsNote": "Local input validation, separate from readiness — Builder readiness does not check the destination or visibility.",
     "destinationHint": "An owner/dataset identifier KPubData Builder accepts",
@@ -1311,14 +1311,20 @@
     "noAutoRetry": "Do not retry automatically.",
     "abortedTitle": "Stopped waiting for the response.",
     "abortedBody": "Only the browser request was stopped — the remote publish was not cancelled. Its outcome is unknown.",
-    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Store your own with KPubData Builder to publish.",
+    "credentialRequiredNote": "This deployment does not lend out the server publish credential. Enter your own Hugging Face token below and check again.",
     "readinessTitle": "KPubData Builder readiness",
     "blockers": "Blockers",
     "warnings": "Warnings",
     "destinationLabel": "Hugging Face destination",
     "publisher": "Publisher",
     "snapshotFiles": "Snapshot files",
-    "reference": "Reference:"
+    "reference": "Reference:",
+    "credentialStillRequiredNote": "KPubData Builder still asks for a credential although your token was sent. This deployment does not take a token with the request — store your own publish credential with KPubData Builder instead.",
+    "tokenLabel": "Hugging Face token",
+    "tokenHint": "Kept only in this page's memory and sent only with the readiness check and the publish request. It is never saved, and it is gone when you leave or reload the page.",
+    "tokenStale": "Check again to confirm readiness with this token.",
+    "tokenCheck": "Check with this token",
+    "tokenForget": "Forget token"
   },
   "settings": {
     "page": {
@@ -2010,7 +2016,8 @@
       "forbidden": "You do not have permission to publish this run.",
       "notFound": "The selected run could not be found in KPubData Builder.",
       "network": "No response from KPubData Builder. The remote publish result was not confirmed.",
-      "mismatch": "The run or target in KPubData Builder's response does not match the request."
+      "mismatch": "The run or target in KPubData Builder's response does not match the request.",
+      "invalidCredential": "The publish token is not in a form KPubData Builder accepts. Check the token and enter it again."
     }
   },
   "status": {
