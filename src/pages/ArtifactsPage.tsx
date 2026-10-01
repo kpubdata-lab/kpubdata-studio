@@ -15,7 +15,7 @@ import { Card, EmptyState, PageHeader } from "@/shared/ui";
 export function ArtifactsPage() {
   const { t } = useTranslation();
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("artifactsPage.title")}
         description={t("artifactsPage.desc")}
@@ -29,6 +29,6 @@ export function ArtifactsPage() {
           actionHref="/refresh-jobs"
         />
       </Card>
-    </main>
+    </div>
   );
 }

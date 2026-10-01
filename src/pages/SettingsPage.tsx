@@ -91,7 +91,7 @@ export function SettingsPage() {
   }, [realEnabled]);
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("settings.page.title")}
         description={t("settings.page.desc")}
@@ -164,7 +164,7 @@ export function SettingsPage() {
           </p>
         </div>
       </Card>
-    </main>
+    </div>
   );
 }
 

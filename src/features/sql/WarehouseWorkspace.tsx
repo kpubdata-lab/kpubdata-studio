@@ -186,7 +186,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={t("sql.title")}
         description={t("sql.desc")}
@@ -308,6 +308,6 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
           ) : null}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

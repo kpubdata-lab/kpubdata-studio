@@ -56,6 +56,8 @@ yarn-error.log*
 # Playwright E2E (#268)
 /test-results/
 /playwright-report/
+# Production build the csp e2e project serves (#663)
+/.csp-preview/
 
 # Builder contract checkout used by the contract-drift CI job
 .builder/

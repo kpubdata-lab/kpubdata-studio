@@ -259,15 +259,15 @@ export function ReportEditorPage() {
 
   if (report === undefined) {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <p className="text-sm text-muted-foreground">{t("reportEditor.loading")}</p>
-      </main>
+      </div>
     );
   }
 
   if (report === null) {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader title={t("reportEditor.notFoundTitle")} />
         <EmptyState
           title={t("reportEditor.notFoundHeading")}
@@ -275,7 +275,7 @@ export function ReportEditorPage() {
           actionLabel={t("reportEditor.backToList")}
           actionHref="/reports"
         />
-      </main>
+      </div>
     );
   }
 
@@ -299,16 +299,7 @@ export function ReportEditorPage() {
   });
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10" id="report-print-area">
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          #report-print-area, #report-print-area * { visibility: visible; }
-          #report-print-area { position: absolute; inset: 0; padding: 1.5rem; }
-          .print\\:hidden { display: none !important; }
-        }
-      `}</style>
-
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10" id="report-print-area">
       <div className="print:hidden">
         <PageHeader title={t("reportEditor.editTitle")} meta={<span className="font-mono">{report.datasetId} · {report.baseRunId}</span>} />
       </div>
@@ -450,6 +441,6 @@ export function ReportEditorPage() {
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 }

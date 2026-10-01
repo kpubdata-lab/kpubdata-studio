@@ -151,7 +151,7 @@ export function ReportsPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader
         title={t("reports.page.title")}
         description={t("reports.page.desc")}
@@ -292,6 +292,6 @@ export function ReportsPage() {
           </ul>
         )}
       </Card>
-    </main>
+    </div>
   );
 }

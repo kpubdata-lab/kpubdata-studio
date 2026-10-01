@@ -110,7 +110,7 @@ export function DiscoverPage() {
   const hasActiveFilters = Boolean(query || provider || onlyRequiresKey || onlyRequiresApplication);
 
   return (
-    <main className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={t("discover.page.title")}
         description={t("discover.page.desc")}
@@ -192,6 +192,6 @@ export function DiscoverPage() {
           <p className="text-xs text-muted-foreground">{t("discover.shownCount", { count: visibleEntries.length })}</p>
         ) : null}
       </Card>
-    </main>
+    </div>
   );
 }

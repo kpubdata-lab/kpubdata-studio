@@ -23,6 +23,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
 import { getBuildQuality, getDataset, listDatasetRuns } from "@/features/datasets/api";
 import { formatDateTime } from "@/features/datasets/model";
+import { RUN_HISTORY_LIMIT, useRunHistoryPaging, type RunHistoryPaging } from "@/features/datasets/runHistory";
 import { sourceKeyOf } from "@/features/datasets/warehouseTables";
 import { RunLicence } from "@/features/licence/LicenceSummary";
 import { useRunLicence, type RunLicenceState } from "@/features/licence/useRunLicence";
@@ -114,7 +115,9 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
   const runId = viewed?.run_id ?? "";
 
   const quality = useAsync<BuildQualityResponse>(runId, tab === "quality" && Boolean(runId), (signal) => getBuildQuality(runId, signal), "datasetDetail.qualityErrorMsg");
-  const runs = useAsync<{ runs: DatasetRunSummary[] }>(datasetId, tab === "snapshots", (signal) => listDatasetRuns(datasetId, 20, signal), "tableDetail.errors.runs");
+  const runs = useAsync<{ runs: DatasetRunSummary[] }>(datasetId, tab === "snapshots", (signal) => listDatasetRuns(datasetId, RUN_HISTORY_LIMIT, signal), "tableDetail.errors.runs");
+  // The same reach as the run view's history, and the same "show more" (#653).
+  const runHistory = useRunHistoryPaging(datasetId, runs.data?.runs);
   // The terms are those of the run that produced the snapshot on screen, read only on Overview.
   const licence = useRunLicence(tab === "overview" ? runId : "");
 
@@ -144,20 +147,20 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
 
   if (dataset.status === "error") {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader title={datasetId} />
         <ErrorState title={t("datasetDetail.loadErrorTitle")} message={dataset.error} />
-      </main>
+      </div>
     );
   }
   if (!dataset.data) {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} />
         <Card>
           <Skeleton className="h-40 w-full" />
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -167,7 +170,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
   const queryHref = `/sql?${new URLSearchParams({ table: logicalName, ...(viewed && !isCurrent ? { snapshot: viewed.snapshot_id } : {}) })}`;
 
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-4 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-4 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={info.title}
         meta={
@@ -266,6 +269,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
             currentId={currentId}
             datasetId={datasetId}
             runs={runs}
+            runHistory={runHistory}
             snapshots={snapshots}
             viewedId={viewed?.snapshot_id ?? null}
             onView={(snapshotId) => update({ snapshot: snapshotId === currentId ? null : snapshotId, tab: null })}
@@ -307,7 +311,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
           />
         )}
       </section>
-    </main>
+    </div>
   );
 }
 
@@ -461,6 +465,7 @@ function SnapshotsTab({
   viewedId,
   datasetId,
   runs,
+  runHistory,
   onView,
 }: {
   snapshots: WarehouseSnapshot[];
@@ -468,6 +473,7 @@ function SnapshotsTab({
   viewedId: string | null;
   datasetId: string;
   runs: AsyncState<{ runs: DatasetRunSummary[] }>;
+  runHistory: RunHistoryPaging;
   onView: (snapshotId: string) => void;
 }) {
   const { t } = useTranslation();
@@ -549,7 +555,7 @@ function SnapshotsTab({
       {runs.status === "error" ? (
         <Card variant="error" role="alert">{runs.error}</Card>
       ) : runs.data ? (
-        <BuildsTab runs={runs.data.runs} selectedRunId={snapshots.find((snapshot) => snapshot.snapshot_id === viewedId)?.run_id ?? ""} />
+        <BuildsTab runs={runHistory.runs ?? runs.data.runs} paging={runHistory} selectedRunId={snapshots.find((snapshot) => snapshot.snapshot_id === viewedId)?.run_id ?? ""} />
       ) : (
         <Card>
           <Skeleton className="h-24 w-full" />
