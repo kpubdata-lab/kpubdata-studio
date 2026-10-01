@@ -1,0 +1,19 @@
+# CodeQL configuration for the Security workflow's `codeql` job (#617).
+#
+# Test code is not shipped, and the tests that check redaction must hold secret-shaped
+# values. CodeQL followed those values from a test helper into a production sink —
+# `specWithSecretExtra` in specRoundTrip.test.ts reaching localStorage.setItem in
+# draftStorage.ts — and reported clear-text storage the production path never does,
+# failing the pull request's CodeQL check (#609). Test files are therefore not
+# extracted. Every other file under src/ is scanned as before, so a secret that starts
+# in production code and reaches storage is still reported.
+#
+# Keep this list to test-only code: __tests__/codeqlConfig.test.ts fails if a pattern
+# here would match a file under src/ that is not a test.
+name: kpubdata-studio CodeQL config
+
+paths-ignore:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "__tests__/**"
+  - "e2e/**"
