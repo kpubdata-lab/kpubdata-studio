@@ -2479,6 +2479,8 @@
     "runsShownCapped": "Showing the latest {{n}} runs. There may be more — KPubData Builder does not report a total.",
     "runsShowMore": "Show more (up to {{max}})",
     "runsAtMax": "{{max}} is the most that can be shown at once.",
+    "runsShownOfTotal": "Showing {{n}} of {{total}} runs.",
+    "runsAtMaxOfTotal": "{{max}} is the most that can be shown at once — {{left}} older runs are not shown.",
     "loadFailed": "KPubData Builder could not answer: {{message}}",
     "users": {
       "title": "Users and sign-up approval",

@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ADMIN_RUNS_MAX, ADMIN_RUNS_PAGE, AdminPage } from "@/pages/AdminPage";
 import { i18n } from "@/shared/i18n";
+import { adminRunsResponseSchema } from "@/shared/lib/builderApi.schema";
 import {
   ApiError,
   builderApi,
@@ -247,6 +248,75 @@ describe("AdminPage run count (#661)", () => {
     expect(await within(runs).findByText(t("admin.runsAtMax", { max: ADMIN_RUNS_MAX }))).toBeInTheDocument();
     expect(within(runs).getByText(t("admin.runsShownCapped", { n: ADMIN_RUNS_MAX }))).toBeInTheDocument();
     expect(within(runs).queryByRole("button", { name: t("admin.runsShowMore", { max: ADMIN_RUNS_MAX }) })).not.toBeInTheDocument();
+  });
+});
+
+describe("AdminPage run total (#702)", () => {
+  /** A page of `count` runs out of `total`, the way Builder 1.73.0+ answers. */
+  const ofTotal = (count: number, total: number): AdminRunsResponse => ({ ...runPage(count), total });
+  const showMore = () => t("admin.runsShowMore", { max: ADMIN_RUNS_MAX });
+
+  it("keeps Builder's total when the response is parsed", () => {
+    // Builder's `LatestOfMore` example (contract/fixtures/responses.json, 1.73.0).
+    const parsed = adminRunsResponseSchema.parse({ ...runPage(2), total: 137 });
+    expect(parsed.total).toBe(137);
+    expect(adminRunsResponseSchema.parse(runPage(2)).total).toBeUndefined();
+  });
+
+  it("shows N of M and offers more while runs are left out", async () => {
+    renderAdmin({ runs: ofTotal(ADMIN_RUNS_PAGE, 137) });
+    await settled();
+    const runs = card("admin.runsTitle");
+    expect(within(runs).getByText(t("admin.runsShownOfTotal", { n: ADMIN_RUNS_PAGE, total: 137 }))).toBeInTheDocument();
+    expect(runs.querySelector('[data-runs-shown="partial"]')).not.toBeNull();
+    expect(within(runs).queryByText(t("admin.runsShownCapped", { n: ADMIN_RUNS_PAGE }))).not.toBeInTheDocument();
+
+    vi.mocked(builderApi.adminRuns).mockResolvedValue(ofTotal(137, 137));
+    fireEvent.click(within(runs).getByRole("button", { name: showMore() }));
+    expect(await within(card("admin.runsTitle")).findByText(t("admin.runsShownOfTotal", { n: 137, total: 137 }))).toBeInTheDocument();
+    expect(vi.mocked(builderApi.adminRuns)).toHaveBeenLastCalledWith(ADMIN_RUNS_MAX, expect.any(AbortSignal));
+    expect(within(card("admin.runsTitle")).queryByRole("button", { name: showMore() })).not.toBeInTheDocument();
+  });
+
+  it("offers no more when a full page is every run", async () => {
+    // A page cut exactly at the limit would read "there may be more" without a total.
+    renderAdmin({ runs: ofTotal(ADMIN_RUNS_PAGE, ADMIN_RUNS_PAGE) });
+    await settled();
+    const runs = card("admin.runsTitle");
+    expect(within(runs).getByText(t("admin.runsShownOfTotal", { n: ADMIN_RUNS_PAGE, total: ADMIN_RUNS_PAGE }))).toBeInTheDocument();
+    expect(runs.querySelector('[data-runs-shown="all"]')).not.toBeNull();
+    expect(within(runs).queryByRole("button", { name: showMore() })).not.toBeInTheDocument();
+  });
+
+  it("says how many older runs stay hidden past the contract's maximum", async () => {
+    renderAdmin({ runs: ofTotal(ADMIN_RUNS_PAGE, 1234) });
+    await settled();
+    vi.mocked(builderApi.adminRuns).mockResolvedValue(ofTotal(ADMIN_RUNS_MAX, 1234));
+    fireEvent.click(screen.getByRole("button", { name: showMore() }));
+    const runs = card("admin.runsTitle");
+    expect(await within(runs).findByText(t("admin.runsShownOfTotal", { n: ADMIN_RUNS_MAX, total: 1234 }))).toBeInTheDocument();
+    expect(within(runs).getByText(t("admin.runsAtMaxOfTotal", { max: ADMIN_RUNS_MAX, left: 1234 - ADMIN_RUNS_MAX }))).toBeInTheDocument();
+    expect(within(runs).queryByRole("button", { name: showMore() })).not.toBeInTheDocument();
+  });
+
+  it("reads N of M in English too", async () => {
+    await i18n.changeLanguage("en");
+    try {
+      renderAdmin({ runs: ofTotal(2, 137) });
+      await settled();
+      expect(within(card("admin.runsTitle")).getByText("Showing 2 of 137 runs.")).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage("ko");
+    }
+  });
+
+  it("keeps the no-total behaviour for an older Builder", async () => {
+    renderAdmin({ runs: runPage(ADMIN_RUNS_PAGE) });
+    await settled();
+    const runs = card("admin.runsTitle");
+    expect(within(runs).getByText(t("admin.runsShownCapped", { n: ADMIN_RUNS_PAGE }))).toBeInTheDocument();
+    expect(runs.querySelector('[data-runs-shown="capped"]')).not.toBeNull();
+    expect(within(runs).getByRole("button", { name: showMore() })).toBeInTheDocument();
   });
 });
 

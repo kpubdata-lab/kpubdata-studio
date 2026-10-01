@@ -14,11 +14,13 @@
  * flight — stays mounted. A decision Builder returns while a refresh is in flight is laid
  * over that refresh's answer, which may have been read before the decision.
  *
- * **Run count** (#661): `AdminRunsResponse.count` is the number of runs returned, not a total
- * — Builder sets it to `len(runs)` after cutting the list at `limit` (kpubdata-builder
- * `routes/admin.py`), and the contract has no total field. So the card never claims a
- * total: a full page reads "latest N (there may be more)" and offers more, up to the
- * contract's maximum `limit` of 200. A real total is asked of Builder in kpubdata-builder#948.
+ * **Run count** (#661, #702): `AdminRunsResponse.count` is the number of runs returned, not
+ * a total — Builder sets it to `len(runs)` after cutting the list at `limit`. From contract
+ * 1.73.0 Builder also sends `total`, the runs before that cut (kpubdata-builder#948), and the
+ * card reads "N of M" and offers more only while `count < total`, up to the contract's
+ * maximum `limit` of 200; past that it says how many older runs stay hidden. An older
+ * Builder sends no total, so the card claims none: a full page reads "latest N (there may
+ * be more)" and offers more up to 200.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -186,6 +188,7 @@ export function AdminPage() {
                 loading={refreshing}
                 onMore={() => setRunsLimit(ADMIN_RUNS_MAX)}
                 shown={runs.data.runs.length}
+                total={runs.data.total}
               />
             ) : null}
             {runs.status === "loaded" && runs.data.runs.length > 0 ? (
@@ -232,11 +235,38 @@ export function AdminPage() {
 }
 
 /**
- * How many runs the card shows. Builder cuts the list at `limit` and reports no total, so a
- * full page means "there may be more", never a number of runs Studio does not know.
+ * How many runs the card shows. With Builder's `total` (contract 1.73.0) it is "N of M" and
+ * more is offered only while runs are left out. Without it a full page means "there may be
+ * more", never a number of runs Studio does not know.
  */
-function RunsShown({ shown, limit, loading, onMore }: { shown: number; limit: number; loading: boolean; onMore: () => void }) {
+function RunsShown({
+  shown,
+  total,
+  limit,
+  loading,
+  onMore,
+}: {
+  shown: number;
+  total?: number;
+  limit: number;
+  loading: boolean;
+  onMore: () => void;
+}) {
   const { t } = useTranslation();
+  const more = (
+    <Button loading={loading} onClick={onMore} size="sm" type="button" variant="ghost">
+      {t("admin.runsShowMore", { max: ADMIN_RUNS_MAX })}
+    </Button>
+  );
+  if (total !== undefined) {
+    const left = total - shown;
+    return (
+      <div className="flex flex-wrap items-center gap-3 px-5 pt-3 text-xs text-muted-foreground" data-runs-shown={left > 0 ? "partial" : "all"}>
+        <span>{t("admin.runsShownOfTotal", { n: shown, total })}</span>
+        {left > 0 ? limit < ADMIN_RUNS_MAX ? more : <span>{t("admin.runsAtMaxOfTotal", { max: ADMIN_RUNS_MAX, left })}</span> : null}
+      </div>
+    );
+  }
   if (shown < limit) {
     return (
       <p className="px-5 pt-3 text-xs text-muted-foreground" data-runs-shown="all">
@@ -247,13 +277,7 @@ function RunsShown({ shown, limit, loading, onMore }: { shown: number; limit: nu
   return (
     <div className="flex flex-wrap items-center gap-3 px-5 pt-3 text-xs text-muted-foreground" data-runs-shown="capped">
       <span>{t("admin.runsShownCapped", { n: shown })}</span>
-      {limit < ADMIN_RUNS_MAX ? (
-        <Button loading={loading} onClick={onMore} size="sm" type="button" variant="ghost">
-          {t("admin.runsShowMore", { max: ADMIN_RUNS_MAX })}
-        </Button>
-      ) : (
-        <span>{t("admin.runsAtMax", { max: ADMIN_RUNS_MAX })}</span>
-      )}
+      {limit < ADMIN_RUNS_MAX ? more : <span>{t("admin.runsAtMax", { max: ADMIN_RUNS_MAX })}</span>}
     </div>
   );
 }
