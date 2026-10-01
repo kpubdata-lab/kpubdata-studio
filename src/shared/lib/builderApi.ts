@@ -22,6 +22,7 @@ import { API_BASE } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
 import { providerKeyHeaders } from "./providerKeys";
+import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
 
 /**
@@ -320,10 +321,7 @@ export async function apiFetch<T>(
     }
   }
 
-  if (!response.ok) {
-    const message = formatApiErrorMessage(response.status, parsed);
-    throw new ApiError(response.status, message, parsed);
-  }
+  if (!response.ok) throw httpError(response.status, parsed);
 
   // runtime type validation via Zod schema (#158, #103)
   if (schema) {
@@ -347,6 +345,16 @@ export async function apiFetch<T>(
 
   // if no schema (backward compat): perform as T casting only
   return parsed as T;
+}
+
+/**
+ * The error for one non-2xx Builder response — every request path builds it here, so a
+ * sign-up ledger refusal (403 `signup_pending`/`signup_rejected`, #658) is recorded once
+ * for the app shell whichever call met it first.
+ */
+function httpError(status: number, parsed: unknown): ApiError {
+  noteSignupBlock(status, parsed);
+  return new ApiError(status, formatApiErrorMessage(status, parsed), parsed);
 }
 
 /**
@@ -1159,7 +1167,7 @@ export async function uploadFile(
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status, formatApiErrorMessage(response.status, parsed), parsed);
+    throw httpError(response.status, parsed);
   }
 
   const result = schemas.uploadMetadataSchema.safeParse(parsed);
@@ -1234,7 +1242,7 @@ async function fetchBinary(path: string, fallbackName: string, signal?: AbortSig
     } catch {
       parsed = undefined;
     }
-    throw new ApiError(response.status, formatApiErrorMessage(response.status, parsed), parsed);
+    throw httpError(response.status, parsed);
   }
   const blob = await response.blob();
   return { blob, filename: filenameFromContentDisposition(response.headers.get("Content-Disposition")) ?? fallbackName };
@@ -1280,7 +1288,7 @@ export async function downloadArtifactFile(
     } catch {
       parsed = undefined;
     }
-    throw new ApiError(response.status, formatApiErrorMessage(response.status, parsed), parsed);
+    throw httpError(response.status, parsed);
   }
 
   const blob = await response.blob();

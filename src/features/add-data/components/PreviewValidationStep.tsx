@@ -94,7 +94,7 @@ export function PreviewValidationStep({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-xl font-semibold tracking-tight">{t("addData.preview.title")}</h3>
+          <h3 className="text-xl font-semibold tracking-tight focus:outline-none" data-step-heading tabIndex={-1}>{t("addData.preview.title")}</h3>
           <p className="mt-1 text-sm text-muted-foreground">{t("addData.preview.desc")}</p>
         </div>
         <Button variant="secondary" size="sm" loading={preview.status === "loading"} onClick={onRefresh}>

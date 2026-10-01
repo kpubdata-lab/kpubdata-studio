@@ -12,7 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import { DiscoverPage } from "@/pages/DiscoverPage";
 import * as discoverApi from "@/features/discover/api";
-import type { DatasetSummary } from "@/shared/lib/builderApi";
+import type { CatalogDataset, DatasetSummary } from "@/shared/lib/builderApi";
 
 function renderDiscover(url = "/discover") {
   return render(
@@ -39,7 +39,7 @@ describe("Catalog comparison table (#529)", () => {
     const headers = within(grid)
       .getAllByRole("columnheader")
       .map((cell) => cell.textContent);
-    expect(headers).toEqual(["소스", "제공자", "접근", "성숙도", "만든 테이블", "일일 호출 한도", "시작"]);
+    expect(headers).toEqual(["소스", "제공자", "형식", "지원 작업", "접근", "성숙도", "만든 테이블", "일일 호출 한도", "시작"]);
   });
 
   it("says what the contract says about access and quota, and unknown where it says nothing", async () => {
@@ -112,5 +112,62 @@ describe("Catalog comparison table (#529)", () => {
     const region = await screen.findByRole("region", { name: /소스 데이터셋 비교/ });
     expect(region).toHaveAttribute("tabindex", "0");
     expect(within(region).getByRole("table")).toBeInTheDocument();
+  });
+});
+
+describe("a source's format and supported operations (#670)", () => {
+  const catalogWith = (representation: CatalogDataset["representation"], operations: CatalogDataset["operations"]) => ({
+    providers: [
+      {
+        name: "datago",
+        datasets: [
+          {
+            name: "probe",
+            title: "형식 확인용 소스",
+            description: null,
+            tags: [],
+            source_url: null,
+            representation,
+            operations,
+            query_support: null,
+            requires_service_key: false,
+          },
+        ],
+      },
+    ],
+  });
+
+  it("shows the representation and each supported operation from the catalog response", async () => {
+    vi.spyOn(discoverApi, "loadCatalog").mockResolvedValue(catalogWith("file_csv", ["list", "schema", "download"]));
+    renderDiscover();
+
+    const row = await rowOf("형식 확인용 소스");
+    const cells = within(row).getAllByRole("cell");
+    expect(cells[2]).toHaveTextContent("CSV 파일");
+    expect(within(cells[2]).getByTitle("file_csv")).toBeInTheDocument();
+    const operations = within(cells[3]).getAllByRole("listitem").map((item) => item.textContent);
+    expect(operations).toEqual(["목록 조회", "스키마", "파일 다운로드"]);
+  });
+
+  it("reads an empty operations list as no information, never as nothing supported", async () => {
+    vi.spyOn(discoverApi, "loadCatalog").mockResolvedValue(catalogWith("api_xml", []));
+    renderDiscover();
+
+    const row = await rowOf("형식 확인용 소스");
+    const cells = within(row).getAllByRole("cell");
+    expect(cells[2]).toHaveTextContent("API 응답 (XML)");
+    const none = within(cells[3]).getByText("지원 작업 정보 없음");
+    expect(none).toHaveAttribute("data-status", "unknown");
+    expect(within(cells[3]).queryByRole("listitem")).not.toBeInTheDocument();
+  });
+
+  it("reads an unmapped representation (`other`) as unknown", async () => {
+    vi.spyOn(discoverApi, "loadCatalog").mockResolvedValue(catalogWith("other", ["raw"]));
+    renderDiscover();
+
+    const row = await rowOf("형식 확인용 소스");
+    const cells = within(row).getAllByRole("cell");
+    expect(within(cells[2]).getByText("분류되지 않은 형식")).toHaveAttribute("data-status", "unknown");
+    expect(within(cells[3]).getByText("원본 응답")).toBeInTheDocument();
   });
 });
