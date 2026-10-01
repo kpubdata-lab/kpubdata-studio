@@ -467,9 +467,6 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
   },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
-  getBuildArtifactFile: {
-    skip: "downloadArtifact saves the file as a blob; nothing parses card.json (builder#962 DatasetCard) yet — #700 maps it",
-  },
 };
 
 // --- Error responses (#701) ---
@@ -992,8 +989,8 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
 
   it("maps every OPERATION_SCHEMAS entry to a contract operation and a Studio schema", () => {
     const broken = Object.entries(OPERATION_SCHEMAS).filter(([operationId, mapped]) => {
-      // A skipped operation reads nothing, so its response need not be a named schema
-      // (getBuildArtifactFile's is a oneOf); it must still exist in the contract.
+      // A skipped operation reads nothing, so its response need not be a named schema;
+      // it must still exist in the contract.
       if (typeof mapped !== "string" && "skip" in mapped) return !operationExists(operationId);
       if (operationSchemaName(operationId) === null) return true;
       return !((typeof mapped === "string" ? mapped : mapped.schema) in schemas);
