@@ -14,6 +14,9 @@ import {
   type PublishRequest,
 } from "@/features/publish/api";
 import { usePublishJob } from "@/features/publish/usePublishJob";
+import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
+import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import type { PublishCredentialSource } from "@/shared/lib/builderApi.schema";
 import { formatDateTime } from "@/features/datasets/model";
 import type { BuildRunStatus } from "@/shared/lib/types";
 import { Button, Card, PageHeader, Skeleton, StatusBadge } from "@/shared/ui";
@@ -65,6 +68,21 @@ const inputClassName =
  * more direct user actions. */
 const CREDENTIAL_BLOCKER_CODES = new Set(["credential_unavailable", "credential_required"]);
 
+/**
+ * Whether a token typed here may be sent in `X-Publish-Credential` (#637). Builder reads
+ * the header only when it takes credentials from the request; a single-user deployment
+ * (`stored`, `stored_or_server`) ignores it, so Studio never sends it there. `null` — an
+ * older Builder that does not say — keeps the #615 behaviour of following the blocker.
+ */
+function acceptsRequestCredential(source: PublishCredentialSource | null): boolean {
+  return source !== "stored" && source !== "stored_or_server";
+}
+
+/** Wait for Builder's `/version` once per page load; nothing to wait for in demo mode. */
+function credentialSourceKnown(): Promise<void> {
+  return isRealBuilderEnabled() ? ensureVersionChecked() : Promise.resolve();
+}
+
 export function BuildPublishPage() {
   const { t } = useTranslation();
   const { buildId: runId = "" } = useParams();
@@ -87,6 +105,9 @@ export function BuildPublishPage() {
   // The token changed since readiness was last checked, so that answer may not hold.
   const [tokenStale, setTokenStale] = useState(false);
   const publish = usePublishJob();
+  // Where Builder takes the publish credential from (`GET /version`, contract 1.69.0).
+  const credentialSource = useVersionCheckStore((state) => state.publishCredential);
+  const requestCredential = acceptsRequestCredential(credentialSource);
 
   useEffect(() => {
     if (!runId) {
@@ -132,10 +153,19 @@ export function BuildPublishPage() {
     setReadiness({ status: "loading" });
     setConfirmation(undefined);
     publish.reset();
-    const credential = publishCredentialFor(publishTokenRef.current);
-    getPublishReadiness(runId, "huggingface", controller.signal, credential)
+    // Readiness waits for the credential source, so a token is never sent to a Builder
+    // that only takes a stored credential (#637).
+    let credential: ReturnType<typeof publishCredentialFor>;
+    credentialSourceKnown()
+      .then(() => {
+        if (!active) return null;
+        credential = acceptsRequestCredential(useVersionCheckStore.getState().publishCredential)
+          ? publishCredentialFor(publishTokenRef.current)
+          : undefined;
+        return getPublishReadiness(runId, "huggingface", controller.signal, credential);
+      })
       .then((data) => {
-        if (!active) return;
+        if (!active || !data) return;
         if (data.run_id !== runId || data.target !== "huggingface") {
           setReadiness({ status: "error", message: i18n.t("buildPublish.readinessMismatch") });
           return;
@@ -171,10 +201,20 @@ export function BuildPublishPage() {
   const canReview = Boolean(runId && builderReady && !destinationError && !tokenError && !tokenStale && publish.status !== "publishing");
   const credentialRequired =
     readiness.status === "loaded" && readiness.data.blockers.some((issue) => issue.code === "credential_required");
-  // A multi-user Builder answers `credential_required` until a token is sent; Studio
-  // cannot read the deployment mode (`GET /admin/config` is admin-only), so the field
-  // appears on that blocker and stays while a token is held or was just forgotten.
-  const showTokenField = credentialRequired || publishToken !== "" || tokenStale;
+  // Builder 1.69.0 says where it takes the credential from (#637): `request` asks for a
+  // token up front, `stored`/`stored_or_server` never do. An older Builder does not say,
+  // so the field appears on a `credential_required` blocker — a multi-user Builder answers
+  // that until a token is sent — and stays while a token is held or was just forgotten.
+  const showTokenField =
+    credentialSource === "request" ||
+    (credentialSource === null && (credentialRequired || publishToken !== "" || tokenStale));
+  const credentialRequiredNoteKey = !requestCredential
+    ? "buildPublish.storedCredentialRequiredNote"
+    : readiness.status !== "loaded" || !readiness.withToken
+      ? "buildPublish.credentialRequiredNote"
+      : credentialSource === "request"
+        ? "buildPublish.requestCredentialStillRequiredNote"
+        : "buildPublish.credentialStillRequiredNote";
 
   const request = useMemo<PublishRequest>(() => ({
     target: "huggingface",
@@ -209,7 +249,7 @@ export function BuildPublishPage() {
    * means entering the token and checking readiness again (`tokenStale`).
    */
   function startPublish(request: PublishRequest) {
-    const credential = publishCredentialFor(publishTokenRef.current);
+    const credential = requestCredential ? publishCredentialFor(publishTokenRef.current) : undefined;
     publishTokenRef.current = "";
     setPublishToken("");
     if (credential) setTokenStale(true);
@@ -270,7 +310,7 @@ export function BuildPublishPage() {
                 (credential_unavailable) — it means more direct user actions
                 exist. The two codes carry different guidance; the same
                 guidance is never reused. */}
-            {credentialRequired ? <p className="text-xs text-muted-foreground">{t(readiness.withToken ? "buildPublish.credentialStillRequiredNote" : "buildPublish.credentialRequiredNote")}</p> : null}
+            {credentialRequired ? <p className="text-xs text-muted-foreground">{t(credentialRequiredNoteKey)}</p> : null}
           </div>
         ) : null}
         {showTokenField ? (

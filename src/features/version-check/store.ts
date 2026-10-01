@@ -7,6 +7,7 @@
 import { create } from "zustand";
 
 import { builderApi } from "@/shared/lib/builderApi";
+import type { PublishCredentialSource } from "@/shared/lib/builderApi.schema";
 
 import { compareAppVersion, type AppVersionComparison } from "./compareAppVersion";
 
@@ -18,6 +19,11 @@ interface VersionCheckState {
   comparison: AppVersionComparison | null;
   /** The Builder's HTTP contract version from the same response; `null` until known (#482). */
   apiVersion: string | null;
+  /**
+   * Where Builder takes publish credentials from (#637, contract 1.69.0); `null` until
+   * known, after a failed check, or when an older Builder does not say.
+   */
+  publishCredential: PublishCredentialSource | null;
   /** Whether the user closed the banner for this page load. */
   dismissed: boolean;
   dismiss: () => void;
@@ -26,6 +32,7 @@ interface VersionCheckState {
 export const useVersionCheckStore = create<VersionCheckState>((set) => ({
   comparison: null,
   apiVersion: null,
+  publishCredential: null,
   dismissed: false,
   dismiss: () => set({ dismissed: true }),
 }));
@@ -49,7 +56,11 @@ export function ensureVersionChecked(): Promise<void> {
       if (comparison.kind === "patch") {
         console.info(`Studio ${comparison.studio} and KPubData Builder ${comparison.builder} differ by a patch release.`);
       }
-      useVersionCheckStore.setState({ comparison, apiVersion: info.api_version });
+      useVersionCheckStore.setState({
+        comparison,
+        apiVersion: info.api_version,
+        publishCredential: info.publish_credential ?? null,
+      });
     })
     .catch(() => {
       // No verdict — see above — and no cached promise, so the next call retries.
@@ -61,5 +72,5 @@ export function ensureVersionChecked(): Promise<void> {
 /** Test-only: forget the previous check. */
 export function resetVersionCheck(): void {
   inFlight = null;
-  useVersionCheckStore.setState({ comparison: null, apiVersion: null, dismissed: false });
+  useVersionCheckStore.setState({ comparison: null, apiVersion: null, publishCredential: null, dismissed: false });
 }
