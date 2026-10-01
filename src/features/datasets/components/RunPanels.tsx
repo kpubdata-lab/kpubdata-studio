@@ -12,6 +12,8 @@ import type { qualityResultsForSource, summarizeQuality } from "@/features/quali
 import type { BuildQualityResponse, DatasetRunSummary } from "@/shared/lib/builderApi";
 import { Card, EmptyState, Skeleton } from "@/shared/ui";
 
+import { QualityTrend } from "./QualityTrend";
+
 export interface AsyncState<T> {
   status: "idle" | "loading" | "loaded" | "error";
   data?: T;
@@ -23,7 +25,14 @@ function formatJson(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
-export function QualityTab({ state, status, results, drift, datasetId, runId, source, stage }: { state: AsyncState<BuildQualityResponse>; status: ReturnType<typeof summarizeQuality>; results: ReturnType<typeof qualityResultsForSource>; drift: BuildQualityResponse["schema_drift"][string]; datasetId: string; runId: string; source: string; stage?: DatasetStage }) {
+type QualityTabProps = { state: AsyncState<BuildQualityResponse>; status: ReturnType<typeof summarizeQuality>; results: ReturnType<typeof qualityResultsForSource>; drift: BuildQualityResponse["schema_drift"][string]; datasetId: string; runId: string; source: string; stage?: DatasetStage };
+
+/** The selected run's quality, then the table's trend across runs (#650), which loads on its own. */
+export function QualityTab(props: QualityTabProps) {
+  return <div className="space-y-4"><RunQuality {...props} /><QualityTrend datasetId={props.datasetId} /></div>;
+}
+
+function RunQuality({ state, status, results, drift, datasetId, runId, source, stage }: QualityTabProps) {
   const { t } = useTranslation();
   if (state.status === "loading" || state.status === "idle") return <Card><Skeleton className="h-40 w-full" /></Card>;
   if (state.status === "error") return <Card variant="error"><QualityBadge status="N/A" /><p className="mt-3 text-sm">{state.error}</p></Card>;

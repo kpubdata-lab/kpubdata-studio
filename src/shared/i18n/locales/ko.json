@@ -2725,5 +2725,30 @@
     "yes": "예",
     "no": "아니요",
     "apiKey": "API 키"
+  },
+  "qualityTrend": {
+    "title": "run별 품질 추이",
+    "description": "Builder가 기록한 run별 PASS/WARN/FAIL을 최신순으로 보여줍니다. 평가된 검사가 없는 run은 N/A로 표시합니다.",
+    "error": "품질 이력을 불러오지 못했습니다",
+    "emptyTitle": "아직 품질 이력이 없습니다",
+    "emptyDescription": "이 테이블에는 품질 결과가 있는 run이 없습니다. 대신 추정한 값을 보여주지 않습니다.",
+    "columns": {
+      "time": "시각",
+      "results": "결과",
+      "passRate": "통과율",
+      "validatedRows": "검증 행 수"
+    },
+    "runStatus": {
+      "failed": "run 실패",
+      "cancelled": "run 취소됨"
+    },
+    "timeNotRecorded": "시각 미기록",
+    "validatedRowsMissing": "검증 행 수가 보고되지 않음",
+    "percent": "{{value}}%",
+    "passedOf": "({{total}}개 중 {{passed}}개 통과)",
+    "noRateYet": "이 이력에는 아직 통과율이 평가된 run이 없습니다.",
+    "sparklineLabel": "run {{runs}}개의 통과율 추이(오래된 순), 통과율이 있는 run {{rated}}개",
+    "sparklineCaption": "통과율, 오래된 순 → 최신 순",
+    "sparklineGaps": "끊긴 구간은 평가된 검사가 없는 run입니다({{gaps}}개)."
   }
 }
