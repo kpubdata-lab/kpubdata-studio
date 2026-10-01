@@ -260,6 +260,29 @@ body {
 }
 
 /*
+ * Printing a report prints only the report (#258). These rules were an inline `<style>`
+ * in ReportEditorPage; the Content-Security-Policy (#663) allows no inline style, so they
+ * live here and apply only while the report editor is on the page (`:has`).
+ */
+@media print {
+  body:has(#report-print-area) * {
+    visibility: hidden;
+  }
+  #report-print-area,
+  #report-print-area * {
+    visibility: visible;
+  }
+  #report-print-area {
+    position: absolute;
+    inset: 0;
+    padding: 1.5rem;
+  }
+  #report-print-area .print\:hidden {
+    display: none !important;
+  }
+}
+
+/*
  * Reduced motion (#664). A person who asked the OS for less motion gets none: the
  * skeleton and status-dot pulses, the button and assistant spinners, and the sidebar's
  * slide all stop. The rule is unlayered and `!important`, so it outranks Tailwind's

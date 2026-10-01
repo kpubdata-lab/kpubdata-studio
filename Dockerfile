@@ -21,14 +21,19 @@ COPY package.json package-lock.json .npmrc ./
 RUN npm ci --no-audit --no-fund
 COPY . .
 # Served at the root. The default production base (/kpubdata-studio/) is for GitHub Pages.
-RUN npx vite build --base /
+# No Content-Security-Policy meta: nginx sends the policy as a header with this
+# deployment's origins (40-kpubdata-config.sh), and a meta copy would narrow it (#663).
+RUN KPUBDATA_CSP_META=off npx vite build --base /
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --chmod=755 docker/40-kpubdata-config.sh /docker-entrypoint.d/40-kpubdata-config.sh
 COPY --from=build /app/dist /usr/share/nginx/html
-# The only file the container writes, and the only one its user may.
+# The only files the container writes, and the only ones its user may: the runtime
+# config and the Content-Security-Policy header with this deployment's origins (#663).
 USER root
-RUN chown 101:101 /usr/share/nginx/html/config.js
+RUN chown 101:101 /usr/share/nginx/html/config.js \
+ && touch /etc/nginx/kpubdata-csp.conf \
+ && chown 101:101 /etc/nginx/kpubdata-csp.conf
 USER 101
 EXPOSE 8080

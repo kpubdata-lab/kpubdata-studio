@@ -300,15 +300,6 @@ export function ReportEditorPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10" id="report-print-area">
-      <style>{`
-        @media print {
-          body * { visibility: hidden; }
-          #report-print-area, #report-print-area * { visibility: visible; }
-          #report-print-area { position: absolute; inset: 0; padding: 1.5rem; }
-          .print\\:hidden { display: none !important; }
-        }
-      `}</style>
-
       <div className="print:hidden">
         <PageHeader title={t("reportEditor.editTitle")} meta={<span className="font-mono">{report.datasetId} · {report.baseRunId}</span>} />
       </div>
