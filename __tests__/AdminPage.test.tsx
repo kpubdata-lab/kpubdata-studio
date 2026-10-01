@@ -9,11 +9,11 @@
  * - 5xx is an alert on its card
  * - one route failing never hides another card's content
  */
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AdminPage } from "@/pages/AdminPage";
+import { ADMIN_RUNS_MAX, ADMIN_RUNS_PAGE, AdminPage } from "@/pages/AdminPage";
 import { i18n } from "@/shared/i18n";
 import {
   ApiError,
@@ -21,6 +21,7 @@ import {
   isRealBuilderEnabled,
   type AdminConfigResponse,
   type AdminRunsResponse,
+  type AdminUser,
   type AdminUsersResponse,
 } from "@/shared/lib/builderApi";
 
@@ -33,6 +34,8 @@ vi.mock("@/shared/lib/builderApi", async () => {
       adminConfig: vi.fn(),
       adminRuns: vi.fn(),
       adminUsers: vi.fn(),
+      adminApproveUser: vi.fn(),
+      adminRejectUser: vi.fn(),
     },
   };
 });
@@ -103,7 +106,7 @@ function loadState(titleKey: string): string | null {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.mocked(isRealBuilderEnabled).mockReturnValue(true);
 });
 
@@ -184,6 +187,135 @@ describe("AdminPage card states (#606)", () => {
       await settled();
       expect(within(card("admin.policyTitle")).getByText(/has no GET \/admin\/config \(404\)/)).toBeInTheDocument();
       expect(within(card("admin.runsTitle")).getByText("KPubData Builder has recorded no runs yet.")).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage("ko");
+    }
+  });
+});
+
+/** `count` runs, the way Builder answers: `count` is the number returned, not a total. */
+function runPage(count: number): AdminRunsResponse {
+  const runs = Array.from({ length: count }, (_, index) => ({
+    run_id: `run-${String(index).padStart(3, "0")}`,
+    status: "succeeded",
+    started_at: null,
+    finished_at: null,
+    owner_id: null,
+  }));
+  return { runs, count: runs.length };
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+describe("AdminPage run count (#661)", () => {
+  it("says a page cut at the limit may have more, and asks Builder for up to 200 on Show more", async () => {
+    renderAdmin({ runs: runPage(ADMIN_RUNS_PAGE) });
+    await settled();
+    expect(vi.mocked(builderApi.adminRuns)).toHaveBeenLastCalledWith(ADMIN_RUNS_PAGE, expect.any(AbortSignal));
+    const runs = card("admin.runsTitle");
+    expect(within(runs).getByText(t("admin.runsShownCapped", { n: ADMIN_RUNS_PAGE }))).toBeInTheDocument();
+    // Builder reports no total, so no "of N" claim is made.
+    expect(runs.querySelector('[data-runs-shown="capped"]')).not.toBeNull();
+
+    vi.mocked(builderApi.adminRuns).mockResolvedValue(runPage(128));
+    fireEvent.click(within(runs).getByRole("button", { name: t("admin.runsShowMore", { max: ADMIN_RUNS_MAX }) }));
+    expect(await within(card("admin.runsTitle")).findByText(t("admin.runsShownAll", { n: 128 }))).toBeInTheDocument();
+    expect(vi.mocked(builderApi.adminRuns)).toHaveBeenLastCalledWith(ADMIN_RUNS_MAX, expect.any(AbortSignal));
+    expect(within(card("admin.runsTitle")).getAllByRole("row")).toHaveLength(129);
+  });
+
+  it("says every run is shown when Builder returns fewer than the limit", async () => {
+    renderAdmin({ runs: runPage(3) });
+    await settled();
+    const runs = card("admin.runsTitle");
+    expect(within(runs).getByText(t("admin.runsShownAll", { n: 3 }))).toBeInTheDocument();
+    expect(within(runs).queryByRole("button", { name: t("admin.runsShowMore", { max: ADMIN_RUNS_MAX }) })).not.toBeInTheDocument();
+  });
+
+  it("stops offering more at the contract's maximum limit", async () => {
+    renderAdmin({ runs: runPage(ADMIN_RUNS_PAGE) });
+    await settled();
+    vi.mocked(builderApi.adminRuns).mockResolvedValue(runPage(ADMIN_RUNS_MAX));
+    fireEvent.click(screen.getByRole("button", { name: t("admin.runsShowMore", { max: ADMIN_RUNS_MAX }) }));
+    const runs = card("admin.runsTitle");
+    expect(await within(runs).findByText(t("admin.runsAtMax", { max: ADMIN_RUNS_MAX }))).toBeInTheDocument();
+    expect(within(runs).getByText(t("admin.runsShownCapped", { n: ADMIN_RUNS_MAX }))).toBeInTheDocument();
+    expect(within(runs).queryByRole("button", { name: t("admin.runsShowMore", { max: ADMIN_RUNS_MAX }) })).not.toBeInTheDocument();
+  });
+});
+
+describe("AdminPage refresh (#661)", () => {
+  it("reloads all three cards and keeps showing them while it does", async () => {
+    renderAdmin();
+    await settled();
+    expect(vi.mocked(builderApi.adminConfig)).toHaveBeenCalledTimes(1);
+
+    const nextRuns = deferred<AdminRunsResponse>();
+    vi.mocked(builderApi.adminConfig).mockResolvedValue({ ...CONFIG, enforce_ownership: false });
+    vi.mocked(builderApi.adminRuns).mockReturnValue(nextRuns.promise);
+    vi.mocked(builderApi.adminUsers).mockResolvedValue({ users: [], count: 0 });
+    fireEvent.click(screen.getByRole("button", { name: t("admin.refresh") }));
+
+    expect(vi.mocked(builderApi.adminConfig)).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(builderApi.adminRuns)).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(builderApi.adminUsers)).toHaveBeenCalledTimes(2);
+    // The runs card keeps its rows until its new answer arrives — no skeleton.
+    expect(within(card("admin.runsTitle")).getByText("run-alpha")).toBeInTheDocument();
+    expect(document.querySelector(".animate-pulse")).toBeNull();
+
+    nextRuns.resolve({ runs: [{ run_id: "run-beta", status: "running", started_at: null, finished_at: null, owner_id: null }], count: 1 });
+    expect(await within(card("admin.runsTitle")).findByText("run-beta")).toBeInTheDocument();
+    expect(within(card("admin.policyTitle")).getAllByText(t("admin.off"))).toHaveLength(2);
+    expect(within(card("admin.users.title")).getByText(t("admin.users.empty"))).toBeInTheDocument();
+  });
+
+  it("keeps an approval made during a refresh, and the row's in-flight state, over the refresh's older answer", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderAdmin();
+    await settled();
+    const pending = USERS.users[0];
+    const approved: AdminUser = { ...pending, status: "approved", decided_at: "2026-09-03T00:00:00+00:00", decided_by: "admin-hash-0001" };
+
+    const decision = deferred<AdminUser>();
+    vi.mocked(builderApi.adminApproveUser).mockReturnValue(decision.promise);
+    const approve = screen.getByRole("button", { name: t("admin.users.approveLabel", { name: pending.display_name }) });
+    fireEvent.click(approve);
+
+    // Refresh while the approval is in flight; Builder read the ledger before deciding.
+    const staleUsers = deferred<AdminUsersResponse>();
+    vi.mocked(builderApi.adminConfig).mockResolvedValue(CONFIG);
+    vi.mocked(builderApi.adminRuns).mockResolvedValue(RUNS);
+    vi.mocked(builderApi.adminUsers).mockReturnValue(staleUsers.promise);
+    fireEvent.click(screen.getByRole("button", { name: t("admin.refresh") }));
+
+    // The row stays busy through the refresh: its buttons are still disabled.
+    expect(screen.getByRole("button", { name: t("admin.users.approveLabel", { name: pending.display_name }) })).toBeDisabled();
+
+    decision.resolve(approved);
+    const users = card("admin.users.title");
+    expect(await within(users).findByText(t("admin.users.status.approved"))).toBeInTheDocument();
+
+    staleUsers.resolve(USERS);
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: t("admin.refresh") })).toBeEnabled());
+    await settled();
+    expect(within(card("admin.users.title")).getByText(t("admin.users.status.approved"))).toBeInTheDocument();
+    expect(within(card("admin.users.title")).queryByText(t("admin.users.status.pending"))).not.toBeInTheDocument();
+  });
+
+  it("shows the refresh action and when the page was loaded, in English too", async () => {
+    await i18n.changeLanguage("en");
+    try {
+      renderAdmin({ runs: runPage(ADMIN_RUNS_PAGE) });
+      await settled();
+      expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+      expect(screen.getByText(/^Loaded /)).toBeInTheDocument();
+      expect(screen.getByText(/There may be more — KPubData Builder does not report a total\./)).toBeInTheDocument();
     } finally {
       await i18n.changeLanguage("ko");
     }

@@ -8,8 +8,19 @@
  * list says it is empty), forbidden, unsupported (a 404 — a Builder without that route) or
  * failed, so one route failing never hides, or empties, another card. Nothing here carries a credential — the Builder's admin
  * responses are strict schemas without one, and an owner is an irreversible hash.
+ *
+ * **Refresh** (#661) reloads all three cards, the way Monitoring does. A card keeps what it
+ * shows until its new answer arrives, so the users table — and a row whose approval is in
+ * flight — stays mounted. A decision Builder returns while a refresh is in flight is laid
+ * over that refresh's answer, which may have been read before the decision.
+ *
+ * **Run count** (#661): `AdminRunsResponse.count` is the number of runs returned, not a total
+ * — Builder sets it to `len(runs)` after cutting the list at `limit` (kpubdata-builder
+ * `routes/admin.py`), and the contract has no total field. So the card never claims a
+ * total: a full page reads "latest N (there may be more)" and offers more, up to the
+ * contract's maximum `limit` of 200. A real total is asked of Builder in kpubdata-builder#948.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { formatDateTime } from "@/features/datasets/model";
@@ -23,7 +34,11 @@ import {
   type AdminUser,
   type AdminUsersResponse,
 } from "@/shared/lib/builderApi";
-import { Card, cn, PageHeader, Skeleton } from "@/shared/ui";
+import { Button, Card, cn, PageHeader, Skeleton } from "@/shared/ui";
+
+/** Runs asked for first, and the contract's maximum `limit` for `GET /admin/runs`. */
+export const ADMIN_RUNS_PAGE = 50;
+export const ADMIN_RUNS_MAX = 200;
 
 type Load<T> =
   | { status: "loading" }
@@ -46,30 +61,63 @@ export function AdminPage() {
   const [runs, setRuns] = useState<Load<AdminRunsResponse>>({ status: "loading" });
   const [users, setUsers] = useState<Load<AdminUsersResponse>>({ status: "loading" });
 
+  const [runsLimit, setRunsLimit] = useState(ADMIN_RUNS_PAGE);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadedAt, setLoadedAt] = useState<Date | null>(null);
+  const controllerRef = useRef<AbortController | null>(null);
+  // Decisions Builder returned after the current users request was sent (see the header).
+  const decidedSinceRequest = useRef(new Map<string, AdminUser>());
+
+  const load = useCallback(
+    (limit: number) => {
+      controllerRef.current?.abort();
+      const controller = new AbortController();
+      controllerRef.current = controller;
+      decidedSinceRequest.current = new Map();
+      const live = () => !controller.signal.aborted;
+      setRefreshing(true);
+      const config = builderApi
+        .adminConfig(controller.signal)
+        .then((data) => live() && setConfig({ status: "loaded", data }))
+        .catch((cause: unknown) => live() && setConfig(toLoad(cause)));
+      const runs = builderApi
+        .adminRuns(limit, controller.signal)
+        .then((data) => live() && setRuns({ status: "loaded", data }))
+        .catch((cause: unknown) => live() && setRuns(toLoad(cause)));
+      const users = builderApi
+        .adminUsers(undefined, controller.signal)
+        .then((data) => {
+          if (!live()) return;
+          const decided = decidedSinceRequest.current;
+          setUsers({
+            status: "loaded",
+            data: { ...data, users: data.users.map((user) => decided.get(user.user_id) ?? user) },
+          });
+        })
+        .catch((cause: unknown) => live() && setUsers(toLoad(cause)));
+      void Promise.allSettled([config, runs, users]).then(() => {
+        if (!live()) return;
+        setRefreshing(false);
+        setLoadedAt(new Date());
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!real) return;
-    const controller = new AbortController();
-    builderApi
-      .adminConfig(controller.signal)
-      .then((data) => setConfig({ status: "loaded", data }))
-      .catch((cause: unknown) => !controller.signal.aborted && setConfig(toLoad(cause)));
-    builderApi
-      .adminRuns(50, controller.signal)
-      .then((data) => setRuns({ status: "loaded", data }))
-      .catch((cause: unknown) => !controller.signal.aborted && setRuns(toLoad(cause)));
-    builderApi
-      .adminUsers(undefined, controller.signal)
-      .then((data) => setUsers({ status: "loaded", data }))
-      .catch((cause: unknown) => !controller.signal.aborted && setUsers(toLoad(cause)));
-    return () => controller.abort();
-  }, [real]);
+    load(runsLimit);
+  }, [real, runsLimit, load]);
+
+  useEffect(() => () => controllerRef.current?.abort(), []);
 
   // A 403 with nothing answered means the caller is not an administrator. Once any card has
   // data, a 403 is said on its own card instead, so it never hides what Builder did answer.
   const loads = [config.status, runs.status, users.status];
   const forbidden = loads.includes("forbidden") && !loads.includes("loaded");
 
-  const replaceUser = (updated: AdminUser) =>
+  const replaceUser = (updated: AdminUser) => {
+    decidedSinceRequest.current.set(updated.user_id, updated);
     setUsers((current) =>
       current.status === "loaded"
         ? {
@@ -78,10 +126,22 @@ export function AdminPage() {
           }
         : current,
     );
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
-      <PageHeader title={t("admin.title")} description={t("admin.desc")} />
+      <PageHeader
+        title={t("admin.title")}
+        description={t("admin.desc")}
+        meta={real && loadedAt ? t("admin.loadedAt", { at: formatDateTime(loadedAt.toISOString()) }) : undefined}
+        actions={
+          real ? (
+            <Button loading={refreshing} onClick={() => load(runsLimit)} size="sm" type="button" variant="secondary">
+              {t("admin.refresh")}
+            </Button>
+          ) : undefined
+        }
+      />
 
       {!real ? (
         <Card variant="dashed" className="text-sm">{t("admin.mock")}</Card>
@@ -121,6 +181,14 @@ export function AdminPage() {
               </p>
             ) : null}
             {runs.status === "loaded" && runs.data.runs.length > 0 ? (
+              <RunsShown
+                limit={runsLimit}
+                loading={refreshing}
+                onMore={() => setRunsLimit(ADMIN_RUNS_MAX)}
+                shown={runs.data.runs.length}
+              />
+            ) : null}
+            {runs.status === "loaded" && runs.data.runs.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
@@ -158,6 +226,33 @@ export function AdminPage() {
             {users.status === "loaded" ? <UsersSection onChange={replaceUser} users={users.data.users} /> : null}
           </Card>
         </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * How many runs the card shows. Builder cuts the list at `limit` and reports no total, so a
+ * full page means "there may be more", never a number of runs Studio does not know.
+ */
+function RunsShown({ shown, limit, loading, onMore }: { shown: number; limit: number; loading: boolean; onMore: () => void }) {
+  const { t } = useTranslation();
+  if (shown < limit) {
+    return (
+      <p className="px-5 pt-3 text-xs text-muted-foreground" data-runs-shown="all">
+        {t("admin.runsShownAll", { n: shown })}
+      </p>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-3 px-5 pt-3 text-xs text-muted-foreground" data-runs-shown="capped">
+      <span>{t("admin.runsShownCapped", { n: shown })}</span>
+      {limit < ADMIN_RUNS_MAX ? (
+        <Button loading={loading} onClick={onMore} size="sm" type="button" variant="ghost">
+          {t("admin.runsShowMore", { max: ADMIN_RUNS_MAX })}
+        </Button>
+      ) : (
+        <span>{t("admin.runsAtMax", { max: ADMIN_RUNS_MAX })}</span>
       )}
     </div>
   );
