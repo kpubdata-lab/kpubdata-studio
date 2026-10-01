@@ -1320,6 +1320,8 @@
     "snapshotFiles": "스냅샷 파일",
     "reference": "참조:",
     "credentialStillRequiredNote": "토큰을 보냈는데도 KPubData Builder가 credential을 요구합니다. 이 배포는 요청에 실은 토큰을 받지 않으니, 본인 publish credential을 KPubData Builder에 저장하세요.",
+    "storedCredentialRequiredNote": "이 배포는 본인이 저장한 publish credential로만 게시하며, 요청에 실어 보낸 토큰은 쓰지 않습니다. KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤 다시 확인하세요.",
+    "requestCredentialStillRequiredNote": "토큰을 보냈는데도 KPubData Builder가 credential을 요구합니다. 게시 위치에 쓸 수 있는 Hugging Face 토큰인지 확인하고, 다시 입력해 확인하세요.",
     "tokenLabel": "Hugging Face 토큰",
     "tokenHint": "이 화면의 메모리에만 두고, 게시 준비 확인과 게시 요청에만 실어 보냅니다. 저장하지 않으며, 화면을 떠나거나 새로고침하면 사라집니다.",
     "tokenStale": "이 토큰으로 게시 준비 상태를 다시 확인하세요.",

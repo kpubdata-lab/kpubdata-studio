@@ -1320,6 +1320,8 @@
     "snapshotFiles": "Snapshot files",
     "reference": "Reference:",
     "credentialStillRequiredNote": "KPubData Builder still asks for a credential although your token was sent. This deployment does not take a token with the request — store your own publish credential with KPubData Builder instead.",
+    "storedCredentialRequiredNote": "This deployment publishes only with a publish credential you have stored yourself, and a token sent with the request is not used. Store your own Hugging Face publish credential in KPubData Builder, then check again.",
+    "requestCredentialStillRequiredNote": "KPubData Builder still asks for a credential although your token was sent. Check that it is a Hugging Face token that can write to the destination, enter it again and check again.",
     "tokenLabel": "Hugging Face token",
     "tokenHint": "Kept only in this page's memory and sent only with the readiness check and the publish request. It is never saved, and it is gone when you leave or reload the page.",
     "tokenStale": "Check again to confirm readiness with this token.",

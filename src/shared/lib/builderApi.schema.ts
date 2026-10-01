@@ -20,6 +20,14 @@ export const versionResponseSchema = z.object({
   api_version: z.string(),
   /** Application release (ADR 0004). Absent on Builders that predate it — not a mismatch (#430). */
   version: z.string().optional(),
+  /**
+   * Where this deployment takes publish credentials from (kpubdata-builder#938, 1.69.0):
+   * `request` — only the request's `X-Publish-Credential` header (multi-user); `stored` —
+   * only the requester's stored credential; `stored_or_server` — the stored one, else the
+   * server's. Absent on older Builders, and a value Studio does not know reads as absent,
+   * so either way the publish page falls back to inferring it from readiness (#637).
+   */
+  publish_credential: z.enum(["request", "stored", "stored_or_server"]).optional().catch(undefined),
 });
 
 /**
@@ -293,6 +301,7 @@ export const errorResponseSchema = z.union([
 
 // Type extraction (extracted from Zod schema to match TypeScript types)
 export type VersionResponse = z.infer<typeof versionResponseSchema>;
+export type PublishCredentialSource = NonNullable<VersionResponse["publish_credential"]>;
 export type ValidateValid = z.infer<typeof validateValidSchema>;
 export type ValidateInvalid = z.infer<typeof validateInvalidSchema>;
 export type ValidateError = z.infer<typeof validateErrorSchema>;

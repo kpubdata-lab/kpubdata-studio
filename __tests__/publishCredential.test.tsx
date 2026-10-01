@@ -6,10 +6,11 @@
  * reaches storage, the URL, a request body, a log or an error message, if the header is
  * missing from readiness or publish, or if it is sent when nothing was entered.
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { describePublishFailure, publishCredentialFor, validatePublishToken } from "@/features/publish/api";
+import { ensureVersionChecked, resetVersionCheck, useVersionCheckStore } from "@/features/version-check/store";
 import { BuildPublishPage } from "@/pages/BuildPublishPage";
 import {
   ApiError,
@@ -332,5 +333,182 @@ describe("BuildPublishPage in a single-user deployment", () => {
     fireEvent.click(screen.getByRole("button", { name: "게시 실행" }));
     await screen.findByText("Builder 게시 완료");
     expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, undefined]);
+  });
+});
+
+/**
+ * Builder 1.69.0 says where it takes publish credentials from (`GET /version`
+ * `publish_credential`, kpubdata-builder#938); the page follows it instead of guessing
+ * from a `credential_required` blocker (#637). Without the value it guesses as before.
+ */
+describe("BuildPublishPage follows Builder's publish credential source (#637)", () => {
+  const STORED_BLOCKED = {
+    ...READY,
+    ready: false,
+    blockers: [{ code: "credential_required", message: "target 'huggingface' requires a credential stored for this principal" }],
+  };
+
+  function versionBody(source?: string) {
+    return { service: "kpubdata-builder", api_version: "1.69.0", ...(source ? { publish_credential: source } : {}) };
+  }
+
+  /** `/version` answers with `source`; readiness and publish answer from `answer`. */
+  function builderFetch(source: string | undefined, answer: (sent: string | undefined, init: RequestInit) => Response) {
+    return vi.fn().mockImplementation((url: string, init: RequestInit) => {
+      if (String(url).endsWith("/version")) return Promise.resolve(response(200, versionBody(source)));
+      return Promise.resolve(answer((init.headers as Record<string, string> | undefined)?.[PUBLISH_CREDENTIAL_HEADER], init));
+    });
+  }
+
+  /** Every request the page made, with the header it carried. */
+  function sentHeaders(fetchMock: ReturnType<typeof vi.fn>) {
+    return (fetchMock.mock.calls as Call[]).map(headerOf);
+  }
+
+  beforeEach(() => resetVersionCheck());
+  afterEach(() => resetVersionCheck());
+
+  it("request: offers the field before any blocker and sends what is entered", async () => {
+    // Ready without a token, so only the declared source can bring the field up.
+    const fetchMock = builderFetch("request", (_sent, init) =>
+      response(200, init.method === "POST" ? SUCCESS : READY));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText("Builder 게시 준비 완료");
+
+    const field = screen.getByLabelText("Hugging Face 토큰");
+    fireEvent.change(field, { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await waitFor(() => expect(publishCalls(fetchMock)).toHaveLength(2));
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, HEADER_VALUE]);
+    await screen.findByText("Builder 게시 준비 완료");
+
+    // Still memory-only and dropped once the publish starts (#615).
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    fireEvent.click(screen.getByRole("button", { name: "게시 실행" }));
+    await screen.findByText("Builder 게시 완료");
+    expect(screen.getByLabelText("Hugging Face 토큰")).toHaveValue("");
+    expectTokenNotPersisted(fetchMock);
+  });
+
+  it("request: a token Builder still refuses is not answered with 'store it in Builder'", async () => {
+    const fetchMock = builderFetch("request", () => response(200, NEEDS_TOKEN));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    expect(await screen.findByText(/게시 위치에 쓸 수 있는 Hugging Face 토큰인지 확인하고/)).toBeInTheDocument();
+    expect(screen.queryByText(/KPubData Builder에 저장하세요/)).not.toBeInTheDocument();
+  });
+
+  it("stored: no field, and credential_required asks for a credential stored in Builder", async () => {
+    vi.stubGlobal("fetch", builderFetch("stored", () => response(200, STORED_BLOCKED)));
+    renderPublish();
+    expect(await screen.findByText(/KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
+    expect(screen.queryByText(/아래에 본인 Hugging Face 토큰을 입력하고/)).not.toBeInTheDocument();
+  });
+
+  it("stored: never sends X-Publish-Credential, through readiness, re-checks and publish", async () => {
+    // Blocked until the requester stores a credential in Builder, then ready.
+    let stored = false;
+    const fetchMock = builderFetch("stored", (_sent, init) =>
+      response(200, init.method === "POST" ? SUCCESS : stored ? READY : STORED_BLOCKED));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤/);
+
+    // Whatever the page offers, try to hand it a value.
+    const field = screen.queryByLabelText("Hugging Face 토큰");
+    if (field) {
+      fireEvent.change(field, { target: { value: TOKEN } });
+      fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+      await waitFor(() => expect(publishCalls(fetchMock)).toHaveLength(2));
+    }
+
+    stored = true;
+    fireEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    fireEvent.click(screen.getByRole("button", { name: "게시 실행" }));
+    await screen.findByText("Builder 게시 완료");
+
+    expect(publishCalls(fetchMock).length).toBeGreaterThanOrEqual(3);
+    expect(sentHeaders(fetchMock).every((value) => value === undefined)).toBe(true);
+  });
+
+  it("stored learned after a value was entered: the held value is not sent", async () => {
+    // The first /version fails, so the page guesses from the blocker and offers the field;
+    // a later check (another page's banner) then learns the deployment is `stored`.
+    let versionKnown = false;
+    const fetchMock = vi.fn().mockImplementation((url: string, init: RequestInit) => {
+      if (String(url).endsWith("/version")) {
+        return Promise.resolve(versionKnown ? response(200, versionBody("stored")) : response(503, { error: "unavailable" }));
+      }
+      return Promise.resolve(response(200, init.method === "POST" ? SUCCESS : STORED_BLOCKED));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    fireEvent.change(await screen.findByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+
+    versionKnown = true;
+    await act(async () => {
+      resetVersionCheck();
+      await ensureVersionChecked();
+    });
+    expect(useVersionCheckStore.getState().publishCredential).toBe("stored");
+    expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
+    const before = publishCalls(fetchMock).length;
+    fireEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+    await waitFor(() => expect(publishCalls(fetchMock).length).toBe(before + 1));
+    expect(sentHeaders(fetchMock).every((value) => value === undefined)).toBe(true);
+  });
+
+  it("stored_or_server: no field even on a credential_required blocker", async () => {
+    const fetchMock = builderFetch("stored_or_server", () => response(200, STORED_BLOCKED));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤/);
+    expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
+    expect(sentHeaders(fetchMock).every((value) => value === undefined)).toBe(true);
+  });
+
+  it("stored_or_server: a ready Builder publishes without a field or header, as before", async () => {
+    const fetchMock = builderFetch("stored_or_server", (_sent, init) =>
+      response(200, init.method === "POST" ? SUCCESS : READY));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText("Builder 게시 준비 완료");
+    expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Hugging Face 게시 위치"), { target: { value: "owner/dataset" } });
+    fireEvent.click(screen.getByRole("button", { name: "최종 확인" }));
+    fireEvent.click(screen.getByRole("button", { name: "게시 실행" }));
+    await screen.findByText("Builder 게시 완료");
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, undefined]);
+  });
+
+  it.each([
+    ["an older Builder that does not say", undefined],
+    ["a value Studio does not know", "per_tenant"],
+  ])("%s: the field follows credential_required, as in #615", async (_label, source) => {
+    const fetchMock = builderFetch(source, (sent) => response(200, sent ? READY : NEEDS_TOKEN));
+    vi.stubGlobal("fetch", fetchMock);
+    renderPublish();
+    await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
+    expect(useVersionCheckStore.getState().apiVersion).toBe("1.69.0");
+    fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
+    fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
+    await screen.findByText("Builder 게시 준비 완료");
+    expect(publishCalls(fetchMock).map(headerOf)).toEqual([undefined, HEADER_VALUE]);
+  });
+
+  it("an older Builder that is ready shows no field", async () => {
+    vi.stubGlobal("fetch", builderFetch(undefined, () => response(200, READY)));
+    renderPublish();
+    await screen.findByText("Builder 게시 준비 완료");
+    expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
   });
 });
