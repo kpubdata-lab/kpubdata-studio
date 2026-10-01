@@ -48,6 +48,7 @@ nav:
       - 시스템 구조: ARCHITECTURE.md
       - 정보 구조: INFORMATION_ARCHITECTURE.md
       - UI 규격: UI_SPEC.md
+      - 디자인 컨셉: brand/DESIGN_CONCEPT.md
       - 시각 정체성: brand/VISUAL_IDENTITY.md
   - 개발 가이드:
       - 기여 방법: CONTRIBUTING.md
