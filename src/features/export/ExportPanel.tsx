@@ -56,7 +56,18 @@ export function describeRefusal(cause: unknown, t: (key: string, options?: Recor
   return t("export.refused.other", { message: cause instanceof Error ? cause.message : String(cause) });
 }
 
-export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot: string; sql: string }) {
+export function ExportPanel({
+  table,
+  snapshot,
+  sql,
+  onCreated,
+}: {
+  table: string;
+  snapshot: string;
+  sql: string;
+  /** Called once Builder kept the export, so the export list can reload (#648). */
+  onCreated?: (created: WarehouseExport) => void;
+}) {
   const { t } = useTranslation();
   const [format, setFormat] = useState<"csv" | "jsonl">("csv");
   const [profile, setProfile] = useState<"machine" | "spreadsheet">("machine");
@@ -70,16 +81,16 @@ export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot:
     setError(null);
     setDone(null);
     try {
-      setDone(
-        await warehouseApi().createWarehouseExport({
-          table,
-          snapshot,
-          sql,
-          format,
-          profile: format === "csv" ? profile : "machine",
-          max_rows: maxRows,
-        }),
-      );
+      const created = await warehouseApi().createWarehouseExport({
+        table,
+        snapshot,
+        sql,
+        format,
+        profile: format === "csv" ? profile : "machine",
+        max_rows: maxRows,
+      });
+      setDone(created);
+      onCreated?.(created);
     } catch (cause) {
       setError(describeRefusal(cause, t));
     } finally {

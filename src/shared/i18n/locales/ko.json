@@ -2612,6 +2612,34 @@
       "declaredPiiUnnamed": "선언된 개인정보 컬럼이 평문으로 담겨 있어 거부했습니다. 아무것도 만들지 않았습니다 — 해당 컬럼을 빼거나 Gold를 읽으세요.",
       "piiDeclarationUnavailable": "{{dataset}}의 개인정보 선언을 확인할 수 없어 안전을 위해 거부했습니다. 아무것도 만들지 않았습니다 — 잠시 후 다시 시도하세요.",
       "piiDeclarationUnavailableUnnamed": "원천의 개인정보 선언을 확인할 수 없어 안전을 위해 거부했습니다. 아무것도 만들지 않았습니다 — 잠시 후 다시 시도하세요."
+    },
+    "history": {
+      "title": "내 내보내기",
+      "note": "KPubData Builder 가 아직 보관하고 있는 내보내기입니다(최신순). 만들고 24시간이 지나 만료되면 Builder 가 삭제하므로 그 전에 내려받거나 지우세요.",
+      "refresh": "새로고침",
+      "empty": "만료되지 않은 내보내기가 없습니다.",
+      "loadFailed": "내보내기 목록을 불러오지 못했습니다: {{message}}",
+      "meta": "{{format}} · {{rows}}행 · 생성 {{created}} · 만료 {{expires}}",
+      "delete": "삭제",
+      "confirmDelete": "{{table}} 내보내기({{id}})를 삭제할까요? Builder 가 파일도 함께 지우며 되돌릴 수 없습니다.",
+      "deleteFailed": "내보내기를 삭제하지 못했습니다: {{message}}",
+      "gone": "KPubData Builder 에 더 이상 없는 내보내기라 목록에서 뺐습니다.",
+      "state": {
+        "completed": "준비됨",
+        "pending": "진행 중",
+        "expired": "만료됨",
+        "failed": "실패",
+        "cancelled": "취소됨"
+      },
+      "reason": {
+        "expired": "만료됨: Builder 가 파일을 삭제해 더 이상 내려받을 수 없습니다. 질의를 다시 내보내세요.",
+        "failed": "실패: Builder 가 이 내보내기를 끝내지 못해 파일이 없습니다. 질의를 다시 내보내세요.",
+        "cancelled": "취소됨: 끝나기 전에 중단된 내보내기라 파일이 없습니다.",
+        "pending": "Builder 가 아직 파일을 만드는 중입니다. 새로고침하면 준비됐는지 볼 수 있습니다."
+      },
+      "refused": {
+        "unavailable": "이 내보내기의 Builder 파일이 없거나 다이제스트가 맞지 않아 보내지 않았습니다. 질의를 다시 내보내세요."
+      }
     }
   },
   "statusState": {

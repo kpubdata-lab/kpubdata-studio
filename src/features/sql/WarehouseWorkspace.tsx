@@ -16,6 +16,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 import { AggregateChartPanel } from "@/features/charts/AggregateChartPanel";
 import { TableRowsPanel } from "@/features/data-table/TableRowsPanel";
+import { ExportHistory } from "@/features/export/ExportHistory";
 import { ExportPanel } from "@/features/export/ExportPanel";
 import { type QueryResponse, type WarehouseSnapshot, type WarehouseTable } from "@/shared/lib/builderApi";
 import { warehouseApi } from "./warehouseApi";
@@ -107,6 +108,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   const [busy, setBusy] = useState<"run" | "save" | null>(null);
   const [outcome, setOutcome] = useState<WarehouseOutcome | null>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
+  const [exportsVersion, setExportsVersion] = useState(0);
 
   const currentId = tables.find((item) => item.logical_name === table)?.current_snapshot_id ?? null;
   const selectedSnapshot = (snapshots ?? []).find((item) => item.snapshot_id === (snapshot === CURRENT ? currentId : snapshot));
@@ -275,7 +277,16 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
 
           {table ? <TableRowsPanel key={`${table}@${snapshot}`} snapshot={snapshot} table={table} /> : null}
           {table ? <AggregateChartPanel key={`chart-${table}@${snapshot}`} snapshot={snapshot} table={table} /> : null}
-          {table && !blocked ? <ExportPanel key={`export-${table}@${snapshot}`} snapshot={snapshot} sql={sql} table={table} /> : null}
+          {table && !blocked ? (
+            <ExportPanel
+              key={`export-${table}@${snapshot}`}
+              onCreated={() => setExportsVersion((value) => value + 1)}
+              snapshot={snapshot}
+              sql={sql}
+              table={table}
+            />
+          ) : null}
+          <ExportHistory refreshKey={exportsVersion} />
 
           {outcome?.status === "error" ? <QueryError code={outcome.code} message={outcome.message} /> : null}
           {outcome?.status === "success" ? (
