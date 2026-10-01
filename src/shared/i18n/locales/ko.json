@@ -1273,7 +1273,14 @@
     "runLookupUnsupportedBody": "run `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 run 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. run 이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest run 으로 자동 변경하지 않았습니다.",
     "passportTitle": "데이터 여권",
     "runValue": "실행 {{id}}",
-    "columnCount": "컬럼 {{count}}개"
+    "columnCount": "컬럼 {{count}}개",
+    "sampleWithheld": {
+      "title": "샘플을 정책에 따라 표시하지 않습니다",
+      "redistributionReason": "이 소스의 약관이 재배포를 금지해, 샘플 행을 Builder 밖으로 보여줄 수 없습니다. 데이터가 없는 것이 아닙니다.",
+      "redistributionNext": "스키마 탭과 품질 결과에서 이 단계의 구조와 상태는 그대로 확인할 수 있습니다.",
+      "piiReason": "이 소스의 kpubdata 개인정보(PII) 선언을 읽을 수 없어 어떤 컬럼을 가려야 할지 알 수 없으므로, 안전을 위해 샘플을 가렸습니다. 데이터가 없는 것이 아닙니다.",
+      "piiNext": "잠시 후 다시 열어 보세요. 선언을 읽을 수 있게 되면 개인정보 컬럼을 마스킹한 샘플이 표시됩니다."
+    }
   },
   "buildPublish": {
     "statusQueued": "대기 중",
@@ -1832,7 +1839,19 @@
     "meta": {
       "note": "이 실행의 manifest에는 일부 메타데이터 필드(레코드 수·스키마·출처 등)가"
     },
-    "mockNoDownload": "Mock 모드에서는 스냅샷 파일 다운로드를 시뮬레이션하지 않습니다. 실연동 모드에서 확인하세요."
+    "mockNoDownload": "Mock 모드에서는 스냅샷 파일 다운로드를 시뮬레이션하지 않습니다. 실연동 모드에서 확인하세요.",
+    "refusal": {
+      "title": "정책에 따라 내려받을 수 없는 파일",
+      "declaredPii": "선언된 개인정보 컬럼({{columns}})이 원본 그대로 담긴 Bronze·Silver 파일이라 내려받을 수 없습니다.",
+      "declaredPiiNoColumns": "선언된 개인정보 컬럼이 원본 그대로 담긴 Bronze·Silver 파일이라 내려받을 수 없습니다.",
+      "declaredPiiNext": "같은 실행의 Gold 파일은 이 컬럼을 마스킹해 제공하므로, Gold 파일을 내려받으세요.",
+      "piiUnavailable": "{{dataset}}의 kpubdata 개인정보(PII) 선언을 확인할 수 없어, 안전을 위해 이 파일의 다운로드를 막았습니다.",
+      "piiUnavailableNoDataset": "이 소스의 kpubdata 개인정보(PII) 선언을 확인할 수 없어, 안전을 위해 이 파일의 다운로드를 막았습니다.",
+      "piiUnavailableNext": "잠시 후 다시 시도하거나, 영향을 받지 않는 Gold 파일을 내려받으세요.",
+      "redistribution": "소스 약관이 재배포를 금지해 이 파일은 Builder 밖으로 내보낼 수 없습니다.",
+      "redistributionSources": "소스 약관이 재배포를 금지해 이 파일은 Builder 밖으로 내보낼 수 없습니다(재배포 금지 소스: {{sources}}).",
+      "redistributionNext": "이 실행의 파일은 Gold를 포함해 모두 같은 제한을 받습니다. 재배포가 필요하면 재배포를 허용하는 소스로 빌드를 구성하세요."
+    }
   },
   "glossary": {
     "dataset": "테이블은 KPubData가 소스 데이터셋으로 만들어 하나의 단위로 관리하는 분석용 데이터입니다. 갱신할 때마다 새 스냅샷이 생깁니다.",
