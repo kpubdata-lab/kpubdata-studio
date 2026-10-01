@@ -329,13 +329,29 @@ describe("Add Data: credentials inside metadata and export options never leave m
     expect(spec.exports[0].options).toMatchObject({ auth: { serviceKey: OPTION_MARKER } });
   });
 
-  it("the run spec store keeps its rule: metadata redacted, export options stored as given", () => {
+  it("the run spec store redacts metadata and export options alike (#626)", () => {
     const spec = specWithMarkedMetadataAndOptions();
     saveBuildSpec("run-623", spec);
-    expect(JSON.stringify(localStorage)).not.toContain(META_MARKER);
+    const stored = JSON.stringify(localStorage);
+    expect(stored).not.toContain(META_MARKER);
+    expect(stored).not.toContain(OPTION_MARKER);
     const loaded = loadBuildSpec("run-623");
     expect(loaded?.metadata).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, region: "kr" });
-    expect(loaded?.exports).toEqual(spec.exports);
+    for (const item of loaded?.exports ?? []) {
+      expect(item.options).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, sheet: "main" });
+    }
+    // The input is not modified.
+    expect(spec.exports[0].options).toMatchObject({ auth: { serviceKey: OPTION_MARKER } });
+  });
+
+  it("a saved spec with redacted export options fails closed when edited and submitted (#626)", () => {
+    const spec = specWithMarkedMetadataAndOptions();
+    spec.metadata = {};
+    saveBuildSpec("run-626", spec);
+    const loaded = loadBuildSpec("run-626") as BuildSpec;
+    const result = toBuildSpec(toFormValues(loaded), loaded);
+    expect(result.spec).toBeUndefined();
+    expect(result.error).toBe(i18n.t("newBuild.errors.specSecretRemoved"));
   });
 });
 
