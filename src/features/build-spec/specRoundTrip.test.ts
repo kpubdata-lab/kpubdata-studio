@@ -275,6 +275,70 @@ describe("Add Data: credentials inside the spec-level extra never leave memory (
   });
 });
 
+describe("Add Data: credentials inside metadata and export options never leave memory (#623)", () => {
+  const META_MARKER = "marker-value-623-metadata";
+  const OPTION_MARKER = "marker-value-623-options";
+  /** A spec carrying a credential in `metadata` and in every export's `options`, beside plain values. */
+  function specWithMarkedMetadataAndOptions(): BuildSpec {
+    const spec = fromYamlText(YAML);
+    spec.metadata = { ...spec.metadata, auth: { serviceKey: META_MARKER }, region: "kr" };
+    spec.exports = spec.exports.map((item) => ({
+      ...item,
+      options: { ...item.options, auth: { serviceKey: OPTION_MARKER }, sheet: "main" },
+    }));
+    return spec;
+  }
+
+  it("draft save redacts metadata and export options, and the restored draft fails closed", () => {
+    saveAddDataDraft(applyBuildSpecToDraft(INITIAL_DRAFT, specWithMarkedMetadataAndOptions()));
+    const stored = JSON.stringify(localStorage);
+    expect(stored).not.toContain(META_MARKER);
+    expect(stored).not.toContain(OPTION_MARKER);
+
+    const restored = loadAddDataDraft();
+    expect(restored).not.toBeNull();
+    const base = restored!.canonicalBase!;
+    expect(base.metadata).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, region: "kr" });
+    for (const item of base.exports) {
+      expect(item.options).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, sheet: "main" });
+    }
+    const result = buildSpecFromDraft(restored!);
+    expect(result.spec).toBeUndefined();
+    expect(result.error).toBe(i18n.t("addData.model.unresolvedPlaceholder"));
+  });
+
+  it("a restored draft with the marker only in export options still fails closed", () => {
+    const spec = specWithMarkedMetadataAndOptions();
+    spec.metadata = fromYamlText(YAML).metadata;
+    saveAddDataDraft(applyBuildSpecToDraft(INITIAL_DRAFT, spec));
+    expect(JSON.stringify(localStorage)).not.toContain(OPTION_MARKER);
+    const result = buildSpecFromDraft(loadAddDataDraft()!);
+    expect(result.spec).toBeUndefined();
+    expect(result.error).toBe(i18n.t("addData.model.unresolvedPlaceholder"));
+  });
+
+  it("the Review preview redacts metadata and export options but keeps the submitted spec intact", () => {
+    const spec = specWithMarkedMetadataAndOptions();
+    const shown = redactBuildSpecForDisplay(spec);
+    const text = JSON.stringify(shown);
+    expect(text).not.toContain(META_MARKER);
+    expect(text).not.toContain(OPTION_MARKER);
+    expect(shown.metadata).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, region: "kr" });
+    expect(shown.exports[0].options).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, sheet: "main" });
+    expect(spec.metadata).toMatchObject({ auth: { serviceKey: META_MARKER } });
+    expect(spec.exports[0].options).toMatchObject({ auth: { serviceKey: OPTION_MARKER } });
+  });
+
+  it("the run spec store keeps its rule: metadata redacted, export options stored as given", () => {
+    const spec = specWithMarkedMetadataAndOptions();
+    saveBuildSpec("run-623", spec);
+    expect(JSON.stringify(localStorage)).not.toContain(META_MARKER);
+    const loaded = loadBuildSpec("run-623");
+    expect(loaded?.metadata).toMatchObject({ auth: { serviceKey: "[REDACTED]" }, region: "kr" });
+    expect(loaded?.exports).toEqual(spec.exports);
+  });
+});
+
 describe("New Build form round trip keeps source contract fields (#601)", () => {
   it("toBuildSpec(toFormValues(spec), spec) keeps them and applies form edits", () => {
     const base = fromYamlText(YAML);
