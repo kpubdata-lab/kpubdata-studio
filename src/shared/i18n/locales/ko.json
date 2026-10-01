@@ -2073,7 +2073,142 @@
       "notFound": "선택한 Run을 KPubData Builder에서 찾을 수 없습니다.",
       "network": "Builder 응답을 받지 못했습니다. 원격 게시 결과는 확인되지 않았습니다.",
       "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다.",
-      "invalidCredential": "게시 토큰 형식을 KPubData Builder가 받지 않습니다. 토큰을 확인하고 다시 입력하세요."
+      "invalidCredential": "게시 토큰 형식을 KPubData Builder가 받지 않습니다. 토큰을 확인하고 다시 입력하세요.",
+      "redistributionBlocked": "소스의 재배포 조건 때문에 KPubData Builder가 게시를 거부했습니다. 아래 사유를 확인하세요."
+    },
+    "issues": {
+      "run_not_terminal": {
+        "message": "Run이 아직 끝나지 않았습니다(대기 중, 실행 중 또는 취소 중).",
+        "action": "Run이 끝날 때까지 기다린 뒤 다시 확인하세요."
+      },
+      "run_failed": {
+        "message": "Run이 오류로 끝나 게시할 Gold 출력이 없습니다.",
+        "action": "Run을 열어 실패 원인을 확인하고, 고친 뒤 다시 실행하세요."
+      },
+      "run_cancelled": {
+        "message": "Run이 끝나기 전에 취소되었습니다.",
+        "action": "테이블을 다시 실행한 뒤 새 Run을 게시하세요."
+      },
+      "gold_unavailable": {
+        "message": "이 Run에는 게시할 성공한 Gold 출력이 없습니다.",
+        "action": "Run을 열어 Gold 단계를 확인하고, 완료되지 않았다면 다시 실행하세요."
+      },
+      "artifact_missing": {
+        "message": "Run manifest에 있는 Gold 파일이 KPubData Builder에 없습니다.",
+        "action": "Run의 스냅샷 파일을 확인한 뒤, 테이블을 다시 실행해 파일을 다시 만드세요."
+      },
+      "artifact_invalid": {
+        "message": "Run manifest에 있는 Gold 파일을 안전하게 확인할 수 없어 KPubData Builder가 게시를 거부합니다.",
+        "action": "Run의 스냅샷 파일을 확인한 뒤, 테이블을 다시 실행해 파일을 다시 만드세요."
+      },
+      "license_missing": {
+        "message": "테이블 스펙에 라이선스가 선언되지 않았습니다. 라이선스 없이는 게시할 수 없습니다.",
+        "action": "스펙을 편집해 라이선스를 선언하고 테이블을 다시 실행하세요."
+      },
+      "pii_allow_with_publish": {
+        "message": "스펙의 PII 정책이 \"allow\"입니다. 개인정보를 그대로 통과시키는 스펙은 게시할 수 없습니다.",
+        "action": "스펙을 편집해 개인정보를 마스킹하거나 제거하는 PII 정책을 고르고 테이블을 다시 실행하세요."
+      },
+      "credential_unavailable": {
+        "message": "이 게시 대상에 쓸 publish credential이 없습니다.",
+        "action": "KPubData Builder 운영자에게 설정을 요청하거나, 본인 publish credential을 저장하세요."
+      },
+      "credential_required": {
+        "message": "이 배포는 본인 publish credential로만 게시합니다.",
+        "action": "아래 credential 안내를 따른 뒤 다시 확인하세요."
+      },
+      "local_publish_root_unconfigured": {
+        "message": "KPubData Builder에 로컬 게시 대상의 publish root가 설정되지 않았습니다.",
+        "action": "KPubData Builder 운영자에게 KPUBDATA_BUILDER_LOCAL_PUBLISH_ROOT 설정을 요청하세요."
+      },
+      "destination_outside_publish_root": {
+        "message": "로컬 게시 위치가 KPubData Builder의 publish root를 벗어납니다.",
+        "action": "publish root 안의 게시 위치를 고르세요."
+      },
+      "kaggle_metadata_missing": {
+        "message": "이 Run에는 게시할 Kaggle 패키징(`dataset-metadata.json`)이 없습니다.",
+        "action": "Kaggle 패키징 문제입니다. 테이블의 Kaggle 내보내기를 확인하고 다시 실행하세요."
+      },
+      "kaggle_metadata_ambiguous": {
+        "message": "이 Run에 Kaggle 패키징이 둘 이상 있어 어느 것을 게시할지 정할 수 없습니다.",
+        "action": "Kaggle 패키징 문제입니다. 스펙에 Kaggle 내보내기를 하나만 남기고 테이블을 다시 실행하세요."
+      },
+      "kaggle_metadata_unreadable": {
+        "message": "Run의 `dataset-metadata.json`을 읽을 수 없거나 id가 없습니다.",
+        "action": "Kaggle 패키징 문제입니다. 테이블의 Kaggle 내보내기를 확인하고 다시 실행하세요."
+      },
+      "kaggle_destination_mismatch": {
+        "message": "Kaggle 패키징의 `id`가 게시 위치와 다릅니다.",
+        "action": "패키징에 적힌 `id`로 게시하거나, Kaggle 내보내기를 고쳐 테이블을 다시 실행하세요."
+      },
+      "redistribution_forbidden": {
+        "message": "소스의 이용 조건이 재배포를 금지하므로 이 테이블은 어디에도 게시할 수 없습니다.",
+        "action": "이 화면에서 바꿀 수 있는 것은 없습니다. 해당 소스를 빼거나, 데이터를 KPubData Builder 안에서만 쓰세요."
+      },
+      "redistribution_unknown": {
+        "message": "소스의 이용 조건을 알 수 없습니다. 조건을 모른다는 것은 공개 게시 허락이 아닙니다.",
+        "action": "비공개로 게시하거나(비공개 설정 유지), 소스의 이용 조건이 선언될 때까지 기다리세요."
+      },
+      "non_commercial_unconfirmed": {
+        "message": "비상업적 이용만 허용하는 소스가 있는데, 이 게시가 비상업 목적이라는 확인이 없습니다.",
+        "action": "아래 \"비상업 조건에 동의합니다\"를 선택한 뒤 게시하세요."
+      },
+      "non_commercial_marker_missing": {
+        "message": "비상업 데이터를 공개 게시하려면 테이블에 비상업 라이선스(예: cc-by-nc-4.0)가 있어야 합니다.",
+        "action": "비공개로 게시하거나, 스펙을 편집해 비상업 라이선스를 선언하고 테이블을 다시 실행하세요."
+      },
+      "destination_public": {
+        "message": "소스 이용 조건상 비공개 게시만 가능한데, 게시 위치가 이미 공개 상태입니다. 게시해도 공개 설정은 바뀌지 않습니다.",
+        "action": "새 게시 위치나 비공개 게시 위치를 고르세요."
+      },
+      "destination_visibility_unknown": {
+        "message": "소스 이용 조건상 비공개 게시만 가능한데, KPubData Builder가 게시 위치의 공개 여부를 확인할 수 없습니다.",
+        "action": "게시 위치가 있는지, 토큰으로 읽을 수 있는지 확인하거나 새 게시 위치를 고른 뒤 다시 시도하세요."
+      },
+      "card_missing": {
+        "message": "Run의 Gold 출력에 데이터 카드(`card.json`)가 없습니다. KPubData Builder가 카드를 만들기 전에 실행된 Run입니다.",
+        "action": "테이블을 다시 실행하면 새 Run의 Gold 출력에 카드가 생깁니다. 그 Run을 게시하세요."
+      },
+      "card_incomplete": {
+        "message": "Run의 데이터 카드에서 필수 절(출처, 가공, 개인정보)이 비어 있습니다.",
+        "action": "아래 KPubData Builder 메시지가 비어 있는 절의 이름을 알려 줍니다. 스펙에서 해당 내용(예: 라이선스, 출처 URL)을 채운 뒤 테이블을 다시 실행하세요."
+      },
+      "unknown": {
+        "message": "Studio가 모르는 차단 사유를 KPubData Builder가 보냈습니다: {{code}}.",
+        "action": "아래 KPubData Builder 메시지를 읽고 해결한 뒤 다시 확인하세요."
+      }
+    },
+    "issueLinks": {
+      "editSpec": "스펙 편집",
+      "openRun": "Run 열기",
+      "openArtifacts": "스냅샷 파일 열기"
+    },
+    "issueDetail": "KPubData Builder 메시지: {{message}}",
+    "redistribution": {
+      "title": "재배포 조건",
+      "verdict": "판정: {{verdict}}",
+      "values": {
+        "allowed": "허용",
+        "non_commercial": "비상업적 이용만 허용",
+        "unknown": "알 수 없음",
+        "forbidden": "금지"
+      },
+      "explain": {
+        "allowed": "모든 소스의 이용 조건이 재배포를 허용합니다.",
+        "non_commercial": "비상업적 이용만 허용하는 소스가 있습니다. 게시하려면 비상업 조건 동의가 필요하고, 공개 게시에는 테이블의 비상업 라이선스도 필요합니다.",
+        "unknown": "이용 조건을 알 수 없는 소스가 있습니다. KPubData Builder는 이 테이블을 이미 공개된 곳이 아닌 위치에 비공개로만 게시합니다.",
+        "forbidden": "재배포를 금지하는 소스가 있습니다. KPubData Builder는 이 테이블을 게시하지 않습니다."
+      },
+      "source": "{{source}}: {{verdict}} — {{reason}}",
+      "confirmLabel": "비상업 조건에 동의합니다",
+      "confirmHint": "소스 이용 조건에 따라 이 테이블을 비상업 목적으로만 게시함을 확인합니다. KPubData Builder는 이 확인을 게시 기록에 남깁니다.",
+      "unknownPublicNote": "이용 조건을 알 수 없는 소스가 있어 KPubData Builder가 공개 게시를 거부합니다. 비공개 설정을 유지하세요.",
+      "nonCommercialPublicNote": "비상업 데이터를 공개 게시하려면 테이블에 비상업 라이선스(예: cc-by-nc-4.0)도 있어야 하며, 없으면 KPubData Builder가 거부합니다.",
+      "confirmed": "비상업 이용 확인함",
+      "notConfirmed": "확인하지 않음",
+      "publishedUnder": "게시 조건",
+      "kpubdataVersion": "kpubdata 릴리스",
+      "versionUnknown": "알 수 없음"
     }
   },
   "status": {

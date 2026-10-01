@@ -885,18 +885,50 @@ export const publishIssueSchema = z.object({
   message: z.string(),
 });
 
+/** A source's terms on redistribution (#688, contract 1.65.0), from most to least open. */
+export const redistributionValueSchema = z.enum(["allowed", "non_commercial", "unknown", "forbidden"]);
+
+export const redistributionSourceVerdictSchema = z.object({
+  source: z.string(),
+  verdict: redistributionValueSchema,
+  reason: z.string(),
+});
+
+/**
+ * Whether a build's data may leave Builder: its most restricted source's verdict (#688).
+ * Readiness reports it for the target's default options, a refused publish's 409 for
+ * the request's.
+ */
+export const redistributionVerdictSchema = z.object({
+  verdict: redistributionValueSchema,
+  sources: z.array(redistributionSourceVerdictSchema),
+});
+
+/** The terms a successful publish went out under, as Builder also keeps in the receipt. */
+export const publishRedistributionRecordSchema = z.object({
+  verdict: redistributionValueSchema,
+  sources: z.array(redistributionSourceVerdictSchema),
+  kpubdata_version: z.string().nullable(),
+  confirm_non_commercial: z.boolean(),
+});
+
 export const publishReadinessResponseSchema = z.object({
   run_id: z.string(),
   target: publishTargetSchema,
   ready: z.boolean(),
   blockers: z.array(publishIssueSchema),
   warnings: z.array(publishIssueSchema),
+  // Null before the run has a manifest; absent from a Builder older than 1.65.0.
+  redistribution: redistributionVerdictSchema.nullable().optional(),
 });
 
 // Requests Studio sends stay strict (#497): a typo'd or stale key here is Studio's own
 // bug and should fail before it reaches the Builder. Only responses tolerate additions.
 export const publishHuggingFaceOptionsSchema = z.object({
   private: z.boolean().default(true),
+  // The publisher's statement that non-commercial data is published for that use (#688).
+  // Builder refuses a `non_commercial` build without it (`non_commercial_unconfirmed`).
+  confirm_non_commercial: z.boolean().optional(),
 }).strict();
 
 export const publishRequestSchema = z.object({
@@ -913,6 +945,8 @@ export const publishResponseSchema = z.object({
   reference: z.string(),
   artifact_count: z.number().int().nonnegative(),
   status: z.string(),
+  // Null when the run has no readable spec; absent from a Builder older than 1.65.0.
+  redistribution: publishRedistributionRecordSchema.nullable().optional(),
 });
 
 export const publishErrorCodeSchema = z.enum([
@@ -931,6 +965,8 @@ export const publishErrorResponseSchema = z.object({
 export const publishBlockedResponseSchema = z.object({
   error: z.string(),
   blockers: z.array(publishIssueSchema),
+  // The request's verdict (#688); every blocked 409 carries it, whatever the blocker.
+  redistribution: redistributionVerdictSchema.nullable().optional(),
 });
 
 /**
@@ -1117,6 +1153,9 @@ export type PublishResponse = z.infer<typeof publishResponseSchema>;
 export type PublishErrorCode = z.infer<typeof publishErrorCodeSchema>;
 export type PublishErrorResponse = z.infer<typeof publishErrorResponseSchema>;
 export type PublishBlockedResponse = z.infer<typeof publishBlockedResponseSchema>;
+export type RedistributionValue = z.infer<typeof redistributionValueSchema>;
+export type RedistributionVerdict = z.infer<typeof redistributionVerdictSchema>;
+export type PublishRedistributionRecord = z.infer<typeof publishRedistributionRecordSchema>;
 
 /**
  * ============================================

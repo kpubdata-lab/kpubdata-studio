@@ -12,7 +12,7 @@
  * Builder would have returned per known mock run (#246 principle: never
  * invent values).
  */
-import type { PublishReadinessResponse, PublishResponse } from "@/shared/lib/builderApi";
+import type { PublishReadinessResponse, PublishResponse, RedistributionVerdict } from "@/shared/lib/builderApi";
 
 export const MOCK_PUBLISH_READINESS: Record<string, PublishReadinessResponse> = {
   "air-quality-20260621": {
@@ -87,7 +87,13 @@ export const MOCK_PUBLISH_READINESS: Record<string, PublishReadinessResponse> = 
   },
 };
 
-export function mockPublishResult(runId: string, destination: string, isPrivate: boolean): PublishResponse {
+export function mockPublishResult(
+  runId: string,
+  destination: string,
+  isPrivate: boolean,
+  redistribution: RedistributionVerdict | null = null,
+  confirmNonCommercial = false,
+): PublishResponse {
   return {
     run_id: runId,
     target: "huggingface",
@@ -96,5 +102,8 @@ export function mockPublishResult(runId: string, destination: string, isPrivate:
     reference: `https://huggingface.co/datasets/${destination}`,
     artifact_count: 1,
     status: isPrivate ? "published_private" : "published_public",
+    redistribution: redistribution
+      ? { ...redistribution, kpubdata_version: null, confirm_non_commercial: confirmNonCommercial }
+      : null,
   };
 }

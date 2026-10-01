@@ -9,8 +9,11 @@ import {
   type PublishRequest,
   type PublishResponse,
   type PublishTarget,
+  type RedistributionVerdict,
 } from "@/shared/lib/builderApi";
+import { publishBlockedResponseSchema, type PublishIssue } from "@/shared/lib/builderApi.schema";
 import { i18n } from "@/shared/i18n";
+import { REDISTRIBUTION_ISSUE_CODES } from "../issues";
 import { MOCK_PUBLISH_READINESS, mockPublishResult } from "./mockData";
 
 /** All wording in this file lives under `publish.errors.*` (#350). */
@@ -23,6 +26,9 @@ export type {
   PublishRequest,
   PublishResponse,
   PublishTarget,
+  PublishRedistributionRecord,
+  RedistributionValue,
+  RedistributionVerdict,
 } from "@/shared/lib/builderApi";
 
 const HUGGING_FACE_DESTINATION =
@@ -99,14 +105,42 @@ export async function publishBuild(
   if (!readiness.ready || readiness.blockers.length > 0) {
     throw new ApiError(409, t("notReady"), { code: "publish_conflict" });
   }
-  return mockPublishResult(runId, request.destination, request.options?.private ?? true);
+  return mockPublishResult(runId, request.destination, request.options?.private ?? true, readiness.redistribution ?? null, request.options?.confirm_non_commercial === true);
 }
 
-export type PublishFailureKind = PublishErrorCode | "invalid_publish_credential" | "forbidden" | "not_found" | "network" | "invalid_request" | "readiness_changed" | "unknown";
+export type PublishFailureKind =
+  | PublishErrorCode
+  | "invalid_publish_credential"
+  | "forbidden"
+  | "not_found"
+  | "network"
+  | "invalid_request"
+  | "readiness_changed"
+  | "redistribution_blocked"
+  | "unknown";
 
 export interface PublishFailure {
   kind: PublishFailureKind;
   message: string;
+  /** The blockers a refused publish's 409 named, shown with their own next steps. */
+  blockers?: PublishIssue[];
+  /** The request's redistribution verdict from that 409 (#688). */
+  redistribution?: RedistributionVerdict | null;
+}
+
+/**
+ * A blocked publish's 409 (`PublishBlockedResponse`). Every one carries `redistribution`
+ * since contract 1.65.0, whatever blocked it, so the blockers' codes — not the field's
+ * presence — tell a refusal by the source terms from a readiness change.
+ */
+function blockedFailure(cause: ApiError): PublishFailure {
+  const parsed = publishBlockedResponseSchema.safeParse(cause.details);
+  if (!parsed.success) return { kind: "readiness_changed", message: t("readinessChanged") };
+  const { blockers, redistribution } = parsed.data;
+  if (blockers.some((issue) => REDISTRIBUTION_ISSUE_CODES.has(issue.code))) {
+    return { kind: "redistribution_blocked", message: t("redistributionBlocked"), blockers, redistribution };
+  }
+  return { kind: "readiness_changed", message: t("readinessChanged"), blockers, redistribution };
 }
 
 function errorCode(cause: ApiError): PublishErrorCode | undefined {
@@ -145,7 +179,7 @@ export function describePublishFailure(cause: unknown): PublishFailure {
   if (code === "publish_failed" || cause.status === 502) {
     return { kind: code ?? "unknown", message: t("externalFailed") };
   }
-  if (cause.status === 409) return { kind: "readiness_changed", message: t("readinessChanged") };
+  if (cause.status === 409) return blockedFailure(cause);
   if (cause.status === 403) return { kind: "forbidden", message: t("forbidden") };
   if (cause.status === 404) return { kind: "not_found", message: t("notFound") };
   if (cause.status === 0 || cause.status === 408) return { kind: "network", message: t("network") };

@@ -28,6 +28,9 @@
  * Known drift waits in `KNOWN_DRIFT` with its issue; an entry that stops failing must
  * be removed (ratchet).
  *
+ * It also checks that every `PublishIssue.code` in the contract's `x-codes` is one Studio
+ * lists in `PUBLISH_ISSUE_CODES`, with a ko and an en message and next step (#644).
+ *
  * The contract is read from `BUILDER_CONTRACT` (CI checks out Builder's main). Run
  * locally with `BUILDER_CONTRACT=../kpubdata-builder/contract/builder-api.yaml`.
  */
@@ -40,11 +43,15 @@ import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
 import { revisionErrorOutcome } from "@/features/build-spec/specRevisions";
 import { profileRefusal } from "@/features/datasets/profileRefusal";
 import { describePublishFailure } from "@/features/publish/api";
+import { PUBLISH_ISSUE_CODES } from "@/features/publish/issues";
 import { classifyQueryError } from "@/features/sql/api";
 import { asInvalidDetails } from "@/features/validation/api";
+import en from "@/shared/i18n/locales/en.json";
+import ko from "@/shared/i18n/locales/ko.json";
 import { httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
 import { clearSignupBlock, useSignupStatusStore } from "./signupStatus";
+import { contractIssueCodesOf, issueCodeDrift, missingIssueEntries } from "../../../__tests__/support/publishIssueCoverage";
 
 type JsonSchema = {
   type?: string | string[];
@@ -1062,6 +1069,18 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
     };
     expect(headersOf("getPublishReadiness")).toContain(PUBLISH_CREDENTIAL_HEADER);
     expect(headersOf("publishBuild")).toContain(PUBLISH_CREDENTIAL_HEADER);
+  });
+
+  // The publish page describes every blocker code by itself (#644). This file is the
+  // one CI runs against Builder's main, so a code Builder adds fails here.
+  it("lists every PublishIssue x-code in Studio's PUBLISH_ISSUE_CODES, and no other", () => {
+    const codes = contractIssueCodesOf(contract);
+    expect(codes.length).toBeGreaterThan(0);
+    expect(issueCodeDrift(PUBLISH_ISSUE_CODES, codes)).toEqual([]);
+  });
+
+  it("has a ko and an en message and next step for every PublishIssue x-code", () => {
+    expect(missingIssueEntries(contractIssueCodesOf(contract), { ko, en })).toEqual([]);
   });
 
   it("lists no KNOWN_DRIFT entry for a schema this check does not cover", () => {
