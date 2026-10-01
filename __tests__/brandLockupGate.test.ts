@@ -46,7 +46,7 @@ describe("Studio is the weaker suffix in every lockup (#425)", () => {
  */
 const DOCS_COPIES: Array<[copy: string, source: string]> = [
   ["docs/brand/assets/favicon.svg", "favicon.svg"],
-  ["docs/brand/assets/logo.svg", "symbol_dark.svg"],
+  ["docs/brand/assets/logo.svg", "symbol_light.svg"],
 ];
 
 /** Docs copies whose bytes differ from their source SVG. */

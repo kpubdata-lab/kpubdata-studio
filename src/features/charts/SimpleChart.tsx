@@ -100,7 +100,7 @@ export function SimpleChart({
               </g>
             ) : (
               <rect
-                className="fill-accent"
+                className="fill-data-accent-strong"
                 height={Math.abs(y(point.y) - y(0))}
                 key={index}
                 width={Math.max(1, step * 0.7)}
@@ -115,7 +115,7 @@ export function SimpleChart({
           <>
             {segments.map((segment, index) => (
               <polyline
-                className="stroke-accent"
+                className="stroke-data-accent-strong"
                 fill="none"
                 key={index}
                 points={segment}
@@ -125,7 +125,7 @@ export function SimpleChart({
             {points.map((point, index) =>
               point.y === null ? null : (
                 <circle
-                  className="fill-accent"
+                  className="fill-data-accent-strong"
                   cx={x(index)}
                   cy={y(point.y)}
                   key={index}

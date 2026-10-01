@@ -17,9 +17,8 @@ import { AccountMenu } from "./AccountMenu";
 import { crumbsFor } from "./breadcrumb";
 import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
+import { BrandLogo } from "@/shared/ui";
 
-const sidebarLogoUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/horizontal_dark.svg", import.meta.url).href;
-const sidebarSymbolUrl = new URL("../../assets/logo/kpubdata-brand-assets/svg/sidebar_dark.svg", import.meta.url).href;
 
 interface NavItem {
   /** Route destination */
@@ -256,9 +255,11 @@ function navigationClassName({ isActive }: { isActive: boolean }) {
   return [
     "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
+    // Brand v2 (#628 §9): only the active item is blue (a light blue tint with Brand Blue
+    // text and icon); hover is a neutral tint and keeps the text colour.
     isActive
       ? "bg-sidebar-active text-sidebar-active-foreground"
-      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-active-foreground",
+      : "text-sidebar-foreground hover:bg-sidebar-hover",
   ].join(" ");
 }
 
@@ -339,16 +340,13 @@ export function Layout() {
             <div>
               <div className="flex items-center gap-2">
                 <Link aria-label={t("layout.studioHome")} className="flex min-w-0 items-center" to="/">
-                  <img
-                    alt="KPubData Studio"
-                    className={["w-[156px] max-w-full", isDesktopSidebarCollapsed ? "lg:hidden" : ""].join(" ")}
-                    src={sidebarLogoUrl}
-                  />
-                  <img
-                    alt="KPubData Studio"
-                    className={["hidden h-8 w-8", isDesktopSidebarCollapsed ? "lg:block" : ""].join(" ")}
-                    src={sidebarSymbolUrl}
-                  />
+                  {/* Light lockup on the light sidebar; the dark one only under the dark theme (#628). */}
+                  <span className={["block", isDesktopSidebarCollapsed ? "lg:hidden" : ""].join(" ")}>
+                    <BrandLogo className="w-[156px] max-w-full" />
+                  </span>
+                  <span className={["hidden", isDesktopSidebarCollapsed ? "lg:block" : ""].join(" ")}>
+                    <BrandLogo className="h-8 w-8" variant="symbol" />
+                  </span>
                 </Link>
               </div>
              {/* Tagline belongs in Topbar (workspace/product context), so Sidebar keeps
@@ -356,7 +354,7 @@ export function Layout() {
             </div>
             <button
               aria-label={t("layout.closeSidebar")}
-              className="rounded-lg border border-sidebar-border p-1.5 text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-active-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar lg:hidden"
+              className="rounded-lg border border-sidebar-border p-1.5 text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar lg:hidden"
               onClick={closeMobileSidebar}
               type="button"
             >
@@ -367,7 +365,7 @@ export function Layout() {
                  never hides even when collapsed. */}
             <button
               aria-label={isDesktopSidebarCollapsed ? t("layout.expandSidebar") : t("layout.collapseSidebar")}
-              className="hidden shrink-0 rounded-lg border border-sidebar-border p-1.5 text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-active-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar lg:inline-flex"
+              className="hidden shrink-0 rounded-lg border border-sidebar-border p-1.5 text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar lg:inline-flex"
               onClick={toggleDesktopSidebarCollapsed}
               type="button"
             >
