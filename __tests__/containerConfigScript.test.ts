@@ -35,7 +35,7 @@ afterEach(() => {
 function run(env: Record<string, string>): { code: number; stderr: string } {
   try {
     execFileSync("sh", [SCRIPT], {
-      env: { PATH: process.env.PATH ?? "", KPUBDATA_CONFIG_OUT: out, ...env },
+      env: { PATH: process.env.PATH ?? "", KPUBDATA_CONFIG_OUT: out, KPUBDATA_CSP_OUT: join(dir, "csp.conf"), ...env },
       stdio: ["ignore", "pipe", "pipe"],
     });
     return { code: 0, stderr: "" };

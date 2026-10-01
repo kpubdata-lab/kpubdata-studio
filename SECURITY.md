@@ -47,6 +47,14 @@ been released yet, give the commit SHA.
 
 - The LLM assistant key is kept in `localStorage` on purpose, under a separate
   policy from provider credentials. Provider credentials are not stored.
+- A Content-Security-Policy limits what an XSS could do with that key: scripts and
+  styles run only from Studio's own origin, with no inline code or eval
+  (`src/shared/config/contentSecurityPolicy.ts`, #663). It is a meta element in a
+  `vite build` and a response header in the container image. `connect-src` allows
+  any HTTPS origin, because the Builder URL and OIDC issuer are runtime settings and
+  the assistant's base URL can be any HTTPS address the user enters — so the policy
+  stops injected code from running, not a running script from sending data to an
+  HTTPS host. The dev server sends no policy.
 - Hiding an administration screen is a convenience. The actual authorization
   check is Builder's, and a report that the UI merely hid something is expected
   to say what Builder allowed.
