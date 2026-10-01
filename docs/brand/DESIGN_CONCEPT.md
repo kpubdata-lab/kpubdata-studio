@@ -54,23 +54,23 @@ Brand v2 의 컨셉은 **Bright Data Workspace** 다. 기본 화면은 밝고 �
 보이는 것은 브랜드가 아니라 데이터다.
 
 ```text
-┌───────────────────────────────────────────────┐
-│ KPubData Studio      Search...            ●   │
-├──────────────┬────────────────────────────────┤
-│ Home         │                                │
-│              │  Tables                        │
-│ DATA         │                                │
-│ Catalog      │  ┌────────┐ ┌────────┐         │
-│ Tables       │  │ 128    │ │ 2.4M   │         │
-│              │  └────────┘ └────────┘         │
-│ ANALYZE      │                                │
-│ SQL          │  housing.apartment_trade       │
-│ Queries      │  weather.daily_observation     │
-│              │                                │
-│ OPERATE      │                                │
-│ Quality      │                                │
-│ Monitoring   │                                │
-└──────────────┴────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ KPubData Studio      Search...            ●     │
+├────────────────┬────────────────────────────────┤
+│ Home           │                                │
+│                │  Tables                        │
+│ DATA           │                                │
+│ Catalog        │  ┌────────┐ ┌────────┐         │
+│ Tables         │  │ 128    │ │ 2.4M   │         │
+│                │  └────────┘ └────────┘         │
+│ ANALYZE        │                                │
+│ SQL Workspace  │  housing.apartment_trade       │
+│ Saved Analyses │  weather.daily_observation     │
+│                │                                │
+│ OPERATE        │                                │
+│ Quality        │                                │
+│ Monitoring     │                                │
+└────────────────┴────────────────────────────────┘
 ```
 
 화면 대부분은 중립 표면이고, 브랜드색은 사용자가 무언가를 고르거나 누르거나 데이터를 강조할

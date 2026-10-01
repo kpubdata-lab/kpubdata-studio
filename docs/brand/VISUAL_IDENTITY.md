@@ -115,8 +115,10 @@ shadow · 3D · 회전 · K 안의 추가 문자 · favicon 의 텍스트. 승�
 | Unknown | `--status-unknown` | `#52525B` | 모른다 — 0 도 실패도 아니다 |
 
 - **모든 성공을 브랜드색으로 칠하지 않는다.** 특히 **Fresh Mint `#14B8A6` 는 success 가 아니다**.
-  상태 토큰의 값은 `--brand-primary` · `--data-accent` · `--brand-secondary` 의 값과 **달라야 한다** —
-  `__tests__/visualTokensGate.test.ts` 가 검사한다.
+  상태 토큰의 값은 `--brand-primary` · `--data-accent` · `--brand-secondary` 의 값과 **달라야 한다**.
+  지금 `__tests__/visualTokensGate.test.ts` 의 브랜드 목록은 `--brand-primary` · `--brand-subtle` · `--brand-ink` · `--data-accent` 뿐이고
+  `--brand-secondary` 는 아직 토큰에 없다 — 토큰 단계(§8)에서 Mint 토큰을 추가하면서 이 게이트가
+  `--brand-secondary` 까지 검사하도록 바뀐다.
 - **Warning · Stale · Partial 은 같은 amber 여도 label 로 구분한다.** 배지는 항상 축과 단어를
   함께 쓴다(`Health Stale`, `Completeness Partial`). 색만으로 의미를 싣지 않는다.
 - **상태 축은 합치지 않는다** (TERMINOLOGY 상태 어휘). Health · Completeness · Refresh · Access ·
