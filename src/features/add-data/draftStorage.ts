@@ -24,7 +24,7 @@ import { clearDraft, hasDraft, loadDraft, saveDraft } from "@/features/build-spe
 import { ownedStorageKey } from "@/features/auth/storageOwner";
 import { sanitizeUrlEndpointForStorage } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsObject, redactSourceParamsText } from "@/features/add-data/paramsRedaction";
-import { redactSpecExtra } from "@/features/build-spec/specStore";
+import { redactSpecTopLevel } from "@/features/build-spec/specStore";
 import { jsonRecordSchema, sourceFormatSchema, sourceKindSchema } from "@/shared/lib/schemas";
 import type { AddDataDraft } from "@/features/add-data/model";
 
@@ -99,9 +99,13 @@ const addDataDraftValidator = {
 };
 
 export function saveAddDataDraft(draft: AddDataDraft): void {
+  // Spec-level fields Studio does not edit (`metadata`, `exports[].options`, the top-level
+  // `extra`) may hold credentials too (#616, #623): redacted by the rule the run spec store
+  // and the Review display copy share, and a restored `[REDACTED]` fails closed in
+  // buildSpecFromDraft.
   const canonicalBase = draft.canonicalBase
     ? {
-        ...draft.canonicalBase,
+        ...redactSpecTopLevel(draft.canonicalBase),
         sources: draft.canonicalBase.sources.map((rawSource) => {
           // Source keys Studio does not model are kept in `extra` (#601) and may hold
           // credentials (e.g. `auth.serviceKey`), so they get the same redaction as params.
@@ -114,9 +118,6 @@ export function saveAddDataDraft(draft: AddDataDraft): void {
           }
           return { ...source, params: redactSourceParamsObject(source.params ?? {}).params };
         }),
-        // Spec keys Studio does not model may hold credentials too (#616): redacted by the
-        // run spec store's rule, and a restored `[REDACTED]` fails closed in buildSpecFromDraft.
-        ...(draft.canonicalBase.extra ? { extra: redactSpecExtra(draft.canonicalBase.extra) } : {}),
       }
     : undefined;
   const safeDraft: AddDataDraft = {

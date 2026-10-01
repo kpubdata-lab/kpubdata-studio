@@ -118,7 +118,43 @@ export function redactSpecForStorage(spec: BuildSpec): BuildSpec {
       }
       return safe;
     }),
-    metadata: redactSecrets(spec.metadata) as Record<string, JsonValue>,
+    // Shared with the Add Data draft and the Review display copy (#623). `exports[].options`
+    // is not redacted here yet, so this store's output is unchanged; see `redactSpecTopLevel`.
+    metadata: redactSpecMetadata(spec.metadata),
+    ...(spec.extra ? { extra: redactSpecExtra(spec.extra) } : {}),
+  };
+}
+
+/**
+ * Redacted copy of a spec's `metadata`, which a pasted BuildSpec YAML may fill with any key.
+ * The same rule as the run spec store has always applied (#623).
+ */
+export function redactSpecMetadata(metadata: Record<string, JsonValue>): Record<string, JsonValue> {
+  return redactSecrets(metadata) as Record<string, JsonValue>;
+}
+
+/**
+ * Redacted copy of `exports`, with each `options` object passed through the `metadata` rule
+ * (#623). Exports without `options` keep that shape.
+ */
+export function redactExportOptions(exports: BuildSpec["exports"]): BuildSpec["exports"] {
+  return exports.map((item) =>
+    item.options ? { ...item, options: redactSecrets(item.options) as Record<string, JsonValue> } : item,
+  );
+}
+
+/**
+ * Redacted copy of a spec's own (non-source) fields that may hold credentials: `metadata`,
+ * `exports[].options` and the top-level `extra` (#616, #623). The Add Data draft
+ * (`canonicalBase`) and the Review display copy apply it as a whole; the run spec store uses
+ * the same `metadata`/`extra` helpers. A restored `[REDACTED]` in any of them fails closed
+ * through `jsonValueHasRedactedSecret`. The argument is not modified.
+ */
+export function redactSpecTopLevel<T extends Pick<BuildSpec, "metadata" | "exports" | "extra">>(spec: T): T {
+  return {
+    ...spec,
+    metadata: redactSpecMetadata(spec.metadata),
+    exports: redactExportOptions(spec.exports),
     ...(spec.extra ? { extra: redactSpecExtra(spec.extra) } : {}),
   };
 }
