@@ -2638,6 +2638,7 @@
     "tabs": {
       "overview": "Overview",
       "schema": "Schema",
+      "profile": "Profile",
       "preview": "Preview",
       "quality": "Quality",
       "snapshots": "Snapshots"
@@ -2682,6 +2683,98 @@
       "recentIssues": "Recent quality issues",
       "recentRuns": "Recent Runs",
       "selected": "selected"
+    }
+  },
+  "licence": {
+    "title": "Terms of use",
+    "source": "As declared in the BuildSpec of run {{run}}.",
+    "labels": {
+      "licence": "Licence",
+      "attribution": "Attribution",
+      "link": "Licence terms"
+    },
+    "kind": {
+      "spdx": "SPDX",
+      "kogl": "KOGL",
+      "other": "Other licence"
+    },
+    "undeclared": "Unknown — not declared in the BuildSpec",
+    "nameUndeclared": "Unknown — the licence name is not declared",
+    "attributionUndeclared": "Unknown — not declared",
+    "attributionRequired": "Required for KOGL but not declared",
+    "linkUndeclared": "Unknown — no link to the terms is declared",
+    "linkUnsafe": "Not an http(s) address, so it is not opened as a link.",
+    "opensInNewTab": "(opens in a new tab)",
+    "unavailable": {
+      "noRun": "Unknown — no run produced this table.",
+      "legacy": "Unknown — this run has no BuildSpec snapshot.",
+      "demo": "Unknown — the demo has no terms of use. Connect KPubData Builder to see them.",
+      "error": "Unknown — could not read the BuildSpec: {{message}}"
+    }
+  },
+  "profile": {
+    "title": "Column profile",
+    "open": "View column profile",
+    "loading": "KPubData Builder is reading every row of this snapshot to profile its columns. This can take up to 60 seconds.",
+    "computedAt": "Computed",
+    "method": "Method",
+    "sampled": "sample of {{count}} rows",
+    "note": "Exact, over every row. NaN and infinite values are counted apart and left out of ranges. A range over fewer than {{min}} values is withheld. “Not detected” is not a guarantee — only value patterns and column names are checked.",
+    "withheldNote": "Columns suspected of holding personal data ({{count}}) show only their name, types and sensitivity.",
+    "noColumns": "This snapshot has no columns.",
+    "storage": "stored as {{type}}",
+    "withheld": "Statistics withheld: suspected personal data. No value is shown.",
+    "columns": {
+      "sensitivity": "Sensitivity",
+      "nulls": "Nulls",
+      "nan": "NaN",
+      "infinite": "Infinite",
+      "range": "Range (min … max)"
+    },
+    "sensitivity": {
+      "notDetected": "Not detected",
+      "suspected": "Suspected personal data",
+      "allowedBySpec": "Allowed by the BuildSpec",
+      "uncheckedValues": "values not checked (a type that can hold text)"
+    },
+    "range": {
+      "noValues": "No values",
+      "smallGroup": "Withheld: too few values",
+      "smallGroupCount": "{{count}} values < {{min}}",
+      "smallGroupRule": "fewer than {{min}} values",
+      "excluded": "NaN or infinite values left out: {{count}}"
+    },
+    "retry": "Retry",
+    "retryAfter": "Retry after {{time}}",
+    "error": "Could not load the column profile",
+    "mismatch": "Builder sent the profile of {{received}} instead of the requested snapshot {{requested}}, so it is not shown.",
+    "refused": {
+      "query_timeout": {
+        "title": "Profiling timed out",
+        "body": "KPubData Builder limits profiling to 60 seconds. It remembers the timeout for this snapshot for 5 minutes, and until then answers the same request at once without profiling again.",
+        "next": "Retry after {{time}}, or aggregate only the columns you need in SQL.",
+        "query": "Aggregate in SQL"
+      },
+      "query_busy": {
+        "title": "KPubData Builder has no free query slot",
+        "body": "Other queries are using every slot. Retry in a moment."
+      },
+      "snapshot_unavailable": {
+        "title": "This snapshot cannot be read",
+        "body": "KPubData Builder could not read this snapshot's file. Choose another snapshot in the Snapshots tab.",
+        "action": "Open the Snapshots tab"
+      },
+      "redistribution_forbidden": {
+        "title": "The source terms forbid redistribution",
+        "body": "The source's terms of use forbid its data leaving KPubData Builder, column statistics included.",
+        "sources": "Forbidden by: {{sources}}",
+        "action": "See the terms on Overview"
+      },
+      "pii_declaration_unavailable": {
+        "title": "The source's personal data declaration could not be read",
+        "body": "KPubData Builder could not read the source's kpubdata personal data declaration, so it refused rather than risk it. Retry in a moment, and tell the Builder operator if it persists.",
+        "dataset": "Source: {{dataset}}"
+      }
     }
   },
   "labels": {

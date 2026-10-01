@@ -24,6 +24,8 @@ import { StageBadge } from "@/features/datasets/components/StageBadge";
 import { StageSampleEmpty } from "@/features/datasets/components/StageSampleEmpty";
 import { StatusAxes } from "@/features/datasets/components/StatusAxes";
 import { WarehouseTableView } from "@/features/datasets/components/WarehouseTableView";
+import { RunLicence } from "@/features/licence/LicenceSummary";
+import { useRunLicence } from "@/features/licence/useRunLicence";
 import { RUN_LOOKUP_API_VERSION, useRequestedRun } from "@/features/datasets/useRequestedRun";
 import { datasetTablesOf } from "@/features/datasets/warehouseTables";
 import {
@@ -384,9 +386,9 @@ function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selected
  * Data Passport — "what is this dataset, where did it come from, and can it be trusted?"
  * at a glance with trust summary (#Phase2 UI polish). Doesn't require new backend data —
  * reuse only values already fetched on this page. Don't fabricate missing fields; clearly
- * mark as "verification unavailable" / "not provided" or omit (License doesn't exist as actual
- * dataset property anywhere in this schema; omit entirely since it's only user-provided value
- * on Publish screen).
+ * mark as "verification unavailable" / "not provided" or omit. The terms of use are the
+ * selected run's BuildSpec declaration (`GET /builds/{run_id}/spec`, builder#764): a field
+ * it does not declare is shown as unknown, never filled in.
  *
  * "Run state (overall)" and "selected Source·Stage state" use different vocabularies (run-level
  * aggregate vs source/stage unit) so values can diverge (see :174-178 runFailedButSelectedStageOk
@@ -394,6 +396,8 @@ function OverviewTab({ dataset, selectedRun, runStatus, selectedSource, selected
  */
 function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selectedStage, sourceStages, columnCount, artifactSummary, validation, onAsk }: { dataset: DatasetDetailResponse; selectedRun?: DatasetRunSummary; runStatus?: string; selectedSource: string; selectedStage: DatasetStage; sourceStages?: RunStagesResponse["sources"][number]; columnCount: number | null; artifactSummary: string; validation: ReturnType<typeof summarizeQuality>; onAsk: () => void }) {
   const { t } = useTranslation();
+  const runId = selectedRun?.run_id ?? "";
+  const licence = useRunLicence(runId);
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -412,6 +416,9 @@ function DataPassport({ dataset, selectedRun, runStatus, selectedSource, selecte
         <Definition label={t("datasetDetail.labels.specDigest")}>{selectedRun?.spec_digest ? <span className="break-all font-mono text-xs">{selectedRun.spec_digest}</span> : t("datasetDetail.unavailable")}</Definition>
         <Definition label={t("datasetDetail.labels.snapshotFiles")}>{artifactSummary}</Definition>
       </dl>
+      <div className="mt-4 border-t border-border pt-4">
+        <RunLicence headingLevel={4} runId={runId} state={licence} />
+      </div>
       <p className="mt-4 text-xs text-muted-foreground">
         {t("datasetDetail.tabsHint", { source: selectedSource || t("datasetDetail.noSource") })}
       </p>

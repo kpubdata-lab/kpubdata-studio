@@ -154,7 +154,7 @@ describe("Table Detail on a warehouse (#526)", () => {
     expect(screen.queryAllByRole("combobox")).toHaveLength(0);
     expect(screen.queryByRole("link", { name: "이 Run 게시" })).not.toBeInTheDocument();
 
-    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["개요", "스키마", "미리보기", "품질", "스냅샷"]);
+    expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["개요", "스키마", "프로파일", "미리보기", "품질", "스냅샷"]);
 
     // Header: identifier, provider, what needs action, and the three actions.
     expect(screen.getByText("air.datago")).toHaveClass("font-mono");

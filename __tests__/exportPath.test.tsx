@@ -119,7 +119,11 @@ describe("the export panel asks Builder and shows its manifest (#501)", () => {
     fireEvent.click(screen.getByRole("button", { name: "내보내기" }));
     await screen.findByText(/air@snap_7 · rev 4 을 읽었습니다/);
     expect(bodies[0]).toEqual({ table: "air", snapshot: "current", sql: "SELECT * FROM dataset", format: "csv", profile: "spreadsheet", max_rows: 100000 });
-    expect(screen.getByText(/공공누리 제1유형 · 출처: 한국환경공단/)).toBeInTheDocument();
+    // The terms read as Table Detail shows them (#645): the licence marked KOGL, the attribution, and an explicit unknown link.
+    expect(screen.getByText("KOGL-1").closest("dd")).toHaveAttribute("data-licence-kind", "kogl");
+    expect(screen.getByText(/공공누리 제1유형/)).toBeInTheDocument();
+    expect(screen.getByText("출처: 한국환경공단")).toBeInTheDocument();
+    expect(screen.getByText("알 수 없음 — 원문 링크가 선언되지 않음")).toBeInTheDocument();
     expect(screen.getByText(/수집 범위: 기록 없음/)).toBeInTheDocument();
     expect(screen.getByText(/memo 2/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /번들 내려받기/ }));

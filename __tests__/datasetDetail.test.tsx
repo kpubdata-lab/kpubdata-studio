@@ -308,10 +308,10 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     expect(await within(schemaRow).findByText("제공되지 않음")).toBeInTheDocument();
   });
 
-  it("does not present fields absent from the schema, like license/freshness/verified score", async () => {
+  // Terms of use are shown since #645, read from the run's BuildSpec — see tableLicence.test.tsx.
+  it("does not present fields absent from the contract, like freshness/verified score", async () => {
     renderDetail();
     const passport = await findPassport();
-    expect(within(passport).queryByText(/license/i)).not.toBeInTheDocument();
     expect(within(passport).queryByText(/freshness/i)).not.toBeInTheDocument();
     expect(within(passport).queryByText(/verified/i)).not.toBeInTheDocument();
     expect(within(passport).queryByText(/인증/)).not.toBeInTheDocument();

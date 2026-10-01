@@ -15,9 +15,9 @@
  * would strip.
  *
  * Nothing is computed in the demo. Row pages are generated deterministically from the
- * row index so paging holds together; a filtered or sorted page, a query, an aggregate,
- * an export or a saved analysis would need a Builder, so the demo answers those with a
- * `demo` error instead of a made-up result.
+ * row index so paging holds together; a filtered or sorted page, a column profile, a
+ * query, an aggregate, an export or a saved analysis would need a Builder, so the demo
+ * answers those with a `demo` error instead of a made-up result.
  */
 import { i18n } from "@/shared/i18n";
 import {
@@ -214,6 +214,7 @@ type WarehouseMethods = Pick<
   typeof builderApi,
   | "listWarehouseTables"
   | "getWarehouseTable"
+  | "getWarehouseTableProfile"
   | "warehouseRows"
   | "warehouseQuery"
   | "warehouseAggregate"
@@ -253,6 +254,10 @@ export const mockWarehouseApi: WarehouseApi = {
   listWarehouseExports: async (signal) => {
     throwIfAborted(signal);
     return { exports: [] };
+  },
+  // A profile is computed over every row of a snapshot; the demo computes nothing.
+  getWarehouseTableProfile: async () => {
+    throw needsBuilder();
   },
   warehouseQuery: async () => {
     throw needsBuilder();

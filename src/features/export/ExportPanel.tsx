@@ -5,13 +5,15 @@
  * Builder checks the source's licence and PII policy, runs the query on that snapshot,
  * refuses a result over the row or byte limit instead of cutting it, and keeps the bundle
  * (data file, `manifest.json`, `NOTICE.md`). Studio shows what the manifest says — the
- * concrete snapshot read, the terms verbatim, that the result is user-derived — and then
+ * concrete snapshot read, the terms verbatim (in the same `LicenceSummary` Table Detail
+ * shows, link included), that the result is user-derived — and then
  * fetches Builder's zip with the person's own credentials.
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { saveBlobAsFile } from "@/features/artifacts/api";
+import { LicenceSummary } from "@/features/licence/LicenceSummary";
 import { ApiError, type WarehouseExport } from "@/shared/lib/builderApi";
 import { warehouseApi } from "@/features/sql/warehouseApi";
 import { Button, Card } from "@/shared/ui";
@@ -152,7 +154,7 @@ export function ExportPanel({ table, snapshot, sql }: { table: string; snapshot:
             <li>
               {t("export.terms")}{" "}
               {terms.status === "declared" ? (
-                <span className="text-foreground">{[terms.license_name ?? terms.license, terms.attribution].filter(Boolean).join(" · ")}</span>
+                <LicenceSummary className="mt-1" terms={terms} />
               ) : (
                 <span className="font-semibold text-status-warning">{t("export.termsUnknown", { status: terms.status })}</span>
               )}

@@ -36,6 +36,56 @@ const DATASET = {
   run_count: 2,
 };
 
+const SPEC = [
+  "dataset_id: air_quality",
+  "license: other",
+  "license_name: kogl-type-1",
+  "license_link: https://www.kogl.or.kr/info/licenseType1.do",
+  "attribution: 서울특별시, 서울시 대기환경정보",
+  "",
+].join("\n");
+const profile = (snapshot_id: string) => ({
+  snapshot: { table_id: TABLE.table_id, logical_name: TABLE.logical_name, snapshot_id, revision: 3 },
+  profile: {
+    snapshot_id,
+    artifact_digest: "sha256:abc",
+    algorithm_version: 2,
+    computed_at: "2026-09-01T00:00:00Z",
+    scope: { mode: "full", sampled: false, sample_size: null },
+    accuracy: "exact",
+    min_range_values: 10,
+    row_count: 4821,
+    columns: [
+      {
+        name: "pm10",
+        storage_type: "Float64",
+        logical_type: "float64",
+        time_zone: null,
+        sensitivity: { status: "not_detected", kinds: [] },
+        status: "profiled",
+        null_count: 12,
+        null_ratio: 0.0025,
+        nan_count: 0,
+        infinite_count: 0,
+        range: { status: "exact", min: 1.5, max: 310, wire_encoding: "number", value_count: 4809, excluded_count: 0 },
+      },
+      {
+        name: "contact",
+        storage_type: "String",
+        logical_type: "string",
+        time_zone: null,
+        sensitivity: { status: "suspected", kinds: ["phone"] },
+        status: "withheld",
+        null_count: null,
+        null_ratio: null,
+        nan_count: null,
+        infinite_count: null,
+        range: null,
+      },
+    ],
+  },
+});
+
 async function stubBuilder(page: Page) {
   await page.route("**/config.js", (route) =>
     route.fulfill({
@@ -51,6 +101,8 @@ async function stubBuilder(page: Page) {
       return json({ ...TABLE, snapshots: [snapshot("snap_3", "run-3", 4821), snapshot("snap_2", "run-2", 4700)] });
     }
     if (url.pathname === "/datasets/air_quality") return json(DATASET);
+    if (url.pathname === "/builds/run-3/spec") return json({ run_id: "run-3", spec: SPEC, spec_digest: `sha256:${"0".repeat(64)}` });
+    if (url.pathname === `/warehouse/tables/${TABLE.logical_name}/profile`) return json(profile(url.searchParams.get("snapshot") ?? ""));
     if (url.pathname === "/datasets/air_quality/runs") {
       return json({ dataset_id: "air_quality", runs: [{ run_id: "run-3", status: "ok", started_at: null, finished_at: null, spec_digest: null, created_by: null }] });
     }
@@ -89,6 +141,32 @@ test("테이블 상세는 선택 없이 현재 스냅샷으로 열리고, 과거
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/tables\/air_quality\?snapshot=snap_2$/);
   await expect(page.getByRole("tabpanel")).toContainText("run-2");
+
+  await expectNoPageErrors(errors);
+});
+
+test("테이블 상세 개요에 이용 조건과 원문 링크가 보이고, 컬럼 프로파일은 보고 있는 스냅샷으로 열리며 390px 에서 가로 스크롤이 없다", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+  await stubBuilder(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/tables/air_quality");
+  const terms = page.getByRole("region", { name: t("licence.title") });
+  await expect(terms).toContainText("kogl-type-1", { timeout: 10_000 });
+  await expect(terms).toContainText(t("licence.kind.kogl"));
+  await expect(terms.getByRole("link", { name: /kogl\.or\.kr/ })).toHaveAttribute("href", "https://www.kogl.or.kr/info/licenseType1.do");
+
+  const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(await overflow(), "Overview with terms horizontal overflow at 390px").toBeLessThanOrEqual(2);
+
+  const profileRequest = page.waitForRequest((request) => request.url().includes("/profile?"));
+  await page.getByRole("button", { name: t("profile.open") }).click();
+  expect(new URL((await profileRequest).url()).searchParams.get("snapshot")).toBe("snap_3");
+  const panel = page.getByRole("tabpanel");
+  await expect(panel.getByRole("rowheader", { name: "pm10" })).toBeVisible();
+  await expect(panel).toContainText(t("profile.withheld"));
+  expect(await overflow(), "Profile tab horizontal overflow at 390px").toBeLessThanOrEqual(2);
 
   await expectNoPageErrors(errors);
 });

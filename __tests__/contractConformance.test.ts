@@ -63,6 +63,7 @@ const EXPECTED_OPERATIONS = [
   "adminRejectUser",
   "listWarehouseTables",
   "getWarehouseTable",
+  "getWarehouseTableProfile",
   "warehouseQuery",
   "warehouseRows",
   "warehouseAggregate",
