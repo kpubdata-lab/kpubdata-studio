@@ -11,11 +11,18 @@
  *
  * This file handles **screen assembly only** (#379). Components live under `features/runs`.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 
 import { getBuildQuality, listBuildStages } from "@/features/datasets/api";
+import { LoadMoreRuns } from "@/features/datasets/components/LoadMoreRuns";
+import {
+  BUILD_HISTORY_LIMIT,
+  mayHaveMoreRuns,
+  nextRunHistoryLimit,
+  type LoadMoreStatus,
+} from "@/features/datasets/runHistory";
 import {
   matchesSearch,
   matchesStatusFilter,
@@ -40,8 +47,6 @@ import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { BuildListItem } from "@/shared/lib/types";
 import { Card, ErrorState, LinkButton, PageHeader, Select, SkeletonTable, TermHelp, TextInput } from "@/shared/ui";
 
-/** `/builds` request scope. Builder has no total count, so the list says when it may be cut. */
-const LIST_LIMIT = 100;
 
 const STATUS_FILTERS: RunStatusFilter[] = ["all", "succeeded", "failed", "running", "queued", "cancelled"];
 
@@ -61,11 +66,19 @@ export function BuildsPage() {
   const navigate = useNavigate();
 
   const [listState, setListState] = useState<AsyncState<BuildListItem[]>>({ status: "loading" });
+  // `/builds` request scope. Builder has no cursor and no total count, so "show more" asks
+  // again with a larger limit and the list says when it may be cut (#653).
+  const [listLimit, setListLimit] = useState(BUILD_HISTORY_LIMIT);
+  const [more, setMore] = useState<{ status: LoadMoreStatus; error?: string }>({ status: "idle" });
+  const moreRequest = useRef(0);
 
   const loadList = useCallback(() => {
     const controller = new AbortController();
+    moreRequest.current += 1;
     setListState({ status: "loading" });
-    listBuilds(LIST_LIMIT)
+    setListLimit(BUILD_HISTORY_LIMIT);
+    setMore({ status: "idle" });
+    listBuilds(BUILD_HISTORY_LIMIT)
       .then((items) => {
         if (!controller.signal.aborted) setListState({ status: "loaded", data: items });
       })
@@ -80,6 +93,24 @@ export function BuildsPage() {
   }, []);
 
   useEffect(() => loadList(), [loadList]);
+
+  // The loaded list stays on screen while the larger one loads, and when it fails.
+  function loadMore() {
+    const limit = nextRunHistoryLimit(listLimit);
+    const request = ++moreRequest.current;
+    setMore({ status: "loading" });
+    listBuilds(limit)
+      .then((items) => {
+        if (request !== moreRequest.current) return;
+        setListState({ status: "loaded", data: items });
+        setListLimit(limit);
+        setMore({ status: "idle" });
+      })
+      .catch((cause: unknown) => {
+        if (request !== moreRequest.current) return;
+        setMore({ status: "error", error: cause instanceof Error ? cause.message : undefined });
+      });
+  }
 
   // The detail is `/refresh-jobs/:id`; an older `?run=` link opens the same detail and
   // wins when both are present.
@@ -201,7 +232,7 @@ export function BuildsPage() {
         {runNotFound ? (
           <Card variant="error" role="alert">
             <p className="font-semibold">{t("builds.run.notFoundTitle", { id: selectedRunId })}</p>
-            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.notFoundDesc", { limit: LIST_LIMIT })}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.notFoundDesc", { limit: listLimit })}</p>
             <button className="mt-4 text-sm font-medium text-brand-text underline" onClick={clearSelection} type="button">
               {t("builds.run.clearSelection")}
             </button>
@@ -209,7 +240,7 @@ export function BuildsPage() {
         ) : runPermissionDenied ? (
           <Card variant="error" role="alert">
             <p className="font-semibold">{t("builds.run.forbiddenTitle", { id: selectedRunId })}</p>
-            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.forbiddenDesc", { limit: LIST_LIMIT })}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.forbiddenDesc", { limit: listLimit })}</p>
             <button className="mt-4 text-sm font-medium text-brand-text underline" onClick={clearSelection} type="button">
               {t("builds.run.clearSelection")}
             </button>
@@ -293,10 +324,17 @@ export function BuildsPage() {
       )}
 
       {listState.status === "loaded" ? (
-        <p className="text-xs text-muted-foreground">
-          {t("builds.table.scope", { count: items.length, limit: LIST_LIMIT })}
-          {isRealBuilderEnabled() ? ` ${t("builds.kpi.completedOnlyHint")}` : null}
-        </p>
+        <>
+          <LoadMoreRuns
+            count={items.length}
+            limit={listLimit}
+            status={more.status}
+            error={more.error}
+            canLoadMore={mayHaveMoreRuns(items.length, listLimit)}
+            onLoadMore={loadMore}
+          />
+          {isRealBuilderEnabled() ? <p className="text-xs text-muted-foreground">{t("builds.kpi.completedOnlyHint")}</p> : null}
+        </>
       ) : null}
     </div>
   );
