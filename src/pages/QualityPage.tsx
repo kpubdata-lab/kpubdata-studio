@@ -150,30 +150,30 @@ export function QualityPage() {
 
   if (state.status === "loading") {
     return (
-      <main className={main}>
+      <div className={main}>
         {header}
         <p className="sr-only" role="status">{t("quality.loading")}</p>
         <Skeleton className="h-40 w-full" />
-      </main>
+      </div>
     );
   }
 
   if (state.status === "error") {
     return (
-      <main className={main}>
+      <div className={main}>
         {header}
         <ErrorState title={t("quality.errors.issues")} message={state.message} />
-      </main>
+      </div>
     );
   }
 
   const { total } = state.overview;
   if (state.overview.coverage.tables === 0) {
     return (
-      <main className={main}>
+      <div className={main}>
         {header}
         <Card><EmptyState title={t("quality.empty.title")} description={t("quality.empty.desc")} actionLabel={t("quality.empty.action")} actionHref="/add" /></Card>
-      </main>
+      </div>
     );
   }
 
@@ -182,7 +182,7 @@ export function QualityPage() {
   const legacyRunIsOlder = Boolean(legacyRun && filteredTable && legacyRun !== filteredTable.runId);
 
   return (
-    <main className={main}>
+    <div className={main}>
       {header}
 
       <p className="text-sm text-muted-foreground" data-testid="quality-coverage">
@@ -278,6 +278,6 @@ export function QualityPage() {
           {t("quality.coverage.failed", { count: tableCoverage.unreadable })}
         </p>
       ) : null}
-    </main>
+    </div>
   );
 }

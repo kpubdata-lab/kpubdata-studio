@@ -29,12 +29,12 @@ export interface PlaceholderPageProps {
 export function PlaceholderPage({ title, description, note }: PlaceholderPageProps) {
   const { t } = useTranslation();
   return (
-    <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+    <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
       <PageHeader title={title} description={description} />
       <Card variant="dashed" className="flex flex-col items-center gap-2 py-16 text-center">
         <p className="text-lg font-medium tracking-tight">{t("placeholder.notReady")}</p>
         <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground">{note}</p>
       </Card>
-    </main>
+    </div>
   );
 }

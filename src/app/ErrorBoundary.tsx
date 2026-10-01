@@ -95,7 +95,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  */
 function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: () => void }) {
   return (
-    <main
+    <div
       role="alert"
       className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center"
     >
@@ -112,7 +112,7 @@ function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: 
       >
         {i18n.t("errorBoundary.feature.retry")}
       </button>
-    </main>
+    </div>
   );
 }
 

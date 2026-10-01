@@ -81,10 +81,13 @@ function renderAdmin({
 
 const t = (key: string, options?: Record<string, unknown>) => i18n.t(key, options);
 
-/** The card (a direct child of `<main>`) whose heading is the translation of `titleKey`. */
+/**
+ * The card (a direct child of the page root) whose heading is the translation of `titleKey`.
+ * The page root is the render container's only child; the app shell owns `<main>` (#660).
+ */
 function card(titleKey: string): HTMLElement {
   let node: HTMLElement | null = screen.getByRole("heading", { name: t(titleKey) });
-  while (node && node.parentElement?.tagName !== "MAIN") node = node.parentElement;
+  while (node && node.parentElement?.parentElement?.parentElement !== document.body) node = node.parentElement;
   if (!node) throw new Error(`no card for ${titleKey}`);
   return node;
 }

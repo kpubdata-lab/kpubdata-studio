@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node scripts/check-bundle-size.mjs",
+    "size:check": "node scripts/check-bundle-size.mjs",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",

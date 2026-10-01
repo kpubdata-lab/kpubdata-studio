@@ -147,20 +147,20 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
 
   if (dataset.status === "error") {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader title={datasetId} />
         <ErrorState title={t("datasetDetail.loadErrorTitle")} message={dataset.error} />
-      </main>
+      </div>
     );
   }
   if (!dataset.data) {
     return (
-      <main className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
+      <div className="flex flex-1 flex-col gap-6 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <PageHeader title={datasetId} description={t("datasetDetail.loadingDesc")} />
         <Card>
           <Skeleton className="h-40 w-full" />
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -170,7 +170,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
   const queryHref = `/sql?${new URLSearchParams({ table: logicalName, ...(viewed && !isCurrent ? { snapshot: viewed.snapshot_id } : {}) })}`;
 
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-4 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-4 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader
         title={info.title}
         meta={
@@ -311,7 +311,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
           />
         )}
       </section>
-    </main>
+    </div>
   );
 }
 
