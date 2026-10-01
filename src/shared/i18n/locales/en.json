@@ -2687,5 +2687,30 @@
     "yes": "yes",
     "no": "no",
     "apiKey": "API Key"
+  },
+  "qualityTrend": {
+    "title": "Quality trend across runs",
+    "description": "PASS/WARN/FAIL per run, newest first, as Builder recorded it. A run with no evaluated checks reads N/A.",
+    "error": "Failed to load the quality history",
+    "emptyTitle": "No quality history yet",
+    "emptyDescription": "Builder has no run with quality results for this table. Nothing is estimated in its place.",
+    "columns": {
+      "time": "Time",
+      "results": "Results",
+      "passRate": "Pass rate",
+      "validatedRows": "Validated rows"
+    },
+    "runStatus": {
+      "failed": "Run failed",
+      "cancelled": "Run cancelled"
+    },
+    "timeNotRecorded": "Time not recorded",
+    "validatedRowsMissing": "Validated rows not reported",
+    "percent": "{{value}}%",
+    "passedOf": "({{passed}} of {{total}} passed)",
+    "noRateYet": "No run in this history has an evaluated pass rate yet.",
+    "sparklineLabel": "Pass rate across {{runs}} runs, oldest to newest; {{rated}} with a rate",
+    "sparklineCaption": "Pass rate, oldest → newest",
+    "sparklineGaps": "Gaps are runs with no evaluated checks ({{gaps}})."
   }
 }
