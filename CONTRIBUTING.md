@@ -1,6 +1,6 @@
 # KPubData-Studio 기여 가이드 (CONTRIBUTING.md)
 
-> **프로젝트 관리·리뷰 정책의 정본은 [POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md) 하나다.**
+> **프로젝트 관리·리뷰 정책의 정본은 [POLICY.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md) 하나다.**
 > Epic · Issue · Priority · Review Level · Verification · Release 규칙은 그 문서를 따른다.
 > 이 문서에는 이 저장소 고유의 절차(빌드 명령, 디렉터리 규칙)만 남긴다.
 > 충돌하면 POLICY.md 가 우선한다.
@@ -46,7 +46,7 @@ git clone https://github.com/YOUR_USERNAME/kpubdata-studio.git
 cd kpubdata-studio
 
 # 2. 원본 저장소(Upstream) 연결하기 (나중에 최신 코드를 받아오기 위해 필요합니다)
-git remote add upstream https://github.com/yeongseon/kpubdata-studio.git
+git remote add upstream https://github.com/kpubdata-lab/kpubdata-studio.git
 ```
 
 ### 3단계: 개발 환경 구축
@@ -118,7 +118,7 @@ flowchart TD
 6. **PR 생성**: GitHub 웹사이트에서 `Compare & pull request` 버튼 클릭
 
 ### 3-5. 제목과 커밋 메시지 규칙
-이슈·PR·최종 커밋 제목의 **정본은 kpubdata 의 [POLICY 2.1.3](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md#213-유형은-제목이-정하고-라벨은-따라온다--2026-09-29-개정)** 입니다 — 세 저장소가
+이슈·PR·최종 커밋 제목의 **정본은 kpubdata 의 [POLICY 2.1.3](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md#213-유형은-제목이-정하고-라벨은-따라온다--2026-09-29-개정)** 입니다 — 세 저장소가
 같은 규칙과 같은 허용 type 11개를 씁니다. 요약하면:
 
 - `type: description` 또는 `type(scope): description`, 영어, 끝에 마침표 없음
@@ -192,5 +192,5 @@ PR 제목은 [3-5](#3-5-제목과-커밋-메시지-규칙) 의 규칙(`type(scop
 ### KPubData Product Family
 | 저장소 | 문서 | 설명 |
 | :--- | :--- | :--- |
-| [kpubdata](https://github.com/yeongseon/kpubdata) | [CONTRIBUTING.md](https://github.com/yeongseon/kpubdata/blob/main/CONTRIBUTING.md) | KPubData 기여 가이드 |
-| [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [CONTRIBUTING.md](https://github.com/yeongseon/kpubdata-builder/blob/main/CONTRIBUTING.md) | Builder 기여 가이드 |
+| [kpubdata](https://github.com/kpubdata-lab/kpubdata) | [CONTRIBUTING.md](https://github.com/kpubdata-lab/kpubdata/blob/main/CONTRIBUTING.md) | KPubData 기여 가이드 |
+| [kpubdata-builder](https://github.com/kpubdata-lab/kpubdata-builder) | [CONTRIBUTING.md](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/CONTRIBUTING.md) | Builder 기여 가이드 |

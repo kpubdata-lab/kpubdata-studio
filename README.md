@@ -9,18 +9,18 @@
 
 **KPubData Studio는 한국 공공데이터를 수집하고, 출처와 이용 조건을 유지한 스냅샷으로 관리하며, 표와 SQL 로 분석하는 작업공간입니다.**
 
-> KPubData 제품군: [KPubData](https://github.com/yeongseon/kpubdata) (공공 API 접근 라이브러리) → [KPubData Builder](https://github.com/yeongseon/kpubdata-builder) (실행·웨어하우스) → **KPubData Studio** (작업공간)
+> KPubData 제품군: [KPubData](https://github.com/kpubdata-lab/kpubdata) (공공 API 접근 라이브러리) → [KPubData Builder](https://github.com/kpubdata-lab/kpubdata-builder) (실행·웨어하우스) → **KPubData Studio** (작업공간)
 
 > **이름** — 실행 엔진의 제품명은 **KPubData Builder**, 저장소·패키지는 `kpubdata-builder` 입니다.
 > 이 문서의 명령어와 환경변수(`VITE_BUILDER_API_URL` 등)도 같은 이름을 씁니다
-> ([BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md)).
+> ([BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md)).
 
 KPubData는 데이터셋을 설계·정규화하는 과정이 종종 복잡하고, YAML 편집 실수, 시각적 피드백 부재, 비개발자 접근 어려움 등의 진입장벽이 있습니다. Studio는 이러한 장벽을 제거하고, 코딩 경험이 없는 사용자도 공공데이터 처리 흐름을 직관적으로 구성하고 관리할 수 있도록 돕습니다.
 
 ## 이 프로젝트가 존재하지 않는 경우
 
-- 빌드 설정 파일을 CLI나 Python 코드로 직접 작성하려는 경우 → [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) 사용
-- 한국 공공데이터를 프로그래밍으로 접근만 하려는 경우 → [kpubdata](https://github.com/yeongseon/kpubdata) 사용
+- 빌드 설정 파일을 CLI나 Python 코드로 직접 작성하려는 경우 → [kpubdata-builder](https://github.com/kpubdata-lab/kpubdata-builder) 사용
+- 한국 공공데이터를 프로그래밍으로 접근만 하려는 경우 → [kpubdata](https://github.com/kpubdata-lab/kpubdata) 사용
 
 ## 설치 및 개발 시작
 
@@ -31,7 +31,7 @@ KPubData는 데이터셋을 설계·정규화하는 과정이 종종 복잡하�
 ### 빠른 시작 (데모 모드)
 
 ```bash
-git clone https://github.com/yeongseon/kpubdata-studio.git
+git clone https://github.com/kpubdata-lab/kpubdata-studio.git
 cd kpubdata-studio
 npm install
 npm run dev
@@ -127,8 +127,8 @@ npm run preview    # 빌드 결과 프리뷰
 
 | 패키지 | 역할 |
 |---|---|
-| [kpubdata](https://github.com/yeongseon/kpubdata) | 접근 + 파싱 + 정규화 SDK |
-| [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | 데이터셋 조립 + 파이프라인 |
+| [kpubdata](https://github.com/kpubdata-lab/kpubdata) | 접근 + 파싱 + 정규화 SDK |
+| [kpubdata-builder](https://github.com/kpubdata-lab/kpubdata-builder) | 데이터셋 조립 + 파이프라인 |
 | **kpubdata-studio** | **시각적 인터페이스** |
 
 ---

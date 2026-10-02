@@ -10,7 +10,7 @@
 #     -e BUILDER_API_URL=https://api.example.org \
 #     -e OIDC_ISSUER=https://sso.example.org/realms/kpubdata \
 #     -e OIDC_CLIENT_ID=kpubdata-studio \
-#     ghcr.io/yeongseon/kpubdata-studio:<version>
+#     ghcr.io/kpubdata-lab/kpubdata-studio:<version>
 #
 # Builder must list this origin in KPUBDATA_BUILDER_ALLOWED_ORIGINS — the browser
 # calls it directly.

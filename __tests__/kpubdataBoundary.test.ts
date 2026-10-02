@@ -75,7 +75,7 @@ describe("kpubdata boundary gate (#511)", () => {
     });
 
     it.each([
-      "https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md",
+      "https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md",
       "../kpubdata-builder",
       "import kpubdata_builder",
       "kpubdata-brand-assets/svg/favicon.svg",

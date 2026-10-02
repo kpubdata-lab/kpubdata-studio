@@ -64,7 +64,7 @@ jobs:
       # Builder and Studio release once a month, in the week holding the month's last
       # Thursday (KST); outside it only a critical patch that names its issue.
       - name: Release window
-        uses: yeongseon/kpubdata/.github/actions/release-window@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-window@main
         with:
           policy: monthly
           critical_patch: ${{ inputs.critical_patch }}
@@ -78,7 +78,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag=$(gh release view --repo yeongseon/kpubdata-builder --json tagName -q .tagName)
+          tag=$(gh release view --repo kpubdata-lab/kpubdata-builder --json tagName -q .tagName)
           if [ -z "${tag}" ]; then
             echo "::error::kpubdata-builder has no release to follow. Release it first (Wednesday)."
             exit 1
@@ -98,14 +98,14 @@ jobs:
           fi
 
       - name: Write the version
-        uses: yeongseon/kpubdata/.github/actions/set-version@main
+        uses: kpubdata-lab/kpubdata/.github/actions/set-version@main
         with:
           version: ${{ steps.upstream.outputs.version }}
 
       # Studio's version follows Builder's, but its CHANGELOG is its own. A release that
       # changed nothing here still needs a line saying so under `[Unreleased]`.
       - name: Date the CHANGELOG section
-        uses: yeongseon/kpubdata/.github/actions/release-notes@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-notes@main
         with:
           command: promote
           version: ${{ steps.upstream.outputs.version }}
@@ -190,7 +190,7 @@ jobs:
       # critical_issue. Re-running this job does not help — it replays the same event,
       # so a Critical-Patch line added to the body after the merge is not seen.
       - name: Release window
-        uses: yeongseon/kpubdata/.github/actions/release-window@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-window@main
         with:
           policy: monthly
           critical_patch: ${{ steps.critical.outputs.patch }}
@@ -242,7 +242,7 @@ jobs:
       # is still nothing to clean up.
       - name: Release notes from the CHANGELOG
         id: notes
-        uses: yeongseon/kpubdata/.github/actions/release-notes@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-notes@main
         with:
           command: extract
           version: ${{ steps.tag.outputs.tag }}
@@ -255,7 +255,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          api=$(gh api repos/yeongseon/kpubdata-builder/contents/contract/builder-api.yaml \
+          api=$(gh api repos/kpubdata-lab/kpubdata-builder/contents/contract/builder-api.yaml \
                   --jq '.content' | base64 -d \
                 | sed -n 's/^  version: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' | head -1)
           echo "api=${api:-unknown}" >> "$GITHUB_OUTPUT"

@@ -13,7 +13,7 @@
 | :--- | :--- | :--- | :--- |
 | 로컬 개발 | `http://localhost:5173` | ✅ 등록 | ✅ 등록 |
 | 실배포 | `https://<studio-host>` | ✅ 등록 | ✅ 등록 |
-| Pages 데모 | `https://yeongseon.github.io` | ❌ (mock 모드, Builder 호출 안 함) | ❌ |
+| Pages 데모 | `https://kpubdata-lab.github.io` | ❌ (mock 모드, Builder 호출 안 함) | ❌ |
 
 > Google 로그인은 Keycloak identity broker가 처리하므로, Google Cloud Console에 등록하는 redirect URI는 Studio 오리진이 아니라 **Keycloak의 broker endpoint**다 (`https://<keycloak-host>/realms/<realm>/broker/google/endpoint`).
 

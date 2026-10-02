@@ -4,9 +4,9 @@
 > 개정). 정확히 **무엇을** 쓰는지 — 색 값 · token · 크기 · 금지 사항 — 만 정한다.
 >
 > - **왜** 이렇게 하는지는 [디자인 컨셉](DESIGN_CONCEPT.md) 이 설명한다. 이 문서는 이유를 반복하지 않는다.
-> - **어떤 파일을 어디에** 쓰는지는 [브랜드 자산 README](https://github.com/yeongseon/kpubdata-studio/blob/main/assets/logo/kpubdata-brand-assets/README.md) 가 정한다.
-> - 이름과 용어는 kpubdata 의 [BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md) ·
->   [TERMINOLOGY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/TERMINOLOGY.md) 가 정한다.
+> - **어떤 파일을 어디에** 쓰는지는 [브랜드 자산 README](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/assets/logo/kpubdata-brand-assets/README.md) 가 정한다.
+> - 이름과 용어는 kpubdata 의 [BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md) ·
+>   [TERMINOLOGY.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/TERMINOLOGY.md) 가 정한다.
 
 > **Light theme is the canonical KPubData visual identity. Dark mode is an alternative user theme, not the brand itself.**
 

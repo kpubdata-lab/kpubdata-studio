@@ -2,8 +2,8 @@
 
 이 문서는 Brand v2(#628) 문서 세 층 중 **자산 사용법** 층이다 — 어떤 파일을 어디에 쓰는가만 다룬다.
 
-- 왜 이렇게 디자인했는가: [`docs/brand/DESIGN_CONCEPT.md`](https://github.com/yeongseon/kpubdata-studio/blob/main/docs/brand/DESIGN_CONCEPT.md)
-- 정확히 무엇을 쓰는가(HEX, token, 크기, 금지 사항): [`docs/brand/VISUAL_IDENTITY.md`](https://github.com/yeongseon/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md)
+- 왜 이렇게 디자인했는가: [`docs/brand/DESIGN_CONCEPT.md`](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/docs/brand/DESIGN_CONCEPT.md)
+- 정확히 무엇을 쓰는가(HEX, token, 크기, 금지 사항): [`docs/brand/VISUAL_IDENTITY.md`](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md)
 
 심볼은 minimal geometric K다. 64×64 단위 grid 위에 손으로 정한 정수 좌표의 평면 다각형이며, grid와 좌표는
 각 SVG 머리의 주석에 적혀 있다. 워드마크는 Pretendard 아웃라인(패스)이고 폰트 파일은 포함하지 않는다.
@@ -11,7 +11,7 @@
 `viewBox`만 지정하고 width/height는 고정하지 않는다.
 
 ## 색상 (Brand v2)
-HEX의 정본은 [`VISUAL_IDENTITY.md`](https://github.com/yeongseon/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md)다. 이 자산들이 쓰는 값은 다음뿐이다.
+HEX의 정본은 [`VISUAL_IDENTITY.md`](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md)다. 이 자산들이 쓰는 값은 다음뿐이다.
 
 | 이름 | HEX | 자산에서의 용도 |
 | :-- | :-- | :-- |
@@ -83,4 +83,4 @@ PNG와 `favicon.ico`는 파생 파일이다: `node scripts/render-brand-png.mjs`
 - Brand v2 geometry가 승인된 뒤에는 **승인된 geometry를 임의로(ad hoc) 바꾸지 않는다.** 바꿀 때는 이슈로
   결정하고 이 디렉터리의 SVG·PNG를 함께 다시 만든다.
 - 금지 사항(gradient, glow, shadow, 3D, 회전, 심볼 안 추가 문자, 파비콘의 텍스트 등)의 정본은
-  [`VISUAL_IDENTITY.md`](https://github.com/yeongseon/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md)다.
+  [`VISUAL_IDENTITY.md`](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/docs/brand/VISUAL_IDENTITY.md)다.
