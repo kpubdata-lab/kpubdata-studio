@@ -1659,6 +1659,17 @@ export const savedAnalysisSchema = z.object({
     executed_at: z.string(),
   }),
   created_at: z.string(),
+  /**
+   * Which SQL the analysis was saved in (builder#875, contract 1.75.0). Optional: an
+   * older Builder does not send them. Studio reads only `migration_required` and does
+   * not show the dialect or engine names (the engine is Builder's business, #565).
+   */
+  sql_dialect: z.string().optional(),
+  engine: z.string().optional(),
+  engine_version: z.string().nullable().optional(),
+  query_contract_version: z.string().nullable().optional(),
+  /** Saved in an earlier SQL; Builder refuses to re-run it (409 `analysis_migration_required`). */
+  migration_required: z.boolean().optional(),
 });
 
 export const analysisListResponseSchema = z.object({ analyses: z.array(savedAnalysisSchema) });

@@ -27,6 +27,7 @@ import { coverageCounts, coverageOf } from "./snapshotCoverage";
 import { TableExplorer } from "./TableExplorer";
 import { referencedTableNames, sqlIdentifier } from "./tableReferences";
 import { queryWarehouse, saveAnalysis, type Pinned, type WarehouseOutcome } from "./warehouse";
+import { MigrationNotice } from "./MigrationNotice";
 
 const DEFAULT_SQL = "SELECT *\nFROM dataset\nLIMIT 100";
 const CURRENT = "current";
@@ -105,6 +106,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   const [snapshots, setSnapshots] = useState<WarehouseSnapshot[] | null>(null);
   const [sql, setSql] = useState(DEFAULT_SQL);
   const [name, setName] = useState("");
+  const [legacy, setLegacy] = useState(false);
   const [busy, setBusy] = useState<"run" | "save" | null>(null);
   const [outcome, setOutcome] = useState<WarehouseOutcome | null>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -144,6 +146,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
         if (found) {
           setSql(found.sql);
           setName(found.name);
+          setLegacy(found.migration_required === true);
         }
       })
       .catch(() => undefined);
@@ -181,7 +184,10 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
   async function save() {
     if (blocked || !sql.trim() || !name.trim()) return;
     setBusy("save");
-    setOutcome(await saveAnalysis(name.trim(), table, snapshot, sql));
+    const saved = await saveAnalysis(name.trim(), table, snapshot, sql);
+    setOutcome(saved);
+    // Saved as a new analysis in today's SQL: the old one's notice no longer applies.
+    if (saved.status === "success") setLegacy(false);
     setBusy(null);
   }
 
@@ -233,6 +239,7 @@ export function WarehouseWorkspace({ tables }: { tables: WarehouseTable[] }) {
 
         <div className="flex min-w-0 flex-col gap-3">
           <BindingBar currentId={currentId} snapshot={snapshot} table={table} />
+          {legacy ? <MigrationNotice where="workspace" /> : null}
           <label className="sr-only" htmlFor="sql-editor">
             {t("sql.editor")}
           </label>

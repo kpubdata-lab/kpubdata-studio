@@ -2752,7 +2752,10 @@
     "namePlaceholder": "e.g. Monthly deals by district",
     "save": "Run and save",
     "saved": "Saved \"{{name}}\" with the snapshot it read.",
-    "openList": "Saved Analyses"
+    "openList": "Saved Analyses",
+    "migrationTitle": "Review before running again",
+    "migrationBody": "Builder SQL changed after this analysis was saved, so it is not run again as it is. Open it in SQL Workspace, check the SQL, and save it as a new analysis.",
+    "migrationWorkspace": "This analysis was saved before Builder SQL changed. Check the SQL below and save it as a new analysis; the saved one is kept as it is."
   },
   "dataTable": {
     "truncated": "Truncated — cut at the limit. Unless the query ordered it, this is not the \"top N\"",
