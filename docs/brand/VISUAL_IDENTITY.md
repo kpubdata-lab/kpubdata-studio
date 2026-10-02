@@ -29,8 +29,8 @@ KPubData · Builder · Studio · Watch 는 **같은 심볼 하나**를 쓴다. �
 | 규칙 | 내용 |
 |---|---|
 | 형태 | 한눈에 K 로 읽힌다. 단순한 직선 기하, 고정된 획 굵기 |
-| 크기 | **16px 에서 K 실루엣이 읽혀야 한다.** 획이 서로 붙거나(collapse) 사라지면 안 된다 |
-| 일관성 | favicon · 앱 아이콘 · 사이드바 · 락업이 **같은 geometry** 를 쓴다. 작은 크기용으로 형태를 바꾸지 않는다 |
+| 크기 | **16px 에서 K 실루엣이 읽혀야 한다.** 획이 서로 붙거나(collapse) 사라지면 안 된다. 64 unit grid 에서 획은 8 unit(16px 에서 2px) 이상, 세로 획과 사선 사이 틈은 4 unit(1px) 이상 — `brandLockupGate` 가 SVG 와 `favicon-16/32.png` 로 검사한다 |
+| 일관성 | favicon · 앱 아이콘 · 사이드바 · 락업이 **같은 geometry** 를 쓴다. 작은 크기용으로 형태를 바꾸지 않는다 (`brandLockupGate` 가 모든 심볼 SVG 의 실루엣을 favicon 과 비교한다) |
 | 제작 | 컨셉 이미지를 trace 하지 않는다. deterministic vector geometry 로 다시 그린다 |
 | Minimum size | 심볼 16px. 가로 락업은 높이 20px — 그보다 작으면 심볼만 쓴다 |
 | Clear space | 심볼 높이의 ½ 을 네 방향에 비운다 |
@@ -313,8 +313,9 @@ Brand v2 는 #425 를 폐기하지 않는다. 화면을 만드는 원칙은 남�
 | 심볼 · 자산 | `assets/logo/kpubdata-brand-assets/` SVG · PNG · social preview · 자산 README | 반영 (#633) |
 | 토큰 | `docs/prototype/warehouse/tokens.css` · `src/globals.css` (light · dark) | 반영 — 대비 값은 #631 결정, v1 이름(`accent*`) 제거 #667 |
 | 화면 | prototype 다섯 화면 · `Layout` 사이드바 · 로그인/가입 · docs 테마 · favicon (`favicon.svg`) · README (`<picture>` light/dark) | 반영 |
-| 검증 | `brandLockupGate` · `visualTokensGate` (브랜드 ↔ 상태) · `brandV2Gate` (prototype ↔ 앱 drift, legacy 색 · v1 토큰 이름, gradient, 팔레트, 대비) | 반영 |
-| 검증 | 앱 screenshot baseline (#532) | 대기 — baseline 은 #563 에 있다 (CI 컨테이너 #585 대기). Brand v2 light 를 기준으로 다시 만든다 |
+| 검증 | `brandLockupGate` (suffix 위계, docs 사본, 16px 생존 · 같은 K) · `visualTokensGate` (브랜드 ↔ 상태) · `brandV2Gate` (prototype ↔ 앱 drift, legacy 색 · v1 토큰 이름, gradient, 팔레트, 대비) | 반영 |
+| 검증 | 앱 screenshot baseline (#532) — Home · Tables · Table Detail · SQL · Catalog, desktop 1440px 와 390px, light | 반영 (#563, `e2e/visual.spec.ts`). CI 컨테이너 이미지에서 만든다 |
+| 검증 | 사람의 시각 리뷰 (#628 §25) | 대기 — 소유자 |
 
 그 사이 코드와 이 문서가 다르면, **이 문서가 목표이고 코드는 아직 옮겨지지 않은 것**이다.
 새 화면이나 수정은 Indigo · dark sidebar 를 새로 늘리지 않는다.
