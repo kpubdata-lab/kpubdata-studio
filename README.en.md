@@ -12,14 +12,14 @@ It is the web interface of the KPubData product family.
 
 > **Names** — the execution engine is **KPubData Builder**; its repository and package are
 > `kpubdata-builder`. Commands and environment variables here (`VITE_BUILDER_API_URL` and so
-> on) use the same name ([BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md)).
+> on) use the same name ([BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md)).
 
 The process of designing and normalizing datasets is often complex, with barriers including YAML editing errors, lack of visual feedback, and difficulty for non-developers. Studio removes these barriers, enabling anyone to intuitively configure and manage public data workflows without coding experience.
 
 ## When this project is NOT needed
 
-- You want to write build configuration files directly via CLI or Python code → Use [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder)
-- You only need to access Korean public data programmatically → Use [kpubdata](https://github.com/yeongseon/kpubdata)
+- You want to write build configuration files directly via CLI or Python code → Use [kpubdata-builder](https://github.com/kpubdata-lab/kpubdata-builder)
+- You only need to access Korean public data programmatically → Use [kpubdata](https://github.com/kpubdata-lab/kpubdata)
 
 ## Installation and Getting Started
 
@@ -30,7 +30,7 @@ The process of designing and normalizing datasets is often complex, with barrier
 ### Quick Start (Demo Mode)
 
 ```bash
-git clone https://github.com/yeongseon/kpubdata-studio.git
+git clone https://github.com/kpubdata-lab/kpubdata-studio.git
 cd kpubdata-studio
 npm install
 npm run dev
@@ -127,8 +127,8 @@ For more details, see the [docs/](./docs/) directory. For Keycloak authenticatio
 
 | Package | Role |
 |---|---|
-| [kpubdata](https://github.com/yeongseon/kpubdata) | Access + parsing + normalization SDK |
-| [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | Dataset assembly + pipeline |
+| [kpubdata](https://github.com/kpubdata-lab/kpubdata) | Access + parsing + normalization SDK |
+| [kpubdata-builder](https://github.com/kpubdata-lab/kpubdata-builder) | Dataset assembly + pipeline |
 | **kpubdata-studio** | **Visual interface** |
 
 ---

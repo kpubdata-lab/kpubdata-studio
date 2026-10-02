@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-**Do not open a public issue.** Use [Private Vulnerability Reporting](https://github.com/yeongseon/kpubdata-studio/security/advisories/new) — it is enabled on this repository.
+**Do not open a public issue.** Use [Private Vulnerability Reporting](https://github.com/kpubdata-lab/kpubdata-studio/security/advisories/new) — it is enabled on this repository.
 
 Please include, as far as you can:
 
@@ -38,7 +38,7 @@ anything that makes published data violate its provider's terms.
 
 Only the latest release receives fixes. Studio and KPubData Builder ship as one
 application under one version
-([kpubdata ADR 0004](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0004-versioning-and-release.md)),
+([kpubdata ADR 0004](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/adrs/0004-versioning-and-release.md)),
 so report the release you looked at — the tag, such as `v0.4.0` — and, if you know
 it, the version Builder reported in `GET /version`. For code on `main` that has not
 been released yet, give the commit SHA.

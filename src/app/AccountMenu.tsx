@@ -22,7 +22,7 @@ import {
 } from "@/shared/i18n";
 
 /** Studio's user documentation (mkdocs `site_url`). */
-export const HELP_URL = "https://yeongseon.github.io/kpubdata-studio/docs/";
+export const HELP_URL = "https://kpubdata-lab.github.io/kpubdata-studio/docs/";
 
 const THEMES: ThemeMode[] = ["system", "light", "dark"];
 

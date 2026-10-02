@@ -146,7 +146,7 @@ describe("account menu (#523)", () => {
     fireEvent.click(screen.getByRole("button", { name: "user@example.com 계정 메뉴" }));
     const menu = screen.getByRole("dialog", { name: "계정" });
     expect(within(menu).getByText("user@example.com")).toBeInTheDocument();
-    expect(within(menu).getByRole("link", { name: "도움말 (문서)" })).toHaveAttribute("href", "https://yeongseon.github.io/kpubdata-studio/docs/");
+    expect(within(menu).getByRole("link", { name: "도움말 (문서)" })).toHaveAttribute("href", "https://kpubdata-lab.github.io/kpubdata-studio/docs/");
 
     fireEvent.click(within(menu).getByRole("button", { name: "로그아웃" }));
     expect(useAuthStore.getState().email).toBeNull();
