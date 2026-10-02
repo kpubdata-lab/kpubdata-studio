@@ -29,6 +29,9 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
  * The 390px shots are the desktop-chromium project at a 390px viewport: they check layout
  * at phone width, not touch input or a phone's device pixel ratio.
  *
+ * Light is the primary baseline (#628 §24): every screen at both widths. The dark theme
+ * has one desktop shot per screen (`*-desktop-dark.png`).
+ *
  * To update after an intended change, on any OS with Docker:
  *
  *   npm run test:e2e:update-visual
@@ -116,28 +119,49 @@ test.beforeEach(async ({ page }, testInfo) => {
   await page.clock.setFixedTime(new Date("2026-08-15T03:00:00Z"));
 });
 
+/** One baseline: a screen at a viewport, light unless `dark`. */
+async function matchesBaseline(page: Page, screen: Screen, viewport: (typeof VIEWPORTS)[number], shot: string): Promise<void> {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+
+  await page.goto(screen.path);
+  await screen.ready(page);
+  await page.evaluate(() => document.fonts.ready);
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow, `${screen.path} scrolls sideways at ${viewport.width}px`).toBeLessThanOrEqual(0);
+
+  await expect(page).toHaveScreenshot(shot, {
+    fullPage: true,
+    animations: "disabled",
+    caret: "hide",
+    maxDiffPixels: MAX_DIFF_PIXELS,
+    threshold: COLOR_THRESHOLD,
+  });
+  await expectNoPageErrors(errors);
+}
+
 for (const viewport of VIEWPORTS) {
   for (const screen of SCREENS) {
     test(`${screen.name} @ ${viewport.name}: matches its baseline and has no page-level horizontal scroll`, async ({ page }) => {
-      const errors: string[] = [];
-      collectPageErrors(page, errors);
-      await page.setViewportSize({ width: viewport.width, height: viewport.height });
-
-      await page.goto(screen.path);
-      await screen.ready(page);
-      await page.evaluate(() => document.fonts.ready);
-
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow, `${screen.path} scrolls sideways at ${viewport.width}px`).toBeLessThanOrEqual(0);
-
-      await expect(page).toHaveScreenshot(`${screen.name}-${viewport.name}.png`, {
-        fullPage: true,
-        animations: "disabled",
-        caret: "hide",
-        maxDiffPixels: MAX_DIFF_PIXELS,
-        threshold: COLOR_THRESHOLD,
-      });
-      await expectNoPageErrors(errors);
+      await matchesBaseline(page, screen, viewport, `${screen.name}-${viewport.name}.png`);
     });
   }
 }
+
+/**
+ * Dark is the alternative theme, not the brand (#628 §10, §24): light stays the primary
+ * baseline above, and dark gets one desktop shot per screen so it keeps working and keeps
+ * the light theme's hierarchy. The OS preference drives it — the app's default theme is
+ * `system` — so this also covers the `prefers-color-scheme: dark` token block.
+ */
+test.describe("dark theme", () => {
+  test.use({ colorScheme: "dark" });
+
+  for (const screen of SCREENS) {
+    test(`${screen.name} @ desktop dark: matches its baseline and has no page-level horizontal scroll`, async ({ page }) => {
+      await matchesBaseline(page, screen, VIEWPORTS[0], `${screen.name}-desktop-dark.png`);
+    });
+  }
+});
