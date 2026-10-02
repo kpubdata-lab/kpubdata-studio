@@ -2752,7 +2752,10 @@
     "namePlaceholder": "예: 구별 월간 거래량",
     "save": "실행하고 저장",
     "saved": "\"{{name}}\" 을 읽은 스냅샷과 함께 저장했습니다.",
-    "openList": "저장된 분석"
+    "openList": "저장된 분석",
+    "migrationTitle": "다시 실행하기 전에 확인이 필요합니다",
+    "migrationBody": "이 분석을 저장한 뒤 Builder SQL 이 바뀌어서 그대로 다시 실행하지 않습니다. SQL Workspace 에서 열어 SQL 을 확인한 뒤 새 분석으로 저장하세요.",
+    "migrationWorkspace": "이 분석은 Builder SQL 이 바뀌기 전에 저장되었습니다. 아래 SQL 을 확인한 뒤 새 분석으로 저장하세요. 기존 분석은 그대로 남습니다."
   },
   "dataTable": {
     "truncated": "잘림 — 한도에서 잘린 결과입니다. 정렬하지 않았다면 \"상위 N\" 이 아닙니다",

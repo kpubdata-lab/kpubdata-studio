@@ -4,6 +4,11 @@
  * Each analysis stores a concrete snapshot id (builder#783), so "Run again" reads the
  * same input even after the table was refreshed; the result says which snapshot. A
  * deployment without a warehouse has nowhere to keep them, and says so.
+ *
+ * An analysis saved before Builder's SQL changed (`migration_required`, builder#875) is
+ * not run again: Builder refuses it with 409 `analysis_migration_required`. Its card says
+ * so instead of offering "Run again", and points to opening it, checking the SQL and
+ * saving it as a new analysis (#565).
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { formatDateTime } from "@/features/datasets/model";
 import { QueryError, ResultTable } from "@/features/sql/ResultTable";
 import { pinnedLabel } from "@/features/sql/WarehouseWorkspace";
+import { MIGRATION_REQUIRED, MigrationNotice } from "@/features/sql/MigrationNotice";
 import { detectWarehouse, rerunAnalysis, type WarehouseOutcome } from "@/features/sql/warehouse";
 import { type SavedAnalysis } from "@/shared/lib/builderApi";
 import { warehouseApi } from "@/features/sql/warehouseApi";
@@ -103,7 +109,12 @@ export function AnalysesPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button loading={outcome === "running"} onClick={() => void rerun(analysis)} size="sm">
+                    <Button
+                      disabled={analysis.migration_required === true}
+                      loading={outcome === "running"}
+                      onClick={() => void rerun(analysis)}
+                      size="sm"
+                    >
                       {t("analyses.rerun")}
                     </Button>
                     <LinkButton size="sm" to={openHref} variant="secondary">
@@ -114,8 +125,14 @@ export function AnalysesPage() {
                     </Button>
                   </div>
                 </div>
+                {analysis.migration_required === true ? <MigrationNotice /> : null}
                 <pre className="overflow-x-auto rounded-lg border border-border bg-muted/40 p-3 font-mono text-xs">{analysis.sql}</pre>
-                {outcome && outcome !== "running" && outcome.status === "error" ? <QueryError code={outcome.code} message={outcome.message} /> : null}
+                {outcome && outcome !== "running" && outcome.status === "error" && outcome.code === MIGRATION_REQUIRED ? (
+                  <MigrationNotice />
+                ) : null}
+                {outcome && outcome !== "running" && outcome.status === "error" && outcome.code !== MIGRATION_REQUIRED ? (
+                  <QueryError code={outcome.code} message={outcome.message} />
+                ) : null}
                 {outcome && outcome !== "running" && outcome.status === "success" ? (
                   <ResultTable result={outcome.result} target={pinnedLabel(outcome.pinned.table, outcome.pinned.snapshotId, outcome.pinned.revision)} />
                 ) : null}
