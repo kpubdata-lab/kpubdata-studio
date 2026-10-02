@@ -226,10 +226,19 @@ jobs:
   #
   # Depending on the matrix instead of naming its entries means a new Node version
   # is covered the moment it is added, and a removed one takes nothing with it.
+  docker-csp:
+    name: Docker CSP smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and verify the image's Content-Security-Policy
+        run: bash scripts/docker-csp-smoke.sh
+
   gate:
     name: CI gate
     runs-on: ubuntu-latest
-    needs: [quality, e2e, coverage, contract-drift, release-freeze]
+    needs: [quality, e2e, coverage, contract-drift, release-freeze, docker-csp]
     # `always()` so a failed job still reaches this step. Without it the gate is
     # skipped when something upstream fails, and a skipped required check is the same
     # absence this job exists to remove.
