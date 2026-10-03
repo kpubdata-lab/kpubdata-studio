@@ -5,7 +5,7 @@
  * stronger than the family name. Each lockup's `Studio` path is now the neutral tone for
  * its surface and drawn smaller than `KPubData`. This fails if it goes back.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
@@ -224,19 +224,19 @@ describe("the symbol is viable at 16px and the same K everywhere (#628)", () => 
     expect(armsLeft - stemRight).toBeGreaterThanOrEqual(UNIT_PX_AT_16);
   });
 
-  it.each([
-    "symbol_light",
-    "symbol_dark",
-    "sidebar_light",
-    "sidebar_dark",
-    "symbol_mono_blue",
-    "symbol_mono_ink",
-    "symbol_mono_white",
-    "horizontal_light",
-    "horizontal_dark",
-    "vertical_light",
-    "vertical_dark",
-  ])("%s draws the favicon's K", (name) => {
+  // Swept from the directory, not listed by hand (#715): a symbol SVG added later is held to
+  // the favicon's K without anyone remembering to name it here.
+  const others = readdirSync(SVG)
+    .filter((file) => file.endsWith(".svg") && file !== "favicon.svg")
+    .map((file) => file.slice(0, -".svg".length))
+    .sort();
+
+  it("the sweep finds the symbol, sidebar, monochrome and lockup SVGs", () => {
+    expect(others).toEqual(expect.arrayContaining(["symbol_light", "sidebar_dark", "symbol_mono_ink", "horizontal_light"]));
+    expect(others).not.toContain("favicon");
+  });
+
+  it.each(others)("%s draws the favicon's K", (name) => {
     expect(silhouette(symbolPaths(read(name)))).toBe(silhouette(favicon));
   });
 
