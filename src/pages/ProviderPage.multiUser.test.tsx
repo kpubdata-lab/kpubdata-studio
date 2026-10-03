@@ -202,7 +202,8 @@ describe("ProviderPage multi-user credential mode (#652)", () => {
     await waitFor(() => expect(seen.puts).toBe(1));
     expect(bodies).toEqual([{ credential: KEY }]);
 
-    fireEvent.click(screen.getByRole("button", { name: "테스트 — datago" }));
+    // The test button comes back once the save response is handled, not when the PUT is seen.
+    fireEvent.click(await screen.findByRole("button", { name: "테스트 — datago" }));
     await waitFor(() => expect(seen.testHeaders).toEqual([null]));
   });
 });

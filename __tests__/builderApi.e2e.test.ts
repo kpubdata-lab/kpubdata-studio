@@ -183,7 +183,7 @@ sources:
     } finally {
       vi.unstubAllGlobals();
       // MSW 서버 재시작
-      mswServer.listen({ onUnhandledRequest: "warn" });
+      mswServer.listen({ onUnhandledFrame: "warn" });
     }
   });
 

@@ -131,7 +131,8 @@ describe("SpecRevisionPanel", () => {
 
     expect(await screen.findByText("저장했습니다 — 새 리비전 4")).toBeInTheDocument();
     expect(server.puts[0]).toMatchObject({ expected_revision: 3, note: "region fix" });
-    // The next save builds on what this one made.
+    // The next save builds on what this one made. The button is busy until the history reloads.
+    await waitFor(() => expect(screen.getByRole("button", { name: "리비전으로 저장" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "리비전으로 저장" }));
     await waitFor(() => expect(server.puts).toHaveLength(2));
     expect(server.puts[1].expected_revision).toBe(4);

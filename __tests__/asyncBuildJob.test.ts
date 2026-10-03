@@ -405,7 +405,7 @@ describe("Add Data source dispatch: sync /build vs async /builds (#X01, ADR 0014
   it("routes a file spec to sync POST /build and never calls POST /builds", async () => {
     const submitSpy = vi.spyOn(builderApi, "submitBuild");
     const buildSpy = vi.spyOn(builderApi, "build");
-    const run = await executeBuild(fileSpec("f"));
+    const run = await runPolled(() => executeBuild(fileSpec("f")));
     expect(buildSpy).toHaveBeenCalledTimes(1);
     expect(submitSpy).not.toHaveBeenCalled();
     expect(run.status).toBe("succeeded");
@@ -416,7 +416,7 @@ describe("Add Data source dispatch: sync /build vs async /builds (#X01, ADR 0014
   it("routes a mixed spec (file + public_api) to sync POST /build — BuildSpec-wide, not first-source-only", async () => {
     const submitSpy = vi.spyOn(builderApi, "submitBuild");
     const buildSpy = vi.spyOn(builderApi, "build");
-    await executeBuild(mixedSpec("m"));
+    await runPolled(() => executeBuild(mixedSpec("m")));
     expect(buildSpy).toHaveBeenCalledTimes(1);
     expect(submitSpy).not.toHaveBeenCalled();
     submitSpy.mockRestore();
