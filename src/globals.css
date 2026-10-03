@@ -44,6 +44,13 @@
   /* Fresh Mint — secondary brand/data accent. Never success. */
   --brand-secondary: #14b8a6;
   --brand-secondary-strong: #0d9488;
+  /* Assistant (#676) — marks AI-written content: provenance badges and Assistant panels.
+     Data Cyan's hue, never a new one; the text value is the darker cyan that reaches
+     4.5:1 on the tint, the card and the page. Never interaction, never a status. */
+  --assistant-accent: var(--data-accent-strong);
+  --assistant-accent-text: #0e7490;
+  --assistant-accent-subtle: #e9f7fa;
+  --assistant-accent-border: #c9e3e8;
 
   /* Neutral surfaces. */
   --background: #f7f8f3;
@@ -95,6 +102,10 @@
   --data-accent-strong: #06b6d4;
   --brand-secondary: #14b8a6;
   --brand-secondary-strong: #14b8a6;
+  --assistant-accent: var(--data-accent-strong);
+  --assistant-accent-text: #06b6d4;
+  --assistant-accent-subtle: #1a2a2e;
+  --assistant-accent-border: #2a4046;
   --background: #15171a;
   --foreground: #e8eaed;
   --card: #1c1f23;
@@ -142,6 +153,10 @@
     --data-accent-strong: #06b6d4;
     --brand-secondary: #14b8a6;
     --brand-secondary-strong: #14b8a6;
+    --assistant-accent: var(--data-accent-strong);
+    --assistant-accent-text: #06b6d4;
+    --assistant-accent-subtle: #1a2a2e;
+    --assistant-accent-border: #2a4046;
     --background: #15171a;
     --foreground: #e8eaed;
     --card: #1c1f23;
@@ -186,6 +201,10 @@
   --color-data-accent-strong: var(--data-accent-strong);
   --color-brand-secondary: var(--brand-secondary);
   --color-brand-secondary-strong: var(--brand-secondary-strong);
+  --color-assistant-accent: var(--assistant-accent);
+  --color-assistant-accent-text: var(--assistant-accent-text);
+  --color-assistant-accent-subtle: var(--assistant-accent-subtle);
+  --color-assistant-accent-border: var(--assistant-accent-border);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
