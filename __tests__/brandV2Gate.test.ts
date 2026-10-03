@@ -68,10 +68,11 @@ const LEGACY_DARK_SIDEBAR = "#0f172a";
 
 /**
  * The approved saturated colours (VISUAL_IDENTITY §3.1, §3.4, §3.5): Brand Blue, Data
- * Cyan, Fresh Mint, their chart-strong variants, Slate (secondary text) and the lighter
- * blue used for blue text on dark surfaces. Neutrals are below the chroma threshold.
+ * Cyan, Fresh Mint, their chart-strong variants, Slate (secondary text), the lighter
+ * blue used for blue text on dark surfaces and the darker cyan used for Assistant text
+ * on light ones (#676). Neutrals are below the chroma threshold.
  */
-const APPROVED = ["#2563eb", "#06b6d4", "#14b8a6", "#0891b2", "#0d9488", "#5e6e84", "#60a5fa"];
+const APPROVED = ["#2563eb", "#06b6d4", "#14b8a6", "#0891b2", "#0d9488", "#5e6e84", "#60a5fa", "#0e7490"];
 /** max(r,g,b) − min(r,g,b) above which a colour counts as saturated (a hue, not a neutral). */
 const CHROMA = 32;
 
@@ -121,6 +122,18 @@ export function v1TokenNames(file: string, source: string): string[] {
   return source.split("\n").flatMap((line, index) =>
     [...line.matchAll(V1_PROPERTY), ...line.matchAll(V1_CLASS)].map((m) => `${file}:${index + 1} ${m[0]}`),
   );
+}
+
+/**
+ * Tailwind's raw indigo, violet and purple palette as a colour utility (#676):
+ * `bg-indigo-100`, `dark:text-violet-300`, `border-indigo-900/60`. Assistant and
+ * provenance marks use the `assistant-accent` tokens; these hues are not in Brand v2.
+ */
+const RAW_ASSISTANT_HUE = /(?<![\w-])(?:[\w-]+:)*[a-z]+(?:-[a-z]+)*-(?:indigo|violet|purple)-\d{2,3}(?:\/\d+)?(?![\w-])/g;
+
+/** `file:line class` for each raw indigo/violet/purple Tailwind class in the source. */
+export function rawAssistantHues(file: string, source: string): string[] {
+  return source.split("\n").flatMap((line, index) => [...line.matchAll(RAW_ASSISTANT_HUE)].map((m) => `${file}:${index + 1} ${m[0]}`));
 }
 
 /** Every file under `src/`, tracked or new (not ignored). */
@@ -320,6 +333,61 @@ export function failingPairs(tokens: Tokens, pairs: Pair[], min: number): string
     return ratio >= min ? [] : [`${fg} on ${bg}: ${ratio.toFixed(2)}`];
   });
 }
+
+/** Assistant text on every surface it is drawn on. */
+const ASSISTANT_TEXT: Array<[string, string]> = [
+  ["--assistant-accent-text", "--assistant-accent-subtle"],
+  ["--assistant-accent-text", "--card"],
+  ["--assistant-accent-text", "--background"],
+  ["--assistant-accent-text", "--muted"],
+  ["--foreground", "--assistant-accent-subtle"],
+];
+const ASSISTANT = ["--assistant-accent", "--assistant-accent-text", "--assistant-accent-subtle", "--assistant-accent-border"];
+
+describe("Assistant marks use their own tokens (#676)", () => {
+  it.each([
+    ["light", THEMES.app.light],
+    ["dark", THEMES.app.dark],
+  ] as const)("%s: every token is defined, and no value is an interaction or status colour", (_, tokens) => {
+    const reserved = [...tokens].filter(([name]) => /^--(status-|brand-primary|brand-text|brand-subtle)/.test(name));
+    for (const name of ASSISTANT) {
+      expect(tokens.get(name), name).toMatch(/^#[0-9a-f]{6}$/);
+      expect(reserved.filter(([, value]) => value === tokens.get(name)).map(([other]) => `${name} = ${other}`)).toEqual([]);
+    }
+  });
+
+  it.each([
+    ["light", THEMES.app.light],
+    ["dark", THEMES.app.dark],
+  ] as const)("%s: Assistant text reaches 4.5:1", (_, tokens) => {
+    expect(failingPairs(tokens, ASSISTANT_TEXT, 4.5)).toEqual([]);
+  });
+
+  it("no source under src/ uses a raw indigo, violet or purple class", () => {
+    const files = srcFiles();
+    expect(files.length).toBeGreaterThan(0);
+    expect(files.flatMap((file) => rawAssistantHues(file, read(file)))).toEqual([]);
+  });
+
+  it("would catch the old classes and plain Data Cyan as light text, but not the tokens", () => {
+    const tsx = [
+      '<span className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-violet-300" />',
+      '<Card className="border-indigo-200 hover:border-purple-900/60" />',
+      '<p className="bg-assistant-accent-subtle text-assistant-accent-text border-assistant-accent-border" />',
+    ].join("\n");
+    expect(rawAssistantHues("f.tsx", tsx)).toEqual([
+      "f.tsx:1 bg-indigo-100",
+      "f.tsx:1 text-indigo-800",
+      "f.tsx:1 dark:bg-indigo-950/50",
+      "f.tsx:1 dark:text-violet-300",
+      "f.tsx:2 border-indigo-200",
+      "f.tsx:2 hover:border-purple-900/60",
+    ]);
+    const cyan = new Map(THEMES.app.light);
+    cyan.set("--assistant-accent-text", "#06b6d4");
+    expect(failingPairs(cyan, [["--assistant-accent-text", "--card"]], 4.5)).toEqual(["--assistant-accent-text on --card: 2.43"]);
+  });
+});
 
 describe("contrast gate (#631, WCAG 2.1 AA)", () => {
   it.each([

@@ -84,7 +84,7 @@ shadow · 3D · 회전 · K 안의 추가 문자 · favicon 의 텍스트. 승�
 | Border | `--border` | `#E5E7E2` |
 
 이 여덟 값이 Brand v2 의 전부다. 다른 브랜드 계열 색(Indigo · Violet · Emerald 등)을 더하지 않는다.
-대비 때문에 파생한 값(§3.5 의 Slate `#5E6E84`, 차트용 진한 변형, dark 의 파랑 텍스트)만 예외이고,
+대비 때문에 파생한 값(§3.5 의 Slate `#5E6E84`, 차트용 진한 변형, dark 의 파랑 텍스트, §3.7 의 Assistant 텍스트)만 예외이고,
 `__tests__/brandV2Gate.test.ts` 가 토큰 소스의 채도 있는 색을 이 목록으로 제한한다.
 
 **색별 사용 규칙**
@@ -205,6 +205,31 @@ Dark 값 (`src/globals.css` 와 prototype `tokens.css` 가 같은 값을 쓴다)
 - `--ring` (focus ring) 과 `--sidebar-*` (사이드바 영역) 는 shadcn/Tailwind 의 역할 이름이고 값은 Brand v2 라 그대로 둔다.
 - Tailwind 의 `accent-*` 유틸리티(체크박스 `accent-color`)는 색 이름이 아니라 속성이다 — `accent-brand-primary` 처럼 역할 토큰과 함께 쓴다.
 - `__tests__/brandV2Gate.test.ts` 가 예전 이름이 `src/` 의 CSS 변수나 Tailwind 클래스로 돌아오면 실패한다.
+
+### 3.7 Assistant 토큰 (#676)
+
+AI 가 쓴 내용임을 표시하는 곳 — Report 의 provenance 배지(`ASSISTANT_INTERPRETATION`), Assistant 블록·미리보기 패널,
+Ask KPubData 의 mock 표시 — 은 `--assistant-accent` 계열 토큰만 쓴다. Tailwind 원시 `indigo-*` · `violet-*` · `purple-*`
+클래스는 쓰지 않는다 (Brand v1 Indigo 처럼 보인다).
+
+| 토큰 · Tailwind | light | dark | 용도 |
+|---|---|---|---|
+| `--assistant-accent` · `*-assistant-accent` | `#0891B2` (`--data-accent-strong`) | `#06B6D4` (`--data-accent-strong`) | 아이콘 · 마크 (비텍스트 3:1) |
+| `--assistant-accent-text` · `text-assistant-accent-text` | `#0E7490` | `#06B6D4` | 배지 · 안내 문구의 글자 |
+| `--assistant-accent-subtle` · `bg-assistant-accent-subtle` | `#E9F7FA` | `#1A2A2E` | 배지 · 안내 문구의 바탕 tint |
+| `--assistant-accent-border` · `border-assistant-accent-border` | `#C9E3E8` | `#2A4046` | Assistant 카드의 테두리 |
+
+- **새 hue 를 만들지 않았다.** 색상은 Data Cyan 계열이다. provenance 배지에서 Builder 근거는 success(녹색), 사용자 작성은
+  warning(amber) 토큰을 쓰므로 Fresh Mint 는 녹색과, Brand Blue 는 상호작용과 헷갈린다 — 남는 팔레트 색이 Cyan 이다.
+- light 의 글자색 `#0E7490` 만 새 값이다. Cyan `#06B6D4`(White 2.43) · Cyan-600 `#0891B2`(3.68) 은 텍스트 4.5:1 에 못 미친다.
+  `#0E7490` 은 White 5.36 · Canvas 5.02 · muted 4.80 · tint `#E9F7FA` 4.89. dark 의 `#06B6D4` 는 card 6.81 · page 7.40 · tint 6.11.
+- tint 와 border 는 채도가 낮아(`brandV2Gate` 의 chroma 기준 아래) 중립 표면처럼 읽힌다 — 넓은 면을 Cyan 으로 채우지 않는다 (§3.1).
+- **상호작용도 상태도 아니다.** 링크 · 버튼 · 선택 표시에 쓰지 않고, 값이 `--brand-primary` · `--brand-text` · `--brand-subtle` ·
+  `--status-*` 와 같아서는 안 된다. 의미는 항상 글자(“Assistant”, “AI 해석”)가 함께 전달한다.
+- `__tests__/brandV2Gate.test.ts` 가 네 토큰의 정의, 위 대비, 그리고 `src/` 에 원시 indigo/violet/purple 클래스가 돌아오는지를 검사한다.
+- **Watch 반영**: KPubData Watch 의 drift gate(`scripts/check_brand_tokens.py`, kpubdata-watch#72)는 Studio 의 light · dark ·
+  OS-dark 블록에 있는 **모든** custom property 가 Watch 의 `brand-v2.css` 에 같은 값으로 있어야 통과한다. 그래서 Watch 는
+  Assistant 화면이 없어도 이 네 토큰을 그대로 복사해 둔다 (사용하지는 않는다).
 
 ## 4. 타이포그래피
 

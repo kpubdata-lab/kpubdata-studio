@@ -14,7 +14,7 @@ const META: Record<BlockProvenance, { labelKey: string; className: string }> = {
   },
   ASSISTANT_INTERPRETATION: {
     labelKey: "assistant",
-    className: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300",
+    className: "bg-assistant-accent-subtle text-assistant-accent-text",
   },
   USER_CONTENT: {
     labelKey: "user",

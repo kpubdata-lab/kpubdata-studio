@@ -275,7 +275,7 @@ function ActionCard({
     <div className={isNavigation ? "flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs" : "rounded-lg border border-border bg-card px-3 py-2 text-xs"}>
       <div className={isNavigation ? "min-w-0" : undefined}>
       {action.type === "PATCH_BUILDSPEC" ? (
-        <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-800 dark:bg-violet-950/50 dark:text-violet-300">
+        <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-assistant-accent-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-assistant-accent-text">
           {t("assistant.action.buildSpec")}
         </span>
       ) : null}
@@ -473,7 +473,7 @@ function TurnCard({ turn, session, collapsed = false, onToggle }: { turn: Assist
 
       <div className="max-w-[92%] rounded-lg border border-border bg-card px-3 py-2 text-xs">
         {turn.isDemo ? (
-          <p className="mb-1.5 mr-1.5 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/50 dark:text-violet-300">
+          <p className="mb-1.5 mr-1.5 inline-block rounded-full bg-assistant-accent-subtle px-2 py-0.5 text-[10px] font-semibold text-assistant-accent-text">
             {t("assistant.turn.demoBadge")}
           </p>
         ) : null}

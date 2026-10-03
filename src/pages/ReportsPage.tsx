@@ -214,7 +214,7 @@ export function ReportsPage() {
       </Card>
 
       {pendingNoteCount > 0 ? (
-        <Card className="border-indigo-200 bg-indigo-50 text-sm dark:border-indigo-900/60 dark:bg-indigo-950/30">
+        <Card className="border-assistant-accent-border bg-assistant-accent-subtle text-sm">
           {t("reports.page.pendingNotes", { count: pendingNoteCount })}
         </Card>
       ) : null}

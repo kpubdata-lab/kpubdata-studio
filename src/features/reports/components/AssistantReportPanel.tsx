@@ -174,7 +174,7 @@ export function AssistantReportPanel({
       {showByok ? <ApiKeySetup /> : null}
 
       {isDemoMode ? (
-        <p className="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-800 dark:bg-violet-950/30 dark:text-violet-300">
+        <p className="rounded-lg bg-assistant-accent-subtle px-3 py-2 text-xs text-assistant-accent-text">
           {mockDisclaimer()}
         </p>
       ) : null}
@@ -214,18 +214,18 @@ export function AssistantReportPanel({
       </div>
 
       {activeTurn ? (
-        <Card className="space-y-2 border-indigo-200 dark:border-indigo-900/60" data-testid="assistant-report-preview">
+        <Card className="space-y-2 border-assistant-accent-border" data-testid="assistant-report-preview">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold">{t("reports.block.assistantTitle")}</h3>
             {activeTurn.isDemo ? (
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-800 dark:bg-violet-950/50 dark:text-violet-300">
+              <span className="rounded-full bg-assistant-accent-subtle px-2 py-0.5 text-[10px] font-semibold text-assistant-accent-text">
                 DEMO
               </span>
             ) : null}
           </div>
 
           {activeTurn.isDemo ? (
-            <p className="text-xs font-medium text-violet-800 dark:text-violet-300">{mockDisclaimer()}</p>
+            <p className="text-xs font-medium text-assistant-accent-text">{mockDisclaimer()}</p>
           ) : null}
 
           {activeTurn.status === "loading" ? (

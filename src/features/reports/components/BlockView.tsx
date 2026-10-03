@@ -102,7 +102,7 @@ export function BlockView({
 
   if (block.provenance === "ASSISTANT_INTERPRETATION") {
     return (
-      <Card className="space-y-2 border-indigo-200 dark:border-indigo-900/60" data-testid="block-assistant">
+      <Card className="space-y-2 border-assistant-accent-border" data-testid="block-assistant">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">{t("reports.block.assistantTitle")}</h3>
           <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export function BlockView({
           {block.sourceContext.stage ? ` · ${t("reports.block.stage", { stage: block.sourceContext.stage })}` : ""}
         </p>
         {!block.isSameContext ? (
-          <p className="rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300">
+          <p className="rounded-lg bg-assistant-accent-subtle px-3 py-2 text-xs text-assistant-accent-text">
             {t("reports.block.otherContext")}
           </p>
         ) : null}
