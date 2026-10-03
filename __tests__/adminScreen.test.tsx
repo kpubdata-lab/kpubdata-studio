@@ -101,7 +101,8 @@ describe("administration page (#409)", () => {
     mswServer.use(http.get(`${API_BASE}/admin/runs`, () => HttpResponse.json(RUNS)));
     renderPage();
     expect(await screen.findByText("run-42")).toBeInTheDocument();
-    expect(screen.getByText("ENFORCE_OWNERSHIP").nextSibling).toHaveTextContent("켜짐");
+    // The policy comes from its own request; it need not have landed when the runs have.
+    expect((await screen.findByText("ENFORCE_OWNERSHIP")).nextSibling).toHaveTextContent("켜짐");
     expect(screen.getByText("9f8e7d6c5b4a")).toBeInTheDocument();
     expect(screen.queryByText("9f8e7d6c5b4a39281706")).not.toBeInTheDocument();
   });
