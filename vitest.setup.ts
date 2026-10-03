@@ -32,7 +32,7 @@ void i18n.changeLanguage("ko");
 export const mswServer = setupServer(...handlers);
 
 // 모든 테스트 시작 전 MSW 서버 시작
-mswServer.listen({ onUnhandledRequest: "warn" });
+mswServer.listen({ onUnhandledFrame: "warn" });
 
 // 각 테스트 후 핸들러 리셋 (이전 테스트의 요청/응답 기록 제거)
 afterEach(() => {
