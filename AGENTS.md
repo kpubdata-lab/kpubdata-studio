@@ -1,6 +1,6 @@
 # AGENTS.md — kpubdata-studio
 
-> **[POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md)
+> **[POLICY.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md)
 > is the single canonical source for project-management and review policy.** Epic,
 > Issue, Priority, Review Level, Verification and Release rules come from there.
 > This file keeps only what is specific to this repository — build commands and
@@ -12,7 +12,7 @@ Implement KPubData Studio: a workspace for collecting Korean public data, keepin
 it as snapshots that carry their source and terms of use, and analysing it with
 tables and SQL. It is the visual workspace for KPubData Builder (`kpubdata-builder`)
 — the product definition is shared word for word with `README.en.md`, `PRD.md` and
-kpubdata's [BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md),
+kpubdata's [BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md),
 and `__tests__/productDefinition.test.ts` checks the copies.
 
 ## Ground rules
@@ -21,7 +21,7 @@ and `__tests__/productDefinition.test.ts` checks the copies.
 - **Studio consumes KPubData Builder's HTTP/OpenAPI contract and nothing else.**
   It does not depend on KPubData's constants, private modules, fixtures, catalogue
   files or repository layout — Independence Rules 8 and 9 of
-  [kpubdata ADR 0007](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0007-independence-rules.md).
+  [kpubdata ADR 0007](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/adrs/0007-independence-rules.md).
   Linking to KPubData's governance and brand documents is fine. The gate is
   `__tests__/kpubdataBoundary.test.ts`; when Studio needs something Builder does not
   expose, ask Builder for it rather than reading KPubData directly.
@@ -32,7 +32,7 @@ and `__tests__/productDefinition.test.ts` checks the copies.
 
 ## Language policy
 
-> [kpubdata ADR 0003](https://github.com/yeongseon/kpubdata/blob/main/docs/adrs/0003-language-policy.md)
+> [kpubdata ADR 0003](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/adrs/0003-language-policy.md)
 > is canonical. The evidence (measurements across ten Korean OSS projects) and the
 > rejected alternatives are there.
 
@@ -43,7 +43,7 @@ release notes.
 |---|---|
 | Code identifiers, comments, JSDoc | English |
 | Commit titles (= PR titles) | English — a squash merge makes the PR title the commit title |
-| Commit bodies (= PR bodies) | Korean or English — the squash body is the PR body ([POLICY 2.1.3](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md), kpubdata#743) |
+| Commit bodies (= PR bodies) | Korean or English — the squash body is the PR body ([POLICY 2.1.3](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md), kpubdata#743) |
 | **PR titles** | English (Conventional Commits) — a squash merge turns it into a commit |
 | CHANGELOG and release notes | English |
 | **Governance documents** (`AGENTS.md`, `CONTRIBUTING.md`) | English |
@@ -70,7 +70,7 @@ Operating rules:
 
 ## 확인은 기계가 한다
 
-[POLICY 18.2](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md) and [VERIFICATION.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/VERIFICATION.md) are canonical. Three rules
+[POLICY 18.2](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md) and [VERIFICATION.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/VERIFICATION.md) are canonical. Three rules
 carry most of the weight:
 
 - **A sentence with a number in it comes from a command.** Run it in the same breath
@@ -95,7 +95,7 @@ was skipped, say it was skipped.
 
 ## Labels — what an agent applies
 
-**[POLICY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/governance/POLICY.md) sections 2.1, 2.1.1 and 2.1.2 are the label reference.**
+**[POLICY.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md) sections 2.1, 2.1.1 and 2.1.2 are the label reference.**
 This file deliberately does not copy the table: a second copy goes stale, and the
 first draft of this section already dropped the Severity axis that POLICY defines.
 
@@ -145,7 +145,7 @@ What an agent does not do:
 
 ## Releases
 
-Cadence and order live in [kpubdata's compatibility.md §5.1](https://github.com/yeongseon/kpubdata/blob/main/docs/compatibility.md#release-cadence);
+Cadence and order live in [kpubdata's compatibility.md §5.1](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/compatibility.md#release-cadence);
 who may do what lives in POLICY 14. This section keeps only what applies to an
 agent.
 
@@ -319,11 +319,11 @@ stateDiagram-v2
 | [API_CONTRACT.md](./API_CONTRACT.md) | API contract |
 | [PRD.md](./PRD.md) | Product requirements |
 | [ROADMAP.md](./ROADMAP.md) | Roadmap |
-| [SECURITY.md](https://github.com/yeongseon/kpubdata-studio/blob/main/SECURITY.md) | Security policy and known limits |
+| [SECURITY.md](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/SECURITY.md) | Security policy and known limits |
 
 ### KPubData product family
 
 | Repository | Document | What it covers |
 | :--- | :--- | :--- |
-| [kpubdata](https://github.com/yeongseon/kpubdata) | [AGENTS.md](https://github.com/yeongseon/kpubdata/blob/main/AGENTS.md) | KPubData agent guide |
-| [kpubdata-builder](https://github.com/yeongseon/kpubdata-builder) | [AGENTS.md](https://github.com/yeongseon/kpubdata-builder/blob/main/AGENTS.md) | Builder agent guide |
+| [kpubdata](https://github.com/kpubdata-lab/kpubdata) | [AGENTS.md](https://github.com/kpubdata-lab/kpubdata/blob/main/AGENTS.md) | KPubData agent guide |
+| [kpubdata-builder](https://github.com/kpubdata-lab/kpubdata-builder) | [AGENTS.md](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/AGENTS.md) | Builder agent guide |

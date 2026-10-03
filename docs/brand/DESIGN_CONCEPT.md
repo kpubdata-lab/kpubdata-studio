@@ -3,9 +3,9 @@
 > 이 문서는 KPubData 의 시각 정체성이 **왜** 이렇게 생겼는지를 적는다 (Brand v2, #628).
 > 정확히 **무엇을** 쓰는지 — HEX · token · 크기 · 금지 목록 — 는
 > [시각 정체성](VISUAL_IDENTITY.md) 이, **어떤 파일을 어디에** 쓰는지는
-> [브랜드 자산 README](https://github.com/yeongseon/kpubdata-studio/blob/main/assets/logo/kpubdata-brand-assets/README.md) 가 정한다.
-> 이름과 용어는 kpubdata 의 [BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md) ·
-> [TERMINOLOGY.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/TERMINOLOGY.md) 가 정한다.
+> [브랜드 자산 README](https://github.com/kpubdata-lab/kpubdata-studio/blob/main/assets/logo/kpubdata-brand-assets/README.md) 가 정한다.
+> 이름과 용어는 kpubdata 의 [BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md) ·
+> [TERMINOLOGY.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/TERMINOLOGY.md) 가 정한다.
 
 ## 문서 계층
 
@@ -130,7 +130,7 @@ Bright · Clear · Data-first · Professional · Human
 | Professional | 진지한 작업 도구다 | 정보 밀도, monospace 식별자, 마케팅 헤딩 없음 |
 | Human | 차갑지 않다 | 약간 따뜻한 canvas, Mint 의 작은 디테일, 차분한 문구 |
 
-목소리(정확 · 간결 · 차분 · 증거 기반)는 [BRAND.md](https://github.com/yeongseon/kpubdata/blob/main/docs/brand/BRAND.md) 가 정한다. 시각 성격은 그 목소리와 같은 방향이어야 한다.
+목소리(정확 · 간결 · 차분 · 증거 기반)는 [BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md) 가 정한다. 시각 성격은 그 목소리와 같은 방향이어야 한다.
 
 ## 6. 브랜드 구조 — K 하나
 

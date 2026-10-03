@@ -2,7 +2,7 @@
 
 ## 1. 역할
 
-Studio는 Builder HTTP API의 소비자입니다. HTTP wire 계약의 단일 소스는 Builder 저장소의 [contract/builder-api.yaml](https://github.com/yeongseon/kpubdata-builder/blob/main/contract/builder-api.yaml)입니다.
+Studio는 Builder HTTP API의 소비자입니다. HTTP wire 계약의 단일 소스는 Builder 저장소의 [contract/builder-api.yaml](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/contract/builder-api.yaml)입니다.
 
 이 문서는 endpoint와 response body를 다시 적지 않고, Studio가 Builder 계약을 소비할 때 필요한 클라이언트 경계만 기록합니다.
 
@@ -126,8 +126,8 @@ Studio는 HTTP 실패와 정상 응답 안의 source-level 실패를 구분합�
 
 | 문서 | 역할 |
 | :--- | :--- |
-| [Builder OpenAPI SSOT](https://github.com/yeongseon/kpubdata-builder/blob/main/contract/builder-api.yaml) | HTTP wire 계약 단일 소스 |
-| [Builder API_CONTRACT.md](https://github.com/yeongseon/kpubdata-builder/blob/main/API_CONTRACT.md) | Builder 운영/정책 가이드 |
+| [Builder OpenAPI SSOT](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/contract/builder-api.yaml) | HTTP wire 계약 단일 소스 |
+| [Builder API_CONTRACT.md](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/API_CONTRACT.md) | Builder 운영/정책 가이드 |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Studio 구조 |
 | [STATE_MODEL.md](./STATE_MODEL.md) | UI 상태 흐름 |
 | [USER_FLOWS.md](./USER_FLOWS.md) | 사용자 흐름 |

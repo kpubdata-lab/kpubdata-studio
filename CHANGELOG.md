@@ -73,6 +73,7 @@
 
 ### Changed
 
+- The repository moved from `yeongseon/kpubdata-studio` to `kpubdata-lab/kpubdata-studio`. Links, the documentation site (`https://kpubdata-lab.github.io/kpubdata-studio/`) and the shared GitHub Actions references now use the new owner.
 - The `PR title` check reads the title live from the API and applies kpubdata's pull-request rules — English, no issue reference or URL, at most 100 characters (kpubdata#741, #742); GitHub's `Revert "…"` title is exempt. A required check that failed no longer stays blocking once a later run of it passes: `required-check-refresh.yml` re-runs the stale failed runs of `R3 review` and `Titles` on the same head (kpubdata#759). AGENTS.md and the PR template say commit titles (= PR titles) are English and commit bodies (= PR bodies) are free, since the squash body is now the PR body (kpubdata#743).
 - **CI's E2E job runs in the Playwright image** (#585). The job now runs in `mcr.microsoft.com/playwright:v1.63.0-noble` on `ubuntu-24.04` instead of downloading Chromium with `playwright install --with-deps` onto `ubuntu-latest`, so browsers, system libraries and fonts come from the image for the installed `@playwright/test` — the same image the screenshot baselines (#532) are rendered in — and do not change when the runner image does. `__tests__/e2eContainerImage.test.ts` fails when the image tag and the installed `@playwright/test`, `playwright` and `playwright-core` versions differ, so a Playwright bump has to move the tag with it.
 
