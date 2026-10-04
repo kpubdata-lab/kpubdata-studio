@@ -50,7 +50,11 @@ Builder API와 실제 연동하려면:
 # 방법 2: 수동 설정
 # 터미널 1: Builder
 cd ../kpubdata-builder
-KPUBDATA_BUILDER_DEV_MODE=true uv run kpubdata-builder serve
+# CORS 는 default-deny 이므로 Studio 오리진을 허용하고, Tables·SQL 화면을 위해 warehouse 를 준다
+mkdir -p build
+KPUBDATA_BUILDER_DEV_MODE=true \
+  KPUBDATA_BUILDER_ALLOWED_ORIGINS=http://localhost:5173 \
+  uv run kpubdata-builder serve --output-dir build --warehouse build/warehouse
 
 # 터미널 2: Studio
 cd ../kpubdata-studio
