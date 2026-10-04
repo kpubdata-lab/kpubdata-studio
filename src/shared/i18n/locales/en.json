@@ -1345,7 +1345,24 @@
     "tokenHint": "Kept only in this page's memory and sent only with the readiness check and the publish request. It is never saved, and it is gone when you leave or reload the page.",
     "tokenStale": "Check again to confirm readiness with this token.",
     "tokenCheck": "Check with this token",
-    "tokenForget": "Forget token"
+    "tokenForget": "Forget token",
+    "recovery": {
+      "title": "When the publish outcome is unknown",
+      "explain": "KPubData Builder does not know whether the publish went through, so it blocks sending it again. You can check the remote, or delete the record and publish again. Neither runs on its own.",
+      "reconcile": "Check the remote",
+      "reset": "Reset the record",
+      "resetConfirm": "Confirm reset",
+      "resetWarning": "This deletes the record without checking the remote. Anything already published stays published, and publishing again sends it to the same destination once more.",
+      "tokenNeeded": "Checking the remote needs the publish token. Enter it again above, then press the button.",
+      "publishAgain": "Prepare to publish again",
+      "outcome": {
+        "confirmed": "The destination exists remotely. The publish went through — there is no need to send it again.",
+        "absent": "Nothing was found remotely. The publish did not go through, and its record was removed. You can publish again.",
+        "reset": "The record was deleted. Anything already published stays published. You can publish again.",
+        "nothing_to_settle": "There is no publish record to settle. You can publish again.",
+        "unavailable": "The remote state could not be read. Nothing changed — try again in a moment."
+      }
+    }
   },
   "settings": {
     "page": {
@@ -2065,7 +2082,7 @@
       "notReady": "This run is not ready to publish.",
       "unknown": "The publish request could not be completed.",
       "inProgress": "The same publish job is already running.",
-      "retryBlocked": "The previous publish result could not be confirmed, so automatic retry is blocked. Ask an Builder operator to check the state.",
+      "retryBlocked": "The previous publish result could not be confirmed, so automatic retry is blocked. Check the remote or reset the record below.",
       "visibilityConflict": "The same run and destination were already published with different visibility.",
       "externalFailed": "The external publishing service could not finish the job. The outcome may be unclear, so it is not retried automatically.",
       "readinessChanged": "KPubData Builder's re-check just before publishing found the readiness had changed. Check readiness again.",
@@ -2074,7 +2091,8 @@
       "network": "No response from KPubData Builder. The remote publish result was not confirmed.",
       "mismatch": "The run or target in KPubData Builder's response does not match the request.",
       "invalidCredential": "The publish token is not in a form KPubData Builder accepts. Check the token and enter it again.",
-      "redistributionBlocked": "KPubData Builder refused the publish because of the sources' redistribution terms. See the reasons below."
+      "redistributionBlocked": "KPubData Builder refused the publish because of the sources' redistribution terms. See the reasons below.",
+      "recoveryFailed": "The publish record could not be settled."
     },
     "issues": {
       "run_not_terminal": {

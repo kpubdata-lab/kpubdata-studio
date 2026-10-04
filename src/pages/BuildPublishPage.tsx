@@ -18,6 +18,7 @@ import {
 } from "@/features/publish/api";
 import { describePublishIssue, redistributionLabel, type PublishIssueLink } from "@/features/publish/issues";
 import { DataCardPreview } from "@/features/publish/DataCardPreview";
+import { PublishRecoveryPanel } from "@/features/publish/PublishRecoveryPanel";
 import { usePublishJob } from "@/features/publish/usePublishJob";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -300,6 +301,17 @@ export function BuildPublishPage() {
     void publish.start(runId, request, credential);
   }
 
+  /** The token on the page, for one recovery request; dropped at once, as a publish drops it (#615). */
+  function takePublishCredential() {
+    const credential = publishCredentialFor(publishTokenRef.current);
+    if (credential) {
+      publishTokenRef.current = "";
+      setPublishToken("");
+      setTokenStale(true);
+    }
+    return credential;
+  }
+
   function updatePrivate(value: boolean) {
     setIsPrivate(value);
     setConfirmation(undefined);
@@ -452,6 +464,15 @@ export function BuildPublishPage() {
           <strong>{t("buildPublish.publishFailed")}</strong>
           <p className="mt-2 text-sm">{publish.failure?.message}</p>
           {publish.failure?.kind === "publish_state_unknown" ? <p className="mt-2 text-xs">{t("buildPublish.noAutoRetry")}</p> : null}
+          {publish.failure?.kind === "publish_state_unknown" && confirmation ? (
+            <PublishRecoveryPanel
+              runId={runId}
+              destination={confirmation.destination}
+              needsCredential={requestCredential}
+              takeCredential={takePublishCredential}
+              onRetryAllowed={publish.reset}
+            />
+          ) : null}
           {publish.failure?.kind === "redistribution_blocked" && publish.failure.redistribution ? <div className="mt-4"><RedistributionSummary verdict={publish.failure.redistribution} /></div> : null}
           {publish.failure?.blockers?.length ? <div className="mt-4"><IssueList title={t("buildPublish.blockers")} issues={publish.failure.blockers} tone="error" runId={runId} /></div> : null}
         </Card>

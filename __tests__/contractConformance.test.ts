@@ -40,6 +40,8 @@ const EXPECTED_OPERATIONS = [
   "getBuildQuality",
   "getPublishReadiness",
   "publishBuild",
+  "reconcilePublish",
+  "resetPublishReceipt",
   "getDatasetQualityHistory",
   "query",
   "getBuildSpecSnapshot",

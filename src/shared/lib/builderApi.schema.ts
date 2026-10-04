@@ -970,6 +970,34 @@ export const publishRequestSchema = z.object({
   options: publishHuggingFaceOptionsSchema.optional(),
 }).strict();
 
+/**
+ * POST /builds/{run_id}/publish/reconcile (builder#551, declared in the contract by
+ * builder#994): what looking at the remote settled. `succeeded` — the destination exists
+ * there, or the receipt already said so (`reconciled: false`). `reset` — nothing was found
+ * and the receipt was deleted, so the publish may be sent again.
+ */
+export const publishReconcileResponseSchema = z.object({
+  run_id: z.string(),
+  state: z.enum(["succeeded", "reset"]),
+  reconciled: z.boolean(),
+  fingerprint: z.string(),
+  retry_allowed: z.boolean().optional(),
+  result: z.record(z.string(), z.json()).optional(),
+});
+export type PublishReconcileResponse = z.infer<typeof publishReconcileResponseSchema>;
+
+/**
+ * DELETE /builds/{run_id}/publish/receipt (builder#551): the caller's receipt was deleted.
+ * Nothing is undone remotely — what was published stays published.
+ */
+export const publishReceiptResetSchema = z.object({
+  run_id: z.string(),
+  state: z.literal("reset"),
+  retry_allowed: z.literal(true),
+  fingerprint: z.string(),
+});
+export type PublishReceiptReset = z.infer<typeof publishReceiptResetSchema>;
+
 export const publishResponseSchema = z.object({
   run_id: z.string(),
   target: publishTargetSchema,
