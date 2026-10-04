@@ -10,7 +10,9 @@
  * ratio, and the range with its status. A column Builder withheld as suspected personal
  * data shows its name, types and sensitivity only — Builder sends no statistic for it, and
  * the screen says why instead of leaving blanks. A range over too few values is withheld
- * by Builder and said so ("too few values"), never shown as empty.
+ * by Builder and said so ("too few values"), never shown as empty. A `trimmed` range
+ * (builder#903) is the min/max after Builder left out the extremes, and says so — it is
+ * never presented as the column's exact minimum and maximum.
  */
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -68,7 +70,7 @@ function NullCell({ column }: { column: ColumnProfile }) {
   );
 }
 
-function RangeCell({ column, minValues }: { column: ColumnProfile; minValues: number }) {
+function RangeCell({ column, minValues, rangeTrim }: { column: ColumnProfile; minValues: number; rangeTrim: number | undefined }) {
   const { t } = useTranslation();
   const range = column.range;
   if (range === null) return <MissingStatus />;
@@ -89,6 +91,11 @@ function RangeCell({ column, minValues }: { column: ColumnProfile; minValues: nu
       <span className="font-mono text-xs">
         {endpoint(range.min)} … {endpoint(range.max)}
       </span>
+      {range.status === "trimmed" ? (
+        <span className="block text-xs text-muted-foreground" data-range-status="trimmed">
+          {rangeTrim === undefined ? t("profile.range.trimmedUnknown") : t("profile.range.trimmed", { count: rangeTrim })}
+        </span>
+      ) : null}
       {range.excluded_count ? <span className="block text-xs text-muted-foreground">{t("profile.range.excluded", { count: range.excluded_count })}</span> : null}
     </span>
   );
@@ -119,7 +126,7 @@ function SensitivityCell({ column }: { column: ColumnProfile }) {
   );
 }
 
-function ProfileRow({ column, minValues }: { column: ColumnProfile; minValues: number }) {
+function ProfileRow({ column, minValues, rangeTrim }: { column: ColumnProfile; minValues: number; rangeTrim: number | undefined }) {
   const { t } = useTranslation();
   const withheld = column.status === "withheld";
   return (
@@ -151,7 +158,7 @@ function ProfileRow({ column, minValues }: { column: ColumnProfile; minValues: n
             <CountCell value={column.infinite_count} />
           </td>
           <td className="px-4 py-2">
-            <RangeCell column={column} minValues={minValues} />
+            <RangeCell column={column} minValues={minValues} rangeTrim={rangeTrim} />
           </td>
         </>
       )}
@@ -312,7 +319,11 @@ export function ProfileTab({
             </dd>
           </div>
         </dl>
-        <p className="text-xs text-muted-foreground">{t("profile.note", { min: profile.min_range_values })}</p>
+        <p className="text-xs text-muted-foreground">
+          {profile.range_trim
+            ? t("profile.noteTrimmed", { min: profile.min_range_values, count: profile.range_trim })
+            : t("profile.note", { min: profile.min_range_values })}
+        </p>
         {withheld > 0 ? <p className="text-xs text-muted-foreground">{t("profile.withheldNote", { count: withheld })}</p> : null}
       </div>
       {profile.columns.length === 0 ? (
@@ -333,7 +344,7 @@ export function ProfileTab({
             </thead>
             <tbody>
               {profile.columns.map((column) => (
-                <ProfileRow column={column} key={column.name} minValues={profile.min_range_values} />
+                <ProfileRow column={column} key={column.name} minValues={profile.min_range_values} rangeTrim={profile.range_trim} />
               ))}
             </tbody>
           </table>

@@ -1386,18 +1386,22 @@ export const warehouseTableDetailResponseSchema = warehouseTableSchema.extend({
 });
 
 /**
- * A column's value range in a snapshot profile (builder#817). `exact` carries min/max over
- * finite, non-null values sent by `wire_encoding`; `withheld_small_group` means fewer than
- * `min_range_values` values exist, `no_values` none, `not_applicable` a column that is
- * neither numeric nor temporal.
+ * A column's value range in a snapshot profile (builder#817). `trimmed` (builder#903,
+ * contract 1.77.0) carries the min/max left after the profile's `range_trim` lowest and
+ * highest values are removed, so one record's extreme is not disclosed; `exact` is the
+ * untrimmed min/max an earlier Builder sent. Both are over finite, non-null values sent by
+ * `wire_encoding`. `withheld_small_group` means fewer than `min_range_values` values
+ * exist, `no_values` none, `not_applicable` a column that is neither numeric nor temporal.
  */
 export const columnRangeSchema = z.object({
-  status: z.enum(["exact", "withheld_small_group", "no_values", "not_applicable"]),
+  status: z.enum(["exact", "trimmed", "withheld_small_group", "no_values", "not_applicable"]),
   min: z.json().optional(),
   max: z.json().optional(),
   wire_encoding: z.enum(["number", "decimal_string", "string"]).optional(),
   value_count: z.number().int().nonnegative().optional(),
   excluded_count: z.number().int().nonnegative().optional(),
+  /** How many values the trimming removed, both ends together (1.77.0). */
+  trimmed_count: z.number().int().nonnegative().optional(),
 });
 
 /**
@@ -1439,6 +1443,8 @@ export const snapshotProfileSchema = z.object({
   accuracy: z.enum(["exact"]),
   /** A range over fewer finite values than this is withheld. */
   min_range_values: z.number().int().min(1),
+  /** Values left out at each end of a range (1.77.0); absent from an earlier Builder. */
+  range_trim: z.number().int().nonnegative().optional(),
   row_count: z.number().int().nonnegative(),
   columns: z.array(columnProfileSchema),
 });

@@ -2982,6 +2982,7 @@
     "method": "Method",
     "sampled": "sample of {{count}} rows",
     "note": "Exact, over every row. NaN and infinite values are counted apart and left out of ranges. A range over fewer than {{min}} values is withheld. “Not detected” is not a guarantee — only value patterns and column names are checked.",
+    "noteTrimmed": "Counts are exact, over every row. A range is the minimum and maximum after the {{count}} lowest and the {{count}} highest values are left out, so that one record's extreme is not disclosed. NaN and infinite values are counted apart and left out of ranges. A range over fewer than {{min}} values is withheld. “Not detected” is not a guarantee — only value patterns and column names are checked.",
     "withheldNote": "Columns suspected of holding personal data ({{count}}) show only their name, types and sensitivity.",
     "noColumns": "This snapshot has no columns.",
     "storage": "stored as {{type}}",
@@ -3004,7 +3005,9 @@
       "smallGroup": "Withheld: too few values",
       "smallGroupCount": "{{count}} values < {{min}}",
       "smallGroupRule": "fewer than {{min}} values",
-      "excluded": "NaN or infinite values left out: {{count}}"
+      "excluded": "NaN or infinite values left out: {{count}}",
+      "trimmed": "Lowest and highest {{count}} values left out",
+      "trimmedUnknown": "Lowest and highest values left out"
     },
     "retry": "Retry",
     "retryAfter": "Retry after {{time}}",
