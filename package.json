@@ -5,6 +5,14 @@
     "node": "^22.13.0 || >=24"
   },
   "private": true,
+  "homepage": "https://github.com/kpubdata-lab/kpubdata-studio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kpubdata-lab/kpubdata-studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kpubdata-lab/kpubdata-studio/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
