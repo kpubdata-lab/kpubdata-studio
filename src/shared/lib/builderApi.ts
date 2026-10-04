@@ -26,18 +26,22 @@ import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
 
 /**
- * **Minimum** Builder API version required by Studio's current integration surface
- * (async build job + cooperative cancel + manifest status/partial + provider credential +
- * monitoring + publish). Not an exact contract pin — per Builder ADR 0013, Studio treats
- * "same major, server >= this minimum" as compatible and allows higher additive
- * minor/patch (1.19~1.21 etc.) as-is.
+ * **Minimum** Builder API contract version Studio's client needs (#725). Not an exact
+ * pin — per Builder ADR 0013, "same major, server >= this minimum" is compatible and a
+ * higher additive minor/patch is accepted as-is.
  *
- * Cancellation (POST /builds/{id}/cancel) and manifest status/partial fields introduced
- * in Builder 1.18.0, and Studio actually uses both, so integration surface minimum is
- * 1.18.0. Unused endpoints added in 1.19~1.21 not reflected in this minimum and not
- * separately implemented in Studio.
+ * It is measured, not remembered: 1.59.0 is the first contract version that declares
+ * every route `builderApi` calls — the newest are the revision routes
+ * (`/revisions/{kind}/{doc_id}`, its `/history` and `/revert`, builder#820). Before it
+ * came `/admin/users` (1.54.0), the snapshot profile (1.46.0) and the warehouse exports
+ * (1.45.0). Studio's response schemas parse every contract-valid response from there up.
+ * Raise it when the client starts calling a route, or requiring a field, that a later
+ * contract introduced.
+ *
+ * Below it some screens cannot work at all, so the app says so on every page
+ * (`VersionMismatchBanner`), and Settings repeats it next to the connection.
  */
-export const MIN_BUILDER_API_VERSION = "1.18.0";
+export const MIN_BUILDER_API_VERSION = "1.59.0";
 
 /** parse into three parts `major.minor.patch`. Return null if format is invalid (fail-closed signal). */
 function parseSemver(version: string): [number, number, number] | null {
