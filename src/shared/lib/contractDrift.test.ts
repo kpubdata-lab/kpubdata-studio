@@ -24,6 +24,8 @@
  *   sign-up ledger's 403, a publish 409, a policy refusal — or is listed in
  *   `ERROR_READERS` as one Studio deliberately shows only as its message (#701).
  *
+ * - every request `builderApi` sends names a method and path the contract declares (#727).
+ *
  * A contract form the sampler does not understand is reported, never passed silently.
  * Known drift waits in `KNOWN_DRIFT` with its issue; an entry that stops failing must
  * be removed (ratchet).
@@ -36,7 +38,7 @@
  */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
@@ -48,7 +50,7 @@ import { classifyQueryError } from "@/features/sql/api";
 import { asInvalidDetails } from "@/features/validation/api";
 import en from "@/shared/i18n/locales/en.json";
 import ko from "@/shared/i18n/locales/ko.json";
-import { httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
+import { builderApi, httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
 import { clearSignupBlock, useSignupStatusStore } from "./signupStatus";
 import { contractIssueCodesOf, issueCodeDrift, missingIssueEntries } from "../../../__tests__/support/publishIssueCoverage";
@@ -1188,3 +1190,108 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
     });
   });
 });
+
+// --- Routes (#727) ---
+//
+// The checks above compare response bodies; nothing asserted that the routes the client
+// calls exist. Each `builderApi` function is called with placeholder arguments against a
+// stubbed `fetch`, the method and path it sends are recorded, and the pair must match a
+// contract operation — a path parameter matches any single segment. It lives in this
+// file because this is the file CI runs with `BUILDER_CONTRACT` set.
+
+const METHODS = ["get", "post", "put", "delete", "patch"] as const;
+
+/** `METHOD /path/{param}` of every contract operation, as a matcher on a concrete path. */
+function contractRoutes(): Array<{ method: string; template: string; pattern: RegExp }> {
+  const doc = parse(readFileSync(contractPath as string, "utf8")) as { paths: Record<string, Record<string, unknown>> };
+  return Object.entries(doc.paths).flatMap(([template, item]) =>
+    METHODS.filter((method) => method in item).map((method) => ({
+      method: method.toUpperCase(),
+      template,
+      pattern: new RegExp(`^${template.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/\{[^}]+\}/g, "[^/]+")}$`),
+    })),
+  );
+}
+
+/** The `METHOD path` a client function sends when called with placeholder arguments. */
+async function requestOf(name: string): Promise<string | null> {
+  let sent: string | null = null;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      sent ??= `${init?.method ?? "GET"} ${new URL(url).pathname}`;
+      // Not retried (4xx), so each function is called once.
+      return { ok: false, status: 418, headers: new Headers(), text: async () => "{}" } as unknown as Response;
+    }),
+  );
+  const call = builderApi[name as keyof typeof builderApi] as (...args: unknown[]) => Promise<unknown>;
+  // Placeholders: a path segment where a string is expected, and an object that answers
+  // any property with a segment for the functions that take a request object. Fewer
+  // arguments are tried first, so a placeholder never lands on a trailing `signal`.
+  const anything = new Proxy({}, { get: (_target, key) => (typeof key === "string" ? "x" : undefined) });
+  const attempts: unknown[][] = [
+    [],
+    ["x"],
+    [anything],
+    ["x", "x"],
+    ["x", anything],
+    ["x", "x", "x"],
+    ["x", "x", anything],
+    ["x", anything, anything],
+  ];
+  for (const args of attempts) {
+    try {
+      await call(...args);
+    } catch {
+      // An ApiError for the stubbed 418, or a function that rejects these arguments.
+    }
+    if (sent !== null) break;
+  }
+  return sent;
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
+
+describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#727)", () => {
+  it("every client function sends a method and path the contract declares", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const routes = contractRoutes();
+    const unsent: string[] = [];
+    const undeclared: string[] = [];
+
+    for (const name of Object.keys(builderApi)) {
+      const request = await requestOf(name);
+      if (request === null) {
+        unsent.push(name);
+        continue;
+      }
+      const [method, path] = request.split(" ");
+      if (!routes.some((route) => route.method === method && route.pattern.test(path))) {
+        undeclared.push(`${name}: ${request}`);
+      }
+    }
+
+    // A function this probe cannot make send a request is not checked — it has to be
+    // listed, so a new one is noticed rather than silently skipped.
+    expect(unsent).toEqual(UNPROBED);
+    expect(undeclared).toEqual([]);
+  });
+
+  it("fails on a route the contract does not declare", () => {
+    const routes = contractRoutes();
+    const declared = (method: string, path: string) =>
+      routes.some((route) => route.method === method && route.pattern.test(path));
+
+    expect(declared("GET", "/builds/run-1/manifest")).toBe(true);
+    expect(declared("DELETE", "/builds/run-1/manifest")).toBe(false);
+    expect(declared("GET", "/no/such/route")).toBe(false);
+    // A parameter matches one segment, not several.
+    expect(declared("GET", "/builds/run-1/extra/manifest")).toBe(false);
+  });
+});
+
+/** Client functions the placeholder call cannot drive to a request, each with its reason. */
+const UNPROBED: string[] = [];
