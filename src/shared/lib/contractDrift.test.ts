@@ -52,6 +52,7 @@ import en from "@/shared/i18n/locales/en.json";
 import ko from "@/shared/i18n/locales/ko.json";
 import { builderApi, httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
+import { forgetAllProviderKeys, holdProviderKey, PROVIDER_KEY_HEADER } from "./providerKeys";
 import { clearSignupBlock, useSignupStatusStore } from "./signupStatus";
 import { contractIssueCodesOf, issueCodeDrift, missingIssueEntries } from "../../../__tests__/support/publishIssueCoverage";
 
@@ -570,8 +571,25 @@ type ErrorReader = {
   check: (status: number, body: unknown) => string[];
 };
 
-/** An example Studio shows only as its message. `code` is the code it carries and Studio ignores. */
-type NotHandled = { notHandled: string; code?: string };
+/**
+ * An example Studio shows only as its message. `code` is the code it carries and Studio
+ * ignores. `since` is the contract version that introduced the example or gave it that
+ * code: Studio's CI reads Builder's main, so an entry for a change Builder has not merged
+ * yet must not fail as stale, and one Builder has merged must not fail as unlisted. Before
+ * `since` the example may be absent, and when present carries no code (#727).
+ */
+type NotHandled = { notHandled: string; code?: string; since?: string };
+
+/** The version of the contract under test; null when no contract is given. */
+const CONTRACT_VERSION: string | null =
+  contractPath && existsSync(contractPath)
+    ? String((parse(readFileSync(contractPath, "utf8")) as { info?: { version?: unknown } }).info?.version ?? "")
+    : null;
+
+/** Whether the contract under test is older than `since`. Without a contract, nothing is. */
+function predates(since: string | undefined, version: string | null = CONTRACT_VERSION): boolean {
+  return since !== undefined && version !== null && version !== "" && compareVersions(version, since) < 0;
+}
 
 const MESSAGE_ONLY = "shown as its `error` message (httpError → formatApiErrorMessage); Studio reads nothing else from it";
 
@@ -647,6 +665,18 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   },
   "Unauthorized 401 MissingOrInvalidApiKey": {
     notHandled: "apiFetch acts on the 401 status (re-authenticates once, #189); the body is only its message",
+    code: "unauthorized",
+    since: "1.79.0",
+  },
+  // Stable codes for failures any operation can answer (builder#1000, #994). Studio shows
+  // each as its message; acting on the codes (wait and retry, a queue-full notice) is not
+  // built yet.
+  "submitBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.79.0" },
+  "AuthThrottled 429 AuthThrottled": { notHandled: MESSAGE_ONLY, code: "auth_throttled", since: "1.80.0" },
+  "ServerOverloaded 503 ServerOverloaded": {
+    notHandled: `${MESSAGE_ONLY}; the response is written before the request is read`,
+    code: "server_overloaded",
+    since: "1.80.0",
   },
   "PiiDeclarationUnavailable 503 PiiDeclarationUnavailable": {
     reader: "artifactDownloadRefusal, profileRefusal and classifyQueryError (#640, #643)",
@@ -682,11 +712,17 @@ function revisionConflictProblems(status: number, body: unknown): string[] {
 }
 
 /** Error examples `ERROR_READERS` does not list, and listed ones the examples no longer have. */
-function errorReaderCoverage(fixtures: ErrorFixture[], readers: Record<string, unknown> = ERROR_READERS) {
+function errorReaderCoverage(
+  fixtures: ErrorFixture[],
+  readers: Record<string, unknown> = ERROR_READERS,
+  version: string | null = CONTRACT_VERSION,
+) {
   const keys = new Set(fixtures.map(errorFixtureKey));
+  // An entry for an example a later contract introduces is not stale against an earlier one.
+  const awaited = (key: string) => predates((readers[key] as { since?: string } | undefined)?.since, version);
   return {
     unlisted: [...keys].filter((key) => !(key in readers)).sort(),
-    stale: Object.keys(readers).filter((key) => !keys.has(key)).sort(),
+    stale: Object.keys(readers).filter((key) => !keys.has(key) && !awaited(key)).sort(),
   };
 }
 
@@ -704,7 +740,9 @@ function errorFixtureProblems(fixture: ErrorFixture): string[] {
     if (typeof error === "string") problems.push(...differs(`${form}: message`, httpError(fixture.status, body).message, error));
     if ("notHandled" in entry) {
       const code = (body as { code?: unknown } | null)?.code;
-      if (code !== entry.code) {
+      // Before the version that gave the example its code, it carries none.
+      const expected = predates(entry.since) ? undefined : entry.code;
+      if (code !== expected) {
         problems.push(`${form}: carries code ${JSON.stringify(code)} that its not-handled entry does not name — read it or list it`);
       }
       continue;
@@ -830,6 +868,16 @@ describe("error fixture checks (#701)", () => {
       fixtures: SAMPLE_ERROR_FIXTURES,
       problem: null,
     });
+  });
+
+  it("does not call an entry stale before the contract version that introduces its example (#727)", () => {
+    const readers = { "later 429 QueueFull": { notHandled: "x", code: "queue_full", since: "9.0.0" } };
+
+    expect(errorReaderCoverage([], readers, "8.9.0").stale).toEqual([]);
+    expect(errorReaderCoverage([], readers, "9.0.0").stale).toEqual(["later 429 QueueFull"]);
+    expect(predates("9.0.0", "8.9.0")).toBe(true);
+    expect(predates("9.0.0", "9.0.0")).toBe(false);
+    expect(predates(undefined, "1.0.0")).toBe(false);
   });
 
   it("reports listed examples the contract no longer has", () => {
@@ -1213,13 +1261,19 @@ function contractRoutes(): Array<{ method: string; template: string; pattern: Re
   );
 }
 
-/** The `METHOD path` a client function sends when called with placeholder arguments. */
-async function requestOf(name: string): Promise<string | null> {
-  let sent: string | null = null;
+type SentRequest = { method: string; path: string; headers: Record<string, string> };
+
+/** What a client function sends when called with placeholder arguments. */
+async function requestOf(name: string): Promise<SentRequest | null> {
+  let sent: SentRequest | null = null;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
-      sent ??= `${init?.method ?? "GET"} ${new URL(url).pathname}`;
+      sent ??= {
+        method: init?.method ?? "GET",
+        path: new URL(url).pathname,
+        headers: { ...((init?.headers as Record<string, string> | undefined) ?? {}) },
+      };
       // Not retried (4xx), so each function is called once.
       return { ok: false, status: 418, headers: new Headers(), text: async () => "{}" } as unknown as Response;
     }),
@@ -1250,6 +1304,9 @@ async function requestOf(name: string): Promise<string | null> {
   return sent;
 }
 
+/** The contract version that declares `X-Provider-Key` as a parameter (builder#994). */
+const PROVIDER_KEY_PARAMETER_SINCE = "1.80.0";
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -1268,9 +1325,8 @@ describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#7
         unsent.push(name);
         continue;
       }
-      const [method, path] = request.split(" ");
-      if (!routes.some((route) => route.method === method && route.pattern.test(path))) {
-        undeclared.push(`${name}: ${request}`);
+      if (!routes.some((route) => route.method === request.method && route.pattern.test(request.path))) {
+        undeclared.push(`${name}: ${request.method} ${request.path}`);
       }
     }
 
@@ -1278,6 +1334,40 @@ describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#7
     // listed, so a new one is noticed rather than silently skipped.
     expect(unsent).toEqual(UNPROBED);
     expect(undeclared).toEqual([]);
+  });
+
+  it(`declares X-Provider-Key on every operation Studio sends it to, from contract ${PROVIDER_KEY_PARAMETER_SINCE} (#727)`, async () => {
+    type Parameter = { $ref?: string; name?: string; in?: string };
+    const doc = parse(readFileSync(contractPath as string, "utf8")) as {
+      info: { version: string };
+      paths: Record<string, Record<string, { operationId?: string; parameters?: Parameter[] }>>;
+      components: { parameters?: Record<string, Parameter> };
+    };
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    expect(holdProviderKey("datago", "placeholder-provider-key")).toBe(true);
+    const routes = contractRoutes();
+    const sending: string[] = [];
+    const undeclared: string[] = [];
+    try {
+      for (const name of Object.keys(builderApi)) {
+        const request = await requestOf(name);
+        if (request === null || !(PROVIDER_KEY_HEADER in request.headers)) continue;
+        sending.push(name);
+        const route = routes.find((candidate) => candidate.method === request.method && candidate.pattern.test(request.path));
+        const declared = (doc.paths[route?.template ?? ""]?.[request.method.toLowerCase()]?.parameters ?? [])
+          .map((parameter) => (parameter.$ref ? doc.components.parameters?.[parameter.$ref.split("/").pop() ?? ""] : parameter))
+          .some((parameter) => parameter?.in === "header" && parameter.name === PROVIDER_KEY_HEADER);
+        if (!declared) undeclared.push(`${name}: ${request.method} ${route?.template ?? request.path}`);
+      }
+    } finally {
+      forgetAllProviderKeys();
+    }
+
+    // The probe must find the calls that carry the key, or the check proves nothing.
+    expect(sending.sort()).toEqual(["build", "getProviderStatus", "preview", "submitBuild", "testProviderConnection"].sort());
+    // An earlier contract mentions the header only in prose; from the version that
+    // declares it, every operation Studio sends it to has to carry the parameter.
+    if (compareVersions(doc.info.version, PROVIDER_KEY_PARAMETER_SINCE) >= 0) expect(undeclared).toEqual([]);
   });
 
   it("fails on a route the contract does not declare", () => {
