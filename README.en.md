@@ -49,7 +49,11 @@ To integrate with the Builder API and use real data:
 # Method 2: Manual setup
 # Terminal 1: Builder
 cd ../kpubdata-builder
-KPUBDATA_BUILDER_DEV_MODE=true uv run kpubdata-builder serve
+# CORS is default-deny, so allow Studio's origin; the Tables and SQL screens need a warehouse
+mkdir -p build
+KPUBDATA_BUILDER_DEV_MODE=true \
+  KPUBDATA_BUILDER_ALLOWED_ORIGINS=http://localhost:5173 \
+  uv run kpubdata-builder serve --output-dir build --warehouse build/warehouse
 
 # Terminal 2: Studio
 cd ../kpubdata-studio
