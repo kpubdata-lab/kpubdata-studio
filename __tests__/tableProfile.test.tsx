@@ -346,6 +346,45 @@ describe("profileRefusal (#647)", () => {
     expect(profileRefusal(new Error("x"))).toBeNull();
   });
 
+  it("shows a trimmed range with the extremes left out, never as the exact minimum and maximum (builder#903)", async () => {
+    const body = profileBody("snap_2");
+    const trimmed = {
+      ...body,
+      profile: {
+        ...body.profile,
+        algorithm_version: 3,
+        min_range_values: 11,
+        range_trim: 5,
+        columns: body.profile.columns.map((column) =>
+          column.name === "pm10"
+            ? { ...column, range: { status: "trimmed", min: 3.5, max: 180.25, wire_encoding: "number", value_count: 971, excluded_count: 4, trimmed_count: 10 } }
+            : column,
+        ),
+      },
+    };
+    expect(snapshotProfileResponseSchema.safeParse(trimmed).success).toBe(true);
+    mswServer.use(http.get(`${API_BASE}/warehouse/tables/air.datago/profile`, () => HttpResponse.json(trimmed)));
+
+    renderDetail("/tables/air?tab=profile");
+    const panel = await screen.findByRole("tabpanel", { name: "프로파일" });
+    const pm10 = (await within(panel).findByText("pm10")).closest("tr")!;
+    const range = within(pm10).getAllByRole("cell")[5];
+    expect(range).toHaveTextContent("3.5 … 180.25");
+    expect(range).toHaveTextContent("위·아래 각 5개 값을 뺀 범위");
+    expect(range.querySelector('[data-range-status="trimmed"]')).not.toBeNull();
+    expect(panel).toHaveTextContent("가장 작은 값 5개와 가장 큰 값 5개를 뺀 뒤의 최소·최대");
+    expect(panel).toHaveTextContent("값이 11개 미만이면 범위는 보류됩니다");
+    expect(panel).not.toHaveTextContent("모든 행에서 정확히 계산한 값입니다");
+  });
+
+  it("keeps an earlier Builder's exact range without a trimming note", async () => {
+    renderDetail("/tables/air?tab=profile");
+    const panel = await screen.findByRole("tabpanel", { name: "프로파일" });
+    await within(panel).findByText("pm10");
+    expect(panel.querySelector('[data-range-status="trimmed"]')).toBeNull();
+    expect(panel).toHaveTextContent("모든 행에서 정확히 계산한 값입니다");
+  });
+
   it("parses the contract's profile response, a withheld column included", () => {
     expect(snapshotProfileResponseSchema.safeParse(profileBody("snap_2")).success).toBe(true);
   });
