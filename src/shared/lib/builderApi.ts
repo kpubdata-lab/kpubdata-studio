@@ -688,6 +688,10 @@ export const builderApi = {
     *
     * `options` per #497 sampling contract (limit 1~1000, default 5, sample_mode first/random,
     * seed) passed as-is. If omitted, returns top 5 rows same as legacy client.
+    *
+    * Not retried (#724): a preview calls the provider with the user's key, so a retry on
+    * a 5xx, a timeout or a dropped connection spent the user's daily quota up to three
+    * times for one click. A failure is shown, and the user decides whether to ask again.
     */
   preview: (
     specYaml: string,
@@ -696,11 +700,18 @@ export const builderApi = {
   ) =>
     apiFetch(
       "/preview",
-      { method: "POST", body: { spec: specYaml, ...options }, signal, headers: providerKeyHeaders() },
+      { method: "POST", body: { spec: specYaml, ...options }, signal, retries: 0, headers: providerKeyHeaders() },
       schemas.previewResponseSchema,
     ),
 
-  /** POST /build — execute build. run_id optional. Non-idempotent; no retry (#117). */
+  /**
+   * POST /build — execute build. run_id optional. Non-idempotent; no retry (#117).
+   *
+   * No client timeout (#723): the call returns when the build ends, and a build of an
+   * uploaded file — which only this synchronous route runs — can take longer than the
+   * default 30 s. Timing out reported a 408 for a build that was still running, and a
+   * second click started the same build again. The caller's `signal` still cancels it.
+   */
   build: (specYaml: string, runId?: string, signal?: AbortSignal) =>
     apiFetch(
       "/build",
@@ -709,6 +720,7 @@ export const builderApi = {
         body: runId ? { spec: specYaml, run_id: runId } : { spec: specYaml },
         signal,
         retries: 0,
+        timeoutMs: 0,
         headers: providerKeyHeaders(),
       },
       schemas.buildResponseSchema,

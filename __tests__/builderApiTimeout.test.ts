@@ -5,7 +5,7 @@
  * 일시 장애와 5xx에 제한 재시도(지수 백오프)가 동작하는지, 호출자 취소는 즉시 전파되는지 검증한다.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, setAuthTokenProvider } from "@/shared/lib/builderApi";
+import { ApiError, apiFetch, builderApi as api, setAuthTokenProvider } from "@/shared/lib/builderApi";
 
 function okResponse(body: unknown): Response {
   return {
@@ -117,5 +117,87 @@ describe("apiFetch retry (#94)", () => {
 
     await expect(promise).rejects.toMatchObject({ name: "AbortError" });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the synchronous /build is not timed out (#723)", () => {
+  it("succeeds with a response that takes longer than the default timeout", async () => {
+    vi.useFakeTimers();
+    const body = {
+      status: "ok",
+      run_id: "r1",
+      manifest: "/runs/r1/manifest.json",
+      api_version: "1.76.0",
+      outcomes: [],
+      composition: null,
+    };
+    const fetchMock = vi.fn().mockImplementation((_url, init: RequestInit) => {
+      return new Promise((resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(init.signal?.reason), { once: true });
+        setTimeout(() => resolve(okResponse(body)), 95_000);
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = api.build("dataset_id: x", "r1");
+    await vi.advanceTimersByTimeAsync(95_000);
+
+    await expect(pending).resolves.toMatchObject({ status: "ok", run_id: "r1" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // No timeout signal is attached: only a caller's own signal could abort the request.
+    expect(fetchMock.mock.calls[0][1].signal).toBeUndefined();
+  });
+
+  it("is still cancelled by the caller's signal", async () => {
+    const controller = new AbortController();
+    const fetchMock = vi.fn().mockImplementation((_url, init: RequestInit) => {
+      return new Promise((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = api.build("dataset_id: x", "r1", controller.signal).catch((cause) => cause);
+    // The request is sent after the auth token is awaited; cancel once it is in flight.
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    controller.abort();
+
+    expect(await pending).toBeInstanceOf(DOMException);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("/preview is not retried (#724)", () => {
+  it("sends one request when Builder answers 5xx", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(serverError());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await api.preview("dataset_id: x").catch((cause) => cause);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(503);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends one request when the connection fails", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error("offline"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const error = await api.preview("dataset_id: x").catch((cause) => cause);
+
+    expect((error as ApiError).status).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves /validate, which carries no key, retried as before", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockResolvedValue(serverError());
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = api.validate("dataset_id: x").catch((cause) => cause);
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(await pending).toBeInstanceOf(ApiError);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });
