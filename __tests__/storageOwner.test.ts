@@ -8,7 +8,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { useAuthStore } from "@/features/auth/store";
-import { ownedStorageKey, resolveStorageOwnerKey } from "@/features/auth/storageOwner";
+import { migrateEmailOwnedStorage, ownedStorageKey, resolveStorageOwnerKey } from "@/features/auth/storageOwner";
 import { clearAllSavedSpecs, createSavedSpec, listSavedSpecSummaries } from "@/features/workspace/savedSpecs";
 import { saveDraft, loadDraft } from "@/features/build-spec/draftStorage";
 
@@ -122,5 +122,104 @@ describe("storageOwner (#293)", () => {
       provider: "mock",
     });
     expect(listSavedSpecSummaries()).toHaveLength(1);
+  });
+});
+
+describe("storageOwner keyed by issuer and subject (#731)", () => {
+  const ISSUER = "https://id.example/realms/kpubdata";
+  const oidc = (identity: { email: string | null; userId: string | null; issuer?: string | null }) =>
+    useAuthStore.getState().setOidcIdentity({ name: null, ...identity });
+
+  beforeEach(() => {
+    localStorage.clear();
+    useAuthStore.getState().clear();
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+    useAuthStore.getState().clear();
+  });
+
+  it("an OIDC session is owned by issuer and subject, not by its e-mail", () => {
+    oidc({ email: "user@example.com", userId: "sub-1", issuer: ISSUER });
+
+    expect(resolveStorageOwnerKey()).toBe(`sub:${ISSUER}#sub-1`);
+    expect(ownedStorageKey("kpubdata-studio:reports")).toBe(`kpubdata-studio:reports:sub:${ISSUER}#sub-1`);
+  });
+
+  it("the same e-mail at another issuer, or under another subject, is another owner", () => {
+    oidc({ email: "user@example.com", userId: "sub-1", issuer: ISSUER });
+    const first = resolveStorageOwnerKey();
+    oidc({ email: "user@example.com", userId: "sub-1", issuer: "https://other.example/realms/x" });
+    const otherIssuer = resolveStorageOwnerKey();
+    oidc({ email: "user@example.com", userId: "sub-2", issuer: ISSUER });
+    const otherSubject = resolveStorageOwnerKey();
+
+    expect(new Set([first, otherIssuer, otherSubject]).size).toBe(3);
+  });
+
+  it("a changed e-mail keeps the same owner", () => {
+    oidc({ email: "old@example.com", userId: "sub-1", issuer: ISSUER });
+    const before = resolveStorageOwnerKey();
+    oidc({ email: "new@example.com", userId: "sub-1", issuer: ISSUER });
+
+    expect(resolveStorageOwnerKey()).toBe(before);
+  });
+
+  it("an identity without a subject or an issuer falls back to the e-mail key", () => {
+    oidc({ email: "user@example.com", userId: null, issuer: ISSUER });
+    expect(resolveStorageOwnerKey()).toBe("user:user@example.com");
+    oidc({ email: "user@example.com", userId: "sub-1" });
+    expect(resolveStorageOwnerKey()).toBe("user:user@example.com");
+  });
+
+  it("moves what was saved under the e-mail key, for every feature's key", () => {
+    localStorage.setItem("kpubdata-studio:reports:user:user@example.com", "[1]");
+    localStorage.setItem("kpubdata-studio:saved-build-specs:user:user@example.com", "[2]");
+    localStorage.setItem("kpubdata-studio:reports:user:someone-else@example.com", "[3]");
+    localStorage.setItem("kpubdata-studio:reports", "[anonymous]");
+    oidc({ email: " User@Example.com ", userId: "sub-1", issuer: ISSUER });
+
+    expect(migrateEmailOwnedStorage()).toBe(2);
+
+    const owner = `sub:${ISSUER}#sub-1`;
+    expect(localStorage.getItem(`kpubdata-studio:reports:${owner}`)).toBe("[1]");
+    expect(localStorage.getItem(`kpubdata-studio:saved-build-specs:${owner}`)).toBe("[2]");
+    expect(localStorage.getItem("kpubdata-studio:reports:user:user@example.com")).toBeNull();
+    // Another user's bucket and the anonymous one are not touched.
+    expect(localStorage.getItem("kpubdata-studio:reports:user:someone-else@example.com")).toBe("[3]");
+    expect(localStorage.getItem("kpubdata-studio:reports")).toBe("[anonymous]");
+    // A second sign-in finds nothing left to move.
+    expect(migrateEmailOwnedStorage()).toBe(0);
+  });
+
+  it("does not overwrite data already saved under the new key", () => {
+    const owner = `sub:${ISSUER}#sub-1`;
+    localStorage.setItem("kpubdata-studio:reports:user:user@example.com", "[old]");
+    localStorage.setItem(`kpubdata-studio:reports:${owner}`, "[new]");
+    oidc({ email: "user@example.com", userId: "sub-1", issuer: ISSUER });
+
+    expect(migrateEmailOwnedStorage()).toBe(0);
+    expect(localStorage.getItem(`kpubdata-studio:reports:${owner}`)).toBe("[new]");
+    expect(localStorage.getItem("kpubdata-studio:reports:user:user@example.com")).toBe("[old]");
+  });
+
+  it("a mock session has nothing to migrate and keeps its e-mail key", () => {
+    localStorage.setItem("kpubdata-studio:reports:user:user@example.com", "[1]");
+    useAuthStore.getState().setSession({ token: "t", email: "user@example.com", name: null, provider: "mock" });
+
+    expect(migrateEmailOwnedStorage()).toBe(0);
+    expect(resolveStorageOwnerKey()).toBe("user:user@example.com");
+  });
+
+  it("a saved spec made before the change is still listed after sign-in migrates it", () => {
+    useAuthStore.getState().setSession({ token: "t", email: "user@example.com", name: null, provider: "mock" });
+    createSavedSpec({ name: "before", spec: emptySpec(), validation: { status: "not_validated", errors: [] } });
+    oidc({ email: "user@example.com", userId: "sub-1", issuer: ISSUER });
+    expect(listSavedSpecSummaries()).toHaveLength(0);
+
+    migrateEmailOwnedStorage();
+
+    expect(listSavedSpecSummaries().map((spec) => spec.name)).toEqual(["before"]);
   });
 });
