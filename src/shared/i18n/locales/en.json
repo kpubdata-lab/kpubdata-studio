@@ -2549,6 +2549,8 @@
     }
   },
   "versionCheck": {
+    "contractTooOld": "The connected KPubData Builder speaks API contract {{api}}. This Studio needs {{min}} or later (same major); below that some screens cannot work.",
+    "contractRemedy": "Update KPubData Builder.",
     "mismatch": "Studio {{studio}} is connected to KPubData Builder {{builder}} — they come from different releases, so some screens may fail to load.",
     "remedy": "Deploy the matching KPubData Builder, or reload to pick up the matching Studio.",
     "dismiss": "Dismiss version notice"

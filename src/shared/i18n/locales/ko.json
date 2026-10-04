@@ -2549,6 +2549,8 @@
     }
   },
   "versionCheck": {
+    "contractTooOld": "연결된 KPubData Builder 의 API 계약 버전은 {{api}} 입니다. 이 Studio 는 {{min}} 이상(같은 major)이 필요해서, 그보다 낮으면 일부 화면이 동작하지 않습니다.",
+    "contractRemedy": "KPubData Builder 를 업데이트하세요.",
     "mismatch": "Studio {{studio}} 가 KPubData Builder {{builder}} 에 연결되어 있습니다 — 서로 다른 릴리스라 일부 화면이 불러오지 못할 수 있습니다.",
     "remedy": "같은 버전의 KPubData Builder 를 배포하거나, 새로고침해 같은 버전의 Studio 를 받으세요.",
     "dismiss": "버전 안내 닫기"

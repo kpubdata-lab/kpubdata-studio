@@ -83,8 +83,8 @@ const EXPECTED_OPERATIONS = [
 ] as const;
 
 describe("Builder API contract conformance (#36)", () => {
-  it("declares 1.18.0 as the minimum required Builder API version for the integrated surface", () => {
-    expect(MIN_BUILDER_API_VERSION).toBe("1.18.0");
+  it("declares 1.59.0 — the first contract with every route the client calls — as the minimum (#725)", () => {
+    expect(MIN_BUILDER_API_VERSION).toBe("1.59.0");
   });
 
   it("exposes exactly the expected client operations", () => {
@@ -100,17 +100,19 @@ describe("Builder API contract conformance (#36)", () => {
 
 describe("isBuilderApiCompatible — SemVer policy (ADR 0013)", () => {
   it("accepts the exact minimum version", () => {
-    expect(isBuilderApiCompatible("1.18.0")).toBe(true);
+    expect(isBuilderApiCompatible("1.59.0")).toBe(true);
   });
 
   it("accepts higher additive minor/patch within the same major", () => {
-    expect(isBuilderApiCompatible("1.18.4")).toBe(true);
-    expect(isBuilderApiCompatible("1.21.0")).toBe(true);
+    expect(isBuilderApiCompatible("1.59.4")).toBe(true);
+    expect(isBuilderApiCompatible("1.77.0")).toBe(true);
   });
 
   it("rejects versions below the minimum within the same major", () => {
-    expect(isBuilderApiCompatible("1.17.0")).toBe(false);
-    expect(isBuilderApiCompatible("1.17.9")).toBe(false);
+    expect(isBuilderApiCompatible("1.58.0")).toBe(false);
+    expect(isBuilderApiCompatible("1.58.9")).toBe(false);
+    // What the constant used to say was enough.
+    expect(isBuilderApiCompatible("1.18.0")).toBe(false);
   });
 
   it("rejects a different (higher) major", () => {
@@ -119,8 +121,8 @@ describe("isBuilderApiCompatible — SemVer policy (ADR 0013)", () => {
 
   it("fails closed on malformed / missing versions", () => {
     expect(isBuilderApiCompatible("")).toBe(false);
-    expect(isBuilderApiCompatible("1.18")).toBe(false);
-    expect(isBuilderApiCompatible("v1.18.0")).toBe(false);
+    expect(isBuilderApiCompatible("1.59")).toBe(false);
+    expect(isBuilderApiCompatible("v1.59.0")).toBe(false);
     expect(isBuilderApiCompatible(undefined)).toBe(false);
   });
 });
