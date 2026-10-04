@@ -48,7 +48,13 @@ function abortableStream(signal?: AbortSignal): AsyncIterable<string> {
       return {
         next(): Promise<IteratorResult<string>> {
           return new Promise((_, reject) => {
-            signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+            const abort = () => reject(new DOMException("Aborted", "AbortError"));
+            // A listener added to a signal that has already aborted never fires. When the
+            // request is cancelled before the hook reads the stream — the order under
+            // load — the promise never settled and the test hung until its timeout (#735).
+            // A real provider's fetch rejects at once on an aborted signal; so does this.
+            if (signal?.aborted) abort();
+            else signal?.addEventListener("abort", abort, { once: true });
           });
         },
       };
@@ -156,6 +162,24 @@ describe("useAssistantSession — key/base URL/LLM error states (#256)", () => {
       await askPromise;
     });
     expect(result.current.turns[0].error).toEqual({ kind: "cancelled" });
+  });
+
+  it("marks a request cancelled before its stream is read as cancelled too (#735)", async () => {
+    configureKey();
+    // The stream is handed over already aborted: the cancel won the race.
+    mockStream(() => {
+      const controller = new AbortController();
+      controller.abort();
+      return abortableStream(controller.signal);
+    });
+
+    const { result } = renderHook(() => useAssistantSession(), { wrapper: makeWrapper("/") });
+    await act(async () => {
+      await result.current.ask("질문");
+    });
+
+    expect(result.current.turns).toHaveLength(1);
+    expect(result.current.turns[0].status).toBe("error");
   });
 
   it("rejects malformed structured output (including an unknown suggested-action type) as a safe error state", async () => {
