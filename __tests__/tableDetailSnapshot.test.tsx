@@ -4,7 +4,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFailed, vi } from "vitest";
 
 import { mswServer } from "../vitest.setup";
 import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
@@ -78,7 +78,55 @@ const SNAPSHOTS: Record<string, unknown[]> = {
 let requests: string[];
 let rowsRequests: Array<Record<string, unknown>>;
 
+/**
+ * What each request of a test did, printed only when the test fails (#741).
+ *
+ * This file has failed in CI with a warehouse request that ended as a connection failure
+ * although a handler for it was registered, and without the warning MSW prints for an
+ * unhandled request. `detectWarehouse` swallows the error, so the log showed the run view
+ * and nothing else. The trace says which of the two it was: MSW's own account of the
+ * request (matched, unhandled, mocked, passed through, threw), and what `fetch` rejected
+ * with.
+ */
+function traceRequests(): void {
+  const startedAt = performance.now();
+  const trace: string[] = [];
+  const note = (line: string) => trace.push(`${Math.round(performance.now() - startedAt)}ms ${line}`);
+  const where = (request: Request) => `${request.method} ${new URL(request.url).pathname}`;
+
+  const listeners = new AbortController();
+  for (const type of ["request:start", "request:match", "request:unhandled", "response:mocked", "response:bypass"] as const) {
+    mswServer.events.on(type, ({ request }) => note(`msw ${type} ${where(request)}`), { signal: listeners.signal });
+  }
+  mswServer.events.on("unhandledException", ({ request, error }) => note(`msw unhandledException ${where(request)} ${String(error)}`), {
+    signal: listeners.signal,
+  });
+
+  const intercepted = globalThis.fetch;
+  const spy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+    const label = `${init?.method ?? "GET"} ${String(input instanceof Request ? input.url : input).replace(API_BASE, "")}`;
+    try {
+      return await intercepted(input, init);
+    } catch (cause) {
+      const inner = cause instanceof Error && cause.cause !== undefined ? ` (cause: ${String(cause.cause)})` : "";
+      note(`fetch rejected ${label}: ${String(cause)}${inner}; signal aborted: ${String(init?.signal?.aborted)}`);
+      throw cause;
+    }
+  });
+
+  onTestFailed(() => {
+    console.error(`[#741] requests of the failed test, in order:\n${trace.join("\n")}`);
+  });
+  afterEachCleanups.push(() => {
+    listeners.abort();
+    spy.mockRestore();
+  });
+}
+
+const afterEachCleanups: Array<() => void> = [];
+
 beforeEach(() => {
+  traceRequests();
   vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
   act(() => useUIStore.setState({ isAssistantDrawerOpen: false }));
   requests = [];
@@ -140,7 +188,10 @@ beforeEach(() => {
     }),
   );
 });
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+  for (const cleanup of afterEachCleanups.splice(0)) cleanup();
+});
 
 describe("Table Detail on a warehouse (#526)", () => {
   it("opens on the current snapshot with no run, source or stage picker", async () => {
