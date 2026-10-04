@@ -6,6 +6,7 @@
 import { getOidcConfig, isOidcEnabled } from "@/shared/config/env";
 import { setAuthErrorCallback, setAuthTokenProvider } from "@/shared/lib/builderApi";
 import { getFreshToken, getKeycloak, initKeycloak } from "./keycloak";
+import { migrateEmailOwnedStorage } from "./storageOwner";
 import { useAuthStore } from "./store";
 
 export function initAuth(): void {
@@ -89,12 +90,15 @@ function syncIdentity(authenticated: boolean): void {
   }
 
   const claims = getKeycloak().tokenParsed as
-    | { sub?: string; email?: string; name?: string; preferred_username?: string }
+    | { sub?: string; iss?: string; email?: string; name?: string; preferred_username?: string }
     | undefined;
   store.setOidcIdentity({
     email: claims?.email ?? null,
     name: claims?.name ?? claims?.preferred_username ?? null,
     userId: claims?.sub ?? null,
+    issuer: claims?.iss ?? null,
   });
+  // What this user saved in this browser under their e-mail moves to their issuer+sub (#731).
+  migrateEmailOwnedStorage();
   store.setOidcStatus("authenticated");
 }

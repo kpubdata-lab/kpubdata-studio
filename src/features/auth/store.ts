@@ -41,6 +41,11 @@ interface AuthState {
   /** Display name. Null if the provider does not provide a name (#263). */
   name: string | null;
   userId: string | null;
+  /**
+   * The OIDC issuer the `userId` (the token's `sub`) belongs to. A subject is unique only
+   * within its issuer, and Builder owns data by the pair (#731). Null for a mock session.
+   */
+  issuer: string | null;
   /** The provider that created this session. Null when not logged in (#263). */
   providerId: AuthProviderId | null;
   /** OIDC bootstrap status. In mock/demo this is "disabled". */
@@ -51,7 +56,12 @@ interface AuthState {
    * Store only the display identity found in the Keycloak session. Do not store the raw access token
    * in the store (see the `token` comment above).
    */
-  setOidcIdentity: (identity: { email: string | null; name: string | null; userId: string | null }) => void;
+  setOidcIdentity: (identity: {
+    email: string | null;
+    name: string | null;
+    userId: string | null;
+    issuer?: string | null;
+  }) => void;
   /** Transition the OIDC bootstrap status. */
   setOidcStatus: (status: OidcStatus) => void;
   /** Logout — fully clear the session (OIDC bootstrap status is managed separately by callers). */
@@ -63,6 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   email: null,
   name: null,
   userId: null,
+  issuer: null,
   providerId: null,
   oidcStatus: "disabled",
   setSession: (session) =>
@@ -71,14 +82,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       email: session.email,
       name: session.name,
       userId: null,
+      issuer: null,
       providerId: session.provider,
     }),
-  setOidcIdentity: ({ email, name, userId }) =>
-    set({ token: null, email, name, userId, providerId: "keycloak" }),
+  setOidcIdentity: ({ email, name, userId, issuer = null }) =>
+    set({ token: null, email, name, userId, issuer, providerId: "keycloak" }),
   setOidcStatus: (oidcStatus) => set({ oidcStatus }),
   clear: () => {
     // Provider keys held for this page load belong to the signed-in user (#652).
     forgetAllProviderKeys();
-    set({ token: null, email: null, name: null, userId: null, providerId: null });
+    set({ token: null, email: null, name: null, userId: null, issuer: null, providerId: null });
   },
 }));
