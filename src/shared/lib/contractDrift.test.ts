@@ -461,6 +461,9 @@ type SchemaName = keyof typeof schemas;
 const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejectsAdditive: string } | { skip: string }> = {
   createBuild: "buildResponseSchema",
   getBuildManifest: "buildManifestResponseSchema",
+  // The contract calls this response ProviderListResponse; Studio reads it with
+  // providersResponseSchema, so the name pairing never found it and it went unchecked (#727).
+  listProviders: "providersResponseSchema",
   getProviderCredential: {
     schema: "providerCredentialResponseSchema",
     rejectsAdditive: "strict on purpose (#497): an unknown field may be a leaked secret",
