@@ -90,15 +90,18 @@ function syncIdentity(authenticated: boolean): void {
   }
 
   const claims = getKeycloak().tokenParsed as
-    | { sub?: string; iss?: string; email?: string; name?: string; preferred_username?: string }
+    | { sub?: string; iss?: string; email?: string; email_verified?: unknown; name?: string; preferred_username?: string }
     | undefined;
   store.setOidcIdentity({
     email: claims?.email ?? null,
     name: claims?.name ?? claims?.preferred_username ?? null,
     userId: claims?.sub ?? null,
     issuer: claims?.iss ?? null,
+    // Only the literal `true` counts: a missing claim or a string is not a verified address.
+    emailVerified: claims?.email_verified === true,
   });
-  // What this user saved in this browser under their e-mail moves to their issuer+sub (#731).
+  // What this user saved in this browser under their e-mail moves to their issuer+sub
+  // (#731) — when the token says the address is theirs (#750).
   migrateEmailOwnedStorage();
   store.setOidcStatus("authenticated");
 }

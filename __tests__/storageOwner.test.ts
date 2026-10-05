@@ -127,8 +127,9 @@ describe("storageOwner (#293)", () => {
 
 describe("storageOwner keyed by issuer and subject (#731)", () => {
   const ISSUER = "https://id.example/realms/kpubdata";
-  const oidc = (identity: { email: string | null; userId: string | null; issuer?: string | null }) =>
-    useAuthStore.getState().setOidcIdentity({ name: null, ...identity });
+  // The address is verified unless a test says otherwise: that is the token Builder accepts.
+  const oidc = (identity: { email: string | null; userId: string | null; issuer?: string | null; emailVerified?: boolean }) =>
+    useAuthStore.getState().setOidcIdentity({ name: null, emailVerified: true, ...identity });
 
   beforeEach(() => {
     localStorage.clear();
@@ -191,6 +192,31 @@ describe("storageOwner keyed by issuer and subject (#731)", () => {
     expect(localStorage.getItem("kpubdata-studio:reports")).toBe("[anonymous]");
     // A second sign-in finds nothing left to move.
     expect(migrateEmailOwnedStorage()).toBe(0);
+  });
+
+  it("moves nothing for an account whose e-mail is not verified (#750)", () => {
+    // On a shared browser this is someone else's data: the account only claims the address.
+    localStorage.setItem("kpubdata-studio:reports:user:user@example.com", "[1]");
+    localStorage.setItem("kpubdata-studio:saved-build-specs:user:user@example.com", "[2]");
+    oidc({ email: "user@example.com", userId: "sub-claims", issuer: ISSUER, emailVerified: false });
+
+    expect(migrateEmailOwnedStorage()).toBe(0);
+
+    expect(localStorage.getItem("kpubdata-studio:reports:user:user@example.com")).toBe("[1]");
+    expect(localStorage.getItem("kpubdata-studio:saved-build-specs:user:user@example.com")).toBe("[2]");
+    expect(localStorage.getItem(`kpubdata-studio:reports:sub:${ISSUER}#sub-claims`)).toBeNull();
+    // The verified owner of the address still gets it afterwards.
+    oidc({ email: "user@example.com", userId: "sub-owner", issuer: ISSUER });
+    expect(migrateEmailOwnedStorage()).toBe(2);
+    expect(localStorage.getItem(`kpubdata-studio:reports:sub:${ISSUER}#sub-owner`)).toBe("[1]");
+  });
+
+  it("an identity that does not say is not verified", () => {
+    useAuthStore.getState().setOidcIdentity({ email: "user@example.com", name: null, userId: "sub-1", issuer: ISSUER });
+    expect(useAuthStore.getState().emailVerified).toBe(false);
+    useAuthStore.getState().setOidcIdentity({ email: "user@example.com", name: null, userId: "sub-1", issuer: ISSUER, emailVerified: true });
+    useAuthStore.getState().clear();
+    expect(useAuthStore.getState().emailVerified).toBe(false);
   });
 
   it("does not overwrite data already saved under the new key", () => {
