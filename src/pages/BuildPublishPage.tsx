@@ -301,17 +301,6 @@ export function BuildPublishPage() {
     void publish.start(runId, request, credential);
   }
 
-  /** The token on the page, for one recovery request; dropped at once, as a publish drops it (#615). */
-  function takePublishCredential() {
-    const credential = publishCredentialFor(publishTokenRef.current);
-    if (credential) {
-      publishTokenRef.current = "";
-      setPublishToken("");
-      setTokenStale(true);
-    }
-    return credential;
-  }
-
   function updatePrivate(value: boolean) {
     setIsPrivate(value);
     setConfirmation(undefined);
@@ -469,7 +458,6 @@ export function BuildPublishPage() {
               runId={runId}
               destination={confirmation.destination}
               needsCredential={requestCredential}
-              takeCredential={takePublishCredential}
               onRetryAllowed={publish.reset}
             />
           ) : null}

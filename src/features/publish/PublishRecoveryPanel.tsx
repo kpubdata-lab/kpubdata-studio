@@ -13,47 +13,67 @@
  *
  * Neither is ever called automatically. A deployment that takes the publish credential
  * from the request needs the token again for the remote check — Studio dropped it when
- * the publish started (#615).
+ * the publish started (#615). The panel asks for it in a field of its own: the page's
+ * token field belongs to the publish form, and typing there starts that form over, which
+ * takes this panel away with it (#749). The token is held for one remote check and then
+ * dropped, the same as the page's. A reset reads nothing remotely, so it is sent without
+ * the token and leaves what was typed in place.
  */
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
+  publishCredentialFor,
   reconcilePublish,
   resetPublishReceipt,
-  type PublishCredential,
+  validatePublishToken,
   type PublishRecoveryOutcome,
 } from "@/features/publish/api";
 import { Button } from "@/shared/ui";
+
+const inputClassName =
+  "h-9 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 interface Props {
   runId: string;
   destination: string;
   /** The deployment reads the publish credential from the request, so the check needs a token. */
   needsCredential: boolean;
-  /** Takes the token entered on the page, and clears it there: used for one request only. */
-  takeCredential: () => PublishCredential | undefined;
   /** Called when nothing blocks a new publish any more. */
   onRetryAllowed: () => void;
 }
 
 const RETRY_ALLOWED: ReadonlySet<PublishRecoveryOutcome["kind"]> = new Set(["absent", "reset", "nothing_to_settle"]);
 
-export function PublishRecoveryPanel({ runId, destination, needsCredential, takeCredential, onRetryAllowed }: Props) {
+export function PublishRecoveryPanel({ runId, destination, needsCredential, onRetryAllowed }: Props) {
   const { t } = useTranslation();
   const [working, setWorking] = useState<"reconcile" | "reset" | null>(null);
   const [outcome, setOutcome] = useState<PublishRecoveryOutcome>();
   const [confirmingReset, setConfirmingReset] = useState(false);
   const [credentialMissing, setCredentialMissing] = useState(false);
+  // Memory only, like the page's token (#615): never stored, gone with the panel.
+  const [token, setToken] = useState("");
+  const tokenRef = useRef("");
   const inFlight = useRef(false);
+  const tokenError = validatePublishToken(token);
+
+  function updateToken(value: string) {
+    tokenRef.current = value;
+    setToken(value);
+    setCredentialMissing(false);
+  }
 
   async function run(action: "reconcile" | "reset") {
     if (inFlight.current) return;
-    const credential = needsCredential ? takeCredential() : undefined;
     // The remote can only be read with the requester's own credential (builder#925).
-    if (action === "reconcile" && needsCredential && !credential) {
-      setCredentialMissing(true);
-      return;
+    // A reset reads nothing there, so it neither needs the token nor uses it up.
+    const credential = action === "reconcile" && needsCredential ? publishCredentialFor(tokenRef.current) : undefined;
+    if (action === "reconcile" && needsCredential) {
+      if (!credential) {
+        setCredentialMissing(true);
+        return;
+      }
+      updateToken("");
     }
     inFlight.current = true;
     setCredentialMissing(false);
@@ -73,8 +93,28 @@ export function PublishRecoveryPanel({ runId, destination, needsCredential, take
     <div className="mt-4 rounded-lg border border-border bg-card p-4 text-sm text-foreground" data-publish-recovery>
       <h3 className="font-semibold">{t("buildPublish.recovery.title")}</h3>
       <p className="mt-1 text-muted-foreground">{t("buildPublish.recovery.explain")}</p>
+      {needsCredential ? (
+        <div className="mt-3">
+          <label className="text-sm font-medium">{t("buildPublish.recovery.tokenLabel")}
+            <input
+              aria-label={t("buildPublish.recovery.tokenLabel")}
+              type="password"
+              autoComplete="off"
+              spellCheck={false}
+              className={`mt-2 ${inputClassName}`}
+              placeholder="hf_…"
+              value={token}
+              disabled={working !== null}
+              onChange={(event) => updateToken(event.target.value)}
+            />
+          </label>
+          <p className={`mt-1 text-xs ${tokenError ? "text-status-failure" : "text-muted-foreground"}`} role={tokenError ? "alert" : undefined}>
+            {tokenError ?? t("buildPublish.recovery.tokenHint")}
+          </p>
+        </div>
+      ) : null}
       <div className="mt-3 flex flex-wrap gap-3">
-        <Button size="sm" loading={working === "reconcile"} disabled={working !== null} onClick={() => void run("reconcile")}>
+        <Button size="sm" loading={working === "reconcile"} disabled={working !== null || Boolean(tokenError)} onClick={() => void run("reconcile")}>
           {t("buildPublish.recovery.reconcile")}
         </Button>
         {confirmingReset ? (
