@@ -1413,7 +1413,7 @@
       "keySet": "키 설정됨",
       "keyUnset": "키 미설정",
       "customBaseUrl": "사용자 지정 Base URL",
-      "persistOn": "브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요.",
+      "persistOn": "브라우저 저장이 켜져 있습니다 — LLM API 키가 이 브라우저에 평문으로 저장됩니다. XSS 공격 시 탈취될 수 있으니 신뢰하지 않는 환경에서는 끄세요. 로그인한 계정의 것으로 저장되며, 로그아웃하거나 세션이 끝나면 지워집니다.",
       "persistOff": "브라우저 저장: 꺼짐(메모리 전용). Ask KPubData 화면에서 명시적으로 켤 수 있습니다."
     },
     "builderBaseUrl": "KPubData Builder API 기본 URL"
