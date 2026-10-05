@@ -1413,7 +1413,7 @@
       "keySet": "Key set",
       "keyUnset": "No key",
       "customBaseUrl": "Custom base URL",
-      "persistOn": "Browser storage is on — the LLM API key is stored in this browser in plain text. An XSS attack could steal it, so turn it off on machines you do not trust.",
+      "persistOn": "Browser storage is on — the LLM API key is stored in this browser in plain text. An XSS attack could steal it, so turn it off on machines you do not trust. It is saved for the signed-in account and deleted when you sign out or the session ends.",
       "persistOff": "Browser storage: off (memory only). You can turn it on explicitly from the Ask KPubData screen."
     },
     "builderBaseUrl": "KPubData Builder API base URL"
