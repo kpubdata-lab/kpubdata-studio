@@ -1345,7 +1345,24 @@
     "tokenHint": "이 화면의 메모리에만 두고, 게시 준비 확인과 게시 요청에만 실어 보냅니다. 저장하지 않으며, 화면을 떠나거나 새로고침하면 사라집니다.",
     "tokenStale": "이 토큰으로 게시 준비 상태를 다시 확인하세요.",
     "tokenCheck": "이 토큰으로 확인",
-    "tokenForget": "토큰 지우기"
+    "tokenForget": "토큰 지우기",
+    "recovery": {
+      "title": "게시 결과를 알 수 없을 때",
+      "explain": "게시가 실제로 올라갔는지 Builder 가 알지 못해 다시 보내는 것을 막고 있습니다. 원격을 확인하거나, 기록을 지우고 다시 게시할 수 있습니다. 어느 것도 자동으로 실행되지 않습니다.",
+      "reconcile": "원격 확인",
+      "reset": "기록 초기화",
+      "resetConfirm": "초기화 확정",
+      "resetWarning": "원격을 확인하지 않고 기록만 지웁니다. 이미 올라간 것이 있다면 지워지지 않고, 다시 게시하면 같은 destination 에 한 번 더 올라갑니다.",
+      "tokenNeeded": "원격을 확인하려면 게시 토큰이 필요합니다. 위에 토큰을 다시 입력한 뒤 눌러 주세요.",
+      "publishAgain": "다시 게시 준비",
+      "outcome": {
+        "confirmed": "원격에 이 destination 이 있습니다. 게시는 이루어졌습니다 — 다시 보낼 필요가 없습니다.",
+        "absent": "원격에 없습니다. 게시되지 않은 것으로 확인되어 기록을 지웠습니다. 다시 게시할 수 있습니다.",
+        "reset": "기록을 지웠습니다. 원격에 이미 올라간 것은 그대로입니다. 다시 게시할 수 있습니다.",
+        "nothing_to_settle": "정리할 게시 기록이 없습니다. 다시 게시할 수 있습니다.",
+        "unavailable": "원격 상태를 확인하지 못했습니다. 아무것도 바뀌지 않았습니다 — 잠시 후 다시 시도하세요."
+      }
+    }
   },
   "settings": {
     "page": {
@@ -2065,7 +2082,7 @@
       "notReady": "게시 준비가 되지 않은 Run입니다.",
       "unknown": "게시 요청을 완료하지 못했습니다.",
       "inProgress": "같은 게시 작업이 이미 진행 중입니다.",
-      "retryBlocked": "이전 게시 결과를 확인할 수 없어 자동 재시도가 차단되었습니다. Builder 운영자에게 상태 확인을 요청하세요.",
+      "retryBlocked": "이전 게시 결과를 확인할 수 없어 자동 재시도가 차단되었습니다. 아래에서 원격을 확인하거나 기록을 초기화할 수 있습니다.",
       "visibilityConflict": "같은 Run과 destination이 다른 공개 설정으로 이미 게시되었습니다.",
       "externalFailed": "외부 게시 서비스에서 작업을 완료하지 못했습니다. 결과가 불명확할 수 있으므로 자동 재시도하지 않습니다.",
       "readinessChanged": "게시 직전 Builder 재검증에서 준비 상태가 변경되었습니다. readiness를 다시 확인하세요.",
@@ -2074,7 +2091,8 @@
       "network": "Builder 응답을 받지 못했습니다. 원격 게시 결과는 확인되지 않았습니다.",
       "mismatch": "Builder 응답의 Run 또는 target이 요청과 일치하지 않습니다.",
       "invalidCredential": "게시 토큰 형식을 KPubData Builder가 받지 않습니다. 토큰을 확인하고 다시 입력하세요.",
-      "redistributionBlocked": "소스의 재배포 조건 때문에 KPubData Builder가 게시를 거부했습니다. 아래 사유를 확인하세요."
+      "redistributionBlocked": "소스의 재배포 조건 때문에 KPubData Builder가 게시를 거부했습니다. 아래 사유를 확인하세요.",
+      "recoveryFailed": "게시 기록을 정리하지 못했습니다."
     },
     "issues": {
       "run_not_terminal": {

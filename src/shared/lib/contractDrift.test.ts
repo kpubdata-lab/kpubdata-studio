@@ -44,7 +44,7 @@ import { z } from "zod";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
 import { revisionErrorOutcome } from "@/features/build-spec/specRevisions";
 import { profileRefusal } from "@/features/datasets/profileRefusal";
-import { describePublishFailure } from "@/features/publish/api";
+import { describePublishFailure, recoveryFailure } from "@/features/publish/api";
 import { PUBLISH_ISSUE_CODES } from "@/features/publish/issues";
 import { classifyQueryError } from "@/features/sql/api";
 import { asInvalidDetails } from "@/features/validation/api";
@@ -473,12 +473,10 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
   },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
-  // The publish recovery routes entered the contract in 1.81.0 (builder#994). Studio calls
-  // none of them yet, so there is no body for it to parse; #728 is where it starts to.
-  getPublishReceipt: { skip: "builderApi does not call this route" },
-  getPublishAudit: { skip: "builderApi does not call this route" },
-  reconcilePublish: { skip: "builderApi does not call this route yet (#728)" },
-  resetPublishReceipt: { skip: "builderApi does not call this route yet (#728)" },
+  // Declared with the recovery routes (builder#1009, contract 1.81.0). Studio settles an
+  // unknown publish with reconcile and reset (#728); it shows neither the receipt nor the audit.
+  getPublishReceipt: { skip: "builderApi does not call it; the publish page settles a receipt without showing it" },
+  getPublishAudit: { skip: "builderApi does not call it; Studio has no publish audit screen" },
 };
 
 // --- Error responses (#701) ---
@@ -565,14 +563,26 @@ function queryCode(status: number, body: unknown, code: string): string[] {
   ];
 }
 
+/** The contract version that declares the publish recovery routes (builder#1009). */
+const PUBLISH_RECOVERY_SINCE = "1.81.0";
+
 const publishReader = (kind: string): ErrorReader => ({
   reader: "describePublishFailure (features/publish/api)",
   check: (status, body) => differs("kind", publishKind(status, body), kind),
 });
 
+/** A failed reconcile or reset, as the publish page's recovery panel sees it (#728). */
+const recoveryReader = (kind: string): ErrorReader => ({
+  reader: "recoveryFailure (features/publish/api)",
+  since: PUBLISH_RECOVERY_SINCE,
+  check: (status, body) => differs("kind", recoveryFailure(httpError(status, body)).kind, kind),
+});
+
 type ErrorReader = {
   /** The Studio code that reads the body. */
   reader: string;
+  /** The contract version that introduced the example; before it the entry is not stale. */
+  since?: string;
   /** What Studio misreads in this body; empty when it reads it as the contract means. */
   check: (status: number, body: unknown) => string[];
 };
@@ -685,13 +695,17 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     code: "server_overloaded",
     since: "1.80.0",
   },
-  // The publish recovery routes (builder#994, contract 1.81.0). Studio does not call them
-  // yet, so nothing reads these bodies; #728 replaces the entries of the two it will call.
-  "getPublishReceipt 404 ReceiptNotFound": { notHandled: NOT_CALLED, code: "receipt_not_found", since: "1.81.0" },
-  "resetPublishReceipt 404 ReceiptNotFound": { notHandled: NOT_CALLED, code: "receipt_not_found", since: "1.81.0" },
-  "resetPublishReceipt 503 ReconcileUnavailable": { notHandled: NOT_CALLED, code: "reconcile_unavailable", since: "1.81.0" },
-  "reconcilePublish 404 ReceiptNotFound": { notHandled: NOT_CALLED, code: "receipt_not_found", since: "1.81.0" },
-  "reconcilePublish 503 ReconcileUnavailable": { notHandled: NOT_CALLED, code: "reconcile_unavailable", since: "1.81.0" },
+  // Settling an unknown publish (#728, builder#1009). No receipt means nothing blocks a new
+  // publish; a 503 means nothing changed and the same action can be tried again.
+  "reconcilePublish 404 ReceiptNotFound": recoveryReader("nothing_to_settle"),
+  "reconcilePublish 503 ReconcileUnavailable": recoveryReader("unavailable"),
+  "resetPublishReceipt 404 ReceiptNotFound": recoveryReader("nothing_to_settle"),
+  "resetPublishReceipt 503 ReconcileUnavailable": recoveryReader("unavailable"),
+  "getPublishReceipt 404 ReceiptNotFound": {
+    notHandled: NOT_CALLED,
+    code: "receipt_not_found",
+    since: PUBLISH_RECOVERY_SINCE,
+  },
   "PiiDeclarationUnavailable 503 PiiDeclarationUnavailable": {
     reader: "artifactDownloadRefusal, profileRefusal and classifyQueryError (#640, #643)",
     check: (status, body) => {

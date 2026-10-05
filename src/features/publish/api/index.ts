@@ -108,6 +108,72 @@ export async function publishBuild(
   return mockPublishResult(runId, request.destination, request.options?.private ?? true, readiness.redistribution ?? null, request.options?.confirm_non_commercial === true);
 }
 
+/** What settling an unknown publish came to (#728). */
+export type PublishRecoveryOutcome =
+  /** The destination exists remotely: the publish did go through. */
+  | { kind: "confirmed" }
+  /** Nothing was found remotely and the receipt is gone: the publish may be sent again. */
+  | { kind: "absent" }
+  /** The receipt was deleted on request; whatever was published stays published. */
+  | { kind: "reset" }
+  /** No receipt to settle — nothing blocks a new publish. */
+  | { kind: "nothing_to_settle" }
+  /** The remote could not be read, or the outcome not saved; nothing changed. */
+  | { kind: "unavailable" }
+  | { kind: "failed"; message: string };
+
+/** What a failed reconcile or reset means for the receipt (#728); read from Builder's error body. */
+export function recoveryFailure(cause: unknown): PublishRecoveryOutcome {
+  if (cause instanceof ApiError) {
+    const code = (cause.details as { code?: unknown } | undefined)?.code;
+    if (cause.status === 404 && code === "receipt_not_found") return { kind: "nothing_to_settle" };
+    if (cause.status === 503) return { kind: "unavailable" };
+    if (cause.status === 400 && code === "invalid_publish_credential") return { kind: "failed", message: t("invalidCredential") };
+    if (cause.status === 403) return { kind: "failed", message: t("forbidden") };
+    if (cause.status === 0 || cause.status === 408) return { kind: "failed", message: t("network") };
+  }
+  return { kind: "failed", message: t("recoveryFailed") };
+}
+
+/**
+ * Ask Builder to look at the remote and settle a publish that ended
+ * `publish_state_unknown` (#728). The demo has no remote and no receipts.
+ */
+export async function reconcilePublish(
+  runId: string,
+  destination: string,
+  signal?: AbortSignal,
+  credential?: PublishCredential,
+): Promise<PublishRecoveryOutcome> {
+  if (!isRealBuilderEnabled()) return { kind: "nothing_to_settle" };
+  try {
+    const response = await builderApi.reconcilePublish(runId, { target: "huggingface", destination }, signal, credential);
+    if (response.run_id !== runId) return { kind: "failed", message: t("mismatch") };
+    return { kind: response.state === "succeeded" ? "confirmed" : "absent" };
+  } catch (cause) {
+    if (signal?.aborted) throw cause;
+    return recoveryFailure(cause);
+  }
+}
+
+/** Delete the receipt of an unknown publish so it can be sent again (#728). Nothing is undone remotely. */
+export async function resetPublishReceipt(
+  runId: string,
+  destination: string,
+  signal?: AbortSignal,
+  credential?: PublishCredential,
+): Promise<PublishRecoveryOutcome> {
+  if (!isRealBuilderEnabled()) return { kind: "nothing_to_settle" };
+  try {
+    const response = await builderApi.resetPublishReceipt(runId, "huggingface", destination, signal, credential);
+    if (response.run_id !== runId) return { kind: "failed", message: t("mismatch") };
+    return { kind: "reset" };
+  } catch (cause) {
+    if (signal?.aborted) throw cause;
+    return recoveryFailure(cause);
+  }
+}
+
 export type PublishFailureKind =
   | PublishErrorCode
   | "invalid_publish_credential"

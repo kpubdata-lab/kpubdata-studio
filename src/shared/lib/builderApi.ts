@@ -895,6 +895,42 @@ export const builderApi = {
       schemas.publishResponseSchema,
     ),
 
+  /**
+   * POST /builds/{run_id}/publish/reconcile — settle a publish whose outcome was not
+   * learnt (`publish_state_unknown`) by looking at the remote (#728). Not retried: it
+   * reads the remote with the requester's credential.
+   */
+  reconcilePublish: (
+    runId: string,
+    request: { target: schemas.PublishTarget; destination: string },
+    signal?: AbortSignal,
+    credential?: PublishCredential,
+  ) =>
+    apiFetch(
+      `/builds/${encodeURIComponent(runId)}/publish/reconcile`,
+      { method: "POST", body: request, signal, retries: 0, headers: publishCredentialHeaders(credential) },
+      schemas.publishReconcileResponseSchema,
+    ),
+
+  /**
+   * DELETE /builds/{run_id}/publish/receipt — delete the caller's receipt so the same
+   * publish can be claimed again (#728). Nothing is undone remotely.
+   */
+  resetPublishReceipt: (
+    runId: string,
+    target: schemas.PublishTarget,
+    destination: string,
+    signal?: AbortSignal,
+    credential?: PublishCredential,
+  ) => {
+    const params = new URLSearchParams({ target, destination });
+    return apiFetch(
+      `/builds/${encodeURIComponent(runId)}/publish/receipt?${params.toString()}`,
+      { method: "DELETE", signal, retries: 0, headers: publishCredentialHeaders(credential) },
+      schemas.publishReceiptResetSchema,
+    );
+  },
+
   /** GET /datasets/{dataset_id}/quality/history — dataset quality history. */
   getDatasetQualityHistory: (datasetId: string, limit?: number, signal?: AbortSignal) => {
     const query = limit !== undefined ? `?limit=${limit}` : "";
