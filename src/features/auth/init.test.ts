@@ -117,6 +117,34 @@ describe("initAuth — OIDC enabled", () => {
     expect(useAuthStore.getState().token).toBeNull();
   });
 
+  it.each([
+    ["true", true, true],
+    ["missing", undefined, false],
+    ["false", false, false],
+    ['the string "true"', "true", false],
+  ])("moves e-mail-keyed storage at sign-in only for a verified address: email_verified %s (#750)", async (_label, claim, moves) => {
+    const oldKey = "kpubdata-studio:reports:user:tester@example.com";
+    const newKey = "kpubdata-studio:reports:sub:https://id.example/realms/kpubdata#sub-1";
+    localStorage.setItem(oldKey, "[1]");
+    mockKeycloak.init.mockResolvedValue(true);
+    mockKeycloak.authenticated = true;
+    mockKeycloak.tokenParsed = {
+      email: "tester@example.com",
+      sub: "sub-1",
+      iss: "https://id.example/realms/kpubdata",
+      ...(claim === undefined ? {} : { email_verified: claim }),
+    };
+
+    initAuth();
+    await flush();
+
+    expect(useAuthStore.getState().oidcStatus).toBe("authenticated");
+    expect(useAuthStore.getState().emailVerified).toBe(moves);
+    expect(localStorage.getItem(newKey)).toBe(moves ? "[1]" : null);
+    expect(localStorage.getItem(oldKey)).toBe(moves ? null : "[1]");
+    localStorage.clear();
+  });
+
   it("goes initializing → unauthenticated when no existing session is found", async () => {
     mockKeycloak.init.mockResolvedValue(false);
     initAuth();

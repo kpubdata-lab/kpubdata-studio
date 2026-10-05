@@ -46,6 +46,12 @@ interface AuthState {
    * within its issuer, and Builder owns data by the pair (#731). Null for a mock session.
    */
   issuer: string | null;
+  /**
+   * Whether the OIDC token says its `email` is verified (`email_verified === true`). An
+   * unverified address is only a claim: nothing saved under it in this browser is this
+   * account's to take (#750). False for a mock session and when signed out.
+   */
+  emailVerified: boolean;
   /** The provider that created this session. Null when not logged in (#263). */
   providerId: AuthProviderId | null;
   /** OIDC bootstrap status. In mock/demo this is "disabled". */
@@ -61,6 +67,7 @@ interface AuthState {
     name: string | null;
     userId: string | null;
     issuer?: string | null;
+    emailVerified?: boolean;
   }) => void;
   /** Transition the OIDC bootstrap status. */
   setOidcStatus: (status: OidcStatus) => void;
@@ -74,6 +81,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   name: null,
   userId: null,
   issuer: null,
+  emailVerified: false,
   providerId: null,
   oidcStatus: "disabled",
   setSession: (session) =>
@@ -83,14 +91,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       name: session.name,
       userId: null,
       issuer: null,
+      emailVerified: false,
       providerId: session.provider,
     }),
-  setOidcIdentity: ({ email, name, userId, issuer = null }) =>
-    set({ token: null, email, name, userId, issuer, providerId: "keycloak" }),
+  setOidcIdentity: ({ email, name, userId, issuer = null, emailVerified = false }) =>
+    set({ token: null, email, name, userId, issuer, emailVerified, providerId: "keycloak" }),
   setOidcStatus: (oidcStatus) => set({ oidcStatus }),
   clear: () => {
     // Provider keys held for this page load belong to the signed-in user (#652).
     forgetAllProviderKeys();
-    set({ token: null, email: null, name: null, userId: null, issuer: null, providerId: null });
+    set({ token: null, email: null, name: null, userId: null, issuer: null, emailVerified: false, providerId: null });
   },
 }));

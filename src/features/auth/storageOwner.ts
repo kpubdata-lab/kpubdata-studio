@@ -46,14 +46,19 @@ export function ownedStorageKey(baseKey: string): string {
  * Move what the signed-in OIDC user saved under their e-mail key to their issuer+subject
  * key (#731). Every key ending in `:user:<e-mail>` is moved, whatever feature wrote it.
  *
+ * Nothing moves unless the token says the e-mail is verified (#750). The move is by
+ * address and happens once: on a shared browser, an account that only claims an address
+ * would otherwise take what the address's real owner saved, for good. Builder refuses
+ * such a token too, but this runs before any request reaches it.
+ *
  * An entry already present under the new key wins and the old one is left where it is:
  * overwriting would lose the newer data, and merging is each feature's own business.
  * Returns how many entries were moved. Safe to call on every sign-in.
  */
 export function migrateEmailOwnedStorage(): number {
-  const { email, userId, issuer } = useAuthStore.getState();
+  const { email, userId, issuer, emailVerified } = useAuthStore.getState();
   const oldOwner = emailOwnerKey(email);
-  if (!userId || !issuer || !oldOwner) return 0;
+  if (!userId || !issuer || !oldOwner || !emailVerified) return 0;
   const newOwner = resolveStorageOwnerKey();
   const suffix = `:${oldOwner}`;
   let moved = 0;
