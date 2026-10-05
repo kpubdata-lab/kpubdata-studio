@@ -122,7 +122,8 @@ export type PublishRecoveryOutcome =
   | { kind: "unavailable" }
   | { kind: "failed"; message: string };
 
-function recoveryFailure(cause: unknown): PublishRecoveryOutcome {
+/** What a failed reconcile or reset means for the receipt (#728); read from Builder's error body. */
+export function recoveryFailure(cause: unknown): PublishRecoveryOutcome {
   if (cause instanceof ApiError) {
     const code = (cause.details as { code?: unknown } | undefined)?.code;
     if (cause.status === 404 && code === "receipt_not_found") return { kind: "nothing_to_settle" };
