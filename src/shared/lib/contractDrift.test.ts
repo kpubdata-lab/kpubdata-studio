@@ -608,6 +608,7 @@ function predates(since: string | undefined, version: string | null = CONTRACT_V
 }
 
 const MESSAGE_ONLY = "shown as its `error` message (httpError → formatApiErrorMessage); Studio reads nothing else from it";
+const NOT_CALLED = "builderApi does not call this route, so Studio never receives this body";
 
 /**
  * Every named error example of the contract, keyed by `errorFixtureKey`: the Studio code
@@ -701,7 +702,7 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   "resetPublishReceipt 404 ReceiptNotFound": recoveryReader("nothing_to_settle"),
   "resetPublishReceipt 503 ReconcileUnavailable": recoveryReader("unavailable"),
   "getPublishReceipt 404 ReceiptNotFound": {
-    notHandled: "Studio does not call getPublishReceipt",
+    notHandled: NOT_CALLED,
     code: "receipt_not_found",
     since: PUBLISH_RECOVERY_SINCE,
   },
