@@ -689,6 +689,9 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // each as its message; acting on the codes (wait and retry, a queue-full notice) is not
   // built yet.
   "submitBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.79.0" },
+  // A synchronous build that got no build slot in time (builder#1040). Studio's synchronous
+  // build is the upload path; it shows the message, and the same request can be sent again.
+  "createBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.82.0" },
   "AuthThrottled 429 AuthThrottled": { notHandled: MESSAGE_ONLY, code: "auth_throttled", since: "1.80.0" },
   "ServerOverloaded 503 ServerOverloaded": {
     notHandled: `${MESSAGE_ONLY}; the response is written before the request is read`,
