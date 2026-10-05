@@ -473,6 +473,12 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
   },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
+  // The publish recovery routes entered the contract in 1.81.0 (builder#994). Studio calls
+  // none of them yet, so there is no body for it to parse; #728 is where it starts to.
+  getPublishReceipt: { skip: "builderApi does not call this route" },
+  getPublishAudit: { skip: "builderApi does not call this route" },
+  reconcilePublish: { skip: "builderApi does not call this route yet (#728)" },
+  resetPublishReceipt: { skip: "builderApi does not call this route yet (#728)" },
 };
 
 // --- Error responses (#701) ---
@@ -592,6 +598,7 @@ function predates(since: string | undefined, version: string | null = CONTRACT_V
 }
 
 const MESSAGE_ONLY = "shown as its `error` message (httpError → formatApiErrorMessage); Studio reads nothing else from it";
+const NOT_CALLED = "builderApi does not call this route, so Studio never receives this body";
 
 /**
  * Every named error example of the contract, keyed by `errorFixtureKey`: the Studio code
@@ -678,6 +685,13 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     code: "server_overloaded",
     since: "1.80.0",
   },
+  // The publish recovery routes (builder#994, contract 1.81.0). Studio does not call them
+  // yet, so nothing reads these bodies; #728 replaces the entries of the two it will call.
+  "getPublishReceipt 404 ReceiptNotFound": { notHandled: NOT_CALLED, code: "receipt_not_found", since: "1.81.0" },
+  "resetPublishReceipt 404 ReceiptNotFound": { notHandled: NOT_CALLED, code: "receipt_not_found", since: "1.81.0" },
+  "resetPublishReceipt 503 ReconcileUnavailable": { notHandled: NOT_CALLED, code: "reconcile_unavailable", since: "1.81.0" },
+  "reconcilePublish 404 ReceiptNotFound": { notHandled: NOT_CALLED, code: "receipt_not_found", since: "1.81.0" },
+  "reconcilePublish 503 ReconcileUnavailable": { notHandled: NOT_CALLED, code: "reconcile_unavailable", since: "1.81.0" },
   "PiiDeclarationUnavailable 503 PiiDeclarationUnavailable": {
     reader: "artifactDownloadRefusal, profileRefusal and classifyQueryError (#640, #643)",
     check: (status, body) => {
