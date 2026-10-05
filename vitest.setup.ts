@@ -23,6 +23,7 @@ configure({ asyncUtilTimeout: 30_000 });
  * vitest 환경에서 실제 HTTP 요청을 인터셉트하여 모의 Builder API 응답을 제공한다.
  * 이를 통해 E2E 테스트를 실제 Builder 서버 없이 실행할 수 있다.
  */
+import { HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { handlers } from "./__tests__/msw/handlers";
 import { i18n } from "@/shared/i18n"; // 다국어 초기화 — 테스트는 ko로 고정(기존 단언 호환)
@@ -32,7 +33,18 @@ void i18n.changeLanguage("ko");
 export const mswServer = setupServer(...handlers);
 
 // 모든 테스트 시작 전 MSW 서버 시작
-mswServer.listen({ onUnhandledFrame: "warn" });
+//
+// 핸들러가 없는 요청은 경고한 뒤 **실제 네트워크로 내보내지 않고** 네트워크 오류로 끝낸다 (#741).
+// 기본 전략 "warn" 은 경고 뒤 요청을 그대로 통과시켜 실제 localhost 에 연결을 시도한다.
+// 그 연결이 살아 있는 동안 같은 origin 으로 가는 다음 요청이 — 핸들러가 있어도 — MSW 를
+// 거치지 않고 그 연결과 함께 실패하는 일이 CI 에서 관찰됐다(`request:start` 없이
+// `fetch failed`). 앱이 보는 결과는 전과 같다: `fetch` 가 reject 되고 연결 실패로 읽힌다.
+mswServer.listen({
+  onUnhandledFrame: async ({ defaults }) => {
+    await defaults.warn();
+    throw HttpResponse.error();
+  },
+});
 
 // 각 테스트 후 핸들러 리셋 (이전 테스트의 요청/응답 기록 제거)
 afterEach(() => {
