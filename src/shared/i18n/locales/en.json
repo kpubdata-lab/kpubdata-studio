@@ -1353,7 +1353,9 @@
       "reset": "Reset the record",
       "resetConfirm": "Confirm reset",
       "resetWarning": "This deletes the record without checking the remote. Anything already published stays published, and publishing again sends it to the same destination once more.",
-      "tokenNeeded": "Checking the remote needs the publish token. Enter it again above, then press the button.",
+      "tokenLabel": "Hugging Face token for the remote check",
+      "tokenHint": "Sent with one remote check and dropped straight after. It is not stored. Resetting the record does not use it.",
+      "tokenNeeded": "Checking the remote needs the publish token. Enter it in the field just above, then press the button.",
       "publishAgain": "Prepare to publish again",
       "outcome": {
         "confirmed": "The destination exists remotely. The publish went through — there is no need to send it again.",
