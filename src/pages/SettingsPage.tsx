@@ -22,7 +22,7 @@ import {
   MIN_BUILDER_API_VERSION,
 } from "@/shared/lib/builderApi";
 import type { ProviderSummary } from "@/shared/lib/builderApi.schema";
-import { keycloakLogout } from "@/features/auth/keycloak";
+import { signOutOfOidc } from "@/features/auth/signOut";
 import { useAuthStore } from "@/features/auth/store";
 import { useAssistConfig } from "@/features/assistant/config";
 import { Card, PageHeader, StatusBadge, Button } from "@/shared/ui";
@@ -48,7 +48,8 @@ export function SettingsPage() {
   // clear in-memory session.
   const handleLogout = () => {
     if (oidcStatus === "authenticated") {
-      void keycloakLogout();
+      // Clears what this browser holds for the user before the page leaves (#769).
+      void signOutOfOidc();
       return;
     }
     clear();

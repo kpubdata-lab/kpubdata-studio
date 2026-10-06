@@ -11,6 +11,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+import { signOutOfOidc } from "@/features/auth/signOut";
 import { useAuthStore } from "@/features/auth/store";
 import { useUIStore, type ThemeMode } from "@/shared/hooks/useUIStore";
 import {
@@ -82,7 +83,8 @@ export function AccountMenu() {
   function signOut() {
     setOpen(false);
     if (oidcStatus === "authenticated") {
-      void import("@/features/auth/keycloak").then(({ keycloakLogout }) => keycloakLogout());
+      // Clears what this browser holds for the user before the page leaves (#769).
+      void signOutOfOidc();
       return;
     }
     clearSession();
