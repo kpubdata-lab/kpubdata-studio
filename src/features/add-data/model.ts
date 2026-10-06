@@ -36,6 +36,23 @@ export interface FileDraft {
   /** Display-only original filename (preserves Builder response original_filename as-is). */
   filename: string | null;
   sizeBytes: number | null;
+  /**
+   * When Builder will delete the upload (#758), as its metadata said at upload time.
+   * Null or absent when it said nothing — nothing is scheduled, or the Builder is older.
+   */
+  expiresAt?: string | null;
+}
+
+/**
+ * Where an uploaded file stands against its expiry (#758): `none` when Builder scheduled
+ * no deletion (or said nothing readable), otherwise whether the date has passed. A spec
+ * that names an expired upload fails at build time with "upload not found".
+ */
+export function uploadExpiry(expiresAt: string | null | undefined, now: number): "none" | "pending" | "expired" {
+  if (!expiresAt) return "none";
+  const at = Date.parse(expiresAt);
+  if (Number.isNaN(at)) return "none";
+  return at <= now ? "expired" : "pending";
 }
 
 export interface UrlDraft {
@@ -331,6 +348,7 @@ export function applyBuildSpecToDraft(draft: AddDataDraft, spec: BuildSpec): Add
       encoding: source?.encoding ?? "utf-8",
       filename: draft.file.filename,
       sizeBytes: draft.file.sizeBytes,
+      expiresAt: draft.file.expiresAt ?? null,
     };
   } else {
     next.url = {

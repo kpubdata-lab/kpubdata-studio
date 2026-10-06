@@ -343,6 +343,7 @@ export function AddDataPage() {
           encoding: meta.encoding,
           filename: meta.original_filename,
           sizeBytes: meta.size_bytes,
+          expiresAt: meta.expires_at ?? null,
         },
         datasetId: identity.datasetId,
         title: identity.title,

@@ -15,6 +15,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes, useParams } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as addDataApi from "@/features/add-data/api";
 import { AddDataPage } from "@/pages/AddDataPage";
 import { API_BASE } from "@/shared/config/env";
 import { mswServer } from "../vitest.setup";
@@ -508,6 +509,54 @@ describe("Add Data Workbench — File source (#250, #498, amendment 2)", () => {
     await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     expect(screen.getByText(/"kind": "file"/)).toBeInTheDocument();
     expect(screen.getByText(/"dataset_id": "2026-apt-trades"/)).toBeInTheDocument();
+  });
+
+  describe("the uploaded file's retention date (#758)", () => {
+    async function uploadAnswering(expiresAt: string | null | undefined) {
+      vi.spyOn(addDataApi, "uploadSourceFile").mockResolvedValue({
+        upload_id: `upl_${"1".repeat(32)}`,
+        format: "csv",
+        encoding: "utf-8",
+        size_bytes: 7,
+        original_filename: "trades.csv",
+        created_at: "2026-10-01T00:00:00+00:00",
+        ...(expiresAt === undefined ? {} : { expires_at: expiresAt }),
+      });
+      renderWizard();
+      fireEvent.click(screen.getByRole("button", { name: /파일 업로드/ }));
+      next();
+      await screen.findAllByText("파일 업로드");
+      fireEvent.change(screen.getByLabelText(/Format/), { target: { value: "csv" } });
+      fireEvent.change(screen.getByLabelText(/파일/) as HTMLInputElement, {
+        target: { files: [new File(["a,b\n1,2"], "trades.csv", { type: "text/csv" })] },
+      });
+      await screen.findByText(/업로드 완료/);
+    }
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it("says until when the file is kept", async () => {
+      await uploadAnswering("2099-01-01T00:00:00+00:00");
+
+      const note = document.querySelector("[data-upload-expiry]");
+      expect(note).toHaveAttribute("data-upload-expiry", "pending");
+      expect(note).toHaveTextContent("까지 보관됩니다");
+      expect(note).toHaveTextContent("다시 올려야 합니다");
+    });
+
+    it("says plainly that a file past its date is gone, before any build is tried", async () => {
+      await uploadAnswering("2020-01-01T00:00:00+00:00");
+
+      const note = screen.getByRole("alert");
+      expect(note).toHaveAttribute("data-upload-expiry", "expired");
+      expect(note).toHaveTextContent("삭제되었습니다");
+    });
+
+    it.each([[null], [undefined]])("shows nothing when Builder scheduled no deletion (%s)", async (answer) => {
+      await uploadAnswering(answer);
+
+      expect(document.querySelector("[data-upload-expiry]")).toBeNull();
+    });
   });
 });
 
