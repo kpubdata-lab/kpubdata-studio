@@ -191,6 +191,28 @@ describe("KeyProbePanel", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("확인하지 못했습니다");
   });
 
+  it("says what it is doing while Builder is still checking (#768)", async () => {
+    let finish: () => void = () => {};
+    mswServer.use(
+      http.post(`${API_BASE}/providers/datago/probe`, async () => {
+        seen.headers.push(null);
+        await new Promise<void>((resolve) => {
+          finish = resolve;
+        });
+        return HttpResponse.json(probed([row("apt_trade", "available")]));
+      }),
+    );
+
+    render(<KeyProbePanel provider="datago" />);
+    await check();
+
+    expect(screen.getByRole("status")).toHaveTextContent("1분쯤 걸릴 수 있습니다");
+    expect(screen.getByRole("button", { name: "확인하는 중…" })).toBeDisabled();
+    finish();
+    await screen.findByRole("row", { name: /apt_trade/ });
+    expect(screen.queryByText(/1분쯤 걸릴 수 있습니다/)).toBeNull();
+  });
+
   it("does not retry: one upstream call per dataset is made per click", async () => {
     mockProbe({ error: "probe unavailable" }, seen, 502);
 
