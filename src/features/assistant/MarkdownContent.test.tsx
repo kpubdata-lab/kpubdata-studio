@@ -18,4 +18,23 @@ describe("MarkdownContent", () => {
     expect(container.querySelector("a")).toBeNull();
     expect(container.textContent).toContain("<img");
   });
+
+  it.each(["//evil.example/path", "//evil.example", "/\\evil.example/path", "///evil.example"])(
+    "does not draw %s as a link: it leaves this origin (#772)",
+    (href) => {
+      render(<MarkdownContent>{`[go](${href})`}</MarkdownContent>);
+
+      expect(screen.queryByRole("link")).toBeNull();
+      expect(screen.getByText("go")).toBeInTheDocument();
+    },
+  );
+
+  it.each(["/tables/x", "/", "./a", "../a", "#h", "https://example.org/a", "http://example.org"])(
+    "still draws %s as a link",
+    (href) => {
+      render(<MarkdownContent>{`[go](${href})`}</MarkdownContent>);
+
+      expect(screen.getByRole("link", { name: "go" })).toHaveAttribute("href", href);
+    },
+  );
 });
