@@ -3266,5 +3266,13 @@
     "scopeAll": "All {{count}} accessible runs are shown.",
     "loadMore": "Show more (up to {{limit}})",
     "moreFailed": "Could not load up to {{limit}} runs. KPubData Builder may refuse a very large limit — the list above is unchanged."
+  },
+  "sessionRefused": {
+    "title": "KPubData Builder does not accept this sign-in",
+    "desc": "You are still signed in, but KPubData Builder refuses the request even with a newly issued token. This is not an expired token; it is the account or the configuration.",
+    "reason": "The reason KPubData Builder gave:",
+    "next": "Check that your e-mail address is verified. If it still fails, give this reason to your administrator. Until then the screens do not resend their queries.",
+    "tryAgain": "Try again",
+    "signOut": "Sign out"
   }
 }

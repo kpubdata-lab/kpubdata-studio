@@ -6,7 +6,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { API_BASE } from "@/shared/config/env";
-import { DEFAULT_TIMEOUT_MS, PROBE_TIMEOUT_MS, builderApi, setAuthErrorCallback, setAuthTokenProvider } from "./builderApi";
+import {
+  DEFAULT_TIMEOUT_MS,
+  PROBE_TIMEOUT_MS,
+  builderApi,
+  resetAuthRenewalForTests,
+  setAuthErrorCallback,
+  setAuthTokenProvider,
+} from "./builderApi";
+import { clearSessionRefusal, isSessionRefused, useSessionRefusalStore } from "./sessionRefusal";
+
+// A refusal recorded by one test would stop the next one's 401 from being renewed (#771).
+beforeEach(() => {
+  clearSessionRefusal();
+  resetAuthRenewalForTests();
+});
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -486,5 +500,88 @@ describe("probeProviderKey waits as long as Builder's probe can take (#768)", ()
 
     await expect(outcome).resolves.toBe("gave up");
     expect(PROBE_TIMEOUT_MS).toBeGreaterThan(60_000);
+  });
+});
+
+describe("a renewed token that is still refused (#771)", () => {
+  const REFUSED = { error: "email not verified", code: "unauthorized" };
+  let renewals: number;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    clearSessionRefusal();
+    renewals = 0;
+    setAuthTokenProvider(() => "token");
+    // The identity provider renews every time: the token is not what is wrong.
+    setAuthErrorCallback(() => {
+      renewals += 1;
+      return true;
+    });
+  });
+
+  afterEach(() => {
+    setAuthErrorCallback(null);
+    setAuthTokenProvider(null);
+    clearSessionRefusal();
+    vi.restoreAllMocks();
+  });
+
+  it("resends once in all, however many queries follow, and records the reason once", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse(401, REFUSED));
+
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+    // The first query: sent, renewed, resent once.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(renewals).toBe(1);
+    expect(useSessionRefusalStore.getState().refusal).toEqual({ code: "unauthorized", reason: "email not verified" });
+
+    for (let query = 0; query < 5; query += 1) {
+      await expect(builderApi.listProviders()).rejects.toMatchObject({ status: 401 });
+    }
+    // Five more queries: one request each, no renewal, no resend.
+    expect(fetchMock).toHaveBeenCalledTimes(7);
+    expect(renewals).toBe(1);
+    expect(useSessionRefusalStore.getState().refusal?.reason).toBe("email not verified");
+  });
+
+  it("recovers as before when the renewed token is accepted", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse(401, { error: "token expired", code: "token_expired" }))
+      .mockResolvedValueOnce(jsonResponse(200, { service: "kpubdata-builder", api_version: "1.0.0" }));
+
+    await expect(builderApi.version()).resolves.toMatchObject({ api_version: "1.0.0" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(renewals).toBe(1);
+    expect(useSessionRefusalStore.getState().refusal).toBeNull();
+  });
+
+  it("tries again after the user asks, and forgets the refusal once a request is accepted", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse(401, REFUSED));
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+    expect(isSessionRefused()).toBe(true);
+
+    clearSessionRefusal();
+    fetchMock.mockImplementation(async () => jsonResponse(200, { service: "kpubdata-builder", api_version: "1.0.0" }));
+    await expect(builderApi.version()).resolves.toMatchObject({ api_version: "1.0.0" });
+    expect(isSessionRefused()).toBe(false);
+
+    // And a refusal that stands is lifted by an accepted request without being asked.
+    fetchMock.mockImplementation(async () => jsonResponse(401, REFUSED));
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+    expect(isSessionRefused()).toBe(true);
+    fetchMock.mockImplementation(async () => jsonResponse(200, { service: "kpubdata-builder", api_version: "1.0.0" }));
+    await expect(builderApi.version()).resolves.toBeDefined();
+    expect(isSessionRefused()).toBe(false);
+  });
+
+  it("a 401 that could not be renewed is not this: the session is cleared by the auth layer", async () => {
+    setAuthErrorCallback(() => false);
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse(401, REFUSED));
+
+    await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
+
+    expect(isSessionRefused()).toBe(false);
   });
 });

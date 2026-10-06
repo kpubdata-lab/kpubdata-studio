@@ -17,8 +17,12 @@ import { AccountMenu } from "./AccountMenu";
 import { crumbsFor, documentTitleFor } from "./breadcrumb";
 import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
+import { signOutOfOidc } from "@/features/auth/signOut";
+import { useAuthStore } from "@/features/auth/store";
+import { SessionRefusedNotice } from "@/features/onboarding/SessionRefusedNotice";
 import { SignupStatusNotice } from "@/features/onboarding/SignupStatusNotice";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { clearSessionRefusal, useSessionRefusalStore } from "@/shared/lib/sessionRefusal";
 import { useSignupStatusStore } from "@/shared/lib/signupStatus";
 import { focusRouteTarget } from "./routeFocus";
 import { BrandLogo, DemoBadge } from "@/shared/ui";
@@ -278,6 +282,21 @@ export function Layout() {
   const isAdmin = useAdminStore((state) => state.status === "admin");
   const navGroups = buildNavGroups(t, isAdmin);
   const signupBlock = useSignupStatusStore((state) => state.block);
+  const sessionRefusal = useSessionRefusalStore((state) => state.refusal);
+  const signedInUser = useAuthStore((state) => state.userId ?? state.email);
+  // The refusal was about the previous user's session.
+  useEffect(() => {
+    clearSessionRefusal();
+  }, [signedInUser]);
+  const signOutAfterRefusal = () => {
+    clearSessionRefusal();
+    if (useAuthStore.getState().oidcStatus === "authenticated") {
+      // The one way out of an OIDC session: it clears this browser before leaving (#769).
+      void signOutOfOidc();
+      return;
+    }
+    useAuthStore.getState().clear();
+  };
   const demoMode = !isRealBuilderEnabled();
   const closeMobileSidebar = useUIStore((state) => state.closeMobileSidebar);
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
@@ -559,7 +578,15 @@ export function Layout() {
           >
             {/* A sign-up the ledger holds back answers every request with 403 (#658); one
                 explanation replaces the page rather than each page's generic error. */}
-            {signupBlock ? <SignupStatusNotice block={signupBlock} /> : <Outlet />}
+            {/* A session Builder keeps refusing after the token is renewed (#771) is
+                explained once here too, and comes first: nothing else can be known. */}
+            {sessionRefusal ? (
+              <SessionRefusedNotice refusal={sessionRefusal} onSignOut={signOutAfterRefusal} />
+            ) : signupBlock ? (
+              <SignupStatusNotice block={signupBlock} />
+            ) : (
+              <Outlet />
+            )}
           </main>
         </div>
       </div>

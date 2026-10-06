@@ -22,6 +22,7 @@ import { API_BASE } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
 import { providerKeyHeaders, specProviders } from "./providerKeys";
+import { clearSessionRefusal, isSessionRefused, noteSessionRefused } from "./sessionRefusal";
 import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
 
@@ -158,12 +159,43 @@ export function setAuthErrorCallback(cb: AuthErrorCallback | null): void {
  * new token. Exceptions from re-auth callback are caught to not mask original 401.
  */
 async function recoverFromUnauthorized(): Promise<boolean> {
-  if (!authErrorCallback) return false;
-  try {
-    return (await authErrorCallback()) === true;
-  } catch {
-    return false;
-  }
+  // A refusal that stands is not cured by renewing again (#771) — on any request path.
+  if (!authErrorCallback || isSessionRefused()) return false;
+  // The queries of one screen meet the same 401 together; they share one renewal rather
+  // than each forcing its own.
+  recovery ??= Promise.resolve()
+    .then(() => authErrorCallback?.())
+    .then(
+      (result) => result === true,
+      () => false,
+    )
+    .then((renewed) => {
+      if (renewed) lastRenewedAt = Date.now();
+      return renewed;
+    })
+    .finally(() => {
+      recovery = null;
+    });
+  return recovery;
+}
+
+let recovery: Promise<boolean> | null = null;
+/** When the token was last renewed after a 401; null until that happens. */
+let lastRenewedAt: number | null = null;
+/**
+ * A token this fresh has not expired. A 401 for a request sent with it is Builder
+ * refusing the session, not asking for another renewal.
+ *
+ * Ten seconds is a value chosen here, not one Builder or the identity provider gives. An
+ * access token that lives for less than this would have its ordinary expiry taken for a
+ * refusal; token lifetimes are minutes, so the two do not meet in practice.
+ */
+const FRESH_TOKEN_MS = 10_000;
+
+/** Test helper: forget that a token was renewed. */
+export function resetAuthRenewalForTests(): void {
+  recovery = null;
+  lastRenewedAt = null;
 }
 
 /** Default auto timeout (ms). Builder /build calls external APIs so set generously. */
@@ -307,17 +339,34 @@ export async function apiFetch<T>(
   options: RequestOptions = {},
   schema?: z.ZodSchema<T>,
 ): Promise<T> {
+  const sentAt = Date.now();
   let response = await fetchWithRetries(path, options);
 
   // 401: if re-auth succeeds, send same request exactly once with new token (#189).
   // avoid exposing first failed attempt to user, limit retry to 1
   // prevent loop on real auth failure (not expiry). Don't attach auth header
   // request (skipAuth) returns same result on replay do not retry.
-  if (response.status === 401) {
-    const recovered = await recoverFromUnauthorized();
-    if (recovered && !options.skipAuth) {
+  //
+  // A renewed token that is refused too is not an expiry (#771): the refusal is recorded
+  // once and, while it stands, a 401 is neither renewed nor resent — at most one resend
+  // per refusal, whatever the number of queries on the screen.
+  let refusedWithFreshToken = false;
+  if (response.status === 401 && !isSessionRefused() && !options.skipAuth) {
+    if (lastRenewedAt !== null && sentAt >= lastRenewedAt && sentAt - lastRenewedAt < FRESH_TOKEN_MS) {
+      // Sent with a token renewed a moment ago: renewing again changes nothing.
+      refusedWithFreshToken = true;
+    } else if (lastRenewedAt !== null && sentAt < lastRenewedAt) {
+      // Another query renewed the token while this one was out: use that one.
       response = await fetchWithRetries(path, options);
+      refusedWithFreshToken = response.status === 401;
+    } else if (await recoverFromUnauthorized()) {
+      response = await fetchWithRetries(path, options);
+      refusedWithFreshToken = response.status === 401;
     }
+  } else if (response.status === 401 && !isSessionRefused()) {
+    // A request that carries no token gets the same answer again; the auth layer is
+    // still told, as before.
+    await recoverFromUnauthorized();
   }
 
   const text = await response.text();
@@ -331,6 +380,9 @@ export async function apiFetch<T>(
     }
   }
 
+  if (refusedWithFreshToken && response.status === 401) noteSessionRefused(parsed);
+  // An accepted request with the session's token means the refusal is over.
+  if (response.ok && !options.skipAuth) clearSessionRefusal();
   if (!response.ok) throw httpError(response.status, parsed);
 
   // runtime type validation via Zod schema (#158, #103)
