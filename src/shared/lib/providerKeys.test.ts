@@ -3,7 +3,8 @@
  *
  * Verifies the header form Builder parses (`<provider>=<key>`, comma-separated), that a
  * key never reaches browser storage or a URL, and that exactly the provider-calling routes
- * carry it — and only while a key is held, so a single-user deployment sends nothing.
+ * and the provider list (which reports what the held keys cover) carry it — and only
+ * while a key is held, so a single-user deployment sends nothing.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -86,6 +87,8 @@ describe("builderApi X-Provider-Key routing", () => {
     ["POST /builds", () => builderApi.submitBuild("dataset_id: x")],
     ["POST /providers/{p}/test", () => builderApi.testProviderConnection("datago")],
     ["GET /providers/{p}/status", () => builderApi.getProviderStatus("datago")],
+    // Calls no provider, but its `configured` can only count a key it sees (contract 1.90.0).
+    ["GET /providers", () => builderApi.listProviders()],
   ];
 
   it.each(PROVIDER_CALLS)("%s carries the held key in the header, never the URL", async (_name, call) => {
@@ -103,11 +106,10 @@ describe("builderApi X-Provider-Key routing", () => {
     expect(lastCall().headers).not.toHaveProperty(PROVIDER_KEY_HEADER);
   });
 
-  it("routes that do not call a provider never carry the key", async () => {
+  it("routes that neither call a provider nor report what a key covers never carry the key", async () => {
     holdProviderKey("datago", KEY);
     const others: Array<() => Promise<unknown>> = [
       () => builderApi.version(),
-      () => builderApi.listProviders(),
       () => builderApi.getProviderCredential("datago"),
       () => builderApi.putProviderCredential("datago", "typed"),
       () => builderApi.validate("dataset_id: x"),

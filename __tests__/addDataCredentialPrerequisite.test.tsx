@@ -14,6 +14,7 @@ import { AddDataPage } from "@/pages/AddDataPage";
 import { ProviderPage } from "@/pages/ProviderPage";
 import { loadAddDataDraft } from "@/features/add-data/draftStorage";
 import { API_BASE } from "@/shared/config/env";
+import { forgetAllProviderKeys, holdProviderKey, PROVIDER_KEY_HEADER } from "@/shared/lib/providerKeys";
 import { mswServer } from "../vitest.setup";
 
 function renderApp() {
@@ -80,6 +81,7 @@ async function selectAirQuality() {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  forgetAllProviderKeys();
   localStorage.clear();
 });
 
@@ -112,6 +114,38 @@ describe("Add Data credential prerequisite (real 모드)", () => {
     expect(saved?.publicApi.provider).toBe("datago");
     expect(saved?.publicApi.dataset).toBe("air_quality");
     expect(saved?.publicApi.sourceParams).toContain("서울");
+  });
+
+  it("다중 사용자 배포에서 이 세션에 키를 쥐고 있으면 막지 않는다 (GET /providers 가 키를 싣는다)", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    useAirQualityCatalog();
+    expect(holdProviderKey("datago", "held-for-this-session")).toBe(true);
+    const seen: Array<string | null> = [];
+    mswServer.use(
+      // Builder in a multi-user deployment: nothing is stored, so `configured` reflects
+      // only the keys the request carries (contract 1.90.0).
+      http.get(`${API_BASE}/providers`, ({ request }) => {
+        const header = request.headers.get(PROVIDER_KEY_HEADER);
+        seen.push(header);
+        const configured = (header ?? "").split(",").some((item) => item.trim().startsWith("datago="));
+        return HttpResponse.json({ providers: [{ provider: "datago", requires_credential: true, configured }] });
+      }),
+      http.post(`${API_BASE}/preview`, () =>
+        HttpResponse.json({ previews: [], transforms: [], diff: null }),
+      ),
+      http.post(`${API_BASE}/validate`, () => HttpResponse.json({ valid: true, errors: [] })),
+    );
+    renderApp();
+    await selectAirQuality();
+    fireEvent.change(screen.getByLabelText(/요청 파라미터/), { target: { value: '{"sidoName":"서울"}' } });
+
+    await waitFor(() => expect(seen.length).toBeGreaterThan(0));
+    expect(seen.every((header) => header === "datago=held-for-this-session")).toBe(true);
+    expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
+
+    next();
+    await screen.findByRole("heading", { name: /Preview · 검증/ });
+    expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
   });
 
   it("provider가 configured면 막지 않고 Preview 요청을 진행한다", async () => {

@@ -1353,6 +1353,15 @@ async function requestOf(name: string): Promise<SentRequest | null> {
 /** The contract version that declares `X-Provider-Key` as a parameter (builder#994). */
 const PROVIDER_KEY_PARAMETER_SINCE = "1.80.0";
 
+/**
+ * Operations that took the header later than {@link PROVIDER_KEY_PARAMETER_SINCE}. Studio
+ * sends it ahead of the Builder that declares it, so an older contract is not held to it.
+ */
+const PROVIDER_KEY_DECLARED_LATER: Record<string, string> = {
+  // GET /providers reads the held keys to report what they cover (contract 1.90.0).
+  listProviders: "1.90.0",
+};
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -1403,14 +1412,18 @@ describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#7
         const declared = (doc.paths[route?.template ?? ""]?.[request.method.toLowerCase()]?.parameters ?? [])
           .map((parameter) => (parameter.$ref ? doc.components.parameters?.[parameter.$ref.split("/").pop() ?? ""] : parameter))
           .some((parameter) => parameter?.in === "header" && parameter.name === PROVIDER_KEY_HEADER);
-        if (!declared) undeclared.push(`${name}: ${request.method} ${route?.template ?? request.path}`);
+        const since = PROVIDER_KEY_DECLARED_LATER[name];
+        const owed = since === undefined || compareVersions(doc.info.version, since) >= 0;
+        if (!declared && owed) undeclared.push(`${name}: ${request.method} ${route?.template ?? request.path}`);
       }
     } finally {
       forgetAllProviderKeys();
     }
 
     // The probe must find the calls that carry the key, or the check proves nothing.
-    expect(sending.sort()).toEqual(["build", "getProviderStatus", "preview", "probeProviderKey", "submitBuild", "testProviderConnection"].sort());
+    expect(sending.sort()).toEqual(
+      ["build", "getProviderStatus", "listProviders", "preview", "probeProviderKey", "submitBuild", "testProviderConnection"].sort(),
+    );
     // An earlier contract mentions the header only in prose; from the version that
     // declares it, every operation Studio sends it to has to carry the parameter.
     if (compareVersions(doc.info.version, PROVIDER_KEY_PARAMETER_SINCE) >= 0) expect(undeclared).toEqual([]);
