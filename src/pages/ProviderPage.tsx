@@ -62,6 +62,7 @@ import {
   useProviderKeyHeld,
 } from "@/shared/lib/providerKeys";
 import { ConnectionsTable } from "@/features/provider/ConnectionsTable";
+import { KeyProbePanel } from "@/features/provider/KeyProbePanel";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 
 /**
@@ -539,6 +540,7 @@ export function ProviderPage() {
                       <p className="mt-2">{t("provider.detail.perRequestBody")}</p>
                     </div>
                     {selectedKeyHeld ? (
+                      <>
                       <div className="flex flex-wrap items-center gap-3 text-sm">
                         <span className="text-foreground">{t("provider.detail.sessionKeyHeld")}</span>
                         <Button size="sm" variant="secondary" onClick={handleForgetSessionKey}>
@@ -548,6 +550,9 @@ export function ProviderPage() {
                           <LinkButton to={safeReturnTo}>{t("provider.detail.backToData")}</LinkButton>
                         ) : null}
                       </div>
+                      {/* Keyed by provider: another provider's result never shows here. */}
+                      <KeyProbePanel key={selectedProvider.id} provider={selectedProvider.id} />
+                      </>
                     ) : showCredentialForm ? (
                       <div className="space-y-4">
                         <div>

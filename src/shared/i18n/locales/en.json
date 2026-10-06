@@ -931,6 +931,61 @@
       "neverTested": "Never tested",
       "test": "Test",
       "testing": "Testing…"
+    },
+    "keyProbe": {
+      "title": "See what this key reaches",
+      "body": "Calls each source dataset of this provider once with the key held for this session. KPubData Builder stores neither the key nor the result.",
+      "run": "Check",
+      "runAgain": "Check again",
+      "running": "Checking…",
+      "failed": "Could not check. Try again in a moment.",
+      "none": "This provider has no source dataset that can be checked.",
+      "notProbed": "Not checked in time: {{datasets}}. Nothing is known about these.",
+      "notKept": "This result is not stored and is gone when you leave this screen.",
+      "unknownStatus": "A status this Studio does not know. Shown as KPubData Builder sent it.",
+      "columns": {
+        "dataset": "Source dataset",
+        "status": "Status",
+        "next": "What to do"
+      },
+      "status": {
+        "available": {
+          "label": "Available",
+          "next": "Ready to use."
+        },
+        "auth_unknown": {
+          "label": "Check the key",
+          "next": "The key was not accepted. Check it and enter it again."
+        },
+        "application_required": {
+          "label": "Application required",
+          "next": "Apply for this service at the provider, then check again once approved."
+        },
+        "params_invalid": {
+          "label": "Check parameters",
+          "next": "The key passed. The result depends on the request parameters."
+        },
+        "rate_limited": {
+          "label": "Rate limited",
+          "next": "The call limit was reached. Check again later."
+        },
+        "temporarily_unavailable": {
+          "label": "Temporarily unavailable",
+          "next": "The provider is not answering now. This says nothing about the key."
+        },
+        "network_error": {
+          "label": "Connection failed",
+          "next": "The provider could not be reached. This says nothing about the key."
+        },
+        "insufficient_metadata": {
+          "label": "Cannot be checked",
+          "next": "This source dataset lacks what a test call needs."
+        },
+        "retired": {
+          "label": "Retired",
+          "next": "The provider has ended this service."
+        }
+      }
     }
   },
   "home": {

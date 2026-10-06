@@ -59,6 +59,7 @@ const EXPECTED_OPERATIONS = [
   "listQualityIssues",
   "listProviders",
   "testProviderConnection",
+  "probeProviderKey",
   "getProviderStatus",
   "getProviderCredential",
   "putProviderCredential",

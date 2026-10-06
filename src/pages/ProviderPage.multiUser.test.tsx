@@ -132,6 +132,45 @@ describe("ProviderPage multi-user credential mode (#652)", () => {
     expect(seen.testHeaders[1]).toBeNull();
   });
 
+  it("offers the key probe only while a key is held, and forgetting the key removes its result (#410)", async () => {
+    const seen: Seen = { puts: 0, testHeaders: [] };
+    const probeHeaders: Array<string | null> = [];
+    mockBuilder("request", seen);
+    mswServer.use(
+      http.post(`${API_BASE}/providers/datago/probe`, ({ request }) => {
+        probeHeaders.push(request.headers.get("X-Provider-Key"));
+        return HttpResponse.json({
+          provider: "datago",
+          probed_at: "2026-10-06T09:30:00+00:00",
+          complete: true,
+          datasets: [{ dataset: "apt_trade", service_id: "RTMSDataSvcAptTradeDev", status: "available", detail: "", http_status: 200 }],
+          not_probed: [],
+        });
+      }),
+    );
+    renderProviders();
+
+    await screen.findByText("이 KPubData Builder는 provider 키를 저장하지 않습니다");
+    // No key yet: nothing to probe with.
+    expect(screen.queryByRole("button", { name: "확인하기" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "이번 세션에 쓸 키 입력" }));
+    fireEvent.change(screen.getByPlaceholderText("API Key를 입력하세요"), { target: { value: KEY } });
+    fireEvent.click(screen.getByRole("button", { name: "이번 세션에 사용" }));
+    fireEvent.click(await screen.findByRole("button", { name: "확인하기" }));
+
+    expect(await screen.findByRole("row", { name: /apt_trade/ })).toHaveTextContent("사용 가능");
+    expect(probeHeaders).toEqual([`datago=${KEY}`]);
+    expect(setItem).not.toHaveBeenCalledWith(expect.anything(), expect.stringContaining(KEY));
+    expectKeyNowhere(consoleSpies);
+
+    fireEvent.click(screen.getByRole("button", { name: "키 지우기" }));
+
+    await waitFor(() => expect(screen.queryByRole("row", { name: /apt_trade/ })).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "확인하기" })).not.toBeInTheDocument();
+    expect(probeHeaders).toHaveLength(1);
+  });
+
   it("from a Builder that does not say, 403 credential_storage_disabled gets its own message and the session action", async () => {
     const seen: Seen = { puts: 0, testHeaders: [] };
     mockBuilder(undefined, seen);

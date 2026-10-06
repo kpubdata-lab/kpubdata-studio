@@ -1400,7 +1400,7 @@ describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#7
     }
 
     // The probe must find the calls that carry the key, or the check proves nothing.
-    expect(sending.sort()).toEqual(["build", "getProviderStatus", "preview", "submitBuild", "testProviderConnection"].sort());
+    expect(sending.sort()).toEqual(["build", "getProviderStatus", "preview", "probeProviderKey", "submitBuild", "testProviderConnection"].sort());
     // An earlier contract mentions the header only in prose; from the version that
     // declares it, every operation Studio sends it to has to carry the parameter.
     if (compareVersions(doc.info.version, PROVIDER_KEY_PARAMETER_SINCE) >= 0) expect(undeclared).toEqual([]);

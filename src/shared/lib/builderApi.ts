@@ -468,6 +468,7 @@ export type CatalogDataset = schemas.CatalogDataset;
 export type CatalogProvider = schemas.CatalogProvider;
 export type CatalogResponse = schemas.CatalogResponse;
 export type ProviderTestResponse = schemas.ProviderTestResponse;
+export type ProviderProbeResponse = schemas.ProviderProbeResponse;
 export type UploadMetadata = schemas.UploadMetadata;
 export type ProviderSummary = schemas.ProviderSummary;
 export type ProviderLastTest = schemas.ProviderLastTest;
@@ -1054,6 +1055,19 @@ export const builderApi = {
       `/providers/${encodeURIComponent(provider)}/test`,
       { method: "POST", signal, retries: 0, headers: providerKeyHeaders() },
       schemas.providerTestResponseSchema,
+    ),
+
+   /**
+    * POST /providers/{provider}/probe — what the key held for this session reaches, per
+    * dataset (#410, kpubdata-builder#802, contract 1.87.0). Builder uses only the key in
+    * `X-Provider-Key` and stores neither it nor the result. One upstream call per dataset,
+    * so it is never retried here.
+    */
+  probeProviderKey: (provider: string, signal?: AbortSignal) =>
+    apiFetch(
+      `/providers/${encodeURIComponent(provider)}/probe`,
+      { method: "POST", signal, retries: 0, headers: providerKeyHeaders() },
+      schemas.providerProbeResponseSchema,
     ),
 
    /**
