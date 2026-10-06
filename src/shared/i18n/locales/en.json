@@ -3273,6 +3273,7 @@
     "reason": "The reason KPubData Builder gave:",
     "next": "Check that your e-mail address is verified. If it still fails, give this reason to your administrator. Until then the screens do not resend their queries.",
     "tryAgain": "Try again",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "nextEmail": "The e-mail address of this account is not verified yet. Open the link in the verification mail from your sign-in provider, then press \"Try again\". Until then the screens do not resend their queries."
   }
 }
