@@ -20,6 +20,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { CREATE_TABLE_PATH } from "@/app/createTableRedirect";
 import { previewBuild } from "@/features/preview/api";
 import { useBuild } from "@/features/runs/useBuild";
+import { retryOfFor } from "@/features/runs/api";
 import { useBuildJob } from "@/features/runs/useBuildJob";
 import { validateSpec } from "@/features/validation/api";
 import { createSavedSpec } from "@/features/workspace/savedSpecs";
@@ -342,7 +343,9 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
                   saveSpecMessage={saveSpecMessage}
                   onRevalidate={() => void runValidate()}
                   onRun={() => {
-                    if (specPreview.spec) void job.start(specPreview.spec);
+                    // A build started here from a run that failed or was cancelled is a
+                    // retry of that run, and says so (#757).
+                    if (specPreview.spec) void job.start(specPreview.spec, { retryOf: retryOfFor(build) });
                   }}
                   onSaveSpec={saveAsSavedSpec}
                   isRefresh

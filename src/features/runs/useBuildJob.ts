@@ -9,7 +9,12 @@
  */
 import { i18n } from "@/shared/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { executeBuild, type BuildExecutionHandle, type BuilderJobStatus } from "@/features/runs/api";
+import {
+  executeBuild,
+  type BuildExecutionHandle,
+  type BuildExecutionOptions,
+  type BuilderJobStatus,
+} from "@/features/runs/api";
 import { ApiError, builderApi, extractErrorMessage } from "@/shared/lib/builderApi";
 import type { BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
 
@@ -47,7 +52,7 @@ export interface BuildJob {
    */
   interrupted: boolean;
   /** Starts a build run. */
-  start: (spec: BuildSpec) => Promise<void>;
+  start: (spec: BuildSpec, options?: BuildExecutionOptions) => Promise<void>;
   /** Cancels the in-flight run. */
   cancel: () => void;
 }
@@ -87,7 +92,7 @@ export function useBuildJob(): BuildJob {
     void builderApi.cancelBuildJob(runId).catch(() => {});
   }, []);
 
-  const start = useCallback(async (spec: BuildSpec) => {
+  const start = useCallback(async (spec: BuildSpec, options: BuildExecutionOptions = {}) => {
     if (controllerRef.current) return;
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -115,6 +120,7 @@ export function useBuildJob(): BuildJob {
             issueAsyncCancel(handle.runId);
           }
         },
+        options,
       );
       if (controller.signal.aborted) return;
       setRun(result);

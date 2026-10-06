@@ -188,6 +188,14 @@ export function RunDetailPanel({
           {live.kind === "job" && (live.job.status === "queued" || live.job.status === "running" || live.job.status === "cancelling") ? (
             <span className="text-xs text-muted-foreground">{t("builds.detail.refreshing")}</span>
           ) : null}
+          {live.kind === "job" && live.job.retry_of ? (
+            <span className="text-xs text-muted-foreground" data-retry-of={live.job.retry_of}>
+              {t("builds.detail.retryOf")}{" "}
+              <Link className="font-mono underline" to={`/refresh-jobs?run=${encodeURIComponent(live.job.retry_of)}`}>
+                {live.job.retry_of}
+              </Link>
+            </span>
+          ) : null}
           {live.kind === "error" ? (
             <span className="text-xs text-status-warning">
               {t("builds.detail.refreshFailed")}
