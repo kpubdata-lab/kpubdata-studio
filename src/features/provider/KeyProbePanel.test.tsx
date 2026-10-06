@@ -160,6 +160,37 @@ describe("KeyProbePanel", () => {
     expect(screen.getByRole("button", { name: "다시 확인" })).toBeEnabled();
   });
 
+  it("says how long to wait when Builder refuses a probe asked too soon", async () => {
+    mockProbe(
+      { error: "this provider was probed a moment ago", code: "probe_rate_limited", retry_after_seconds: 24 },
+      seen,
+      429,
+    );
+
+    render(<KeyProbePanel provider="datago" />);
+    await check();
+
+    expect(await screen.findByRole("status")).toHaveTextContent("24초 뒤에 다시 확인하세요");
+    // Not a failure, and nothing is retried on its own.
+    expect(screen.queryByRole("alert")).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(seen.headers).toHaveLength(1);
+  });
+
+  it("asks to wait without a number when Builder gives none, and treats another 429 as a failure", async () => {
+    mockProbe({ error: "x", code: "probe_rate_limited" }, seen, 429);
+    const { unmount } = render(<KeyProbePanel provider="datago" />);
+    await check();
+    expect(await screen.findByRole("status")).toHaveTextContent("잠시 후 다시 확인하세요");
+    unmount();
+
+    seen.headers.length = 0;
+    mockProbe({ error: "too many failed authentication attempts", code: "auth_throttled", retry_after_seconds: 42 }, seen, 429);
+    render(<KeyProbePanel provider="datago" />);
+    await check();
+    expect(await screen.findByRole("alert")).toHaveTextContent("확인하지 못했습니다");
+  });
+
   it("does not retry: one upstream call per dataset is made per click", async () => {
     mockProbe({ error: "probe unavailable" }, seen, 502);
 

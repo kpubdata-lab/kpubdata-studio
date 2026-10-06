@@ -12,6 +12,8 @@
  *   kpubdata may add one.
  * - A dataset Builder did not reach (`not_probed`) gets no status. Nothing was observed
  *   about it, and the panel says so.
+ * - Builder lets a user probe a provider only so often (kpubdata-builder#1059). A probe
+ *   refused for that is not a failure: the panel says how long to wait.
  * - No key text is rendered, and none is put in an error message.
  */
 import { useState } from "react";
@@ -19,6 +21,8 @@ import { useTranslation } from "react-i18next";
 
 import { builderApi, isRealBuilderEnabled, type ProviderProbeResponse } from "@/shared/lib/builderApi";
 import { Button } from "@/shared/ui";
+
+import { probeRateLimited } from "./probeRefusal";
 import { ActionableStatus, NormalStatus, type ActionTone } from "@/shared/ui/StatusState";
 
 /** kpubdata's `PROBE_STATUSES`, and how each reads here. `null` tone: plain text. */
@@ -38,6 +42,7 @@ type ProbeState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "loaded"; result: ProviderProbeResponse }
+  | { status: "wait"; seconds: number | null }
   | { status: "error" };
 
 /** Demo answer for mock mode: one of each outcome a user most often meets. */
@@ -63,7 +68,12 @@ export function KeyProbePanel({ provider }: { provider: string }) {
     try {
       const result = isRealBuilderEnabled() ? await builderApi.probeProviderKey(provider) : mockProbe(provider);
       setState({ status: "loaded", result });
-    } catch {
+    } catch (cause) {
+      const limited = probeRateLimited(cause);
+      if (limited) {
+        setState({ status: "wait", seconds: limited.retryAfterSeconds });
+        return;
+      }
       // The cause is not shown: an upstream error text is the one place a key could ride.
       setState({ status: "error" });
     }
@@ -87,6 +97,14 @@ export function KeyProbePanel({ provider }: { provider: string }) {
 
       {state.status === "error" ? (
         <p role="alert" className="text-status-failure">{t("provider.keyProbe.failed")}</p>
+      ) : null}
+
+      {state.status === "wait" ? (
+        <p role="status" className="text-muted-foreground">
+          {state.seconds === null
+            ? t("provider.keyProbe.wait")
+            : t("provider.keyProbe.waitSeconds", { seconds: state.seconds })}
+        </p>
       ) : null}
 
       {state.status === "loaded" ? (

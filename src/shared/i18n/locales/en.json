@@ -985,7 +985,9 @@
           "label": "Retired",
           "next": "The provider has ended this service."
         }
-      }
+      },
+      "wait": "This was checked a moment ago, or a check is still running. Try again shortly.",
+      "waitSeconds": "This was checked a moment ago, or a check is still running. Try again in {{seconds}} seconds."
     }
   },
   "home": {
