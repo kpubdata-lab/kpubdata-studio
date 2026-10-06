@@ -1094,6 +1094,7 @@
       "uploadDone": "Uploaded: {{name}} ({{bytes}} bytes)",
       "uploadExpires": "This file is kept until {{at}}. After that it is deleted, and building this spec again needs the file uploaded again.",
       "uploadExpired": "This file passed its retention date on {{at}} and was deleted. Upload it again.",
+      "uploadGone": "Builder no longer has this file — it was deleted or passed its retention date. Upload it again.",
       "urlTitle": "URL / REST API",
       "endpointHelp": "https:// GET only (P0).",
       "methodLabel": "Method",

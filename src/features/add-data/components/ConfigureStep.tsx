@@ -14,6 +14,7 @@ import { exampleParamsText, hasExampleParams, mergeExampleParams } from "@/featu
 import { checkCredentialPrerequisite, credentialPrerequisiteMessage } from "@/features/add-data/credentialPrerequisite";
 import { findDataset, findProvider } from "@/features/add-data/identity";
 import { uploadExpiry, type AddDataDraft } from "@/features/add-data/model";
+import { useUploadStatus } from "@/features/add-data/useUploadStatus";
 import { formatDateTime } from "@/features/datasets/model";
 import type { SourceFormat } from "@/shared/lib/types";
 import { Button, Card, FormField, Select, Textarea, TextInput } from "@/shared/ui";
@@ -310,7 +311,7 @@ export function ConfigureStep({
             </p>
           ) : null}
           {/* The upload has an end (#758): Builder deletes it then, and this spec stops building. */}
-          {draft.file.uploadId ? <UploadExpiryNote expiresAt={draft.file.expiresAt} /> : null}
+          {draft.file.uploadId ? <UploadExpiryNote uploadId={draft.file.uploadId} expiresAt={draft.file.expiresAt} /> : null}
         </div>
       ) : null}
 
@@ -489,21 +490,35 @@ export function ConfigureStep({
   );
 }
 
-/** When the chosen upload will be deleted, and plainly when that has already happened (#758). */
-function UploadExpiryNote({ expiresAt }: { expiresAt: string | null | undefined }) {
+/**
+ * When the chosen upload will be deleted, and plainly when that has already happened (#758).
+ * Builder is asked each time the draft is shown — a draft opened from a saved spec has only
+ * the id, and the date a draft remembers can be out of date. Until Builder answers, and if
+ * it cannot be asked, the draft's own date is shown.
+ */
+function UploadExpiryNote({ uploadId, expiresAt }: { uploadId: string; expiresAt: string | null | undefined }) {
   const { t } = useTranslation();
-  const state = uploadExpiry(expiresAt, Date.now());
+  const asked = useUploadStatus(uploadId);
+  if (asked.kind === "gone") {
+    return (
+      <p role="alert" className="text-sm text-status-failure" data-upload-expiry="gone">
+        {t("addData.configure.uploadGone")}
+      </p>
+    );
+  }
+  const date = asked.kind === "present" ? asked.expiresAt : expiresAt;
+  const state = uploadExpiry(date, Date.now());
   if (state === "none") return null;
   if (state === "expired") {
     return (
       <p role="alert" className="text-sm text-status-failure" data-upload-expiry="expired">
-        {t("addData.configure.uploadExpired", { at: formatDateTime(expiresAt) })}
+        {t("addData.configure.uploadExpired", { at: formatDateTime(date) })}
       </p>
     );
   }
   return (
     <p className="text-xs text-muted-foreground" data-upload-expiry="pending">
-      {t("addData.configure.uploadExpires", { at: formatDateTime(expiresAt) })}
+      {t("addData.configure.uploadExpires", { at: formatDateTime(date) })}
     </p>
   );
 }

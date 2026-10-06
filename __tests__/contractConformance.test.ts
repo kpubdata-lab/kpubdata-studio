@@ -24,6 +24,8 @@ const EXPECTED_OPERATIONS = [
   "validate",
   "preview",
   "build",
+  // An upload's metadata, to say whether it is still there and until when (#758).
+  "getUpload",
   "submitBuild",
   "getBuildJob",
   "cancelBuildJob",
