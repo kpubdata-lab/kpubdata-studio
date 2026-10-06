@@ -468,6 +468,35 @@ export const providersResponseSchema = z.object({
   providers: z.array(providerSummarySchema),
 });
 
+/** One dataset's verdict in POST /providers/{provider}/probe (kpubdata-builder#802). */
+export const providerProbeDatasetSchema = z.object({
+  /** Dataset name within the provider, as GET /catalog lists it. */
+  dataset: z.string(),
+  /** The provider service it belongs to; an application is granted per service. */
+  service_id: z.string(),
+  // One of kpubdata's PROBE_STATUSES. Not an enum in the contract: a kpubdata release
+  // may add one, and an unknown status is shown as it is rather than refused.
+  status: z.string(),
+  /** What the provider said, with no key in it. May be empty. */
+  detail: z.string(),
+  http_status: z.number().int().nullable(),
+});
+
+/**
+ * POST /providers/{provider}/probe (kpubdata-builder#802, contract 1.87.0): what the key
+ * in the request's `X-Provider-Key` header can reach, per dataset. Builder stores neither
+ * the key nor this result.
+ */
+export const providerProbeResponseSchema = z.object({
+  provider: z.string(),
+  probed_at: z.string(),
+  /** False when `not_probed` names a dataset. */
+  complete: z.boolean(),
+  datasets: z.array(providerProbeDatasetSchema),
+  /** Datasets nothing was observed about (time budget, or no spec to probe with). */
+  not_probed: z.array(z.string()),
+});
+
 /** POST /providers/{provider}/test, GET /providers/{provider}/status common response. */
 export const providerTestResponseSchema = z.object({
   provider: z.string(),
@@ -523,6 +552,8 @@ export type ProviderLastTest = z.infer<typeof providerLastTestSchema>;
 export type ProviderSummary = z.infer<typeof providerSummarySchema>;
 export type ProvidersResponse = z.infer<typeof providersResponseSchema>;
 export type ProviderTestResponse = z.infer<typeof providerTestResponseSchema>;
+export type ProviderProbeDataset = z.infer<typeof providerProbeDatasetSchema>;
+export type ProviderProbeResponse = z.infer<typeof providerProbeResponseSchema>;
 export type ProviderCredentialResponse = z.infer<typeof providerCredentialResponseSchema>;
 export type UploadMetadata = z.infer<typeof uploadMetadataSchema>;
 
