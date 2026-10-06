@@ -42,6 +42,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
+import { probeRateLimited } from "@/features/provider/probeRefusal";
 import { revisionErrorOutcome } from "@/features/build-spec/specRevisions";
 import { profileRefusal } from "@/features/datasets/profileRefusal";
 import { describePublishFailure, recoveryFailure } from "@/features/publish/api";
@@ -692,6 +693,15 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // A synchronous build that got no build slot in time (builder#1040). Studio's synchronous
   // build is the upload path; it shows the message, and the same request can be sent again.
   "createBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.82.0" },
+  "probeProviderKey 429 ProbeRateLimited": {
+    reader: "probeRateLimited (features/provider/probeRefusal, #410)",
+    since: "1.88.0",
+    check: (status, body) => {
+      const limited = probeRateLimited(httpError(status, body));
+      if (!limited) return ["probeRateLimited: the refusal was not recognised"];
+      return limited.retryAfterSeconds === null ? ["retry_after_seconds: not read from the body"] : [];
+    },
+  },
   // A run id that already ended is not reused (builder#1042): a retry takes a new id.
   // Studio makes a new run id for every build (generateRunId), so it does not meet these;
   // listed so that Builder's examples can land. 400 on the synchronous route, whose 409 is a build response.
