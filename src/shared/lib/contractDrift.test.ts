@@ -692,6 +692,11 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // A synchronous build that got no build slot in time (builder#1040). Studio's synchronous
   // build is the upload path; it shows the message, and the same request can be sent again.
   "createBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.82.0" },
+  // A run id that already ended is not reused (builder#1042): a retry takes a new id.
+  // Studio makes a new run id for every build (generateRunId), so it does not meet these;
+  // listed so that Builder's examples can land. 400 on the synchronous route, whose 409 is a build response.
+  "submitBuild 409 RunIdEnded": { notHandled: MESSAGE_ONLY, code: "run_id_ended", since: "1.85.0" },
+  "createBuild 400 RunIdEnded": { notHandled: MESSAGE_ONLY, code: "run_id_ended", since: "1.85.0" },
   "AuthThrottled 429 AuthThrottled": { notHandled: MESSAGE_ONLY, code: "auth_throttled", since: "1.80.0" },
   "ServerOverloaded 503 ServerOverloaded": {
     notHandled: `${MESSAGE_ONLY}; the response is written before the request is read`,
