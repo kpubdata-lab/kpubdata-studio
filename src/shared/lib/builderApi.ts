@@ -1036,11 +1036,18 @@ export const builderApi = {
    /**
     * GET /providers — Runtime Provider list and current principal's configured status (#492).
     * Response contains only boolean summary — credential text does not exist anywhere.
+    *
+    * Carries the held provider keys (contract 1.90.0). In a multi-user deployment the
+    * request is the only place a key lives, so Builder can only report a provider as
+    * configured when it sees the key — without the header every keyed provider reads
+    * `false` and Add Data blocks a user who holds a key. Builder also decides which held
+    * key covers a provider (`localdata` uses `datago`'s), so Studio sends what it holds
+    * rather than guessing. The route calls no provider.
     */
   listProviders: (signal?: AbortSignal) =>
     apiFetch(
       "/providers",
-      { signal },
+      { signal, headers: providerKeyHeaders() },
       schemas.providersResponseSchema,
     ),
 
