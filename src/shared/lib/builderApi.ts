@@ -21,7 +21,7 @@ import { i18n } from "@/shared/i18n";
 import { API_BASE } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
-import { providerKeyHeaders, specProviders } from "./providerKeys";
+import { noteKeyProviders, providerKeyHeaders, specProviders } from "./providerKeys";
 import { clearSessionRefusal, isSessionRefused, noteSessionRefused } from "./sessionRefusal";
 import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
@@ -1117,7 +1117,11 @@ export const builderApi = {
       "/providers",
       { signal, headers: providerKeyHeaders() },
       schemas.providersResponseSchema,
-    ),
+    ).then((response) => {
+      // Whose key each provider calls with is Builder's to say (kpubdata-builder#1085).
+      noteKeyProviders(response.providers);
+      return response;
+    }),
 
    /**
     * POST /providers/{provider}/test — connection test with the current principal's

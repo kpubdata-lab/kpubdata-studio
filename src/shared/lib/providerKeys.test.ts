@@ -6,15 +6,20 @@
  * and the provider list (which reports what the held keys cover) carry it — and only
  * while a key is held, so a single-user deployment sends nothing.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { builderApi } from "./builderApi";
 import {
   PROVIDER_KEY_HEADER,
   forgetAllProviderKeys,
+  forgetKeyProviders,
   forgetProviderKey,
   holdProviderKey,
   isProviderKeyHeld,
+  noteKeyProviders,
   providerKeyHeaders,
   providerKeyProblem,
 } from "./providerKeys";
@@ -128,6 +133,16 @@ describe("builderApi X-Provider-Key routing", () => {
   });
 });
 
+/** `GET /providers` items of a Builder that reports `key_provider`. */
+const BUILDER_SAYS = [
+  { provider: "datago", key_provider: "datago" },
+  { provider: "localdata", key_provider: "datago" },
+  { provider: "lofin", key_provider: "datago" },
+  { provider: "semas", key_provider: "datago" },
+  { provider: "seoul", key_provider: "seoul" },
+  { provider: "bok", key_provider: "bok" },
+];
+
 describe("only the keys a request needs are sent (#770)", () => {
   let fetchMock: ReturnType<typeof vi.spyOn>;
   const SEOUL = "seoul-KEY-value";
@@ -136,7 +151,11 @@ describe("only the keys a request needs are sent (#770)", () => {
     fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse({}));
     holdProviderKey("datago", KEY);
     holdProviderKey("seoul", SEOUL);
+    // What Builder says in GET /providers (contract 1.98.0).
+    noteKeyProviders(BUILDER_SAYS);
   });
+
+  afterEach(() => forgetKeyProviders());
 
   async function headerOf(call: () => Promise<unknown>): Promise<string | undefined> {
     await call().catch(() => undefined);
@@ -200,3 +219,74 @@ describe("only the keys a request needs are sent (#770)", () => {
   });
 });
 
+
+describe("whose key a provider calls with comes from Builder (builder#1085)", () => {
+  let fetchMock: ReturnType<typeof vi.spyOn>;
+  const SEOUL = "seoul-KEY-value";
+
+  beforeEach(() => {
+    forgetKeyProviders();
+    holdProviderKey("datago", KEY);
+    holdProviderKey("seoul", SEOUL);
+  });
+
+  afterEach(() => forgetKeyProviders());
+
+  async function headerOf(call: () => Promise<unknown>): Promise<string[]> {
+    await call().catch(() => undefined);
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const header = ((init.headers ?? {}) as Record<string, string>)[PROVIDER_KEY_HEADER];
+    return header ? header.split(",").sort() : [];
+  }
+
+  const both = [`datago=${KEY}`, `seoul=${SEOUL}`].sort();
+
+  it("before Builder has said, every held key is sent rather than one left out on a guess", async () => {
+    fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse({}));
+
+    expect(await headerOf(() => builderApi.preview(specOf("localdata")))).toEqual(both);
+    expect(await headerOf(() => builderApi.testProviderConnection("seoul"))).toEqual(both);
+  });
+
+  it("listProviders teaches it, and from then on only the needed keys are sent", async () => {
+    fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      String(input).endsWith("/providers")
+        ? jsonResponse({
+            providers: [
+              { provider: "datago", requires_credential: true, configured: true, key_provider: "datago" },
+              { provider: "localdata", requires_credential: true, configured: true, key_provider: "datago" },
+              { provider: "seoul", requires_credential: true, configured: true, key_provider: "seoul" },
+            ],
+          })
+        : jsonResponse({}),
+    );
+    await builderApi.listProviders();
+
+    expect(await headerOf(() => builderApi.preview(specOf("localdata")))).toEqual([`datago=${KEY}`]);
+    expect(await headerOf(() => builderApi.preview(specOf("seoul")))).toEqual([`seoul=${SEOUL}`]);
+  });
+
+  it("a Builder that does not say leaves it unknown: every held key, as before #770", async () => {
+    fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) =>
+      String(input).endsWith("/providers")
+        ? jsonResponse({ providers: [{ provider: "seoul", requires_credential: true, configured: true }] })
+        : jsonResponse({}),
+    );
+    await builderApi.listProviders();
+
+    expect(await headerOf(() => builderApi.preview(specOf("seoul")))).toEqual(both);
+  });
+
+  it("what a newer Builder said is not forgotten when a later answer says nothing", () => {
+    noteKeyProviders([{ provider: "localdata", key_provider: "datago" }]);
+    noteKeyProviders([{ provider: "localdata" }]);
+
+    expect(providerKeyHeaders(["localdata"])).toEqual({ [PROVIDER_KEY_HEADER]: `datago=${KEY}` });
+  });
+
+  it("no copy of the table is left in Studio", () => {
+    const source = readFileSync(join(process.cwd(), "src/shared/lib/providerKeys.ts"), "utf8");
+
+    expect(source).not.toMatch(/localdata|lofin|semas/);
+  });
+});

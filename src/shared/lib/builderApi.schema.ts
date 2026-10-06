@@ -460,6 +460,11 @@ export const providerSummarySchema = z.object({
   provider: z.string(),
   requires_credential: z.boolean(),
   configured: z.boolean(),
+  /**
+   * The provider whose key this one calls with (kpubdata-builder#1085, contract 1.98.0):
+   * its own name, or the one it shares a key with. Absent from an older Builder.
+   */
+  key_provider: z.string().optional(),
   /** Absent from a Builder before kpubdata-builder#842; null when never tested. */
   last_test: providerLastTestSchema.nullable().optional(),
 });
