@@ -6,16 +6,22 @@
  * what the browser still holds at the moment `keycloakLogout` is called — the last
  * moment anything can run.
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { execFileSync } from "node:child_process";
+
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AccountMenu } from "@/app/AccountMenu";
+import { Layout } from "@/app/Layout";
 import { useAssistConfig } from "@/features/assistant/config";
 import { signOutOfOidc } from "@/features/auth/signOut";
 import { useAuthStore } from "@/features/auth/store";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { useUIStore } from "@/shared/hooks/useUIStore";
+import { i18n } from "@/shared/i18n";
 import { holdProviderKey, isProviderKeyHeld } from "@/shared/lib/providerKeys";
+import { clearSessionRefusal, useSessionRefusalStore } from "@/shared/lib/sessionRefusal";
 
 const ISSUER = "https://id.example/realms/kpubdata";
 const SAVED_KEY = `kpubdata-assist-key:sub:${ISSUER}#alice`;
@@ -60,6 +66,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  clearSessionRefusal();
   useAuthStore.getState().clear();
   useAuthStore.getState().setOidcStatus("unauthenticated");
   useAssistConfig.setState({ apiKey: "", isConfigured: false, persistToStorage: false });
@@ -119,5 +126,40 @@ describe("OIDC sign-out clears the browser before leaving (#769)", () => {
     await waitFor(() => expect(useAuthStore.getState().userId).toBeNull());
     expect(atLogout).toEqual([]);
     expect(localStorage.getItem(SAVED_KEY)).toBeNull();
+  });
+
+  it("the notice for a session Builder refuses signs out through it (#771)", async () => {
+    // jsdom has no matchMedia, so pin the theme to avoid the system branch.
+    act(() => useUIStore.setState({ theme: "light", isMobileSidebarOpen: false, isAssistantDrawerOpen: false }));
+    render(
+      <MemoryRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route element={<p>page</p>} path="*" />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+    // The refusal arrives after the shell is up, as it does when a query is refused.
+    act(() => useSessionRefusalStore.setState({ refusal: { code: "unauthorized", reason: "email not verified" } }));
+
+    const notice = await screen.findByRole("alert");
+    fireEvent.click(within(notice).getByRole("button", { name: i18n.t("sessionRefused.signOut") }));
+
+    await waitFor(() => expect(atLogout).toHaveLength(1));
+    expectClearedBeforeLeaving();
+  });
+});
+
+describe("there is one way out of an OIDC session (#769)", () => {
+  it("only signOut.ts calls keycloakLogout", () => {
+    const callers = execFileSync("git", ["grep", "-l", "keycloakLogout", "--", "src"], { encoding: "utf8" })
+      .split("\n")
+      .filter((file) => file && !/\.test\.tsx?$/.test(file))
+      .sort();
+
+    // The definition, and the one caller that clears the session first. A new caller
+    // would leave the saved LLM key behind, as the two before it did.
+    expect(callers).toEqual(["src/features/auth/keycloak.ts", "src/features/auth/signOut.ts"]);
   });
 });
