@@ -809,6 +809,16 @@ export const builderApi = {
   getUpload: (uploadId: string, signal?: AbortSignal) =>
     apiFetch(`/uploads/${encodeURIComponent(uploadId)}`, { signal, retries: 0 }, schemas.uploadMetadataSchema),
 
+  /**
+   * GET /uploads — the signed-in user's uploads, metadata only, newest first (#779,
+   * builder#1067, contract 1.96.0). An upload past its retention date is not listed.
+   */
+  listUploads: (signal?: AbortSignal) => apiFetch("/uploads", { signal, retries: 0 }, schemas.uploadListSchema),
+
+  /** DELETE /uploads/{upload_id} — delete one of the signed-in user's uploads (#779). */
+  deleteUpload: (uploadId: string, signal?: AbortSignal) =>
+    apiFetch<unknown>(`/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE", signal, retries: 0 }),
+
   /** POST /builds — async build job submission (#245, builder #482/#480). do not retry. */
   submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
     apiFetch(

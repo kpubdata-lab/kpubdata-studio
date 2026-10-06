@@ -26,6 +26,8 @@ const EXPECTED_OPERATIONS = [
   "build",
   // An upload's metadata, to say whether it is still there and until when (#758).
   "getUpload",
+  "listUploads",
+  "deleteUpload",
   "submitBuild",
   "getBuildJob",
   "cancelBuildJob",

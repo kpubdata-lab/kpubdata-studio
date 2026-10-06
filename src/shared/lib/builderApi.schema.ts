@@ -548,6 +548,11 @@ export const uploadMetadataSchema = z.object({
   expires_at: z.string().nullable().optional(),
 });
 
+/** GET /uploads — the requester's uploads, newest first (builder#1067, contract 1.96.0). */
+export const uploadListSchema = z.object({
+  uploads: z.array(uploadMetadataSchema),
+});
+
 export type ProviderLastTest = z.infer<typeof providerLastTestSchema>;
 export type ProviderSummary = z.infer<typeof providerSummarySchema>;
 export type ProvidersResponse = z.infer<typeof providersResponseSchema>;
@@ -556,6 +561,7 @@ export type ProviderProbeDataset = z.infer<typeof providerProbeDatasetSchema>;
 export type ProviderProbeResponse = z.infer<typeof providerProbeResponseSchema>;
 export type ProviderCredentialResponse = z.infer<typeof providerCredentialResponseSchema>;
 export type UploadMetadata = z.infer<typeof uploadMetadataSchema>;
+export type UploadList = z.infer<typeof uploadListSchema>;
 
 /**
  * ============================================

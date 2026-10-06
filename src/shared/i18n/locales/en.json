@@ -1258,7 +1258,23 @@
       "preview": "Preview & Validate",
       "create": "Create"
     },
-    "savedSpecOpened": "Opened the saved spec “{{name}}”. Opening it does not change the saved copy."
+    "savedSpecOpened": "Opened the saved spec “{{name}}”. Opening it does not change the saved copy.",
+    "myUploads": {
+      "title": "Show my uploads",
+      "body": "The files you have uploaded to KPubData Builder. If you reached an upload limit, delete one you no longer use to make room. A file's content cannot be shown here.",
+      "loading": "Loading…",
+      "loadFailed": "Could not load your uploads.",
+      "empty": "You have no uploaded file.",
+      "inUse": "(used by this draft)",
+      "meta": "{{format}} · {{bytes}} bytes · uploaded {{at}}",
+      "keptUntil": "kept until {{at}}",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "deleteNamed": "Delete {{name}}",
+      "deleteFailed": "Could not delete it. Try again in a moment.",
+      "confirm": "Delete \"{{name}}\" from KPubData Builder? A saved BuildSpec that uses this file can no longer be built. Continue?",
+      "confirmCurrent": "\"{{name}}\" is the file this draft uses. If you delete it, the draft needs the file uploaded again. Continue?"
+    }
   },
   "datasetDetail": {
     "stagesErrorMsg": "Could not load stage status.",
