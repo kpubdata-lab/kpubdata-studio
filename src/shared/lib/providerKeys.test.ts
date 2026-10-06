@@ -69,6 +69,11 @@ describe("providerKeys memory store", () => {
   });
 });
 
+/** A BuildSpec whose sources call the given providers. */
+function specOf(...providers: string[]): string {
+  return ["dataset_id: x", "sources:", ...providers.map((name) => `  - provider: ${name}\n    dataset: d`)].join("\n");
+}
+
 describe("builderApi X-Provider-Key routing", () => {
   let fetchMock: ReturnType<typeof vi.spyOn>;
 
@@ -82,9 +87,9 @@ describe("builderApi X-Provider-Key routing", () => {
   }
 
   const PROVIDER_CALLS: Array<[string, () => Promise<unknown>]> = [
-    ["POST /preview", () => builderApi.preview("dataset_id: x")],
-    ["POST /build", () => builderApi.build("dataset_id: x")],
-    ["POST /builds", () => builderApi.submitBuild("dataset_id: x")],
+    ["POST /preview", () => builderApi.preview(specOf("datago"))],
+    ["POST /build", () => builderApi.build(specOf("datago"))],
+    ["POST /builds", () => builderApi.submitBuild(specOf("datago"))],
     ["POST /providers/{p}/test", () => builderApi.testProviderConnection("datago")],
     ["GET /providers/{p}/status", () => builderApi.getProviderStatus("datago")],
     // Calls no provider, but its `configured` can only count a key it sees (contract 1.90.0).
@@ -122,3 +127,76 @@ describe("builderApi X-Provider-Key routing", () => {
     }
   });
 });
+
+describe("only the keys a request needs are sent (#770)", () => {
+  let fetchMock: ReturnType<typeof vi.spyOn>;
+  const SEOUL = "seoul-KEY-value";
+
+  beforeEach(() => {
+    fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async () => jsonResponse({}));
+    holdProviderKey("datago", KEY);
+    holdProviderKey("seoul", SEOUL);
+  });
+
+  async function headerOf(call: () => Promise<unknown>): Promise<string | undefined> {
+    await call().catch(() => undefined);
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    return ((init.headers ?? {}) as Record<string, string>)[PROVIDER_KEY_HEADER];
+  }
+
+  const SPEC_CALLS: Array<[string, (spec: string) => Promise<unknown>]> = [
+    ["preview", (spec) => builderApi.preview(spec)],
+    ["build", (spec) => builderApi.build(spec)],
+    ["submitBuild", (spec) => builderApi.submitBuild(spec)],
+  ];
+
+  it.each(SPEC_CALLS)("%s of a seoul-only spec carries the seoul key and not the datago one", async (_name, call) => {
+    const header = await headerOf(() => call(specOf("seoul")));
+
+    expect(header).toBe(`seoul=${SEOUL}`);
+    expect(header).not.toContain(KEY);
+  });
+
+  it.each(SPEC_CALLS)("%s of a localdata spec carries the datago key it calls with", async (_name, call) => {
+    expect(await headerOf(() => call(specOf("localdata")))).toBe(`datago=${KEY}`);
+  });
+
+  it("a spec that mixes providers carries each one's key once", async () => {
+    const header = await headerOf(() => builderApi.preview(specOf("datago", "seoul", "datago", "lofin")));
+
+    expect(header?.split(",").sort()).toEqual([`datago=${KEY}`, `seoul=${SEOUL}`].sort());
+  });
+
+  it.each([
+    ["no provider source", "dataset_id: x\nsources:\n  - kind: file\n    upload_id: u1"],
+    ["no sources", "dataset_id: x"],
+    ["YAML that cannot be read", "sources: [unclosed"],
+    ["a provider no key is held for", specOf("bok")],
+  ])("a spec with %s carries no key", async (_name, spec) => {
+    expect(await headerOf(() => builderApi.preview(spec))).toBeUndefined();
+  });
+
+  it.each([
+    ["testProviderConnection", (provider: string) => builderApi.testProviderConnection(provider)],
+    ["getProviderStatus", (provider: string) => builderApi.getProviderStatus(provider)],
+    ["probeProviderKey", (provider: string) => builderApi.probeProviderKey(provider)],
+  ])("%s carries the named provider's key only", async (_name, call) => {
+    expect(await headerOf(() => call("seoul"))).toBe(`seoul=${SEOUL}`);
+    expect(await headerOf(() => call("semas"))).toBe(`datago=${KEY}`);
+    expect(await headerOf(() => call("bok"))).toBeUndefined();
+  });
+
+  it("listProviders still carries every held key: it asks what they cover", async () => {
+    const header = await headerOf(() => builderApi.listProviders());
+
+    expect(header?.split(",").sort()).toEqual([`datago=${KEY}`, `seoul=${SEOUL}`].sort());
+  });
+
+  it("with no key held, nothing is sent whatever the spec names", async () => {
+    forgetAllProviderKeys();
+
+    expect(await headerOf(() => builderApi.preview(specOf("datago", "seoul")))).toBeUndefined();
+    expect(await headerOf(() => builderApi.listProviders())).toBeUndefined();
+  });
+});
+

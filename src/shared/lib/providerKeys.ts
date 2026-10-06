@@ -14,6 +14,7 @@
  * A single-user Builder stores keys as before, so nothing is held here and no header is
  * sent: its flow is unchanged.
  */
+import { parse as parseYaml } from "yaml";
 import { create } from "zustand";
 
 /** The request header that carries provider keys (builder `request_credentials.py`). */
@@ -88,12 +89,60 @@ export function useProviderKeyHeld(provider: string | null | undefined): boolean
 }
 
 /**
- * The `X-Provider-Key` header carrying every held key, or no header when none is held.
- * Builder reads each key only for the provider it names, so one header serves a spec that
- * mixes providers.
+ * Providers that call with another provider's key. Builder keeps the same table
+ * (`_CLIENT_KEY_SLOT` in kpubdata-builder `service/providers.py`) and looks a request's
+ * key up under either name; the contract does not publish it, so it is repeated here.
+ * A provider missing from this table only loses the shared key — its own is still sent.
  */
-export function providerKeyHeaders(): Record<string, string> {
-  const entries = Object.entries(useHeldProviderKeysStore.getState().keys);
+const SHARED_KEY_OF: Readonly<Record<string, string>> = {
+  localdata: "datago",
+  lofin: "datago",
+  semas: "datago",
+};
+
+/**
+ * The providers a BuildSpec's sources call, read from its YAML. A spec that cannot be
+ * read names none: Builder refuses it before any provider is called, so no key is needed.
+ */
+export function specProviders(specYaml: string): string[] {
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(specYaml);
+  } catch {
+    return [];
+  }
+  const sources = (parsed as { sources?: unknown } | null)?.sources;
+  if (!Array.isArray(sources)) return [];
+  const names = new Set<string>();
+  for (const source of sources) {
+    const provider = (source as { provider?: unknown } | null)?.provider;
+    if (typeof provider === "string" && provider.trim()) names.add(normalizeProvider(provider));
+  }
+  return [...names];
+}
+
+/**
+ * The `X-Provider-Key` header, or no header when no key it would carry is held.
+ *
+ * - With `providers`: only the keys those providers call with — each one's own, and the
+ *   key of the provider it shares one with (#770). A request for seoul data does not
+ *   carry the datago key through every proxy on the way.
+ * - Without: every held key. That is for the one call that asks what the held keys
+ *   cover (`GET /providers`).
+ */
+export function providerKeyHeaders(providers?: readonly string[]): Record<string, string> {
+  const held = useHeldProviderKeysStore.getState().keys;
+  let entries = Object.entries(held);
+  if (providers !== undefined) {
+    const wanted = new Set<string>();
+    for (const provider of providers) {
+      const id = normalizeProvider(provider);
+      wanted.add(id);
+      const shared = SHARED_KEY_OF[id];
+      if (shared) wanted.add(shared);
+    }
+    entries = entries.filter(([id]) => wanted.has(id));
+  }
   if (entries.length === 0) return {};
   return { [PROVIDER_KEY_HEADER]: entries.map(([id, value]) => `${id}=${value}`).join(",") };
 }

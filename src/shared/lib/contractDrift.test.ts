@@ -1310,7 +1310,7 @@ function contractRoutes(): Array<{ method: string; template: string; pattern: Re
 type SentRequest = { method: string; path: string; headers: Record<string, string> };
 
 /** What a client function sends when called with placeholder arguments. */
-async function requestOf(name: string): Promise<SentRequest | null> {
+async function requestOf(name: string, word = "x"): Promise<SentRequest | null> {
   let sent: SentRequest | null = null;
   vi.stubGlobal(
     "fetch",
@@ -1328,17 +1328,20 @@ async function requestOf(name: string): Promise<SentRequest | null> {
   // Placeholders: a path segment where a string is expected, and an object that answers
   // any property with a segment for the functions that take a request object. Fewer
   // arguments are tried first, so a placeholder never lands on a trailing `signal`.
-  const anything = new Proxy({}, { get: (_target, key) => (typeof key === "string" ? "x" : undefined) });
+  const anything = new Proxy({}, { get: (_target, key) => (typeof key === "string" ? word : undefined) });
   const attempts: unknown[][] = [
     [],
-    ["x"],
+    [word],
     [anything],
-    ["x", "x"],
-    ["x", anything],
-    ["x", "x", "x"],
-    ["x", "x", anything],
-    ["x", anything, anything],
+    [word, word],
+    [word, anything],
+    [word, word, word],
+    [word, word, anything],
+    [word, anything, anything],
   ];
+  // With a word of its own the caller wants it sent: a call with no arguments would send
+  // a request without it and be taken for the answer.
+  if (word !== "x") attempts.shift();
   for (const args of attempts) {
     try {
       await call(...args);
@@ -1399,14 +1402,18 @@ describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#7
       components: { parameters?: Record<string, Parameter> };
     };
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    expect(holdProviderKey("datago", "placeholder-provider-key")).toBe(true);
+    // A key is sent only for the provider a call names, or a spec's sources name (#770):
+    // the placeholder provider is `x`, and the second pass names it in a spec.
+    expect(holdProviderKey("x", "placeholder-provider-key")).toBe(true);
+    const specOfX = "sources:\n  - provider: x\n    dataset: d";
     const routes = contractRoutes();
     const sending: string[] = [];
     const undeclared: string[] = [];
     try {
       for (const name of Object.keys(builderApi)) {
-        const request = await requestOf(name);
-        if (request === null || !(PROVIDER_KEY_HEADER in request.headers)) continue;
+        const sent = [await requestOf(name), await requestOf(name, specOfX)];
+        const request = sent.find((candidate) => candidate !== null && PROVIDER_KEY_HEADER in candidate.headers);
+        if (!request) continue;
         sending.push(name);
         const route = routes.find((candidate) => candidate.method === request.method && candidate.pattern.test(request.path));
         const declared = (doc.paths[route?.template ?? ""]?.[request.method.toLowerCase()]?.parameters ?? [])
