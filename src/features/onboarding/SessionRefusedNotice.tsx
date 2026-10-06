@@ -23,7 +23,11 @@ export function SessionRefusedNotice({ refusal, onSignOut }: { refusal: SessionR
             {t("sessionRefused.reason")} <span className="font-mono text-xs">{refusal.reason}</span>
           </p>
         ) : null}
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{t("sessionRefused.next")}</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {/* Builder names this cause by code since contract 1.95.0 (kpubdata-builder#1074);
+              an older Builder, or any other cause, gets the general advice. */}
+          {refusal.code === "email_not_verified" ? t("sessionRefused.nextEmail") : t("sessionRefused.next")}
+        </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Button onClick={clearSessionRefusal} variant="secondary">
             {t("sessionRefused.tryAgain")}

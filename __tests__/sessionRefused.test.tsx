@@ -123,4 +123,24 @@ describe("a session Builder refuses after renewal (#771)", () => {
     expect(screen.queryByRole("heading", { name: i18n.t("sessionRefused.title") })).not.toBeInTheDocument();
     expect(useSessionRefusalStore.getState().refusal).toBeNull();
   });
+
+  it("tells an unverified e-mail what to do, by Builder's code (builder#1074)", async () => {
+    builderAnswers(401, { error: "email not verified", code: "email_not_verified" });
+    renderTables();
+
+    const notice = await screen.findByRole("alert");
+    expect(notice).toHaveTextContent(i18n.t("sessionRefused.nextEmail"));
+    expect(notice).not.toHaveTextContent(i18n.t("sessionRefused.next"));
+    expect(notice).toHaveAttribute("role", "alert");
+    expect(renewals).toBe(1);
+  });
+
+  it("keeps the general advice for any other refusal", async () => {
+    builderAnswers(401, { error: "invalid token: InvalidAudienceError", code: "unauthorized" });
+    renderTables();
+
+    const notice = await screen.findByRole("alert");
+    expect(notice).toHaveTextContent(i18n.t("sessionRefused.next"));
+    expect(notice).not.toHaveTextContent(i18n.t("sessionRefused.nextEmail"));
+  });
 });
