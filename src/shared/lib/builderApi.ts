@@ -575,6 +575,19 @@ export function publishCredentialHeaders(
  * `/providers/{provider}/test` and `/status` — and on no other route. Nothing is held in a
  * single-user deployment, so those calls send no such header there.
  */
+/**
+ * The body of `POST /build` and `POST /builds`. `retry_of` names the earlier run this
+ * build retries (builder#1042, contract 1.85.0): a run id is one attempt, so a retry is a
+ * new run that points back. Each optional field is sent only when it has a value.
+ */
+function buildRequestBody(specYaml: string, runId?: string, retryOf?: string) {
+  return {
+    spec: specYaml,
+    ...(runId ? { run_id: runId } : {}),
+    ...(retryOf ? { retry_of: retryOf } : {}),
+  };
+}
+
 export const builderApi = {
   /** GET /warehouse/tables — the caller's committed tables; 404 when there is no warehouse (builder#797). */
   listWarehouseTables: (signal?: AbortSignal) =>
@@ -716,12 +729,12 @@ export const builderApi = {
    * default 30 s. Timing out reported a 408 for a build that was still running, and a
    * second click started the same build again. The caller's `signal` still cancels it.
    */
-  build: (specYaml: string, runId?: string, signal?: AbortSignal) =>
+  build: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
     apiFetch(
       "/build",
       {
         method: "POST",
-        body: runId ? { spec: specYaml, run_id: runId } : { spec: specYaml },
+        body: buildRequestBody(specYaml, runId, retryOf),
         signal,
         retries: 0,
         timeoutMs: 0,
@@ -731,12 +744,12 @@ export const builderApi = {
     ),
 
   /** POST /builds — async build job submission (#245, builder #482/#480). do not retry. */
-  submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal) =>
+  submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
     apiFetch(
       "/builds",
       {
         method: "POST",
-        body: runId ? { spec: specYaml, run_id: runId } : { spec: specYaml },
+        body: buildRequestBody(specYaml, runId, retryOf),
         signal,
         retries: 0,
         headers: providerKeyHeaders(),

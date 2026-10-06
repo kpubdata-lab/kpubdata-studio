@@ -157,6 +157,7 @@
     "detail": {
       "analyzeQuestion": "Analyze the status and failure cause of run {{id}}.",
       "refreshing": "Refreshing live…",
+      "retryOf": "Retry of",
       "refreshFailed": "Live status refresh failed (transient) — showing the last known status.",
       "refreshForbidden": "No permission to poll live status for this run — showing the status from the list instead.",
       "outOfScopeDetail": "This run is outside the current list scope (limit). Stage/quality were fetched directly by run_id.",

@@ -127,6 +127,8 @@ export const buildJobSchema = z.object({
   created_by: z.string().nullable().optional(),
   response: z.record(z.string(), z.unknown()).nullable().optional(),
   error: z.string().nullable().optional(),
+  /** The earlier run this one was submitted as a retry of (builder#1042); absent otherwise. */
+  retry_of: z.string().optional(),
 });
 
 /**

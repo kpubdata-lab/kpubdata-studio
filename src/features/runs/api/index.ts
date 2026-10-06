@@ -73,11 +73,32 @@ export function specHasFileSource(spec: BuildSpec): boolean {
   return spec.sources.some((source) => source.kind === "file");
 }
 
+export interface BuildExecutionOptions {
+  /**
+   * The earlier run this build retries (#757, builder#1042). Builder records it on the
+   * new run; the earlier run is left as it ended.
+   */
+  retryOf?: string;
+}
+
+/**
+ * What to send as `retry_of` when a build is started from an earlier run's page (#757).
+ *
+ * Only a run that failed or was cancelled is retried (kpubdata#812: a retry is a new run
+ * that points at the earlier attempt). Running a succeeded run's spec again is a refresh —
+ * a new result, not a second attempt at the old one — and names nothing.
+ */
+export function retryOfFor(earlier: { id: string; status: BuildRunStatus } | null | undefined): string | undefined {
+  if (!earlier) return undefined;
+  return earlier.status === "failed" || earlier.status === "cancelled" ? earlier.id : undefined;
+}
+
 export async function executeBuild(
   spec: BuildSpec,
   signal?: AbortSignal,
   onJobStatus?: (status: BuilderJobStatus) => void,
   onHandle?: (handle: BuildExecutionHandle) => void,
+  options: BuildExecutionOptions = {},
 ): Promise<BuildRun> {
   if (!isRealBuilderEnabled()) {
     const mockRun: BuildRun = {
@@ -102,12 +123,12 @@ export async function executeBuild(
   let result: BuildRun;
   if (specHasFileSource(spec)) {
     onHandle?.({ runId, mode: "sync" });
-    result = await runSyncBuild(spec, runId, startedAt, signal);
+    result = await runSyncBuild(spec, runId, startedAt, signal, options.retryOf);
   } else {
     // In async mode, expose handle only after POST /builds succeeds and obtains
     // authoritative run_id (F03). This prevents race where submit-in-flight Cancel
     // sends cooperative cancel to non-existent run_id on server.
-    result = await runAsyncBuild(spec, runId, startedAt, signal, onJobStatus, onHandle);
+    result = await runAsyncBuild(spec, runId, startedAt, signal, onJobStatus, onHandle, options.retryOf);
   }
 
   // Builder does not persist spec (#120), so Studio saves the spec bound to
@@ -172,8 +193,9 @@ async function runAsyncBuild(
   signal: AbortSignal | undefined,
   onJobStatus: ((status: BuilderJobStatus) => void) | undefined,
   onHandle: ((handle: BuildExecutionHandle) => void) | undefined,
+  retryOf?: string,
 ): Promise<BuildRun> {
-  const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal);
+  const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal, retryOf);
   // Server-returned run_id is authoritative. Only from here can cooperative cancel
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
@@ -240,8 +262,9 @@ async function runSyncBuild(
   runId: string,
   startedAt: string,
   signal: AbortSignal | undefined,
+  retryOf?: string,
 ): Promise<BuildRun> {
-  const response = await builderApi.build(serializeSpec(spec), runId, signal);
+  const response = await builderApi.build(serializeSpec(spec), runId, signal, retryOf);
   const finishedAt = new Date().toISOString();
   const finalRunId = response.run_id || runId;
 
