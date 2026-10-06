@@ -54,6 +54,7 @@ import { useBuildJob } from "@/features/runs/useBuildJob";
 import { validateSpec } from "@/features/validation/api";
 import { i18n } from "@/shared/i18n";
 import { Button, Card, PageHeader, Stepper } from "@/shared/ui";
+import { ApiError } from "@/shared/lib/builderApi";
 
 // Labels must follow screen language, so create at render time, not as constants.
 const STEP_IDS = ["configure", "preview", "create"] as const;
@@ -78,6 +79,13 @@ function draftFromFormValues(values: BuildFormValues): AddDataDraft {
     exportFormats: values.exportFormats.length > 0 ? values.exportFormats : INITIAL_DRAFT.exportFormats,
     outputPath: values.outputPath,
   };
+}
+
+/** Builder's 409 `upload_quota_exceeded` (builder#1045): the user is at an upload limit. */
+export function isUploadLimitReached(cause: unknown): boolean {
+  if (!(cause instanceof ApiError) || cause.status !== 409) return false;
+  const details = cause.details;
+  return typeof details === "object" && details !== null && (details as { code?: unknown }).code === "upload_quota_exceeded";
 }
 
 export function AddDataPage() {
@@ -357,6 +365,7 @@ export function AddDataPage() {
       setUpload({
         status: "error",
         error: cause instanceof Error ? cause.message : i18n.t("addData.errors.upload"),
+        limitReached: isUploadLimitReached(cause),
       });
     }
   }

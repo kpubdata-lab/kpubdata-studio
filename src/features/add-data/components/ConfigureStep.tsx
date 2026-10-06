@@ -18,7 +18,9 @@ import { useUploadStatus } from "@/features/add-data/useUploadStatus";
 import { formatDateTime } from "@/features/datasets/model";
 import type { SourceFormat } from "@/shared/lib/types";
 import { Button, Card, FormField, Select, Textarea, TextInput } from "@/shared/ui";
-import type { CatalogProvider } from "@/shared/lib/builderApi";
+import { isRealBuilderEnabled, type CatalogProvider } from "@/shared/lib/builderApi";
+
+import { MyUploads } from "./MyUploads";
 
 const EXPORT_FORMATS = exportFormatSchema.options;
 const FILE_FORMATS: SourceFormat[] = ["csv", "json", "jsonl", "parquet"];
@@ -32,6 +34,8 @@ export type CatalogState =
 export interface UploadState {
   status: "idle" | "uploading" | "done" | "error";
   error?: string;
+  /** The upload was refused because the user is at an upload limit (builder#1045). */
+  limitReached?: boolean;
 }
 
 export interface ConfigureStepProps {
@@ -312,6 +316,19 @@ export function ConfigureStep({
           ) : null}
           {/* The upload has an end (#758): Builder deletes it then, and this spec stops building. */}
           {draft.file.uploadId ? <UploadExpiryNote uploadId={draft.file.uploadId} expiresAt={draft.file.expiresAt} /> : null}
+          {/* What the user has uploaded, and a way to delete one (#779): the answer to
+              "delete an upload you no longer need" when a limit is reached. */}
+          {isRealBuilderEnabled() ? (
+            <MyUploads
+              currentUploadId={draft.file.uploadId}
+              openNow={upload.status === "error" && upload.limitReached === true}
+              onDeleted={(uploadId) => {
+                if (uploadId === draft.file.uploadId) {
+                  updateDraft({ file: { ...draft.file, uploadId: null, filename: null, sizeBytes: null, expiresAt: null } });
+                }
+              }}
+            />
+          ) : null}
         </div>
       ) : null}
 
