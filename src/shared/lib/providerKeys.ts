@@ -89,16 +89,28 @@ export function useProviderKeyHeld(provider: string | null | undefined): boolean
 }
 
 /**
- * Providers that call with another provider's key. Builder keeps the same table
- * (`_CLIENT_KEY_SLOT` in kpubdata-builder `service/providers.py`) and looks a request's
- * key up under either name; the contract does not publish it, so it is repeated here.
- * A provider missing from this table only loses the shared key — its own is still sent.
+ * Which provider's key each provider calls with, as Builder says in `GET /providers`
+ * (`key_provider`, kpubdata-builder#1085, contract 1.98.0): its own, or the one it shares
+ * a key with (several providers call with data.go.kr's). Which ones is Builder's to say.
+ *
+ * Studio kept a copy of that table (#770) with nothing holding the two together. It is
+ * now only what Builder last said. `null` until Builder has said: before the provider
+ * list is first loaded, and for a Builder older than that contract.
  */
-const SHARED_KEY_OF: Readonly<Record<string, string>> = {
-  localdata: "datago",
-  lofin: "datago",
-  semas: "datago",
-};
+let keyProviderOf: ReadonlyMap<string, string> | null = null;
+
+/** Remember what one `GET /providers` answer says about whose key each provider uses. */
+export function noteKeyProviders(providers: ReadonlyArray<{ provider: string; key_provider?: string }>): void {
+  const told = providers.filter((item) => typeof item.key_provider === "string" && item.key_provider);
+  // An older Builder says nothing; what is known is kept rather than forgotten.
+  if (told.length === 0) return;
+  keyProviderOf = new Map(told.map((item) => [normalizeProvider(item.provider), normalizeProvider(item.key_provider as string)]));
+}
+
+/** Test helper: forget what Builder said. */
+export function forgetKeyProviders(): void {
+  keyProviderOf = null;
+}
 
 /**
  * The providers a BuildSpec's sources call, read from its YAML. A spec that cannot be
@@ -125,20 +137,23 @@ export function specProviders(specYaml: string): string[] {
  * The `X-Provider-Key` header, or no header when no key it would carry is held.
  *
  * - With `providers`: only the keys those providers call with — each one's own, and the
- *   key of the provider it shares one with (#770). A request for seoul data does not
- *   carry the datago key through every proxy on the way.
+ *   key of the provider Builder says it shares one with (#770). A request for seoul data
+ *   does not carry the datago key through every proxy on the way.
+ * - With `providers`, before Builder has said whose key a provider uses: every held key.
+ *   Leaving a key out on a guess would fail the request for a key the user does hold.
  * - Without: every held key. That is for the one call that asks what the held keys
  *   cover (`GET /providers`).
  */
 export function providerKeyHeaders(providers?: readonly string[]): Record<string, string> {
   const held = useHeldProviderKeysStore.getState().keys;
   let entries = Object.entries(held);
-  if (providers !== undefined) {
+  if (providers !== undefined && keyProviderOf !== null) {
+    const known = keyProviderOf;
     const wanted = new Set<string>();
     for (const provider of providers) {
       const id = normalizeProvider(provider);
       wanted.add(id);
-      const shared = SHARED_KEY_OF[id];
+      const shared = known.get(id);
       if (shared) wanted.add(shared);
     }
     entries = entries.filter(([id]) => wanted.has(id));
