@@ -21,7 +21,7 @@ import { i18n } from "@/shared/i18n";
 import { API_BASE } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
-import { providerKeyHeaders } from "./providerKeys";
+import { providerKeyHeaders, specProviders } from "./providerKeys";
 import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
 
@@ -724,7 +724,7 @@ export const builderApi = {
   ) =>
     apiFetch(
       "/preview",
-      { method: "POST", body: { spec: specYaml, ...options }, signal, retries: 0, headers: providerKeyHeaders() },
+      { method: "POST", body: { spec: specYaml, ...options }, signal, retries: 0, headers: providerKeyHeaders(specProviders(specYaml)) },
       schemas.previewResponseSchema,
     ),
 
@@ -745,7 +745,7 @@ export const builderApi = {
         signal,
         retries: 0,
         timeoutMs: 0,
-        headers: providerKeyHeaders(),
+        headers: providerKeyHeaders(specProviders(specYaml)),
       },
       schemas.buildResponseSchema,
     ),
@@ -766,7 +766,7 @@ export const builderApi = {
         body: buildRequestBody(specYaml, runId, retryOf),
         signal,
         retries: 0,
-        headers: providerKeyHeaders(),
+        headers: providerKeyHeaders(specProviders(specYaml)),
       },
       schemas.buildJobSchema,
     ),
@@ -1066,7 +1066,7 @@ export const builderApi = {
   testProviderConnection: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/test`,
-      { method: "POST", signal, retries: 0, headers: providerKeyHeaders() },
+      { method: "POST", signal, retries: 0, headers: providerKeyHeaders([provider]) },
       schemas.providerTestResponseSchema,
     ),
 
@@ -1079,7 +1079,7 @@ export const builderApi = {
   probeProviderKey: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/probe`,
-      { method: "POST", signal, retries: 0, timeoutMs: PROBE_TIMEOUT_MS, headers: providerKeyHeaders() },
+      { method: "POST", signal, retries: 0, timeoutMs: PROBE_TIMEOUT_MS, headers: providerKeyHeaders([provider]) },
       schemas.providerProbeResponseSchema,
     ),
 
@@ -1091,7 +1091,7 @@ export const builderApi = {
   getProviderStatus: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/status`,
-      { signal, retries: 1, headers: providerKeyHeaders() },
+      { signal, retries: 1, headers: providerKeyHeaders([provider]) },
       schemas.providerTestResponseSchema,
     ),
 
