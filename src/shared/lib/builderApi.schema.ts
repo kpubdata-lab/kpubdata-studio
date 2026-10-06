@@ -511,6 +511,12 @@ export const uploadMetadataSchema = z.object({
   size_bytes: z.number().int().nonnegative(),
   original_filename: z.string().nullable(),
   created_at: z.string(),
+  /**
+   * When Builder will delete the upload (builder#1047, contract 1.86.0): past it a spec
+   * that names the upload no longer builds. Null when nothing will delete it; absent from
+   * a Builder older than that contract.
+   */
+  expires_at: z.string().nullable().optional(),
 });
 
 export type ProviderLastTest = z.infer<typeof providerLastTestSchema>;

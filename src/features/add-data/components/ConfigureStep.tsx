@@ -13,7 +13,8 @@ import { exportFormatSchema } from "@/shared/lib/schemas";
 import { exampleParamsText, hasExampleParams, mergeExampleParams } from "@/features/add-data/requiredParams";
 import { checkCredentialPrerequisite, credentialPrerequisiteMessage } from "@/features/add-data/credentialPrerequisite";
 import { findDataset, findProvider } from "@/features/add-data/identity";
-import type { AddDataDraft } from "@/features/add-data/model";
+import { uploadExpiry, type AddDataDraft } from "@/features/add-data/model";
+import { formatDateTime } from "@/features/datasets/model";
 import type { SourceFormat } from "@/shared/lib/types";
 import { Button, Card, FormField, Select, Textarea, TextInput } from "@/shared/ui";
 import type { CatalogProvider } from "@/shared/lib/builderApi";
@@ -308,6 +309,8 @@ export function ConfigureStep({
               })}
             </p>
           ) : null}
+          {/* The upload has an end (#758): Builder deletes it then, and this spec stops building. */}
+          {draft.file.uploadId ? <UploadExpiryNote expiresAt={draft.file.expiresAt} /> : null}
         </div>
       ) : null}
 
@@ -483,5 +486,24 @@ export function ConfigureStep({
         </div>
       </details>
     </div>
+  );
+}
+
+/** When the chosen upload will be deleted, and plainly when that has already happened (#758). */
+function UploadExpiryNote({ expiresAt }: { expiresAt: string | null | undefined }) {
+  const { t } = useTranslation();
+  const state = uploadExpiry(expiresAt, Date.now());
+  if (state === "none") return null;
+  if (state === "expired") {
+    return (
+      <p role="alert" className="text-sm text-status-failure" data-upload-expiry="expired">
+        {t("addData.configure.uploadExpired", { at: formatDateTime(expiresAt) })}
+      </p>
+    );
+  }
+  return (
+    <p className="text-xs text-muted-foreground" data-upload-expiry="pending">
+      {t("addData.configure.uploadExpires", { at: formatDateTime(expiresAt) })}
+    </p>
   );
 }

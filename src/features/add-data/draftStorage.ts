@@ -74,6 +74,8 @@ export const addDataDraftSchema = z.object({
     encoding: z.string(),
     filename: z.string().nullable(),
     sizeBytes: z.number().nullable(),
+    // Absent from a draft saved before #758.
+    expiresAt: z.string().nullable().optional(),
   }),
   url: z.object({ endpoint: z.string(), format: z.enum(["csv", "json", "jsonl"]).nullable() }),
   datasetId: z.string(),
