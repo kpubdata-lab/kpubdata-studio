@@ -95,6 +95,10 @@ export function KeyProbePanel({ provider }: { provider: string }) {
         </Button>
       </div>
 
+      {state.status === "loading" ? (
+        <p role="status" className="text-muted-foreground">{t("provider.keyProbe.runningDetail")}</p>
+      ) : null}
+
       {state.status === "error" ? (
         <p role="alert" className="text-status-failure">{t("provider.keyProbe.failed")}</p>
       ) : null}

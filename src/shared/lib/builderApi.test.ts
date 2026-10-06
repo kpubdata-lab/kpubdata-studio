@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { API_BASE } from "@/shared/config/env";
-import { builderApi, setAuthErrorCallback, setAuthTokenProvider } from "./builderApi";
+import { DEFAULT_TIMEOUT_MS, PROBE_TIMEOUT_MS, builderApi, setAuthErrorCallback, setAuthTokenProvider } from "./builderApi";
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -424,5 +424,67 @@ describe("BuildJob response on the polling path (#603)", () => {
     ["a response that is an array", { ...base, status: "failed", response: [] }],
   ])("still rejects a job with %s", async (_label, body) => {
     await expect(poll(body)).rejects.toThrow();
+  });
+});
+
+describe("probeProviderKey waits as long as Builder's probe can take (#768)", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  /** A fetch that answers after `ms`, unless its signal aborts first. */
+  function slowFetch(ms: number, body: unknown) {
+    return vi.spyOn(globalThis, "fetch").mockImplementation(
+      (_input, init) =>
+        new Promise<Response>((resolve, reject) => {
+          const timer = setTimeout(() => resolve(jsonResponse(200, body)), ms);
+          init?.signal?.addEventListener("abort", () => {
+            clearTimeout(timer);
+            reject(init.signal?.reason ?? new DOMException("Aborted", "AbortError"));
+          });
+        }),
+    );
+  }
+
+  const PROBED = {
+    provider: "datago",
+    probed_at: "2026-10-06T09:30:00+00:00",
+    complete: true,
+    datasets: [{ dataset: "apt_trade", service_id: "svc", status: "available", detail: "", http_status: 200 }],
+    not_probed: [],
+  };
+
+  it("reads a probe that answers after 50 seconds", async () => {
+    vi.useFakeTimers();
+    slowFetch(50_000, PROBED);
+
+    const pending = builderApi.probeProviderKey("datago");
+    await vi.advanceTimersByTimeAsync(50_000);
+
+    await expect(pending).resolves.toMatchObject({ complete: true, datasets: [{ dataset: "apt_trade" }] });
+  });
+
+  it("still gives up on a probe that outlasts Builder's own bound", async () => {
+    vi.useFakeTimers();
+    slowFetch(120_000, PROBED);
+
+    const pending = builderApi.probeProviderKey("datago");
+    const outcome = pending.then(() => "answered", () => "gave up");
+    await vi.advanceTimersByTimeAsync(PROBE_TIMEOUT_MS);
+
+    await expect(outcome).resolves.toBe("gave up");
+  });
+
+  it("leaves every other call at the default 30 seconds", async () => {
+    vi.useFakeTimers();
+    slowFetch(50_000, { provider: "datago", status: "connected", configured: true, latency_ms: 1, checked_at: "2026-10-06T00:00:00+00:00" });
+
+    const pending = builderApi.testProviderConnection("datago");
+    const outcome = pending.then(() => "answered", () => "gave up");
+    await vi.advanceTimersByTimeAsync(DEFAULT_TIMEOUT_MS);
+
+    await expect(outcome).resolves.toBe("gave up");
+    expect(PROBE_TIMEOUT_MS).toBeGreaterThan(60_000);
   });
 });

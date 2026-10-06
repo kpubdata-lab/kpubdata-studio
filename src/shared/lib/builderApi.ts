@@ -170,6 +170,12 @@ async function recoverFromUnauthorized(): Promise<boolean> {
 export const DEFAULT_TIMEOUT_MS = 30_000;
 /** Builder's profiling timeout is 60 s (builder#896); Studio waits a little longer for its answer. */
 export const PROFILE_TIMEOUT_MS = 75_000;
+/**
+ * A key probe can take about 60 s: Builder stops starting calls after 45 s, and the call
+ * it started last may run for 15 s more (builder#802). Cut off at the default 30 s, the
+ * probe went on running in Builder and pressing again met its rate limit (#768).
+ */
+export const PROBE_TIMEOUT_MS = 75_000;
 
 /** Default retry count for network errors/5xx (additional count beyond initial attempt). */
 export const DEFAULT_RETRIES = 2;
@@ -1073,7 +1079,7 @@ export const builderApi = {
   probeProviderKey: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/probe`,
-      { method: "POST", signal, retries: 0, headers: providerKeyHeaders() },
+      { method: "POST", signal, retries: 0, timeoutMs: PROBE_TIMEOUT_MS, headers: providerKeyHeaders() },
       schemas.providerProbeResponseSchema,
     ),
 

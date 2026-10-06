@@ -987,7 +987,8 @@
         }
       },
       "wait": "This was checked a moment ago, or a check is still running. Try again shortly.",
-      "waitSeconds": "This was checked a moment ago, or a check is still running. Try again in {{seconds}} seconds."
+      "waitSeconds": "This was checked a moment ago, or a check is still running. Try again in {{seconds}} seconds.",
+      "runningDetail": "Calling each source dataset in turn. When the provider is slow this can take about a minute. Stay on this screen until it finishes."
     }
   },
   "home": {
