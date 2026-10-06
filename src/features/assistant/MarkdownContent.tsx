@@ -1,6 +1,8 @@
 import { Fragment, type ReactNode } from "react";
 
-const SAFE_LINK = /^(https?:\/\/|\/|\.\/|\.\.\/|#)/i;
+// A same-origin path is `/` not followed by `/` or `\`: `//host` is another origin (#772),
+// and browsers read `/\host` the same way.
+const SAFE_LINK = /^(https?:\/\/|\/(?![/\\])|\.\/|\.\.\/|#)/i;
 
 function inline(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
