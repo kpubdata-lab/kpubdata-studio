@@ -1094,6 +1094,7 @@
       "uploadDone": "업로드 완료: {{name}} ({{bytes}} bytes)",
       "uploadExpires": "이 파일은 {{at}} 까지 보관됩니다. 그 뒤에는 삭제되어, 이 스펙을 다시 빌드하려면 파일을 다시 올려야 합니다.",
       "uploadExpired": "이 파일은 {{at}} 에 보관 기한이 지나 삭제되었습니다. 파일을 다시 올려 주세요.",
+      "uploadGone": "이 파일은 Builder 에 더 이상 없습니다 — 삭제됐거나 보관 기한이 지났습니다. 파일을 다시 올려 주세요.",
       "urlTitle": "URL / REST API",
       "endpointHelp": "https:// GET만 지원합니다(P0).",
       "methodLabel": "메서드 (Method)",

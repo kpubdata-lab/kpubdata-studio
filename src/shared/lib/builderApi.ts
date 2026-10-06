@@ -743,6 +743,13 @@ export const builderApi = {
       schemas.buildResponseSchema,
     ),
 
+  /**
+   * GET /uploads/{upload_id} — an upload's metadata (#758): whether it is still there and
+   * until when it is kept. Not retried: a 404 is the answer for an upload Builder deleted.
+   */
+  getUpload: (uploadId: string, signal?: AbortSignal) =>
+    apiFetch(`/uploads/${encodeURIComponent(uploadId)}`, { signal, retries: 0 }, schemas.uploadMetadataSchema),
+
   /** POST /builds — async build job submission (#245, builder #482/#480). do not retry. */
   submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
     apiFetch(
