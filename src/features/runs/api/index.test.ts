@@ -43,6 +43,16 @@ describe("buildRunFromJob (#603)", () => {
     expect(result).toMatchObject({ status: "failed", error: "provider client unavailable" });
   });
 
+  it("marks a run that failed because its keys were gone, by code or by sentence (#787)", () => {
+    const lost = "credentials_required: the server restarted and the job's provider keys are gone";
+
+    expect(run({ status: "failed", error: lost, code: "credentials_required" })).toMatchObject({ keysLost: true, error: lost });
+    expect(run({ status: "failed", error: lost }).keysLost).toBe(true);
+    // Any other failure, and a run that did not fail, are not that.
+    expect(run({ status: "failed", error: "pipeline failed" }).keysLost).toBeUndefined();
+    expect(run({ status: "succeeded", code: "credentials_required" }).keysLost).toBeUndefined();
+  });
+
   it("falls back to the response's error, then a default, when the job has none", () => {
     expect(run({ status: "failed", response: { error: "from body" } }).error).toBe("from body");
     expect(run({ status: "failed", response: { error: 42 } }).error).toBe("실행 잡이 실패했습니다.");

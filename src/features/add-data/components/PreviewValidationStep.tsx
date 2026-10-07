@@ -7,6 +7,8 @@
  * multiple sources via YAML), show all via per-source tabs, not just first; if status varies
  * (mixed), explicitly state this fact.
  */
+import { PreviewKeyNotice } from "@/features/provider/BuildKeyNotice";
+import type { MissingProviderKeys } from "@/shared/lib/missingProviderKey";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -34,7 +36,7 @@ export type PreviewState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "loaded"; response: PreviewResponse }
-  | { status: "error"; error: string };
+  | { status: "error"; error: string; missingKeys?: MissingProviderKeys };
 
 export interface PreviewValidationStepProps {
   preview: PreviewState;
@@ -116,6 +118,7 @@ export function PreviewValidationStep({
       {preview.status === "error" ? (
         <EmptyState title={t("addData.preview.errorTitle")} description={preview.error} />
       ) : null}
+      {preview.status === "error" ? <PreviewKeyNotice missing={preview.missingKeys} /> : null}
 
       {isStale && preview.status === "loaded" ? (
         <p

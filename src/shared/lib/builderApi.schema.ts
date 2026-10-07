@@ -127,6 +127,11 @@ export const buildJobSchema = z.object({
   created_by: z.string().nullable().optional(),
   response: z.record(z.string(), z.unknown()).nullable().optional(),
   error: z.string().nullable().optional(),
+  /**
+   * A stable reason for a failure Builder itself caused (builder#996). A string, not an
+   * enum: a reason added later must not make the whole job unreadable.
+   */
+  code: z.string().optional(),
   /** The earlier run this one was submitted as a retry of (builder#1042); absent otherwise. */
   retry_of: z.string().optional(),
 });

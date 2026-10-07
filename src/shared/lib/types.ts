@@ -249,6 +249,11 @@ export interface BuildRun {
   finishedAt?: string;
   /** failure/cancellation reason (only in terminal state of failed/partially failed job) */
   error?: string;
+  /**
+   * The run failed because Builder no longer held its provider keys (#787). The key has
+   * to be entered again and the build submitted as a new run.
+   */
+  keysLost?: boolean;
 }
 
 /**

@@ -207,3 +207,53 @@ describe("useBuildJob (#39)", () => {
     executeBuildMock.mockRestore();
   });
 });
+
+describe("a build refused for a missing provider key (#787)", () => {
+  it("says which keys, and forgets it when the build is started again", async () => {
+    const { ApiError } = await import("@/shared/lib/builderApi");
+    const refused = new ApiError(400, "this build calls datago, and the request carries no key for it", {
+      error: "this build calls datago, and the request carries no key for it",
+      code: "provider_credential_required",
+      providers: ["datago"],
+    });
+    const executeBuildMock = vi
+      .spyOn(await import("@/features/runs/api"), "executeBuild")
+      .mockRejectedValueOnce(refused)
+      .mockResolvedValueOnce({ id: "run-2", spec, status: "succeeded", startedAt: "s", finishedAt: "f" });
+    const { result } = renderHook(() => useBuildJob());
+
+    await act(async () => {
+      await result.current.start(spec);
+    });
+
+    expect(result.current.status).toBe("failed");
+    expect(result.current.missingKeys).toEqual({ providers: ["datago"], keptIn: "request" });
+    // Nothing was submitted, so there is no run to retry.
+    expect(result.current.run).toBeUndefined();
+
+    await act(async () => {
+      await result.current.start(spec);
+    });
+
+    expect(result.current.status).toBe("succeeded");
+    expect(result.current.missingKeys).toBeUndefined();
+    expect(executeBuildMock).toHaveBeenCalledTimes(2);
+    executeBuildMock.mockRestore();
+  });
+
+  it("an ordinary failure names no keys", async () => {
+    const { ApiError } = await import("@/shared/lib/builderApi");
+    const executeBuildMock = vi
+      .spyOn(await import("@/features/runs/api"), "executeBuild")
+      .mockRejectedValueOnce(new ApiError(502, "provider client unavailable", { error: "provider client unavailable" }));
+    const { result } = renderHook(() => useBuildJob());
+
+    await act(async () => {
+      await result.current.start(spec);
+    });
+
+    expect(result.current.status).toBe("failed");
+    expect(result.current.missingKeys).toBeUndefined();
+    executeBuildMock.mockRestore();
+  });
+});

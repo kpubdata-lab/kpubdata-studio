@@ -88,6 +88,13 @@ export function useProviderKeyHeld(provider: string | null | undefined): boolean
   );
 }
 
+/** React hook: whether a key is held for every one of `providers` (false for none). */
+export function useEveryProviderKeyHeld(providers: readonly string[]): boolean {
+  return useHeldProviderKeysStore(
+    (state) => providers.length > 0 && providers.every((provider) => normalizeProvider(provider) in state.keys),
+  );
+}
+
 /**
  * Which provider's key each provider calls with, as Builder says in `GET /providers`
  * (`key_provider`, kpubdata-builder#1085, contract 1.98.0): its own, or the one it shares
@@ -105,6 +112,16 @@ export function noteKeyProviders(providers: ReadonlyArray<{ provider: string; ke
   // An older Builder says nothing; what is known is kept rather than forgotten.
   if (told.length === 0) return;
   keyProviderOf = new Map(told.map((item) => [normalizeProvider(item.provider), normalizeProvider(item.key_provider as string)]));
+}
+
+/**
+ * The provider whose key `provider` calls with — itself, unless Builder has said it
+ * shares another's. That is the key to ask the user for when Builder says `provider` is
+ * missing one (#787).
+ */
+export function keyProviderFor(provider: string): string {
+  const id = normalizeProvider(provider);
+  return keyProviderOf?.get(id) ?? id;
 }
 
 /** Test helper: forget what Builder said. */

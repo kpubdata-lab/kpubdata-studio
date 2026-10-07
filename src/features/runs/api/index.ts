@@ -11,6 +11,7 @@ import { serializeSpec } from "@/features/build-spec/specMapping";
 import { builderApi, isRealBuilderEnabled, type BuildJob, type BuildSummary } from "@/shared/lib/builderApi";
 import { buildJobResponseSchema } from "@/shared/lib/builderApi.schema";
 import { DEMO_DATASETS, type DemoDataset } from "@/shared/lib/demoDatasets";
+import { keysWereLost } from "@/shared/lib/missingProviderKey";
 import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
 
 const MOCK_TIME = "1970-01-01T00:00:00.000Z";
@@ -222,6 +223,7 @@ export function buildRunFromJob(job: BuildJob, spec: BuildSpec, startedAt: strin
       startedAt,
       finishedAt,
       error: job.error || body?.error || i18n.t("runs.build.jobFailed"),
+      ...(keysWereLost(job) ? { keysLost: true } : {}),
     };
   }
   if (body?.status !== undefined && body.status !== "ok") {

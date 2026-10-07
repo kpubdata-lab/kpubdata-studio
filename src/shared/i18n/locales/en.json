@@ -990,6 +990,21 @@
       "wait": "This was checked a moment ago, or a check is still running. Try again shortly.",
       "waitSeconds": "This was checked a moment ago, or a check is still running. Try again in {{seconds}} seconds.",
       "runningDetail": "Calling each source dataset in turn. When the provider is slow this can take about a minute. Stay on this screen until it finishes."
+    },
+    "missingKey": {
+      "title": "A provider key is needed",
+      "refused": "This request was not sent on. Calling {{providers}} needs a key, and the request carried none for it.",
+      "lost": "This run ended because its key was gone. The server restarted, or the job waited longer than its keys are kept. Keys are not stored on the server, so it has to be entered again.",
+      "lostNext": "Once the key is in, running again submits a new run recorded as a retry of this one. This run stays as it ended.",
+      "sharedKey": "{{provider}} is called with {{keyProvider}}'s key.",
+      "keyLabel": "{{provider}} key",
+      "use": "Use this key",
+      "held": "The {{provider}} key is in. It is forgotten when this tab is closed or reloaded.",
+      "allHeld": "Every key that is needed is in. Run it again.",
+      "memoryOnly": "The key is kept in this tab's memory only and sent with the requests that need it. It is not stored.",
+      "openConnections": "Enter the {{provider}} key on Connections",
+      "storedHint": "This KPubData Builder stores keys. Save the key on Connections, then come back and run again. What you entered here may not be kept.",
+      "retry": "Enter the key again and retry"
     }
   },
   "home": {

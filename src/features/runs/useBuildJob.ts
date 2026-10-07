@@ -16,6 +16,7 @@ import {
   type BuilderJobStatus,
 } from "@/features/runs/api";
 import { ApiError, builderApi, extractErrorMessage } from "@/shared/lib/builderApi";
+import { missingProviderKeys, type MissingProviderKeys } from "@/shared/lib/missingProviderKey";
 import type { BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
 
 /**
@@ -40,6 +41,11 @@ export interface BuildJob {
   run?: BuildRun;
   /** Error message on failure. */
   error?: string;
+  /**
+   * The build was refused because the request carried no key for these providers (#787).
+   * Nothing was submitted: once the key is given, the same spec can be started again.
+   */
+  missingKeys?: MissingProviderKeys;
   /** Starts a build run. */
   start: (spec: BuildSpec, options?: BuildExecutionOptions) => Promise<void>;
   /** Cancels the in-flight run. */
@@ -56,6 +62,7 @@ export function useBuildJob(): BuildJob {
   const [builderStatus, setBuilderStatus] = useState<BuilderJobStatus>();
   const [run, setRun] = useState<BuildRun>();
   const [error, setError] = useState<string>();
+  const [missingKeys, setMissingKeys] = useState<MissingProviderKeys>();
   // Controller used only for unmount/restart (lifecycle) cancellation.
   // Semantically distinct from a user "cancel".
   const controllerRef = useRef<AbortController | null>(null);
@@ -90,6 +97,7 @@ export function useBuildJob(): BuildJob {
     setStatus("running");
     setBuilderStatus(undefined);
     setError(undefined);
+    setMissingKeys(undefined);
     setRun(undefined);
     try {
       const result = await executeBuild(
@@ -133,6 +141,7 @@ export function useBuildJob(): BuildJob {
           ? (extractErrorMessage(cause.details) ?? cause.message)
           : i18n.t("runs.build.runFailed");
       setError(message);
+      setMissingKeys(missingProviderKeys(cause) ?? undefined);
     } finally {
       // Once the run ends (success/failure/cancel), clear the now-invalid
       // controller reference.
@@ -168,5 +177,5 @@ export function useBuildJob(): BuildJob {
   // (#73).
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  return { status, builderStatus, run, error, start, cancel };
+  return { status, builderStatus, run, error, missingKeys, start, cancel };
 }

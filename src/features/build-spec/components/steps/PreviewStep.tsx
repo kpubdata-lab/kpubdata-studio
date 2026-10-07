@@ -1,4 +1,5 @@
 /** wizard 4step — preview (#379). */
+import { PreviewKeyNotice } from "@/features/provider/BuildKeyNotice";
 import { useTranslation } from "react-i18next";
 
 import { Button, EmptyState } from "@/shared/ui";
@@ -28,6 +29,7 @@ export function PreviewStep({ preview, onRefresh }: PreviewStepProps) {
           description={preview.error ?? t("newBuild.preview.failDesc")}
         />
       ) : null}
+      {preview.status === "error" ? <PreviewKeyNotice missing={preview.missingKeys} /> : null}
       {preview.status === "loaded" && preview.rows.length === 0 ? (
         <EmptyState title={t("newBuild.preview.emptyTitle")} description={t("newBuild.preview.emptyDesc")} />
       ) : null}

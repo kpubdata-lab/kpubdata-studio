@@ -21,6 +21,7 @@ import { CREATE_TABLE_PATH } from "@/app/createTableRedirect";
 import { previewBuild } from "@/features/preview/api";
 import { useBuild } from "@/features/runs/useBuild";
 import { retryOfFor } from "@/features/runs/api";
+import { missingProviderKeys } from "@/shared/lib/missingProviderKey";
 import { useBuildJob } from "@/features/runs/useBuildJob";
 import { validateSpec } from "@/features/validation/api";
 import { createSavedSpec } from "@/features/workspace/savedSpecs";
@@ -223,6 +224,7 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
         schema: {},
         warnings: [],
         error: cause instanceof Error ? cause.message : i18n.t("newBuild.errors.previewFail"),
+        missingKeys: missingProviderKeys(cause) ?? undefined,
       });
     }
   }
@@ -345,7 +347,11 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
                   onRun={() => {
                     // A build started here from a run that failed or was cancelled is a
                     // retry of that run, and says so (#757).
-                    if (specPreview.spec) void job.start(specPreview.spec, { retryOf: retryOfFor(build) });
+                    // So is one started again here after an attempt that just failed — a
+                    // run that lost its keys, say: it retries that attempt (#787).
+                    if (specPreview.spec) {
+                      void job.start(specPreview.spec, { retryOf: retryOfFor(job.run) ?? retryOfFor(build) });
+                    }
                   }}
                   onSaveSpec={saveAsSavedSpec}
                   isRefresh
