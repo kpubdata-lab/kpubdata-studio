@@ -1135,6 +1135,9 @@ export const queryErrorCodeSchema = z.enum([
   "declared_pii_withheld",
   // builder#900 (1.68.0, 503): the kpubdata PII declaration could not be read (names the `dataset`).
   "pii_declaration_unavailable",
+  // builder#961 (1.107.0, 400): the query needed more memory or temporary disk than the
+  // deployment allows. Before, it answered `query_execution_failed`.
+  "query_resource_limit",
 ]);
 
 export const queryErrorResponseSchema = z.object({

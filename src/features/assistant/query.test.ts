@@ -103,6 +103,17 @@ describe("runAssistantQuery (#256, Builder #504 contract 1.7.0)", () => {
     expect(result).toMatchObject({ status: "error", code: "query_timeout" });
   });
 
+  it("classifies a 400 query_resource_limit error (builder#961, 1.107.0) with its code", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const body = {
+      error: "the table needs more memory or temporary disk than this deployment allows (KPUBDATA_DUCKDB_MEMORY_LIMIT, KPUBDATA_DUCKDB_MAX_TEMP_SIZE)",
+      code: "query_resource_limit",
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(400, body)));
+    const result = await runAssistantQuery(SILVER_CONTEXT, SILVER_SQL);
+    expect(result).toMatchObject({ status: "error", code: "query_resource_limit", message: body.error });
+  });
+
   it("classifies a 403 forbidden (ownership) error", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(mockResponse(403, { error: "forbidden", code: "forbidden" })));

@@ -665,6 +665,11 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   "queryBuiltDataset 404 ArtifactUnavailable": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "artifact_unavailable") },
   "queryBuiltDataset 429 QueryBusy": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "query_busy") },
   "queryBuiltDataset 504 QueryTimeout": { reader: "classifyQueryError (features/sql/api)", check: (status, body) => queryCode(status, body, "query_timeout") },
+  "queryBuiltDataset 400 QueryResourceLimit": {
+    reader: "classifyQueryError (features/sql/api)",
+    since: "1.107.0",
+    check: (status, body) => queryCode(status, body, "query_resource_limit"),
+  },
   "saveRevision 409 RevisionConflict": {
     reader: "revisionErrorOutcome (features/build-spec/specRevisions, #682)",
     check: (status, body) => revisionConflictProblems(status, body),
