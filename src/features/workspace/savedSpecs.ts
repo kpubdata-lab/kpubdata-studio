@@ -119,10 +119,20 @@ function outputPath(spec: BuildSpec): string {
   return typeof value === "string" ? value : "";
 }
 
+/**
+ * Most recently modified first (#781). `updatedAt` has millisecond resolution, so two
+ * saves in a row can share it; the order then falls to `createdAt` (newer first) and
+ * finally to `id`, so it never depends on the order entries were stored in.
+ */
+function byMostRecent(a: SavedBuildSpec, b: SavedBuildSpec): number {
+  return b.updatedAt.localeCompare(a.updatedAt) || b.createdAt.localeCompare(a.createdAt) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+}
+
 /** List saved Saved BuildSpec summaries sorted by recent modification. */
 export function listSavedSpecSummaries(): SavedBuildSpecSummary[] {
   const envelope = readEnvelope();
   return Object.values(envelope.specs)
+    .sort(byMostRecent)
     .map((entry) => ({
       id: entry.id,
       name: entry.name,
@@ -130,8 +140,7 @@ export function listSavedSpecSummaries(): SavedBuildSpecSummary[] {
       outputPath: outputPath(entry.spec),
       validationStatus: entry.validation.status,
       updatedAt: entry.updatedAt,
-    }))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    }));
 }
 
 /** Load entire Saved BuildSpec by id. Return null if not found. */
