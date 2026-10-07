@@ -14,7 +14,7 @@
  * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specResult.spec))
  * bypasses this component and uses the original spec, so display redaction does not affect submitted values.
  */
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
 import { toBuilderSpec } from "@/features/build-spec/specMapping";
@@ -41,6 +41,8 @@ export interface ReviewBuildStepProps {
   isStale: boolean;
   jobStatus: BuildJobStatus;
   jobError?: string;
+  /** Shown under the failure when a provider key is what the build needs (#787). */
+  keyNotice?: ReactNode;
   runId?: string;
   onBuild: () => void;
   onCancel: () => void;
@@ -87,6 +89,7 @@ export function ReviewBuildStep({
   isStale,
   jobStatus,
   jobError,
+  keyNotice,
   runId,
   onBuild,
   onCancel,
@@ -297,6 +300,7 @@ export function ReviewBuildStep({
           <span className="text-sm text-muted-foreground">{t("addData.review.buildCancelled")}</span>
         ) : null}
       </div>
+      {keyNotice}
     </div>
   );
 }

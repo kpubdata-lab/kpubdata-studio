@@ -4,6 +4,7 @@
  * Keeping rendering separate from assembly lets us verify "what becomes spec" without
  * reading JSX. When step order changes, assembly rules stay in one place.
  */
+import type { MissingProviderKeys } from "@/shared/lib/missingProviderKey";
 import { parseSourceParams } from "@/features/build-spec/paramsInput";
 import {
   jsonValueHasRedactedSecret,
@@ -215,6 +216,8 @@ export interface PreviewState {
   schema: Record<string, string>;
   warnings: string[];
   error?: string;
+  /** The preview was refused for want of these providers' keys (#787). */
+  missingKeys?: MissingProviderKeys;
 }
 
 export interface ValidationState {

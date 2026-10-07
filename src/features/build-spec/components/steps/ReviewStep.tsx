@@ -7,6 +7,7 @@
 import { useTranslation } from "react-i18next";
 
 import { Button, Card } from "@/shared/ui";
+import { BuildKeyNotice } from "@/features/provider/BuildKeyNotice";
 import type { BuildJob } from "@/features/runs/useBuildJob";
 import type { ValidationState } from "@/features/build-spec/newBuildModel";
 
@@ -92,6 +93,7 @@ export function ReviewStep({
           <span className="text-sm text-muted-foreground">{t("newBuild.review.cancelled")}</span>
         ) : null}
       </div>
+      <BuildKeyNotice job={job} />
 
       <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <Button variant="secondary" disabled={!canSave} onClick={onSaveSpec}>

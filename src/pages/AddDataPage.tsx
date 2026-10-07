@@ -51,6 +51,9 @@ import type { BuildFormValues } from "@/features/build-spec/newBuildModel";
 import type { BuildSpec, SourceKind } from "@/shared/lib/types";
 import { previewBuildDetailed } from "@/features/preview/api";
 import { useBuildJob } from "@/features/runs/useBuildJob";
+import { retryOfFor } from "@/features/runs/api";
+import { BuildKeyNotice } from "@/features/provider/BuildKeyNotice";
+import { missingProviderKeys } from "@/shared/lib/missingProviderKey";
 import { validateSpec } from "@/features/validation/api";
 import { i18n } from "@/shared/i18n";
 import { Button, Card, PageHeader, Stepper } from "@/shared/ui";
@@ -467,6 +470,7 @@ export function AddDataPage() {
         error: previewOutcome.reason instanceof Error
             ? previewOutcome.reason.message
             : i18n.t("addData.errors.preview"),
+        missingKeys: missingProviderKeys(previewOutcome.reason) ?? undefined,
       });
     }
 
@@ -718,9 +722,12 @@ export function AddDataPage() {
             isStale={isStale}
             jobStatus={job.status}
             jobError={job.error}
+            keyNotice={<BuildKeyNotice job={job} />}
             runId={job.run?.id}
             onBuild={() => {
-              if (specResult.spec) void job.start(specResult.spec);
+              // Started again after an attempt that failed here, it is a retry of that
+              // attempt and says so (#757, #787).
+              if (specResult.spec) void job.start(specResult.spec, { retryOf: retryOfFor(job.run) });
             }}
             onCancel={job.cancel}
           />
