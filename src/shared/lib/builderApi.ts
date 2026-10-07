@@ -21,7 +21,7 @@ import { i18n } from "@/shared/i18n";
 import { API_BASE } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
-import { noteKeyProviders, providerKeyHeaders, specProviders } from "./providerKeys";
+import { AmbiguousSpecError, noteKeyProviders, providerKeyHeaders, specProviders } from "./providerKeys";
 import { clearSessionRefusal, isSessionRefused, noteSessionRefused } from "./sessionRefusal";
 import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
@@ -141,6 +141,39 @@ export class ContractMismatchError extends ApiError {
     super(status, message);
     this.name = "ContractMismatchError";
   }
+}
+
+/**
+ * A spec Studio did not send (#788): it could not tell which provider keys the request
+ * needs the way Builder would. Nothing reached Builder, so `status` is 400 only in the
+ * sense that the spec has to change — `code` tells it apart from Builder's own 400s.
+ */
+export class SpecNotSentError extends ApiError {
+  constructor(
+    message: string,
+    readonly code: "repeated_merge_key",
+  ) {
+    super(400, message);
+    this.name = "SpecNotSentError";
+  }
+}
+
+/**
+ * Send a request that carries a spec, with the keys its providers call with. A spec
+ * whose providers cannot be decided is not sent keyless: the promise rejects with
+ * `SpecNotSentError` and no request is made.
+ */
+function withSpecKeys<T>(specYaml: string, send: (headers: Record<string, string>) => Promise<T>): Promise<T> {
+  let headers: Record<string, string>;
+  try {
+    headers = providerKeyHeaders(specProviders(specYaml));
+  } catch (cause) {
+    if (cause instanceof AmbiguousSpecError) {
+      return Promise.reject(new SpecNotSentError(i18n.t("api.specRepeatedMergeKey"), "repeated_merge_key"));
+    }
+    return Promise.reject(cause);
+  }
+  return send(headers);
 }
 
 /** The fields a schema rejected, as dotted paths ("" for the body itself). No values. */
@@ -827,10 +860,12 @@ export const builderApi = {
     options?: { limit?: number; sample_mode?: "first" | "random"; seed?: number },
     signal?: AbortSignal,
   ) =>
-    apiFetch(
-      "/preview",
-      { method: "POST", body: { spec: specYaml, ...options }, signal, retries: 0, headers: providerKeyHeaders(specProviders(specYaml)) },
-      schemas.previewResponseSchema,
+    withSpecKeys(specYaml, (headers) =>
+      apiFetch(
+        "/preview",
+        { method: "POST", body: { spec: specYaml, ...options }, signal, retries: 0, headers },
+        schemas.previewResponseSchema,
+      ),
     ),
 
   /**
@@ -842,17 +877,12 @@ export const builderApi = {
    * second click started the same build again. The caller's `signal` still cancels it.
    */
   build: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
-    apiFetch(
-      "/build",
-      {
-        method: "POST",
-        body: buildRequestBody(specYaml, runId, retryOf),
-        signal,
-        retries: 0,
-        timeoutMs: 0,
-        headers: providerKeyHeaders(specProviders(specYaml)),
-      },
-      schemas.buildResponseSchema,
+    withSpecKeys(specYaml, (headers) =>
+      apiFetch(
+        "/build",
+        { method: "POST", body: buildRequestBody(specYaml, runId, retryOf), signal, retries: 0, timeoutMs: 0, headers },
+        schemas.buildResponseSchema,
+      ),
     ),
 
   /**
@@ -874,16 +904,12 @@ export const builderApi = {
 
   /** POST /builds — async build job submission (#245, builder #482/#480). do not retry. */
   submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
-    apiFetch(
-      "/builds",
-      {
-        method: "POST",
-        body: buildRequestBody(specYaml, runId, retryOf),
-        signal,
-        retries: 0,
-        headers: providerKeyHeaders(specProviders(specYaml)),
-      },
-      schemas.buildJobSchema,
+    withSpecKeys(specYaml, (headers) =>
+      apiFetch(
+        "/builds",
+        { method: "POST", body: buildRequestBody(specYaml, runId, retryOf), signal, retries: 0, headers },
+        schemas.buildJobSchema,
+      ),
     ),
 
   /** GET /builds/{run_id} — async build job status polling (#245, builder #482/#480). */

@@ -253,6 +253,7 @@
   "api": {
     "timeout": "Builder API did not respond in time.",
     "connFail": "Could not connect to the Builder API.",
+    "specRepeatedMergeKey": "This spec was not sent: a mapping has more than one '<<' merge key, and which provider it names would be read differently by Builder. Combine them into one — '<<: [*a, *b]'.",
     "badJson": "Failed to parse the response JSON.",
     "unsupportedEncoding": "Unsupported format",
     "schemaMismatch": "Builder API response does not match the expected shape: {{details}}",
