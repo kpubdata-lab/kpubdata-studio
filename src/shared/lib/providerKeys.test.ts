@@ -26,8 +26,8 @@ import {
 
 const KEY = "dg-KEY-value+/abc==";
 
-function jsonResponse(body: unknown): Response {
-  return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
 afterEach(() => {
@@ -109,6 +109,45 @@ describe("builderApi X-Provider-Key routing", () => {
     expect(headers[PROVIDER_KEY_HEADER]).toBe(`datago=${KEY}`);
     expect(url).not.toContain(KEY);
     expect(url).not.toContain(encodeURIComponent(KEY));
+  });
+
+  // Every call that makes Builder call a provider with the user's key (#792). A retry is
+  // a second call on their quota for one action, and the first may have reached the
+  // provider — so each is sent once, whatever comes back.
+  const CALLS_THAT_SPEND_A_KEY: Array<[string, () => Promise<unknown>]> = [
+    ...PROVIDER_CALLS.filter(([name]) => name !== "GET /providers"),
+    ["POST /providers/{p}/probe", () => builderApi.probeProviderKey("datago")],
+  ];
+
+  it.each(CALLS_THAT_SPEND_A_KEY)("%s is sent once when Builder answers 503", async (_name, call) => {
+    holdProviderKey("datago", KEY);
+    fetchMock.mockImplementation(async () => jsonResponse({ error: "unavailable" }, 503));
+
+    await expect(call()).rejects.toMatchObject({ status: 503 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(CALLS_THAT_SPEND_A_KEY)("%s is sent once when the connection fails", async (_name, call) => {
+    holdProviderKey("datago", KEY);
+    fetchMock.mockImplementation(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+
+    await expect(call()).rejects.toMatchObject({ status: 0 });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("the list of calls that spend a key is every keyed call but the one that calls no provider", () => {
+    expect(CALLS_THAT_SPEND_A_KEY.map(([name]) => name).sort()).toEqual([
+      "GET /providers/{p}/status",
+      "POST /build",
+      "POST /builds",
+      "POST /preview",
+      "POST /providers/{p}/probe",
+      "POST /providers/{p}/test",
+    ]);
   });
 
   it.each(PROVIDER_CALLS)("%s sends no X-Provider-Key when no key is held (single-user)", async (_name, call) => {

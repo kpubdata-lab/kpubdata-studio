@@ -1180,14 +1180,19 @@ export const builderApi = {
     ),
 
    /**
-    * GET /providers/{provider}/status — Lightweight connection check using server-stored
-    * credential (or unauthenticated provider) (#259, builder provider credentials API).
-    * Credential text not exchanged. Response shape common with POST /providers/{provider}/test.
+    * GET /providers/{provider}/status — a light connection check with the key this
+    * request carries (#259; a single-user Builder uses its stored or environment key).
+    * Response shape common with POST /providers/{provider}/test.
+    *
+    * Never retried here (#792): Builder calls the provider to answer, with the user's
+    * key in a multi-user deployment, so a retry after a timeout or a 5xx is a second call
+    * on their quota for one click — and the first may have reached the provider. The
+    * same rule as the test, the probe and the preview.
     */
   getProviderStatus: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/status`,
-      { signal, retries: 1, headers: providerKeyHeaders([provider]) },
+      { signal, retries: 0, headers: providerKeyHeaders([provider]) },
       schemas.providerTestResponseSchema,
     ),
 
