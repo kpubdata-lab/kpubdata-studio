@@ -10,6 +10,8 @@ import { MemoryRouter, useNavigate } from "react-router-dom";
 
 import { mswServer } from "../../../vitest.setup";
 import { API_BASE } from "@/shared/config/env";
+import { i18n } from "@/shared/i18n";
+import { MIN_BUILDER_API_VERSION } from "@/shared/lib/builderApi";
 import packageJson from "../../../package.json";
 
 import { VersionMismatchBanner } from "./VersionMismatchBanner";
@@ -20,7 +22,7 @@ const [major, minor, patch] = packageJson.version.split(".").map(Number);
 function serveVersion(version: string | undefined) {
   mswServer.use(
     http.get(`${API_BASE}/version`, () =>
-      HttpResponse.json({ service: "kpubdata-builder", api_version: "1.77.0", ...(version ? { version } : {}) }),
+      HttpResponse.json({ service: "kpubdata-builder", api_version: MIN_BUILDER_API_VERSION, ...(version ? { version } : {}) }),
     ),
   );
 }
@@ -116,7 +118,7 @@ describe("VersionMismatchBanner (#430)", () => {
     mswServer.use(
       http.get(`${API_BASE}/version`, () => {
         asked = true;
-        return HttpResponse.json({ service: "kpubdata-builder", api_version: "1.77.0", version: "9.9.9" });
+        return HttpResponse.json({ service: "kpubdata-builder", api_version: MIN_BUILDER_API_VERSION, version: "9.9.9" });
       }),
     );
     renderShell();
@@ -131,7 +133,7 @@ describe("VersionMismatchBanner (#430)", () => {
     mswServer.use(
       http.get(`${API_BASE}/version`, () =>
         engineUp
-          ? HttpResponse.json({ service: "kpubdata-builder", api_version: "1.77.0", version: `${major}.${minor + 1}.0` })
+          ? HttpResponse.json({ service: "kpubdata-builder", api_version: MIN_BUILDER_API_VERSION, version: `${major}.${minor + 1}.0` })
           : new HttpResponse(null, { status: 500 }),
       ),
     );
@@ -149,7 +151,7 @@ describe("VersionMismatchBanner (#430)", () => {
     mswServer.use(
       http.get(`${API_BASE}/version`, () => {
         calls += 1;
-        return HttpResponse.json({ service: "kpubdata-builder", api_version: "1.77.0", version: packageJson.version });
+        return HttpResponse.json({ service: "kpubdata-builder", api_version: MIN_BUILDER_API_VERSION, version: packageJson.version });
       }),
     );
     renderShell();
@@ -159,6 +161,10 @@ describe("VersionMismatchBanner (#430)", () => {
     expect(calls).toBe(1);
   });
 });
+
+// The patch-zero version just below the minimum: what an older Builder reports.
+const [minMajor, minMinor] = MIN_BUILDER_API_VERSION.split(".").map(Number);
+const BELOW_MIN = `${minMajor}.${minMinor - 1}.0`;
 
 describe("a Builder below the minimum API contract (#725)", () => {
   function serveContract(apiVersion: string, version = packageJson.version) {
@@ -170,19 +176,20 @@ describe("a Builder below the minimum API contract (#725)", () => {
   }
 
   it("is said on the page as an alert that cannot be dismissed, and the screen still renders", async () => {
-    serveContract("1.58.0");
+    serveContract(BELOW_MIN);
     renderShell();
     await settled();
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent("1.58.0");
-    expect(alert).toHaveTextContent("1.59.0");
+    expect(alert).toHaveTextContent(BELOW_MIN);
+    expect(alert).toHaveTextContent(MIN_BUILDER_API_VERSION);
+    expect(alert).toHaveAttribute("data-version-check", "contract-too-old");
     expect(alert.querySelector("button")).toBeNull();
     expect(screen.getByText("page content")).toBeInTheDocument();
   });
 
   it("is not said at the minimum or above", async () => {
-    serveContract("1.59.0");
+    serveContract(MIN_BUILDER_API_VERSION);
     renderShell();
     await settled();
 
@@ -190,7 +197,7 @@ describe("a Builder below the minimum API contract (#725)", () => {
   });
 
   it("takes the place of the release notice, which says less", async () => {
-    serveContract("1.58.0", `${major}.${minor + 1}.0`);
+    serveContract(BELOW_MIN, `${major}.${minor + 1}.0`);
     renderShell();
     await settled();
 
@@ -204,5 +211,47 @@ describe("a Builder below the minimum API contract (#725)", () => {
     renderShell();
 
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
+describe("a Builder whose contract is another major, or unreadable (#790)", () => {
+  function serveContract(apiVersion: string) {
+    mswServer.use(
+      http.get(`${API_BASE}/version`, () =>
+        HttpResponse.json({ service: "kpubdata-builder", api_version: apiVersion, version: packageJson.version }),
+      ),
+    );
+  }
+
+  it("says a newer major needs a newer Studio, not a Builder update", async () => {
+    serveContract(`${minMajor + 1}.0.0`);
+    renderShell();
+    await settled();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveAttribute("data-version-check", "contract-major");
+    expect(alert).toHaveTextContent(`${minMajor + 1}.0.0`);
+    expect(alert).toHaveTextContent(i18n.t("versionCheck.contractMajorRemedyStudio"));
+    expect(alert).not.toHaveTextContent(i18n.t("versionCheck.contractRemedy"));
+  });
+
+  it("says an older major needs a Builder update", async () => {
+    serveContract(`${minMajor - 1}.99.0`);
+    renderShell();
+    await settled();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveAttribute("data-version-check", "contract-major");
+    expect(alert).toHaveTextContent(i18n.t("versionCheck.contractRemedy"));
+  });
+
+  it("says a version it cannot read is unreadable, not too old", async () => {
+    serveContract(`${minMajor}.${minMinor}`);
+    renderShell();
+    await settled();
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveAttribute("data-version-check", "contract-unreadable");
+    expect(alert).not.toHaveTextContent(i18n.t("versionCheck.contractTooOld", { api: `${minMajor}.${minMinor}`, min: MIN_BUILDER_API_VERSION }));
   });
 });

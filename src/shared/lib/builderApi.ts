@@ -27,22 +27,23 @@ import { noteSignupBlock } from "./signupStatus";
 import { z } from "zod";
 
 /**
- * **Minimum** Builder API contract version Studio's client needs (#725). Not an exact
- * pin — per Builder ADR 0013, "same major, server >= this minimum" is compatible and a
- * higher additive minor/patch is accepted as-is.
+ * **Minimum** Builder API contract version Studio's client needs (#725, #790). Not an
+ * exact pin — per Builder ADR 0013, "same major, server >= this minimum" is compatible and
+ * a higher additive minor/patch is accepted as-is.
  *
- * It is measured, not remembered: 1.59.0 is the first contract version that declares
- * every route `builderApi` calls — the newest are the revision routes
- * (`/revisions/{kind}/{doc_id}`, its `/history` and `/revert`, builder#820). Before it
- * came `/admin/users` (1.54.0), the snapshot profile (1.46.0) and the warehouse exports
- * (1.45.0). Studio's response schemas parse every contract-valid response from there up.
- * Raise it when the client starts calling a route, or requiring a field, that a later
- * contract introduced.
+ * It is measured, not remembered: `npm run contract:floor` runs Studio's contract drift
+ * test against every contract version in a Builder checkout's history, newest first, and
+ * 1.96.0 is the oldest that passes. Below it a route `builderApi` calls does not exist:
+ * `GET /uploads` (1.96.0), before that `POST /providers/{provider}/probe` (1.87.0), the
+ * publish receipt reset and reconcile routes (1.81.0) and the artifact file download
+ * (1.65.0). API_CONTRACT.md §3 lists them, and the newer fields Studio reads only when
+ * present. Raise it when the client starts calling a route, or requiring a field, that a
+ * later contract introduced — and run the script.
  *
  * Below it some screens cannot work at all, so the app says so on every page
  * (`VersionMismatchBanner`), and Settings repeats it next to the connection.
  */
-export const MIN_BUILDER_API_VERSION = "1.59.0";
+export const MIN_BUILDER_API_VERSION = "1.96.0";
 
 /** parse into three parts `major.minor.patch`. Return null if format is invalid (fail-closed signal). */
 function parseSemver(version: string): [number, number, number] | null {
@@ -67,16 +68,38 @@ export function isBuilderApiCompatible(
   serverVersion: string | undefined | null,
   requiredVersion: string = MIN_BUILDER_API_VERSION,
 ): boolean {
-  if (!serverVersion) return false;
-  const server = parseSemver(serverVersion);
+  return builderApiCompatibility(serverVersion, requiredVersion).kind === "compatible";
+}
+
+/**
+ * Why a Builder's contract version is or is not one Studio can work with (#790). The
+ * remedies differ, so the reasons are kept apart:
+ *
+ * - `too_old` — same major, below the minimum: some routes or fields Studio uses do not
+ *   exist yet. Update Builder.
+ * - `unsupported_major` — another major: a breaking contract. `builderNewer` says which
+ *   side is behind — a newer Builder needs a newer Studio, an older one an update.
+ * - `unreadable` — missing or not `major.minor.patch`; fail-closed.
+ */
+export type BuilderApiCompatibility =
+  | { kind: "compatible" }
+  | { kind: "too_old" }
+  | { kind: "unsupported_major"; builderNewer: boolean }
+  | { kind: "unreadable" };
+
+export function builderApiCompatibility(
+  serverVersion: string | undefined | null,
+  requiredVersion: string = MIN_BUILDER_API_VERSION,
+): BuilderApiCompatibility {
+  const server = serverVersion ? parseSemver(serverVersion) : null;
   const required = parseSemver(requiredVersion);
-  if (!server || !required) return false;
-  if (server[0] !== required[0]) return false;
-  for (let i = 0; i < 3; i++) {
-    if (server[i] > required[i]) return true;
-    if (server[i] < required[i]) return false;
+  if (!server || !required) return { kind: "unreadable" };
+  if (server[0] !== required[0]) return { kind: "unsupported_major", builderNewer: server[0] > required[0] };
+  for (let i = 1; i < 3; i++) {
+    if (server[i] > required[i]) return { kind: "compatible" };
+    if (server[i] < required[i]) return { kind: "too_old" };
   }
-  return true;
+  return { kind: "compatible" };
 }
 
 /** whether to enable actual Builder calls (uses mock if not set). */

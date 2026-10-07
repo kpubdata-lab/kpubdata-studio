@@ -49,12 +49,21 @@ describe("SettingsPage version check", () => {
     expect(warning.textContent).toContain("2.0.0");
   });
 
-  it("surfaces a warning when the builder version is below the required minimum (1.58.0)", async () => {
-    version.mockResolvedValue({ service: "builder", api_version: "1.58.0" });
+  it("surfaces a warning when the builder version is below the required minimum (1.95.0)", async () => {
+    version.mockResolvedValue({ service: "builder", api_version: "1.95.0" });
     renderSettings();
 
     const warning = await screen.findByRole("alert");
     expect(warning.textContent).toContain("계약 버전 불일치");
+  });
+
+  it("says why for a version it cannot read (#790)", async () => {
+    version.mockResolvedValue({ service: "builder", api_version: "1.96" });
+    renderSettings();
+
+    const warning = await screen.findByRole("alert");
+    expect(warning.textContent).toContain("계약 버전 불일치");
+    expect(warning.textContent).toContain("읽을 수 없습니다");
   });
 
   it("shows no warning at the exact minimum version", async () => {
@@ -69,12 +78,12 @@ describe("SettingsPage version check", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("shows no false-incompatible warning for a higher additive minor (1.77.0, current Builder main)", async () => {
-    version.mockResolvedValue({ service: "builder", api_version: "1.77.0" });
+  it("shows no false-incompatible warning for a higher additive minor (1.105.0, current Builder main)", async () => {
+    version.mockResolvedValue({ service: "builder", api_version: "1.105.0" });
     renderSettings();
 
     await waitFor(() =>
-      expect(screen.getByText(/Builder API 버전 1\.77\.0/)).toBeInTheDocument(),
+      expect(screen.getByText(/Builder API 버전 1\.105\.0/)).toBeInTheDocument(),
     );
     expect(screen.queryByRole("alert")).toBeNull();
   });

@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
-import { isBuilderApiCompatible, isRealBuilderEnabled, MIN_BUILDER_API_VERSION } from "@/shared/lib/builderApi";
+import { builderApiCompatibility, isRealBuilderEnabled, MIN_BUILDER_API_VERSION } from "@/shared/lib/builderApi";
 
 import { ensureVersionChecked, useVersionCheckStore } from "./store";
 
@@ -35,15 +35,27 @@ export function VersionMismatchBanner() {
 
   if (!realEnabled) return null;
 
-  if (apiVersion !== null && !isBuilderApiCompatible(apiVersion)) {
+  const contract = apiVersion === null ? null : builderApiCompatibility(apiVersion);
+  if (apiVersion !== null && contract !== null && contract.kind !== "compatible") {
+    // Each reason has its own remedy (#790): an older minor needs a Builder update, another
+    // major is a breaking contract, and a version Studio cannot read is reported as such.
+    const vars = { api: apiVersion, min: MIN_BUILDER_API_VERSION };
+    const [message, remedy] =
+      contract.kind === "too_old"
+        ? [t("versionCheck.contractTooOld", vars), t("versionCheck.contractRemedy")]
+        : contract.kind === "unsupported_major"
+          ? [
+              t("versionCheck.contractMajor", vars),
+              t(contract.builderNewer ? "versionCheck.contractMajorRemedyStudio" : "versionCheck.contractRemedy"),
+            ]
+          : [t("versionCheck.contractUnreadable", vars), t("versionCheck.contractRemedy")];
     return (
       <div
         className="border-b border-status-failure-border bg-status-failure-subtle px-4 py-2 text-sm text-status-failure"
-        data-version-check="contract-too-old"
+        data-version-check={contract.kind === "too_old" ? "contract-too-old" : contract.kind === "unsupported_major" ? "contract-major" : "contract-unreadable"}
         role="alert"
       >
-        {t("versionCheck.contractTooOld", { api: apiVersion, min: MIN_BUILDER_API_VERSION })}{" "}
-        {t("versionCheck.contractRemedy")}
+        {message} {remedy}
       </div>
     );
   }
