@@ -156,6 +156,31 @@ describe("the --check gate", () => {
 });
 
 describe("the snapshot in use", () => {
+  it("no schema types out an enum the snapshot holds", () => {
+    // A list written again by hand is the copy this file exists to remove: it is right
+    // on the day it is typed and nothing says when the contract moves. What stays by
+    // hand are the lists the contract does not declare as an enum of a schema — the
+    // `code` values of its error examples.
+    const source = readFileSync(join(import.meta.dirname, "builderApi.schema.ts"), "utf8");
+    const generated = new Map<string, string>();
+    for (const [name, values] of Object.entries(BUILDER_ENUMS)) {
+      generated.set(JSON.stringify([...values].sort()), name);
+    }
+    const copies: string[] = [];
+    const byHand: number[] = [];
+    for (const match of source.matchAll(/z\.enum\(\[([^\]]*)\]/g)) {
+      const body = match[1] ?? "";
+      const values = [...body.replace(/\/\/.*$/gm, "").matchAll(/"([^"]*)"/g)].map((value) => value[1]);
+      byHand.push(values.length);
+      const name = generated.get(JSON.stringify([...values].sort()));
+      if (name) copies.push(`${values.join(", ")} — use builderEnum("${name}")`);
+    }
+
+    expect(copies).toEqual([]);
+    // publishErrorCodeSchema and queryErrorCodeSchema. A third is a decision to make.
+    expect(byHand).toHaveLength(2);
+  });
+
   it("names a contract version and holds the enums Studio decides by", () => {
     expect(BUILDER_ENUMS_CONTRACT_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
     expect(BUILDER_ENUMS["BuildJob.status"]).toEqual(["queued", "running", "cancelling", "succeeded", "failed", "cancelled"]);
