@@ -419,33 +419,41 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
  * @returns Parsed response body.
  * @throws ApiError if response not 2xx or network/parse/timeout/schema validation error occurs.
  */
-export async function apiFetch<T>(
-  path: string,
-  options: RequestOptions = {},
-  schema?: z.ZodSchema<T>,
-): Promise<T> {
+/**
+ * Send a request and, on a 401, apply the one policy every request path follows — JSON
+ * calls, the upload and the binary downloads alike (#789).
+ *
+ * 401: if re-auth succeeds, send the same request exactly once with the new token (#189).
+ * The first failed attempt is not shown to the user, and the single resend keeps a real
+ * auth failure (not an expiry) from looping. A request that carries no token (`skipAuth`)
+ * would get the same answer again and is not resent.
+ *
+ * A renewed token that is refused too is not an expiry (#771): the caller records the
+ * refusal (`refusedWithFreshToken`) once and, while it stands, a 401 is neither renewed
+ * nor resent — at most one resend per refusal, whatever the number of requests on the
+ * screen and whichever path they take.
+ *
+ * `send` is called at most twice. It reads the token itself, so the second call carries
+ * the renewed one; a body it sends (the upload's bytes) is therefore sent at most twice,
+ * and the first time Builder refused it at the auth gate before reading it.
+ */
+async function sendWithSession(
+  send: () => Promise<Response>,
+  skipAuth = false,
+): Promise<{ response: Response; refusedWithFreshToken: boolean }> {
   const sentAt = Date.now();
-  let response = await fetchWithRetries(path, options);
-
-  // 401: if re-auth succeeds, send same request exactly once with new token (#189).
-  // avoid exposing first failed attempt to user, limit retry to 1
-  // prevent loop on real auth failure (not expiry). Don't attach auth header
-  // request (skipAuth) returns same result on replay do not retry.
-  //
-  // A renewed token that is refused too is not an expiry (#771): the refusal is recorded
-  // once and, while it stands, a 401 is neither renewed nor resent — at most one resend
-  // per refusal, whatever the number of queries on the screen.
+  let response = await send();
   let refusedWithFreshToken = false;
-  if (response.status === 401 && !isSessionRefused() && !options.skipAuth) {
+  if (response.status === 401 && !isSessionRefused() && !skipAuth) {
     if (lastRenewedAt !== null && sentAt >= lastRenewedAt && sentAt - lastRenewedAt < FRESH_TOKEN_MS) {
       // Sent with a token renewed a moment ago: renewing again changes nothing.
       refusedWithFreshToken = true;
     } else if (lastRenewedAt !== null && sentAt < lastRenewedAt) {
       // Another query renewed the token while this one was out: use that one.
-      response = await fetchWithRetries(path, options);
+      response = await send();
       refusedWithFreshToken = response.status === 401;
     } else if (await recoverFromUnauthorized()) {
-      response = await fetchWithRetries(path, options);
+      response = await send();
       refusedWithFreshToken = response.status === 401;
     }
   } else if (response.status === 401 && !isSessionRefused()) {
@@ -453,6 +461,28 @@ export async function apiFetch<T>(
     // still told, as before.
     await recoverFromUnauthorized();
   }
+  return { response, refusedWithFreshToken };
+}
+
+/**
+ * What a request path does with the session once it has its final response: a refusal
+ * of a fresh token is recorded with Builder's reason, and an accepted request with the
+ * session's token means any earlier refusal is over.
+ */
+function settleSession(response: Response, refusedWithFreshToken: boolean, errorBody: unknown, skipAuth = false): void {
+  if (refusedWithFreshToken && response.status === 401) noteSessionRefused(errorBody);
+  if (response.ok && !skipAuth) clearSessionRefusal();
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestOptions = {},
+  schema?: z.ZodSchema<T>,
+): Promise<T> {
+  const { response, refusedWithFreshToken } = await sendWithSession(
+    () => fetchWithRetries(path, options),
+    options.skipAuth,
+  );
 
   const text = await response.text();
   let parsed: unknown = undefined;
@@ -465,9 +495,7 @@ export async function apiFetch<T>(
     }
   }
 
-  if (refusedWithFreshToken && response.status === 401) noteSessionRefused(parsed);
-  // An accepted request with the session's token means the refusal is over.
-  if (response.ok && !options.skipAuth) clearSessionRefusal();
+  settleSession(response, refusedWithFreshToken, parsed, options.skipAuth);
   if (!response.ok) throw httpError(response.status, parsed);
 
   // runtime type validation via Zod schema (#158, #103)
@@ -1378,7 +1406,9 @@ export const builderApi = {
  * apiFetch's JSON-only path. Auth/retry/timeout conventions matched as much as possible
  * (Bearer header uses authTokenProvider directly), but upload is non-idempotent so
  * do not retry on network errors/5xx. 401 is exception — Builder rejects at auth gate
- * before routing, so upload didn't occur; if re-auth succeeds, retry once (#189).
+ * before routing, so upload didn't occur; if re-auth succeeds, retry once (#189). The
+ * 401 policy is `sendWithSession`, shared with every other path (#789): the bytes are
+ * sent at most twice, and not again while Builder refuses the session.
  * `format`/`encoding`/`filename` sent as query parameters.
  */
 export async function uploadFile(
@@ -1406,20 +1436,19 @@ export async function uploadFile(
     }
   }
 
-  let response = await send();
-  if (response.status === 401 && (await recoverFromUnauthorized())) {
-    response = await send();
-  }
+  const { response, refusedWithFreshToken } = await sendWithSession(send);
 
   const text = await response.text();
   let parsed: unknown;
   try {
     parsed = text ? JSON.parse(text) : undefined;
   } catch {
+    settleSession(response, refusedWithFreshToken, undefined);
     if (!response.ok) throw new ApiError(response.status, i18n.t("api.badJson"));
     throw new ContractMismatchError(response.status, i18n.t("api.badJson"), "bad_json");
   }
 
+  settleSession(response, refusedWithFreshToken, parsed);
   if (!response.ok) {
     throw httpError(response.status, parsed);
   }
@@ -1478,7 +1507,11 @@ export async function downloadWarehouseExport(
   return fetchBinary(`/warehouse/exports/${encodeURIComponent(exportId)}/download`, `${exportId}.zip`, signal);
 }
 
-/** GET a binary Builder resource with the Bearer token, retrying once after re-auth (#189). */
+/**
+ * GET a binary Builder resource with the Bearer token. The 401 policy is
+ * `sendWithSession` (#189, #771, #789) — one resend after a renewal, none while Builder
+ * refuses the session — for the artifact file and the export bundle alike.
+ */
 async function fetchBinary(path: string, fallbackName: string, signal?: AbortSignal): Promise<{ blob: Blob; filename: string }> {
   async function send(): Promise<Response> {
     const headers: Record<string, string> = {};
@@ -1491,8 +1524,7 @@ async function fetchBinary(path: string, fallbackName: string, signal?: AbortSig
       throw new ApiError(0, i18n.t("api.connFail"), cause);
     }
   }
-  let response = await send();
-  if (response.status === 401 && (await recoverFromUnauthorized())) response = await send();
+  const { response, refusedWithFreshToken } = await sendWithSession(send);
   if (!response.ok) {
     let parsed: unknown;
     try {
@@ -1501,8 +1533,10 @@ async function fetchBinary(path: string, fallbackName: string, signal?: AbortSig
     } catch {
       parsed = undefined;
     }
+    settleSession(response, refusedWithFreshToken, parsed);
     throw httpError(response.status, parsed);
   }
+  settleSession(response, refusedWithFreshToken, undefined);
   const blob = await response.blob();
   return { blob, filename: filenameFromContentDisposition(response.headers.get("Content-Disposition")) ?? fallbackName };
 }
@@ -1518,42 +1552,9 @@ export async function downloadArtifactFile(
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
-  async function send(): Promise<Response> {
-    const headers: Record<string, string> = {};
-    const token = (await authTokenProvider?.()) ?? null;
-    if (token) headers.Authorization = `Bearer ${token}`;
-    try {
-      return await fetch(`${API_BASE}/artifacts/${encodeURIComponent(runId)}/${encodedPath}`, {
-        method: "GET",
-        headers,
-        signal,
-      });
-    } catch (cause) {
-      if (signal?.aborted) throw cause;
-      throw new ApiError(0, i18n.t("api.connFail"), cause);
-    }
-  }
-
-  let response = await send();
-  if (response.status === 401 && (await recoverFromUnauthorized())) {
-    response = await send();
-  }
-
-  if (!response.ok) {
-    let parsed: unknown;
-    try {
-      const text = await response.text();
-      parsed = text ? JSON.parse(text) : undefined;
-    } catch {
-      parsed = undefined;
-    }
-    throw httpError(response.status, parsed);
-  }
-
-  const blob = await response.blob();
-  const filename =
-    filenameFromContentDisposition(response.headers.get("Content-Disposition")) ??
-    filePath.split("/").pop() ??
-    "artifact";
-  return { blob, filename };
+  return fetchBinary(
+    `/artifacts/${encodeURIComponent(runId)}/${encodedPath}`,
+    filePath.split("/").pop() || "artifact",
+    signal,
+  );
 }
