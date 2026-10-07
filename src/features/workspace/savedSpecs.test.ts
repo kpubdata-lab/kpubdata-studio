@@ -5,7 +5,7 @@
  * returns, rejection at the cap (no auto-delete), optimistic concurrency,
  * corrupted-value recovery, secret redaction.
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BuildSpec } from "@/shared/lib/types";
 import {
   SAVED_SPEC_LIMIT,
@@ -61,14 +61,64 @@ describe("createSavedSpec / listSavedSpecSummaries", () => {
     });
   });
 
-  it("sorts summaries by most-recently-updated first", async () => {
-    const first = createSavedSpec({ name: "먼저", spec: makeSpec(), validation: { status: "not_validated", errors: [] } });
-    await new Promise((resolve) => setTimeout(resolve, 2));
-    const second = createSavedSpec({ name: "나중", spec: makeSpec(), validation: { status: "not_validated", errors: [] } });
+  // The clock is set explicitly (#781): a real 2 ms wait does not guarantee the two
+  // saves land in different milliseconds, and the test failed on CI when they did not.
+  describe("ordering", () => {
+    const create = (name: string) =>
+      createSavedSpec({ name, spec: makeSpec(), validation: { status: "not_validated", errors: [] } });
 
-    const summaries = listSavedSpecSummaries();
-    expect(summaries[0].id).toBe(second.entry.id);
-    expect(summaries[1].id).toBe(first.entry.id);
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("sorts summaries by most-recently-updated first", () => {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      const first = create("먼저");
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.001Z"));
+      const second = create("나중");
+
+      expect(listSavedSpecSummaries().map((s) => s.id)).toEqual([second.entry.id, first.entry.id]);
+    });
+
+    it("puts an older spec saved again since ahead of a newer one", () => {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      const older = create("오래된");
+      vi.setSystemTime(new Date("2026-10-07T00:00:01.000Z"));
+      const newer = create("새로운");
+      vi.setSystemTime(new Date("2026-10-07T00:00:02.000Z"));
+      expect(saveSpec({ ...getSavedSpec(older.entry.id)!, name: "다시 저장" }).ok).toBe(true);
+
+      expect(listSavedSpecSummaries().map((s) => s.id)).toEqual([older.entry.id, newer.entry.id]);
+    });
+
+    it("orders two saves in the same millisecond the same way whichever was stored first", () => {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      const a = create("a");
+      const b = create("b");
+      const once = listSavedSpecSummaries().map((s) => s.id);
+
+      // Store the same two entries in the opposite order.
+      window.localStorage.clear();
+      expect(saveSpec(b.entry).ok).toBe(true);
+      expect(saveSpec(a.entry).ok).toBe(true);
+
+      expect(listSavedSpecSummaries().map((s) => s.id)).toEqual(once);
+      expect(once).toEqual([a.entry.id, b.entry.id].sort());
+    });
+
+    it("breaks a tie in updatedAt by the newer createdAt", () => {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      const older = create("오래된");
+      vi.setSystemTime(new Date("2026-10-07T00:00:05.000Z"));
+      const newer = create("새로운");
+      // Saved again at the very millisecond the newer one was created.
+      expect(saveSpec({ ...getSavedSpec(older.entry.id)!, name: "같은 시각" }).ok).toBe(true);
+
+      expect(listSavedSpecSummaries().map((s) => s.id)).toEqual([newer.entry.id, older.entry.id]);
+    });
   });
 
   it("returns an empty list when nothing is stored, and hasAnySavedSpec reflects that", () => {
