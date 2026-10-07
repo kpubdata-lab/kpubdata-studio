@@ -11,7 +11,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { builderApi } from "./builderApi";
+import { builderApi, SpecNotSentError } from "./builderApi";
 import {
   PROVIDER_KEY_HEADER,
   forgetAllProviderKeys,
@@ -242,6 +242,36 @@ describe("only the keys a request needs are sent (#770)", () => {
     expect(await headerOf(() => call("seoul"))).toBe(`seoul=${SEOUL}`);
     expect(await headerOf(() => call("semas"))).toBe(`datago=${KEY}`);
     expect(await headerOf(() => call("bok"))).toBeUndefined();
+  });
+
+  // Forms Builder's parser accepts and Studio's read as naming no provider (#788): the
+  // request went out with no key for a spec that calls datago.
+  it.each([
+    ["a provider given by a merge", "base: &b\n  provider: datago\nsources:\n  - <<: *b\n    dataset: a\n"],
+    ["a key written twice", "sources:\n  - provider: seoul\n    dataset: a\n    provider: datago\n"],
+    ["more than 100 alias uses", `p: &p datago\nsources:\n${"  - provider: *p\n    dataset: d\n".repeat(150)}`],
+  ])("a spec with %s carries the key Builder will ask for, and no other", async (_name, spec) => {
+    for (const call of [() => builderApi.preview(spec), () => builderApi.build(spec), () => builderApi.submitBuild(spec)]) {
+      expect(await headerOf(call)).toBe(`datago=${KEY}`);
+    }
+  });
+
+  it("a spec whose provider the two parsers would read differently is not sent at all", async () => {
+    const spec = "a: &a {provider: seoul}\nc: &c {provider: datago}\nsources:\n  - <<: *a\n    <<: *c\n    dataset: d\n";
+
+    for (const call of [() => builderApi.preview(spec), () => builderApi.build(spec), () => builderApi.submitBuild(spec)]) {
+      const refused = await call().then(
+        () => null,
+        (cause: unknown) => cause,
+      );
+      expect(refused).toBeInstanceOf(SpecNotSentError);
+      expect(refused).toMatchObject({ status: 400, code: "repeated_merge_key" });
+      // The message says what to change and holds nothing from the spec or the keys.
+      expect(String((refused as Error).message)).toContain("<<");
+      expect(String((refused as Error).message)).not.toContain(KEY);
+      expect(String((refused as Error).message)).not.toContain(SEOUL);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("listProviders still carries every held key: it asks what they cover", async () => {

@@ -14,7 +14,7 @@
  * A single-user Builder stores keys as before, so nothing is held here and no header is
  * sent: its flow is unchanged.
  */
-import { parse as parseYaml } from "yaml";
+import { isMap, isScalar, parseDocument, Scalar, visit, type Document } from "yaml";
 import { create } from "zustand";
 
 /** The request header that carries provider keys (builder `request_credentials.py`). */
@@ -113,14 +113,68 @@ export function forgetKeyProviders(): void {
 }
 
 /**
- * The providers a BuildSpec's sources call, read from its YAML. A spec that cannot be
- * read names none: Builder refuses it before any provider is called, so no key is needed.
+ * How Builder reads a BuildSpec (#788). It parses with PyYAML's `safe_load`, which is
+ * YAML 1.1: a `<<` key merges the mappings it names, a key written twice keeps its last
+ * value, and aliases are followed without a limit. This library's defaults are YAML 1.2
+ * — no merge, a repeated key is an error, at most 100 alias uses — so a spec Builder
+ * accepts was read here as naming no provider, and its request went out without the key.
+ *
+ * `specProviders.cases.ts` holds each case with what PyYAML reads from it, and
+ * `specProviders.test.ts` holds this reader to those answers.
+ */
+const AS_BUILDER_READS = { version: "1.1", uniqueKeys: false } as const;
+
+/**
+ * The spec's key cannot be decided here the way Builder would decide it: a mapping has
+ * more than one `<<` key. PyYAML lets the later one win and this library the earlier, so
+ * the two could name different providers — and the request would carry the wrong key or
+ * none. The request is not sent; the user is told to write one merge.
+ */
+export class AmbiguousSpecError extends Error {
+  constructor() {
+    super("a mapping in the spec has more than one '<<' merge key");
+    this.name = "AmbiguousSpecError";
+  }
+}
+
+/** An unquoted `<<` key. Under YAML 1.1 the parser gives its value as a symbol. */
+function isMergeKey(key: unknown): boolean {
+  if (!isScalar(key) || (key.type && key.type !== Scalar.PLAIN)) return false;
+  const value: unknown = key.value;
+  return value === "<<" || (typeof value === "symbol" && value.description === "<<");
+}
+
+function hasRepeatedMergeKey(document: Document): boolean {
+  let found = false;
+  visit(document, {
+    Map(_key, map) {
+      if (map.items.filter((pair) => isMergeKey(pair.key)).length > 1) {
+        found = true;
+        return visit.BREAK;
+      }
+      return undefined;
+    },
+  });
+  return found;
+}
+
+/**
+ * The providers a BuildSpec's sources call, read from its YAML as Builder reads it. A
+ * spec that cannot be read names none: Builder refuses it before any provider is called,
+ * so no key is needed.
+ *
+ * @throws AmbiguousSpecError when Builder could read a different provider than this does.
  */
 export function specProviders(specYaml: string): string[] {
   let parsed: unknown;
   try {
-    parsed = parseYaml(specYaml);
-  } catch {
+    const document = parseDocument(specYaml, AS_BUILDER_READS);
+    if (document.errors.length > 0) return [];
+    if (isMap(document.contents) && hasRepeatedMergeKey(document)) throw new AmbiguousSpecError();
+    // No alias limit: Builder has none, and only `sources[].provider` is read here.
+    parsed = document.toJS({ maxAliasCount: -1 });
+  } catch (cause) {
+    if (cause instanceof AmbiguousSpecError) throw cause;
     return [];
   }
   const sources = (parsed as { sources?: unknown } | null)?.sources;
