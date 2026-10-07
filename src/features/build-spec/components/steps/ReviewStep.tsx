@@ -91,9 +91,6 @@ export function ReviewStep({
         {job.status === "cancelled" ? (
           <span className="text-sm text-muted-foreground">{t("newBuild.review.cancelled")}</span>
         ) : null}
-        {job.interrupted && job.status !== "cancelled" ? (
-          <span className="text-sm text-muted-foreground">{t("newBuild.review.aborted")}</span>
-        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">

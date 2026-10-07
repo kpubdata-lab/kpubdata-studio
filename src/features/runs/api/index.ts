@@ -49,28 +49,18 @@ export type BuilderJobStatus =
   | "cancelled";
 
 /**
- * Indicates which Builder surface the execution uses (and its run_id) to caller
- * (useBuildJob).
+ * The run a build was submitted as, for the caller (useBuildJob): POST /builds and
+ * polling, with cancel sent as POST /builds/{run_id}/cancel.
  *
- * - `async`: POST /builds + polling. User cancel must be sent via
- *   POST /builds/{run_id}/cancel.
- * - `sync`: POST /build (file source, ADR 0014). No server-side cooperative
- *   cancellation path.
+ * Every build takes this path, file sources included (#786). They used to go through the
+ * synchronous POST /build (ADR 0014), which held one request open for the whole build —
+ * as long as a browser or a proxy would wait — and could not be cancelled on the server.
+ * Builder's async worker reads the submitter's uploads since kpubdata-builder#998, and
+ * every Builder Studio supports (`MIN_BUILDER_API_VERSION`) has it.
  */
 export interface BuildExecutionHandle {
   runId: string;
-  mode: "sync" | "async";
-}
-
-/**
- * Returns true if BuildSpec contains any file source.
- *
- * ADR 0014: async build (POST /builds) with file source is currently out of scope
- * — any spec with files must run entirely via sync POST /build. Checks all sources,
- * not just the first.
- */
-export function specHasFileSource(spec: BuildSpec): boolean {
-  return spec.sources.some((source) => source.kind === "file");
+  mode: "async";
 }
 
 export interface BuildExecutionOptions {
@@ -118,18 +108,11 @@ export async function executeBuild(
   const runId = generateRunId(spec.datasetId);
   const startedAt = new Date().toISOString();
 
-  // Specs with file sources run via sync (POST /build), not async (POST /builds).
-  // (ADR 0014). public_api/url only uses existing async job surface.
-  let result: BuildRun;
-  if (specHasFileSource(spec)) {
-    onHandle?.({ runId, mode: "sync" });
-    result = await runSyncBuild(spec, runId, startedAt, signal, options.retryOf);
-  } else {
-    // In async mode, expose handle only after POST /builds succeeds and obtains
-    // authoritative run_id (F03). This prevents race where submit-in-flight Cancel
-    // sends cooperative cancel to non-existent run_id on server.
-    result = await runAsyncBuild(spec, runId, startedAt, signal, onJobStatus, onHandle, options.retryOf);
-  }
+  // Every source kind, file included, goes through the async job surface (#786). The
+  // handle is exposed only after POST /builds succeeds and returns the authoritative
+  // run_id (F03), so a Cancel pressed while the submit is in flight never reaches a
+  // run_id the server does not have.
+  const result = await runAsyncBuild(spec, runId, startedAt, signal, onJobStatus, onHandle, options.retryOf);
 
   // Builder does not persist spec (#120), so Studio saves the spec bound to
   // run_id for edit screen restoration. Save failures are ignored and do not
@@ -244,34 +227,6 @@ export function buildRunFromJob(job: BuildJob, spec: BuildSpec, startedAt: strin
   if (body?.status !== undefined && body.status !== "ok") {
     const outcomeReason = body.outcomes?.find((outcome) => outcome.error)?.error;
     const reason = body.error || outcomeReason || i18n.t("runs.build.someSourcesFailed");
-    return { id: finalRunId, spec, status: "failed", startedAt, finishedAt, error: reason };
-  }
-  return { id: finalRunId, spec, status: "succeeded", startedAt, finishedAt };
-}
-
-/**
- * Execute spec with file sources via synchronous `POST /build` (ADR 0014).
- *
- * Skips async job surface (POST /builds + polling), so job status callbacks/cancel
- * endpoints are not involved. Success/partial-failure judgment follows same rules
- * as async final build response (topmost error → outcomes[].error → default message,
- * #75) so UI can consume BuildRun identically to async result.
- */
-async function runSyncBuild(
-  spec: BuildSpec,
-  runId: string,
-  startedAt: string,
-  signal: AbortSignal | undefined,
-  retryOf?: string,
-): Promise<BuildRun> {
-  const response = await builderApi.build(serializeSpec(spec), runId, signal, retryOf);
-  const finishedAt = new Date().toISOString();
-  const finalRunId = response.run_id || runId;
-
-  if (response.status !== "ok") {
-    const outcomeReason = response.outcomes.find((outcome) => outcome.error)?.error;
-    const reason =
-      ("error" in response && response.error) || outcomeReason || i18n.t("runs.build.someSourcesFailed");
     return { id: finalRunId, spec, status: "failed", startedAt, finishedAt, error: reason };
   }
   return { id: finalRunId, spec, status: "succeeded", startedAt, finishedAt };

@@ -718,7 +718,6 @@ export function AddDataPage() {
             isStale={isStale}
             jobStatus={job.status}
             jobError={job.error}
-            jobInterrupted={job.interrupted}
             runId={job.run?.id}
             onBuild={() => {
               if (specResult.spec) void job.start(specResult.spec);

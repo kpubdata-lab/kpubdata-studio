@@ -46,7 +46,6 @@ const LOADED: CatalogState = {
 
 const idleJob: BuildJob = {
   status: "idle",
-  interrupted: false,
   start: vi.fn(),
   cancel: vi.fn(),
 };
