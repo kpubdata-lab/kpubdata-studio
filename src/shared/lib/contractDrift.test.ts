@@ -718,6 +718,11 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     code: "server_overloaded",
     since: "1.80.0",
   },
+  // The identity provider's signing keys could not be fetched, so the credentials were not
+  // judged (builder#1000). Builder has answered this since 1.79.0 and declares it as a shared
+  // response from 1.108.0 (builder#1109); Studio shows the message, and a later request
+  // succeeds once the keys can be read. Listed ahead of that contract so the example can land.
+  "AuthUnavailable 503 AuthUnavailable": { notHandled: MESSAGE_ONLY, code: "auth_unavailable", since: "1.108.0" },
   // Settling an unknown publish (#728, builder#1009). No receipt means nothing blocks a new
   // publish; a 503 means nothing changed and the same action can be tried again.
   "reconcilePublish 404 ReceiptNotFound": recoveryReader("nothing_to_settle"),
