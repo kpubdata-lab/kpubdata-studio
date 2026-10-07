@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+- **The design docs describe the shipped Studio** (#797). ARCHITECTURE, STATE_MODEL, UI_SPEC, USER_FLOWS and INFORMATION_ARCHITECTURE described an earlier build console. The corrections, with code references in each doc:
+  - TanStack Query is not used; it was removed in #82. Server state lives in each screen's hooks, drafts in `localStorage`, and shell and session state in Zustand. There is no `src/entities/`.
+  - A build is an async job: `POST /builds`, polled, with `cancelling`. A retry is a new run that carries `retry_of`; the earlier run never goes back to `queued`.
+  - Publish is implemented, including the recovery panel for `publish_state_unknown`. Hugging Face is the only target.
+  - The routes are `/add`, `/refresh-jobs…` and the rest of `src/app/router.tsx`; `/refresh-jobs/new` redirects to `/add`.
+  - Read requests retry twice. There is no offline mode.
+
+  `__tests__/docRoutes.test.ts` checks that INFORMATION_ARCHITECTURE's URL table lists exactly the router's routes, and that USER_FLOWS's route map names only routes that exist. README and AGENTS no longer list TanStack Query or `entities/`.
 - **The first screen no longer downloads both translations** (#796). Both locale files sat in a chunk every visitor downloaded before the first screen, so a Korean visitor also fetched the English file and the other way round, and each new translation grew the start-up download. Each locale is now its own chunk (`ko-*.js` 48.2 KiB, `en-*.js` 43.1 KiB gzip), fetched for the language in use, and Studio renders once it has arrived, so the first paint is translated. The initial load — the entry chunk and its static imports — went from 326.4 to 237.3 KiB gzip, plus the one locale (production build, 2026-10-07).
   - English no longer falls back to Korean: `npm run i18n:keys` keeps the two files on the same keys, so the fallback only meant downloading Korean for nothing.
   - If the English file cannot be fetched on a visit, Studio shows Korean, never raw keys, and keeps the visitor's stored choice for the next visit. Choosing a language whose file cannot be fetched leaves the current one in place and says so in the account menu; a browser does not retry a failed module fetch, so the message asks for a reload.

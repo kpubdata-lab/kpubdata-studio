@@ -2,172 +2,90 @@
 
 ## 1. 화면 내비게이션 흐름
 
+화면과 URL 의 전체 목록은 [INFORMATION_ARCHITECTURE.md](./INFORMATION_ARCHITECTURE.md) 에 있고, 기준은 `src/app/router.tsx` 입니다. 아래는 테이블을 만들고 갱신·출판하는 중심 흐름입니다.
+
 ```mermaid
 flowchart TD
-    Home(["Home / Dashboard"]) -->|Create New| Editor[Build Editor]
-    Home -->|View Recent| Run["Build Run / History"]
-    Editor -->|Validate/Run| Run
-    Run -->|Success| Artifacts[Artifact Viewer]
-    Artifacts -->|Share| Publish[Publish Page]
-    Run -->|Failure/Edit| Editor
-    Publish --> Home
+    Home(["Home /"]) --> Catalog["카탈로그 /discover"]
+    Home --> Tables["테이블 /tables"]
+    Catalog -->|테이블 만들기| Add["새 테이블 /add<br/>구성 → 미리보기·검증 → 생성"]
+    Tables -->|테이블 만들기| Add
+    Add -->|생성 = 빌드 제출| Run["run 상세 /refresh-jobs/:id"]
+    Tables --> Detail["테이블 상세 /tables/:datasetId"]
+    Detail -->|갱신| Edit["spec 수정 /refresh-jobs/:id/edit"]
+    Edit -->|실행| Run
+    Run -->|결과물| Artifacts["/refresh-jobs/:id/artifacts"]
+    Run -->|출판| Publish["/refresh-jobs/:id/publish"]
+    Detail -->|출판| Publish
+    Detail -->|SQL| Sql["SQL 작업대 /sql"]
 ```
 
-## 2. 주요 화면 및 와이어프레임
+## 2. 주요 화면
 
-### [Home] 대시보드
-빌드 목록을 한눈에 보고 빠르게 작업을 시작하는 곳입니다.
+### [Home] `/`
+처음 쓰는 사람에게는 시작 안내를, 데이터가 있는 사람에게는 현황을 보여 줍니다(`pages/HomePage.tsx`).
+- **API**: `GET /datasets`, `GET /builds`, warehouse 가 있으면 `GET /warehouse/tables`, 최근 스냅샷, `GET /analyses`.
+- 데이터셋도 run 도 없으면 시작 화면(StartHome)이 나옵니다.
+- 전역 "New Build" 버튼은 없습니다. 테이블 만들기는 카탈로그·테이블 화면에서 `/add` 로 갑니다.
 
-**와이어프레임:**
-```text
-+--------------------------------------------------+
-| [Header] KPubData Studio          [User Profile] |
-+--------------------------------------------------+
-| [Sidebar]    |                                   |
-| - Dashboard  |  [ + New Build ] [ Quick Actions ]|
-| - Builds     |                                   |
-| - Settings   |  Recent Build Runs                |
-|              |  +-----------------------------+  |
-|              |  | ID | Status | Time | Action |  |
-|              |  |----|--------|------|--------|  |
-|              |  | 01 | Success| 2min | View   |  |
-|              |  +-----------------------------+  |
-+--------------+-----------------------------------+
-```
-- **상호작용**:
-  - `[ + New Build ]`: 새로운 빌드 작성 페이지(`/builds/new`)로 이동합니다.
-  - `[ View ]`: 해당 빌드의 상세 결과 페이지로 이동합니다.
-- **API**: 현재 호출 없음(로컬/정적). Home 대시보드는 API를 호출하지 않고 로컬/정적 상태만 렌더링합니다. 빌드 결과물 조회(`GET /artifacts/{run_id}`)는 빌드 상세/결과물 화면(Build Detail / Artifacts)의 책임이며, 실제 연동 시 해당 화면에서 호출합니다.
+### [새 테이블 만들기] `/add`
+테이블 하나를 만드는 단일 흐름입니다(`pages/AddDataPage.tsx`). 세 단계입니다.
+1. **구성**: 데이터셋, provider 키, 요청 파라미터, 활용신청 안내.
+2. **미리보기·검증**: `POST /preview`, `POST /validate`. Builder 미리보기가 테이블의 논리 이름을 알려 줍니다.
+3. **생성**: 빌드를 `POST /builds` 로 제출하고 진행을 폴링합니다.
 
-> **계획(planned)/미구현**: 빌드 목록 조회(`GET /builds`)는 현재 Builder API에 존재하지 않습니다.
+초안은 `localStorage` 에 남아, 다시 들어오면 이어서 할 수 있습니다. `/refresh-jobs/new` 는 쿼리를 유지한 채 여기로 이동합니다(작업대에 저장한 spec, Ask KPubData 초안).
 
----
+### [spec 수정] `/refresh-jobs/:buildId/edit`
+이미 있는 run 의 spec 을 고쳐 다시 실행합니다(`pages/NewBuildPage.tsx`).
+- 소스(provider·데이터셋·파라미터)와 내보내기 형식을 고칩니다. 내보내기는 형식만 고르며, 저장 위치를 고르는 항목은 없습니다.
+- `[검증]` 은 `POST /validate`, 미리보기는 `POST /preview` 입니다. `[실행]` 은 검증을 통과한 뒤에만 켜지고, 통과한 뒤 내용을 고치면 다시 꺼집니다.
+- 실행은 새 run 을 `POST /builds` 로 제출합니다. 원래 run 이 실패하거나 취소된 것이면 `retry_of` 로 그 run 을 가리킵니다([STATE_MODEL.md](./STATE_MODEL.md) §2).
+- provider 목록은 `GET /catalog` 에서 옵니다.
 
-### [Build Editor] 빌드 편집기
-빌드 어떤 데이터를 어떻게 수집할지 기획서를 작성하는 곳입니다.
+### [갱신 이력과 run 상세] `/refresh-jobs`, `/refresh-jobs/:buildId`
+- 목록은 `GET /builds`, 상세는 `GET /builds/{run_id}` 를 폴링합니다.
+- 실행 중에는 소스별 Bronze/Silver/Gold 단계와 이벤트 타임라인(`GET /builds/{run_id}/events`)이 보입니다. 진행률 막대는 없습니다.
+- `[취소]` 는 `POST /builds/{run_id}/cancel` 입니다. 실행 중인 run 은 `cancelling` 을 거쳐 `cancelled` 가 됩니다.
+- 끝난 run 에서 결과물·출판·spec 수정으로 갑니다.
 
-```mermaid
-graph TD
-    subgraph EditorPage ["Build Editor Page"]
-        Header["Editor Header: Validate/Run Buttons"]
-        subgraph MainContent ["Main Configuration Area"]
-            direction LR
-            SourceArea["1. Source: Provider/Dataset/Params"]
-            ExportArea["2. Export Config: Format/Target"]
-        end
-        subgraph FeedbackArea ["Feedback Panels"]
-            direction LR
-            PreviewPanel["3. Preview Panel: Data Table"]
-            ValidationPanel["4. Validation Panel: Errors/Warnings"]
-        end
-        Header --> MainContent
-        MainContent --> FeedbackArea
-    end
-```
+### [결과물] `/refresh-jobs/:buildId/artifacts`
+`GET /builds/{run_id}/manifest` 와 `GET /artifacts/{run_id}` 로 결과 파일을 보여 주고 내려받게 합니다.
 
-**와이어프레임:**
-```text
-+--------------------------------------------------+
-| < Back to List         [ Validate ] [ Run Build ]|
-+--------------------------------------------------+
-| [1. Source]          | [3. Preview Panel]        |
-| + Provider Choice    |                           |
-| + Dataset Choice     | (Sample Data Table)       |
-| + Parameters Input   |                           |
-|                      |                           |
-| [2. Export Config]   | [4. Validation Panel]     |
-| + Format (JSON/MD..) |                           |
-| + Target (HF/Local)  | (Warnings/Errors List)    |
-+----------------------+---------------------------+
-```
-- **상호작용**:
-  - `Provider/Dataset Choice`: 선택 시 관련 파라미터 입력란이 자동으로 나타납니다.
-  - `[ Validate ]`: 현재 설정이 올바른지 확인합니다. (Validation Panel 업데이트)
-  - `[ Run Build ]`: 검증이 완료된 상태에서만 활성화되며, 누르면 실제 빌드가 시작됩니다.
-- **API**:
-  - `POST /validate`: 설정값 검증
-  - `POST /preview`: 샘플 데이터 미리보기
-
-> **계획(planned)/미구현**: `GET /providers` 엔드포인트는 현재 Builder API에 존재하지 않습니다. 제공 기관 목록은 현재 Studio 내에 하드코딩된 목록으로 제공됩니다.
-
----
-
-### [Build Run] 빌드 실행 화면
-빌드가 진행되는 과정을 실시간으로 지켜보는 곳입니다.
-
-**와이어프레임:**
-```text
-+--------------------------------------------------+
-| Build #123 - Running...           [ Cancel Build ]|
-+--------------------------------------------------+
-| Status: [====------] 40%                         |
-|                                                  |
-| [ Execution Logs ]                               |
-| 10:00:01 - Fetching data from data.go.kr...      |
-| 10:00:05 - Normalizing records...                |
-| 10:00:08 - Converting to Markdown...             |
-+--------------------------------------------------+
-```
-- **상호작용**:
-  - `[ Cancel Build ]`: 실행 중인 작업을 즉시 중단합니다.
-- **API**: `POST /build` (동기 빌드 실행, 완료까지 블로킹)
-
-> **계획(planned)/미구현**: 비동기 상태 폴링(`GET /builds/:id/status`) 및 취소(`DELETE /builds/:id`)는 현재 구현되어 있지 않습니다. 현재 `POST /build`는 동기식으로 동작합니다.
-
----
+### [출판] `/refresh-jobs/:buildId/publish`
+빌드 결과를 Hugging Face 로 출판합니다(`pages/BuildPublishPage.tsx`).
+- 데이터 카드 미리보기, 준비 상태(`GET /builds/{run_id}/publish/readiness`: 약관, 데이터 카드, 자격 증명).
+- 대상 저장소(`owner/repo`), 비공개·공개 선택, 비상업 약관이면 확인. Hugging Face 토큰은 필요한 배포에서만 `X-Publish-Credential` 헤더로 한 번 보냅니다.
+- `[출판]` 은 `POST /builds/{run_id}/publish` 이고, 성공하면 결과 참조가 링크로 보입니다.
+- 결과를 모르는 실패(`publish_state_unknown`)에는 자동 재시도 대신 복구 패널이 나옵니다(원격 확인 `POST …/publish/reconcile`, 기록 초기화 `DELETE …/publish/receipt`).
+- 런 상세, 결과물 화면, 테이블 상세에서 들어옵니다.
 
 ## 3. 화면별 API 호출 지도
 
-```mermaid
-graph LR
-    subgraph Screens ["Studio 화면"]
-        HomeS[Home Dashboard]
-        EditorS[Build Editor]
-        RunS[Build Run Tracking]
-        ArtifactsS[Artifact Viewer]
-        PublishS[Publish Page]
-        SettingsS[Settings]
-    end
+| 화면 | 호출 API |
+| :--- | :--- |
+| Home | `GET /datasets`, `GET /builds`, `GET /warehouse/tables`, `GET /analyses` |
+| 카탈로그 `/discover` | `GET /catalog`, `GET /datasets` |
+| 새 테이블 `/add` | `POST /preview`, `POST /validate`, `POST /builds`, `GET /builds/{id}` |
+| spec 수정 | `GET /catalog`, `POST /validate`, `POST /preview`, `POST /builds` |
+| 갱신 이력·run 상세 | `GET /builds`, `GET /builds/{id}`, `GET /builds/{id}/events`, `POST /builds/{id}/cancel` |
+| 결과물 | `GET /builds/{id}/manifest`, `GET /artifacts/{id}`, `GET /artifacts/{id}/{file}` |
+| 출판 | `GET /builds/{id}/publish/readiness`, `POST /builds/{id}/publish`, `POST …/publish/reconcile`, `DELETE …/publish/receipt` |
+| 테이블·SQL·저장된 분석 | `GET /warehouse/tables…`, `POST /warehouse/query`, `/rows`, `/aggregate`, `/exports`, `GET /analyses…` |
+| 품질 / 모니터링 | `GET /quality/…` / `GET /monitoring/…` |
+| 연결 `/connections` | `GET /providers`, provider 키 확인 |
+| 관리 `/admin` | `GET /admin/…` (관리자만) |
+| 설정 | `GET /version` |
 
-    subgraph APIEndpoints ["Builder API 엔드포인트"]
-        GET_Version["GET /version"]
-        POST_Validate["POST /validate"]
-        POST_Preview["POST /preview"]
-        POST_Build["POST /build"]
-        GET_Artifacts["GET /artifacts/{run_id}"]
-    end
-
-    SettingsS --> GET_Version
-    EditorS --> POST_Validate
-    EditorS --> POST_Preview
-    EditorS --> POST_Build
-    ArtifactsS --> GET_Artifacts
-    RunS --> POST_Build
-    PublishS -.->|계획/미구현| GET_Artifacts
-```
-
-> 라우팅은 React Router가 담당하며, 각 화면은 `src/pages/`에서 조립되고 실제 API 호출은 `src/features/*/api/index.ts`를 통해 수행됩니다.
+> 각 화면은 `src/pages/` 에서 조립됩니다. Builder 호출은 `shared/lib/builderApi.ts` 가 캡슐화하고, feature 의 `api` 가 그 위에서 mock 모드를 나눕니다. 일부 페이지는 `builderApi` 를 직접 부릅니다([ARCHITECTURE.md](./ARCHITECTURE.md) §4). 데모(GitHub Pages)는 Builder 없이 mock 데이터로 같은 화면을 보여 줍니다.
 
 ## 4. 에러 및 예외 상태 처리
 
-- **Loading State**: 데이터를 불러오는 동안 스피너(Spinner)나 스켈레톤(Skeleton) UI를 보여줍니다.
-- **Empty State**: 목록이 없을 때 "아직 생성된 빌드가 없습니다. 첫 빌드를 만들어보세요!"라는 안내 문구를 보여줍니다.
+- **Loading State**: 데이터를 불러오는 동안 스피너나 스켈레톤 UI 를 보여 줍니다.
+- **Empty State**: 목록이 비면 다음 행동을 안내합니다(예: Home 의 시작 화면).
 - **Error State**:
-  - **Network Error**: "서버와 연결이 끊겼습니다. 인터넷 연결을 확인해주세요."
-  - **Validation Error**: 입력창 아래에 붉은색 글씨로 구체적인 오류 원인을 적어줍니다. (예: "날짜 형식은 YYYYMMDD여야 합니다.")
-
----
-
-## 5. 화면별 명세 요약
-
-| 화면명 | 주요 기능 | 호출 API |
-| :--- | :--- | :--- |
-| Home | 전체 현황 파악 | 현재 호출 없음(로컬/정적) |
-| Editor | 빌드 설정 기획 및 검증 | `POST /validate`, `POST /preview` |
-| Run | 빌드 실행 (동기) | `POST /build` |
-| Artifacts | 결과물 확인 및 다운로드 | `GET /artifacts/{run_id}` |
-| Settings | 환경 설정 및 연결 확인 | `GET /version` (계약 버전 확인, 실연동 모드) |
-| Publish | 외부 저장소 배포 | **계획(planned)/미구현** |
+  - **Network Error**: 읽기 요청은 연결 실패·타임아웃·5xx 에 최대 2번 자동으로 다시 시도한 뒤 "Builder API에 연결하지 못했습니다." 또는 "Builder API 응답이 시간 내에 오지 않았습니다." 를 보여 줍니다. 빌드 제출·취소·출판은 자동으로 다시 보내지 않습니다.
+  - **Validation Error**: 검증 오류를 목록으로 보여 주고, 입력값은 그대로 둡니다.
 
 ---
 

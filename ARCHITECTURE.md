@@ -34,21 +34,20 @@ Studio는 **Vite + React + TypeScript + React Router** 기반의 단일 페이�
 - **Vite**: 빠른 개발 서버와 프로덕션 빌드를 담당합니다.
 - **React**: 화면을 컴포넌트 단위로 조립합니다.
 - **React Router**: 브라우저 URL과 페이지 컴포넌트를 연결합니다.
-- **TanStack Query**: `QueryClientProvider`가 마운트되어 준비(provisioned)되어 있습니다. 현재는 `useQuery`/`useMutation` 훅이 사용되지 않으며, 서버 상태 채택이 진행 중(in progress)입니다.
-- **Zustand**: 편집기 임시 저장과 UI 세션 상태를 다루는 경량 스토어입니다.
+- **서버 상태(Builder 응답)**: 공용 캐시 라이브러리를 쓰지 않습니다. 화면·기능마다 `useState` + `useEffect` + `AbortController` 로 만든 훅이 응답을 불러와 자기 상태로 둡니다(예: `features/runs/useBuild.ts`, `features/runs/useBuildJob.ts`, `features/publish/usePublishJob.ts`, `features/data-table/useWarehouseRows.ts`). TanStack Query 는 쓰지 않던 의존성이라 제거했습니다(#82). 공용 클라이언트 계약으로 정리하는 일은 #794 에서 다룹니다.
+- **Zustand**: 셸 UI 상태(`shared/hooks/useUIStore.ts`, 테마·사이드바), 메모리에만 두는 로그인 토큰(`features/auth/store.ts`)과 provider 키(`shared/lib/providerKeys.ts`), 어시스턴트 세션, 그리고 세션 단위로 기억하는 서버 사실(버전 확인·관리자 여부·가입 상태·세션 거절)을 담습니다.
+- **편집 초안**: Zustand 가 아니라 `localStorage` 에 둡니다(`features/build-spec/draftStorage.ts`, `features/add-data/draftStorage.ts`). 폼 입력은 react-hook-form 이 다룹니다.
 - **TypeScript**: Builder API 계약과 UI 상태를 정적으로 검증합니다.
 
 ```mermaid
 graph TD
     Main[src/main.tsx] --> App[src/app/App.tsx]
     App --> Router[src/app/router.tsx]
-    Router --> Home[HomePage]
-    Router --> Builds[BuildsPage]
-    Router --> NewBuild[NewBuildPage]
-    Home --> Features[src/features/*]
-    Builds --> Features
-    NewBuild --> Features
+    Router --> Pages[src/pages/* — 라우트별 페이지]
+    Pages --> Features[src/features/*]
 ```
+
+라우트 전체 목록은 [INFORMATION_ARCHITECTURE.md](INFORMATION_ARCHITECTURE.md) 의 URL 표와 `src/app/router.tsx` 에 있습니다.
 
 ---
 
@@ -61,7 +60,7 @@ Studio는 설정, 미리보기, 상태, 결과물을 렌더링합니다.
 - 빌드 의미론은 Builder가 소유합니다.
 - Studio는 입력, 상태 전이, 시각화, 검토 흐름을 담당합니다.
 - 기능별 API 호출은 feature 경계 안에 둡니다.
-- 공통 타입과 UI는 `shared/`, 핵심 도메인 표현은 `entities/`에 둡니다.
+- 공통 타입과 UI는 `shared/` 에 둡니다(도메인 타입은 `shared/lib/types.ts`, 계약 스키마는 `shared/lib/builderApi.schema.ts`).
 
 ---
 
@@ -74,7 +73,6 @@ graph LR
     Router --> Pages[pages/*]
     Pages --> Features[features/*]
     Features --> Shared[shared/*]
-    Features --> Entities[entities/*]
     Features --> BuilderAPI[Builder API]
 ```
 
@@ -82,21 +80,23 @@ graph LR
 
 - **`src/main.tsx`**: 브라우저 `#root`에 앱을 마운트하는 진입점입니다.
 - **`src/app/`**: 앱 셸과 라우터를 조립합니다.
-  - `App.tsx`: `RouterProvider` 연결
-  - `router.tsx`: 브라우저 라우트와 공통 셸 정의
-- **`src/pages/`**: URL 단위 페이지 컴포넌트를 둡니다.
+  - `App.tsx`: `ErrorBoundary` 안에서 `RouterProvider` 연결, 테마 적용
+  - `router.tsx`: 브라우저 라우트와 공통 셸(`Layout`) 정의. `/login`·`/signup` 은 셸 밖입니다
+- **`src/pages/`**: URL 단위 페이지 컴포넌트를 둡니다(26개). 예:
   - `HomePage.tsx`: `/`
-  - `BuildsPage.tsx`: `/builds`
-  - `NewBuildPage.tsx`: `/builds/new`
-- **`src/features/`**: 기능 단위로 UI, API, 상태를 묶습니다.
-  - `build-spec/`: 빌드 기획 입력
-  - `preview/`: 미리보기
-  - `validation/`: 검증 결과
-  - `runs/`: 실행 추적
+  - `AddDataPage.tsx`: `/add` — 새 테이블 만들기(구성 → 미리보기·검증 → 생성)
+  - `BuildsPage.tsx`: `/refresh-jobs`, `/refresh-jobs/:buildId` — 갱신 이력과 run 상세
+  - `NewBuildPage.tsx`: `/refresh-jobs/:buildId/edit` — 기존 run 의 spec 을 고쳐 다시 실행
+  - `BuildPublishPage.tsx`: `/refresh-jobs/:buildId/publish` — 출판
+- **`src/features/`**: 기능 단위로 UI, API, 상태를 묶습니다. 예:
+  - `add-data/`: 새 테이블 만들기 흐름
+  - `build-spec/`: spec 편집과 초안
+  - `preview/`, `validation/`: 미리보기, 검증 결과
+  - `runs/`: 실행·취소·재시도·이벤트 추적
   - `artifacts/`: 결과물 조회
-  - `publish/`: 출판 흐름
-- **`src/shared/`**: 공통 config, hooks, lib, types, ui를 둡니다.
-- **`src/entities/`**: `build`, `dataset`, `manifest`, `artifact` 등 핵심 도메인 모델을 위한 예약 디렉터리입니다. 현재 각 하위 폴더에는 `.gitkeep` 파일만 있으며 실제 도메인 타입은 `src/shared/lib/types.ts`에 위치합니다. (`entities/` 내 도메인 분리는 계획(planned)/미구현 상태입니다.)
+  - `publish/`: 출판과 출판 복구
+  - `datasets/`, `data-table/`, `sql/`, `discover/`, `quality/`, `monitoring/`, `admin/`, `auth/`, `assistant/`, `reports/` 등
+- **`src/shared/`**: 공통 `config`, `content`, `hooks`, `i18n`, `lib`, `ui` 를 둡니다. 도메인 타입은 `shared/lib/types.ts`, Builder 계약 스키마는 `shared/lib/builderApi.schema.ts`, HTTP 클라이언트는 `shared/lib/builderApi.ts` 입니다.
 
 ### 기능 폴더 규약
 
@@ -104,16 +104,15 @@ graph LR
 
 ```text
 src/features/<feature>/
-├── api/           # Builder API 호출 진입점
-├── components/    # 기능 전용 UI
-├── hooks/         # 기능 전용 상태/데이터 훅 (필요 시)
-└── schemas/       # 입력 검증/매핑 스키마 (필요 시)
+├── api/ 또는 api.ts  # Builder 호출과 mock 분기 (있는 feature 만)
+├── components/       # 기능 전용 UI
+└── use*.ts           # 기능 전용 상태/데이터 훅 (feature 루트에 둠)
 ```
 
 원칙:
-- 기능별 HTTP 연동은 `features/*/api/index.ts`에서 시작합니다.
-- 페이지는 여러 feature를 조립하지만 Builder API 세부 구현을 직접 소유하지 않습니다.
-- feature 간 공통 코드는 `shared/`로 올리고, 개념적으로 독립된 핵심 데이터는 `entities/`에 둡니다.
+- Builder HTTP 계약은 `shared/lib/builderApi.ts` 하나가 캡슐화합니다(재시도, 타임아웃, 응답 스키마 검증, 오류 표준화). feature 의 `api` 는 그 위에서 mock 모드 분기와 화면용 변환을 맡습니다.
+- 지향점은 페이지가 feature 를 조립하고 Builder 호출을 직접 하지 않는 것이지만, 지금은 일부 페이지·컴포넌트가 `builderApi` 를 직접 부릅니다(예: `pages/MonitoringPage.tsx`, `pages/ProviderPage.tsx`, `features/runs/components/CancelRunButton.tsx`). real/demo 클라이언트를 한 인터페이스로 모으는 일은 #794 입니다.
+- feature 간 공통 코드는 `shared/` 로 올립니다.
 
 ---
 
@@ -129,10 +128,14 @@ sequenceDiagram
     participant BAPI as KPubData Builder API
 
     User->>Page: 빌드 실행 요청
-    Page->>FeatureAPI: runBuild(spec)
-    FeatureAPI->>BAPI: POST /build
+    Page->>FeatureAPI: executeBuild(spec)
+    FeatureAPI->>BAPI: POST /builds (비동기 작업 제출)
+    BAPI-->>FeatureAPI: 202 + run_id
+    loop 끝날 때까지
+        FeatureAPI->>BAPI: GET /builds/{run_id}
+    end
     Note over BAPI: 수집·검증·게시는 Builder 안에서 일어나며<br/>Studio 는 그 내부(KPubData 호출 포함)를 모른다
-    BAPI-->>FeatureAPI: Result JSON (OpenAPI 계약)
+    BAPI-->>FeatureAPI: 끝난 run (OpenAPI 계약)
     FeatureAPI-->>Page: UI용 데이터 반환
     Page-->>User: 결과 표시
 ```
@@ -150,26 +153,27 @@ sequenceDiagram
 
 ## 6. 주요 프런트엔드 영역
 
-- 빌드 대시보드
-- 소스 선택
-- 빌드 스펙 편집기
-- 미리보기 패널
-- 검증 패널
-- 실행/빌드 이력
+- 홈(데이터셋·최근 run·warehouse 요약)
+- 카탈로그와 새 테이블 만들기(`/add`: 구성 → 미리보기·검증 → 생성)
+- 테이블 목록·상세, SQL 작업대, 저장된 분석, 리포트
+- 빌드 스펙 편집기(기존 run 을 고쳐 다시 실행)
+- 갱신 이력과 run 상세(이벤트 타임라인, 취소, 재시도)
 - 아티팩트 뷰어
-- 출판 폼
+- 출판과 출판 복구
+- 품질, 모니터링, 연결(provider 키), 관리
 
 ## 7. 백엔드 / 연동 표면
 
 Studio에는 다음을 노출하는 안정적인 연동 계층이 필요합니다.
-- 데이터셋 목록 조회
-- 소스 미리보기 가져오기
-- 스펙 검증
-- 빌드 실행
-- 빌드 상태 조회
-- manifest 읽기
-- 아티팩트 목록 조회
-- 빌드 출판
+- 카탈로그·데이터셋 목록 조회
+- 소스 미리보기 가져오기, 스펙 검증
+- 빌드 제출·상태 조회·취소·이벤트(`POST /builds`, `GET /builds/{id}`, `POST /builds/{id}/cancel`, `GET /builds/{id}/events`)
+- manifest 읽기, 아티팩트 목록·파일
+- 출판, 출판 준비 상태, 출판 복구(reconcile, receipt 초기화)
+- warehouse 테이블·SQL·행·집계·내보내기, 저장된 분석, spec revision
+- provider 와 키 확인, 업로드, 품질, 모니터링, 관리
+
+전체 목록은 `src/shared/lib/builderApi.ts` 입니다.
 
 ## 8. 상태 소유권
 
@@ -199,8 +203,8 @@ graph LR
 - UI 필터, 선택 상태, 패널 상태
 
 ### 상태 소유권 규칙
-- Zustand는 UI 상태와 초안 상태를 소유합니다.
-- TanStack Query는 서버 상태와 캐싱을 소유하도록 채택이 진행 중(in progress)입니다. 현재는 `QueryClientProvider`만 마운트되어 있고 `useQuery`/`useMutation` 훅은 사용되지 않습니다.
+- 초안은 `localStorage`(`features/*/draftStorage.ts`), 폼 입력은 react-hook-form, 셸 UI 와 세션 상태는 Zustand 가 소유합니다.
+- 서버 상태는 그것을 쓰는 화면의 훅이 불러와 들고 있습니다. 공용 캐시는 없습니다(§2).
 
 ### Builder/backend가 소유하는 상태
 - 빌드 실행 상태
