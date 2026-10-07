@@ -17,6 +17,8 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:5174",
     trace: "retain-on-failure",
+    // CI uploads test-results/ when the suite fails (.github/workflows/real-e2e.yml, #726).
+    screenshot: "only-on-failure",
   },
   webServer: {
     command: "npm run dev -- --port 5174 --strictPort",

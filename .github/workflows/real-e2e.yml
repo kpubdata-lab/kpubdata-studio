@@ -1,0 +1,130 @@
+# The real-Builder e2e suite in CI (#726). `npm run test:e2e:real` (scripts/run-real-e2e.mjs)
+# starts Builder from a checkout in its replay mode — recorded fixtures, no network and no
+# service key — with a table catalog, then runs the @real-builder Playwright specs against
+# it: file upload → preview → build → history, a public-API source built through Builder,
+# warehouse tables, Tables → SQL → Saved Analyses, PII masking and the admin screens. The
+# mock-mode `E2E (Playwright)` job in ci.yml filters every one of these out, so until now
+# they ran only when someone ran them by hand.
+#
+# When it runs: every night, by hand (optionally against another Builder ref), and on a
+# pull request that changes the suite or its runner. It is not part of `CI gate`. A
+# required check that only some pull requests produce leaves the others BLOCKED for ever,
+# and Builder main breaking would turn every unrelated Studio pull request red — the
+# reason Builder's cross-repo-contract.yml is not per-PR either. A nightly failure is the
+# signal; the evidence below is how it gets read.
+#
+# Evidence: on failure the Playwright traces and page snapshots (test-results/) and the
+# runner's log with Builder's output are uploaded for 7 days — but only after
+# scripts/check-e2e-evidence.mjs finds no credential in them. Builder is given a canary
+# provider key and the check looks for it by value, so a key that leaks into a log, a
+# manifest or a response fails the run instead of being published in an artifact.
+name: Real-Builder E2E
+
+on:
+  schedule:
+    # 19:00 UTC (KST 04:00), after Builder's cross-repo run at 18:00.
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+    inputs:
+      builder_ref:
+        description: "kpubdata-builder ref to run against"
+        required: false
+        default: main
+  pull_request:
+    paths:
+      - "e2e/real-*.spec.ts"
+      - "e2e/helpers.ts"
+      - "playwright.real.config.ts"
+      - "scripts/run-real-e2e.mjs"
+      - "scripts/check-e2e-evidence.mjs"
+      - ".github/workflows/real-e2e.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-e2e:
+    name: Real-Builder E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Builder's pyproject points kpubdata at a sibling checkout for local development;
+      # CI resolves the released kpubdata its pin names, as Builder's own CI does.
+      UV_NO_SOURCES: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Checkout Builder
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: kpubdata-lab/kpubdata-builder
+          ref: ${{ inputs.builder_ref || 'main' }}
+          path: .builder
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          npm_config_cache: ${{ runner.temp }}/.npm-cache
+          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # A fresh canary per run: it is not a secret, only a value no legitimate output
+      # contains, so finding it anywhere in the evidence means a key leaked.
+      - name: Canary provider key
+        run: echo "CANARY_KEY=e2e-canary-${{ github.run_id }}-${{ github.run_attempt }}-key" >> "${GITHUB_ENV}"
+
+      - name: Run the real-Builder suite
+        env:
+          KPUBDATA_DATAGO_API_KEY: ${{ env.CANARY_KEY }}
+        run: |
+          set -o pipefail
+          node scripts/run-real-e2e.mjs --builder-root .builder 2>&1 | tee real-e2e.log
+
+      # Traces are zips; unpack each next to itself so the check reads what is inside.
+      - name: Check the evidence for credentials
+        id: evidence
+        if: failure()
+        env:
+          E2E_CANARY_SECRETS: ${{ env.CANARY_KEY }}
+        run: |
+          find test-results -name '*.zip' -print0 2>/dev/null | while IFS= read -r -d '' zip; do
+            unzip -q -o "${zip}" -d "${zip%.zip}.unpacked"
+          done
+          node scripts/check-e2e-evidence.mjs real-e2e.log test-results
+
+      - name: Upload the evidence
+        if: failure() && steps.evidence.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: real-e2e-evidence
+          path: |
+            real-e2e.log
+            test-results/
+            !test-results/**/*.unpacked/
+          retention-days: 7
+          if-no-files-found: warn
+
+      # A passing run uploads nothing, but its log is still checked: a key Builder
+      # writes to its output is a leak whether or not a test failed.
+      - name: Check the log of a passing run for credentials
+        if: success()
+        env:
+          E2E_CANARY_SECRETS: ${{ env.CANARY_KEY }}
+        run: node scripts/check-e2e-evidence.mjs real-e2e.log
