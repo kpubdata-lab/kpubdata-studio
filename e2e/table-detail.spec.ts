@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./helpers";
 
@@ -167,6 +168,74 @@ test("테이블 상세 개요에 이용 조건과 원문 링크가 보이고, �
   await expect(panel.getByRole("rowheader", { name: "pm10" })).toBeVisible();
   await expect(panel).toContainText(t("profile.withheld"));
   expect(await overflow(), "Profile tab horizontal overflow at 390px").toBeLessThanOrEqual(2);
+
+  await expectNoPageErrors(errors);
+});
+
+test("테이블 상세의 탭은 화살표·Home·End 로 움직이고, Tab 은 목록을 떠나 패널로 가며, axe 위반이 없다 (#795)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+  await stubBuilder(page);
+
+  await page.goto("/tables/air_quality");
+  await expect(page.getByRole("tabpanel")).toContainText("snap_3", { timeout: 10_000 });
+  const tab = (key: string) => page.getByRole("tab", { name: t(`tableDetail.tabs.${key}`) });
+  const tabs = page.getByRole("tab");
+  const ids = ["overview", "schema", "profile", "preview", "quality", "snapshots"];
+  await expect(tabs).toHaveCount(ids.length);
+
+  // Only the selected tab is in the Tab order.
+  for (const [i, key] of ids.entries()) await expect(tab(key)).toHaveAttribute("tabindex", i === 0 ? "0" : "-1");
+
+  await tab("overview").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(tab("schema")).toBeFocused();
+  await expect(tab("schema")).toHaveAttribute("aria-selected", "true");
+  await expect(page).toHaveURL(/[?&]tab=schema/);
+
+  await page.keyboard.press("End");
+  await expect(tab("snapshots")).toBeFocused();
+  await expect(page.getByRole("tabpanel", { name: t("tableDetail.tabs.snapshots") })).toBeVisible();
+
+  await page.keyboard.press("ArrowRight");
+  await expect(tab("overview")).toBeFocused();
+  await expect(tab("overview")).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowLeft");
+  await expect(tab("snapshots")).toBeFocused();
+  await expect(tab("snapshots")).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Home");
+  await expect(tab("overview")).toBeFocused();
+  await expect(tab("overview")).toHaveAttribute("aria-selected", "true");
+
+  // Keys pressed faster than the URL updates still count from the focused tab.
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(tab("profile")).toBeFocused();
+  await expect(tab("profile")).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Home");
+  await expect(tab("overview")).toHaveAttribute("aria-selected", "true");
+
+  // Tab leaves the list for the panel; Shift+Tab comes back to the selected tab. The
+  // panel is read once it shows the selected tab, as a person would.
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("tabpanel", { name: t("tableDetail.tabs.schema") })).toBeVisible();
+  await page.keyboard.press("Tab");
+  const leftList = await page.evaluate(() => document.activeElement?.closest('[role="tablist"]') === null);
+  expect(leftList, "Tab moved focus out of the tab list").toBe(true);
+  await page.keyboard.press("Shift+Tab");
+  await expect(tab("schema")).toBeFocused();
+
+  // Every tab controls the panel, and the panel is named by the selected tab.
+  const panelId = await page.getByRole("tabpanel").getAttribute("id");
+  expect(panelId).toBeTruthy();
+  for (const key of ids) await expect(tab(key)).toHaveAttribute("aria-controls", panelId!);
+
+  const axe = await new AxeBuilder({ page })
+    .include('[role="tablist"]')
+    .include('[role="tabpanel"]')
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
 
   await expectNoPageErrors(errors);
 });
