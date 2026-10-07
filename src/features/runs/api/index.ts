@@ -16,12 +16,29 @@ import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/share
 
 const MOCK_TIME = "1970-01-01T00:00:00.000Z";
 
+/** How many run ids this page load has made. Part of each id, so no two are the same. */
+let issuedRunIds = 0;
+
+/** Four characters of `[a-z0-9]` from the platform's random source. */
+function randomSuffix(): string {
+  const values = new Uint32Array(1);
+  globalThis.crypto.getRandomValues(values);
+  return (values[0]! % 36 ** 4).toString(36).padStart(4, "0");
+}
+
 /**
  * Generate path-safe run_id from BuildSpec.
  *
  * Builder uses run_id as output directory name, so only safe segments
- * (alphanumeric/hyphen) are kept. Combines dataset id and timestamp for
- * human-identifiable collision-free values.
+ * (alphanumeric/hyphen) are kept: `<dataset slug>-<milliseconds>-<count><random>`.
+ *
+ * The time alone is not an identity (#815): two builds of one dataset made in the same
+ * millisecond got the same id, and Builder answers a submission under an id it already
+ * has with the existing job — the second build did not run. So each id also carries
+ * the count of ids this page load has made, which makes two from one tab differ
+ * whatever the clock says, and four random characters, which keep two tabs apart. The
+ * count is variable-length and the random part fixed, so ids with different counts
+ * never spell the same string.
  */
 export function generateRunId(datasetId: string): string {
   const slug = datasetId
@@ -30,7 +47,8 @@ export function generateRunId(datasetId: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
   const base = slug.length > 0 ? slug : "build";
-  return `${base}-${Date.now()}`;
+  issuedRunIds += 1;
+  return `${base}-${Date.now()}-${issuedRunIds.toString(36)}${randomSuffix()}`;
 }
 
 /**
