@@ -99,32 +99,50 @@ const shutdown = (exitCode) => {
 process.on("SIGINT", () => shutdown(130));
 process.on("SIGTERM", () => shutdown(143));
 
-// /healthz가 뜰 때까지 폴링(최대 30초).
-const ready = spawnSync(
-  "bash",
-  [
-    "-c",
-    `for i in $(seq 1 60); do curl -sf http://localhost:${port}/healthz >/dev/null && exit 0; sleep 0.5; done; exit 1`,
-  ],
-  { stdio: "inherit" },
-);
-if (ready.status !== 0) {
+// Everything below waits asynchronously, never with spawnSync (#726). Builder's output
+// comes through the pipes read by the "data" handlers above, and those run only while
+// Node's event loop does: a spawnSync for the Playwright run blocked it for the whole
+// suite, and nobody read the pipes. They are Unix sockets, which hold about 278 writes
+// whatever their size (measured; Builder wrote only 5–8 KB a run, but a traceback line by
+// line). Once full, Builder's next log line blocked — holding the stream's lock, so every
+// request thread that logged stopped behind it. Requests then sat unread until the test timed out, late
+// in the suite and only on some runs, and none of Builder's output ever reached the log.
+const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
+
+/** Poll /healthz until it answers, for up to 30 seconds. */
+async function waitForHealth() {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    if (builder.exitCode !== null) return false;
+    try {
+      const response = await fetch(`http://localhost:${port}/healthz`);
+      if (response.ok) return true;
+    } catch {
+      // Not listening yet.
+    }
+    await sleep(500);
+  }
+  return false;
+}
+
+/** Run a command with inherited stdio and resolve with its exit status. */
+function run(command, commandArgs, env) {
+  return new Promise((done) => {
+    const child = spawn(command, commandArgs, { stdio: "inherit", env });
+    child.on("error", () => done(1));
+    child.on("exit", (code, signal) => done(code ?? (signal ? 1 : 0)));
+  });
+}
+
+if (!(await waitForHealth())) {
   console.error("[real-e2e] builder did not become healthy");
   shutdown(1);
 }
 
-const e2e = spawnSync(
-  "npx",
-  ["playwright", "test", "-c", "playwright.real.config.ts"],
-  {
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      REAL_BUILDER_E2E: "1",
-      REAL_BUILDER_URL: `http://localhost:${port}`,
-      ...(replayAvailable ? { REAL_BUILDER_REPLAY: "1" } : {}),
-    },
-  },
-);
+const status = await run("npx", ["playwright", "test", "-c", "playwright.real.config.ts"], {
+  ...process.env,
+  REAL_BUILDER_E2E: "1",
+  REAL_BUILDER_URL: `http://localhost:${port}`,
+  ...(replayAvailable ? { REAL_BUILDER_REPLAY: "1" } : {}),
+});
 
-shutdown(e2e.status ?? 1);
+shutdown(status);
