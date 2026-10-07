@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { API_BASE } from "@/shared/config/env";
 import {
+  ApiError,
+  ContractMismatchError,
   DEFAULT_TIMEOUT_MS,
   PROBE_TIMEOUT_MS,
   builderApi,
@@ -583,5 +585,90 @@ describe("a renewed token that is still refused (#771)", () => {
     await expect(builderApi.version()).rejects.toMatchObject({ status: 401 });
 
     expect(isSessionRefused()).toBe(false);
+  });
+});
+
+describe("a response Studio cannot read is not a server error (#791)", () => {
+  // Values that must never travel in the error: a person's name and a key-shaped string.
+  const PERSON = "홍길동-canary";
+  const KEY = "serviceKey-canary-0123456789";
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function rejectionOf(promise: Promise<unknown>): Promise<unknown> {
+    try {
+      await promise;
+    } catch (cause) {
+      return cause;
+    }
+    throw new Error("expected a rejection");
+  }
+
+  it("keeps the real status of a 200 whose JSON the schema rejects, names the fields and not their values", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(jsonResponse(200, { builds: [{ run_id: PERSON, status: KEY }], owner: PERSON }));
+
+    const cause = await rejectionOf(builderApi.listBuilds());
+
+    expect(cause).toBeInstanceOf(ContractMismatchError);
+    expect(cause).toBeInstanceOf(ApiError);
+    const error = cause as ContractMismatchError;
+    expect(error.status).toBe(200);
+    expect(error.code).toBe("schema_mismatch");
+    expect(error.paths.length).toBeGreaterThan(0);
+    expect(error.paths.some((path) => path.startsWith("builds.0"))).toBe(true);
+    expect(error.details).toBeUndefined();
+    const everything = JSON.stringify({ message: error.message, paths: error.paths, details: error.details });
+    expect(everything).not.toContain(PERSON);
+    expect(everything).not.toContain(KEY);
+    // A GET is retried on 5xx; a mismatch is not a 5xx, so it is not sent again.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the real status of a 200 whose body is not JSON", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(`<html>${PERSON}</html>`, { status: 200 }));
+
+    const error = (await rejectionOf(builderApi.listBuilds())) as ContractMismatchError;
+
+    expect(error).toBeInstanceOf(ContractMismatchError);
+    expect(error.status).toBe(200);
+    expect(error.code).toBe("bad_json");
+    expect(error.message).not.toContain(PERSON);
+    expect(error.details).toBeUndefined();
+  });
+
+  it("still reports a real 500 as an ApiError with Builder's error body", async () => {
+    vi.useFakeTimers();
+    try {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(500, { error: "boom", code: "internal" }));
+      const pending = rejectionOf(builderApi.listBuilds());
+      await vi.runAllTimersAsync();
+      const error = (await pending) as ApiError;
+
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error).not.toBeInstanceOf(ContractMismatchError);
+      expect(error.status).toBe(500);
+      expect(error.details).toEqual({ error: "boom", code: "internal" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("treats an upload answer the schema rejects as a mismatch with the status Builder sent", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(201, { upload_id: 42, filename: PERSON }));
+
+    const error = (await rejectionOf(builderApi.uploadFile(new Blob(["a,b\n1,2"]), { format: "csv" }))) as ContractMismatchError;
+
+    expect(error).toBeInstanceOf(ContractMismatchError);
+    expect(error.status).toBe(201);
+    expect(error.code).toBe("schema_mismatch");
+    expect(error.details).toBeUndefined();
+    expect(JSON.stringify({ message: error.message, paths: error.paths })).not.toContain(PERSON);
   });
 });

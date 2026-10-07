@@ -26,6 +26,7 @@ import { fromYamlText, toYamlText } from "@/features/build-spec/yamlText";
 import { i18n } from "@/shared/i18n";
 import {
   ApiError,
+  ContractMismatchError,
   builderApi,
   isRealBuilderEnabled,
   type DocumentRevision,
@@ -128,9 +129,16 @@ export function revisionErrorOutcome(cause: unknown): Exclude<RevisionOutcome, {
   };
 }
 
-/** Whether a failure left the outcome unknown, so the same save may be retried. */
+/**
+ * Whether a failure left the outcome unknown, so the same save may be retried.
+ *
+ * A response Studio could not read (#791) counts as unknown too: Builder may well have
+ * saved — a 2xx whose body did not match — and keeping the key makes the person's retry
+ * a replay of that save instead of a second revision.
+ */
 function isUndecided(cause: unknown): boolean {
   if (!(cause instanceof ApiError)) return true;
+  if (cause instanceof ContractMismatchError) return true;
   return cause.status === 0 || cause.status === 408 || cause.status >= 500;
 }
 
