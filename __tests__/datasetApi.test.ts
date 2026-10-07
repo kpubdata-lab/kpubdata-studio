@@ -65,8 +65,9 @@ describe("Builder 1.6.0 dataset/stage/quality client (#253)", () => {
 
   it("rejects malformed dataset and stage responses", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(mockResponse(200, { datasets: [{ dataset_id: "broken" }] })).mockResolvedValueOnce(mockResponse(200, { run_id: "run-1", stage: "silver", source_key: "air", status: "completed", available: true })));
-    await expect(builderApi.listDatasets()).rejects.toMatchObject({ name: "ApiError", status: 500 });
-    await expect(builderApi.getBuildStageDetail("run-1", "silver", "air")).rejects.toMatchObject({ name: "ApiError", status: 500 });
+    // A 200 Studio cannot read keeps its real status and says so (#791); it used to read as a 500.
+    await expect(builderApi.listDatasets()).rejects.toMatchObject({ name: "ContractMismatchError", status: 200, code: "schema_mismatch" });
+    await expect(builderApi.getBuildStageDetail("run-1", "silver", "air")).rejects.toMatchObject({ name: "ContractMismatchError", status: 200, code: "schema_mismatch" });
   });
 
   it.each([403, 404])("preserves HTTP %s for access and missing-resource errors", async (status) => {

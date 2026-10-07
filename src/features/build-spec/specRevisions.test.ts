@@ -244,6 +244,23 @@ describe("saveSpecRevision", () => {
     expect(bodies.at(-1)?.idempotency_key).not.toBe(firstKey);
   }, 15_000);
 
+  it("reuses the key after a save whose answer Studio could not read, so a retry cannot save twice (#791)", async () => {
+    let unreadable = true;
+    const { bodies } = recordRevisionRequests(() =>
+      unreadable ? HttpResponse.json({ revision: "not-a-revision" }, { status: 201 }) : HttpResponse.json(revision({ revision: 5 })),
+    );
+    const keys = createIdempotencyKeys();
+    const input = { docId: "air-quality", spec: SPEC, expectedRevision: 4, keys };
+
+    // Builder answered 2xx, but not in the contract's form: not retried automatically,
+    // and not treated as a definite answer either.
+    expect((await saveSpecRevision(input)).status).toBe("error");
+    expect(bodies).toHaveLength(1);
+    unreadable = false;
+    expect((await saveSpecRevision(input)).status).toBe("saved");
+    expect(bodies[1].idempotency_key).toBe(bodies[0].idempotency_key);
+  });
+
   it("uses a new key for a different save", async () => {
     const { bodies } = recordRevisionRequests(() => HttpResponse.json({ error: "x", code: "invalid_request" }, { status: 400 }));
     const keys = createIdempotencyKeys();

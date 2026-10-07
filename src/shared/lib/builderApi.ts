@@ -96,6 +96,35 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Builder answered, but not in the form Studio reads it with (#791): a body that is not
+ * JSON, or JSON its contract schema rejects. It used to be thrown as `ApiError(500)`,
+ * which read as a server failure — retried as an undecided save, counted with real 5xx —
+ * and carried the whole response body as `details`, so the body (rows, names, anything
+ * the endpoint returns) reached the console through the error boundaries.
+ *
+ * `status` is the HTTP status Builder actually sent (2xx for a successful request whose
+ * body did not match). `code` says which mismatch it was, and `paths` names the fields
+ * the schema rejected — never their values. `details` is left empty: it is where callers
+ * look for Builder's own error body, and this is not one.
+ */
+export class ContractMismatchError extends ApiError {
+  constructor(
+    status: number,
+    message: string,
+    readonly code: "bad_json" | "schema_mismatch",
+    readonly paths: readonly string[] = [],
+  ) {
+    super(status, message);
+    this.name = "ContractMismatchError";
+  }
+}
+
+/** The fields a schema rejected, as dotted paths ("" for the body itself). No values. */
+function rejectedPaths(issues: readonly { path: readonly PropertyKey[] }[]): string[] {
+  return [...new Set(issues.map((issue) => issue.path.map(String).join(".")))];
+}
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
@@ -376,7 +405,7 @@ export async function apiFetch<T>(
       parsed = JSON.parse(text);
     } catch {
       if (!response.ok) throw new ApiError(response.status, text);
-      throw new ApiError(response.status, i18n.t("api.badJson"));
+      throw new ContractMismatchError(response.status, i18n.t("api.badJson"), "bad_json");
     }
   }
 
@@ -396,10 +425,11 @@ export async function apiFetch<T>(
         return `${path}: ${message}`;
       }).join(", ");
 
-      throw new ApiError(
-        500,
+      throw new ContractMismatchError(
+        response.status,
         i18n.t("api.schemaMismatch", { details: errorDetails }),
-        parsed,
+        "schema_mismatch",
+        rejectedPaths(result.error.issues),
       );
     }
     return result.data;
@@ -1150,14 +1180,19 @@ export const builderApi = {
     ),
 
    /**
-    * GET /providers/{provider}/status — Lightweight connection check using server-stored
-    * credential (or unauthenticated provider) (#259, builder provider credentials API).
-    * Credential text not exchanged. Response shape common with POST /providers/{provider}/test.
+    * GET /providers/{provider}/status — a light connection check with the key this
+    * request carries (#259; a single-user Builder uses its stored or environment key).
+    * Response shape common with POST /providers/{provider}/test.
+    *
+    * Never retried here (#792): Builder calls the provider to answer, with the user's
+    * key in a multi-user deployment, so a retry after a timeout or a 5xx is a second call
+    * on their quota for one click — and the first may have reached the provider. The
+    * same rule as the test, the probe and the preview.
     */
   getProviderStatus: (provider: string, signal?: AbortSignal) =>
     apiFetch(
       `/providers/${encodeURIComponent(provider)}/status`,
-      { signal, retries: 1, headers: providerKeyHeaders([provider]) },
+      { signal, retries: 0, headers: providerKeyHeaders([provider]) },
       schemas.providerTestResponseSchema,
     ),
 
@@ -1332,7 +1367,8 @@ export async function uploadFile(
   try {
     parsed = text ? JSON.parse(text) : undefined;
   } catch {
-    throw new ApiError(response.status, i18n.t("api.badJson"));
+    if (!response.ok) throw new ApiError(response.status, i18n.t("api.badJson"));
+    throw new ContractMismatchError(response.status, i18n.t("api.badJson"), "bad_json");
   }
 
   if (!response.ok) {
@@ -1341,7 +1377,12 @@ export async function uploadFile(
 
   const result = schemas.uploadMetadataSchema.safeParse(parsed);
   if (!result.success) {
-    throw new ApiError(500, i18n.t("api.uploadMismatch"), parsed);
+    throw new ContractMismatchError(
+      response.status,
+      i18n.t("api.uploadMismatch"),
+      "schema_mismatch",
+      rejectedPaths(result.error.issues),
+    );
   }
   return result.data;
 }
