@@ -13,7 +13,6 @@ import {
   executeBuild,
   listBuilds,
   POLL_INTERVAL_MS,
-  specHasFileSource,
   type BuilderJobStatus,
 } from "@/features/runs/api";
 import { useBuildJob } from "@/features/runs/useBuildJob";
@@ -184,21 +183,12 @@ describe("async build job polling (#245)", () => {
     // 취소 요청 실패를 로컬 cancelled로 바꾸지 않는다 — polling terminal이 정답이다.
     expect(result.current.status).toBe("succeeded");
     expect(result.current.run?.status).toBe("succeeded");
-    expect(result.current.interrupted).toBe(false);
     cancelSpy.mockRestore();
   });
 
-  it("sync /build abort is a client-side interruption, not a confirmed cancellation (MAJOR / MINOR B)", async () => {
+  it("a file build is cancelled on Builder like any other, not just aborted client-side (#786)", async () => {
+    const buildSpy = vi.spyOn(builderApi, "build");
     const cancelSpy = vi.spyOn(builderApi, "cancelBuildJob");
-    // sync build 요청을 abort될 때까지 붙잡아, abort 타이밍을 테스트가 제어한다.
-    const buildSpy = vi.spyOn(builderApi, "build").mockImplementation(
-      (_spec, _runId, signal) =>
-        new Promise((_resolve, reject) => {
-          signal?.addEventListener("abort", () =>
-            reject(new DOMException("aborted", "AbortError")),
-          );
-        }),
-    );
     const { result } = renderHook(() => useBuildJob());
 
     let promise: Promise<void> = Promise.resolve();
@@ -206,8 +196,6 @@ describe("async build job polling (#245)", () => {
       promise = result.current.start(fileSpec("f"));
     });
     await settle();
-    expect(result.current.status).toBe("running");
-
     act(() => {
       result.current.cancel();
     });
@@ -216,14 +204,9 @@ describe("async build job polling (#245)", () => {
       await promise.catch(() => undefined);
     });
 
-    // async 협조적 취소 endpoint는 sync build에서 절대 호출되지 않는다.
-    expect(cancelSpy).not.toHaveBeenCalled();
-    // canonical BuildRun/status를 cancelled(또는 succeeded/failed)로 확정하지 않는다.
-    expect(result.current.status).toBe("idle");
-    expect(result.current.status).not.toBe("cancelled");
-    expect(result.current.run).toBeUndefined();
-    // 오직 client-side "요청 중단" 의미만 노출한다.
-    expect(result.current.interrupted).toBe(true);
+    // The synchronous POST /build is never used, and the cancel reaches Builder.
+    expect(buildSpy).not.toHaveBeenCalled();
+    expect(cancelSpy).toHaveBeenCalledTimes(1);
     buildSpy.mockRestore();
     cancelSpy.mockRestore();
   });
@@ -285,7 +268,6 @@ describe("async pre-submit cancellation race (F03)", () => {
     // 이 시점에는 cancel endpoint가 호출되지 않았고, local 상태도 취소/중단이 아니다.
     expect(cancelSpy).not.toHaveBeenCalled();
     expect(result.current.status).toBe("running");
-    expect(result.current.interrupted).toBe(false);
     // 사용자 Cancel 때문에 submit 요청 자체를 abort하지 않는다.
     expect(submitSpy).toHaveBeenCalledTimes(1);
 
@@ -381,7 +363,7 @@ describe("async pre-submit cancellation race (F03)", () => {
   });
 });
 
-describe("Add Data source dispatch: sync /build vs async /builds (#X01, ADR 0014)", () => {
+describe("every source kind goes through async /builds (#X01, #786)", () => {
   it("routes a public_api-only spec to async POST /builds", async () => {
     const submitSpy = vi.spyOn(builderApi, "submitBuild");
     const buildSpy = vi.spyOn(builderApi, "build");
@@ -402,32 +384,28 @@ describe("Add Data source dispatch: sync /build vs async /builds (#X01, ADR 0014
     buildSpy.mockRestore();
   });
 
-  it("routes a file spec to sync POST /build and never calls POST /builds", async () => {
+  it("routes a file spec to async POST /builds and never holds a POST /build open", async () => {
     const submitSpy = vi.spyOn(builderApi, "submitBuild");
     const buildSpy = vi.spyOn(builderApi, "build");
     const run = await runPolled(() => executeBuild(fileSpec("f")));
-    expect(buildSpy).toHaveBeenCalledTimes(1);
-    expect(submitSpy).not.toHaveBeenCalled();
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(buildSpy).not.toHaveBeenCalled();
     expect(run.status).toBe("succeeded");
+    // The upload travels in the spec the async route receives.
+    expect(submitSpy.mock.calls[0][0]).toContain(`"upload_id":"upl_${"0".repeat(32)}"`);
     submitSpy.mockRestore();
     buildSpy.mockRestore();
   });
 
-  it("routes a mixed spec (file + public_api) to sync POST /build — BuildSpec-wide, not first-source-only", async () => {
+  it("routes a mixed spec (file + public_api) to async POST /builds, with retry_of", async () => {
     const submitSpy = vi.spyOn(builderApi, "submitBuild");
     const buildSpy = vi.spyOn(builderApi, "build");
-    await runPolled(() => executeBuild(mixedSpec("m")));
-    expect(buildSpy).toHaveBeenCalledTimes(1);
-    expect(submitSpy).not.toHaveBeenCalled();
+    await runPolled(() => executeBuild(mixedSpec("m"), undefined, undefined, undefined, { retryOf: "earlier-run" }));
+    expect(submitSpy).toHaveBeenCalledTimes(1);
+    expect(submitSpy.mock.calls[0][3]).toBe("earlier-run");
+    expect(buildSpy).not.toHaveBeenCalled();
     submitSpy.mockRestore();
     buildSpy.mockRestore();
-  });
-
-  it("specHasFileSource inspects the whole spec", () => {
-    expect(specHasFileSource(mixedSpec("m"))).toBe(true);
-    expect(specHasFileSource(fileSpec("f"))).toBe(true);
-    expect(specHasFileSource(specOf("p"))).toBe(false);
-    expect(specHasFileSource(urlSpec("u"))).toBe(false);
   });
 });
 

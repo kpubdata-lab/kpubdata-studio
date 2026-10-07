@@ -94,7 +94,16 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
     page.getByText(/Not evaluated|checks passed/).first(),
   ).toBeVisible({ timeout: 30_000 });
 
-  // 4) Review & Build — show canonical BuildSpec, then real POST /build
+  // 4) Review & Build — show canonical BuildSpec, then the real async POST /builds (#786).
+  //    A file source used to go through the synchronous POST /build; it now takes the
+  //    same submit-and-poll route as every other source.
+  const buildRoutes: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.origin === new URL(BUILDER_URL).origin && request.method() === "POST" && /^\/builds?$/.test(url.pathname)) {
+      buildRoutes.push(`POST ${url.pathname}`);
+    }
+  });
   await page.getByRole("button", { name: "다음" }).first().click();
   await expect(page.getByRole("heading", { name: "검토 · 테이블 만들기" })).toBeVisible();
   const buildButton = page.getByRole("button", { name: "테이블 만들기" });
@@ -107,6 +116,7 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   // wizard lands on the new run's detail, succeeded.
   await expect(page).toHaveURL(/\/refresh-jobs\/[^/?]+/, { timeout: 60_000 });
   await expect(page.getByText("성공").and(page.locator(":visible")).first()).toBeVisible({ timeout: 60_000 });
+  expect(buildRoutes).toEqual(["POST /builds"]);
 
   // 6) The run history (real GET /builds) has it.
   await navigateViaShell(page, /^(Refresh History|갱신 이력)$/);

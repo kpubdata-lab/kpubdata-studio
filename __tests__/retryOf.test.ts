@@ -109,7 +109,7 @@ describe("retry_of on the wire", () => {
   });
 });
 
-describe("executeBuild passes the link to whichever route runs the build", () => {
+describe("executeBuild passes the link to the route that runs the build", () => {
   it("async: POST /builds", async () => {
     const submit = vi.spyOn(builderApi, "submitBuild");
 
@@ -121,13 +121,15 @@ describe("executeBuild passes the link to whichever route runs the build", () =>
     expect(submit.mock.calls[0][1]).not.toBe("old-run");
   });
 
-  it("sync: POST /build, for a spec with a file source", async () => {
+  it("async too for a spec with a file source (#786), never POST /build", async () => {
+    const submit = vi.spyOn(builderApi, "submitBuild");
     const build = vi.spyOn(builderApi, "build");
 
     await runPolled(() => executeBuild(fileSpec(), undefined, undefined, undefined, { retryOf: "old-run" }));
 
-    expect(build).toHaveBeenCalledTimes(1);
-    expect(build.mock.calls[0][3]).toBe("old-run");
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(submit.mock.calls[0][3]).toBe("old-run");
+    expect(build).not.toHaveBeenCalled();
   });
 
   it("without the option nothing is named", async () => {

@@ -41,8 +41,6 @@ export interface ReviewBuildStepProps {
   isStale: boolean;
   jobStatus: BuildJobStatus;
   jobError?: string;
-  /** User interrupted an in-flight request on the client (server execution result unknown, sync build). */
-  jobInterrupted?: boolean;
   runId?: string;
   onBuild: () => void;
   onCancel: () => void;
@@ -89,7 +87,6 @@ export function ReviewBuildStep({
   isStale,
   jobStatus,
   jobError,
-  jobInterrupted,
   runId,
   onBuild,
   onCancel,
@@ -298,9 +295,6 @@ export function ReviewBuildStep({
         ) : null}
         {jobStatus === "cancelled" ? (
           <span className="text-sm text-muted-foreground">{t("addData.review.buildCancelled")}</span>
-        ) : null}
-        {jobInterrupted && jobStatus !== "cancelled" ? (
-          <span className="text-sm text-muted-foreground">{t("addData.review.interrupted")}</span>
         ) : null}
       </div>
     </div>

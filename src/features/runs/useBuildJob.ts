@@ -40,17 +40,6 @@ export interface BuildJob {
   run?: BuildRun;
   /** Error message on failure. */
   error?: string;
-  /**
-   * Local-only marker that the user aborted the in-flight request client-side.
-   *
-   * The sync `POST /build` (file source, ADR 0014) has no server-side
-   * cooperative-cancellation path, so a fetch abort does not stop the Builder
-   * run — the build can still succeed or fail on the server. So this case
-   * never finalizes status as canonical `cancelled`; the flag only surfaces
-   * the client-side fact "the request was interrupted". Not a wire/canonical
-   * BuildRun status.
-   */
-  interrupted: boolean;
   /** Starts a build run. */
   start: (spec: BuildSpec, options?: BuildExecutionOptions) => Promise<void>;
   /** Cancels the in-flight run. */
@@ -67,7 +56,6 @@ export function useBuildJob(): BuildJob {
   const [builderStatus, setBuilderStatus] = useState<BuilderJobStatus>();
   const [run, setRun] = useState<BuildRun>();
   const [error, setError] = useState<string>();
-  const [interrupted, setInterrupted] = useState(false);
   // Controller used only for unmount/restart (lifecycle) cancellation.
   // Semantically distinct from a user "cancel".
   const controllerRef = useRef<AbortController | null>(null);
@@ -103,7 +91,6 @@ export function useBuildJob(): BuildJob {
     setBuilderStatus(undefined);
     setError(undefined);
     setRun(undefined);
-    setInterrupted(false);
     try {
       const result = await executeBuild(
         spec,
@@ -130,13 +117,10 @@ export function useBuildJob(): BuildJob {
       if (result.status === "failed") setError(result.error ?? i18n.t("runs.build.someSourcesFailed"));
     } catch (cause) {
       if (controller.signal.aborted) {
-        // AbortController.abort() comes only from (a) user cancel of a sync
-        // build, or (b) unmount lifecycle cleanup (async cancel does not
-        // abort the controller). Either way a fetch abort cannot know the
-        // Builder server-side outcome, so no terminal —
+        // AbortController.abort() comes only from unmount cleanup: cancel goes to
+        // Builder (POST /builds/{run_id}/cancel) and never aborts the controller.
+        // A fetch abort cannot know the server-side outcome, so no terminal —
         // succeeded/failed/cancelled — is finalized; it only leaves running.
-        // The "request interrupted" fact was already recorded by cancel()
-        // calling setInterrupted(true).
         setStatus((current) => (current === "running" ? "idle" : current));
         return;
       }
@@ -170,17 +154,6 @@ export function useBuildJob(): BuildJob {
       issueAsyncCancel(handle.runId);
       return;
     }
-    if (handle?.mode === "sync") {
-      // sync `POST /build` (file source, ADR 0014): no server-side
-      // cooperative-cancellation path. A fetch abort only interrupts the
-      // client request and does not cancel the Builder run, so nothing —
-      // success/failure/cancel — is finalized; only the fact "the request
-      // was aborted client-side" is recorded (#S04, existing behavior
-      // kept).
-      controllerRef.current?.abort();
-      setInterrupted(true);
-      return;
-    }
     // No handle yet = the async POST /builds submit is still in flight.
     // Aborting the fetch here cannot tell whether the server already
     // accepted the submit, risking an orphan build. So instead of aborting,
@@ -195,5 +168,5 @@ export function useBuildJob(): BuildJob {
   // (#73).
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  return { status, builderStatus, run, error, interrupted, start, cancel };
+  return { status, builderStatus, run, error, start, cancel };
 }
