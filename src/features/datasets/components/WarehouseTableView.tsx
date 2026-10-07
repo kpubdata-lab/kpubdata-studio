@@ -43,6 +43,7 @@ import { warehouseApi } from "@/features/sql/warehouseApi";
 import type { WarehouseTableDetailResponse } from "@/shared/lib/builderApi.schema";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton } from "@/shared/ui";
 import { ActionableStatus, MissingStatus, NormalStatus, UnknownStatus } from "@/shared/ui/StatusState";
+import { useTabs } from "@/shared/ui/useTabs";
 
 import { ProfileTab } from "./ProfileTab";
 import { BuildsTab, QualityTab, type AsyncState } from "./RunPanels";
@@ -137,6 +138,8 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
     update({ run: runId || null, source: selected.sourceKey, stage: null });
     openAssistantDrawer();
   }
+
+  const tabs = useTabs({ ids: TABS, selected: tab, onSelect: (id) => update({ tab: id === "overview" ? null : id }) });
 
   // A saved link to the removed AI tab still opens Ask KPubData, once the run is known.
   useEffect(() => {
@@ -233,14 +236,13 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
         </Card>
       ) : null}
 
-      <div className="border-b border-border" role="tablist" aria-label={t("tableDetail.tabsLabel")}>
-        <div className="flex gap-1 overflow-x-auto">
+      <div className="border-b border-border">
+        <div className="flex gap-1 overflow-x-auto" {...tabs.tabListProps} aria-label={t("tableDetail.tabsLabel")}>
           {TABS.map((id) => (
             <button
               key={id}
               type="button"
-              role="tab"
-              aria-selected={tab === id}
+              {...tabs.tabProps(id)}
               onClick={() => update({ tab: id === "overview" ? null : id })}
               className={`whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium ${tab === id ? "border-brand-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
@@ -250,7 +252,7 @@ export function WarehouseTableView({ datasetId, tables }: { datasetId: string; t
         </div>
       </div>
 
-      <section className="min-w-0" role="tabpanel" aria-label={t(`tableDetail.tabs.${tab}`)}>
+      <section className="min-w-0" {...tabs.panelProps}>
         {detail.status === "error" ? (
           <ErrorState title={t("tableDetail.errors.table")} message={detail.error} />
         ) : detail.status !== "loaded" ? (

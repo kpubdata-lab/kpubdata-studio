@@ -49,6 +49,7 @@ import type {
   WarehouseTable,
 } from "@/shared/lib/builderApi";
 import { Button, Card, EmptyState, ErrorState, LinkButton, PageHeader, Skeleton, StageLegend } from "@/shared/ui";
+import { useTabs } from "@/shared/ui/useTabs";
 
 type DetailTab = "overview" | "schema" | "preview" | "quality" | "builds";
 
@@ -59,6 +60,7 @@ const TABS: { id: DetailTab; labelKey: string }[] = [
   { id: "quality", labelKey: "tableDetail.tabs.quality" },
   { id: "builds", labelKey: "labels.runs" },
 ];
+const TAB_IDS = TABS.map((tab) => tab.id);
 
 interface CoreState {
   status: "loading" | "loaded" | "error";
@@ -232,6 +234,7 @@ function RunDetailView({ note }: { note: string }) {
 
   const tabParam = searchParams.get("tab");
   const selectedTab = TABS.find((tab) => tab.id === tabParam)?.id ?? "overview";
+  const tabs = useTabs({ ids: TAB_IDS, selected: selectedTab, onSelect: goToTab });
   const selectedRun = runOptions?.find((run) => run.run_id === selectedRunId);
   const validation = summarizeQuality(qualityState.data, selectedSource);
   const selectedQualityResults = qualityResultsForSource(qualityState.data, selectedSource);
@@ -343,14 +346,13 @@ function RunDetailView({ note }: { note: string }) {
         </Card>
       ) : null}
 
-      <div className="border-b border-border" role="tablist" aria-label={t("tableDetail.tabsLabel")}>
-        <div className="flex gap-1 overflow-x-auto">
+      <div className="border-b border-border">
+        <div className="flex gap-1 overflow-x-auto" {...tabs.tabListProps} aria-label={t("tableDetail.tabsLabel")}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
               type="button"
-              role="tab"
-              aria-selected={selectedTab === tab.id}
+              {...tabs.tabProps(tab.id)}
               onClick={() => goToTab(tab.id)}
               className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium ${selectedTab === tab.id ? "border-brand-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
@@ -360,7 +362,7 @@ function RunDetailView({ note }: { note: string }) {
         </div>
       </div>
 
-      <section role="tabpanel" aria-label={t(TABS.find((tab) => tab.id === selectedTab)?.labelKey ?? "tableDetail.tabs.overview")}>
+      <section {...tabs.panelProps}>
         {selectedTab === "overview" ? <OverviewTab dataset={core.dataset} selectedRun={selectedRun} runStatus={runStatus} selectedSource={selectedSource} selectedStage={selectedStage} sourceStages={sourceStageEntry} stageDetail={stageDetailState.data} stageError={stageDetailState.error} rowCount={summaryRowCount} validation={validation} onSelectStage={(stageName) => updateContext({ stage: stageName })} onSelectTab={goToTab} onAsk={askAboutThis} /> : null}
         {selectedTab === "schema" ? <SchemaTab state={stageDetailState} drift={selectedDrift} /> : null}
         {selectedTab === "preview" ? <PreviewTab state={stageDetailState} qualityState={qualityState} qualityStatus={validation} qualityResults={selectedQualityResults} onOpenQuality={() => updateContext({ tab: "quality" })} /> : null}

@@ -27,6 +27,7 @@ import { QualityBadge } from "@/features/quality/QualityBadge";
 import type { PreviewResponse, PreviewSource } from "@/shared/lib/builderApi";
 import type { PreviewColumnView, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
 import { Button, Card, EmptyState, Select } from "@/shared/ui";
+import { useTabs } from "@/shared/ui/useTabs";
 import { cellValue, encodingsOf } from "@/shared/lib/cellValue";
 
 export type PreviewState =
@@ -89,6 +90,13 @@ export function PreviewValidationStep({
   const safeIndex = Math.min(activeIndex, Math.max(previews.length - 1, 0));
   const source: PreviewSource | undefined = previews[safeIndex];
   const { mixed, perSource } = summarizePreviewSources(previews);
+  // One tab per source; the preview below is their panel (#795).
+  const tabs = useTabs({
+    ids: previews.map((_, i) => String(i)),
+    selected: String(safeIndex),
+    onSelect: (id) => setActiveIndex(Number(id)),
+  });
+  const sourceTabs = previews.length > 1;
 
   return (
     <div className="space-y-4">
@@ -118,15 +126,14 @@ export function PreviewValidationStep({
         </p>
       ) : null}
 
-      {previews.length > 1 ? (
+      {sourceTabs ? (
         <div className="space-y-2">
-          <div role="tablist" aria-label={t("addData.preview.sourceTabs")} className="flex flex-wrap gap-2">
+          <div {...tabs.tabListProps} aria-label={t("addData.preview.sourceTabs")} className="flex flex-wrap gap-2">
             {perSource.map(({ source: s, state }, i) => (
               <button
                 key={s.source_key}
                 type="button"
-                role="tab"
-                aria-selected={i === safeIndex}
+                {...tabs.tabProps(String(i))}
                 onClick={() => setActiveIndex(i)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
                   i === safeIndex
@@ -147,7 +154,7 @@ export function PreviewValidationStep({
       ) : null}
 
       {source ? (
-        <div className="preview-layout grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]">
+        <div className="preview-layout grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(16rem,0.8fr)]" {...(sourceTabs ? tabs.panelProps : {})}>
           <Card className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
