@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { BUDGET, checkBudget, measure, type Chunk } from "../scripts/check-bundle-size.mjs";
+import { BUDGET, checkBudget, initialChunks, measure, type Chunk } from "../scripts/check-bundle-size.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCRIPT = join(ROOT, "scripts", "check-bundle-size.mjs");
@@ -52,6 +52,15 @@ describe("checkBudget", () => {
 
   it("fails the single 1.14 MB chunk #378 removed", () => {
     expect(checkBudget([chunk("index-abc.js", 1140, 335)]).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("fails an initial load over its budget, though every chunk is small (#796)", () => {
+    const parts = Array.from({ length: 4 }, (_, i) => chunk(`Part${i}-x.js`, 100, BUDGET.initialGzip / KIB / 4));
+    const all = [chunk("index-abc.js", 10, 5), ...parts];
+    const failures = checkBudget(all, BUDGET, all.map((c) => c.name));
+    expect(failures).toEqual([expect.stringMatching(/^the initial load \(5 chunks.* over the 270\.0 KiB budget$/)]);
+    // The same chunks loaded later (not in the initial list) are within budget.
+    expect(checkBudget(all, BUDGET, ["index-abc.js"])).toEqual([]);
   });
 
   it("does not pass when there is nothing to measure, or no entry chunk", () => {
@@ -100,6 +109,27 @@ describe("check-bundle-size.mjs", () => {
     expect(code).not.toBe(0);
     expect(out).toContain("bundle size budget exceeded");
     expect(out).toContain("entry chunk index-abc.js");
+  });
+
+  it("follows static imports from the entry chunk, not dynamic ones (#796)", () => {
+    writeChunk("index-abc.js", Buffer.from('import{a as b}from"./ui-def.js";import"./side-ghi.js";const l=()=>import("./ko-jkl.js");'));
+    writeChunk("ui-def.js", Buffer.from('export*from"./dep-mno.js";export const a=1;'));
+    writeChunk("side-ghi.js", Buffer.from("console.log(1);"));
+    writeChunk("dep-mno.js", Buffer.from("export const d=1;"));
+    writeChunk("ko-jkl.js", Buffer.from("export default {};"));
+    writeChunk("Page-pqr.js", Buffer.from('import{a}from"./ui-def.js";'));
+    expect(initialChunks(dir, measure(dir))).toEqual(["dep-mno.js", "index-abc.js", "side-ghi.js", "ui-def.js"]);
+  });
+
+  it("exits non-zero when the entry statically imports more than the initial budget", () => {
+    // A locale imported statically again — what #796 moved out. Random bytes do not compress.
+    writeChunk("index-abc.js", Buffer.from('import l from"./ko-abc.js";console.log(l);'));
+    for (const part of ["ko-abc.js", "en-abc.js"]) writeChunk(part, randomBytes(140 * KIB));
+    expect(run().code).toBe(0); // en-abc.js alone is not part of the initial load
+    writeChunk("index-abc.js", Buffer.from('import l from"./ko-abc.js";import m from"./en-abc.js";console.log(l,m);'));
+    const { code, out } = run();
+    expect(code).not.toBe(0);
+    expect(out).toContain("the initial load (3 chunks");
   });
 
   it("exits non-zero when there is no build to measure", () => {

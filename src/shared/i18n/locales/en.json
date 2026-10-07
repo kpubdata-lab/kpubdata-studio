@@ -50,6 +50,7 @@
       "signedInAs": "Signed in as",
       "notSignedIn": "Not signed in",
       "language": "Language",
+      "languageLoadFailed": "Could not load the language file. Check your connection, reload the page and choose it again.",
       "help": "Help (documentation)",
       "signOut": "Sign out",
       "signIn": "Sign in"

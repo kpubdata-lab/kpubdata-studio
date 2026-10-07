@@ -10,6 +10,8 @@ import { defineConfig, devices } from "@playwright/test";
 /** Where the csp project's production build is written and served (#663). */
 const CSP_PREVIEW_DIR = ".csp-preview";
 const CSP_PREVIEW_PORT = 4174;
+/** Specs that need the production build: the policy (#663) and the locale chunks (#796). */
+const BUILT_APP_SPECS = /(csp|locale-loading)\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -48,11 +50,11 @@ export default defineConfig({
   // @real-builder 스펙(실 Builder 기동 필요)은 기본 슈트에서 제외한다.
   grep: /^(?!.*@real-builder).*$/,
   projects: [
-    { name: "desktop-chromium", testIgnore: /csp\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile-chromium", testIgnore: /csp\.spec\.ts/, use: { ...devices["Pixel 7"] } },
+    { name: "desktop-chromium", testIgnore: BUILT_APP_SPECS, use: { ...devices["Desktop Chrome"] } },
+    { name: "mobile-chromium", testIgnore: BUILT_APP_SPECS, use: { ...devices["Pixel 7"] } },
     {
       name: "csp-chromium",
-      testMatch: /csp\.spec\.ts/,
+      testMatch: BUILT_APP_SPECS,
       use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${CSP_PREVIEW_PORT}` },
     },
   ],

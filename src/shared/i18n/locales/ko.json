@@ -50,6 +50,7 @@
       "signedInAs": "로그인 계정",
       "notSignedIn": "로그인하지 않았습니다",
       "language": "언어",
+      "languageLoadFailed": "언어 파일을 불러오지 못했습니다. 네트워크 연결을 확인하고 페이지를 새로고침한 뒤 다시 선택해 주세요.",
       "help": "도움말 (문서)",
       "signOut": "로그아웃",
       "signIn": "로그인"
