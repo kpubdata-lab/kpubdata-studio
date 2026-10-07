@@ -100,8 +100,8 @@ stops the container with the reason instead of starting it.
 | **Vite** | Fast frontend build tool |
 | **React** | UI library |
 | **TypeScript** | Type safety |
-| **TanStack Query** | Server state management and data fetching |
-| **Zustand** | Local UI state management |
+| **React Router** | Routing |
+| **Zustand** | Shell UI and session state (each screen's hooks load server responses) |
 | **Tailwind CSS** | Styling |
 
 ## Development Commands

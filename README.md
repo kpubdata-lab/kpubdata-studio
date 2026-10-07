@@ -100,8 +100,8 @@ Studio 의 origin 을 넣어야 합니다. 값에 따옴표·공백·`<` 같은 
 | **Vite** | 빠른 프런트엔드 빌드 도구 |
 | **React** | UI 라이브러리 |
 | **TypeScript** | 타입 안정성 |
-| **TanStack Query** | 서버 상태 관리 및 데이터 페칭 |
-| **Zustand** | 로컬 UI 상태 관리 |
+| **React Router** | 화면 라우팅 |
+| **Zustand** | 셸 UI·세션 상태 관리 (서버 응답은 화면별 훅이 불러옴) |
 | **Tailwind CSS** | 스타일링 |
 
 ## 개발 명령어

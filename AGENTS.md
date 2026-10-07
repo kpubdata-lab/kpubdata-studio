@@ -250,7 +250,6 @@ graph TD
     src --> pages[pages/: one per route]
     src --> features[features/: per-feature modules]
     src --> shared[shared/: shared utils, types, UI]
-    src --> entities[entities/: domain models]
 ```
 
 ```text
@@ -259,8 +258,7 @@ src/
 ├── app/             # App assembly and React Router setup
 ├── pages/           # one component per URL
 ├── features/        # per-feature UI, API and state
-├── shared/          # shared utilities, types, UI pieces
-└── entities/        # build, dataset, manifest, artifact models
+└── shared/          # shared utilities, i18n, UI pieces; domain types in shared/lib/types.ts
 ```
 
 ### Which file to change
