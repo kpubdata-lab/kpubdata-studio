@@ -17,7 +17,7 @@ import { API_BASE } from "@/shared/config/env";
 import {
   ApiError,
   builderApi,
-  isBuilderApiCompatible,
+  builderApiCompatibility,
   isRealBuilderEnabled,
   MIN_BUILDER_API_VERSION,
 } from "@/shared/lib/builderApi";
@@ -132,9 +132,9 @@ export function SettingsPage() {
                   {t("settings.conn.version", { version: connection.apiVersion })}
                 </span>
               </div>
-              {!isBuilderApiCompatible(connection.apiVersion) ? (
+              {contractNotice(connection.apiVersion) ? (
                 <p role="alert" className="text-sm text-status-warning">
-                  {t("settings.conn.mismatch", { api: connection.apiVersion, min: MIN_BUILDER_API_VERSION })}
+                  {contractNotice(connection.apiVersion)}
                 </p>
               ) : null}
             </div>
@@ -334,4 +334,14 @@ function AssistantByokSection() {
       </div>
     </Card>
   );
+}
+
+/** What Settings says next to the connection when the contract will not do (#790). */
+function contractNotice(apiVersion: string | undefined): string | null {
+  const contract = builderApiCompatibility(apiVersion);
+  const vars = { api: apiVersion, min: MIN_BUILDER_API_VERSION };
+  if (contract.kind === "too_old") return i18n.t("settings.conn.mismatch", vars);
+  if (contract.kind === "unsupported_major") return i18n.t("settings.conn.majorMismatch", vars);
+  if (contract.kind === "unreadable") return i18n.t("settings.conn.unreadable", vars);
+  return null;
 }

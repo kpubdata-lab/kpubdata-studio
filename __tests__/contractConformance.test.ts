@@ -13,6 +13,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  builderApiCompatibility,
   isBuilderApiCompatible,
   MIN_BUILDER_API_VERSION,
   builderApi,
@@ -90,8 +91,9 @@ const EXPECTED_OPERATIONS = [
 ] as const;
 
 describe("Builder API contract conformance (#36)", () => {
-  it("declares 1.59.0 — the first contract with every route the client calls — as the minimum (#725)", () => {
-    expect(MIN_BUILDER_API_VERSION).toBe("1.59.0");
+  it("declares 1.96.0 — the oldest contract the drift test passes against — as the minimum (#725, #790)", () => {
+    // Measured with `npm run contract:floor`; 1.95.0 lacks GET /uploads (listUploads).
+    expect(MIN_BUILDER_API_VERSION).toBe("1.96.0");
   });
 
   it("exposes exactly the expected client operations", () => {
@@ -107,18 +109,19 @@ describe("Builder API contract conformance (#36)", () => {
 
 describe("isBuilderApiCompatible — SemVer policy (ADR 0013)", () => {
   it("accepts the exact minimum version", () => {
-    expect(isBuilderApiCompatible("1.59.0")).toBe(true);
+    expect(isBuilderApiCompatible("1.96.0")).toBe(true);
   });
 
   it("accepts higher additive minor/patch within the same major", () => {
-    expect(isBuilderApiCompatible("1.59.4")).toBe(true);
-    expect(isBuilderApiCompatible("1.77.0")).toBe(true);
+    expect(isBuilderApiCompatible("1.96.4")).toBe(true);
+    expect(isBuilderApiCompatible("1.105.0")).toBe(true);
   });
 
   it("rejects versions below the minimum within the same major", () => {
-    expect(isBuilderApiCompatible("1.58.0")).toBe(false);
-    expect(isBuilderApiCompatible("1.58.9")).toBe(false);
+    expect(isBuilderApiCompatible("1.95.0")).toBe(false);
+    expect(isBuilderApiCompatible("1.95.9")).toBe(false);
     // What the constant used to say was enough.
+    expect(isBuilderApiCompatible("1.59.0")).toBe(false);
     expect(isBuilderApiCompatible("1.18.0")).toBe(false);
   });
 
@@ -128,8 +131,24 @@ describe("isBuilderApiCompatible — SemVer policy (ADR 0013)", () => {
 
   it("fails closed on malformed / missing versions", () => {
     expect(isBuilderApiCompatible("")).toBe(false);
-    expect(isBuilderApiCompatible("1.59")).toBe(false);
-    expect(isBuilderApiCompatible("v1.59.0")).toBe(false);
+    expect(isBuilderApiCompatible("1.96")).toBe(false);
+    expect(isBuilderApiCompatible("v1.96.0")).toBe(false);
     expect(isBuilderApiCompatible(undefined)).toBe(false);
+  });
+});
+
+describe("builderApiCompatibility — the reason, for the banner (#790)", () => {
+  it.each([
+    ["1.96.0", { kind: "compatible" }],
+    ["1.200.0", { kind: "compatible" }],
+    ["1.95.9", { kind: "too_old" }],
+    ["1.0.0", { kind: "too_old" }],
+    ["2.0.0", { kind: "unsupported_major", builderNewer: true }],
+    ["0.99.0", { kind: "unsupported_major", builderNewer: false }],
+    ["1.96", { kind: "unreadable" }],
+    ["", { kind: "unreadable" }],
+    [undefined, { kind: "unreadable" }],
+  ])("%s → %o", (version, expected) => {
+    expect(builderApiCompatibility(version)).toEqual(expected);
   });
 });

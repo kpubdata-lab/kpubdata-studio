@@ -1456,6 +1456,8 @@
       "version": "Builder API version {{version}}",
       "minVersion": "Minimum required Builder API version {{version}}",
       "mismatch": "Contract version mismatch: KPubData Builder {{api}} is not compatible with the minimum version ({{min}}, same major) required by Studio. Some response shapes may be incompatible.",
+      "majorMismatch": "Contract version mismatch: KPubData Builder {{api}} is another major than the contract this Studio reads ({{min}}). Some screens cannot read Builder's answers.",
+      "unreadable": "Contract version mismatch: the contract version KPubData Builder reported ({{api}}) cannot be read. This Studio needs {{min}} or later.",
       "mockNote": "Mock mode. To connect to a real KPubData Builder,",
       "mockEnv": ".",
       "connFail": "Connection check failed.",
@@ -2649,6 +2651,9 @@
   "versionCheck": {
     "contractTooOld": "The connected KPubData Builder speaks API contract {{api}}. This Studio needs {{min}} or later (same major); below that some screens cannot work.",
     "contractRemedy": "Update KPubData Builder.",
+    "contractMajor": "The connected KPubData Builder speaks API contract {{api}}. This Studio reads the contract of {{min}}'s major version; with another major its screens cannot read Builder's answers.",
+    "contractMajorRemedyStudio": "Update KPubData Studio to the release paired with this Builder.",
+    "contractUnreadable": "The API contract version the connected KPubData Builder reported ({{api}}) cannot be read. This Studio needs {{min}} or later.",
     "mismatch": "Studio {{studio}} is connected to KPubData Builder {{builder}} — they come from different releases, so some screens may fail to load.",
     "remedy": "Deploy the matching KPubData Builder, or reload to pick up the matching Studio.",
     "dismiss": "Dismiss version notice"
