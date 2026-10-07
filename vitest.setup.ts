@@ -26,8 +26,12 @@ configure({ asyncUtilTimeout: 30_000 });
 import { HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { handlers } from "./__tests__/msw/handlers";
-import { i18n } from "@/shared/i18n"; // 다국어 초기화 — 테스트는 ko로 고정(기존 단언 호환)
-void i18n.changeLanguage("ko");
+import { i18n, i18nReady, loadLanguage } from "@/shared/i18n"; // 다국어 초기화 — 테스트는 ko로 고정(기존 단언 호환)
+// The locales load lazily in the app (#796). Tests switch languages synchronously, so
+// both are loaded once here, before any test.
+await i18nReady;
+await Promise.all([loadLanguage("ko"), loadLanguage("en")]);
+await i18n.changeLanguage("ko");
 
 // MSW 서버 설정 (모든 핸들러 등록)
 export const mswServer = setupServer(...handlers);

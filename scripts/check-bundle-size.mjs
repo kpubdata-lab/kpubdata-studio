@@ -22,6 +22,16 @@
  *   | largest chunk of any kind, raw          | 453.7 KiB      | 520 KiB  |
  *   | all JavaScript together, gzip           | 452.2 KiB      | 500 KiB  |
  *
+ * The **initial load** is what a visitor downloads before the first screen: the entry
+ * chunk and every chunk it imports statically, followed through their own static imports
+ * (a dynamic `import()` — a route, a locale — is not followed). Before #796 both locale
+ * files sat in it; measured on 2026-10-07 (origin/main 0ad15c3) it went from 326.4 KiB to
+ * 237.3 KiB gzip when they moved to their own chunks, with one locale (43–48 KiB) fetched
+ * after it. The budget is 270 KiB, so a static import that pulls a locale (or a route) back
+ * in fails:
+ *
+ *   | initial load (entry + static imports), gzip | 237.3 KiB  | 270 KiB  |
+ *
  * A budget raised to let a change through says so in its pull request, with the build
  * output that shows why. The #378 regression (one 335 KB gzip chunk) fails the first
  * three lines by a wide margin.
@@ -44,6 +54,7 @@ export const BUDGET = Object.freeze({
   chunkGzip: 160 * KIB,
   chunkRaw: 520 * KIB,
   totalGzip: 500 * KIB,
+  initialGzip: 270 * KIB,
 });
 
 /** Vite names the entry chunk `index-<hash>.js`. */
@@ -71,12 +82,33 @@ export function kib(bytes) {
   return `${(bytes / KIB).toFixed(1)} KiB`;
 }
 
+/** `import … from "./x.js"`, `import "./x.js"` and `export … from "./x.js"`, not `import("./x.js")`. */
+const STATIC_IMPORT = /\b(?:import|export)\s*(?:[^"'();]*?\bfrom\s*)?["']\.\/([\w.-]+\.js)["']/g;
+
+/**
+ * The chunks a visitor downloads before the first screen: the entry chunk and, followed
+ * transitively, every chunk imported statically. Names only; sizes come from `measure`.
+ */
+export function initialChunks(dir, chunks) {
+  const assets = join(dir, "assets");
+  const known = new Set(chunks.map((chunk) => chunk.name));
+  const seen = new Set();
+  const pending = chunks.filter((chunk) => ENTRY_PATTERN.test(chunk.name)).map((chunk) => chunk.name);
+  while (pending.length > 0) {
+    const name = pending.pop();
+    if (seen.has(name) || !known.has(name)) continue;
+    seen.add(name);
+    for (const match of readFileSync(join(assets, name), "utf8").matchAll(STATIC_IMPORT)) pending.push(match[1]);
+  }
+  return [...seen].sort();
+}
+
 /**
  * Compare measured chunks with a budget. Returns the failures as sentences; an empty
  * list passes. No chunks at all, or no entry chunk, is a failure: a gate that finds
  * nothing to measure must not pass.
  */
-export function checkBudget(chunks, budget = BUDGET) {
+export function checkBudget(chunks, budget = BUDGET, initial = null) {
   const failures = [];
   if (chunks.length === 0) {
     return ["no JavaScript found under assets/ — run `vite build` first, or pass --dir"];
@@ -100,6 +132,15 @@ export function checkBudget(chunks, budget = BUDGET) {
   if (totalGzip > budget.totalGzip) {
     failures.push(`all JavaScript is ${kib(totalGzip)} gzip, over the ${kib(budget.totalGzip)} budget`);
   }
+  if (initial !== null) {
+    const names = new Set(initial);
+    const initialGzip = chunks.filter((chunk) => names.has(chunk.name)).reduce((sum, chunk) => sum + chunk.gzip, 0);
+    if (initialGzip > budget.initialGzip) {
+      failures.push(
+        `the initial load (${initial.length} chunks: the entry and its static imports) is ${kib(initialGzip)} gzip, over the ${kib(budget.initialGzip)} budget`,
+      );
+    }
+  }
   return failures;
 }
 
@@ -107,7 +148,9 @@ function main(argv) {
   const at = argv.indexOf("--dir");
   const dir = resolve(at >= 0 && argv[at + 1] ? argv[at + 1] : "dist");
   const chunks = measure(dir);
-  const failures = checkBudget(chunks);
+  const initial = initialChunks(dir, chunks);
+  const failures = checkBudget(chunks, BUDGET, initial);
+  const initialGzip = chunks.filter((chunk) => initial.includes(chunk.name)).reduce((sum, chunk) => sum + chunk.gzip, 0);
 
   const totalRaw = chunks.reduce((sum, chunk) => sum + chunk.raw, 0);
   const totalGzip = chunks.reduce((sum, chunk) => sum + chunk.gzip, 0);
@@ -116,8 +159,9 @@ function main(argv) {
     console.log(`  ${chunk.name.padEnd(40)} ${kib(chunk.raw).padStart(12)} raw ${kib(chunk.gzip).padStart(12)} gzip`);
   }
   console.log(`  ${"total".padEnd(40)} ${kib(totalRaw).padStart(12)} raw ${kib(totalGzip).padStart(12)} gzip`);
+  console.log(`  ${`initial load (${initial.length} chunks)`.padEnd(40)} ${"".padStart(16)} ${kib(initialGzip).padStart(12)} gzip`);
   console.log(
-    `  budget: entry ${kib(BUDGET.entryGzip)} gzip, any chunk ${kib(BUDGET.chunkGzip)} gzip / ${kib(BUDGET.chunkRaw)} raw, total ${kib(BUDGET.totalGzip)} gzip`,
+    `  budget: entry ${kib(BUDGET.entryGzip)} gzip, any chunk ${kib(BUDGET.chunkGzip)} gzip / ${kib(BUDGET.chunkRaw)} raw, total ${kib(BUDGET.totalGzip)} gzip, initial load ${kib(BUDGET.initialGzip)} gzip`,
   );
 
   if (failures.length > 0) {

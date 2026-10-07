@@ -55,6 +55,8 @@ export function AccountMenu() {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
   const [open, setOpen] = useState(false);
+  // The chosen language's chunk could not be fetched (#796): the language stays as it was.
+  const [languageFailed, setLanguageFailed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
@@ -128,7 +130,10 @@ export function AccountMenu() {
               {t("layout.account.language")}
               <select
                 className={fieldClassName}
-                onChange={(event) => changeLanguage(event.target.value as AppLanguage)}
+                onChange={(event) => {
+                  setLanguageFailed(false);
+                  void changeLanguage(event.target.value as AppLanguage).then((changed) => setLanguageFailed(!changed));
+                }}
                 value={language}
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
@@ -136,6 +141,11 @@ export function AccountMenu() {
                 ))}
               </select>
             </label>
+            {languageFailed ? (
+              <p className="text-xs text-status-failure" role="alert">
+                {t("layout.account.languageLoadFailed")}
+              </p>
+            ) : null}
             <label className="block text-xs font-medium text-muted-foreground">
               {t("layout.theme")}
               <select

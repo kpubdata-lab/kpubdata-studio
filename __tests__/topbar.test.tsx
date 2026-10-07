@@ -126,7 +126,7 @@ describe("account menu (#523)", () => {
     expect(useUIStore.getState().theme).toBe("dark");
   });
 
-  it("changes the language from the account menu", () => {
+  it("changes the language from the account menu", async () => {
     renderLayoutAt("/");
 
     fireEvent.click(screen.getByRole("button", { name: "계정 메뉴" }));
@@ -135,8 +135,10 @@ describe("account menu (#523)", () => {
       fireEvent.change(within(menu).getByLabelText("언어"), { target: { value: "en" } });
     });
 
+    // The switch waits for the language's resources (#796), loaded here by the test setup.
+    expect(await screen.findByRole("button", { name: "Account menu" })).toBeInTheDocument();
     expect(i18n.language).toBe("en");
-    expect(screen.getByRole("button", { name: "Account menu" })).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("links to help and signs the person out", () => {
