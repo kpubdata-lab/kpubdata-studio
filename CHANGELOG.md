@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **`AGENTS.md` names only what exists** (#811). It said to run the release workflow with `dry_run`, an input `release.yml` never had; `mode=prepare` opens a real release pull request. It said to propose a version bump, which Studio cannot choose: `prepare` writes Builder's newest release. It now also says which directories the Korean comment gate checks (`src`, `e2e`). `__tests__/agentsMdReferences.test.ts` checks the scripts, workflows, release inputs and comment gate it names.
 - **The design docs describe the shipped Studio** (#797). ARCHITECTURE, STATE_MODEL, UI_SPEC, USER_FLOWS and INFORMATION_ARCHITECTURE described an earlier build console. The corrections, with code references in each doc:
   - TanStack Query is not used; it was removed in #82. Server state lives in each screen's hooks, drafts in `localStorage`, and shell and session state in Zustand. There is no `src/entities/`.
   - A build is an async job: `POST /builds`, polled, with `cancelling`. A retry is a new run that carries `retry_of`; the earlier run never goes back to `queued`.

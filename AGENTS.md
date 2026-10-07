@@ -86,6 +86,11 @@ carry most of the weight:
   check too. Require the one aggregate `CI gate` job, never a matrix-suffixed name,
   and run `scripts/check_required_checks.py` (in kpubdata) after touching a matrix.
 
+Comments are gated in English (kpubdata ADR 0003): CI runs
+`scripts/check_korean_ts_comments.py src e2e`, which fails on any Korean comment
+there. `__tests__/` and the files at the root (`vitest.setup.ts`, configs) are not
+checked yet — they still hold Korean comments — so keep new ones in English there too.
+
 Existing debt is frozen with a **ratchet** — the baseline holds today's per-file
 count and the check fails only when a count grows. Fixing everything first means
 starting nothing.
@@ -163,12 +168,16 @@ agent.
 - **kpubdata is not on this train.** It releases on demand, at most once every seven
   days. Never recommend a release outside these rules to unblock work: build against
   kpubdata `main` in the early-warning job, and raise the pin when kpubdata releases.
-- **Prepare, do not release.** An agent may tidy the CHANGELOG's Unreleased section,
-  run a release workflow with `dry_run`, and draft the version and pin pull requests.
+- **Prepare, do not release.** An agent may tidy the CHANGELOG's Unreleased section
+  and draft pin pull requests. `release.yml` has no dry run: its dispatch inputs are
+  `mode`, `critical_patch` and `critical_issue`, and `mode=prepare` (the default)
+  opens a real release pull request, which a person merges to release or closes.
   Pushing a tag, creating a GitHub Release, approving the PyPI environment and
   changing what a release contains are a person's (POLICY 14).
-- **Propose the bump from the CHANGELOG, with the reason.** In 0.x, a breaking change
-  or a new feature is minor; fixes alone are patch.
+- **Studio does not choose its version.** `mode=prepare` reads Builder's newest
+  release tag and writes exactly that version (ADR 0004); there is no bump input.
+  Propose the bump on Builder, from its CHANGELOG, with the reason: in 0.x, a breaking
+  change or a new feature is minor; fixes alone are patch.
 - **Write what a release changes under `## [Unreleased]` in `CHANGELOG.md`, as you
   merge it.** The prepare job dates that section and the release job publishes it as
   the notes. An empty `[Unreleased]` stops the release — Studio included, when it only
