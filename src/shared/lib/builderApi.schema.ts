@@ -11,6 +11,7 @@
  */
 
 import { z } from "zod";
+import { builderEnum } from "./builderEnums";
 
 /**
  * GET /version response schema
@@ -27,7 +28,7 @@ export const versionResponseSchema = z.object({
    * server's. Absent on older Builders, and a value Studio does not know reads as absent,
    * so either way the publish page falls back to inferring it from readiness (#637).
    */
-  publish_credential: z.enum(["request", "stored", "stored_or_server"]).optional().catch(undefined),
+  publish_credential: builderEnum("VersionResponse.publish_credential").optional().catch(undefined),
 });
 
 /**
@@ -121,7 +122,7 @@ export const buildResponseSchema = z.discriminatedUnion("status", [
  */
 export const buildJobSchema = z.object({
   run_id: z.string(),
-  status: z.enum(["queued", "running", "cancelling", "succeeded", "failed", "cancelled"]),
+  status: builderEnum("BuildJob.status"),
   created_at: z.string(),
   updated_at: z.string(),
   created_by: z.string().nullable().optional(),
@@ -372,7 +373,7 @@ export type BuildPartialFailure = z.infer<typeof buildPartialFailureSchema>;
  * GET /catalog search metadata list query capability (#490).
  */
 export const catalogQuerySupportSchema = z.object({
-  pagination: z.enum(["offset", "index", "cursor", "none"]),
+  pagination: builderEnum("CatalogQuerySupport.pagination"),
   filterable_fields: z.array(z.string()),
   sortable_fields: z.array(z.string()),
   time_range: z.boolean(),
@@ -413,7 +414,7 @@ export const catalogDatasetSchema = z.object({
   description: z.string().nullable(),
   tags: z.array(z.string()),
   source_url: z.string().nullable(),
-  representation: z.enum(["api_json", "api_xml", "file_csv", "file_excel", "sheet", "other"]),
+  representation: builderEnum("CatalogDataset.representation"),
   operations: z.array(z.enum(["list", "get", "schema", "raw", "download"])),
   query_support: catalogQuerySupportSchema.nullable(),
   requires_service_key: z.boolean(),
@@ -512,13 +513,13 @@ export const providerTestResponseSchema = z.object({
   provider: z.string(),
   // `not_testable` (kpubdata-builder#842): no dataset can be called without guessing a
   // parameter. It says nothing about the key.
-  status: z.enum(["connected", "failed", "not_configured", "not_testable"]),
+  status: builderEnum("ProviderTestResponse.status"),
   configured: z.boolean(),
   /** The dataset a `connected` test called (kpubdata-builder#842). */
   dataset: z.string().optional(),
   latency_ms: z.number().int().nonnegative(),
   checked_at: z.string(),
-  error_category: z.enum(["auth", "network", "timeout", "provider", "unknown"]).optional(),
+  error_category: builderEnum("ProviderTestResponse.error_category").optional(),
   response_code: z.number().int().min(100).max(599).optional(),
 });
 
@@ -545,7 +546,7 @@ export const providerCredentialResponseSchema = z.object({
 /** kind="file" source upload metadata (secret-free, no content). */
 export const uploadMetadataSchema = z.object({
   upload_id: z.string().regex(/^upl_[a-f0-9]{32}$/),
-  format: z.enum(["csv", "json", "jsonl", "parquet"]),
+  format: builderEnum("UploadMetadata.format"),
   encoding: z.string(),
   size_bytes: z.number().int().nonnegative(),
   original_filename: z.string().nullable(),
@@ -602,9 +603,9 @@ export const datasetStageMapSchema = z.record(z.string(), sourceStageStatusSchem
  * taken as they are.
  */
 export const datasetStatusAxesSchema = z.object({
-  refresh: z.enum(["queued", "running", "succeeded", "failed", "cancelled", "unknown"]),
-  completeness: z.enum(["complete", "partial", "unknown"]),
-  health: z.enum(["healthy", "stale", "degraded", "unknown"]),
+  refresh: builderEnum("DatasetStatusAxes.refresh"),
+  completeness: builderEnum("DatasetStatusAxes.completeness"),
+  health: builderEnum("DatasetStatusAxes.health"),
   access: z.enum([
     "available",
     "auth_unknown",
@@ -617,7 +618,7 @@ export const datasetStatusAxesSchema = z.object({
     "retired",
     "unknown",
   ]),
-  maturity: z.enum(["stable", "beta", "experimental", "unknown"]),
+  maturity: builderEnum("DatasetStatusAxes.maturity"),
 });
 
 export const datasetSummarySchema = z.object({
@@ -625,7 +626,7 @@ export const datasetSummarySchema = z.object({
   title: z.string(),
   sources: z.array(datasetSourceRefSchema),
   latest_run_id: z.string(),
-  status: z.enum(["ok", "failed", "cancelled"]),
+  status: builderEnum("DatasetSummary.status"),
   updated_at: z.string().nullable(),
   row_counts: z.record(z.string(), z.number().int()),
   total_row_count: z.number().int(),
@@ -655,7 +656,7 @@ export const datasetsResponseSchema = z.object({
  */
 export const buildSummarySchema = z.object({
   run_id: z.string(),
-  status: z.enum(["ok", "failed", "cancelled"]),
+  status: builderEnum("BuildSummary.status"),
   started_at: z.string().nullable().optional(),
   finished_at: z.string().nullable().optional(),
   dataset_id: z.string().nullable().optional(),
@@ -675,7 +676,7 @@ export type BuildsResponse = z.infer<typeof buildsResponseSchema>;
 
 export const datasetRunSummarySchema = z.object({
   run_id: z.string(),
-  status: z.enum(["ok", "failed", "cancelled"]),
+  status: builderEnum("DatasetRunSummary.status"),
   started_at: z.string().nullable(),
   finished_at: z.string().nullable(),
   spec_digest: z.string().nullable(),
@@ -807,7 +808,7 @@ export const qualityCheckResultSchema = z.object({
   category: z.string(),
   rule: z.string(),
   column: z.string().nullable(),
-  status: z.enum(["pass", "warn", "fail"]),
+  status: builderEnum("QualityCheckResult.status"),
   actual: z.json(),
   threshold: z.json(),
   affected_rows: z.number().int().nullable(),
@@ -869,7 +870,7 @@ export const previewResponseSchema = z.object({
 });
 
 export const schemaDriftFindingSchema = z.object({
-  kind: z.enum(["column_added", "column_removed", "dtype_changed", "row_count_jump"]),
+  kind: builderEnum("SchemaDriftFinding.kind"),
   column: z.string().nullable(),
   detail: z.string(),
 });
@@ -895,8 +896,8 @@ export const qualityIssueSchema = z.object({
   run_id: z.string(),
   finished_at: z.string().nullable(),
   source_key: z.string(),
-  kind: z.enum(["check", "drift"]),
-  status: z.enum(["fail", "warn", "drift"]),
+  kind: builderEnum("QualityIssue.kind"),
+  status: builderEnum("QualityIssue.status"),
   category: z.string().nullable(),
   check: qualityCheckResultSchema.nullable(),
   drift: schemaDriftFindingSchema.nullable(),
@@ -929,7 +930,7 @@ export type QualityIssuesResponse = z.infer<typeof qualityIssuesResponseSchema>;
 export const datasetQualityHistoryEntrySchema = z.object({
   run_id: z.string(),
   timestamp: z.string().nullable(),
-  status: z.enum(["ok", "failed", "cancelled"]),
+  status: builderEnum("DatasetQualityHistoryEntry.status"),
   pass_count: z.number().int(),
   warn_count: z.number().int(),
   fail_count: z.number().int(),
@@ -952,7 +953,7 @@ export const datasetQualityHistoryResponseSchema = z.object({
 export const qualitySummaryResponseSchema = z.object({
   window: z.literal("24h"),
   generated_at: z.string(),
-  availability: z.enum(["available", "unavailable"]),
+  availability: builderEnum("QualitySummaryResponse.availability"),
   total_runs: z.number().int().nonnegative(),
   evaluated_runs: z.number().int().nonnegative(),
   pass_runs: z.number().int().nonnegative(),
@@ -1033,7 +1034,7 @@ export const publishRequestSchema = z.object({
  */
 export const publishReconcileResponseSchema = z.object({
   run_id: z.string(),
-  state: z.enum(["succeeded", "reset"]),
+  state: builderEnum("PublishReconcileResponse.state"),
   reconciled: z.boolean(),
   fingerprint: z.string(),
   retry_allowed: z.boolean().optional(),
@@ -1215,7 +1216,7 @@ export const monitoringArtifactStoreSchema = z.object({
 /** GET /monitoring/summary response. Aggregate status is 2-value: healthy/degraded(#516). */
 export const monitoringSummaryResponseSchema = z.object({
   generated_at: z.string(),
-  status: z.enum(["healthy", "degraded"]),
+  status: builderEnum("MonitoringSummaryResponse.status"),
   api: monitoringApiStatusSchema,
   queue: monitoringQueueSchema,
   workers: monitoringWorkersSchema,
@@ -1309,10 +1310,10 @@ export const buildEventNameSchema = z.enum([
   "quality_evaluated",
 ]);
 
-export const buildEventStatusSchema = z.enum(["ok", "warn", "fail"]);
+export const buildEventStatusSchema = builderEnum("BuildEventStatus");
 
 /** Medallion stage (bronze/silver/gold) + export execution stage. Separate vocabulary from RunStagesResponse 3-stage. */
-export const buildEventStageNameSchema = z.enum(["bronze", "silver", "gold", "export"]);
+export const buildEventStageNameSchema = builderEnum("BuildEventStageName");
 
 /** Single structured run event (#496). Bounded fields only — no raw logs/stack traces/free-form objects. */
 export const buildEventSchema = z.object({
@@ -1459,7 +1460,7 @@ export const warehouseTableListResponseSchema = z.object({ tables: z.array(wareh
 export const warehouseSnapshotSchema = z.object({
   snapshot_id: z.string(),
   run_id: z.string(),
-  state: z.enum(["committed", "quarantined"]),
+  state: builderEnum("WarehouseSnapshot.state"),
   row_count: z.number().int().nonnegative().nullable(),
   created_at: z.string(),
   committed_at: z.string().nullable(),
@@ -1480,10 +1481,10 @@ export const warehouseTableDetailResponseSchema = warehouseTableSchema.extend({
  * exist, `no_values` none, `not_applicable` a column that is neither numeric nor temporal.
  */
 export const columnRangeSchema = z.object({
-  status: z.enum(["exact", "trimmed", "withheld_small_group", "no_values", "not_applicable"]),
+  status: builderEnum("ColumnRange.status"),
   min: z.json().optional(),
   max: z.json().optional(),
-  wire_encoding: z.enum(["number", "decimal_string", "string"]).optional(),
+  wire_encoding: builderEnum("ColumnRange.wire_encoding").optional(),
   value_count: z.number().int().nonnegative().optional(),
   excluded_count: z.number().int().nonnegative().optional(),
   /** How many values the trimming removed, both ends together (1.77.0). */
@@ -1505,7 +1506,7 @@ export const columnProfileSchema = z.object({
     status: z.enum(["not_detected", "suspected", "allowed_by_spec"]),
     kinds: z.array(z.string()),
   }),
-  status: z.enum(["profiled", "withheld"]),
+  status: builderEnum("ColumnProfile.status"),
   null_count: z.number().int().nonnegative().nullable(),
   /** Null for an empty table or a withheld column — not 0. */
   null_ratio: z.number().nullable(),
@@ -1526,7 +1527,7 @@ export const snapshotProfileSchema = z.object({
     sampled: z.boolean(),
     sample_size: z.number().int().nonnegative().nullable(),
   }),
-  accuracy: z.enum(["exact"]),
+  accuracy: builderEnum("SnapshotProfile.accuracy"),
   /** A range over fewer finite values than this is withheld. */
   min_range_values: z.number().int().min(1),
   /** Values left out at each end of a range (1.77.0); absent from an earlier Builder. */
@@ -1586,7 +1587,7 @@ export const warehouseRowsRequestSchema = z.object({
     )
     .max(16)
     .optional(),
-  count: z.enum(["exact", "none"]).optional(),
+  count: builderEnum("WarehouseRowsRequest.count").optional(),
 });
 
 export const warehouseRowsResponseSchema = z.object({
@@ -1666,8 +1667,8 @@ export const warehouseExportRequestSchema = z.object({
   table: z.string().min(1),
   snapshot: z.string().min(1).optional(),
   sql: z.string().min(1).max(65536),
-  format: z.enum(["csv", "jsonl"]).optional(),
-  profile: z.enum(["machine", "spreadsheet"]).optional(),
+  format: builderEnum("WarehouseExportRequest.format").optional(),
+  profile: builderEnum("WarehouseExportRequest.profile").optional(),
   max_rows: z.number().int().min(1).max(1_000_000).optional(),
 });
 

@@ -41,6 +41,7 @@ import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
+import { renderBuilderEnums } from "../../../scripts/generate-builder-enums.mjs";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
 import { probeRateLimited } from "@/features/provider/probeRefusal";
 import { revisionErrorOutcome } from "@/features/build-spec/specRevisions";
@@ -53,6 +54,7 @@ import en from "@/shared/i18n/locales/en.json";
 import ko from "@/shared/i18n/locales/ko.json";
 import { builderApi, httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
+import { BUILDER_ENUMS_CONTRACT_VERSION } from "./builderEnums";
 import { forgetAllProviderKeys, holdProviderKey, PROVIDER_KEY_HEADER } from "./providerKeys";
 import { clearSignupBlock, useSignupStatusStore } from "./signupStatus";
 import { contractIssueCodesOf, issueCodeDrift, missingIssueEntries } from "../../../__tests__/support/publishIssueCoverage";
@@ -1456,6 +1458,44 @@ describe.skipIf(!contractPath)("builderApi routes against Builder's contract (#7
     expect(declared("GET", "/no/such/route")).toBe(false);
     // A parameter matches one segment, not several.
     expect(declared("GET", "/builds/run-1/extra/manifest")).toBe(false);
+  });
+});
+
+/**
+ * The snapshot of Builder's enums against the contract it names (#793).
+ *
+ * `generated/builderEnums.ts` is regenerated from the contract in hand and compared — but
+ * only when that contract is the version the snapshot was made from. This job reads
+ * Builder's `main`, and the snapshot is allowed to differ from `main` in both directions:
+ * behind it, when Builder has moved on and Studio reads nothing new; ahead of it, when a
+ * value was generated from a Builder branch so that the branch can merge (Builder's own
+ * job runs this file, and a value Studio does not accept fails the tests above). At the
+ * same version there is one right answer, and a snapshot edited by hand or written by an
+ * older generator is not it.
+ */
+describe.skipIf(!contractPath)("generated Builder enums against the contract (#793)", () => {
+  const document = contractPath && existsSync(contractPath) ? parse(readFileSync(contractPath, "utf8")) : {};
+  const sameVersion = CONTRACT_VERSION === BUILDER_ENUMS_CONTRACT_VERSION;
+
+  it.skipIf(!sameVersion)("is exactly what the generator writes from the contract of its version", () => {
+    const committed = readFileSync(join(process.cwd(), "src/shared/lib/generated/builderEnums.ts"), "utf8");
+
+    expect(committed, "run: node scripts/generate-builder-enums.mjs").toBe(renderBuilderEnums(document));
+  });
+
+  it("can always be regenerated from the contract in hand: no two enums share a name", () => {
+    expect(() => renderBuilderEnums(document)).not.toThrow();
+  });
+
+  it("says which side is ahead when the versions differ", () => {
+    // Not a failure either way; printed so a stale snapshot is seen in the job's log.
+    if (sameVersion || CONTRACT_VERSION === null) return;
+    const order = compareVersions(BUILDER_ENUMS_CONTRACT_VERSION, CONTRACT_VERSION);
+    console.info(
+      `generated/builderEnums.ts is from contract ${BUILDER_ENUMS_CONTRACT_VERSION}, ` +
+        `${order < 0 ? "behind" : "ahead of"} the contract under test (${CONTRACT_VERSION})`,
+    );
+    expect(order).not.toBe(0);
   });
 });
 

@@ -33,7 +33,8 @@
     "i18n:check": "node scripts/i18n-coverage.mjs --check",
     "check:stale-ui": "node scripts/check-stale-ui-literals.mjs --base origin/main",
     "i18n:keys": "node scripts/check-i18n-keys.mjs",
-    "contract:floor": "node scripts/contract-floor.mjs"
+    "contract:floor": "node scripts/contract-floor.mjs",
+    "contract:enums": "node scripts/generate-builder-enums.mjs"
   },
   "dependencies": {
     "i18next": "^26.4.2",

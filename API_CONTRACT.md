@@ -45,6 +45,42 @@ Studio는 `GET /version` 응답의 `api_version`을 `MIN_BUILDER_API_VERSION`과
    1.105.0은 호환).
 4. 파싱 불가/형식 오류인 버전 문자열은 fail-closed로 비호환 처리합니다.
 
+### Builder 의 enum 은 생성한다 (#793)
+
+Studio 의 응답 스키마(`src/shared/lib/builderApi.schema.ts`)는 손으로 쓴다. 그 안의 enum 값 목록은
+Builder 계약에 있는 것을 다시 옮겨 적은 것이었다. 이제 값은 계약에서 생성한다.
+
+| | 어디 | 누가 |
+|---|---|---|
+| enum 의 값, 그 값을 읽은 계약 버전 | `src/shared/lib/generated/builderEnums.ts` | `scripts/generate-builder-enums.mjs` 가 쓴다. 손으로 고치지 않는다 |
+| 스키마의 모양, 어떤 필드가 어떤 enum 인지 | `builderApi.schema.ts` — `builderEnum("BuildJob.status")` | 손으로 |
+| **모르는 값이 왔을 때 어떻게 할지** | 그 필드를 선언한 자리 | 손으로 — 생성기가 정하지 않는다 |
+
+enum 의 이름은 계약에서의 위치다: 스키마 자체가 enum 이면 `Schema`, 그 안의 것이면
+`Schema.property[.property…]`.
+
+**모르는 enum 값의 처리**는 필드마다 그 필드를 선언한 곳에 드러난다.
+
+- `builderEnum(name)` 그대로 — **엄격**. 스냅샷에 없는 값이 오면 그 응답의 파싱이 실패한다. Studio 가
+  그 값으로 무언가를 결정하는 필드(job 의 `status`, stage 의 상태 등)는 이렇게 둔다: 모르는 상태를
+  아는 상태 중 하나로 읽는 것보다 실패가 낫다.
+- `builderEnum(name).optional().catch(undefined)` — **없는 것으로 읽음**. 그 필드 없이도 화면이 성립하는 경우.
+- `z.string()` — **그대로 통과**. Studio 가 값을 해석하지 않고 보여 주기만 하는 경우. `BuildJob.code` 가
+  그렇다: 나중에 추가된 사유가 job 전체를 못 읽게 만들면 안 된다(#787).
+
+지금은 `builderApi.schema.ts` 의 한 줄짜리 enum 56개 가운데 32개가 스냅샷에서 온다 — 스키마 이름과
+속성 이름이 계약과 그대로 대응하고 값 목록이 같은 것들이다. 나머지 24개는 Studio 쪽 이름이 계약과
+다르거나(`KnownWireEncoding`, `StageStatus` 등) 요청 스키마라서 하나씩 대응을 확인해 옮겨야 하고, 아직
+손으로 쓴 목록이다. 그것들은 종전처럼 drift 테스트가 계약과 대조한다.
+
+**다시 생성하기**: `BUILDER_CONTRACT=../kpubdata-builder/contract/builder-api.yaml npm run contract:enums`.
+Builder 가 enum 값을 더하려면 Studio 가 먼저 그 값을 받아야 한다(Builder 의 CI 가 Studio 의 drift
+테스트를 돌린다). 그때는 Builder 의 **브랜치**에 있는 계약으로 생성해서 Studio 에 먼저 넣는다 — 스냅샷이
+Builder `main` 보다 앞선 버전을 가리키게 되고, 그것은 허용된다. `contractDrift.test.ts` 는 대조하는 계약의
+버전이 스냅샷의 버전과 **같을 때만** 정확히 일치하는지 본다. 버전이 다르면 종전의 규칙 — 계약이 허용하는
+값을 Studio 가 모두 받는가 — 만 적용되고, 어느 쪽이 앞서 있는지 로그에 찍는다. 따라서 Builder 가 앞서
+나간 뒤 스냅샷이 낡아 있는 것은 실패가 아니다; Studio 가 새 값을 읽어야 할 때 다시 생성한다.
+
 ### 애플리케이션 버전 — 짝 판정 (#430)
 
 `api_version` 과 **별개로**, `GET /version` 이 `version`(애플리케이션 릴리스)을 주면
