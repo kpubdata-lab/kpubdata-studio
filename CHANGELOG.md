@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- **A Builder answer Studio cannot read is no longer reported as a server error** (#791). A response whose JSON the contract schema rejected, an upload answer in the wrong form, and a successful response that was not JSON were all thrown as `ApiError(500)`. These errors also carried the whole response body as `details`, and the error boundaries print `details` to the console. They are now `ContractMismatchError`, a subclass of `ApiError`, so existing handlers still catch it. It keeps the status Builder actually sent, a `code` (`schema_mismatch` or `bad_json`), and the rejected field paths, never their values. `details` is empty. A GET is no longer retried as if it were a 5xx. A spec revision save whose 2xx answer did not match still keeps its idempotency key: Builder may have saved, and a retry must replay that save rather than make a second revision. A real 5xx is unchanged.
 - **Tabs work from the keyboard** (#795). The table detail tabs (warehouse and run views) and the per-source preview tabs in Add Data had `role="tab"` and `aria-selected`, and nothing else. Every tab was a Tab stop, the arrow keys did nothing, and no tab said which panel it controlled. They now share one hook, `useTabs`, which follows the WAI-ARIA tabs pattern with automatic activation:
   - Only the selected tab is in the Tab order.
   - ArrowLeft/ArrowRight move between tabs and wrap at the ends; Home and End go to the first and last.
