@@ -599,6 +599,7 @@
       "query_busy": "Query capacity is full. Please try again shortly.",
       "query_timeout": "Query execution timed out.",
       "query_execution_failed": "Query execution failed.",
+      "query_resource_limit": "The query needs more memory or temporary disk than this Builder allows. Filter the rows or select fewer columns, then try again.",
       "network": "Could not connect to KPubData Builder.",
       "mock_mode": "Queries cannot run in mock mode.",
       "unknown": "An unknown error occurred."
