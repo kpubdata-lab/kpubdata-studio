@@ -56,6 +56,11 @@ Builder 계약에 있는 것을 다시 옮겨 적은 것이었다. 이제 값은
 | 스키마의 모양, 어떤 필드가 어떤 enum 인지 | `builderApi.schema.ts` — `builderEnum("BuildJob.status")` | 손으로 |
 | **모르는 값이 왔을 때 어떻게 할지** | 그 필드를 선언한 자리 | 손으로 — 생성기가 정하지 않는다 |
 
+`builderApi.schema.ts` 에서 손으로 값을 적는 enum 은 둘만 남는다: `publishErrorCodeSchema` 와
+`queryErrorCodeSchema`. 오류의 `code` 는 계약에 스키마의 enum 으로 선언되어 있지 않고 오류 응답의
+예시로만 있어서 생성할 것이 없다. 계약에 있는 enum 을 다시 손으로 적으면 `builderEnums.test.ts` 가
+실패하고 써야 할 이름을 알려 준다.
+
 enum 의 이름은 계약에서의 위치다: 스키마 자체가 enum 이면 `Schema`, 그 안의 것이면
 `Schema.property[.property…]`.
 

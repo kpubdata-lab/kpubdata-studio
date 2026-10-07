@@ -199,7 +199,7 @@ export const buildManifestResponseSchema = z.object({
   started_at: z.string(),
   finished_at: z.string(),
   schema_version: z.string(),
-  status: z.enum(["ok", "failed", "cancelled"]).optional(),
+  status: builderEnum("BuildManifest.status").optional(),
   partial: z.boolean().optional(),
   inputs: z.array(z.string()).optional(),
   outputs: z.array(z.string()).optional(),
@@ -228,7 +228,7 @@ export const buildManifestResponseSchema = z.object({
  * of it. A non-string is still a type error. The known values stay a plain enum as the
  * first branch so the contract drift check can compare them with Builder's.
  */
-export const knownWireEncodingSchema = z.enum(["number", "decimal_string", "string", "boolean", "json"]);
+export const knownWireEncodingSchema = builderEnum("WireEncoding");
 export const UNSUPPORTED_WIRE_ENCODING = "unsupported";
 export const wireEncodingSchema = z.union([
   knownWireEncodingSchema,
@@ -415,7 +415,7 @@ export const catalogDatasetSchema = z.object({
   tags: z.array(z.string()),
   source_url: z.string().nullable(),
   representation: builderEnum("CatalogDataset.representation"),
-  operations: z.array(z.enum(["list", "get", "schema", "raw", "download"])),
+  operations: z.array(builderEnum("CatalogDataset.operations")),
   query_support: catalogQuerySupportSchema.nullable(),
   requires_service_key: z.boolean(),
   // Backward compat: parsing does not break on old Builder versions that don't send this field yet
@@ -455,7 +455,7 @@ export type CatalogResponse = z.infer<typeof catalogResponseSchema>;
  *  Contains no credential plaintext (the server sends only booleans). */
 /** The principal's last connection test of a provider (kpubdata-builder#842). */
 export const providerLastTestSchema = z.object({
-  status: z.enum(["connected", "failed", "not_configured", "not_testable"]),
+  status: builderEnum("ProviderSummary.last_test.status"),
   checked_at: z.string(),
   error_category: z.string().nullable(),
   response_code: z.number().int().nullable(),
@@ -580,7 +580,7 @@ export type UploadList = z.infer<typeof uploadListSchema>;
  * ============================================
  */
 
-export const stageStatusSchema = z.enum(["completed", "failed", "not_run", "unavailable"]);
+export const stageStatusSchema = builderEnum("StageStatusValue");
 
 export const datasetSourceRefSchema = z.object({
   provider: z.string(),
@@ -606,18 +606,7 @@ export const datasetStatusAxesSchema = z.object({
   refresh: builderEnum("DatasetStatusAxes.refresh"),
   completeness: builderEnum("DatasetStatusAxes.completeness"),
   health: builderEnum("DatasetStatusAxes.health"),
-  access: z.enum([
-    "available",
-    "auth_unknown",
-    "application_required",
-    "params_invalid",
-    "rate_limited",
-    "temporarily_unavailable",
-    "network_error",
-    "insufficient_metadata",
-    "retired",
-    "unknown",
-  ]),
+  access: builderEnum("DatasetStatusAxes.access"),
   maturity: builderEnum("DatasetStatusAxes.maturity"),
 });
 
@@ -769,7 +758,7 @@ export const silverValidationResultSchema = z.object({
  * 1.65.0, 1.68.0). Absent when the sample was not withheld — an empty sample is then a
  * table with no rows.
  */
-export const sampleWithheldReasonSchema = z.enum(["redistribution_forbidden", "pii_declaration_unavailable"]);
+export const sampleWithheldReasonSchema = builderEnum("SilverStageDetailResponse.sample_withheld");
 
 export const silverStageDetailResponseSchema = z.object({
   ...stageDetailBase,
@@ -849,7 +838,7 @@ export const previewSourceSchema = z.object({
   quality_results: z.array(qualityCheckResultSchema),
   /** Bronze original sample before transformation. Can be populated as best effort even if diff_available=false. */
   source_sample: z.array(z.record(z.string(), z.unknown())),
-  sample_mode: z.enum(["first", "random"]),
+  sample_mode: builderEnum("SourcePreview.sample_mode"),
   diff_available: z.boolean(),
   diffs: z.array(previewDiffItemSchema),
   transform_summary: previewTransformSummarySchema.nullable(),
@@ -875,7 +864,7 @@ export const schemaDriftFindingSchema = z.object({
   detail: z.string(),
 });
 
-export const qualityAvailabilitySchema = z.enum(["available", "partial", "unavailable"]);
+export const qualityAvailabilitySchema = builderEnum("BuildQualityResponse.availability");
 
 export const buildQualityResponseSchema = z.object({
   run_id: z.string(),
@@ -975,7 +964,7 @@ export const publishIssueSchema = z.object({
 });
 
 /** A source's terms on redistribution (#688, contract 1.65.0), from most to least open. */
-export const redistributionValueSchema = z.enum(["allowed", "non_commercial", "unknown", "forbidden"]);
+export const redistributionValueSchema = builderEnum("RedistributionVerdict.verdict");
 
 export const redistributionSourceVerdictSchema = z.object({
   source: z.string(),
@@ -1092,7 +1081,7 @@ export const publishBlockedResponseSchema = z.object({
  * ============================================
  */
 
-export const queryStageSchema = z.enum(["silver", "gold"]);
+export const queryStageSchema = builderEnum("QueryRequest.stage");
 
 export const queryRequestSchema = z.object({
   dataset_id: z.string().min(1),
@@ -1184,7 +1173,7 @@ export type QualitySummaryResponse = z.infer<typeof qualitySummaryResponseSchema
  * available/partial/unavailable shared with quality (#486); never-measured
  * values come back as null, never disguised as 0 (#516 principle).
  */
-const monitoringAvailabilitySchema = z.enum(["available", "partial", "unavailable"]);
+const monitoringAvailabilitySchema = builderEnum("MonitoringApiStatus.availability");
 
 export const monitoringApiStatusSchema = z.object({
   availability: monitoringAvailabilitySchema,
@@ -1290,25 +1279,12 @@ export const buildSpecSnapshotResponseSchema = z.object({
   spec_digest: z.string().regex(/^sha256:[0-9a-f]{64}$/),
 });
 
-export const buildEventNameSchema = z.enum([
-  "run_submitted",
-  "run_started",
-  "run_finished",
-  "run_failed",
-  // Builder has emitted this for a cancelled async run since builder#481. Missing
-  // here, every cancelled run's timeline failed to parse.
-  "run_cancelled",
-  "source_fetch_started",
-  // One per finished param_grid combination (builder#648), so a long fetch shows
-  // progress instead of going silent.
-  "source_fetch_progress",
-  "source_fetch_completed",
-  "source_fetch_failed",
-  "stage_started",
-  "stage_completed",
-  "stage_failed",
-  "quality_evaluated",
-]);
+// Two of the values have a history worth keeping next to the schema. `run_cancelled`
+// has been emitted for a cancelled async run since builder#481; while it was missing
+// here, every cancelled run's timeline failed to parse. `source_fetch_progress` comes
+// once per finished param_grid combination (builder#648), so a long fetch shows
+// progress instead of going silent.
+export const buildEventNameSchema = builderEnum("BuildEventName");
 
 export const buildEventStatusSchema = builderEnum("BuildEventStatus");
 
@@ -1377,7 +1353,7 @@ export const adminRunsResponseSchema = z.object({
  * id, a display name (the verified email) and the decision — the Builder stores no token
  * or credential, and anything else it might send is stripped here.
  */
-export const adminUserStatusSchema = z.enum(["pending", "approved", "rejected"]);
+export const adminUserStatusSchema = builderEnum("AdminUser.status");
 
 export const adminUserSchema = z.object({
   /** Irreversible hash of issuer and subject — not an identity. */
@@ -1503,7 +1479,7 @@ export const columnProfileSchema = z.object({
   time_zone: z.string().nullable(),
   sensitivity: z.object({
     /** `not_detected` is not a guarantee: only value patterns and column names are checked. */
-    status: z.enum(["not_detected", "suspected", "allowed_by_spec"]),
+    status: builderEnum("ColumnProfile.sensitivity.status"),
     kinds: z.array(z.string()),
   }),
   status: builderEnum("ColumnProfile.status"),
@@ -1523,7 +1499,7 @@ export const snapshotProfileSchema = z.object({
   algorithm_version: z.number().int().min(1),
   computed_at: z.string(),
   scope: z.object({
-    mode: z.enum(["full"]),
+    mode: builderEnum("SnapshotProfile.scope.mode"),
     sampled: z.boolean(),
     sample_size: z.number().int().nonnegative().nullable(),
   }),
@@ -1574,13 +1550,13 @@ export const warehouseRowsRequestSchema = z.object({
   offset: z.number().int().nonnegative().optional(),
   page_size: z.number().int().min(1).max(500).optional(),
   columns: z.array(z.string()).min(1).optional(),
-  sort: z.array(z.object({ column: z.string(), direction: z.enum(["asc", "desc"]).optional() })).max(8).optional(),
+  sort: z.array(z.object({ column: z.string(), direction: builderEnum("WarehouseRowsRequest.sort.direction").optional() })).max(8).optional(),
   /** Row filters, ANDed. With a filter, `count` defaults to `none`. */
   filters: z
     .array(
       z.object({
         column: z.string(),
-        op: z.enum(["eq", "ne", "lt", "lte", "gt", "gte", "in", "is_null", "is_not_null"]),
+        op: builderEnum("WarehouseRowsRequest.filters.op"),
         value: jsonQueryValueSchema.optional(),
         values: z.array(jsonQueryValueSchema).max(100).optional(),
       }),
@@ -1595,7 +1571,7 @@ export const warehouseRowsResponseSchema = z.object({
   columns: z.array(z.string()),
   column_meta: z.array(columnWireInfoSchema),
   rows: z.array(z.record(z.string(), jsonQueryValueSchema)),
-  order: z.array(z.object({ column: z.string(), direction: z.enum(["asc", "desc"]) })),
+  order: z.array(z.object({ column: z.string(), direction: builderEnum("WarehouseRowsResponse.order.direction") })),
   page: z.object({
     offset: z.number().int().nonnegative(),
     page_size: z.number().int().positive(),
@@ -1605,7 +1581,7 @@ export const warehouseRowsResponseSchema = z.object({
   }),
   /** `not_computed` carries a null value — never read it as 0. An unknown status stays unknown. */
   count: z.object({
-    status: z.union([z.enum(["exact", "estimated", "not_computed"]), z.string()]),
+    status: z.union([builderEnum("WarehouseRowsResponse.count.status"), z.string()]),
     value: z.number().int().nonnegative().nullable(),
   }),
   execution_ms: z.number().int().nonnegative(),
@@ -1615,7 +1591,7 @@ export const warehouseRowsResponseSchema = z.object({
 
 /** POST /warehouse/aggregate (builder#818, contract 1.44.0): named aggregates over a pinned snapshot. */
 export const aggregateMeasureSchema = z.object({
-  fn: z.enum(["count_rows", "count", "count_null", "count_distinct", "sum", "avg", "min", "max"]),
+  fn: builderEnum("WarehouseAggregateRequest.measures.fn"),
   column: z.string().optional(),
   as: z.string().optional(),
   /** Required and true for `sum`: the caller states the column may be added up. */
@@ -1627,7 +1603,7 @@ export const warehouseAggregateRequestSchema = z.object({
   snapshot: z.string().min(1).optional(),
   group_by: z.array(z.string()).max(4).optional(),
   measures: z.array(aggregateMeasureSchema).min(1).max(16),
-  order_by: z.array(z.object({ key: z.string(), direction: z.enum(["asc", "desc"]).optional() })).max(8).optional(),
+  order_by: z.array(z.object({ key: z.string(), direction: builderEnum("WarehouseAggregateRequest.order_by.direction").optional() })).max(8).optional(),
   limit: z.number().int().min(1).max(1000).optional(),
 });
 
@@ -1646,13 +1622,13 @@ export const warehouseAggregateResponseSchema = z.object({
       unit_column: z.string().nullable(),
     }),
   ),
-  order: z.array(z.object({ key: z.string(), direction: z.enum(["asc", "desc"]) })),
+  order: z.array(z.object({ key: z.string(), direction: builderEnum("WarehouseAggregateResponse.order.direction") })),
   unit: z.object({ column: z.string().nullable(), policy: z.string(), check: z.string() }),
   /** Rows that passed the filters, all aggregated. `sampled` is always false today. */
   input: z.object({ row_count: z.number().int().nonnegative(), sampled: z.boolean() }),
   /** `full` — every group is here. `top_n` — the first `limit` after sorting, of `group_count`. */
   result: z.object({
-    completeness: z.union([z.enum(["full", "top_n"]), z.string()]),
+    completeness: z.union([builderEnum("WarehouseAggregateResponse.result.completeness"), z.string()]),
     group_count: z.number().int().nonnegative(),
     returned: z.number().int().nonnegative(),
     limit: z.number().int().positive(),
@@ -1802,7 +1778,7 @@ export type CreateAnalysisResponse = z.infer<typeof createAnalysisResponseSchema
 // --- Document revisions (kpubdata-builder#820, contract 1.59.0) ---
 
 /** Kinds of document Builder keeps revisions of. */
-export const revisionKindSchema = z.enum(["spec", "annotation"]);
+export const revisionKindSchema = builderEnum("DocumentRevision.kind");
 
 /**
  * One immutable revision (`DocumentRevision`). `author` and `created_at` are decided by
@@ -1826,7 +1802,7 @@ export const revisionHistoryResponseSchema = z.object({
   audit: z.array(
     z.object({
       revision: z.number().int(),
-      action: z.enum(["save", "revert"]),
+      action: builderEnum("RevisionHistoryResponse.audit.action"),
       author: z.string(),
       at: z.string(),
     }),
