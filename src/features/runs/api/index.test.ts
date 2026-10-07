@@ -1,25 +1,69 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { BuildJob } from "@/shared/lib/builderApi";
 import type { BuildSpec } from "@/shared/lib/types";
 import { buildRunFromJob, generateRunId } from "./index";
 
 describe("generateRunId", () => {
+  /** What Builder accepts as a run id (`pipeline/context.py`): a safe path segment. */
+  const BUILDER_SAFE = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
+
   it("dataset id를 경로 안전한 슬러그로 정규화한다", () => {
     const runId = generateRunId("My Dataset/2024!");
-    expect(runId).toMatch(/^my-dataset-2024-\d+$/);
+    expect(runId).toMatch(/^my-dataset-2024-\d+-[a-z0-9]{5,}$/);
+    expect(runId).toMatch(BUILDER_SAFE);
   });
 
   it("빈/비영숫자 dataset id는 'build' 기본값으로 대체한다", () => {
     const runId = generateRunId("!!!");
-    expect(runId).toMatch(/^build-\d+$/);
+    expect(runId).toMatch(/^build-\d+-[a-z0-9]{5,}$/);
   });
 
-  it("호출마다 서로 다른 값을 생성한다", async () => {
-    const first = generateRunId("ds");
-    await new Promise((resolve) => setTimeout(resolve, 2));
-    const second = generateRunId("ds");
-    expect(first).not.toBe(second);
+  it("carries the time it was made, so the id still sorts and reads by when", () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      expect(generateRunId("ds")).toMatch(new RegExp(`^ds-${Date.UTC(2026, 9, 7)}-[a-z0-9]{5,}$`));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("makes different ids in the same millisecond (#815)", () => {
+    // The clock does not move: the time cannot be what tells the ids apart.
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      const ids = Array.from({ length: 2000 }, () => generateRunId("ds"));
+
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(new Set(ids.map((id) => id.split("-")[1])).size).toBe(1);
+      for (const id of ids) expect(id).toMatch(BUILDER_SAFE);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("differs in the same millisecond even when the random part repeats", () => {
+    // The count alone keeps one tab's ids apart; the random part is for other tabs.
+    vi.useFakeTimers();
+    const random = vi.spyOn(globalThis.crypto, "getRandomValues").mockImplementation((values) => values);
+    try {
+      vi.setSystemTime(new Date("2026-10-07T00:00:00.000Z"));
+      const ids = Array.from({ length: 200 }, () => generateRunId("ds"));
+
+      expect(new Set(ids).size).toBe(ids.length);
+    } finally {
+      random.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps a long dataset name from making an unbounded id", () => {
+    const runId = generateRunId("x".repeat(500));
+
+    expect(runId.split("-")[0]).toHaveLength(40);
+    expect(runId.length).toBeLessThan(80);
   });
 });
 

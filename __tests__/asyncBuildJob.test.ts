@@ -142,7 +142,7 @@ describe("async build job polling (#245)", () => {
 
     // 실제 Builder 취소 endpoint를 호출한다 — polling만 끊고 "취소된 척"하지 않는다.
     expect(cancelSpy).toHaveBeenCalledTimes(1);
-    expect(cancelSpy.mock.calls[0][0]).toMatch(/^success-\d+$/);
+    expect(cancelSpy.mock.calls[0][0]).toMatch(/^success-\d+-[a-z0-9]{5,}$/);
 
     // Builder가 cancelling → cancelled로 전이하는 것을 polling으로 관찰해 종결한다.
     await settle(POLL_BUDGET_MS);
