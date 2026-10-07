@@ -56,7 +56,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
 
@@ -64,7 +64,7 @@ jobs:
       # Builder and Studio release once a month, in the week holding the month's last
       # Thursday (KST); outside it only a critical patch that names its issue.
       - name: Release window
-        uses: kpubdata-lab/kpubdata/.github/actions/release-window@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-window@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
         with:
           policy: monthly
           critical_patch: ${{ inputs.critical_patch }}
@@ -98,14 +98,14 @@ jobs:
           fi
 
       - name: Write the version
-        uses: kpubdata-lab/kpubdata/.github/actions/set-version@main
+        uses: kpubdata-lab/kpubdata/.github/actions/set-version@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
         with:
           version: ${{ steps.upstream.outputs.version }}
 
       # Studio's version follows Builder's, but its CHANGELOG is its own. A release that
       # changed nothing here still needs a line saying so under `[Unreleased]`.
       - name: Date the CHANGELOG section
-        uses: kpubdata-lab/kpubdata/.github/actions/release-notes@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-notes@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
         with:
           command: promote
           version: ${{ steps.upstream.outputs.version }}
@@ -155,7 +155,7 @@ jobs:
       # On the pull request path, the merge commit itself — not `main`, which by then
       # may be whatever merged next. On a dispatch it is main's head, pinned right away
       # so the tag cannot land on something that merged while the gates ran.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha || github.ref }}
           fetch-depth: 0
@@ -190,7 +190,7 @@ jobs:
       # critical_issue. Re-running this job does not help — it replays the same event,
       # so a Critical-Patch line added to the body after the merge is not seen.
       - name: Release window
-        uses: kpubdata-lab/kpubdata/.github/actions/release-window@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-window@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
         with:
           policy: monthly
           critical_patch: ${{ steps.critical.outputs.patch }}
@@ -200,7 +200,7 @@ jobs:
         id: commit
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: "22"
           cache: npm
@@ -242,7 +242,7 @@ jobs:
       # is still nothing to clean up.
       - name: Release notes from the CHANGELOG
         id: notes
-        uses: kpubdata-lab/kpubdata/.github/actions/release-notes@main
+        uses: kpubdata-lab/kpubdata/.github/actions/release-notes@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
         with:
           command: extract
           version: ${{ steps.tag.outputs.tag }}

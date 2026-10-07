@@ -34,10 +34,10 @@ jobs:
         node-version: ["22", "24"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Setup Node ${{ matrix.node-version }}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
@@ -59,6 +59,12 @@ jobs:
       # 주석·mock 데이터·LLM 프롬프트는 세지 않으므로 기준선은 0이다.
       - name: i18n extraction gate
         run: npm run i18n:check
+
+      # A `uses:` reference to another repository runs whatever its ref points at when
+      # the job starts, so a branch or tag lets code reach the release and review gates
+      # without a change here (#729). Every one must be a full commit SHA.
+      - name: Action pin gate (#729)
+        run: node scripts/check-action-pins.mjs
 
       # A key that no locale file has renders as the key itself, so the user reads
       # "layout.homeLink" where a label should be — nothing else in the build fails
@@ -106,10 +112,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: "22"
           cache: npm
@@ -132,7 +138,7 @@ jobs:
       # 보고 원인을 추측하지 않아도 된다.
       - name: Upload traces on failure
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: playwright-traces
           path: test-results/
@@ -148,10 +154,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: "22"
           cache: npm
@@ -174,17 +180,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Checkout Builder's contract
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           repository: kpubdata-lab/kpubdata-builder
           path: .builder
           sparse-checkout: contract
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: "22"
           cache: npm
@@ -212,7 +218,7 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: kpubdata-lab/kpubdata/.github/actions/release-freeze@main
+      - uses: kpubdata-lab/kpubdata/.github/actions/release-freeze@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
         with:
           github_token: ${{ github.token }}
 
@@ -231,7 +237,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Build and verify the image's Content-Security-Policy
         run: bash scripts/docker-csp-smoke.sh
 

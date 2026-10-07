@@ -31,3 +31,8 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(ci)"
+    # The shared kpubdata actions are pinned to a kpubdata main commit, not a release
+    # tag, so a tag-based bump would move them backwards. They move together with
+    # `node scripts/check-action-pins.mjs --bump-kpubdata SHA` (#729).
+    ignore:
+      - dependency-name: "kpubdata-lab/kpubdata*"
