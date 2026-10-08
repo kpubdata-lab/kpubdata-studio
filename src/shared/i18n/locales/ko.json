@@ -1083,8 +1083,16 @@
       "planDataset": "테이블",
       "planQuery": "쿼리 / 설정",
       "planPreview": "미리보기",
-      "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}}개 source{{mixed}}",
-      "planPreviewSingle": "{{limit}} rows({{mode}}) · {{total}}건 중 표본",
+      "planPreviewMulti": "{{limit}}행({{mode}}) · {{count}}개 source{{mixed}}",
+      "planPreviewSingle": "{{limit}}행({{mode}}) · {{total}}건 중 표본",
+      "planPreviewPartial": "{{limit}}행({{mode}}) · {{extent}}",
+      "qualityOfSample": "source 전체가 아니라 Preview 표본에 대한 결과입니다.",
+      "previewGateTitle": "Preview 가 성공해야 테이블을 만들 수 있습니다",
+      "previewGateNotRun": "이 설정으로 Preview 를 아직 실행하지 않았습니다. Preview 단계에서 데이터를 확인한 뒤 계속하세요.",
+      "previewGateSameReason": "같은 설정으로 테이블을 만들면 같은 이유로 실패합니다. 조건이나 연결을 고친 뒤 Preview 를 다시 실행하세요.",
+      "previewGateBack": "Preview 단계로 돌아가기",
+      "previewFailed": "Preview 실패",
+      "ofSample": "표본 기준",
       "perSourceTitle": "Source별 Preview/Validation",
       "specTitle": "실제 제출될 canonical BuildSpec",
       "specUnavailable": "스펙을 아직 만들 수 없습니다.",
@@ -1128,6 +1136,13 @@
       "diffUnavailable": "Diff를 사용할 수 없습니다",
       "diffUnavailableDesc": "source_sample과 변환 결과의 행이 일치한다고 보장할 수 없어 diff를 계산하지 않았습니다(diff_available=false).",
       "sampleFooter": "{{total}}건 중 {{shown}}건 표시 · {{columns}}개 컬럼",
+      "extentFirst": "처음 {{fetched}}건",
+      "extentFirstOf": "약 {{reported}}건 중 처음 {{fetched}}건",
+      "extentFirstOne": "처음 1건",
+      "extentFirstOneOf": "약 {{reported}}건 중 처음 1건",
+      "sampleFooterPartial": "{{extent}}을 읽어 {{shown}}건 표시 · {{columns}}개 컬럼",
+      "sampleNotice": "이 Preview 는 source 전체가 아니라 표본입니다 — {{extent}}만 읽었습니다. 아래 검증 결과도 이 표본에 대한 것입니다.",
+      "validationOfSample": "source 전체가 아니라 읽어 온 표본 {{fetched}}건에 대한 결과입니다.",
       "validationTitle": "검증 결과 (Validation)",
       "notEvaluated": "Not evaluated / N/A — 이 preview에서 평가된 quality check가 없습니다.",
       "qualityLink": "상세 Quality 보기",
@@ -1299,7 +1314,7 @@
     "schemaSilverNote": "선택한 persisted schema와 KPubData Builder가 보고한 변경만 표시합니다.",
     "schemaGoldNote": "Gold 응답은 column 이름만 제공하며 dtype을 추론하지 않습니다.",
     "changeCol": "변경",
-    "previewNoneDesc": "{{stage}} stage는 persisted sample을 제공하지 않습니다.",
+    "previewNoneDesc": "{{stage}} 단계는 표본을 저장하지 않습니다.",
     "previewNote": "KPubData Builder가 저장한 Silver sample 일부를 확인합니다.",
     "fetchFailed": "Quality 조회 실패",
     "noEvaluated": "평가된 결과가 없습니다.",
@@ -1354,7 +1369,11 @@
     "tabsHint": "Source: {{source}} · Lineage/Schema/Quality 상세는 각 탭에서 확인할 수 있습니다.",
     "schemaNone": "Schema 없음/지원되지 않음",
     "schemaNoneDesc": "{{stage}} stage 응답이 schema를 제공하지 않습니다.",
-    "previewNone": "미리보기 없음/지원되지 않음",
+    "previewZeroRows": "행이 없습니다 (0행)",
+    "previewZeroRowsDesc": "{{stage}} 단계의 결과에 행이 하나도 없습니다. 조건에 맞는 데이터가 없었거나, 앞 단계에서 모두 걸러졌습니다.",
+    "previewUnsupported": "이 단계는 미리보기를 지원하지 않습니다",
+    "previewNoSample": "저장된 표본이 없습니다",
+    "previewNoSampleDesc": "{{stage}} 단계의 표본이 이 실행에는 저장되어 있지 않습니다. 행이 없다는 뜻은 아닙니다.",
     "askAboutThis": "이 테이블에 대해 묻기",
     "labels": {
       "rows": "행",
@@ -2391,6 +2410,12 @@
       "title": "{{feature}} 화면에 문제가 발생했습니다",
       "desc": "이 영역만 일시적으로 표시할 수 없습니다. 사이드바와 다른 메뉴는 정상적으로 사용할 수 있어요. 잠시 후 다시 시도해주세요.",
       "retry": "다시 시도"
+    },
+    "report": {
+      "idLabel": "오류 ID",
+      "withContact": "문제가 계속되면 이 오류 ID와 함께 알려 주세요.",
+      "withoutContact": "문제가 계속되면 관리자에게 이 오류 ID를 알려 주세요.",
+      "contact": "{{contact}}로 문의하기"
     }
   },
   "router": {
@@ -2600,7 +2625,11 @@
     "build": {
       "jobFailed": "실행 잡이 실패했습니다.",
       "someSourcesFailed": "일부 소스 처리가 실패했습니다.",
-      "runFailed": "실행에 실패했습니다."
+      "runFailed": "실행에 실패했습니다.",
+      "ownerLimit": "이미 실행 {{limit}}개가 대기 중이거나 진행 중입니다. 그중 하나가 끝난 뒤 다시 시도하세요.",
+      "ownerLimitOne": "이미 실행 1개가 대기 중이거나 진행 중입니다. 그것이 끝난 뒤 다시 시도하세요.",
+      "ownerLimitUnstated": "한 사용자가 동시에 둘 수 있는 실행 수에 이르렀습니다. 대기 중이거나 진행 중인 실행 하나가 끝난 뒤 다시 시도하세요.",
+      "queueFull": "서버의 실행 대기열이 가득 찼습니다. 잠시 후 다시 시도하세요."
     },
     "mock": {
       "noSpecSnapshot": "Mock 모드에서는 BuildSpec snapshot을 시뮬레이션하지 않습니다. 실연동 모드에서 확인하세요.",
@@ -2880,6 +2909,11 @@
   },
   "dataTable": {
     "truncated": "잘림 — 한도에서 잘린 결과입니다. 정렬하지 않았다면 \"상위 N\" 이 아닙니다",
+    "expand": "펼치기",
+    "collapse": "접기",
+    "expandColumn": "{{column}} 값 펼치기",
+    "collapseColumn": "{{column}} 값 접기",
+    "opensNewTab": "(새 탭에서 열림)",
     "shownRange": "{{from}}–{{to}}행 표시",
     "totalNotComputed": "전체 건수 계산 안 함",
     "totalUnknown": "전체 건수 알 수 없음",
