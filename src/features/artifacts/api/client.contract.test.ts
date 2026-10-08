@@ -98,6 +98,22 @@ describe("the two clients give the same answer", () => {
   });
 });
 
+describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, client) => {
+  // Held by what was asked, not by the other client: both go through the demo's data.
+  it("gives each run its own manifest and its own files", async () => {
+    const [first, second] = DEMO_DATASETS.filter((dataset) => dataset.status === "succeeded").map((dataset) => dataset.buildId);
+    expect(second).toBeDefined();
+
+    const manifests = [await client.getBuildManifest(first), await client.getBuildManifest(second)];
+    const files = [await client.listArtifactFiles(first), await client.listArtifactFiles(second)];
+
+    expect(manifests.map((manifest) => manifest.build_id)).toEqual([first, second]);
+    expect(files[0].every((file) => file.includes(first))).toBe(true);
+    expect(files[1].every((file) => file.includes(second))).toBe(true);
+    expect(files[0]).not.toEqual(files[1]);
+  });
+});
+
 describe.each(CLIENTS)("the %s client", (_name, client) => {
   it("lists files as run-relative POSIX paths", async () => {
     for (const [, runId] of RUNS) {

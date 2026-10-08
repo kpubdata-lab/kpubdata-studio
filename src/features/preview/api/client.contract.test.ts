@@ -22,6 +22,18 @@ const SPEC: BuildSpec = {
   metadata: {},
 };
 
+/** The spec the Builder below previews: the one the test is about to send. */
+let specSent: BuildSpec = SPEC;
+
+/** The options of a `/preview` request body, read field by field. */
+function optionsIn(body: Record<string, unknown>): PreviewOptions {
+  const options: PreviewOptions = {};
+  if (typeof body.limit === "number") options.limit = body.limit;
+  if (body.sample_mode === "first" || body.sample_mode === "random") options.sample_mode = body.sample_mode;
+  if (typeof body.seed === "number") options.seed = body.seed;
+  return options;
+}
+
 /** What the Builder below was last sent, to see that the request carried the options. */
 let lastRequest: { path: string; body: Record<string, unknown> } | undefined;
 
@@ -33,16 +45,16 @@ async function demoBuilder(input: RequestInfo | URL, init?: RequestInit): Promis
   if (init?.method !== "POST" || !path.endsWith("/preview")) {
     throw new Error(`the demo Builder has no route for ${init?.method} ${path}`);
   }
-  const body = JSON.parse(String(init.body)) as Record<string, unknown>;
-  lastRequest = { path, body };
-  const { spec: _yaml, ...options } = body;
-  const response = await demoPreviewClient.preview(SPEC, options as PreviewOptions);
+  const body: unknown = JSON.parse(String(init.body));
+  if (typeof body !== "object" || body === null) throw new Error("a preview request is an object");
+  lastRequest = { path, body: { ...body } };
+  const response = await demoPreviewClient.preview(specSent, optionsIn(lastRequest.body));
   return new Response(JSON.stringify(response), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
 /** Each method once; held to the interface's methods by the first test. */
 const CALLS: Array<[name: keyof PreviewClient, call: (client: PreviewClient, signal?: AbortSignal) => Promise<unknown>]> = [
-  ["preview", (client, signal) => client.preview(SPEC, { limit: 3, sample_mode: "random", seed: 7 }, signal)],
+  ["preview", (client, signal) => client.preview(SPEC, { limit: 2, sample_mode: "random", seed: 7 }, signal)],
 ];
 
 const CLIENTS: Array<[name: string, client: PreviewClient]> = [
@@ -54,6 +66,7 @@ beforeEach(() => {
   clearSessionRefusal();
   resetAuthRenewalForTests();
   lastRequest = undefined;
+  specSent = SPEC;
   vi.spyOn(globalThis, "fetch").mockImplementation(demoBuilder);
 });
 
@@ -78,7 +91,7 @@ describe("the two clients give the same answer", () => {
     expect(fromReal).toStrictEqual(JSON.parse(JSON.stringify(fromDemo)));
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     // The options went to Builder, and came back in the answer as the demo gives them.
-    expect(lastRequest?.body).toMatchObject({ limit: 3, sample_mode: "random", seed: 7 });
+    expect(lastRequest?.body).toMatchObject({ limit: 2, sample_mode: "random", seed: 7 });
     expect(fromReal).toMatchObject({ previews: [{ sample_mode: "random" }] });
   });
 
@@ -87,6 +100,43 @@ describe("the two clients give the same answer", () => {
     const [source] = previews;
 
     expect(source.schema.map((column) => column.name).sort()).toEqual(Object.keys(source.sample[0]).sort());
+  });
+});
+
+describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, client) => {
+  // Values that are not the ones the demo would give if it ignored what it was asked.
+  it("samples as many rows as the limit, and says how many there are in all", async () => {
+    const { previews } = await client.preview(SPEC, { limit: 1 });
+
+    expect(previews[0].sample).toHaveLength(1);
+    expect(previews[0].total_rows).toBe(3);
+  });
+
+  it("samples five rows when no limit is given — all three the demo has", async () => {
+    const { previews } = await client.preview(SPEC);
+
+    expect(previews[0].sample).toHaveLength(3);
+  });
+
+  it("previews the spec it was given: its dataset and its source", async () => {
+    specSent = { ...SPEC, datasetId: "bike-rental", sources: [{ provider: "seoul", dataset: "bike_rental", params: {} }] };
+
+    const response = await client.preview(specSent, { sample_mode: "first" });
+
+    expect(response.dataset_id).toBe("bike-rental");
+    expect(response.previews[0]).toMatchObject({ source_key: "bike_rental", sample_mode: "first" });
+  });
+});
+
+describe("the demo", () => {
+  it("hands out copies of its rows, not the rows", async () => {
+    const first = await demoPreviewClient.preview(SPEC);
+    first.previews[0].sample[0].region = "changed";
+    first.previews[0].sample.length = 0;
+
+    const second = await demoPreviewClient.preview(SPEC);
+    expect(second.previews[0].sample).toHaveLength(3);
+    expect(second.previews[0].sample[0].region).not.toBe("changed");
   });
 });
 

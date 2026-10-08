@@ -8,9 +8,10 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, resetAuthRenewalForTests } from "@/shared/lib/builderApi";
+import { ApiError, resetAuthRenewalForTests, type PublishReadinessResponse } from "@/shared/lib/builderApi";
+import { publishRequestSchema } from "@/shared/lib/builderApi.schema";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
-import { demoPublishClient, realPublishClient, type PublishClient } from "./client";
+import { createDemoPublishClient, demoPublishClient, realPublishClient, type PublishClient } from "./client";
 import { describePublishFailure, publishBuild, reconcilePublish, resetPublishReceipt } from "./index";
 import { MOCK_PUBLISH_READINESS } from "./mockData";
 
@@ -23,6 +24,20 @@ const CREDENTIAL = { HF_TOKEN: "hf_not_a_real_token" };
 /** What the Builder below was last sent. */
 let lastRequest: { method: string; url: URL; headers: Record<string, string>; body: string | undefined } | undefined;
 
+/** The demo the Builder below answers with: the real one, unless a test puts another in. */
+let served: PublishClient = demoPublishClient;
+
+function headersOf(init?: RequestInit): Record<string, string> {
+  return Object.fromEntries(new Headers(init?.headers).entries());
+}
+
+function reconcileRequest(body: string | undefined): { target: "huggingface"; destination: string } {
+  const parsed: unknown = JSON.parse(body ?? "{}");
+  const destination =
+    typeof parsed === "object" && parsed !== null && "destination" in parsed ? String(parsed.destination) : "";
+  return { target: "huggingface", destination };
+}
+
 /** A Builder that holds exactly what the demo holds. */
 async function demoBuilder(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const signal = init?.signal ?? undefined;
@@ -30,20 +45,22 @@ async function demoBuilder(input: RequestInfo | URL, init?: RequestInit): Promis
   const url = new URL(String(input), "http://builder.test");
   const method = init?.method ?? "GET";
   const body = typeof init?.body === "string" ? init.body : undefined;
-  lastRequest = { method, url, headers: { ...(init?.headers as Record<string, string>) }, body };
+  lastRequest = { method, url, headers: headersOf(init), body };
   const route = /\/builds\/([^/]+)\/publish(\/readiness|\/reconcile|\/receipt)?$/.exec(url.pathname);
   if (!route) throw new Error(`the demo Builder has no route for ${method} ${url.pathname}`);
   const runId = decodeURIComponent(route[1]);
   try {
-    if (route[2] === "/readiness") return json(200, await demoPublishClient.readiness(runId, "huggingface"));
-    if (route[2] === "/reconcile") return json(200, await demoPublishClient.reconcile(runId, JSON.parse(body ?? "{}")));
+    if (route[2] === "/readiness") return json(200, await served.readiness(runId, "huggingface"));
+    if (route[2] === "/reconcile") return json(200, await served.reconcile(runId, reconcileRequest(body)));
     if (route[2] === "/receipt") {
-      return json(200, await demoPublishClient.resetReceipt(runId, "huggingface", url.searchParams.get("destination") ?? ""));
+      return json(200, await served.resetReceipt(runId, "huggingface", url.searchParams.get("destination") ?? ""));
     }
-    return json(200, await demoPublishClient.publish(runId, JSON.parse(body ?? "{}")));
+    // Read as Builder reads it: a request the contract would refuse is not published.
+    return json(200, await served.publish(runId, publishRequestSchema.parse(JSON.parse(body ?? "{}"))));
   } catch (error) {
     if (!(error instanceof ApiError)) throw error;
-    return json(error.status, { error: error.message, ...(error.details as object | undefined) });
+    const details = typeof error.details === "object" && error.details !== null ? error.details : {};
+    return json(error.status, { error: error.message, ...details });
   }
 }
 
@@ -65,6 +82,7 @@ const CALLS: Array<[name: keyof PublishClient, call: Call]> = [
 const REFUSALS: Array<[name: string, call: Call, status: number, code: string | undefined]> = [
   ["readiness of a run that is not there", (client) => client.readiness("no-such-run", "huggingface"), 404, undefined],
   ["publish of a run that is not there", (client) => client.publish("no-such-run", { target: "huggingface", destination: DESTINATION }), 404, undefined],
+  // The demo's way of refusing: a Builder sends its blockers here (see "what is the demo's own").
   ["publish of a run that is not ready", (client) => client.publish(NOT_READY, { target: "huggingface", destination: DESTINATION }), 409, "publish_conflict"],
   ["reconcile with no receipt", (client) => client.reconcile(READY, { target: "huggingface", destination: DESTINATION }), 404, "receipt_not_found"],
   ["reset with no receipt", (client) => client.resetReceipt(READY, "huggingface", DESTINATION), 404, "receipt_not_found"],
@@ -79,6 +97,7 @@ beforeEach(() => {
   clearSessionRefusal();
   resetAuthRenewalForTests();
   lastRequest = undefined;
+  served = demoPublishClient;
   vi.spyOn(globalThis, "fetch").mockImplementation(demoBuilder);
 });
 
@@ -109,7 +128,6 @@ describe("the two clients give the same answer", () => {
   it.each([
     ["private by default", {}],
     ["public", { private: false }],
-    ["non-commercial confirmed", { private: true, confirm_non_commercial: true }],
   ])("a publish, %s", async (_name, options) => {
     const request = { target: "huggingface" as const, destination: DESTINATION, options };
     const fromDemo = await demoPublishClient.publish(READY, request);
@@ -120,16 +138,23 @@ describe("the two clients give the same answer", () => {
   });
 });
 
-describe.each(CLIENTS)("the %s client", (_name, client) => {
+function codeOf(error: ApiError): unknown {
+  const details: unknown = error.details;
+  return typeof details === "object" && details !== null && "code" in details ? details.code : undefined;
+}
+
+describe.each(CLIENTS)("the %s client", (name, client) => {
   it.each(REFUSALS)("refuses %s", async (_what, call, status, code) => {
-    const refusal = await call(client).then(
+    const refusal: unknown = await call(client).then(
       () => undefined,
       (error: unknown) => error,
     );
 
-    expect(refusal).toBeInstanceOf(ApiError);
-    expect((refusal as ApiError).status).toBe(status);
-    expect(((refusal as ApiError).details as { code?: string } | undefined)?.code).toBe(code);
+    if (!(refusal instanceof ApiError)) throw new Error(`expected an ApiError, got ${String(refusal)}`);
+    expect(refusal.status).toBe(status);
+    expect(codeOf(refusal)).toBe(code);
+    // The demo refuses by itself; a Builder is asked once, and not again.
+    expect(globalThis.fetch).toHaveBeenCalledTimes(name === "real" ? 1 : 0);
   });
 
   it.each(CALLS)("%s gives no answer once the caller has given up", async (_method, call) => {
@@ -142,6 +167,93 @@ describe.each(CLIENTS)("the %s client", (_name, client) => {
     });
 
     expect(settled).not.toHaveBeenCalled();
+  });
+});
+
+describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, client) => {
+  // Values that are not the ones the demo would give if it ignored what it was asked.
+  it("gives each run its own readiness", async () => {
+    const ready = await client.readiness(READY, "huggingface");
+    const notReady = await client.readiness(NOT_READY, "huggingface");
+
+    expect(ready).toMatchObject({ run_id: READY, ready: true, blockers: [] });
+    expect(notReady.run_id).toBe(NOT_READY);
+    expect(notReady.ready).toBe(false);
+    expect(notReady.blockers).not.toHaveLength(0);
+  });
+
+  it("publishes the run asked, where asked, as visible as asked", async () => {
+    const other = RUNS.find((run) => run !== READY && MOCK_PUBLISH_READINESS[run].ready);
+    if (!other) throw new Error("the demo needs a second run that is ready");
+
+    const shown = await client.publish(other, {
+      target: "huggingface",
+      destination: "another-org/another-name",
+      options: { private: false },
+    });
+    const hidden = await client.publish(other, {
+      target: "huggingface",
+      destination: "another-org/another-name",
+      options: { private: true },
+    });
+
+    expect(shown).toMatchObject({
+      run_id: other,
+      destination: "another-org/another-name",
+      reference: "https://huggingface.co/datasets/another-org/another-name",
+      status: "published_public",
+    });
+    expect(hidden.status).toBe("published_private");
+  });
+});
+
+describe("a run whose source terms allow non-commercial use only", () => {
+  // No demo run has a redistribution verdict, so the demo is given one: without it
+  // the confirmation below would be compared on a branch nothing reaches.
+  const RUN = "non-commercial-run";
+  const READINESS: Record<string, PublishReadinessResponse> = {
+    [RUN]: {
+      run_id: RUN,
+      target: "huggingface",
+      ready: true,
+      blockers: [],
+      warnings: [],
+      redistribution: { verdict: "non_commercial", sources: [] },
+    },
+  };
+  const withVerdict = createDemoPublishClient(READINESS);
+
+  beforeEach(() => {
+    served = withVerdict;
+  });
+
+  it.each([
+    ["confirmed", true],
+    ["not confirmed", false],
+  ])("records the verdict and that it was %s, on both clients", async (_name, confirmed) => {
+    const request = {
+      target: "huggingface" as const,
+      destination: DESTINATION,
+      options: { confirm_non_commercial: confirmed },
+    };
+
+    const fromDemo = await withVerdict.publish(RUN, request);
+    const fromReal = await realPublishClient.publish(RUN, request);
+
+    expect(fromDemo.redistribution).toMatchObject({ verdict: "non_commercial", confirm_non_commercial: confirmed });
+    expect(fromReal).toStrictEqual(JSON.parse(JSON.stringify(fromDemo)));
+  });
+});
+
+describe("the demo", () => {
+  it("hands out a copy of a readiness, not the fixture", async () => {
+    const first = await demoPublishClient.readiness(NOT_READY, "huggingface");
+    first.blockers.length = 0;
+    first.ready = true;
+
+    const second = await demoPublishClient.readiness(NOT_READY, "huggingface");
+    expect(second.ready).toBe(false);
+    expect(second.blockers).not.toHaveLength(0);
   });
 });
 

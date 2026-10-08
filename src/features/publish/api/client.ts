@@ -22,14 +22,12 @@ import {
   type PublishResponse,
   type PublishTarget,
 } from "@/shared/lib/builderApi";
+import type { PublishReceiptReset, PublishReconcileResponse } from "@/shared/lib/builderApi.schema";
 import { i18n } from "@/shared/i18n";
 import { MOCK_PUBLISH_READINESS, mockPublishResult } from "./mockData";
 
 /** All wording in this file lives under `publish.errors.*` (#350). */
 const t = (key: string): string => i18n.t(`publish.errors.${key}`);
-
-export type PublishReconcileResponse = Awaited<ReturnType<typeof builderApi.reconcilePublish>>;
-export type PublishReceiptReset = Awaited<ReturnType<typeof builderApi.resetPublishReceipt>>;
 
 /**
  * What the publish screens ask for. Every method resolves with the response as Builder's
@@ -85,37 +83,49 @@ function noReceipt(): ApiError {
   return new ApiError(404, t("recoveryFailed"), { code: "receipt_not_found" });
 }
 
-export const demoPublishClient: PublishClient = {
-  async readiness(runId, _target, signal) {
-    throwIfAborted(signal);
-    const readiness = MOCK_PUBLISH_READINESS[runId];
-    if (!readiness) throw new ApiError(404, t("readinessNotFound"));
-    return readiness;
-  },
-  async publish(runId, request, signal) {
-    throwIfAborted(signal);
-    const readiness = MOCK_PUBLISH_READINESS[runId];
-    if (!readiness) throw new ApiError(404, t("runNotFound"));
-    if (!readiness.ready || readiness.blockers.length > 0) {
-      throw new ApiError(409, t("notReady"), { code: "publish_conflict" });
-    }
-    return mockPublishResult(
-      runId,
-      request.destination,
-      request.options?.private ?? true,
-      readiness.redistribution ?? null,
-      request.options?.confirm_non_commercial === true,
-    );
-  },
-  async reconcile(_runId, _request, signal) {
-    throwIfAborted(signal);
-    throw noReceipt();
-  },
-  async resetReceipt(_runId, _target, _destination, signal) {
-    throwIfAborted(signal);
-    throw noReceipt();
-  },
-};
+/**
+ * A demo client over `readiness`: what each run's readiness is, and so whether it may
+ * be published. The demo uses its fixtures; a test gives its own to reach what they do
+ * not hold.
+ */
+export function createDemoPublishClient(
+  readinessByRun: Readonly<Record<string, PublishReadinessResponse>>,
+): PublishClient {
+  return {
+    async readiness(runId, _target, signal) {
+      throwIfAborted(signal);
+      const readiness = readinessByRun[runId];
+      if (!readiness) throw new ApiError(404, t("readinessNotFound"));
+      // A copy: a caller that changed it would change the demo for everyone after it.
+      return structuredClone(readiness);
+    },
+    async publish(runId, request, signal) {
+      throwIfAborted(signal);
+      const readiness = readinessByRun[runId];
+      if (!readiness) throw new ApiError(404, t("runNotFound"));
+      if (!readiness.ready || readiness.blockers.length > 0) {
+        throw new ApiError(409, t("notReady"), { code: "publish_conflict" });
+      }
+      return mockPublishResult(
+        runId,
+        request.destination,
+        request.options?.private ?? true,
+        readiness.redistribution ?? null,
+        request.options?.confirm_non_commercial === true,
+      );
+    },
+    async reconcile(_runId, _request, signal) {
+      throwIfAborted(signal);
+      throw noReceipt();
+    },
+    async resetReceipt(_runId, _target, _destination, signal) {
+      throwIfAborted(signal);
+      throw noReceipt();
+    },
+  };
+}
+
+export const demoPublishClient: PublishClient = createDemoPublishClient(MOCK_PUBLISH_READINESS);
 
 /** The client in force: Builder's when one is configured, the demo's otherwise. */
 export function publishClient(): PublishClient {

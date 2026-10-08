@@ -81,7 +81,8 @@ const DEMO_CATALOG: CatalogResponse = {
 export const demoDiscoverClient: DiscoverClient = {
   async catalog(signal) {
     if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
-    return DEMO_CATALOG;
+    // A copy: a caller that changed it would change the demo for everyone after it.
+    return structuredClone(DEMO_CATALOG);
   },
 };
 
