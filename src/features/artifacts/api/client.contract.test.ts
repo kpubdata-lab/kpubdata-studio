@@ -108,6 +108,9 @@ describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, cl
     const files = [await client.listArtifactFiles(first), await client.listArtifactFiles(second)];
 
     expect(manifests.map((manifest) => manifest.build_id)).toEqual([first, second]);
+    // Not empty: `every` is true of no files at all.
+    expect(files[0].length).toBeGreaterThan(0);
+    expect(files[1].length).toBeGreaterThan(0);
     expect(files[0].every((file) => file.includes(first))).toBe(true);
     expect(files[1].every((file) => file.includes(second))).toBe(true);
     expect(files[0]).not.toEqual(files[1]);

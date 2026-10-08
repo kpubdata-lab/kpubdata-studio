@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, resetAuthRenewalForTests } from "@/shared/lib/builderApi";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
 import { demoDatasetsClient, realDatasetsClient, type DatasetsClient } from "./client";
-import { MOCK_DATASETS, MOCK_RUNS, MOCK_STAGES } from "./mockData";
+import { MOCK_DATASETS, MOCK_QUALITY, MOCK_RUNS, MOCK_STAGES } from "./mockData";
 
 const DATASET = MOCK_DATASETS.datasets[0].dataset_id;
 const RUN = MOCK_RUNS[DATASET].runs[0].run_id;
@@ -47,13 +47,20 @@ function route(parts: string[], params: URLSearchParams, limit: (fallback: numbe
   if (head === "datasets" && third === "quality" && fourth === "history") return demo.getDatasetQualityHistory(id, limit(30));
   if (head === "builds" && third === "stages" && parts.length === 3) return demo.listBuildStages(id);
   if (head === "builds" && third === "stages" && parts.length === 4) {
-    return demo.getBuildStageDetail(id, fourth as "bronze" | "silver" | "gold", params.get("source") ?? "", limit(5));
+    if (!isStage(fourth)) throw new Error(`not a stage: ${fourth}`);
+    return demo.getBuildStageDetail(id, fourth, params.get("source") ?? "", limit(5));
   }
   if (head === "builds" && third === "quality") return demo.getBuildQuality(id);
   if (head === "quality" && id === "issues") {
     return demo.listQualityIssues({ datasetId: params.get("dataset_id") ?? undefined, limit: limit(100) });
   }
   throw new Error(`the demo Builder has no route for /${parts.join("/")}`);
+}
+
+const STAGES = ["bronze", "silver", "gold"] as const;
+
+function isStage(value: string | undefined): value is (typeof STAGES)[number] {
+  return STAGES.some((stage) => stage === value);
 }
 
 function json(status: number, body: unknown): Response {
@@ -154,16 +161,40 @@ describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, cl
     expect((await client.listDatasetRuns(OTHER, 50)).runs).toEqual(MOCK_RUNS[OTHER].runs);
   });
 
-  it("gives the run asked for", async () => {
+  it("gives the run asked for, of the table asked for", async () => {
+    // A second run of the first table, and a run of another table: a client that
+    // answered with the first run it has would give neither.
+    const [, secondRun] = MOCK_RUNS[DATASET].runs;
+    const otherRun = MOCK_RUNS[OTHER].runs[0];
+    expect(secondRun).toBeDefined();
+
     expect(await client.getDatasetRun(DATASET, RUN)).toMatchObject({ dataset_id: DATASET, run: { run_id: RUN } });
+    expect(await client.getDatasetRun(DATASET, secondRun.run_id)).toMatchObject({
+      dataset_id: DATASET,
+      run: { run_id: secondRun.run_id },
+    });
+    expect(await client.getDatasetRun(OTHER, otherRun.run_id)).toMatchObject({
+      dataset_id: OTHER,
+      run: { run_id: otherRun.run_id },
+    });
   });
 
-  it("gives the stages and the quality of the run asked for", async () => {
+  it("gives the stages of the run asked for", async () => {
     const runs = Object.keys(MOCK_STAGES);
     expect(runs.length).toBeGreaterThan(1);
 
     for (const runId of runs.slice(0, 2)) {
       expect(await client.listBuildStages(runId)).toEqual(JSON.parse(JSON.stringify(MOCK_STAGES[runId])));
+    }
+  });
+
+  it("gives the quality of the run asked for", async () => {
+    const runs = Object.keys(MOCK_QUALITY);
+    expect(runs.length).toBeGreaterThan(1);
+    expect(JSON.stringify(MOCK_QUALITY[runs[0]])).not.toBe(JSON.stringify(MOCK_QUALITY[runs[1]]));
+
+    for (const runId of runs.slice(0, 2)) {
+      expect(await client.getBuildQuality(runId)).toEqual(JSON.parse(JSON.stringify(MOCK_QUALITY[runId])));
     }
   });
 
@@ -175,7 +206,8 @@ describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, cl
     expect(here.issues.every((issue) => issue.dataset_id === DATASET)).toBe(true);
     expect(here.coverage.tables).toBe(1);
     expect(everywhere.coverage.tables).toBe(MOCK_DATASETS.datasets.length);
-    expect(few.issues.length).toBeLessThanOrEqual(1);
+    expect(everywhere.issues.length).toBeGreaterThan(1);
+    expect(few.issues).toHaveLength(1);
   });
 });
 
