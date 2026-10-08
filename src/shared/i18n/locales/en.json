@@ -2615,6 +2615,7 @@
       "someSourcesFailed": "Some sources failed to process.",
       "runFailed": "The run failed.",
       "ownerLimit": "You already have {{limit}} runs queued or running. Try again when one of them has finished.",
+      "ownerLimitOne": "You already have 1 run queued or running. Try again when it has finished.",
       "ownerLimitUnstated": "You have reached the number of runs one user may have at a time. Try again when one of your queued or running runs has finished.",
       "queueFull": "The server's run queue is full. Try again shortly."
     },
