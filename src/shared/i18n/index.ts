@@ -77,6 +77,19 @@ void i18n
     returnNull: false,
   });
 
+/**
+ * The page says which language it is in (#841). `index.html` says Korean, the language
+ * Studio starts in; this keeps `<html lang>` true when the reader's stored choice, or the
+ * switcher, makes it English. A screen reader picks its voice by it, and a browser its
+ * offer to translate.
+ */
+function syncDocumentLanguage(language: string | undefined): void {
+  if (typeof document !== "undefined") document.documentElement.lang = normalizeLanguage(language);
+}
+
+i18n.on("languageChanged", syncDocumentLanguage);
+i18n.on("initialized", () => syncDocumentLanguage(i18n.language));
+
 function readStoredLanguage(): string | null {
   try {
     return window.localStorage.getItem(LANGUAGE_STORAGE_KEY);

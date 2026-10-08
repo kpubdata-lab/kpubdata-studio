@@ -27,6 +27,7 @@ RUN KPUBDATA_CSP_META=off npx vite build --base /
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/security-headers.conf /etc/nginx/kpubdata-security-headers.conf
 COPY --chmod=755 docker/40-kpubdata-config.sh /docker-entrypoint.d/40-kpubdata-config.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 # The only files the container writes, and the only ones its user may: the runtime
