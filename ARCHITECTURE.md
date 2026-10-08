@@ -158,7 +158,8 @@ Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다
 것을 아무것도 말해 주지 않는다. 그래서 기능은 **클라이언트 인터페이스 하나**를 두고 구현 둘이 그것을
 만족하게 한다.
 
-지금 이 구조인 기능은 **datasets** 하나다(`src/features/datasets/api/client.ts`).
+지금 이 구조인 기능은 **datasets** 와 **artifacts** 다(`src/features/<기능>/api/client.ts`). 아래 표는
+datasets 의 이름이고 artifacts 도 같은 모양이다(`ArtifactsClient`).
 
 | | 무엇 |
 |---|---|
@@ -172,8 +173,11 @@ Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다
 Builder**(fetch 를 바꿔 끼운 것)에 붙여서, 데모의 답이 JSON 과 계약의 응답 스키마를 거쳐도 그대로인지
 본다. 데모가 계약에 없는 필드나 값을 화면에 넘기면 두 답이 달라져 테스트가 실패한다.
 
-나머지 기능(`publish`, `add-data`, `discover`, `artifacts`, `runs`, `preview` 등)과 일부 페이지에는 분기가
-그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
+데모가 Builder 와 다르게 답하는 곳은 숨기지 않고 그 기능의 `client.ts` 와 계약 테스트에 적는다. artifacts 에는
+셋이 있다: 데모는 모르는 run id 에도 답하고, 파일이 없어 다운로드를 거부하며, **끝나지 않은 run 에도
+`finished_at` 없는 manifest 를 준다** — Builder 의 계약에는 없는 manifest 다.
+
+나머지 기능(`publish`, `add-data`, `discover`, `runs`, `preview` 등)과 일부 페이지에는 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
 전제하지 않는다.
 
 ## 6. 주요 프런트엔드 영역
