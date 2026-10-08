@@ -1085,6 +1085,14 @@
       "planPreview": "Preview",
       "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}} sources{{mixed}}",
       "planPreviewSingle": "{{limit}} rows({{mode}}) · sample of {{total}} rows",
+      "planPreviewPartial": "{{limit}} rows({{mode}}) · {{extent}}",
+      "qualityOfSample": "Covers the preview sample, not the whole source.",
+      "previewGateTitle": "The table can be created once the preview succeeds",
+      "previewGateNotRun": "No preview has been run with these settings yet. Check the data in the Preview step, then continue.",
+      "previewGateSameReason": "Creating the table with the same settings fails for the same reason. Fix the conditions or the connection, then run the preview again.",
+      "previewGateBack": "Back to the Preview step",
+      "previewFailed": "Preview failed",
+      "ofSample": "of the sample",
       "perSourceTitle": "Preview/validation per source",
       "specTitle": "The canonical BuildSpec that will be submitted",
       "specUnavailable": "The spec cannot be built yet.",
@@ -1128,6 +1136,13 @@
       "diffUnavailable": "Diff is not available",
       "diffUnavailableDesc": "The rows in source_sample and the transformed result cannot be guaranteed to line up, so no diff was computed (diff_available=false).",
       "sampleFooter": "Showing {{shown}} of {{total}} rows · {{columns}} columns",
+      "extentFirst": "first {{fetched}} rows",
+      "extentFirstOf": "first {{fetched}} rows of about {{reported}}",
+      "extentFirstOne": "first row",
+      "extentFirstOneOf": "first row of about {{reported}}",
+      "sampleFooterPartial": "Read the {{extent}}, showing {{shown}} · {{columns}} columns",
+      "sampleNotice": "This preview is a sample, not the whole source: it read only the {{extent}}. The validation results below cover this sample.",
+      "validationOfSample": "These results cover the {{fetched}} rows read, not the whole source.",
       "validationTitle": "Validation",
       "notEvaluated": "Not evaluated / N/A — no quality check ran in this preview.",
       "qualityLink": "Open Quality",
@@ -1354,7 +1369,11 @@
     "tabsHint": "Source: {{source}} · lineage, schema and quality details are in their own tabs.",
     "schemaNone": "No schema / not supported",
     "schemaNoneDesc": "The {{stage}} stage response does not provide a schema.",
-    "previewNone": "No preview / not supported",
+    "previewZeroRows": "No rows (0 rows)",
+    "previewZeroRowsDesc": "The {{stage}} stage produced no rows at all. No data matched the conditions, or an earlier stage filtered everything out.",
+    "previewUnsupported": "This stage does not support a preview",
+    "previewNoSample": "No sample is stored",
+    "previewNoSampleDesc": "This run has no stored sample of the {{stage}} stage. That does not mean it has no rows.",
     "askAboutThis": "Ask about this table",
     "labels": {
       "rows": "Rows",
@@ -2391,6 +2410,12 @@
       "title": "Something went wrong in {{feature}}",
       "desc": "Only this area is temporarily unavailable. The sidebar and other menus still work. Try again in a moment.",
       "retry": "Try again"
+    },
+    "report": {
+      "idLabel": "Error ID",
+      "withContact": "If it keeps happening, report it with this error ID.",
+      "withoutContact": "If it keeps happening, give this error ID to your administrator.",
+      "contact": "Contact {{contact}}"
     }
   },
   "router": {
@@ -2600,7 +2625,11 @@
     "build": {
       "jobFailed": "The run job failed.",
       "someSourcesFailed": "Some sources failed to process.",
-      "runFailed": "The run failed."
+      "runFailed": "The run failed.",
+      "ownerLimit": "You already have {{limit}} runs queued or running. Try again when one of them has finished.",
+      "ownerLimitOne": "You already have 1 run queued or running. Try again when it has finished.",
+      "ownerLimitUnstated": "You have reached the number of runs one user may have at a time. Try again when one of your queued or running runs has finished.",
+      "queueFull": "The server's run queue is full. Try again shortly."
     },
     "mock": {
       "noSpecSnapshot": "Mock mode does not simulate a BuildSpec snapshot. Check it in real-integration mode.",
@@ -2880,6 +2909,11 @@
   },
   "dataTable": {
     "truncated": "Truncated — cut at the limit. Unless the query ordered it, this is not the \"top N\"",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "expandColumn": "Expand the value of {{column}}",
+    "collapseColumn": "Collapse the value of {{column}}",
+    "opensNewTab": "(opens in a new tab)",
     "shownRange": "rows {{from}}–{{to}} shown",
     "totalNotComputed": "total not computed",
     "totalUnknown": "total unknown",

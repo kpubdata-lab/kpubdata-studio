@@ -44,6 +44,7 @@ import { z } from "zod";
 import { renderBuilderEnums } from "../../../scripts/generate-builder-enums.mjs";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
 import { probeRateLimited } from "@/features/provider/probeRefusal";
+import { buildRefusal } from "@/features/runs/buildRefusal";
 import { revisionErrorOutcome } from "@/features/build-spec/specRevisions";
 import { profileRefusal } from "@/features/datasets/profileRefusal";
 import { describePublishFailure, recoveryFailure } from "@/features/publish/api";
@@ -574,6 +575,20 @@ const publishReader = (kind: string): ErrorReader => ({
   check: (status, body) => differs("kind", publishKind(status, body), kind),
 });
 
+/** A build refused for want of room, as the build page reads it (#859). */
+const buildRefusalReader = (code: "build_queue_full" | "build_owner_limit", since: string): ErrorReader => ({
+  reader: "buildRefusal (features/runs/buildRefusal, #859)",
+  since,
+  check: (status, body) => {
+    const refusal = buildRefusal(httpError(status, body));
+    return [
+      ...differs("refusal code", refusal?.code, code),
+      // The limit is what the sentence tells the user; an example without one is a drift.
+      ...(refusal?.code === "build_owner_limit" && refusal.limit === null ? ["limit: not read from the body"] : []),
+    ];
+  },
+});
+
 /** A failed reconcile or reset, as the publish page's recovery panel sees it (#728). */
 const recoveryReader = (kind: string): ErrorReader => ({
   reader: "recoveryFailure (features/publish/api)",
@@ -693,13 +708,14 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     code: "unauthorized",
     since: "1.79.0",
   },
-  // Stable codes for failures any operation can answer (builder#1000, #994). Studio shows
-  // each as its message; acting on the codes (wait and retry, a queue-full notice) is not
-  // built yet.
-  "submitBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.79.0" },
-  // A synchronous build that got no build slot in time (builder#1040). Studio's synchronous
-  // build is the upload path; it shows the message, and the same request can be sent again.
-  "createBuild 429 BuildQueueFull": { notHandled: MESSAGE_ONLY, code: "build_queue_full", since: "1.82.0" },
+  // A build turned away for want of room (builder#1000, #1040, #1189). The build page says
+  // each in the user's language, with the per-user limit when Builder gives it (#859).
+  "submitBuild 429 BuildQueueFull": buildRefusalReader("build_queue_full", "1.79.0"),
+  // The synchronous route. No screen sends it: an upload has gone through `submitBuild`
+  // like every other source since #786, and `builderApi.build` is left without a caller.
+  // Were it called, the same reader would read its refusal — which is what is checked.
+  "createBuild 429 BuildQueueFull": buildRefusalReader("build_queue_full", "1.82.0"),
+  "submitBuild 429 BuildOwnerLimit": buildRefusalReader("build_owner_limit", "1.111.0"),
   "probeProviderKey 429 ProbeRateLimited": {
     reader: "probeRateLimited (features/provider/probeRefusal, #410)",
     since: "1.88.0",

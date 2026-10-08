@@ -23,6 +23,9 @@ import { QualityBadge } from "@/features/quality/QualityBadge";
 import { redactBuildSpecForDisplay } from "@/features/add-data/model";
 import { redactUrlEndpoint } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsText } from "@/features/add-data/paramsRedaction";
+import { previewCoverage, sampleExtentText } from "@/features/add-data/previewCoverage";
+import { PreviewProblemNotice } from "@/features/add-data/components/PreviewProblemNotice";
+import type { PreviewProblem } from "@/features/add-data/previewGate";
 import type { PreviewSource } from "@/shared/lib/builderApi";
 import type { BuildJobStatus } from "@/features/runs/useBuildJob";
 import type { AddDataDraft, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
@@ -39,6 +42,9 @@ export interface ReviewBuildStepProps {
   previewLimit: PreviewLimit;
   previewSampleMode: PreviewSampleMode;
   isStale: boolean;
+  /** What of the preview stops the build, or null (#842). */
+  previewProblem: PreviewProblem | null;
+  onBackToPreview: () => void;
   jobStatus: BuildJobStatus;
   jobError?: string;
   /** Shown under the failure when a provider key is what the build needs (#787). */
@@ -87,6 +93,8 @@ export function ReviewBuildStep({
   previewLimit,
   previewSampleMode,
   isStale,
+  previewProblem,
+  onBackToPreview,
   jobStatus,
   jobError,
   keyNotice,
@@ -104,15 +112,24 @@ export function ReviewBuildStep({
    // Do not fabricate fake single PASS from multiple sources' quality_results — sum results as Builder actually returned
    // (pass/warn/fail counts), and if per-source status varies, display as mixed (#250 §3).
   const totalRows = previewSources.length > 0 ? previewSources[0].total_rows : undefined;
+  // A preview that stopped before the source's end read a sample: its row count is not
+  // the source's size, and the checks ran over those rows only (#847).
+  const coverage = previewSources.length === 1 ? previewCoverage(previewSources[0]) : null;
+  const sampleExtent = coverage?.kind === "sample" ? sampleExtentText(coverage) : null;
+  const anySample = previewSources.some((source) => previewCoverage(source).kind === "sample");
   const previewsSummary = summarizePreviewSources(previewSources);
   const quality = previewSources.length > 0
     ? summarizeChecksPassed(previewSources.flatMap((s) => s.quality_results))
     : null;
+  // A preview that was run and failed is not "a sample of 0 rows", nor "not run" (#842).
+  const previewFailed = !isStale && (previewProblem?.kind === "request_failed" || previewProblem?.kind === "sources_failed");
   const canBuild =
     Boolean(spec) &&
     validation.status === "validated" &&
     validation.valid &&
     !isStale &&
+    // Not on a preview that failed or was never run: the build would fail the same way (#842).
+    previewProblem === null &&
     jobStatus !== "running";
 
   return (
@@ -135,8 +152,12 @@ export function ReviewBuildStep({
                     count: previewSources.length,
                     mixed: previewsSummary.mixed ? " · mixed" : "",
                   })
-                : t("addData.review.previewSingle", { total: totalRows })
-              : t("addData.review.notRun")}
+                : previewFailed
+                  ? t("addData.review.previewFailed")
+                  : (sampleExtent ?? t("addData.review.previewSingle", { total: totalRows }))
+              : previewFailed
+                ? t("addData.review.previewFailed")
+                : t("addData.review.notRun")}
           </p>
         </Card>
         <Card className="p-4">
@@ -152,6 +173,11 @@ export function ReviewBuildStep({
           {previewsSummary.mixed ? (
             <p role="status" className="mt-1 text-xs text-status-warning">
               {t("addData.review.mixedShort")}
+            </p>
+          ) : null}
+          {quality && anySample ? (
+            <p className="mt-1 text-xs text-muted-foreground" data-testid="review-sample-note">
+              {t("addData.review.qualityOfSample")}
             </p>
           ) : null}
         </Card>
@@ -177,6 +203,9 @@ export function ReviewBuildStep({
         )}
         <p className="mt-1 text-xs text-muted-foreground">{t("addData.review.logicalNameNote")}</p>
       </Card>
+
+      {/* A stale preview has its own notice below; this one is about the preview it replaced. */}
+      {isStale ? null : <PreviewProblemNotice onBackToPreview={onBackToPreview} problem={previewProblem} />}
 
       {isStale ? (
         <Card variant="error" className="p-4">
@@ -210,7 +239,9 @@ export function ReviewBuildStep({
               [t("addData.review.planQuery"), querySummary(draft)],
               [
                 t("addData.review.planPreview"),
-                previewSources.length > 0
+                previewFailed
+                  ? t("addData.review.previewFailed")
+                  : previewSources.length > 0
                   ? previewSources.length > 1
                     ? t("addData.review.planPreviewMulti", {
                         limit: previewLimit,
@@ -218,14 +249,27 @@ export function ReviewBuildStep({
                         count: previewSources.length,
                         mixed: previewsSummary.mixed ? " (mixed)" : "",
                       })
-                    : t("addData.review.planPreviewSingle", {
-                        limit: previewLimit,
-                        mode: previewSampleMode,
-                        total: totalRows,
-                      })
+                    : sampleExtent
+                      ? t("addData.review.planPreviewPartial", {
+                          limit: previewLimit,
+                          mode: previewSampleMode,
+                          extent: sampleExtent,
+                        })
+                      : t("addData.review.planPreviewSingle", {
+                          limit: previewLimit,
+                          mode: previewSampleMode,
+                          total: totalRows,
+                        })
                   : t("addData.review.notRun"),
               ],
-              ["Validation", quality ? `${quality.pass}/${quality.evaluated} · ${quality.status}` : t("addData.review.notRun")],
+              [
+                "Validation",
+                quality
+                  ? // A rule on the number of rows judged the sample: `min_rows: 100` fails on 20
+                    // previewed rows of a source the build will pass.
+                    `${quality.pass}/${quality.evaluated} · ${quality.status}${anySample ? ` · ${t("addData.review.ofSample")}` : ""}`
+                  : t("addData.review.notRun"),
+              ],
               ["Output", draft.exportFormats.join(", ").toUpperCase() || "—"],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between gap-3 py-2">
