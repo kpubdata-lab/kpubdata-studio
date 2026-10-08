@@ -252,8 +252,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The same strict docs build deploy.yml runs on main, on every pull
-      # request (Refs #835): a broken docs site should not reach Pages.
+      # The strict docs build of deploy.yml, as a job the CI gate waits for (Refs #835):
+      # deploy.yml's own run on pull requests is to be removed, and a broken docs site
+      # should still not reach Pages. Both install the same range.
       - run: pip install "mkdocs-material>=9,<10"
       - run: mkdocs build --strict
 
