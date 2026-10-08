@@ -158,10 +158,10 @@ Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다
 것을 아무것도 말해 주지 않는다. 그래서 기능은 **클라이언트 인터페이스 하나**를 두고 구현 둘이 그것을
 만족하게 한다.
 
-지금 이 구조인 기능은 **datasets**, **artifacts**, **discover**, **preview**, **add-data** 다
+지금 이 구조인 기능은 **datasets**, **artifacts**, **discover**, **preview**, **add-data**, **publish** 다
 (`src/features/<기능>/api/client.ts`; discover 와 add-data 는 `src/features/<기능>/client.ts`). 아래 표는
 datasets 의 이름이고 나머지도 같은 모양이다(`ArtifactsClient`, `DiscoverClient`, `PreviewClient`,
-`AddDataClient`).
+`AddDataClient`, `PublishClient`).
 
 | | 무엇 |
 |---|---|
@@ -183,7 +183,11 @@ add-data 에도 적어 둔 차이가 있다: 데모의 연결 테스트는 언�
 같은 id 를 주며, **데모의 `GET /catalog` 답이 둘이다** — Add Data 의 것과 Catalog 화면의 것이 서로 다른
 fixture 다.
 
-나머지 기능(`publish`, `runs` 등)과 일부 페이지에는 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
+publish 에서는 거부도 계약의 일부다: 두 구현이 같은 상태 코드와 `code` 로 거부하는지 본다. 데모는 게시를
+어디에도 하지 않고, 영수증이 없으므로 reconcile·reset 에 Builder 와 같은 404 `receipt_not_found` 로 답한다.
+
+**runs 는 아직 이 구조가 아니다.** build 실행은 job 을 제출하고 상태를 폴링하는 흐름이고 데모는 그 흐름 없이
+결과만 돌려주므로, 인터페이스를 어느 높이에 둘지부터 정해야 한다. 일부 페이지에도 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
 전제하지 않는다.
 
 ## 6. 주요 프런트엔드 영역
