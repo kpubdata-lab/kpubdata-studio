@@ -48,6 +48,32 @@ describe("keysWereLost (#787)", () => {
     expect(keysWereLost({ status: "failed", error: "credentials_required: the server restarted" })).toBe(true);
   });
 
+  it("reads the code in the job's response when the job gives no reason of its own (#849)", () => {
+    expect(keysWereLost({ status: "failed", response: { status: "failed", code: "credentials_required" } })).toBe(true);
+    expect(keysWereLost({ status: "failed", code: null, error: null, response: { code: "credentials_required" } })).toBe(true);
+  });
+
+  it("reads an empty reason at the top as none", () => {
+    expect(keysWereLost({ status: "failed", code: "", error: "", response: { code: "credentials_required" } })).toBe(true);
+    expect(keysWereLost({ status: "failed", code: null, error: "", response: { code: "other" } })).toBe(false);
+  });
+
+  it("reads the sentence in the job's response the same way", () => {
+    expect(keysWereLost({ status: "failed", response: { error: "credentials_required: the keys are gone" } })).toBe(true);
+  });
+
+  it.each([
+    ["the job's own code says another reason", { status: "failed", code: "build_timeout", response: { code: "credentials_required" } }],
+    ["the job's own sentence says another reason", { status: "failed", error: "pipeline failed", response: { code: "credentials_required" } }],
+    ["the response says another reason", { status: "failed", response: { code: "build_timeout", error: "took too long" } }],
+    ["the response's code is not text", { status: "failed", response: { code: 42, error: { nested: "credentials_required: x" } } }],
+    ["the response is empty", { status: "failed", response: {} }],
+    ["the response is null", { status: "failed", response: null }],
+    ["a run that did not fail, whatever its response says", { status: "succeeded", response: { code: "credentials_required" } }],
+  ])("is not this: %s", (_name, job) => {
+    expect(keysWereLost(job)).toBe(false);
+  });
+
   it.each([
     ["another failure", { status: "failed", error: "pipeline failed" }],
     ["a failure with no reason", { status: "failed" }],

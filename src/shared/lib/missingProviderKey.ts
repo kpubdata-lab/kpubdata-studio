@@ -49,10 +49,37 @@ export function missingProviderKeys(cause: unknown): MissingProviderKeys | null 
 }
 
 /**
+ * What of a job can say why it failed: its own `code` and `error`, and its `response`.
+ * Builder today always states the reason at the top — no path of it leaves the reason in
+ * `response` alone — so reading `response` is a defence, not a fix for something seen.
+ */
+interface FailedJob {
+  status: string;
+  code?: string | null;
+  error?: string | null;
+  response?: Record<string, unknown> | null;
+}
+
+function saysKeysLost(code: unknown, error: unknown): boolean {
+  if (code === CREDENTIALS_REQUIRED) return true;
+  return typeof error === "string" && error.startsWith(`${CREDENTIALS_REQUIRED}:`);
+}
+
+/**
  * Whether a finished job failed because Builder no longer held its keys. The `code` is
  * read first; a Builder older than contract 1.78.0 says it only in the sentence.
+ *
+ * The job's own `code` and `error` decide when either is there. When the job gives no
+ * reason at the top, the reason in its `response` is read the same way (#849), so that a
+ * Builder which stated `credentials_required` only there would still be understood. An
+ * empty string is no reason: it is read as absent, like null.
  */
-export function keysWereLost(job: { status: string; code?: string | null; error?: string | null }): boolean {
+export function keysWereLost(job: FailedJob): boolean {
   if (job.status !== "failed") return false;
-  return job.code === CREDENTIALS_REQUIRED || (job.error ?? "").startsWith(`${CREDENTIALS_REQUIRED}:`);
+  if (statesAReason(job.code) || statesAReason(job.error)) return saysKeysLost(job.code, job.error);
+  return saysKeysLost(job.response?.code, job.response?.error);
+}
+
+function statesAReason(value: string | null | undefined): boolean {
+  return typeof value === "string" && value !== "";
 }
