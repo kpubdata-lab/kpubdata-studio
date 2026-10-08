@@ -54,6 +54,8 @@ function renderReview(draft: AddDataDraft) {
         tableChoice="new"
         onChooseTable={vi.fn()}
         onRecheckExisting={vi.fn()}
+        previewProblem={null}
+        onBackToPreview={vi.fn()}
         jobStatus="idle"
         onBuild={vi.fn()}
         onCancel={vi.fn()}
@@ -129,6 +131,8 @@ describe("ReviewBuildStep — cancelled wording", () => {
         tableChoice="new"
         onChooseTable={vi.fn()}
         onRecheckExisting={vi.fn()}
+        previewProblem={null}
+        onBackToPreview={vi.fn()}
         jobStatus={props.jobStatus}
         onBuild={vi.fn()}
         onCancel={vi.fn()}

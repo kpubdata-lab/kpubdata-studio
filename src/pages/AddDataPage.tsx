@@ -35,6 +35,7 @@ import {
   type ExistingTableChoice,
   type ExistingTables,
 } from "@/features/add-data/existingTables";
+import { previewProblem } from "@/features/add-data/previewGate";
 import { SourceStep } from "@/features/add-data/components/SourceStep";
 import { getSavedSpec } from "@/features/workspace/savedSpecs";
 import { clearAddDataDraft, hasAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
@@ -194,14 +195,21 @@ export function AddDataPage() {
     const provider = searchParams.get("provider");
     const dataset = searchParams.get("dataset");
     if (!provider || !dataset) return;
-    const found = catalog.providers.find((p) => p.name === provider)?.datasets.find((d) => d.name === dataset);
+    const knownProvider = catalog.providers.find((p) => p.name === provider);
+    const found = knownProvider?.datasets.find((d) => d.name === dataset);
     preselectApplied.current = true;
-    if (!found) return;
     // Source and its settings share the Configure step, so there is no step to skip.
+    // Coming from the Catalog means a public API whatever else is known: the kind is set
+    // even when this catalogue does not list the dataset, so it is not asked for again
+    // (#842). What it does not list is left for the user to pick — never guessed.
     setDraft((current) => ({
       ...current,
       sourceKind: "public_api",
-      publicApi: { ...current.publicApi, provider, dataset },
+      publicApi: found
+        ? { ...current.publicApi, provider, dataset }
+        : knownProvider
+          ? { ...current.publicApi, provider, dataset: "" }
+          : current.publicApi,
     }));
   }, [catalog, searchParams]);
 
@@ -756,6 +764,8 @@ export function AddDataPage() {
             tableChoice={tableChoice}
             onChooseTable={setTableChoice}
             onRecheckExisting={() => setExistingAsked((asked) => asked + 1)}
+            previewProblem={previewProblem(preview)}
+            onBackToPreview={() => setStep(STEP_IDS.indexOf("preview"))}
             jobStatus={job.status}
             jobError={job.error}
             keyNotice={<BuildKeyNotice job={job} />}

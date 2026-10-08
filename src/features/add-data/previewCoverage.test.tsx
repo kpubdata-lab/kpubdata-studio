@@ -90,6 +90,8 @@ function renderReview(...previews: PreviewSource[]) {
       tableChoice="new"
       onChooseTable={vi.fn()}
       onRecheckExisting={vi.fn()}
+      previewProblem={null}
+      onBackToPreview={vi.fn()}
       jobStatus="idle"
       onBuild={vi.fn()}
       onCancel={vi.fn()}
