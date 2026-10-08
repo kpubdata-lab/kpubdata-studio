@@ -85,6 +85,8 @@ function renderReview(...previews: PreviewSource[]) {
       previewLimit={5}
       previewSampleMode="first"
       isStale={false}
+      previewProblem={null}
+      onBackToPreview={vi.fn()}
       jobStatus="idle"
       onBuild={vi.fn()}
       onCancel={vi.fn()}
