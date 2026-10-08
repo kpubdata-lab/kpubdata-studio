@@ -41,6 +41,26 @@ async function resolveManifestStatus(runId: string): Promise<BuildRunStatus | nu
   }
 }
 
+const RUN_STATUSES: readonly BuildRunStatus[] = ["queued", "running", "cancelling", "succeeded", "failed", "cancelled"];
+
+/**
+ * The status of a run that has a job and nothing else (#846).
+ *
+ * A run Builder failed before it started — its provider keys were gone while it
+ * waited — has no run directory: it is in no history list and has no manifest. Its job
+ * still says how it ended. Null when there is no job either, or its status is one this
+ * Studio does not know.
+ */
+async function resolveJobStatus(runId: string): Promise<{ status: BuildRunStatus; startedAt: string } | null> {
+  try {
+    const job = await builderApi.getBuildJob(runId);
+    const status = RUN_STATUSES.find((known) => known === job.status);
+    return status ? { status, startedAt: job.created_at } : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Query build execution info by buildId.
  *
@@ -94,7 +114,8 @@ export async function getBuild(buildId: string): Promise<BuildRun> {
     );
   }
 
-  // 2) status: GET /builds list > authoritative manifest.status > explicit error.
+  // 2) status: GET /builds list > authoritative manifest.status > the job (a run that
+  //    never started has only that) > explicit error.
   const items: BuildListItem[] = await listBuilds().catch(() => [] as BuildListItem[]);
   const item = items.find((candidate) => candidate.id === buildId);
   if (item) {
@@ -110,6 +131,11 @@ export async function getBuild(buildId: string): Promise<BuildRun> {
   const manifestStatus = await resolveManifestStatus(buildId);
   if (manifestStatus) {
     return { id: buildId, spec, status: manifestStatus, startedAt: "", finishedAt: undefined };
+  }
+
+  const job = await resolveJobStatus(buildId);
+  if (job) {
+    return { id: buildId, spec, status: job.status, startedAt: job.startedAt, finishedAt: undefined };
   }
 
   throw new Error(
