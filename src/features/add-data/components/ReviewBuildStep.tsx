@@ -23,6 +23,7 @@ import { QualityBadge } from "@/features/quality/QualityBadge";
 import { redactBuildSpecForDisplay } from "@/features/add-data/model";
 import { redactUrlEndpoint } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsText } from "@/features/add-data/paramsRedaction";
+import { previewCoverage, sampleExtentText } from "@/features/add-data/previewCoverage";
 import type { PreviewSource } from "@/shared/lib/builderApi";
 import type { BuildJobStatus } from "@/features/runs/useBuildJob";
 import type { AddDataDraft, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
@@ -104,6 +105,11 @@ export function ReviewBuildStep({
    // Do not fabricate fake single PASS from multiple sources' quality_results — sum results as Builder actually returned
    // (pass/warn/fail counts), and if per-source status varies, display as mixed (#250 §3).
   const totalRows = previewSources.length > 0 ? previewSources[0].total_rows : undefined;
+  // A preview that stopped before the source's end read a sample: its row count is not
+  // the source's size, and the checks ran over those rows only (#847).
+  const coverage = previewSources.length === 1 ? previewCoverage(previewSources[0]) : null;
+  const sampleExtent = coverage?.kind === "sample" ? sampleExtentText(coverage) : null;
+  const anySample = previewSources.some((source) => previewCoverage(source).kind === "sample");
   const previewsSummary = summarizePreviewSources(previewSources);
   const quality = previewSources.length > 0
     ? summarizeChecksPassed(previewSources.flatMap((s) => s.quality_results))
@@ -135,7 +141,7 @@ export function ReviewBuildStep({
                     count: previewSources.length,
                     mixed: previewsSummary.mixed ? " · mixed" : "",
                   })
-                : t("addData.review.previewSingle", { total: totalRows })
+                : sampleExtent ?? t("addData.review.previewSingle", { total: totalRows })
               : t("addData.review.notRun")}
           </p>
         </Card>
@@ -152,6 +158,11 @@ export function ReviewBuildStep({
           {previewsSummary.mixed ? (
             <p role="status" className="mt-1 text-xs text-status-warning">
               {t("addData.review.mixedShort")}
+            </p>
+          ) : null}
+          {quality && anySample ? (
+            <p className="mt-1 text-xs text-muted-foreground" data-testid="review-sample-note">
+              {t("addData.review.qualityOfSample")}
             </p>
           ) : null}
         </Card>
@@ -218,11 +229,17 @@ export function ReviewBuildStep({
                         count: previewSources.length,
                         mixed: previewsSummary.mixed ? " (mixed)" : "",
                       })
-                    : t("addData.review.planPreviewSingle", {
-                        limit: previewLimit,
-                        mode: previewSampleMode,
-                        total: totalRows,
-                      })
+                    : sampleExtent
+                      ? t("addData.review.planPreviewPartial", {
+                          limit: previewLimit,
+                          mode: previewSampleMode,
+                          extent: sampleExtent,
+                        })
+                      : t("addData.review.planPreviewSingle", {
+                          limit: previewLimit,
+                          mode: previewSampleMode,
+                          total: totalRows,
+                        })
                   : t("addData.review.notRun"),
               ],
               ["Validation", quality ? `${quality.pass}/${quality.evaluated} · ${quality.status}` : t("addData.review.notRun")],
