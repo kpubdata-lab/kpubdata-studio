@@ -48,11 +48,30 @@ export function missingProviderKeys(cause: unknown): MissingProviderKeys | null 
   return { providers: names, keptIn: cause.status === 403 ? "stored" : "request" };
 }
 
+/** What of a job says why it failed: at the top, and — from some paths — in its `response`. */
+interface FailedJob {
+  status: string;
+  code?: string | null;
+  error?: string | null;
+  response?: Record<string, unknown> | null;
+}
+
+function saysKeysLost(code: unknown, error: unknown): boolean {
+  if (code === CREDENTIALS_REQUIRED) return true;
+  return typeof error === "string" && error.startsWith(`${CREDENTIALS_REQUIRED}:`);
+}
+
 /**
  * Whether a finished job failed because Builder no longer held its keys. The `code` is
  * read first; a Builder older than contract 1.78.0 says it only in the sentence.
+ *
+ * The job's own `code` and `error` decide when either is there. When the job gives no
+ * reason at the top, the reason in its `response` is read the same way (#849): a
+ * failure that carried `credentials_required` only there was shown as an ordinary one,
+ * without the way on that this failure has.
  */
-export function keysWereLost(job: { status: string; code?: string | null; error?: string | null }): boolean {
+export function keysWereLost(job: FailedJob): boolean {
   if (job.status !== "failed") return false;
-  return job.code === CREDENTIALS_REQUIRED || (job.error ?? "").startsWith(`${CREDENTIALS_REQUIRED}:`);
+  if (job.code || job.error) return saysKeysLost(job.code, job.error);
+  return saysKeysLost(job.response?.code, job.response?.error);
 }

@@ -97,6 +97,14 @@ describe("buildRunFromJob (#603)", () => {
     expect(run({ status: "succeeded", code: "credentials_required" }).keysLost).toBeUndefined();
   });
 
+  it("marks it too when the reason is only in the job's response (#849)", () => {
+    const inResponse = run({ status: "failed", response: { status: "failed", code: "credentials_required" } });
+    expect(inResponse.keysLost).toBe(true);
+    expect(inResponse.status).toBe("failed");
+    // The job's own reason comes first: another one there is not overruled.
+    expect(run({ status: "failed", code: "build_timeout", response: { code: "credentials_required" } }).keysLost).toBeUndefined();
+  });
+
   it("falls back to the response's error, then a default, when the job has none", () => {
     expect(run({ status: "failed", response: { error: "from body" } }).error).toBe("from body");
     expect(run({ status: "failed", response: { error: 42 } }).error).toBe("실행 잡이 실패했습니다.");
