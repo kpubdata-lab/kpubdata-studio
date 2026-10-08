@@ -46,7 +46,6 @@ jobs:
         run: npm ci
         env:
           # npm이 runner-writable 경로 사용하도록 강제 설정
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
           npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
       - name: Lint (ESLint)
@@ -123,7 +122,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
         env:
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
           npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
       # Browsers are not downloaded: the image already holds them (PLAYWRIGHT_BROWSERS_PATH).
@@ -165,7 +163,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
         env:
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
           npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
       - name: Test with coverage
@@ -198,7 +195,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
         env:
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
           npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
       - name: Compare schemas with the contract
