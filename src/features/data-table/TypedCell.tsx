@@ -31,11 +31,16 @@ export function cellAlignment(kind: CellKind): string {
 export interface TypedCellProps {
   encoding: WireEncoding | undefined;
   logicalType: string | undefined;
+  /** `semantic.kind`, when Builder said what the column means. */
+  semanticKind?: string;
+  /** The column's name, for the controls a cell has: several cells on a page have one. */
+  column: string;
   value: unknown;
 }
 
-export function TypedCell({ encoding, logicalType, value }: TypedCellProps) {
-  const display = cellDisplay(encoding, logicalType, value);
+export function TypedCell({ encoding, logicalType, semanticKind, column, value }: TypedCellProps) {
+  const { t } = useTranslation();
+  const display = cellDisplay(encoding, logicalType, value, semanticKind);
   if (display.kind === "missing") return <span className="text-muted-foreground">{display.text}</span>;
   if (display.kind === "link") {
     return (
@@ -48,6 +53,9 @@ export function TypedCell({ encoding, logicalType, value }: TypedCellProps) {
         title={display.text}
       >
         {display.text}
+        {/* It leaves the page: said to a screen reader, marked for the eye. */}
+        <span aria-hidden="true"> ↗</span>
+        <span className="sr-only"> {t("dataTable.opensNewTab")}</span>
       </a>
     );
   }
@@ -73,18 +81,28 @@ export function TypedCell({ encoding, logicalType, value }: TypedCellProps) {
       </span>
     );
   }
-  return <TextCell text={display.text} />;
+  // Keyed by its text: a cell opened on one page is not found open on the next, where the
+  // same row of the table holds another value.
+  return <TextCell column={column} key={display.text} text={display.text} />;
 }
 
-function TextCell({ text }: { text: string }) {
+function TextCell({ text, column }: { text: string; column: string }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  if (text.length <= LONG_TEXT) return <span data-cell-kind="text">{text}</span>;
+  if (text.length <= LONG_TEXT) {
+    // One line, as every cell was: wide characters would otherwise wrap a short text.
+    return (
+      <span className="block max-w-72 truncate" data-cell-kind="text" title={text}>
+        {text}
+      </span>
+    );
+  }
   return (
     <span className="flex items-start gap-2" data-cell-kind="text" data-cell-long="">
       <span className={open ? "max-w-xl whitespace-pre-wrap break-words" : "block max-w-72 truncate"}>{text}</span>
       <button
         aria-expanded={open}
+        aria-label={open ? t("dataTable.collapseColumn", { column }) : t("dataTable.expandColumn", { column })}
         className="shrink-0 rounded border border-border px-1.5 font-sans text-[11px] text-muted-foreground hover:bg-muted"
         onClick={() => setOpen((was) => !was)}
         type="button"

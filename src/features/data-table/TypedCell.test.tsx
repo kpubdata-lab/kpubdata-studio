@@ -91,6 +91,20 @@ describe("cellDisplay", () => {
     expect(cellDisplay("string", type, value)).toStrictEqual({ kind: "text", text: value });
   });
 
+  it.each(["code", "period", "date", "flag", "text", "a-kind-of-a-later-builder"])(
+    "does not draw a numeric column whose values are a %s as quantities",
+    (kind) => {
+      // A legal-dong code kept as an integer, a 202410: digits, not an amount.
+      expect(cellDisplay("number", "int64", 1111010100, kind)).toStrictEqual({ kind: "text", text: "1111010100" });
+    },
+  );
+
+  it("draws a numeric column said to be a measure, or said nothing of, as quantities", () => {
+    expect(cellDisplay("number", "int64", 1111010100, "measure").kind).toBe("number");
+    expect(cellDisplay("number", "int64", 1111010100).kind).toBe("number");
+    expect(cellDisplay("number", "int64", 1111010100, undefined).digits?.groups).toEqual(["1", "111", "010", "100"]);
+  });
+
   it("reads a date column, and leaves a text column that looks like a date alone", () => {
     expect(cellDisplay("string", "datetime", "2026-09-08T13:05:00")).toStrictEqual({ kind: "date", text: "2026-09-08 13:05" });
     expect(cellDisplay("string", "date", "2026-09-08")).toStrictEqual({ kind: "date", text: "2026-09-08" });
@@ -125,9 +139,10 @@ describe("cellDisplay", () => {
 
 describe("TypedCell", () => {
   it("opens a link elsewhere and passes nothing on to it", () => {
-    render(<TypedCell encoding="string" logicalType="string" value="https://example.org/a" />);
+    render(<TypedCell column="note" encoding="string" logicalType="string" value="https://example.org/a" />);
 
-    const link = screen.getByRole("link", { name: "https://example.org/a" });
+    // Its name says where it goes and that it opens elsewhere.
+    const link = screen.getByRole("link", { name: /^https:\/\/example\.org\/a.*새 탭에서 열림/ });
     expect(link).toHaveAttribute("href", "https://example.org/a");
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
@@ -135,21 +150,23 @@ describe("TypedCell", () => {
 
   it("opens a long text in place and closes it again", () => {
     const long = "가".repeat(LONG_TEXT + 1);
-    render(<TypedCell encoding="string" logicalType="string" value={long} />);
+    render(<TypedCell column="note" encoding="string" logicalType="string" value={long} />);
 
-    const control = screen.getByRole("button", { name: "펼치기" });
+    // Named by its column: a page has one such control in every long cell.
+    const control = screen.getByRole("button", { name: "note 값 펼치기" });
     expect(control).toHaveAttribute("aria-expanded", "false");
+    expect(control).toHaveTextContent("펼치기");
     // All of it is in the page either way: cut by the layout, not by the text.
     expect(screen.getByText(long)).toBeInTheDocument();
     fireEvent.click(control);
-    expect(screen.getByRole("button", { name: "접기" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "note 값 접기" })).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText(long).className).toContain("whitespace-pre-wrap");
-    fireEvent.click(screen.getByRole("button", { name: "접기" }));
-    expect(screen.getByRole("button", { name: "펼치기" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "note 값 접기" }));
+    expect(screen.getByRole("button", { name: "note 값 펼치기" })).toBeInTheDocument();
   });
 
   it("draws a number's digits in threes without writing a separator into its text", () => {
-    const { container } = render(<TypedCell encoding="decimal_string" logicalType="decimal" value="-9007199254740993.10" />);
+    const { container } = render(<TypedCell column="note" encoding="decimal_string" logicalType="decimal" value="-9007199254740993.10" />);
 
     // What is read, searched and copied is what Builder sent.
     expect(container.textContent).toBe("-9007199254740993.10");
@@ -159,8 +176,25 @@ describe("TypedCell", () => {
     expect(groups.map((group) => group.className.includes("before:content-[',']"))).toEqual([false, true, true, true, true, true]);
   });
 
+  it("does not leave a cell open for the value that takes its place", () => {
+    // A table page is drawn into the same rows as the one before it.
+    const first = "가".repeat(LONG_TEXT + 1);
+    const { rerender } = render(<TypedCell column="note" encoding="string" logicalType="string" value={first} />);
+    fireEvent.click(screen.getByRole("button", { name: "note 값 펼치기" }));
+
+    rerender(<TypedCell column="note" encoding="string" logicalType="string" value={"나".repeat(LONG_TEXT + 1)} />);
+
+    expect(screen.getByRole("button", { name: "note 값 펼치기" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps a short text on one line", () => {
+    render(<TypedCell column="note" encoding="string" logicalType="string" value="서울특별시 강남구 테헤란로" />);
+
+    expect(screen.getByText("서울특별시 강남구 테헤란로").className).toContain("truncate");
+  });
+
   it("gives a short text no control", () => {
-    render(<TypedCell encoding="string" logicalType="string" value={"나".repeat(LONG_TEXT)} />);
+    render(<TypedCell column="note" encoding="string" logicalType="string" value={"나".repeat(LONG_TEXT)} />);
 
     expect(screen.queryByRole("button")).toBeNull();
   });
@@ -214,6 +248,26 @@ describe("DataTable", () => {
     const { second } = renderTable();
 
     for (const index of [1, 2, 3]) expect(second[index], columns[index]).toHaveTextContent("—");
+  });
+
+  it("leaves a numeric column of codes against the left edge, ungrouped", () => {
+    render(
+      <DataTable
+        columnMeta={[
+          { name: "dong", logical_type: "int64", wire_encoding: "number" as const, semantic: { kind: "code", origin: "kpubdata_spec" } },
+          { name: "count", logical_type: "int64", wire_encoding: "number" as const, semantic: { kind: "measure", origin: "kpubdata_spec" } },
+        ]}
+        columns={["dong", "count"]}
+        rowTotal={{ returned: 1, total: 1, status: "exact" }}
+        rows={[{ dong: 1111010100, count: 1111010100 }]}
+      />,
+    );
+    const [dong, count] = within(screen.getAllByRole("row")[1]).getAllByRole("cell");
+
+    expect(dong.querySelectorAll("[data-digit-group]")).toHaveLength(0);
+    expect(dong.className).not.toContain("text-right");
+    expect(count.querySelectorAll("[data-digit-group]")).toHaveLength(4);
+    expect(count.className).toContain("text-right");
   });
 
   it("draws a column Builder described nothing of as the text it was sent", () => {

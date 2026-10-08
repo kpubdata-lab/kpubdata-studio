@@ -89,7 +89,11 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
   const alignments = new Map(
     columns.map((column) => [
       column,
-      masked.has(column) ? "" : cellAlignment(cellDisplay(encodings.get(column), meta.get(column)?.logical_type, 0).kind),
+      masked.has(column)
+        ? ""
+        : cellAlignment(
+            cellDisplay(encodings.get(column), meta.get(column)?.logical_type, 0, meta.get(column)?.semantic?.kind).kind,
+          ),
     ]),
   );
   return (
@@ -127,7 +131,13 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
                         <MaskedCell fallback={cellValue(encodings.get(column), row[column])} value={row[column]} />
                       </span>
                     ) : (
-                      <TypedCell encoding={encodings.get(column)} logicalType={meta.get(column)?.logical_type} value={row[column]} />
+                      <TypedCell
+                        column={column}
+                        encoding={encodings.get(column)}
+                        logicalType={meta.get(column)?.logical_type}
+                        semanticKind={meta.get(column)?.semantic?.kind}
+                        value={row[column]}
+                      />
                     )}
                   </td>
                 ))}

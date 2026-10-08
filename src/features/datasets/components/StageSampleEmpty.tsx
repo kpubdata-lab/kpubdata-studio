@@ -10,9 +10,10 @@
  * The notice is a known value that needs no action of the user here, so it reads as plain
  * text (`NormalStatus`, #524), not as a failure: nothing went wrong. No row value is shown.
  *
- * An empty state is two facts as well (#844): the stage keeps no sample to show — Bronze
- * and Gold do not — or it does and the result has no rows. "No preview / not supported"
- * said neither. The caller says which, and each has its own words.
+ * An empty state is more than one fact as well (#844): the stage keeps no sample to show —
+ * Bronze and Gold do not — or it does and the result has no rows, or it does and this run
+ * has none stored though it has rows. "No preview / not supported" said none of them. The
+ * caller says which, and each has its own words.
  */
 import { useTranslation } from "react-i18next";
 
@@ -20,13 +21,31 @@ import type { SampleWithheldReason } from "@/shared/lib/builderApi.schema";
 import { Card, EmptyState } from "@/shared/ui";
 import { NormalStatus } from "@/shared/ui/StatusState";
 
+export type StageSampleEmptyReason = "unsupported" | "zero_rows" | "no_sample";
+
+/**
+ * Why a stage detail with an empty sample has nothing to show. Only a stage that keeps a
+ * sample (Silver) can be said to have no rows, and only when Builder counted none: an
+ * empty sample beside a row count that is not zero, or not known, is a missing sample.
+ */
+export function stageSampleEmptyReason(detail: {
+  stage: string;
+  row_count?: number | null;
+  statistics?: { row_count: number } | null;
+}): StageSampleEmptyReason {
+  if (detail.stage !== "silver") return "unsupported";
+  const counted = detail.row_count ?? detail.statistics?.row_count;
+  return counted === 0 ? "zero_rows" : "no_sample";
+}
+
 /**
  * Empty-sample panel for the dataset preview tab.
  *
  * @param props.stage - The stage whose detail had no sample rows.
  * @param props.withheld - `sample_withheld` from the Silver stage detail, when present.
  * @param props.empty - Why there is nothing to show when nothing was withheld: the stage
- *   keeps no sample (`unsupported`), or it has no rows (`zero_rows`).
+ *   keeps no sample (`unsupported`), it has no rows (`zero_rows`), or it has no sample
+ *   stored and its row count is not zero or not known (`no_sample`).
  * @returns A policy notice when the sample was withheld, otherwise the empty state.
  */
 export function StageSampleEmpty({
@@ -36,7 +55,7 @@ export function StageSampleEmpty({
 }: {
   stage: string;
   withheld?: SampleWithheldReason;
-  empty: "unsupported" | "zero_rows";
+  empty: StageSampleEmptyReason;
 }) {
   const { t } = useTranslation();
   if (!withheld) {
@@ -44,6 +63,8 @@ export function StageSampleEmpty({
       <Card data-sample-empty={empty}>
         {empty === "zero_rows" ? (
           <EmptyState title={t("datasetDetail.previewZeroRows")} description={t("datasetDetail.previewZeroRowsDesc", { stage })} />
+        ) : empty === "no_sample" ? (
+          <EmptyState title={t("datasetDetail.previewNoSample")} description={t("datasetDetail.previewNoSampleDesc", { stage })} />
         ) : (
           <EmptyState title={t("datasetDetail.previewUnsupported")} description={t("datasetDetail.previewNoneDesc", { stage })} />
         )}

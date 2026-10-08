@@ -111,13 +111,29 @@ export function readableMoment(text: string): string {
   return `${date} ${minutes}${second}${offset}`;
 }
 
-/** How to draw `value` of a column whose encoding and logical type are these. */
-export function cellDisplay(encoding: WireEncoding | undefined, logicalType: string | undefined, value: unknown): CellDisplay {
+/**
+ * Whether a numeric column holds quantities. Builder may say what a column means
+ * (`semantic.kind`, builder#813): a legal-dong code kept as an integer is a `code`, a
+ * `202410` is a `period`, and neither is to be read as "two hundred thousand". Only a
+ * column said to be a `measure`, or said nothing of, is drawn as a number; any other kind,
+ * a kind this Studio does not know included, is shown as the text it was sent.
+ */
+function holdsQuantities(semanticKind: string | undefined): boolean {
+  return semanticKind === undefined || semanticKind === "measure";
+}
+
+/** How to draw `value` of a column whose encoding, logical type and meaning are these. */
+export function cellDisplay(
+  encoding: WireEncoding | undefined,
+  logicalType: string | undefined,
+  value: unknown,
+  semanticKind?: string,
+): CellDisplay {
   const text = cellValue(encoding, value);
   if (value === null || value === undefined) return { kind: "missing", text };
   // A column this Studio cannot read, and anything nested, is shown as the text it has.
   if (encoding === UNSUPPORTED_WIRE_ENCODING || (typeof value === "object" && value !== null)) return { kind: "text", text };
-  if (logicalType !== undefined && NUMERIC_TYPE.test(logicalType)) {
+  if (logicalType !== undefined && NUMERIC_TYPE.test(logicalType) && holdsQuantities(semanticKind)) {
     const digits = digitGroups(text);
     return digits ? { kind: "number", text, digits } : { kind: "number", text };
   }

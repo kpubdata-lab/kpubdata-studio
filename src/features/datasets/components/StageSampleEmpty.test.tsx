@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { silverStageDetailResponseSchema } from "@/shared/lib/builderApi.schema";
 
-import { StageSampleEmpty } from "./StageSampleEmpty";
+import { StageSampleEmpty, stageSampleEmptyReason } from "./StageSampleEmpty";
 
 // A Silver stage detail whose sample Builder withheld (builder#688 / #900): `sample` is
 // empty on purpose and `sample_withheld` says why (#642).
@@ -43,6 +43,26 @@ describe("StageSampleEmpty tells a withheld sample from an empty table (#642)", 
     // Not "not supported": the stage does keep a sample, and this one is empty.
     expect(screen.queryByText(/지원하지 않습니다/)).toBeNull();
     expect(document.querySelector("[data-sample-withheld]")).toBeNull();
+  });
+
+  it("says a sample is missing, not that there are no rows, when rows were counted or not counted at all (#844)", () => {
+    render(<StageSampleEmpty empty="no_sample" stage="silver" />);
+    expect(screen.getByText("저장된 표본이 없습니다")).toBeInTheDocument();
+    expect(screen.getByText(/행이 없다는 뜻은 아닙니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/0행|지원하지 않습니다/)).toBeNull();
+  });
+
+  it.each([
+    [{ stage: "silver", row_count: 0, statistics: null }, "zero_rows"],
+    [{ stage: "silver", row_count: null, statistics: { row_count: 0 } }, "zero_rows"],
+    // Rows were counted and the sample is empty: the sample is what is missing.
+    [{ stage: "silver", row_count: 22, statistics: { row_count: 22 } }, "no_sample"],
+    // Nothing was counted: "0 rows" would be a guess.
+    [{ stage: "silver", row_count: null, statistics: null }, "no_sample"],
+    [{ stage: "gold" }, "unsupported"],
+    [{ stage: "bronze", row_count: 0 }, "unsupported"],
+  ] as const)("reads %j as %s", (detail, reason) => {
+    expect(stageSampleEmptyReason(detail)).toBe(reason);
   });
 
   it("says a stage that keeps no sample does not support a preview (#844)", () => {

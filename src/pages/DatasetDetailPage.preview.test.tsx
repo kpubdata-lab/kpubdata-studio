@@ -42,11 +42,19 @@ describe("DatasetDetailPage preview tab (#642)", () => {
     expect(document.querySelector("[data-sample-empty]")).toBeNull();
   });
 
-  it("says 0 rows for a Silver sample that is really empty", () => {
-    renderPreview(detail({}));
+  it("says 0 rows for a Silver table Builder counted no rows in", () => {
+    renderPreview(detail({ row_count: 0 }));
     // Silver does keep a sample, so an empty one is a count, not "not supported" (#844).
     expect(screen.getByText("행이 없습니다 (0행)")).toBeInTheDocument();
     expect(screen.queryByText(/지원하지 않습니다/)).toBeNull();
+    expect(document.querySelector("[data-sample-withheld]")).toBeNull();
+  });
+
+  it("says the sample is missing, not that there are no rows, for a Silver table with rows", () => {
+    // 120 rows counted and no sample stored: "0 rows" would be wrong.
+    renderPreview(detail({}));
+    expect(screen.getByText("저장된 표본이 없습니다")).toBeInTheDocument();
+    expect(screen.queryByText(/0행/)).toBeNull();
     expect(document.querySelector("[data-sample-withheld]")).toBeNull();
   });
 });
