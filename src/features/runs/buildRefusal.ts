@@ -35,7 +35,7 @@ export function buildRefusal(cause: unknown): BuildRefusal | null {
 /** What to tell the user about `refusal`, in the language of the screen. */
 export function buildRefusalMessage(refusal: BuildRefusal): string {
   if (refusal.code === "build_queue_full") return i18n.t("runs.build.queueFull");
-  return refusal.limit === null
-    ? i18n.t("runs.build.ownerLimitUnstated")
-    : i18n.t("runs.build.ownerLimit", { limit: refusal.limit });
+  if (refusal.limit === null) return i18n.t("runs.build.ownerLimitUnstated");
+  // One has wording of its own: English would otherwise say "1 runs".
+  return refusal.limit === 1 ? i18n.t("runs.build.ownerLimitOne") : i18n.t("runs.build.ownerLimit", { limit: refusal.limit });
 }
