@@ -1,8 +1,6 @@
 /** Connects the publish HTTP contract from Builder PR #547 into Studio's shared API layer. */
 import {
   ApiError,
-  builderApi,
-  isRealBuilderEnabled,
   type PublishCredential,
   type PublishErrorCode,
   type PublishReadinessResponse,
@@ -14,7 +12,7 @@ import {
 import { publishBlockedResponseSchema, type PublishIssue } from "@/shared/lib/builderApi.schema";
 import { i18n } from "@/shared/i18n";
 import { REDISTRIBUTION_ISSUE_CODES } from "../issues";
-import { MOCK_PUBLISH_READINESS, mockPublishResult } from "./mockData";
+import { publishClient } from "./client";
 
 /** All wording in this file lives under `publish.errors.*` (#350). */
 const t = (key: string): string => i18n.t(`publish.errors.${key}`);
@@ -66,18 +64,10 @@ export function publishCredentialFor(token: string): PublishCredential | undefin
   return { HF_TOKEN: trimmed };
 }
 
-function throwIfAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
-}
-
 /**
- * Branches mock/real the same way as the other Builder endpoints
- * (getDataset/listBuildStages etc. in `features/datasets/api`) — previously
- * this branch did not exist, so mock mode always hit the real Builder
- * server; in local/demo environments (Builder not running) that request
- * always failed and the readiness card was effectively always empty (UI
- * audit #4). A mock run_id with no Builder is treated as 404, never
- * invented.
+ * Each of these asks the client in force (`./client`): Builder's when one is configured,
+ * the demo's otherwise (#794). The demo has a readiness for each of its known runs and
+ * answers 404 for any other — it never invents one (UI audit #4).
  */
 export async function getPublishReadiness(
   runId: string,
@@ -85,11 +75,7 @@ export async function getPublishReadiness(
   signal?: AbortSignal,
   credential?: PublishCredential,
 ): Promise<PublishReadinessResponse> {
-  if (isRealBuilderEnabled()) return builderApi.getPublishReadiness(runId, target, signal, credential);
-  throwIfAborted(signal);
-  const mock = MOCK_PUBLISH_READINESS[runId];
-  if (!mock) throw new ApiError(404, t("readinessNotFound"));
-  return mock;
+  return publishClient().readiness(runId, target, signal, credential);
 }
 
 export async function publishBuild(
@@ -98,14 +84,7 @@ export async function publishBuild(
   signal?: AbortSignal,
   credential?: PublishCredential,
 ): Promise<PublishResponse> {
-  if (isRealBuilderEnabled()) return builderApi.publishBuild(runId, request, signal, credential);
-  throwIfAborted(signal);
-  const readiness = MOCK_PUBLISH_READINESS[runId];
-  if (!readiness) throw new ApiError(404, t("runNotFound"));
-  if (!readiness.ready || readiness.blockers.length > 0) {
-    throw new ApiError(409, t("notReady"), { code: "publish_conflict" });
-  }
-  return mockPublishResult(runId, request.destination, request.options?.private ?? true, readiness.redistribution ?? null, request.options?.confirm_non_commercial === true);
+  return publishClient().publish(runId, request, signal, credential);
 }
 
 /** What settling an unknown publish came to (#728). */
@@ -137,7 +116,9 @@ export function recoveryFailure(cause: unknown): PublishRecoveryOutcome {
 
 /**
  * Ask Builder to look at the remote and settle a publish that ended
- * `publish_state_unknown` (#728). The demo has no remote and no receipts.
+ * `publish_state_unknown` (#728). The demo has no remote and no receipts: its client
+ * answers as a Builder does for a publish it has no receipt of, which reads here as
+ * nothing to settle.
  */
 export async function reconcilePublish(
   runId: string,
@@ -145,9 +126,8 @@ export async function reconcilePublish(
   signal?: AbortSignal,
   credential?: PublishCredential,
 ): Promise<PublishRecoveryOutcome> {
-  if (!isRealBuilderEnabled()) return { kind: "nothing_to_settle" };
   try {
-    const response = await builderApi.reconcilePublish(runId, { target: "huggingface", destination }, signal, credential);
+    const response = await publishClient().reconcile(runId, { target: "huggingface", destination }, signal, credential);
     if (response.run_id !== runId) return { kind: "failed", message: t("mismatch") };
     return { kind: response.state === "succeeded" ? "confirmed" : "absent" };
   } catch (cause) {
@@ -163,9 +143,8 @@ export async function resetPublishReceipt(
   signal?: AbortSignal,
   credential?: PublishCredential,
 ): Promise<PublishRecoveryOutcome> {
-  if (!isRealBuilderEnabled()) return { kind: "nothing_to_settle" };
   try {
-    const response = await builderApi.resetPublishReceipt(runId, "huggingface", destination, signal, credential);
+    const response = await publishClient().resetReceipt(runId, "huggingface", destination, signal, credential);
     if (response.run_id !== runId) return { kind: "failed", message: t("mismatch") };
     return { kind: "reset" };
   } catch (cause) {
