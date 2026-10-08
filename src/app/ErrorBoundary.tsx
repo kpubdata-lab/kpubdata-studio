@@ -4,17 +4,62 @@
  * When an exception occurs during render, the `ErrorBoundary` class component catches
  * throws in the subtree and displays a Korean fallback screen (with refresh action).
  * The same fallback is also reused in the router `errorElement`.
+ *
+ * Every fallback shows the error's id and the deployment's support contact (#839); the
+ * console line for the error starts with the same id.
  */
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, useEffect, useState, type ErrorInfo, type ReactNode } from "react";
 import { useRouteError } from "react-router-dom";
 import { i18n } from "@/shared/i18n";
+import {
+  getSupportContact,
+  newErrorId,
+  reportClientError,
+  reportHref,
+} from "@/shared/lib/clientErrors";
+
+/**
+ * The error's id and how to report it (#839).
+ *
+ * @param id - The id the console line for this error carries.
+ * @returns The id, selectable, and the support link when one is configured.
+ */
+export function ErrorReport({ id }: { id: string }) {
+  const contact = getSupportContact();
+  return (
+    <div className="flex max-w-md flex-col items-center gap-1 text-xs leading-5 text-muted-foreground">
+      <p>
+        {i18n.t("errorBoundary.report.idLabel")}{" "}
+        <code className="select-all rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">
+          {id}
+        </code>
+      </p>
+      {contact ? (
+        <p>
+          {i18n.t("errorBoundary.report.withContact")}{" "}
+          <a
+            href={reportHref(contact, id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-brand-text underline underline-offset-2"
+          >
+            {i18n.t("errorBoundary.report.contact", { contact: contact.label })}
+          </a>
+        </p>
+      ) : (
+        <p>{i18n.t("errorBoundary.report.withoutContact")}</p>
+      )}
+    </div>
+  );
+}
 
 /**
  * Fallback screen shown when an error occurs.
  *
+ * @param errorId - The caught error's id, shown with the support contact (#839).
  * @returns Error guidance UI with refresh action.
  */
-export function ErrorFallback() {
+export function ErrorFallback({ errorId }: { errorId: string }) {
   return (
     <main
       role="alert"
@@ -33,6 +78,7 @@ export function ErrorFallback() {
       >
         {i18n.t("errorBoundary.global.reload")}
       </button>
+      <ErrorReport id={errorId} />
     </main>
   );
 }
@@ -46,8 +92,11 @@ export function ErrorFallback() {
  */
 export function RouteErrorBoundary() {
   const error = useRouteError();
-  console.error("Route error:", error);
-  return <ErrorFallback />;
+  const [errorId] = useState(() => newErrorId());
+  useEffect(() => {
+    reportClientError(errorId, "route", error);
+  }, [errorId, error]);
+  return <ErrorFallback errorId={errorId} />;
 }
 
 interface ErrorBoundaryProps {
@@ -58,25 +107,27 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   /** Whether exception occurred in subtree */
   hasError: boolean;
+  /** The caught error's id (#839); null while nothing has been caught. */
+  errorId: string | null;
 }
 
 /**
  * App-global ErrorBoundary that catches render exceptions in subtree and replaces with fallback UI.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false };
+  state: ErrorBoundaryState = { hasError: false, errorId: null };
 
   static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
+    return { hasError: true, errorId: newErrorId() };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error("Uncaught render error:", error, info.componentStack);
+    reportClientError(this.state.errorId ?? "unknown", "render", error, info.componentStack ?? undefined);
   }
 
   render(): ReactNode {
     if (this.state.hasError) {
-      return <ErrorFallback />;
+      return <ErrorFallback errorId={this.state.errorId ?? "unknown"} />;
     }
     return this.props.children;
   }
@@ -93,7 +144,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  * @param onRetry - Callback to reset boundary state and re-render subtree.
  * @returns Feature-scoped error guidance UI.
  */
-function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: () => void }) {
+function FeatureErrorFallback({
+  feature,
+  errorId,
+  onRetry,
+}: {
+  feature: string;
+  errorId: string;
+  onRetry: () => void;
+}) {
   return (
     <div
       role="alert"
@@ -112,6 +171,7 @@ function FeatureErrorFallback({ feature, onRetry }: { feature: string; onRetry: 
       >
         {i18n.t("errorBoundary.feature.retry")}
       </button>
+      <ErrorReport id={errorId} />
     </div>
   );
 }
@@ -133,21 +193,32 @@ export class FeatureErrorBoundary extends Component<
   FeatureErrorBoundaryProps,
   ErrorBoundaryState
 > {
-  state: ErrorBoundaryState = { hasError: false };
+  state: ErrorBoundaryState = { hasError: false, errorId: null };
 
   static getDerivedStateFromError(): ErrorBoundaryState {
-    return { hasError: true };
+    return { hasError: true, errorId: newErrorId() };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error(`Feature error (${this.props.feature}):`, error, info.componentStack);
+    reportClientError(
+      this.state.errorId ?? "unknown",
+      "feature",
+      error,
+      `${this.props.feature}${info.componentStack ?? ""}`,
+    );
   }
 
-  private readonly handleRetry = () => this.setState({ hasError: false });
+  private readonly handleRetry = () => this.setState({ hasError: false, errorId: null });
 
   render(): ReactNode {
     if (this.state.hasError) {
-      return <FeatureErrorFallback feature={this.props.feature} onRetry={this.handleRetry} />;
+      return (
+        <FeatureErrorFallback
+          feature={this.props.feature}
+          errorId={this.state.errorId ?? "unknown"}
+          onRetry={this.handleRetry}
+        />
+      );
     }
     return this.props.children;
   }
