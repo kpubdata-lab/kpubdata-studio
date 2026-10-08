@@ -9,6 +9,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import EN from "@/shared/i18n/locales/en.json";
 import { ApiError, resetAuthRenewalForTests } from "@/shared/lib/builderApi";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
 import type { BuildSpec } from "@/shared/lib/types";
@@ -54,6 +55,12 @@ describe("buildRefusal", () => {
       "이미 실행 2개가 대기 중이거나 진행 중입니다. 그중 하나가 끝난 뒤 다시 시도하세요.",
     );
     expect(buildRefusalMessage({ code: "build_owner_limit", limit: 7 })).toContain("실행 7개");
+    // One is one run, in English too: not "1 runs".
+    expect(buildRefusalMessage({ code: "build_owner_limit", limit: 1 })).toBe(
+      "이미 실행 1개가 대기 중이거나 진행 중입니다. 그것이 끝난 뒤 다시 시도하세요.",
+    );
+    expect(EN.runs.build.ownerLimitOne).toBe("You already have 1 run queued or running. Try again when it has finished.");
+    expect(EN.runs.build.ownerLimit).toContain("{{limit}} runs");
     expect(buildRefusalMessage({ code: "build_owner_limit", limit: null })).toContain("동시에 둘 수 있는 실행 수");
     expect(buildRefusalMessage({ code: "build_queue_full" })).toBe("서버의 실행 대기열이 가득 찼습니다. 잠시 후 다시 시도하세요.");
   });
