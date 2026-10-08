@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * keycloak.ts (OIDC singleton) test.
  *

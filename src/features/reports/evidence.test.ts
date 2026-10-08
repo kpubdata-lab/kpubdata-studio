@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as datasetsApi from "@/features/datasets/api";
 import { buildEvidenceRefs, fetchReportEvidence } from "./evidence";

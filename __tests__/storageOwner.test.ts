@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * 사용자별 localStorage 저장 격리 테스트 (#293).
  *

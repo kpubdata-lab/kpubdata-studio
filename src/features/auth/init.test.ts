@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * initAuth (auth ↔ builderApi wiring + OIDC bootstrap) test.
  *

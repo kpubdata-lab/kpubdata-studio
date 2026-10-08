@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Integration regression tests for run provenance (independent review blocker).
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * 비동기 build job 폴링 회귀 테스트 (#245).
  *
