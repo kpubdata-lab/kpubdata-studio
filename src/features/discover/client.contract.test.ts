@@ -7,7 +7,6 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { demoDatasetsClient } from "@/features/datasets/api/client";
 import { MOCK_DATASETS } from "@/features/datasets/api/mockData";
 import { resetAuthRenewalForTests } from "@/shared/lib/builderApi";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
@@ -21,7 +20,9 @@ async function demoBuilder(input: RequestInfo | URL, init?: RequestInit): Promis
   const url = new URL(String(input), "http://builder.test");
   if (url.pathname.endsWith("/catalog")) return json(await demoDiscoverClient.catalog());
   if (url.pathname.endsWith("/datasets")) {
-    return json(await demoDatasetsClient.listDatasets(Number(url.searchParams.get("limit") ?? 50)));
+    // The demo's tables, as a Builder's `GET /datasets` would send them.
+    const limit = Number(url.searchParams.get("limit") ?? 50);
+    return json({ datasets: MOCK_DATASETS.datasets.slice(0, limit), total: MOCK_DATASETS.datasets.length });
   }
   throw new Error(`the demo Builder has no route for ${url.pathname}`);
 }
@@ -79,6 +80,15 @@ describe.each(CLIENTS)("the %s client", (_name, client) => {
     });
 
     expect(settled).not.toHaveBeenCalled();
+  });
+});
+
+describe("the demo", () => {
+  it("hands out a copy of its catalogue, not the catalogue", async () => {
+    const first = await demoDiscoverClient.catalog();
+    first.providers.length = 0;
+
+    expect((await demoDiscoverClient.catalog()).providers).not.toHaveLength(0);
   });
 });
 

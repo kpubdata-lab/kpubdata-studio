@@ -28,6 +28,9 @@ export const realPreviewClient: PreviewClient = {
   preview: async (spec, options, signal) => builderApi.preview(serializeSpec(spec), options, signal),
 };
 
+/** How many rows Builder's `/preview` samples when the request does not say. */
+const DEFAULT_PREVIEW_LIMIT = 5;
+
 /** Deterministic sample rows the demo previews every spec with. */
 const DEMO_ROWS: Record<string, unknown>[] = [
   { region: "서울", value: 42, measured_at: "2026-06-21T09:00:00Z" },
@@ -38,6 +41,9 @@ const DEMO_ROWS: Record<string, unknown>[] = [
 export const demoPreviewClient: PreviewClient = {
   async preview(spec, options, signal) {
     if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
+    // As many rows as were asked for (Builder's default is 5), each a copy: a caller
+    // that changed one would otherwise change the demo for everyone after it.
+    const sample = DEMO_ROWS.slice(0, options?.limit ?? DEFAULT_PREVIEW_LIMIT).map((row) => ({ ...row }));
     return {
       dataset_id: spec.datasetId,
       previews: [
@@ -51,7 +57,7 @@ export const demoPreviewClient: PreviewClient = {
             { name: "value", dtype: "int64", nullable: true, unique_count: 3 },
             { name: "measured_at", dtype: "string", nullable: false, unique_count: 1 },
           ],
-          sample: DEMO_ROWS,
+          sample,
           total_rows: DEMO_ROWS.length,
           statistics: {
             row_count: DEMO_ROWS.length,
@@ -59,7 +65,7 @@ export const demoPreviewClient: PreviewClient = {
             duplicate_rate: 0,
           },
           quality_results: [],
-          source_sample: DEMO_ROWS,
+          source_sample: sample.map((row) => ({ ...row })),
           sample_mode: options?.sample_mode ?? "first",
           diff_available: false,
           diffs: [],

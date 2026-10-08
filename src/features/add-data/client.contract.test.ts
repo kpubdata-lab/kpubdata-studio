@@ -7,7 +7,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { demoDiscoverClient } from "@/features/discover/client";
+import { loadCatalog } from "@/features/discover/api";
 import { resetAuthRenewalForTests } from "@/shared/lib/builderApi";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
 import { fetchProviderConfigured } from "./api";
@@ -29,12 +29,21 @@ async function demoBuilder(input: RequestInfo | URL, init?: RequestInit): Promis
   const test = /\/providers\/([^/]+)\/test$/.exec(url.pathname);
   if (method === "POST" && test) return json(await demoAddDataClient.testProvider(decodeURIComponent(test[1])));
   if (method === "POST" && url.pathname.endsWith("/uploads")) {
-    const bytes = (init?.body as ArrayBuffer).byteLength;
-    lastUpload = { query: url.searchParams, bytes };
-    const sent = new File([new Uint8Array(bytes)], url.searchParams.get("filename") ?? "");
-    return json(await demoAddDataClient.uploadFile(sent, url.searchParams.get("format") as "csv"));
+    const body = init?.body;
+    if (!(body instanceof ArrayBuffer)) throw new Error("an upload is sent as bytes");
+    const format = url.searchParams.get("format");
+    if (!isSourceFormat(format)) throw new Error(`not an upload format: ${format}`);
+    lastUpload = { query: url.searchParams, bytes: body.byteLength };
+    const sent = new File([new Uint8Array(body.byteLength)], url.searchParams.get("filename") ?? "");
+    return json(await demoAddDataClient.uploadFile(sent, format));
   }
   throw new Error(`the demo Builder has no route for ${method} ${url.pathname}`);
+}
+
+const SOURCE_FORMATS = ["csv", "json", "jsonl", "parquet"] as const;
+
+function isSourceFormat(value: string | null): value is (typeof SOURCE_FORMATS)[number] {
+  return SOURCE_FORMATS.some((format) => format === value);
 }
 
 function json(body: unknown): Response {
@@ -122,6 +131,40 @@ describe.each([
   });
 });
 
+describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, client) => {
+  // Values that are not the ones the demo would give if it ignored what it was asked.
+  it("tests the provider named", async () => {
+    expect(await client.testProvider("kosis")).toMatchObject({ provider: "kosis" });
+  });
+
+  it("describes the file uploaded: its format, its size and its name", async () => {
+    const other = new File(['{"a": 1}\n{"a": 2}\n{"a": 3}\n'], "three rows.jsonl");
+    expect(other.size).not.toBe(FILE.size);
+
+    expect(await client.uploadFile(other, "jsonl")).toMatchObject({
+      format: "jsonl",
+      size_bytes: other.size,
+      original_filename: "three rows.jsonl",
+    });
+  });
+});
+
+describe("the demo", () => {
+  it("hands out a copy of its catalogue, not the catalogue", async () => {
+    const first = await demoAddDataClient.catalog();
+    first.providers.length = 0;
+
+    expect((await demoAddDataClient.catalog()).providers).not.toHaveLength(0);
+  });
+
+  it("lists as providers the ones its catalogue has", async () => {
+    const catalog = await demoAddDataClient.catalog();
+    const { providers } = await demoAddDataClient.providers();
+
+    expect(providers.map((provider) => provider.provider)).toEqual(catalog.providers.map((provider) => provider.name));
+  });
+});
+
 describe("what is the demo's own", () => {
   it("does not read the file: any upload gets the same id", async () => {
     const other = new File(["x"], "other.csv");
@@ -146,7 +189,8 @@ describe("what is the demo's own", () => {
     // providers. Held here so that it is a known difference; when the two become one,
     // this fails and can go.
     const here = await demoAddDataClient.catalog();
-    const there = await demoDiscoverClient.catalog();
+    const there = await loadCatalog();
+    expect(globalThis.fetch).not.toHaveBeenCalled();
 
     expect(here).not.toEqual(there);
     expect(here.providers.map((provider) => provider.name)).toEqual(["datago"]);

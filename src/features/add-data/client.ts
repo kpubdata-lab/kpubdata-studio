@@ -93,7 +93,8 @@ const DEMO_CATALOG: CatalogResponse = {
 export const demoAddDataClient: AddDataClient = {
   async catalog(signal) {
     throwIfAborted(signal);
-    return DEMO_CATALOG;
+    // A copy: a caller that changed it would change the demo for everyone after it.
+    return structuredClone(DEMO_CATALOG);
   },
   async providers(signal) {
     throwIfAborted(signal);

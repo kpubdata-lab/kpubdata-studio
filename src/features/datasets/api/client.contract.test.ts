@@ -127,6 +127,58 @@ describe("the two clients give the same answer", () => {
   });
 });
 
+describe.each(CLIENTS)("the %s client answers for what it was asked", (_name, client) => {
+  // Held by what was asked, not by the other client: both go through the demo's data,
+  // so a demo that ignored an argument would still agree with itself.
+  const OTHER = MOCK_DATASETS.datasets[1].dataset_id;
+
+  it("lists no more tables than the limit, and says how many there are", async () => {
+    const page = await client.listDatasets(2);
+
+    expect(page.datasets).toHaveLength(2);
+    expect(page.total).toBe(MOCK_DATASETS.datasets.length);
+    expect(MOCK_DATASETS.datasets.length).toBeGreaterThan(2);
+  });
+
+  it("gives the table asked for", async () => {
+    expect((await client.getDataset(DATASET)).dataset_id).toBe(DATASET);
+    expect((await client.getDataset(OTHER)).dataset_id).toBe(OTHER);
+  });
+
+  it("gives the runs of the table asked for, no more than the limit", async () => {
+    const all = await client.listDatasetRuns(DATASET, 50);
+    const one = await client.listDatasetRuns(DATASET, 1);
+
+    expect(all.runs).toEqual(MOCK_RUNS[DATASET].runs);
+    expect(one.runs).toHaveLength(1);
+    expect((await client.listDatasetRuns(OTHER, 50)).runs).toEqual(MOCK_RUNS[OTHER].runs);
+  });
+
+  it("gives the run asked for", async () => {
+    expect(await client.getDatasetRun(DATASET, RUN)).toMatchObject({ dataset_id: DATASET, run: { run_id: RUN } });
+  });
+
+  it("gives the stages and the quality of the run asked for", async () => {
+    const runs = Object.keys(MOCK_STAGES);
+    expect(runs.length).toBeGreaterThan(1);
+
+    for (const runId of runs.slice(0, 2)) {
+      expect(await client.listBuildStages(runId)).toEqual(JSON.parse(JSON.stringify(MOCK_STAGES[runId])));
+    }
+  });
+
+  it("gives the issues of the table asked for, no more than the limit", async () => {
+    const everywhere = await client.listQualityIssues({});
+    const here = await client.listQualityIssues({ datasetId: DATASET });
+    const few = await client.listQualityIssues({ limit: 1 });
+
+    expect(here.issues.every((issue) => issue.dataset_id === DATASET)).toBe(true);
+    expect(here.coverage.tables).toBe(1);
+    expect(everywhere.coverage.tables).toBe(MOCK_DATASETS.datasets.length);
+    expect(few.issues.length).toBeLessThanOrEqual(1);
+  });
+});
+
 describe.each(CLIENTS)("the %s client", (_name, client) => {
   it.each(MISSING)("%s refuses an id that names nothing with a 404", async (_method, call) => {
     await expect(call(client)).rejects.toMatchObject({ name: "ApiError", status: 404 });
