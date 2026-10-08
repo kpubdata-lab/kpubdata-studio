@@ -145,6 +145,12 @@ jobs:
 
       # `!cancelled()` lets coverage report even when the drift step failed; the job
       # still fails because the drift step's own failure is not overridden.
+      #
+      # The thresholds are measured with the contract present, so the contract-only
+      # paths count. `npm run test:coverage` without BUILDER_CONTRACT skips them and
+      # reports slightly different figures; to reproduce this step locally, check out
+      # kpubdata-builder's `contract/` directory and run
+      #   BUILDER_CONTRACT=<builder>/contract/builder-api.yaml npm run test:coverage
       - name: Test with coverage and the Builder contract (Vitest)
         if: ${{ !cancelled() && matrix.coverage }}
         env:
@@ -241,15 +247,32 @@ jobs:
       - name: Build and verify the image's Content-Security-Policy
         run: bash scripts/docker-csp-smoke.sh
 
+  # The strict docs build of deploy.yml, as a job the CI gate waits for (Refs #835):
+  # deploy.yml's own run on pull requests is to be removed, and a broken docs site
+  # should still not reach Pages. Both install requirements-docs.txt.
+  docs:
+    name: Docs build (strict)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements-docs.txt
+      - run: mkdocs build --strict
+
   gate:
     name: CI gate
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: [static, test, e2e, release-freeze, docker-csp]
+    needs: [static, test, e2e, release-freeze, docker-csp, docs]
     # `always()` so a failed job still reaches this step. Without it the gate is
     # skipped when something upstream fails, and a skipped required check is the same
     # absence this job exists to remove.
     if: always()
+    timeout-minutes: 5
     steps:
       - name: Every job this gate covers must have succeeded
         run: |

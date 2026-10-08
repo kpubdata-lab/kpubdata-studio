@@ -46,8 +46,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.12"
-      # Exact versions, so a new mkdocs-material release cannot fail --strict on a pull
-      # request that did not touch the docs. Dependabot raises them.
+      # mkdocs and mkdocs-material at exact versions, the same file ci.yml's `docs` job
+      # installs, so a new release of either cannot fail --strict on a pull request that
+      # did not touch the docs. What those two depend on (pymdown-extensions among them)
+      # is not pinned and can still move. Dependabot raises the two.
       - run: pip install -r requirements-docs.txt
       - run: mkdocs build --strict
 
