@@ -92,6 +92,7 @@ export function PreviewValidationStep({
 
   const safeIndex = Math.min(activeIndex, Math.max(previews.length - 1, 0));
   const source: PreviewSource | undefined = previews[safeIndex];
+  const diffEncodings = encodingsOf(source?.schema);
   const coverage = source ? previewCoverage(source) : null;
   const { mixed, perSource } = summarizePreviewSources(previews);
   // One tab per source; the preview below is their panel (#795).
@@ -254,8 +255,10 @@ export function PreviewValidationStep({
                           <tr key={i} className="border-t border-border">
                             <td className="py-1 pr-3">{d.row}</td>
                             <td className="py-1 pr-3 font-medium">{d.column}</td>
-                            <td className="py-1 pr-3 text-status-failure">{String(d.before)}</td>
-                            <td className="py-1 pr-3 text-status-success">{String(d.after)}</td>
+                            {/* As every other Builder value is shown (#844): a nested value as its
+                                JSON, not "[object Object]", and a missing one as a dash. */}
+                            <td className="py-1 pr-3 text-status-failure">{cellValue(diffEncodings.get(d.column), d.before)}</td>
+                            <td className="py-1 pr-3 text-status-success">{cellValue(diffEncodings.get(d.column), d.after)}</td>
                             <td className="py-1 pr-3 text-muted-foreground">{d.transform ?? "—"}</td>
                           </tr>
                         ))}

@@ -63,11 +63,17 @@ describe("DataTable cells keep the exact text (#499, #484)", () => {
   it("shows zero-led and 19-digit codes, an unsafe integer, a Decimal, null and a date as sent", () => {
     render(<DataTable columnMeta={META} columns={COLUMNS} rowTotal={{ returned: 1, total: 1, status: "exact" }} rows={[ROW]} />);
     const cells = within(screen.getAllByRole("row")[1]).getAllByRole("cell").map((cell) => cell.textContent);
+    // Quantities are drawn in threes (#844), but by generated content: the text is as sent.
     expect(cells).toEqual(["06102", "1234567890123456789", "9007199254740993", "12345.6700", "—", "2026-09-30"]);
   });
 
   it("never parses numbers in the table code", () => {
-    for (const file of ["src/features/data-table/DataTable.tsx", "src/features/data-table/TableRowsPanel.tsx"]) {
+    for (const file of [
+      "src/features/data-table/DataTable.tsx",
+      "src/features/data-table/TableRowsPanel.tsx",
+      "src/features/data-table/TypedCell.tsx",
+      "src/shared/lib/cellValue.ts",
+    ]) {
       const source = readFileSync(join(ROOT, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
       expect(source).not.toMatch(/\bNumber\(|parseFloat|parseInt/);
     }
