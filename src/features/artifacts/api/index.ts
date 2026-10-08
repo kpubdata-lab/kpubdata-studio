@@ -19,7 +19,7 @@ export type { AuthoritativeBuildManifest } from "./client";
  * @param signal - Optional AbortSignal for cancellation.
  * @returns Build manifest information.
  */
-export function getBuildManifest(buildId: string, signal?: AbortSignal): Promise<AuthoritativeBuildManifest> {
+export async function getBuildManifest(buildId: string, signal?: AbortSignal): Promise<AuthoritativeBuildManifest> {
   return artifactsClient().getBuildManifest(buildId, signal);
 }
 
@@ -34,7 +34,7 @@ export function getBuildManifest(buildId: string, signal?: AbortSignal): Promise
  *
  * @returns Array of file paths relative to the run directory.
  */
-export function listArtifactFiles(runId: string, signal?: AbortSignal): Promise<string[]> {
+export async function listArtifactFiles(runId: string, signal?: AbortSignal): Promise<string[]> {
   return artifactsClient().listArtifactFiles(runId, signal);
 }
 
@@ -47,7 +47,7 @@ export function listArtifactFiles(runId: string, signal?: AbortSignal): Promise<
  * segment. The demo has no real files, so it explicitly reports
  * unsupported rather than inventing content.
  */
-export function downloadArtifact(
+export async function downloadArtifact(
   runId: string,
   filePath: string,
   signal?: AbortSignal,

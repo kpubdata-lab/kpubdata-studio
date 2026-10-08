@@ -42,10 +42,9 @@ export interface ArtifactsClient {
 }
 
 export const realArtifactsClient: ArtifactsClient = {
-  getBuildManifest: async (runId, signal) =>
-    (await builderApi.getBuildManifest(runId, signal)) as AuthoritativeBuildManifest,
+  getBuildManifest: async (runId, signal) => builderApi.getBuildManifest(runId, signal),
   listArtifactFiles: async (runId, signal) => (await builderApi.artifacts(runId, signal)).files,
-  downloadArtifact: (runId, filePath, signal) => builderApi.downloadArtifactFile(runId, filePath, signal),
+  downloadArtifact: async (runId, filePath, signal) => builderApi.downloadArtifactFile(runId, filePath, signal),
 };
 
 function throwIfAborted(signal?: AbortSignal): void {
@@ -75,7 +74,7 @@ function exportExtension(target: ExportTarget): string {
  * @param buildId - Build execution id.
  * @returns mock BuildManifest.
  */
-export function demoManifest(buildId: string): BuildManifest {
+function demoManifest(buildId: string): BuildManifest {
   const dataset = findDemoDataset(buildId);
   const sourceKey = `datago.${dataset.providerDataset}`;
   const succeeded = dataset.status === "succeeded";

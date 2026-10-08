@@ -8,6 +8,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { i18n } from "@/shared/i18n";
 import { resetAuthRenewalForTests } from "@/shared/lib/builderApi";
 import { DEMO_DATASETS } from "@/shared/lib/demoDatasets";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
@@ -39,6 +40,16 @@ function json(body: unknown): Response {
   return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
+/**
+ * Each method once. A method added to the interface without a line here fails the
+ * first test below, so it cannot go without the expectations every method has.
+ */
+const CALLS: Array<[name: keyof ArtifactsClient, call: (client: ArtifactsClient, signal?: AbortSignal) => Promise<unknown>]> = [
+  ["getBuildManifest", (client, signal) => client.getBuildManifest(ENDED[0][1], signal)],
+  ["listArtifactFiles", (client, signal) => client.listArtifactFiles(ENDED[0][1], signal)],
+  ["downloadArtifact", (client, signal) => client.downloadArtifact(ENDED[0][1], "README.md", signal)],
+];
+
 const CLIENTS: Array<[name: string, client: ArtifactsClient]> = [
   ["demo", demoArtifactsClient],
   ["real", realArtifactsClient],
@@ -54,11 +65,17 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it("has a call for each method of the interface", () => {
+  const called = CALLS.map(([name]) => name).sort();
+
+  expect(called).toEqual(Object.keys(demoArtifactsClient).sort());
+  expect(called).toEqual(Object.keys(realArtifactsClient).sort());
+});
+
 it("the demo has a run in every state to compare", () => {
   expect(RUNS.map(([status]) => status).sort()).toEqual(["failed", "queued", "running", "succeeded"]);
   expect(ENDED).toHaveLength(2);
   expect(NOT_ENDED).toHaveLength(2);
-  expect(Object.keys(realArtifactsClient).sort()).toEqual(Object.keys(demoArtifactsClient).sort());
 });
 
 describe("the two clients give the same answer", () => {
@@ -67,7 +84,7 @@ describe("the two clients give the same answer", () => {
     const fromReal = await realArtifactsClient.getBuildManifest(runId);
 
     // Through JSON and Builder's manifest schema, the demo's manifest is unchanged.
-    expect(fromReal).toEqual(JSON.parse(JSON.stringify(fromDemo)));
+    expect(fromReal).toStrictEqual(JSON.parse(JSON.stringify(fromDemo)));
   });
 
   it.each(RUNS)("the files of a %s run", async (_status, runId) => {
@@ -90,16 +107,12 @@ describe.each(CLIENTS)("the %s client", (_name, client) => {
     }
   });
 
-  it.each([
-    ["getBuildManifest", (signal: AbortSignal) => client.getBuildManifest(RUNS[0][1], signal)],
-    ["listArtifactFiles", (signal: AbortSignal) => client.listArtifactFiles(RUNS[0][1], signal)],
-    ["downloadArtifact", (signal: AbortSignal) => client.downloadArtifact(RUNS[0][1], "README.md", signal)],
-  ])("%s gives no answer once the caller has given up", async (_method, call) => {
+  it.each(CALLS)("%s gives no answer once the caller has given up", async (_method, call) => {
     const controller = new AbortController();
     controller.abort();
     const settled = vi.fn();
 
-    await call(controller.signal).then(settled, (error: unknown) => {
+    await call(client, controller.signal).then(settled, (error: unknown) => {
       expect(error).toMatchObject({ name: "AbortError" });
     });
 
@@ -128,7 +141,9 @@ describe("what is the demo's own", () => {
   });
 
   it("refuses a download rather than invent a file", async () => {
-    await expect(demoArtifactsClient.downloadArtifact(RUNS[0][1], "README.md")).rejects.toThrow();
+    await expect(demoArtifactsClient.downloadArtifact(RUNS[0][1], "README.md")).rejects.toThrow(
+      i18n.t("artifacts.mockNoDownload"),
+    );
     expect(globalThis.fetch).not.toHaveBeenCalled();
   });
 });

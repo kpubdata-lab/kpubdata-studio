@@ -67,16 +67,16 @@ export interface DatasetsClient {
 }
 
 export const realDatasetsClient: DatasetsClient = {
-  listDatasets: (limit, signal) => builderApi.listDatasets(limit, signal),
-  getDataset: (datasetId, signal) => builderApi.getDataset(datasetId, signal),
-  listDatasetRuns: (datasetId, limit, signal) => builderApi.listDatasetRuns(datasetId, limit, signal),
-  getDatasetRun: (datasetId, runId, signal) => builderApi.getDatasetRun(datasetId, runId, signal),
-  listBuildStages: (runId, signal) => builderApi.listBuildStages(runId, signal),
-  getBuildStageDetail: (runId, stage, source, limit, signal) =>
+  listDatasets: async (limit, signal) => builderApi.listDatasets(limit, signal),
+  getDataset: async (datasetId, signal) => builderApi.getDataset(datasetId, signal),
+  listDatasetRuns: async (datasetId, limit, signal) => builderApi.listDatasetRuns(datasetId, limit, signal),
+  getDatasetRun: async (datasetId, runId, signal) => builderApi.getDatasetRun(datasetId, runId, signal),
+  listBuildStages: async (runId, signal) => builderApi.listBuildStages(runId, signal),
+  getBuildStageDetail: async (runId, stage, source, limit, signal) =>
     builderApi.getBuildStageDetail(runId, stage, source, limit, signal),
-  getBuildQuality: (runId, signal) => builderApi.getBuildQuality(runId, signal),
-  listQualityIssues: (query, signal) => builderApi.listQualityIssues(query, signal),
-  getDatasetQualityHistory: (datasetId, limit, signal) => builderApi.getDatasetQualityHistory(datasetId, limit, signal),
+  getBuildQuality: async (runId, signal) => builderApi.getBuildQuality(runId, signal),
+  listQualityIssues: async (query, signal) => builderApi.listQualityIssues(query, signal),
+  getDatasetQualityHistory: async (datasetId, limit, signal) => builderApi.getDatasetQualityHistory(datasetId, limit, signal),
 };
 
 function throwIfAborted(signal?: AbortSignal): void {

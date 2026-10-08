@@ -29,11 +29,11 @@ export async function listDatasetsPage(
   return { datasets: response.datasets, total: response.total };
 }
 
-export function getDataset(datasetId: string, signal?: AbortSignal): Promise<DatasetDetailResponse> {
+export async function getDataset(datasetId: string, signal?: AbortSignal): Promise<DatasetDetailResponse> {
   return datasetsClient().getDataset(datasetId, signal);
 }
 
-export function listDatasetRuns(datasetId: string, limit = 50, signal?: AbortSignal): Promise<DatasetRunsResponse> {
+export async function listDatasetRuns(datasetId: string, limit = 50, signal?: AbortSignal): Promise<DatasetRunsResponse> {
   return datasetsClient().listDatasetRuns(datasetId, limit, signal);
 }
 
@@ -41,15 +41,15 @@ export function listDatasetRuns(datasetId: string, limit = 50, signal?: AbortSig
  * One run of a dataset by id, not limited to the newest page (#418). Builder answers 404
  * when the run is not this dataset's and 403 when it is not the caller's.
  */
-export function getDatasetRun(datasetId: string, runId: string, signal?: AbortSignal): Promise<DatasetRunResponse> {
+export async function getDatasetRun(datasetId: string, runId: string, signal?: AbortSignal): Promise<DatasetRunResponse> {
   return datasetsClient().getDatasetRun(datasetId, runId, signal);
 }
 
-export function listBuildStages(runId: string, signal?: AbortSignal): Promise<RunStagesResponse> {
+export async function listBuildStages(runId: string, signal?: AbortSignal): Promise<RunStagesResponse> {
   return datasetsClient().listBuildStages(runId, signal);
 }
 
-export function getBuildStageDetail(
+export async function getBuildStageDetail(
   runId: string,
   stage: StageDetailResponse["stage"],
   source: string,
@@ -59,16 +59,16 @@ export function getBuildStageDetail(
   return datasetsClient().getBuildStageDetail(runId, stage, source, limit, signal);
 }
 
-export function getBuildQuality(runId: string, signal?: AbortSignal): Promise<BuildQualityResponse> {
+export async function getBuildQuality(runId: string, signal?: AbortSignal): Promise<BuildQualityResponse> {
   return datasetsClient().getBuildQuality(runId, signal);
 }
 
 /** `GET /quality/issues` (kpubdata-builder#843): findings across tables in one call. */
-export function listQualityIssues(query: QualityIssuesQuery = {}, signal?: AbortSignal): Promise<QualityIssuesResponse> {
+export async function listQualityIssues(query: QualityIssuesQuery = {}, signal?: AbortSignal): Promise<QualityIssuesResponse> {
   return datasetsClient().listQualityIssues(query, signal);
 }
 
-export function getDatasetQualityHistory(datasetId: string, limit = 30, signal?: AbortSignal): Promise<DatasetQualityHistoryResponse> {
+export async function getDatasetQualityHistory(datasetId: string, limit = 30, signal?: AbortSignal): Promise<DatasetQualityHistoryResponse> {
   return datasetsClient().getDatasetQualityHistory(datasetId, limit, signal);
 }
 

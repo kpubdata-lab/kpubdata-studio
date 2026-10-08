@@ -117,7 +117,7 @@ describe("the two clients give the same answer", () => {
     const fromReal = await call(realDatasetsClient);
 
     // Through JSON and Builder's response schema, the demo's answer is unchanged.
-    expect(fromReal).toEqual(JSON.parse(JSON.stringify(fromDemo)));
+    expect(fromReal).toStrictEqual(JSON.parse(JSON.stringify(fromDemo)));
   });
 
   it("the real client did ask its Builder", async () => {
