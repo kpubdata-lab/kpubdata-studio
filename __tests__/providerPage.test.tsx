@@ -119,9 +119,11 @@ describe("ProviderPage real mode (#S01)", () => {
     renderPage();
     fireEvent.click(await screen.findByText("datago"));
 
+    // Said once this provider's own state is known (#845) — in the readiness line and
+    // in the note under it, so more than one element holds the sentence.
     expect(
-      await screen.findByText(/Builder 기본 자격 증명으로 사용 중/),
-    ).toBeInTheDocument();
+      (await screen.findAllByText(/Builder 기본 자격 증명으로 사용 중/)).length,
+    ).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "사용자 자격 증명 등록" })).toBeInTheDocument();
   });

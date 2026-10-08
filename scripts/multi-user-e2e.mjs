@@ -21,6 +21,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { startFakeKeycloak } from "./fake-keycloak.mjs";
+import { uvEnvironment } from "./real-e2e-probe.mjs";
 
 export const MULTI_USER = {
   builderPort: 8903,
@@ -109,9 +110,9 @@ export async function runMultiUserE2e({ builderRoot, replayArgs }) {
     {
       stdio: ["ignore", "pipe", "pipe"],
       env: {
-        ...inherited,
-        // As the workflow and the single-user run do: kpubdata from the lock's pin.
-        UV_NO_SOURCES: "1",
+        // As the workflow and the single-user run do: dependencies from the lock, unless
+        // the caller set UV_NO_SOURCES (`real-e2e-probe.mjs`).
+        ...uvEnvironment(inherited),
         OIDC_ISSUER: identity.issuer,
         OIDC_AUDIENCE: audience,
         OIDC_JWKS_URL: identity.jwksUrl,

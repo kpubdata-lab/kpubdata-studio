@@ -32,6 +32,7 @@ import { extractDatasetId, mapLiveStatus, normalizeBuildContextSearch } from "@/
 import { useStageDetails } from "@/features/runs/stageDetails";
 import { CancelRunButton } from "@/features/runs/components/CancelRunButton";
 import { EventTimeline } from "@/features/runs/components/EventTimeline";
+import { KeysLostCard } from "@/features/runs/components/KeysLostCard";
 import { SplitAlgorithmCard } from "@/features/runs/components/SplitAlgorithmCard";
 import { AssistantRunAnalysis } from "@/features/runs/components/AssistantRunAnalysis";
 import {
@@ -414,19 +415,8 @@ export function RunDetailPanel({
       {live.kind === "job" && keysWereLost(live.job) ? (
         // A run that lost its keys never started, so it has no failure evidence and the
         // card below does not appear for it (#787). The run is over and stays as it
-        // ended: running its spec again from the edit page submits a new run that names
-        // this one as what it retries, and the key is asked for there, where the spec is.
-        <Card data-keys-lost={live.job.run_id} variant="error">
-          <h3 className="text-sm font-semibold">{t("provider.missingKey.title")}</h3>
-          <p className="mt-2 text-sm">{t("provider.missingKey.lost")}</p>
-          <p className="mt-1 text-sm">{t("provider.missingKey.lostNext")}</p>
-          <Link
-            className="mt-3 inline-block text-sm font-medium underline"
-            to={`/refresh-jobs/${encodeURIComponent(live.job.run_id)}/edit`}
-          >
-            {t("provider.missingKey.retry")}
-          </Link>
-        </Card>
+        // ended; what can be done next is the card's to say (#846).
+        <KeysLostCard runId={live.job.run_id} />
       ) : null}
 
       {failureEvidence.length > 0 || qualityFails.length > 0 ? (

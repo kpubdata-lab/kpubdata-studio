@@ -59,6 +59,20 @@ export async function loadLanguage(lang: AppLanguage): Promise<boolean> {
   }
 }
 
+/**
+ * The page says which language it is in (#841). `index.html` says Korean, the language
+ * Studio starts in; this keeps `<html lang>` true when the reader's stored choice, or the
+ * switcher, makes it English. A screen reader picks its voice by it, and a browser its
+ * offer to translate.
+ */
+function syncDocumentLanguage(language: string | undefined): void {
+  if (typeof document !== "undefined") document.documentElement.lang = normalizeLanguage(language?.split("-")[0]);
+}
+
+// Before `init`: with no resources to load it finishes at once, and a listener added
+// after it has already missed the language the detector found.
+i18n.on("languageChanged", syncDocumentLanguage);
+
 void i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -103,14 +117,17 @@ export const i18nReady: Promise<void> = (async () => {
   const detected = normalizeLanguage(i18n.language?.split("-")[0]);
   if (await loadLanguage(detected)) {
     if (i18n.language !== detected) await i18n.changeLanguage(detected);
-    return;
+  } else {
+    // Shown in Korean this time, but the stored choice is the visitor's: changeLanguage
+    // would overwrite it, so the next visit would not try their language again.
+    const stored = readStoredLanguage();
+    await loadLanguage("ko");
+    await i18n.changeLanguage("ko");
+    if (stored !== null) writeStoredLanguage(stored);
   }
-  // Shown in Korean this time, but the stored choice is the visitor's: changeLanguage
-  // would overwrite it, so the next visit would not try their language again.
-  const stored = readStoredLanguage();
-  await loadLanguage("ko");
-  await i18n.changeLanguage("ko");
-  if (stored !== null) writeStoredLanguage(stored);
+  // The language the first paint is in, said once more here: a language found by the
+  // detector and already loaded changes nothing above, and so tells no listener (#841).
+  syncDocumentLanguage(i18n.language);
 })();
 
 /**

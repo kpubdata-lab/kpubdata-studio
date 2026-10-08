@@ -25,12 +25,13 @@
  * Saved Analyses) talk to a real catalog. Without one, `GET /warehouse/tables` answers 404
  * and the browser logs it as a console error on every screen that asks.
  */
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { mkdtempSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { runMultiUserE2e } from "./multi-user-e2e.mjs";
+import { probeBuilder, uvEnvironment } from "./real-e2e-probe.mjs";
 
 const args = process.argv.slice(2);
 const keep = args.includes("--keep");
@@ -50,12 +51,15 @@ if (replayDir !== null && !existsSync(replayDir)) {
   process.exit(1);
 }
 
-// Ask Builder's CLI rather than its source tree: replay arrived in kpubdata-builder#837, and an
-// older checkout's `serve` does not know the flag.
-const serveHelp = spawnSync("uv", ["run", "--project", builderRoot, "kpubdata-builder", "serve", "--help"], {
-  encoding: "utf8",
-});
-const replayAvailable = serveHelp.status === 0 && serveHelp.stdout.includes("--replay");
+// What this Builder checkout can do, asked of its CLI (`real-e2e-probe.mjs`). A `uv run`
+// that fails is reported as what it is, not as a checkout without replay (#840).
+const probe = probeBuilder(builderRoot);
+if (!probe.ok) {
+  console.error("[real-e2e] could not ask this Builder checkout anything — uv run failed:");
+  for (const line of probe.lines) console.error(line);
+  process.exit(1);
+}
+const replayAvailable = probe.replayAvailable;
 const replayArgs = !replayAvailable ? [] : replayDir !== null ? ["--replay-dir", replayDir] : ["--replay"];
 
 const port = "8902";
@@ -87,7 +91,8 @@ const builder = spawn(
   {
     stdio: ["ignore", "pipe", "pipe"],
     env: {
-      ...process.env,
+      // Dependencies from the lock, as for the question above.
+      ...uvEnvironment(),
       KPUBDATA_BUILDER_DEV_MODE: "true",
       // Studio dev 서버(5174) 오리진 허용 — CORS는 default-deny(ADR 0006).
       KPUBDATA_BUILDER_ALLOWED_ORIGINS: "http://localhost:5174",

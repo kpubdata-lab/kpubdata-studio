@@ -997,6 +997,8 @@
       "refused": "This request was not sent on. Calling {{providers}} needs a key, and the request carried none for it.",
       "lost": "This run ended because its key was gone. The server restarted, or the job waited longer than its keys are kept. Keys are not stored on the server, so it has to be entered again.",
       "lostNext": "Once the key is in, running again submits a new run recorded as a retry of this one. This run stays as it ended.",
+      "lostNoSpec": "This run never started, so the server kept no spec of it, and this browser holds none either — it was submitted from another browser, or the stored copy was cleared. Make the build again from Add Data.",
+      "addAgain": "Make it again in Add Data",
       "sharedKey": "{{provider}} is called with {{keyProvider}}'s key.",
       "keyLabel": "{{provider}} key",
       "use": "Use this key",
