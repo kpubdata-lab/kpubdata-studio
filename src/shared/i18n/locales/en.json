@@ -2401,6 +2401,12 @@
       "title": "Something went wrong in {{feature}}",
       "desc": "Only this area is temporarily unavailable. The sidebar and other menus still work. Try again in a moment.",
       "retry": "Try again"
+    },
+    "report": {
+      "idLabel": "Error ID",
+      "withContact": "If it keeps happening, report it with this error ID.",
+      "withoutContact": "If it keeps happening, give this error ID to your administrator.",
+      "contact": "Contact {{contact}}"
     }
   },
   "router": {
