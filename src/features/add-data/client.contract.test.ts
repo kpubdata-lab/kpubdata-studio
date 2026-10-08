@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * One contract, two clients — Add Data (#794).
  *

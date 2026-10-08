@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Collects visibility-aware polling (#255 §3) hook tests into one file.
  *

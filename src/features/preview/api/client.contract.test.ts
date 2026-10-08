@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * One contract, two clients — preview (#794).
  *

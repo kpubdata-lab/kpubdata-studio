@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * One contract, two clients — publish (#794).
  *
@@ -82,7 +83,7 @@ const CALLS: Array<[name: keyof PublishClient, call: Call]> = [
 const REFUSALS: Array<[name: string, call: Call, status: number, code: string | undefined]> = [
   ["readiness of a run that is not there", (client) => client.readiness("no-such-run", "huggingface"), 404, undefined],
   ["publish of a run that is not there", (client) => client.publish("no-such-run", { target: "huggingface", destination: DESTINATION }), 404, undefined],
-  // The demo's way of refusing: a Builder sends its blockers here (see "what is the demo's own").
+  // The demo's way of refusing: a Builder sends its blockers here (the header of `./client` lists it).
   ["publish of a run that is not ready", (client) => client.publish(NOT_READY, { target: "huggingface", destination: DESTINATION }), 409, "publish_conflict"],
   ["reconcile with no receipt", (client) => client.reconcile(READY, { target: "huggingface", destination: DESTINATION }), 404, "receipt_not_found"],
   ["reset with no receipt", (client) => client.resetReceipt(READY, "huggingface", DESTINATION), 404, "receipt_not_found"],

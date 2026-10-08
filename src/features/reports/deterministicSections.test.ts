@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { buildDeterministicSections } from "./deterministicSections";
 import { fetchReportEvidence } from "./evidence";

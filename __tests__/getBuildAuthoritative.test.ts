@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * getBuild() real-mode authoritative data 회귀 (F02).
  *

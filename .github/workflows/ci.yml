@@ -134,8 +134,19 @@ jobs:
 
       # With BUILDER_CONTRACT set, src/shared/lib/contractDrift.test.ts (and the
       # contract half of __tests__/publishIssueCodes.test.ts) run instead of skipping.
-      - name: Test with coverage and the Builder contract (Vitest)
+      # Run on its own first so a drift failure shows under this step's name; the
+      # coverage step below runs the whole suite again, drift file included. A failed
+      # Builder checkout fails the leg at the checkout step, as the drift job did.
+      - name: Builder contract drift
         if: matrix.coverage
+        env:
+          BUILDER_CONTRACT: .builder/contract/builder-api.yaml
+        run: npx vitest run src/shared/lib/contractDrift.test.ts
+
+      # `!cancelled()` lets coverage report even when the drift step failed; the job
+      # still fails because the drift step's own failure is not overridden.
+      - name: Test with coverage and the Builder contract (Vitest)
+        if: ${{ !cancelled() && matrix.coverage }}
         env:
           BUILDER_CONTRACT: .builder/contract/builder-api.yaml
         run: npm run test:coverage
