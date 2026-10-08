@@ -10,6 +10,7 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { INITIAL_DRAFT } from "@/features/add-data/model";
+import EN from "@/shared/i18n/locales/en.json";
 import { previewSourceSchema } from "@/shared/lib/builderApi.schema";
 import type { PreviewSource } from "@/shared/lib/builderApi";
 import { PreviewValidationStep } from "./components/PreviewValidationStep";
@@ -138,6 +139,21 @@ describe("previewCoverage", () => {
     expect(previewCoverage(failed)).toStrictEqual({ kind: "whole", rows: 0 });
   });
 
+  it("leaves a preview that read no row to the empty state", () => {
+    const empty = read({ ...BEFORE_1_109, total_rows: 0, sample: [], fetch_complete: false, source_reported_total: 40 });
+
+    expect(previewCoverage(empty)).toStrictEqual({ kind: "whole", rows: 0 });
+  });
+
+  it("words one row as one row", () => {
+    expect(sampleExtentText({ kind: "sample", fetched: 1, reported: null })).toBe("처음 1건");
+    expect(sampleExtentText({ kind: "sample", fetched: 1, reported: 2_000_000 })).toBe("약 2,000,000건 중 처음 1건");
+    // English is where it shows: not "first 1 rows".
+    expect(EN.addData.preview.extentFirstOne).toBe("first row");
+    expect(EN.addData.preview.extentFirstOneOf).toBe("first row of about {{reported}}");
+    expect(EN.addData.preview.extentFirst).toContain("{{fetched}} rows");
+  });
+
   it("words the extent with the provider's count when there is one", () => {
     expect(sampleExtentText({ kind: "sample", fetched: 5, reported: 2_000_000 })).toBe("약 2,000,000건 중 처음 5건");
     expect(sampleExtentText({ kind: "sample", fetched: 7, reported: null })).toBe("처음 7건");
@@ -149,6 +165,8 @@ describe("PreviewValidationStep, for a preview that read part of the source", ()
     renderPreview(SAMPLE_OF_KNOWN);
 
     expect(screen.getByTestId("preview-sample-notice")).toHaveTextContent("약 2,000,000건 중 처음 5건만 읽었습니다");
+    // The preview step has no statistics panel to speak of.
+    expect(screen.getByTestId("preview-sample-notice")).not.toHaveTextContent("통계");
     expect(screen.getByTestId("sample-footer")).toHaveTextContent("약 2,000,000건 중 처음 5건을 읽어 2건 표시 · 1개 컬럼");
     // Not as the source's size.
     expect(screen.getByTestId("sample-footer")).not.toHaveTextContent("5건 중 2건");
@@ -195,6 +213,10 @@ describe("ReviewBuildStep, for a preview that read part of the source", () => {
     expect(screen.getAllByText(/약 2,000,000건 중 처음 5건/).length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText(/5건 중 표본/)).toBeNull();
     expect(screen.getByTestId("review-sample-note")).toHaveTextContent("Preview 표본에 대한 결과");
+    // The plan's Validation line says so too: a row-count rule judged the sample.
+    expect(screen.getByText(/^1\/1 · .+ · 표본 기준$/)).toBeInTheDocument();
+    // Rows are counted in one unit down the plan, sample or not.
+    expect(screen.getByText(/^5행\(first\) · 약 2,000,000건 중 처음 5건$/)).toBeInTheDocument();
   });
 
   it("states first N rows when the provider stated no count", () => {
@@ -211,7 +233,9 @@ describe("ReviewBuildStep, for a preview that read part of the source", () => {
     renderReview(source);
 
     expect(screen.getAllByText(/5건 중 표본/).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/^5행\(first\) · 5건 중 표본$/)).toBeInTheDocument();
     expect(screen.queryByTestId("review-sample-note")).toBeNull();
+    expect(screen.queryByText(/표본 기준/)).toBeNull();
   });
 
   it("says the checks cover a sample when any of several sources was read in part", () => {
