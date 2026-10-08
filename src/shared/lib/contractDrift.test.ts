@@ -711,6 +711,9 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // A build turned away for want of room (builder#1000, #1040, #1189). The build page says
   // each in the user's language, with the per-user limit when Builder gives it (#859).
   "submitBuild 429 BuildQueueFull": buildRefusalReader("build_queue_full", "1.79.0"),
+  // The synchronous route. No screen sends it: an upload has gone through `submitBuild`
+  // like every other source since #786, and `builderApi.build` is left without a caller.
+  // Were it called, the same reader would read its refusal — which is what is checked.
   "createBuild 429 BuildQueueFull": buildRefusalReader("build_queue_full", "1.82.0"),
   "submitBuild 429 BuildOwnerLimit": buildRefusalReader("build_owner_limit", "1.111.0"),
   "probeProviderKey 429 ProbeRateLimited": {
