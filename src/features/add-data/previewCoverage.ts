@@ -10,6 +10,7 @@
  * A Builder before 1.109.0 sends neither field and read the source to its end, so its
  * `total_rows` is the source's size: it reads here as `whole`, as does `fetch_complete:
  * true`. A source that failed is not a sample of anything; its error is what is shown.
+ * Nor is one no row was read of: the empty state says that.
  */
 import { i18n } from "@/shared/i18n";
 import type { PreviewSource } from "@/shared/lib/builderApi";
@@ -23,7 +24,10 @@ export type PreviewCoverage =
 export function previewCoverage(
   source: Pick<PreviewSource, "status" | "total_rows" | "fetch_complete" | "source_reported_total">,
 ): PreviewCoverage {
-  if (source.fetch_complete !== false || source.status === "failed") return { kind: "whole", rows: source.total_rows };
+  // No rows read is the empty state's to say, not "the first 0 rows".
+  if (source.fetch_complete !== false || source.status === "failed" || source.total_rows === 0) {
+    return { kind: "whole", rows: source.total_rows };
+  }
   return { kind: "sample", fetched: source.total_rows, reported: source.source_reported_total ?? null };
 }
 
@@ -31,7 +35,13 @@ export function previewCoverage(
 export function sampleExtentText(coverage: Extract<PreviewCoverage, { kind: "sample" }>): string {
   // Grouped digits, as the table screens write counts: a source's size can be millions.
   const fetched = coverage.fetched.toLocaleString("ko-KR");
-  return coverage.reported === null
-    ? i18n.t("addData.preview.extentFirst", { fetched })
-    : i18n.t("addData.preview.extentFirstOf", { fetched, reported: coverage.reported.toLocaleString("ko-KR") });
+  // One row has wording of its own: English would otherwise say "first 1 rows".
+  const one = coverage.fetched === 1;
+  if (coverage.reported === null) {
+    return one ? i18n.t("addData.preview.extentFirstOne") : i18n.t("addData.preview.extentFirst", { fetched });
+  }
+  const reported = coverage.reported.toLocaleString("ko-KR");
+  return one
+    ? i18n.t("addData.preview.extentFirstOneOf", { reported })
+    : i18n.t("addData.preview.extentFirstOf", { fetched, reported });
 }
