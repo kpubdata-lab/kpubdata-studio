@@ -158,9 +158,10 @@ Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다
 것을 아무것도 말해 주지 않는다. 그래서 기능은 **클라이언트 인터페이스 하나**를 두고 구현 둘이 그것을
 만족하게 한다.
 
-지금 이 구조인 기능은 **datasets**, **artifacts**, **discover**, **preview** 다
-(`src/features/<기능>/api/client.ts`, discover 는 `src/features/discover/client.ts`). 아래 표는 datasets 의
-이름이고 나머지도 같은 모양이다(`ArtifactsClient`, `DiscoverClient`, `PreviewClient`).
+지금 이 구조인 기능은 **datasets**, **artifacts**, **discover**, **preview**, **add-data** 다
+(`src/features/<기능>/api/client.ts`; discover 와 add-data 는 `src/features/<기능>/client.ts`). 아래 표는
+datasets 의 이름이고 나머지도 같은 모양이다(`ArtifactsClient`, `DiscoverClient`, `PreviewClient`,
+`AddDataClient`).
 
 | | 무엇 |
 |---|---|
@@ -178,7 +179,11 @@ Builder**(fetch 를 바꿔 끼운 것)에 붙여서, 데모의 답이 JSON 과 �
 셋이 있다: 데모는 모르는 run id 에도 답하고, 파일이 없어 다운로드를 거부하며, **끝나지 않은 run 에도
 `finished_at` 없는 manifest 를 준다** — Builder 의 계약에는 없는 manifest 다.
 
-나머지 기능(`publish`, `add-data`, `runs` 등)과 일부 페이지에는 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
+add-data 에도 적어 둔 차이가 있다: 데모의 연결 테스트는 언제나 `connected` 이고, 업로드는 파일을 읽지 않고
+같은 id 를 주며, **데모의 `GET /catalog` 답이 둘이다** — Add Data 의 것과 Catalog 화면의 것이 서로 다른
+fixture 다.
+
+나머지 기능(`publish`, `runs` 등)과 일부 페이지에는 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
 전제하지 않는다.
 
 ## 6. 주요 프런트엔드 영역

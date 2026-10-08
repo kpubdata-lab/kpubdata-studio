@@ -1432,6 +1432,9 @@ export async function uploadFile(
         signal,
       });
     } catch (cause) {
+      // A caller that gave up gets its own abort back, as every other request does —
+      // not "could not connect", which is what an upload that was cancelled showed.
+      if (signal?.aborted) throw cause;
       throw new ApiError(0, i18n.t("api.connFail"), cause);
     }
   }
