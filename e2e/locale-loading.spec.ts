@@ -43,6 +43,7 @@ test("a Korean visit fetches the Korean locale only", async ({ page }) => {
   await page.goto("/");
 
   await expect(homeLink(page, t("nav.home"))).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   expect(urls.filter((url) => KOREAN_CHUNK.test(url))).toHaveLength(1);
   expect(urls.filter((url) => ENGLISH_CHUNK.test(url))).toEqual([]);
 });
@@ -56,6 +57,8 @@ test("an English visit is English on the first paint and fetches the English loc
   await page.goto("/");
 
   await expect(homeLink(page, en.nav.home)).toBeVisible();
+  // The page says the language it is in, not the one index.html was written with (#841).
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByText("nav.home")).toHaveCount(0);
   expect(urls.filter((url) => ENGLISH_CHUNK.test(url))).toHaveLength(1);
   expect(urls.filter((url) => KOREAN_CHUNK.test(url))).toEqual([]);
@@ -69,6 +72,8 @@ test("an English visit whose locale cannot be fetched is Korean, and keeps the c
   await page.goto("/");
 
   await expect(homeLink(page, t("nav.home"))).toBeVisible();
+  // Shown in Korean, so the page says Korean — whatever was asked for.
+  await expect(page.locator("html")).toHaveAttribute("lang", "ko");
   await expect(page.getByText("nav.home")).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("studio-lang"))).toBe("en");
 });

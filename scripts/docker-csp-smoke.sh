@@ -3,6 +3,7 @@
 # BUILDER_API_URLs, and verify the Content-Security-Policy header — its
 # existence, the deployment origin in connect-src, and that it does not
 # double-apply with the <meta> CSP. A bad origin must refuse to start.
+# Also: the security headers every response carries, and the page's lang (#841).
 #
 # Runs outside CI (manually) and in CI (ci.yml's docker-csm job). Requires a
 # Docker daemon. Exits nonzero on the first failure.
@@ -40,6 +41,17 @@ echo "$header" | grep -q 'https://api.example.org' && ok "deployment origin in c
 # a second policy in the page would double-apply.
 body=$(curl -s http://localhost:18081/)
 echo "$body" | grep -q 'http-equiv="Content-Security-Policy"' && bad "meta CSP also present (double-apply)" || ok "no meta CSP (header only)"
+
+# The headers every response carries (#841), on the page and on the three other kinds of
+# response nginx gives: a location that left the include out would drop them there.
+for path in / /assets/none.js /config.js /silent-check-sso.html; do
+  headers=$(curl -sI "http://localhost:18081${path}")
+  echo "$headers" | grep -qi '^Referrer-Policy: strict-origin-when-cross-origin' && ok "Referrer-Policy on ${path}" || bad "Referrer-Policy missing on ${path}"
+  echo "$headers" | grep -qi '^Permissions-Policy: .*camera=()' && ok "Permissions-Policy on ${path}" || bad "Permissions-Policy missing on ${path}"
+  echo "$headers" | grep -qi '^Strict-Transport-Security: max-age=31536000' && ok "Strict-Transport-Security on ${path}" || bad "Strict-Transport-Security missing on ${path}"
+  echo "$headers" | grep -qi '^X-Content-Type-Options: nosniff' && ok "X-Content-Type-Options on ${path}" || bad "X-Content-Type-Options missing on ${path}"
+done
+echo "$body" | grep -q '<html lang="ko"' && ok "the page declares its language" || bad "the page does not declare lang=\"ko\""
 
 # --- Case 2: a different origin produces a different header ---
 say "Case 2: different origin"
