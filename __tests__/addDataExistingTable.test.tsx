@@ -20,14 +20,18 @@ function RunStub() {
   return <div>run={buildId}</div>;
 }
 
-function existingTable(datasetId: string, rows: number) {
+/** The source key the preview answers with (`__tests__/msw/handlers.ts`): it names the table. */
+const SOURCE_KEY = "kma__forecast";
+
+/** A table of `datasetId`: by default the one a build of the previewed source would commit to. */
+function existingTable(datasetId: string, rows: number, sourceKey = SOURCE_KEY, owner: string | null = datasetId) {
   return {
-    table_id: `tbl_${datasetId}`,
-    logical_name: `${datasetId}.datago.air_quality`,
+    table_id: `tbl_${datasetId}_${sourceKey}`,
+    logical_name: `${datasetId}.${sourceKey}`,
     current_snapshot_id: "snap_1",
     revision: 1,
     current_snapshot: { snapshot_id: "snap_1", row_count: rows, committed_at: "2026-10-08T01:00:00Z", coverage: null },
-    dataset_id: datasetId,
+    dataset_id: owner,
   };
 }
 
@@ -98,7 +102,7 @@ function buildButton(): HTMLElement {
   return screen.getByRole("button", { name: "테이블 만들기" });
 }
 
-function shownSpec(): { dataset_id?: unknown } {
+function shownSpec(): { dataset_id?: unknown; title?: unknown } {
   const shown: unknown = JSON.parse(document.querySelector("pre")?.textContent ?? "null");
   return typeof shown === "object" && shown !== null ? shown : {};
 }
@@ -121,7 +125,7 @@ describe("Add Data — a table of this id is already there (#837)", () => {
       return found!;
     });
     // It names the table that is there, and how much is in it.
-    expect(within(notice).getByText("datago-air-quality.datago.air_quality")).toBeInTheDocument();
+    expect(within(notice).getByText(`datago-air-quality.${SOURCE_KEY}`)).toBeInTheDocument();
     expect(within(notice).getByText(/22행/)).toBeInTheDocument();
     expect(within(notice).getByRole("radio", { name: /새 테이블로 만들기/ })).toBeChecked();
     expect(within(notice).getByRole("radio", { name: /기존 테이블 갱신/ })).not.toBeChecked();
@@ -163,6 +167,55 @@ describe("Add Data — a table of this id is already there (#837)", () => {
 
     await screen.findByText("run=run-of-datago-air-quality-3");
     expect(builder.submitted).toEqual(["datago-air-quality-3"]);
+  });
+
+  it("does not overwrite a table Builder could not attribute to a dataset", async () => {
+    // `dataset_id: null`: Builder could not read the spec of the run behind the table.
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const builder = builderWith(() => HttpResponse.json({ tables: [existingTable("datago-air-quality", 22, SOURCE_KEY, null)] }));
+
+    await reachReview();
+    await screen.findByRole("radio", { name: /기존 테이블 갱신/ });
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    fireEvent.click(buildButton());
+
+    await screen.findByText("run=run-of-datago-air-quality-2");
+    expect(builder.submitted).toEqual(["datago-air-quality-2"]);
+  });
+
+  it("says a table would be added beside, not replaced, when only the id is shared", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const builder = builderWith(() => HttpResponse.json({ tables: [existingTable("datago-air-quality", 22, "another_source")] }));
+
+    await reachReview();
+
+    const notice = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-existing-table="found"]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(notice.getAttribute("data-existing-table-replaces")).toBe("false");
+    expect(within(notice).queryByRole("radio", { name: /기존 테이블 갱신/ })).toBeNull();
+    // A new id is still the default; the same id is there to choose.
+    fireEvent.click(within(notice).getByRole("radio", { name: /같은 ID 아래에 추가/ }));
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    fireEvent.click(buildButton());
+    await screen.findByText("run=run-of-datago-air-quality");
+    expect(builder.submitted).toEqual(["datago-air-quality"]);
+  });
+
+  it("shows the id and the numbered title the new table is built under", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    builderWith(() => HttpResponse.json({ tables: [existingTable("datago-air-quality", 22)] }));
+
+    await reachReview();
+    await screen.findByRole("radio", { name: /새 테이블로 만들기/ });
+
+    expect(shownSpec()).toMatchObject({ dataset_id: "datago-air-quality-2", title: "대기오염 (2)" });
+    expect(screen.getByText("ID: datago-air-quality-2")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /기존 테이블 갱신/ }));
+    expect(shownSpec()).toMatchObject({ dataset_id: "datago-air-quality", title: "대기오염" });
+    expect(screen.getByText("ID: datago-air-quality")).toBeInTheDocument();
   });
 
   it("says nothing and keeps the id when no table of it is there", async () => {

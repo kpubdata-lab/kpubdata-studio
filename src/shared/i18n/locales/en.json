@@ -1085,6 +1085,8 @@
       "planPreview": "Preview",
       "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}} sources{{mixed}}",
       "planPreviewSingle": "{{limit}} rows({{mode}}) · sample of {{total}} rows",
+      "planPreviewPartial": "{{limit}} rows({{mode}}) · {{extent}}",
+      "qualityOfSample": "Covers the preview sample, not the whole source.",
       "perSourceTitle": "Preview/validation per source",
       "specTitle": "The canonical BuildSpec that will be submitted",
       "specUnavailable": "The spec cannot be built yet.",
@@ -1106,7 +1108,10 @@
       "existingChoiceNew": "Create a new table",
       "existingChoiceNewNote": "Created under the ID {{id}}. The existing table is left as it is.",
       "existingChoiceRefresh": "Refresh the existing table",
-      "existingChoiceRefreshNote": "Replaces the table under the ID {{id}} with the data fetched this time."
+      "existingChoiceRefreshNote": "Replaces the table under the ID {{id}} with the data fetched this time.",
+      "existingBodyBeside": "There are already tables under the table ID {{id}}. The table created this time has another name, so it does not replace them. Created under the same ID, though, it becomes one more table under that ID and they are listed together.",
+      "existingChoiceBeside": "Add under the same ID",
+      "existingChoiceBesideNote": "Creates one more table under the ID {{id}}. The existing tables are left as they are."
     },
     "preview": {
       "title": "Preview · validation",
@@ -1138,6 +1143,11 @@
       "diffUnavailable": "Diff is not available",
       "diffUnavailableDesc": "The rows in source_sample and the transformed result cannot be guaranteed to line up, so no diff was computed (diff_available=false).",
       "sampleFooter": "Showing {{shown}} of {{total}} rows · {{columns}} columns",
+      "extentFirst": "first {{fetched}} rows",
+      "extentFirstOf": "first {{fetched}} rows of about {{reported}}",
+      "sampleFooterPartial": "Read the {{extent}}, showing {{shown}} · {{columns}} columns",
+      "sampleNotice": "This preview is a sample, not the whole source — only the {{extent}} were read. The statistics and validation results below cover this sample.",
+      "validationOfSample": "These results cover the {{fetched}} rows read, not the whole source.",
       "validationTitle": "Validation",
       "notEvaluated": "Not evaluated / N/A — no quality check ran in this preview.",
       "qualityLink": "Open Quality",

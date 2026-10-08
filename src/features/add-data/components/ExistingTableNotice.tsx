@@ -1,8 +1,10 @@
 /**
  * What the review step says about a table that is already there (#837).
  *
- * See `existingTables.ts`. A new table is what is built unless the user picks the other
+ * See `existingTables.ts`. A new id is what is built under unless the user picks the other
  * choice here; while the answer is unknown the step holds the build and offers to ask again.
+ * The words differ by what the same id would do: replace a table that is there, or — a
+ * file, whose every upload is a table of its own — put another beside it.
  */
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,11 +44,18 @@ export function ExistingTableNotice({ datasetId, existing, choice, onChoose, onR
     );
   }
 
+  // Whether the build would commit to a table that is there, or only share its id.
+  const replaces = existing.replaced.length > 0;
+
   return (
-    <Card className="space-y-3 p-4" data-existing-table="found" variant="error">
+    <Card className="space-y-3 p-4" data-existing-table="found" data-existing-table-replaces={String(replaces)} variant="error">
       <div role="alert" className="space-y-1">
         <p className="text-sm font-semibold">{t("addData.review.existingTitle")}</p>
-        <p className="text-sm">{t("addData.review.existingBody", { id: datasetId })}</p>
+        <p className="text-sm">
+          {replaces
+            ? t("addData.review.existingBody", { id: datasetId })
+            : t("addData.review.existingBodyBeside", { id: datasetId })}
+        </p>
       </div>
       <ul className="space-y-0.5 text-sm">
         {existing.tables.map((table) => {
@@ -81,17 +90,21 @@ export function ExistingTableNotice({ datasetId, existing, choice, onChoose, onR
         </label>
         <label className="flex items-start gap-2 text-sm">
           <input
-            checked={choice === "refresh"}
+            checked={choice === "same"}
             className="mt-1"
             name={group}
-            onChange={() => onChoose("refresh")}
+            onChange={() => onChoose("same")}
             type="radio"
-            value="refresh"
+            value="same"
           />
           <span>
-            <span className="block font-medium">{t("addData.review.existingChoiceRefresh")}</span>
+            <span className="block font-medium">
+              {replaces ? t("addData.review.existingChoiceRefresh") : t("addData.review.existingChoiceBeside")}
+            </span>
             <span className="block text-xs text-muted-foreground">
-              {t("addData.review.existingChoiceRefreshNote", { id: datasetId })}
+              {replaces
+                ? t("addData.review.existingChoiceRefreshNote", { id: datasetId })
+                : t("addData.review.existingChoiceBesideNote", { id: datasetId })}
             </span>
           </span>
         </label>

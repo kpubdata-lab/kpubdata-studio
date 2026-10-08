@@ -598,20 +598,24 @@ export function AddDataPage() {
 
   // Adding a dataset whose id already has a table would replace that table (#837). The
   // review step asks Builder each time it is entered and whenever the id changes, and the
-  // spec it shows and submits goes under a free id unless the user chose to refresh.
+  // spec it shows and submits goes under a free id unless the user chose the same one.
   const requestedDatasetId = specResult.spec?.datasetId;
+  // The source keys Builder's preview gave name the tables the build makes. From a stale
+  // preview they are not the current ones, and the build is held anyway.
+  const previewedSourceKeys = isStale ? "" : previewSources.map((source) => source.source_key).join("\n");
   useEffect(() => {
     if (step !== STEP_IDS.indexOf("create") || !requestedDatasetId) return;
     const controller = new AbortController();
     setExisting({ status: "checking" });
     setTableChoice("new");
-    findExistingTables(requestedDatasetId, controller.signal)
+    const sourceKeys = previewedSourceKeys === "" ? [] : previewedSourceKeys.split("\n");
+    findExistingTables(requestedDatasetId, controller.signal, sourceKeys)
       .then(setExisting)
       .catch(() => {
         // Aborted: a newer question is on its way, or the step was left.
       });
     return () => controller.abort();
-  }, [step, requestedDatasetId, existingAsked]);
+  }, [step, requestedDatasetId, previewedSourceKeys, existingAsked]);
   const specForBuild = specResult.spec ? specToBuild(specResult.spec, existing, tableChoice) : undefined;
 
   // Build success (real-mode always uses actual run_id from Builder, mock-mode uses existing

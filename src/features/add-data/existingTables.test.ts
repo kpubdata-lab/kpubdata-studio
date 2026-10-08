@@ -41,42 +41,92 @@ const SPEC: BuildSpec = {
 
 describe("existingTablesAmong", () => {
   it("finds the table the dataset id already has, and the id that is free", () => {
-    const found = existingTablesAmong("datago-air-station", [table("other.x", "other"), STATIONS]);
+    const found = existingTablesAmong("datago-air-station", [table("other.x", "other"), STATIONS], ["datago.air_station"]);
 
-    expect(found).toStrictEqual({ status: "found", tables: [STATIONS], freeId: "datago-air-station-2" });
+    expect(found).toStrictEqual({
+      status: "found",
+      tables: [STATIONS],
+      replaced: [STATIONS],
+      freeId: "datago-air-station-2",
+      freeNumber: 2,
+    });
   });
 
   it("finds every table of a dataset with several sources", () => {
     const first = table("weather.a", "weather");
     const second = table("weather.b", "weather");
 
-    expect(existingTablesAmong("weather", [first, table("weather-2.a", "weather-2"), second])).toStrictEqual({
+    expect(existingTablesAmong("weather", [first, table("weather-2.a", "weather-2"), second], ["a", "b"])).toStrictEqual({
       status: "found",
       tables: [first, second],
+      replaced: [first, second],
       freeId: "weather-3",
+      freeNumber: 3,
     });
+  });
+
+  it("tells a table the build would replace from one that only shares the id", () => {
+    // Two uploads under one id: every upload is a source key, and a table, of its own.
+    const earlier = table("report.file.upl_1", "report");
+
+    const found = existingTablesAmong("report", [earlier], ["file.upl_2"]);
+
+    expect(found).toMatchObject({ status: "found", tables: [earlier], replaced: [], freeId: "report-2" });
+  });
+
+  it("takes every table under the id as replaced while the names it would make are not known", () => {
+    const earlier = table("report.file.upl_1", "report");
+
+    expect(existingTablesAmong("report", [earlier])).toMatchObject({ status: "found", replaced: [earlier] });
   });
 
   it("reads an older Builder's tables by their names", () => {
     const old = table("datago-air-station.datago.air_station");
 
-    expect(existingTablesAmong("datago-air-station", [old])).toMatchObject({ status: "found", tables: [old] });
+    expect(existingTablesAmong("datago-air-station", [old], ["datago.air_station"])).toMatchObject({
+      status: "found",
+      tables: [old],
+      replaced: [old],
+    });
   });
 
-  it("says none when no table belongs to the id", () => {
+  it("counts a table Builder could not attribute, when its name is under the id", () => {
+    // `dataset_id: null`: Builder could not read the run's spec. The Tables screen does
+    // not guess whose it is; here a wrong "none" would let the build overwrite it.
+    const unattributed = table("datago-air-station.datago.air_station", null);
+
+    expect(existingTablesAmong("datago-air-station", [unattributed], ["datago.air_station"])).toStrictEqual({
+      status: "found",
+      tables: [unattributed],
+      replaced: [unattributed],
+      freeId: "datago-air-station-2",
+      freeNumber: 2,
+    });
+    // Not one whose name merely begins the same way.
+    expect(existingTablesAmong("datago-air", [unattributed], ["station"])).toStrictEqual({ status: "none" });
+  });
+
+  it("counts a table of another dataset whose name is exactly one the build would make", () => {
+    // Dataset `seoul` with source `air.pm` and dataset `seoul.air` with source `pm` are
+    // one table name.
+    const sameName = table("seoul.air.pm", "seoul.air");
+
+    expect(existingTablesAmong("seoul", [sameName], ["air.pm"])).toMatchObject({
+      status: "found",
+      tables: [sameName],
+      replaced: [sameName],
+    });
+    expect(existingTablesAmong("seoul", [sameName], ["air.o3"])).toStrictEqual({ status: "none" });
+  });
+
+  it("says none when no table is under the id", () => {
     // A table whose name starts with the id but which Builder says is another dataset's.
     const other = table("datago-air-station.x", "datago-air-station-archive");
 
-    expect(existingTablesAmong("datago-air-station", [other, table("datago-air.y", "datago-air")])).toStrictEqual({
-      status: "none",
-    });
-    expect(existingTablesAmong("datago-air-station", [])).toStrictEqual({ status: "none" });
-  });
-
-  it("does not take a table Builder could not attribute as this dataset's", () => {
-    expect(existingTablesAmong("datago-air-station", [table("datago-air-station.x", null)])).toStrictEqual({
-      status: "none",
-    });
+    expect(
+      existingTablesAmong("datago-air-station", [other, table("datago-air.y", "datago-air")], ["datago.air_station"]),
+    ).toStrictEqual({ status: "none" });
+    expect(existingTablesAmong("datago-air-station", [], ["datago.air_station"])).toStrictEqual({ status: "none" });
   });
 });
 
@@ -84,7 +134,13 @@ describe("freeDatasetId", () => {
   it("skips the suffixes that already have a table", () => {
     const tables = [STATIONS, table("datago-air-station-2.s", "datago-air-station-2"), table("datago-air-station-3.s", "datago-air-station-3")];
 
-    expect(freeDatasetId("datago-air-station", tables)).toBe("datago-air-station-4");
+    expect(freeDatasetId("datago-air-station", tables)).toStrictEqual({ id: "datago-air-station-4", number: 4 });
+  });
+
+  it("skips a suffix whose table Builder could not attribute, or whose name the build would make", () => {
+    const tables = [table("air-2.pm", null), table("air-3.pm", "air-3.archive")];
+
+    expect(freeDatasetId("air", tables, ["pm"])).toStrictEqual({ id: "air-4", number: 4 });
   });
 
   it("stays inside the length a dataset id may have", () => {
@@ -92,17 +148,23 @@ describe("freeDatasetId", () => {
 
     const free = freeDatasetId(long, [table(`${long}.s`, long)]);
 
-    expect(free).toBe(`${"a".repeat(78)}-2`);
-    expect(free).toHaveLength(80);
+    expect(free.id).toBe(`${"a".repeat(78)}-2`);
+    expect(free.id).toHaveLength(80);
   });
 });
 
 describe("datasetIdToBuild and specToBuild", () => {
-  const found: ExistingTables = { status: "found", tables: [STATIONS], freeId: "datago-air-station-2" };
+  const found: ExistingTables = {
+    status: "found",
+    tables: [STATIONS],
+    replaced: [STATIONS],
+    freeId: "datago-air-station-2",
+    freeNumber: 2,
+  };
 
-  it("builds under the free id unless the user chose to refresh the table", () => {
+  it("builds under the free id unless the user chose the same one", () => {
     expect(datasetIdToBuild("datago-air-station", found, "new")).toBe("datago-air-station-2");
-    expect(datasetIdToBuild("datago-air-station", found, "refresh")).toBe("datago-air-station");
+    expect(datasetIdToBuild("datago-air-station", found, "same")).toBe("datago-air-station");
   });
 
   it.each<ExistingTables>([{ status: "none" }, { status: "checking" }, { status: "unknown" }])(
@@ -112,12 +174,12 @@ describe("datasetIdToBuild and specToBuild", () => {
     },
   );
 
-  it("changes nothing of the spec but the id, and not the spec it was given", () => {
+  it("changes the id and numbers the title, nothing else, and not the spec it was given", () => {
     const built = specToBuild(SPEC, found, "new");
 
-    expect(built).toStrictEqual({ ...SPEC, datasetId: "datago-air-station-2" });
-    expect(SPEC.datasetId).toBe("datago-air-station");
-    expect(specToBuild(SPEC, found, "refresh")).toBe(SPEC);
+    expect(built).toStrictEqual({ ...SPEC, datasetId: "datago-air-station-2", title: "Air stations (2)" });
+    expect(SPEC).toMatchObject({ datasetId: "datago-air-station", title: "Air stations" });
+    expect(specToBuild(SPEC, found, "same")).toBe(SPEC);
     expect(specToBuild(SPEC, { status: "none" }, "new")).toBe(SPEC);
   });
 });
@@ -153,9 +215,15 @@ describe("findExistingTables", () => {
   it("asks Builder for the caller's tables and finds the one of this id", async () => {
     const asked = builder(() => json(200, { tables: [STATIONS] }));
 
-    const existing = await findExistingTables("datago-air-station");
+    const existing = await findExistingTables("datago-air-station", undefined, ["datago.air_station"]);
 
-    expect(existing).toStrictEqual({ status: "found", tables: [STATIONS], freeId: "datago-air-station-2" });
+    expect(existing).toStrictEqual({
+      status: "found",
+      tables: [STATIONS],
+      replaced: [STATIONS],
+      freeId: "datago-air-station-2",
+      freeNumber: 2,
+    });
     expect(asked.filter((path) => path.endsWith("/warehouse/tables"))).toHaveLength(1);
   });
 

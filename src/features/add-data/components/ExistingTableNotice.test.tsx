@@ -19,10 +19,7 @@ const DRAFT: AddDataDraft = {
   description: "Measuring stations",
 };
 
-const FOUND: ExistingTables = {
-  status: "found",
-  freeId: "datago-air-station-2",
-  tables: [
+const THERE = [
     {
       table_id: "tbl_1",
       logical_name: "datago-air-station.datago.air_station",
@@ -39,8 +36,18 @@ const FOUND: ExistingTables = {
       current_snapshot: null,
       dataset_id: "datago-air-station",
     },
-  ],
+];
+
+/** The build would commit to the first of them: same name. */
+const FOUND: ExistingTables = {
+  status: "found",
+  freeId: "datago-air-station-2",
+  freeNumber: 2,
+  tables: THERE,
+  replaced: [THERE[0]],
 };
+/** The build makes a table of another name under the same id — a second upload. */
+const BESIDE: ExistingTables = { ...FOUND, replaced: [] };
 
 /** The review step, ready to build but for what `existing` says. */
 function renderReview(existing: ExistingTables, choice: ExistingTableChoice = "new") {
@@ -108,13 +115,36 @@ describe("ReviewBuildStep — a table of this id is already there (#837)", () =>
 
   it.each<[ExistingTableChoice, RegExp, RegExp]>([
     ["new", /새 테이블로 만들기/, /기존 테이블 갱신/],
-    ["refresh", /기존 테이블 갱신/, /새 테이블로 만들기/],
+    ["same", /기존 테이블 갱신/, /새 테이블로 만들기/],
   ])("shows %s as the choice in force and reports the other when picked", (choice, checked, other) => {
     const handlers = renderReview(FOUND, choice);
 
     expect(screen.getByRole("radio", { name: checked })).toBeChecked();
     expect(screen.getByRole("radio", { name: other })).not.toBeChecked();
     fireEvent.click(screen.getByRole("radio", { name: other }));
-    expect(handlers.onChooseTable).toHaveBeenCalledWith(choice === "new" ? "refresh" : "new");
+    expect(handlers.onChooseTable).toHaveBeenCalledWith(choice === "new" ? "same" : "new");
+  });
+
+  it("does not say a table is replaced, or call it a refresh, when the build only shares its id", () => {
+    // A file: every upload is a table of its own, so the same id adds one beside the other.
+    const handlers = renderReview(BESIDE);
+
+    const notice = document.querySelector<HTMLElement>('[data-existing-table="found"]');
+    expect(notice?.getAttribute("data-existing-table-replaces")).toBe("false");
+    expect(notice?.textContent).toContain("바꾸지는 않습니다");
+    expect(notice?.textContent).not.toContain("바뀝니다");
+    expect(screen.queryByRole("radio", { name: /기존 테이블 갱신/ })).toBeNull();
+    expect(screen.getByRole("radio", { name: /새 테이블로 만들기/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("radio", { name: /같은 ID 아래에 추가/ }));
+    expect(handlers.onChooseTable).toHaveBeenCalledWith("same");
+  });
+
+  it("says it of the table that would be replaced when one would be", () => {
+    renderReview(FOUND);
+
+    const notice = document.querySelector<HTMLElement>('[data-existing-table="found"]');
+    expect(notice?.getAttribute("data-existing-table-replaces")).toBe("true");
+    expect(notice?.textContent).toContain("바뀝니다");
+    expect(screen.queryByRole("radio", { name: /같은 ID 아래에 추가/ })).toBeNull();
   });
 });

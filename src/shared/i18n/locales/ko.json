@@ -1085,6 +1085,8 @@
       "planPreview": "미리보기",
       "planPreviewMulti": "{{limit}} rows({{mode}}) · {{count}}개 source{{mixed}}",
       "planPreviewSingle": "{{limit}} rows({{mode}}) · {{total}}건 중 표본",
+      "planPreviewPartial": "{{limit}}행({{mode}}) · {{extent}}",
+      "qualityOfSample": "source 전체가 아니라 Preview 표본에 대한 결과입니다.",
       "perSourceTitle": "Source별 Preview/Validation",
       "specTitle": "실제 제출될 canonical BuildSpec",
       "specUnavailable": "스펙을 아직 만들 수 없습니다.",
@@ -1106,7 +1108,10 @@
       "existingChoiceNew": "새 테이블로 만들기",
       "existingChoiceNewNote": "ID {{id}} 로 만듭니다. 이미 있는 테이블은 그대로 둡니다.",
       "existingChoiceRefresh": "기존 테이블 갱신",
-      "existingChoiceRefreshNote": "ID {{id}} 의 테이블을 이번에 가져오는 데이터로 바꿉니다."
+      "existingChoiceRefreshNote": "ID {{id}} 의 테이블을 이번에 가져오는 데이터로 바꿉니다.",
+      "existingBodyBeside": "테이블 ID {{id}} 아래에 테이블이 이미 있습니다. 이번에 만드는 테이블은 이름이 달라 그 테이블을 바꾸지는 않습니다. 다만 같은 ID 로 만들면 같은 ID 아래에 테이블이 하나 더 생겨 서로 섞여 보입니다.",
+      "existingChoiceBeside": "같은 ID 아래에 추가",
+      "existingChoiceBesideNote": "ID {{id}} 아래에 테이블을 하나 더 만듭니다. 이미 있는 테이블은 그대로입니다."
     },
     "preview": {
       "title": "Preview · 검증",
@@ -1138,6 +1143,11 @@
       "diffUnavailable": "Diff를 사용할 수 없습니다",
       "diffUnavailableDesc": "source_sample과 변환 결과의 행이 일치한다고 보장할 수 없어 diff를 계산하지 않았습니다(diff_available=false).",
       "sampleFooter": "{{total}}건 중 {{shown}}건 표시 · {{columns}}개 컬럼",
+      "extentFirst": "처음 {{fetched}}건",
+      "extentFirstOf": "약 {{reported}}건 중 처음 {{fetched}}건",
+      "sampleFooterPartial": "{{extent}}을 읽어 {{shown}}건 표시 · {{columns}}개 컬럼",
+      "sampleNotice": "이 Preview 는 source 전체가 아니라 표본입니다 — {{extent}}만 읽었습니다. 아래 통계와 검증 결과도 이 표본에 대한 것입니다.",
+      "validationOfSample": "source 전체가 아니라 읽어 온 표본 {{fetched}}건에 대한 결과입니다.",
       "validationTitle": "검증 결과 (Validation)",
       "notEvaluated": "Not evaluated / N/A — 이 preview에서 평가된 quality check가 없습니다.",
       "qualityLink": "상세 Quality 보기",

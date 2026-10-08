@@ -11,12 +11,13 @@
  *
  * Two exceptions (#283 review response, Epic #246, follow-up §1): url source endpoint and public_api source sourceParams
  * may contain secret query/param values (api_key/serviceKey/token/secret, high-entropy), so redactBuildSpecForDisplay/
- * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specResult.spec))
- * bypasses this component and uses the original spec, so display redaction does not affect submitted values.
+ * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specForBuild))
+ * bypasses this component and submits the spec it was given unredacted, so display redaction does not affect submitted values.
  *
  * `spec` is the spec as it will be submitted: where a table of the draft's id is already
- * there, the page has put it under a free id unless the user chose to refresh that table
- * (#837, `existingTables.ts`). `draft.datasetId` stays the id the draft asked for.
+ * there, the page has put it under a free id — and numbered its title — unless the user
+ * chose the same id (#837, `existingTables.ts`). `draft.datasetId` stays the id the draft
+ * asked for; what the step shows of the table is read from `spec`.
  */
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,6 +30,7 @@ import { redactUrlEndpoint } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsText } from "@/features/add-data/paramsRedaction";
 import { ExistingTableNotice } from "@/features/add-data/components/ExistingTableNotice";
 import type { ExistingTableChoice, ExistingTables } from "@/features/add-data/existingTables";
+import { previewCoverage, sampleExtentText } from "@/features/add-data/previewCoverage";
 import type { PreviewSource } from "@/shared/lib/builderApi";
 import type { BuildJobStatus } from "@/features/runs/useBuildJob";
 import type { AddDataDraft, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
@@ -109,16 +111,24 @@ export function ReviewBuildStep({
   onBuild,
   onCancel,
 }: ReviewBuildStepProps) {
-  // Actual submission always uses the original spec (AddDataPage onBuild passes specResult.spec to job.start directly) —
+  // Submission uses `spec` as given, unredacted (AddDataPage onBuild passes the same specForBuild to job.start) —
   // displaySpec here is a display-only copy, and redaction has no effect on actual submission (#283 review response, Epic #246).
   const { t } = useTranslation();
   const logicalNameId = useId();
+  // The table as it will be built: `spec` carries the id and title the page settled on.
+  const tableId = spec?.datasetId || draft.datasetId;
+  const tableTitle = spec?.title || draft.title || tableId || "—";
   const logicalNames = spec && !isStale ? previewSources.map((source) => `${spec.datasetId}.${source.source_key}`) : [];
   const displaySpec = spec ? redactBuildSpecForDisplay(spec) : null;
   const displaySubmissionSpec = displaySpec ? toBuilderSpec(displaySpec) : null;
    // Do not fabricate fake single PASS from multiple sources' quality_results — sum results as Builder actually returned
    // (pass/warn/fail counts), and if per-source status varies, display as mixed (#250 §3).
   const totalRows = previewSources.length > 0 ? previewSources[0].total_rows : undefined;
+  // A preview that stopped before the source's end read a sample: its row count is not
+  // the source's size, and the checks ran over those rows only (#847).
+  const coverage = previewSources.length === 1 ? previewCoverage(previewSources[0]) : null;
+  const sampleExtent = coverage?.kind === "sample" ? sampleExtentText(coverage) : null;
+  const anySample = previewSources.some((source) => previewCoverage(source).kind === "sample");
   const previewsSummary = summarizePreviewSources(previewSources);
   const quality = previewSources.length > 0
     ? summarizeChecksPassed(previewSources.flatMap((s) => s.quality_results))
@@ -139,7 +149,9 @@ export function ReviewBuildStep({
       <div className="grid gap-3 sm:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs font-semibold uppercase text-muted-foreground">{t("addData.review.datasetLabel")}</p>
-          <p className="mt-1 text-base font-semibold">{draft.title || draft.datasetId || "—"}</p>
+          <p className="mt-1 text-base font-semibold">{tableTitle}</p>
+          {/* The id it is built under — a free one when a table of the draft's id is there (#837). */}
+          {tableId ? <p className="break-all font-mono text-xs text-muted-foreground">{t("labels.idValue", { id: tableId })}</p> : null}
           <p className="text-xs text-muted-foreground">{sourceSummary(draft)}</p>
         </Card>
         <Card className="p-4">
@@ -152,7 +164,7 @@ export function ReviewBuildStep({
                     count: previewSources.length,
                     mixed: previewsSummary.mixed ? " · mixed" : "",
                   })
-                : t("addData.review.previewSingle", { total: totalRows })
+                : sampleExtent ?? t("addData.review.previewSingle", { total: totalRows })
               : t("addData.review.notRun")}
           </p>
         </Card>
@@ -169,6 +181,11 @@ export function ReviewBuildStep({
           {previewsSummary.mixed ? (
             <p role="status" className="mt-1 text-xs text-status-warning">
               {t("addData.review.mixedShort")}
+            </p>
+          ) : null}
+          {quality && anySample ? (
+            <p className="mt-1 text-xs text-muted-foreground" data-testid="review-sample-note">
+              {t("addData.review.qualityOfSample")}
             </p>
           ) : null}
         </Card>
@@ -231,7 +248,7 @@ export function ReviewBuildStep({
           <dl className="divide-y divide-border text-sm">
             {[
               [t("addData.review.planSource"), sourceSummary(draft)],
-              [t("addData.review.planDataset"), draft.title || draft.datasetId || "—"],
+              [t("addData.review.planDataset"), tableId ? `${tableTitle} · ${tableId}` : tableTitle],
               [t("addData.review.planQuery"), querySummary(draft)],
               [
                 t("addData.review.planPreview"),
@@ -243,11 +260,17 @@ export function ReviewBuildStep({
                         count: previewSources.length,
                         mixed: previewsSummary.mixed ? " (mixed)" : "",
                       })
-                    : t("addData.review.planPreviewSingle", {
-                        limit: previewLimit,
-                        mode: previewSampleMode,
-                        total: totalRows,
-                      })
+                    : sampleExtent
+                      ? t("addData.review.planPreviewPartial", {
+                          limit: previewLimit,
+                          mode: previewSampleMode,
+                          extent: sampleExtent,
+                        })
+                      : t("addData.review.planPreviewSingle", {
+                          limit: previewLimit,
+                          mode: previewSampleMode,
+                          total: totalRows,
+                        })
                   : t("addData.review.notRun"),
               ],
               ["Validation", quality ? `${quality.pass}/${quality.evaluated} · ${quality.status}` : t("addData.review.notRun")],
