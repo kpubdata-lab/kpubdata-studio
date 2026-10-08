@@ -719,6 +719,8 @@ describe("Add Data Workbench — Review == submission, 실제 run_id 사용 (rea
 
     let capturedSpec: unknown = null;
     mswServer.use(
+      // No table of this id yet: the build is not held (#837).
+      http.get(`${API_BASE}/warehouse/tables`, () => HttpResponse.json({ tables: [] })),
       http.post(`${API_BASE}/builds`, async ({ request }) => {
         const body = (await request.json()) as { spec: string };
         capturedSpec = JSON.parse(body.spec);

@@ -11,8 +11,13 @@
  *
  * Two exceptions (#283 review response, Epic #246, follow-up §1): url source endpoint and public_api source sourceParams
  * may contain secret query/param values (api_key/serviceKey/token/secret, high-entropy), so redactBuildSpecForDisplay/
- * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specResult.spec))
- * bypasses this component and uses the original spec, so display redaction does not affect submitted values.
+ * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specForBuild))
+ * bypasses this component and submits the spec it was given unredacted, so display redaction does not affect submitted values.
+ *
+ * `spec` is the spec as it will be submitted: where a table of the draft's id is already
+ * there, the page has put it under a free id — and numbered its title — unless the user
+ * chose the same id (#837, `existingTables.ts`). `draft.datasetId` stays the id the draft
+ * asked for; what the step shows of the table is read from `spec`.
  */
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,6 +28,8 @@ import { QualityBadge } from "@/features/quality/QualityBadge";
 import { redactBuildSpecForDisplay } from "@/features/add-data/model";
 import { redactUrlEndpoint } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsText } from "@/features/add-data/paramsRedaction";
+import { ExistingTableNotice } from "@/features/add-data/components/ExistingTableNotice";
+import type { ExistingTableChoice, ExistingTables } from "@/features/add-data/existingTables";
 import { previewCoverage, sampleExtentText } from "@/features/add-data/previewCoverage";
 import { PreviewProblemNotice } from "@/features/add-data/components/PreviewProblemNotice";
 import type { PreviewProblem } from "@/features/add-data/previewGate";
@@ -42,6 +49,11 @@ export interface ReviewBuildStepProps {
   previewLimit: PreviewLimit;
   previewSampleMode: PreviewSampleMode;
   isStale: boolean;
+  /** Whether a table of the draft's dataset id is already there (#837). */
+  existing: ExistingTables;
+  tableChoice: ExistingTableChoice;
+  onChooseTable: (choice: ExistingTableChoice) => void;
+  onRecheckExisting: () => void;
   /** What of the preview stops the build, or null (#842). */
   previewProblem: PreviewProblem | null;
   onBackToPreview: () => void;
@@ -93,6 +105,10 @@ export function ReviewBuildStep({
   previewLimit,
   previewSampleMode,
   isStale,
+  existing,
+  tableChoice,
+  onChooseTable,
+  onRecheckExisting,
   previewProblem,
   onBackToPreview,
   jobStatus,
@@ -102,10 +118,13 @@ export function ReviewBuildStep({
   onBuild,
   onCancel,
 }: ReviewBuildStepProps) {
-  // Actual submission always uses the original spec (AddDataPage onBuild passes specResult.spec to job.start directly) —
+  // Submission uses `spec` as given, unredacted (AddDataPage onBuild passes the same specForBuild to job.start) —
   // displaySpec here is a display-only copy, and redaction has no effect on actual submission (#283 review response, Epic #246).
   const { t } = useTranslation();
   const logicalNameId = useId();
+  // The table as it will be built: `spec` carries the id and title the page settled on.
+  const tableId = spec?.datasetId || draft.datasetId;
+  const tableTitle = spec?.title || draft.title || tableId || "—";
   const logicalNames = spec && !isStale ? previewSources.map((source) => `${spec.datasetId}.${source.source_key}`) : [];
   const displaySpec = spec ? redactBuildSpecForDisplay(spec) : null;
   const displaySubmissionSpec = displaySpec ? toBuilderSpec(displaySpec) : null;
@@ -128,6 +147,8 @@ export function ReviewBuildStep({
     validation.status === "validated" &&
     validation.valid &&
     !isStale &&
+    // Not while it is unknown whether the build would replace a table (#837).
+    (existing.status === "none" || existing.status === "found") &&
     // Not on a preview that failed or was never run: the build would fail the same way (#842).
     previewProblem === null &&
     jobStatus !== "running";
@@ -139,7 +160,9 @@ export function ReviewBuildStep({
       <div className="grid gap-3 sm:grid-cols-4">
         <Card className="p-4">
           <p className="text-xs font-semibold uppercase text-muted-foreground">{t("addData.review.datasetLabel")}</p>
-          <p className="mt-1 text-base font-semibold">{draft.title || draft.datasetId || "—"}</p>
+          <p className="mt-1 text-base font-semibold">{tableTitle}</p>
+          {/* The id it is built under — a free one when a table of the draft's id is there (#837). */}
+          {tableId ? <p className="break-all font-mono text-xs text-muted-foreground">{t("labels.idValue", { id: tableId })}</p> : null}
           <p className="text-xs text-muted-foreground">{sourceSummary(draft)}</p>
         </Card>
         <Card className="p-4">
@@ -204,6 +227,13 @@ export function ReviewBuildStep({
         <p className="mt-1 text-xs text-muted-foreground">{t("addData.review.logicalNameNote")}</p>
       </Card>
 
+      <ExistingTableNotice
+        choice={tableChoice}
+        datasetId={draft.datasetId}
+        existing={existing}
+        onChoose={onChooseTable}
+        onRecheck={onRecheckExisting}
+      />
       {/* A stale preview has its own notice below; this one is about the preview it replaced. */}
       {isStale ? null : <PreviewProblemNotice onBackToPreview={onBackToPreview} problem={previewProblem} />}
 
@@ -235,7 +265,7 @@ export function ReviewBuildStep({
           <dl className="divide-y divide-border text-sm">
             {[
               [t("addData.review.planSource"), sourceSummary(draft)],
-              [t("addData.review.planDataset"), draft.title || draft.datasetId || "—"],
+              [t("addData.review.planDataset"), tableId ? `${tableTitle} · ${tableId}` : tableTitle],
               [t("addData.review.planQuery"), querySummary(draft)],
               [
                 t("addData.review.planPreview"),

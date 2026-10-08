@@ -61,6 +61,8 @@ function builder(answer: () => "ok" | "failed") {
     http.get(`${API_BASE}/providers`, () =>
       HttpResponse.json({ providers: [{ provider: "datago", requires_credential: true, configured: true }] }),
     ),
+    // No table of this id yet: the review step's question about one has an answer (#837).
+    http.get(`${API_BASE}/warehouse/tables`, () => HttpResponse.json({ tables: [] })),
     http.post(`${API_BASE}/preview`, () => HttpResponse.json(previewAnswer(answer()))),
     http.post(`${API_BASE}/builds`, async ({ request }) => {
       const body: unknown = await request.json();

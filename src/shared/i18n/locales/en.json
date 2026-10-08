@@ -1106,7 +1106,20 @@
       "planTitle": "Table creation plan",
       "logicalNameLabel": "Table name to be created",
       "logicalNameAfterPreview": "Shown after a fresh Preview.",
-      "logicalNameNote": "Table ID and the source key from KPubData Builder’s Preview."
+      "logicalNameNote": "Table ID and the source key from KPubData Builder’s Preview.",
+      "existingChecking": "Checking whether a table with this ID already exists.",
+      "existingUnknown": "Could not check whether a table with this ID already exists. So that an existing table is not replaced unknowingly, the table is not created until this is known.",
+      "existingRecheck": "Check again",
+      "existingTitle": "A table with this ID already exists",
+      "existingBody": "A table was already created under the table ID {{id}}. Creating it again under the same ID replaces that table’s contents with the data fetched this time. If you are adding it again with different conditions, the rows shown now leave that table’s current contents.",
+      "existingChoiceLegend": "How should it be created?",
+      "existingChoiceNew": "Create a new table",
+      "existingChoiceNewNote": "Created under the ID {{id}}. The existing table is left as it is.",
+      "existingChoiceRefresh": "Refresh the existing table",
+      "existingChoiceRefreshNote": "Replaces the table under the ID {{id}} with the data fetched this time.",
+      "existingBodyBeside": "There are already tables under the table ID {{id}}. The table created this time has another name, so it does not replace them. Created under the same ID, though, it becomes one more table under that ID and they are listed together.",
+      "existingChoiceBeside": "Add under the same ID",
+      "existingChoiceBesideNote": "Creates one more table under the ID {{id}}. The existing tables are left as they are."
     },
     "preview": {
       "title": "Preview · validation",
