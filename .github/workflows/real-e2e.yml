@@ -36,6 +36,12 @@ on:
       - "e2e/helpers.ts"
       - "playwright.real.config.ts"
       - "scripts/run-real-e2e.mjs"
+      # What the runner loads: a change to any of these changes what the suite does.
+      # __tests__/e2eEvidenceGate.test.ts fails when the runner loads a file not listed.
+      - "scripts/real-e2e-probe.mjs"
+      - "scripts/multi-user-e2e.mjs"
+      - "scripts/fake-keycloak.mjs"
+      - "playwright.multiuser.config.ts"
       - "scripts/check-e2e-evidence.mjs"
       - ".github/workflows/real-e2e.yml"
 

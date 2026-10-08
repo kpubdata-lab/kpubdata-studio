@@ -5,7 +5,7 @@
  * these feed it one and expect a finding. The workflow is read as YAML: it has to run
  * the suite, check the evidence before uploading it, and stay out of `CI gate`.
  */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,6 +100,27 @@ describe("scan and main", () => {
   });
 });
 
+/**
+ * `entry` and what it loads, as paths from the repository root: the relative modules it
+ * imports, followed through, and the Playwright configs named after `-c`.
+ */
+function filesTheRunnerLoads(entry: string): string[] {
+  const seen = new Set<string>();
+  const follow = (file: string) => {
+    if (seen.has(file) || !existsSync(join(ROOT, file))) return;
+    seen.add(file);
+    const source = readFileSync(join(ROOT, file), "utf8");
+    for (const [, imported] of source.matchAll(/from\s+"(\.\/[^"]+\.mjs)"/g)) {
+      follow(join(dirname(file), imported));
+    }
+    for (const [, config] of source.matchAll(/"-c",\s*"(playwright\.[\w.]+\.ts)"/g)) {
+      seen.add(config);
+    }
+  };
+  follow(entry);
+  return [...seen].sort();
+}
+
 describe("real-e2e.yml", () => {
   type Step = { name?: string; id?: string; if?: string; run?: string; uses?: string; env?: Record<string, string> };
   const workflow = parse(readFileSync(join(ROOT, ".github", "workflows", "real-e2e.yml"), "utf8")) as {
@@ -119,6 +140,17 @@ describe("real-e2e.yml", () => {
     expect(workflow.on.pull_request?.paths).toEqual(
       expect.arrayContaining(["e2e/real-*.spec.ts", "scripts/run-real-e2e.mjs", "playwright.real.config.ts"]),
     );
+  });
+
+  // The suite is the runner and everything the runner loads: the modules it imports and
+  // the Playwright configs it passes with `-c`. A pull request that changes one of them
+  // changes what the suite does, and one the filter does not list would merge unrun.
+  it("runs on a pull request that changes any file the runner loads", () => {
+    const paths = workflow.on.pull_request?.paths ?? [];
+    const loaded = filesTheRunnerLoads("scripts/run-real-e2e.mjs");
+    expect(loaded).toContain("scripts/run-real-e2e.mjs");
+    expect(loaded).toContain("playwright.real.config.ts");
+    expect(loaded.filter((file) => !paths.includes(file))).toEqual([]);
   });
 
   it("runs the suite against a Builder checkout with a canary key", () => {
