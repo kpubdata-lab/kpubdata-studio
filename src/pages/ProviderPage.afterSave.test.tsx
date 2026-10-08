@@ -17,12 +17,22 @@ import { ProviderPage } from "./ProviderPage";
 const DEFAULT_NOTE = /Builder 기본 자격 증명으로 사용 중/;
 const LOADING = "자격 증명 상태를 불러오는 중…";
 const READ_FAILED = "자격 증명 상태를 불러오지 못했습니다";
+/** The readiness label of a provider some key works for, whoever's it is. */
+const READY = "연결 준비됨";
+const NO_KEY = "API Key 미설정";
+const NEEDS_KEY = "이 제공 기관을 사용하려면 자격 증명을 등록해야 합니다.";
 
-/** How the Builder answers the reads that follow a save or a delete. */
-type After = "answers" | "never answers" | "fails";
+/**
+ * How the Builder answers the reads that follow a save or a delete: both, neither, or
+ * one of the two — the provider's own key (`fails`) or the list (`list fails`).
+ */
+type After = "answers" | "never answers" | "fails" | "list fails";
 
-/** A Builder with a default key for datago, and whatever the user has stored. */
-function builder(after: After = "answers") {
+/**
+ * A Builder with whatever the user has stored for datago and, unless `defaultKey` is
+ * false, a default key of its own for it.
+ */
+function builder(after: After = "answers", { defaultKey = true }: { defaultKey?: boolean } = {}) {
   const state = { stored: false, changed: false, summaryCalls: 0, credentialCalls: 0 };
   const held = async () => {
     if (state.changed && after === "never answers") await delay("infinite");
@@ -31,9 +41,12 @@ function builder(after: After = "answers") {
     http.get(`${API_BASE}/providers`, async () => {
       state.summaryCalls += 1;
       await held();
-      // Configured either way: by the default key, or by the user's.
+      if (state.changed && after === "list fails") return HttpResponse.json({ error: "boom" }, { status: 500 });
+      // Configured by the default key, or by the user's: the list does not say which.
       return HttpResponse.json({
-        providers: [{ provider: "datago", requires_credential: true, configured: true, key_provider: "datago" }],
+        providers: [
+          { provider: "datago", requires_credential: true, configured: defaultKey || state.stored, key_provider: "datago" },
+        ],
       });
     }),
     http.get(`${API_BASE}/providers/datago/credential`, async () => {
@@ -93,6 +106,9 @@ describe("ProviderPage, after a key is saved or deleted", () => {
     expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
     expect(screen.queryAllByText(DEFAULT_NOTE)).toHaveLength(0);
     expect(screen.getAllByText("API Key 등록됨").length).toBeGreaterThan(0);
+    // The key that was typed is nowhere on the screen: not as text, not left in a field.
+    expect(screen.queryByText(/secret/)).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue(/secret/)).not.toBeInTheDocument();
     // Both were asked again after the save: the list and this provider's own key.
     expect(state.summaryCalls).toBeGreaterThanOrEqual(2);
     expect(state.credentialCalls).toBeGreaterThanOrEqual(2);
@@ -138,7 +154,9 @@ describe("ProviderPage, after a key is saved or deleted", () => {
     expect(screen.queryByText(/dg••••99/)).not.toBeInTheDocument();
   });
 
-  it("says that at once too, before the reads after the delete have answered", async () => {
+  it("shows the key gone at once, and says whose is in use only when the list has been read again", async () => {
+    // The list called the provider configured while the user's key was there; whether a
+    // default key is left it has not said yet.
     const state = builder("never answers");
     state.stored = true;
     renderPage();
@@ -146,9 +164,91 @@ describe("ProviderPage, after a key is saved or deleted", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "삭제" }));
 
-    expect((await screen.findAllByText(DEFAULT_NOTE)).length).toBeGreaterThan(0);
+    expect(await screen.findByText(LOADING)).toBeInTheDocument();
     expect(screen.queryByText(/dg••••99/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
+    expect(screen.queryAllByText(DEFAULT_NOTE)).toHaveLength(0);
+  });
+});
+
+describe("ProviderPage, after the only key of a provider is deleted", () => {
+  // The other way round of #845: with no default key, the provider was "configured" in
+  // the list only for the key that has just been deleted.
+  it("says a key is needed once the list has been read again", async () => {
+    const state = builder("answers", { defaultKey: false });
+    state.stored = true;
+    renderPage();
+    expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+
+    expect(await screen.findByText(NEEDS_KEY)).toBeInTheDocument();
+    expect(screen.getAllByText(NO_KEY).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(DEFAULT_NOTE)).toHaveLength(0);
+    expect(screen.queryByText(READY)).not.toBeInTheDocument();
+  });
+
+  it("does not say the default credential is in use while the list is being read again", async () => {
+    const state = builder("never answers", { defaultKey: false });
+    state.stored = true;
+    renderPage();
+    expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+
+    expect(await screen.findByText(LOADING)).toBeInTheDocument();
+    expect(screen.queryByText(/dg••••99/)).not.toBeInTheDocument();
+    expect(screen.queryAllByText(DEFAULT_NOTE)).toHaveLength(0);
+    // Nor that the provider is ready: that too is the old line of the list.
+    expect(screen.queryByText(READY)).not.toBeInTheDocument();
+  });
+
+  it("does not say it when the list could not be read again, however long that lasts", async () => {
+    const state = builder("list fails", { defaultKey: false });
+    state.stored = true;
+    renderPage();
+    expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "삭제" }));
+
+    await waitFor(() => expect(state.summaryCalls).toBeGreaterThanOrEqual(2));
+    expect(await screen.findByText(READ_FAILED)).toBeInTheDocument();
+    expect(screen.queryAllByText(DEFAULT_NOTE)).toHaveLength(0);
+    expect(screen.queryByText(READY)).not.toBeInTheDocument();
+    expect(screen.queryByText(/dg••••99/)).not.toBeInTheDocument();
+  });
+});
+
+describe("ProviderPage, on a Builder with no credential store", () => {
+  // No key of the user's can exist there, so whose key is in use is known.
+  function builderWithoutStore(configured: boolean) {
+    mswServer.use(
+      http.get(`${API_BASE}/providers`, () =>
+        HttpResponse.json({ providers: [{ provider: "datago", requires_credential: true, configured }] }),
+      ),
+      http.get(`${API_BASE}/providers/datago/credential`, () =>
+        HttpResponse.json({ error: "credential store is not configured" }, { status: 503 }),
+      ),
+    );
+  }
+
+  it("says the default credential is in use when the Builder has one", async () => {
+    builderWithoutStore(true);
+
+    renderPage();
+
+    expect(await screen.findByText("자격 증명 저장소가 아직 구성되지 않았습니다")).toBeInTheDocument();
+    expect(screen.getAllByText(DEFAULT_NOTE).length).toBeGreaterThan(0);
+  });
+
+  it("says a key is missing when it has none", async () => {
+    builderWithoutStore(false);
+
+    renderPage();
+
+    expect(await screen.findByText("자격 증명 저장소가 아직 구성되지 않았습니다")).toBeInTheDocument();
+    expect(screen.getAllByText(NO_KEY).length).toBeGreaterThan(0);
+    expect(screen.getByText(/API Key가 필요할 수 있습니다/)).toBeInTheDocument();
   });
 });
 
