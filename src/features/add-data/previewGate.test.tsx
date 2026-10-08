@@ -95,6 +95,10 @@ function renderReview(problem: PreviewProblem | null, previews: PreviewSource[] 
       previewLimit={5}
       previewSampleMode="first"
       isStale={isStale}
+      existing={{ status: "none" }}
+      tableChoice="new"
+      onChooseTable={vi.fn()}
+      onRecheckExisting={vi.fn()}
       previewProblem={problem}
       onBackToPreview={handlers.onBackToPreview}
       jobStatus="idle"

@@ -125,6 +125,98 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
   await expectNoPageErrors(errors);
 });
 
+interface CommittedTable {
+  logical_name: string;
+  dataset_id?: string | null;
+  revision: number;
+  current_snapshot_id: string | null;
+  current_snapshot?: { row_count: number | null } | null;
+}
+
+/**
+ * The reproduction of #837: the same public-API dataset added a second time. A public-API
+ * source's table is `<table id>.<provider>.<dataset>` whatever was asked of the provider,
+ * so the second add asked for the name of the table the first one made and Builder
+ * committed it as that table's next revision — the first add's rows were no longer its
+ * current contents, and nothing on the way said so.
+ *
+ * Replay has one recorded answer for `datago.air_station` (22 rows), so both adds fetch the
+ * same rows; what is checked is that the first table is not committed to again. A file
+ * source cannot show this: each upload is a source key of its own.
+ */
+test("같은 데이터셋을 다시 추가해도 이미 있는 테이블은 그대로 남는다 (#837) @real-builder", async ({ page, request }) => {
+  test.skip(
+    !process.env.REAL_BUILDER_REPLAY,
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
+  );
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+  // An id of its own per run: the Builder under test may be kept between runs.
+  const id = `keep-first-${Date.now()}`;
+  const params = { station: "강남구", term: "daily", page: 1, page_size: 100 };
+  const tableOf = async (datasetId: string): Promise<CommittedTable | undefined> => {
+    const listed = (await (await request.get(`${BUILDER_URL}/warehouse/tables`)).json()) as { tables: CommittedTable[] };
+    return listed.tables.find((table) => table.logical_name === `${datasetId}.datago.air_station`);
+  };
+
+  // 1) The first add, as Studio would have submitted it: the table and its 22 rows.
+  const firstBuild = await request.post(`${BUILDER_URL}/build`, {
+    data: {
+      spec: JSON.stringify({
+        dataset_id: id,
+        title: "Air stations",
+        description: "The first add",
+        sources: [{ provider: "datago", dataset: "air_station", params }],
+        exports: [{ kind: "jsonl", output_path: "out/data.jsonl" }],
+      }),
+      run_id: `${id}-first`,
+    },
+    timeout: 60_000,
+  });
+  expect(((await firstBuild.json()) as { status?: string }).status).toBe("ok");
+  const first = await tableOf(id);
+  expect(first?.current_snapshot?.row_count).toBe(22);
+
+  // 2) The same dataset again, through the wizard, under the same table id.
+  await openCreateTable(page);
+  await page.getByRole("button", { name: /공공 API/ }).first().click();
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.locator('#add-data-provider option[value="datago"]')).toBeAttached({ timeout: 30_000 });
+  await page.locator("#add-data-provider").selectOption("datago");
+  await page.locator("#add-data-dataset").selectOption("air_station");
+  await page.locator("#add-data-params").fill(JSON.stringify(params));
+  await page.locator("summary").filter({ hasText: /고급 설정/ }).click();
+  await page.locator("#add-data-dataset-id").fill(id);
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "검토 · 테이블 만들기" })).toBeVisible();
+
+  // 3) The review step says the table is there, and builds a new one unless told otherwise.
+  const notice = page.locator('[data-existing-table="found"]');
+  await expect(notice).toContainText(`${id}.datago.air_station`, { timeout: 30_000 });
+  await expect(notice).toContainText("22행");
+  await expect(notice.getByRole("radio", { name: /새 테이블로 만들기/ })).toBeChecked();
+  const build = page.getByRole("button", { name: "테이블 만들기" });
+  await expect(build).toBeEnabled({ timeout: 30_000 });
+  await build.click();
+  await expect(page).toHaveURL(/\/refresh-jobs\/[^/?]+/, { timeout: 60_000 });
+  await expect(page.getByText("성공").and(page.locator(":visible")).first()).toBeVisible({ timeout: 60_000 });
+
+  // 4) The first table is as it was — same snapshot, same revision, its 22 rows — and the
+  //    second add is a table of its own.
+  expect(await tableOf(id)).toMatchObject({
+    revision: first?.revision,
+    current_snapshot_id: first?.current_snapshot_id,
+    current_snapshot: { row_count: 22 },
+  });
+  expect((await tableOf(`${id}-2`))?.current_snapshot?.row_count).toBe(22);
+
+  await expectNoPageErrors(errors);
+});
+
 /**
  * Public API source BuildSpec. Must match the replay fixture's dataset and params exactly
  * (fixture is `datago.air_station` example `gangnam_full_page`).
