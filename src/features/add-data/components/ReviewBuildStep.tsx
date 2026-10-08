@@ -242,7 +242,14 @@ export function ReviewBuildStep({
                         })
                   : t("addData.review.notRun"),
               ],
-              ["Validation", quality ? `${quality.pass}/${quality.evaluated} · ${quality.status}` : t("addData.review.notRun")],
+              [
+                "Validation",
+                quality
+                  ? // A rule on the number of rows judged the sample: `min_rows: 100` fails on 20
+                    // previewed rows of a source the build will pass.
+                    `${quality.pass}/${quality.evaluated} · ${quality.status}${anySample ? ` · ${t("addData.review.ofSample")}` : ""}`
+                  : t("addData.review.notRun"),
+              ],
               ["Output", draft.exportFormats.join(", ").toUpperCase() || "—"],
             ].map(([label, value]) => (
               <div key={label} className="flex items-center justify-between gap-3 py-2">
