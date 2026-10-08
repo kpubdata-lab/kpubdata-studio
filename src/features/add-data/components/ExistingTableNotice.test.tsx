@@ -65,6 +65,9 @@ function renderReview(existing: ExistingTables, choice: ExistingTableChoice = "n
       tableChoice={choice}
       onChooseTable={handlers.onChooseTable}
       onRecheckExisting={handlers.onRecheckExisting}
+      // The preview answered: what holds the build here is the table, not the preview (#842).
+      previewProblem={null}
+      onBackToPreview={vi.fn()}
       jobStatus="idle"
       onBuild={handlers.onBuild}
       onCancel={vi.fn()}
