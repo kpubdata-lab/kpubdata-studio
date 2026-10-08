@@ -49,7 +49,7 @@ if (replayDir !== null && !existsSync(replayDir)) {
 // older checkout's `serve` does not know the flag.
 // UV_NO_SOURCES resolves kpubdata from the lock's PyPI pin, the way the workflow
 // does (real-e2e.yml sets the same variable). Locally it used to be unset, so uv
-// tried the editable ../kpubdata source and failed — and that failure was
+// tried the repository-local editable kpubdata override and failed — and that failure was
 // reported as "this Builder checkout has no replay mode" (#840).
 const serveHelp = spawnSync("uv", ["run", "--project", builderRoot, "kpubdata-builder", "serve", "--help"], {
   encoding: "utf8",
