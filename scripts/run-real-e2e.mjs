@@ -7,6 +7,9 @@
  * 임시 기동하고, Studio를 VITE_USE_REAL_BUILDER=true로 띄운 Playwright
  * real 슈트(@real-builder)를 실행한다. 종료 시 Builder를 정리한다.
  *
+ * 그 뒤 같은 Builder 체크아웃을 OIDC 다중 사용자 모드로 한 번 더 띄워 `@multi-user` 스펙을
+ * 실행한다(#773, `scripts/multi-user-e2e.mjs`).
+ *
  * Usage: node scripts/run-real-e2e.mjs [--builder-root <path>] [--replay-dir <path>] [--keep]
  * The default --builder-root is ../kpubdata-builder.
  *
@@ -26,6 +29,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+
+import { runMultiUserE2e } from "./multi-user-e2e.mjs";
 
 const args = process.argv.slice(2);
 const keep = args.includes("--keep");
@@ -145,4 +150,9 @@ const status = await run("npx", ["playwright", "test", "-c", "playwright.real.co
   ...(replayAvailable ? { REAL_BUILDER_REPLAY: "1" } : {}),
 });
 
-shutdown(status);
+// The same Studio against a Builder people sign in to (#773): OIDC, runs kept apart per
+// user, provider keys with each request. Run whatever the suite above did, so one run
+// reports both, and fail when either does.
+const multiUserStatus = await runMultiUserE2e({ builderRoot, replayArgs });
+
+shutdown(status || multiUserStatus);

@@ -125,6 +125,19 @@ uv run --with "pandas>=2.2,<3" kpubdata-builder serve --host 127.0.0.1 --port 80
 
 `VITE_DEV_BYPASS_AUTH` takes effect only in Vite development; a production build never bypasses the login gate.
 
+
+### Local Multi-User E2E (OIDC, No Keycloak Needed)
+
+After the data-path suite, `npm run test:e2e:real` starts the same Builder checkout a second time as a deployment people sign in to, and runs the specs tagged `@multi-user` (`e2e/real-multi-user.spec.ts`, #773):
+
+- **Builder runs with real OIDC settings**, not dev mode: `OIDC_ISSUER`, `OIDC_AUDIENCE`, `OIDC_JWKS_URL` and an `OIDC_ALLOWED_EMAILS` allowlist. It verifies every token, keeps each user's runs apart, and takes provider keys with each request only.
+- **The identity provider is a stand-in** (`scripts/fake-keycloak.mjs`): just enough of a Keycloak realm for keycloak-js to sign in with Authorization Code + PKCE and for Builder to read the signing key. It makes its key when it starts and has two users, so no container, account or secret is needed. It signs in whoever is asked for and listens on localhost only — it is a test double, never a way to run Studio.
+- **Studio is served with the OIDC client configured** and no auth bypass (`playwright.multiuser.config.ts`, port 5175), so each test signs in from the login page.
+
+Before a browser starts, the runner checks that this Builder answers `GET /providers` with 401 without a token and 200 with one, and stops if it does not: the isolation checks would otherwise pass against a Builder that lets everyone in.
+
+Ports: Builder 8903, identity provider 8904, Studio 5175. What it does **not** cover is Keycloak itself — sign-up, e-mail verification, the Google broker; those remain the manual smoke above. The suite records no Playwright trace, because a trace holds every request's headers and the workflow refuses to upload evidence that carries a token.
+
 ### Keycloak → Builder OIDC Smoke Test (Manual)
 
 Run this to confirm the real authentication path end to end. It requires a running Keycloak realm and Builder started with `OIDC_ISSUER` set and `KPUBDATA_BUILDER_DEV_MODE` unset.
