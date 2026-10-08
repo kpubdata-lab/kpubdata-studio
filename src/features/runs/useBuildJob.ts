@@ -16,6 +16,7 @@ import {
   type BuilderJobStatus,
 } from "@/features/runs/api";
 import { ApiError, builderApi, extractErrorMessage } from "@/shared/lib/builderApi";
+import { buildRefusal, buildRefusalMessage } from "./buildRefusal";
 import { missingProviderKeys, type MissingProviderKeys } from "@/shared/lib/missingProviderKey";
 import type { BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
 
@@ -136,8 +137,11 @@ export function useBuildJob(): BuildJob {
       // /build 502 returns failure reasons via outcomes[].error without a
       // top-level error. Priority: top-level error (backcompat) →
       // outcomes[].error → ApiError message → generic message.
-      const message =
-        cause instanceof ApiError
+      // A build turned away for want of room is said in the user's language (#859).
+      const refusal = buildRefusal(cause);
+      const message = refusal
+        ? buildRefusalMessage(refusal)
+        : cause instanceof ApiError
           ? (extractErrorMessage(cause.details) ?? cause.message)
           : i18n.t("runs.build.runFailed");
       setError(message);
