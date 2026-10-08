@@ -48,7 +48,8 @@ describe("silver sample on Table Detail (#484)", () => {
         </Routes>
       </MemoryRouter>,
     );
-    expect(await screen.findByText("9007199254740993")).toBeInTheDocument();
-    expect(screen.getByText("123456789.10")).toBeInTheDocument();
+    // The cell's whole text: its digits are drawn in threes, in elements of their own (#844).
+    expect(await screen.findByRole("cell", { name: "9007199254740993" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "123456789.10" })).toBeInTheDocument();
   });
 });
