@@ -95,6 +95,9 @@ describe("the tables made from each source", () => {
 
     const created = await loadCreatedTables();
 
+    // The flag was read: only a Builder is asked over HTTP. Without this, a flag that
+    // did not take would have both cases reading the demo.
+    expect(globalThis.fetch).toHaveBeenCalledTimes(useRealBuilder === "true" ? 1 : 0);
     expect(created.complete).toBe(true);
     expect(created.tables.map((table) => table.dataset_id)).toEqual(MOCK_DATASETS.datasets.map((table) => table.dataset_id));
     expect(MOCK_DATASETS.datasets.length).toBeLessThanOrEqual(CREATED_TABLES_LIMIT);

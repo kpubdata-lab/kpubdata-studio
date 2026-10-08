@@ -49,7 +49,7 @@ function dataset(
   };
 }
 
-export const DEMO_CATALOG: CatalogResponse = {
+const DEMO_CATALOG: CatalogResponse = {
   providers: [
     {
       name: "datago",

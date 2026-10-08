@@ -6,10 +6,10 @@
  * `features/datasets/api`); never blend the two. `/datasets` is read here only to name,
  * per source, the tables made from it (#529).
  *
- * Whether a Builder or the demo answers is decided by the two clients this asks
- * (`./client`, `features/datasets/api/client`) and nowhere in this file (#794).
+ * Whether a Builder or the demo answers is decided by the clients behind what this
+ * asks (`./client`, and the datasets feature's own) and nowhere in this file (#794).
  */
-import { datasetsClient } from "@/features/datasets/api/client";
+import { listDatasetsPage } from "@/features/datasets/api";
 import type { CatalogResponse, DatasetSummary } from "@/shared/lib/builderApi";
 import { discoverClient } from "./client";
 
@@ -23,7 +23,7 @@ export const CREATED_TABLES_LIMIT = 100;
  * sends its `total` as a Builder does, so the same rule reads it.
  */
 export async function loadCreatedTables(signal?: AbortSignal): Promise<{ tables: DatasetSummary[]; complete: boolean }> {
-  const { datasets, total } = await datasetsClient().listDatasets(CREATED_TABLES_LIMIT, signal);
+  const { datasets, total } = await listDatasetsPage(CREATED_TABLES_LIMIT, signal);
   return { tables: datasets, complete: total !== undefined && total <= datasets.length };
 }
 
