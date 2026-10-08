@@ -36,7 +36,7 @@ const ROOT = new URL("../src", import.meta.url).pathname;
 const CONTENT_NOT_UI = [
   /\/api\/mockData\.ts$/,
   /^shared\/lib\/demoDatasets\.ts$/,
-  /^features\/add-data\/api\.ts$/,
+  /^features\/add-data\/client\.ts$/,
   /^features\/discover\/client\.ts$/,
   /^features\/preview\/api\/client\.ts$/,
   /^features\/assistant\/(demo|prompt)\.ts$/,
