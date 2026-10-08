@@ -848,6 +848,19 @@ export const previewSourceSchema = z.object({
    * 1.68.0): text holds the mask token, any other dtype null. Absent when none was masked.
    */
   masked_columns: z.array(z.string()).optional(),
+  /**
+   * Whether the rows fetched are the whole source (builder#1185, 1.109.0). A preview reads
+   * a `public_api` source up to `limit` records or three pages; false when it stopped
+   * there while the source had more, or when the source failed — `total_rows`,
+   * `statistics` and `quality_results` then count the rows fetched. Absent from an earlier
+   * Builder, which read the source to its end.
+   */
+  fetch_complete: z.boolean().optional(),
+  /**
+   * The provider's own count of the source's records (1.109.0), when one call stated it;
+   * null otherwise — a `param_grid` total is never summed.
+   */
+  source_reported_total: z.number().int().nonnegative().nullable().optional(),
 });
 
 /**
