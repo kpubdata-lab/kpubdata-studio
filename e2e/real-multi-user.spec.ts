@@ -20,17 +20,22 @@ test.skip(!process.env.MULTI_USER_E2E, "multi-user Builder needed — scripts/ru
 
 const ALICE = "e2e-alice";
 const BOB = "e2e-bob";
-/** Not a real key: replay answers for the provider, and no request leaves the machine. */
-const SESSION_KEY = "e2e-not-a-real-key";
+/**
+ * The provider key Alice types. Not a real key — replay answers for the provider — but a
+ * value of this run only, made by the runner around the workflow's canary, so that it is
+ * found by value if it ever reaches Builder's output, a response to Bob or the evidence of
+ * a failed run.
+ */
+const SESSION_KEY = process.env.MULTI_USER_SESSION_KEY ?? "e2e-canary-local-key-alice-session";
 
 /** Sign in as a user of the test realm, the way the login page does it. */
 async function signIn(page: Page, userId: string): Promise<void> {
   await page.goto("/");
+  // Where Studio is, before the identity provider is anywhere in the address.
+  const studio = new URL(page.url()).origin;
   await page.getByRole("button", { name: t("auth.page.emailLogin") }).click();
   await page.locator(`[data-fake-user="${userId}"]`).click();
-  await page.waitForURL((url) => url.origin === new URL(page.url()).origin && !url.pathname.startsWith("/login"), {
-    timeout: 30_000,
-  });
+  await page.waitForURL((url) => url.origin === studio && !url.pathname.startsWith("/login"), { timeout: 30_000 });
   await expect(page.getByRole("navigation", { name: "주 메뉴" })).toBeVisible({ timeout: 30_000 });
 }
 
@@ -46,6 +51,17 @@ async function openCreateTable(page: Page): Promise<void> {
   await openFromMenu(page, /^(Catalog|카탈로그)$/);
   await page.getByRole("link", { name: /^(Create Table|테이블 만들기)$/ }).first().click();
   await expect(page).toHaveURL(/\/add/);
+}
+
+/** Enter the datago key on the Connections page, for this session: this Builder stores none. */
+async function enterSessionKey(page: Page): Promise<void> {
+  await openFromMenu(page, /^(Connections|연결)$/);
+  await page.getByRole("button", { name: `${t("provider.table.manage")} — datago` }).click();
+  await expect(page.getByText(t("provider.detail.perRequestTitle"))).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: t("provider.detail.enterSessionKey") }).click();
+  await page.getByPlaceholder(t("provider.detail.keyPlaceholder")).fill(SESSION_KEY);
+  await page.getByRole("button", { name: t("provider.detail.useForSession") }).click();
+  await expect(page.getByText(t("provider.detail.sessionKeyHeld"))).toBeVisible();
 }
 
 /**
@@ -98,13 +114,7 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
   await expect(page.getByText(t("addData.credential.title"))).toBeVisible({ timeout: 30_000 });
 
   // 2) The key is entered for this session only: this Builder stores none.
-  await openFromMenu(page, /^(Connections|연결)$/);
-  await page.getByRole("button", { name: `${t("provider.table.manage")} — datago` }).click();
-  await expect(page.getByText(t("provider.detail.perRequestTitle"))).toBeVisible({ timeout: 30_000 });
-  await page.getByRole("button", { name: t("provider.detail.enterSessionKey") }).click();
-  await page.getByPlaceholder(t("provider.detail.keyPlaceholder")).fill(SESSION_KEY);
-  await page.getByRole("button", { name: t("provider.detail.useForSession") }).click();
-  await expect(page.getByText(t("provider.detail.sessionKeyHeld"))).toBeVisible();
+  await enterSessionKey(page);
 
   // 3) Add Data is not blocked any more — the defect of #767: the provider list was
   //    asked for without the key the user holds, so Builder answered "not configured".
@@ -135,12 +145,17 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
   await expectNoPageErrors(errors);
 });
 
-test("두 사용자는 서로의 실행을 볼 수 없다 @multi-user", async ({ browser, request }) => {
-  // 1) Alice makes a table from a file: no provider, so no key is involved.
+test("두 사용자는 서로의 실행도 키도 볼 수 없다 @multi-user", async ({ browser, request }) => {
+  // 1) Alice enters her provider key, and Builder is sent it with her next provider list.
   const alice = await browser.newContext();
   const alicePage = await alice.newPage();
+  const alicesLists = watchProviderLists(alicePage);
   await signIn(alicePage, ALICE);
+  await enterSessionKey(alicePage);
+
+  //    She makes a table from a file.
   await openCreateTable(alicePage);
+  await expect.poll(() => alicesLists.some((list) => list.carriedKey)).toBe(true);
   await alicePage.getByRole("button", { name: "파일 업로드" }).first().click();
   await alicePage.getByRole("button", { name: "다음" }).first().click();
   await alicePage.getByLabel("포맷 (Format)").selectOption("csv");
@@ -171,9 +186,13 @@ test("두 사용자는 서로의 실행을 볼 수 없다 @multi-user", async ({
     .then((sent) => sent.headers()["authorization"]);
   await signIn(bobPage, BOB);
 
-  // His run history does not have her run…
+  // His run history has been asked for, has answered, and does not have her run…
+  const bobsHistory = bobPage.waitForResponse(
+    (answer) => answer.url().startsWith(`${BUILDER_URL}/builds`) && answer.request().method() === "GET" && answer.ok(),
+  );
   await openFromMenu(bobPage, /^(Refresh History|갱신 이력)$/);
   await expect(bobPage.getByRole("heading", { name: /갱신 이력|Refresh History/i }).first()).toBeVisible();
+  expect(await (await bobsHistory).text()).not.toContain(runId);
   await expect(bobPage.getByText(runId)).toHaveCount(0);
 
   // …and Builder answers him as it would for a run that does not exist, by every way
@@ -185,7 +204,22 @@ test("두 사용자는 서로의 실행을 볼 수 없다 @multi-user", async ({
   }
   const listed = await request.get(`${BUILDER_URL}/builds?limit=200`, { headers: { Authorization: authorization } });
   expect(listed.ok()).toBeTruthy();
-  expect(JSON.stringify(await listed.json())).not.toContain(runId);
+  const listedText = await listed.text();
+  expect(listedText).not.toContain(runId);
+
+  // 3) Her key is hers. Builder holds it for her request only: it does not answer Bob as
+  //    if he had one, and the key is in nothing he is sent.
+  const bobsProviders = await request.get(`${BUILDER_URL}/providers`, { headers: { Authorization: authorization } });
+  expect(bobsProviders.ok()).toBeTruthy();
+  const providersText = await bobsProviders.text();
+  const datago = (JSON.parse(providersText) as { providers: Array<{ provider: string; configured: boolean }> }).providers.find(
+    (provider) => provider.provider === "datago",
+  );
+  expect(datago, "datago in Bob's provider list").toBeDefined();
+  expect(datago?.configured, "datago is not usable by Bob on Alice's key").toBe(false);
+  for (const [what, text] of [["GET /providers", providersText], ["GET /builds", listedText]] as const) {
+    expect(text.includes(SESSION_KEY), `Alice's key in Bob's ${what}`).toBe(false);
+  }
 
   await openFromMenu(alicePage, /^(Refresh History|갱신 이력)$/);
   await expect(alicePage.getByText(runId).first()).toBeVisible({ timeout: 30_000 });

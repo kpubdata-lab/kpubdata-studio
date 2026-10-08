@@ -153,6 +153,10 @@ const status = await run("npx", ["playwright", "test", "-c", "playwright.real.co
 // The same Studio against a Builder people sign in to (#773): OIDC, runs kept apart per
 // user, provider keys with each request. Run whatever the suite above did, so one run
 // reports both, and fail when either does.
-const multiUserStatus = await runMultiUserE2e({ builderRoot, replayArgs });
+const multiUserStatus = await runMultiUserE2e({ builderRoot, replayArgs }).catch((cause) => {
+  // A port already in use, for one: the Builder above must still be stopped below.
+  console.error(`[real-e2e] the multi-user suite could not start: ${cause instanceof Error ? cause.message : String(cause)}`);
+  return 1;
+});
 
 shutdown(status || multiUserStatus);

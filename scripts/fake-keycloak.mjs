@@ -53,14 +53,14 @@ export async function startFakeKeycloak(options) {
   /** Refresh tokens → what they renew. */
   const refreshTokens = new Map();
 
-  function jwt(claims) {
+  function jwt(claims, signingKey = privateKey) {
     const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT", kid }));
     const payload = base64url(JSON.stringify(claims));
-    const signature = sign("RSA-SHA256", Buffer.from(`${header}.${payload}`), privateKey);
+    const signature = sign("RSA-SHA256", Buffer.from(`${header}.${payload}`), signingKey);
     return `${header}.${payload}.${base64url(signature)}`;
   }
 
-  function tokensFor(user, nonce, sessionId) {
+  function tokensFor(user, nonce, sessionId, { tokenAudience = audience, signingKey = privateKey } = {}) {
     const now = Math.floor(Date.now() / 1000);
     const common = {
       iss: issuer,
@@ -79,7 +79,7 @@ export async function startFakeKeycloak(options) {
     const refreshToken = jwt({ iss: issuer, aud: issuer, sub: user.id, typ: "Refresh", iat: now, exp: now + 1800, sid: sessionId, jti: randomUUID() });
     refreshTokens.set(refreshToken, { user, nonce, sessionId });
     return {
-      access_token: jwt({ ...common, typ: "Bearer", aud: audience, jti: randomUUID() }),
+      access_token: jwt({ ...common, typ: "Bearer", aud: tokenAudience, jti: randomUUID() }, signingKey),
       id_token: jwt({ ...common, typ: "ID", aud: clientId, jti: randomUUID() }),
       refresh_token: refreshToken,
       token_type: "Bearer",
@@ -245,14 +245,30 @@ export async function startFakeKeycloak(options) {
     }
   }
 
+  function userOf(userId) {
+    const user = users.find((candidate) => candidate.id === userId);
+    if (!user) throw new Error(`no such test user: ${userId}`);
+    return user;
+  }
+
   return {
     issuer,
     jwksUrl: `http://localhost:${port}${base}/certs`,
     /** A token as Builder would be sent it, for a check that needs no browser. */
     accessTokenFor(userId) {
-      const user = users.find((candidate) => candidate.id === userId);
-      if (!user) throw new Error(`no such test user: ${userId}`);
-      return tokensFor(user, null, randomUUID()).access_token;
+      return tokensFor(userOf(userId), null, randomUUID()).access_token;
+    },
+    /**
+     * Tokens a Builder that verifies must refuse, for the check that it does: one with
+     * every claim right and a signature by a key the realm does not publish, and one the
+     * realm signed for another audience.
+     */
+    tokensToRefuse(userId) {
+      const stranger = generateKeyPairSync("rsa", { modulusLength: 2048 }).privateKey;
+      return {
+        signedByAnotherKey: tokensFor(userOf(userId), null, randomUUID(), { signingKey: stranger }).access_token,
+        forAnotherAudience: tokensFor(userOf(userId), null, randomUUID(), { tokenAudience: `${audience}-other` }).access_token,
+      };
     },
     close: () =>
       Promise.all(

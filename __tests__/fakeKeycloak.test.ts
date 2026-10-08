@@ -191,6 +191,27 @@ describe("the test realm", () => {
     expect(claims((await exchange(codeGrant(code))).body.access_token).email_verified).toBe(false);
   });
 
+  it("makes tokens a verifying Builder must refuse: another key's signature, another audience", async () => {
+    const started = await start();
+    const jwks: unknown = await (await fetch(started.jwksUrl)).json();
+    const keys = typeof jwks === "object" && jwks !== null && "keys" in jwks && Array.isArray(jwks.keys) ? jwks.keys : [];
+    const published = createPublicKey({ key: keys[0], format: "jwk" });
+    const verified = (token: string): boolean => {
+      const [header, payload, signature] = token.split(".");
+      return verify("RSA-SHA256", Buffer.from(`${header}.${payload}`), published, Buffer.from(signature, "base64url"));
+    };
+
+    const refused = started.tokensToRefuse("alice");
+
+    // Every claim as a good token has it; only the signature is not the realm's.
+    expect(claims(refused.signedByAnotherKey)).toMatchObject({ iss: started.issuer, aud: "builder", sub: "alice", email_verified: true });
+    expect(verified(refused.signedByAnotherKey)).toBe(false);
+    // The realm's own signature, for someone else.
+    expect(verified(refused.forAnotherAudience)).toBe(true);
+    expect(claims(refused.forAnotherAudience).aud).toBe("builder-other");
+    expect(verified(started.accessTokenFor("alice"))).toBe(true);
+  });
+
   it("lets Studio's origin read its answers, with the session cookie, and no other", async () => {
     await start();
 
@@ -206,7 +227,7 @@ describe("the real-e2e runner", () => {
   const multiUser = readFileSync(join(ROOT, "scripts/multi-user-e2e.mjs"), "utf8");
 
   it("runs the multi-user suite too, and fails when either suite does", () => {
-    expect(runner).toContain("await runMultiUserE2e({ builderRoot, replayArgs })");
+    expect(runner).toContain("await runMultiUserE2e({ builderRoot, replayArgs }).catch(");
     expect(runner).toContain("shutdown(status || multiUserStatus)");
   });
 
@@ -216,13 +237,25 @@ describe("the real-e2e runner", () => {
     }
     expect(multiUser).toContain("delete inherited.KPUBDATA_BUILDER_DEV_MODE");
     expect(multiUser).toContain("delete inherited.KPUBDATA_BUILDER_API_KEY");
-    // And refuses to go on against a Builder that lets an unsigned request in.
-    expect(multiUser).toContain("unsigned.status !== 401 || signed.status !== 200");
+    // PyJWT comes with the extra: without it an OIDC Builder does not start.
+    expect(multiUser).toMatch(/"--extra",\s+"auth",/);
+    // And refuses to go on against a Builder that does not verify what it is sent.
+    for (const how of ["without a token", "with a token signed by another key", "with a token for another audience"]) {
+      expect(multiUser).toContain(`"${how}": [await ask(`);
+    }
+    // A user's key in Builder's output fails the run, and is not repeated in saying so.
+    expect(multiUser).toContain("if (keyInBuilderOutput)");
+    expect(multiUser).toContain('.split(sessionKey).join("<redacted>")');
   });
 
   it("keeps the multi-user specs out of the suites that have no such Builder", () => {
     expect(readFileSync(join(ROOT, "playwright.config.ts"), "utf8")).toContain("@(real-builder|multi-user)");
     expect(readFileSync(join(ROOT, "playwright.real.config.ts"), "utf8")).toContain("grep: /@real-builder/");
-    expect(readFileSync(join(ROOT, "playwright.multiuser.config.ts"), "utf8")).toContain("grep: /@multi-user/");
+    const multiUserConfig = readFileSync(join(ROOT, "playwright.multiuser.config.ts"), "utf8");
+    expect(multiUserConfig).toContain("grep: /@multi-user/");
+    // Its own directory: a run empties the one it writes to, and the single-user run's
+    // evidence of a failure is in `test-results/`.
+    expect(multiUserConfig).toContain('outputDir: "test-results/multi-user"');
+    expect(multiUserConfig).toContain('trace: "off"');
   });
 });

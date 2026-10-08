@@ -17,6 +17,9 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"]],
+  // Playwright empties its output directory when a run starts. This suite runs after the
+  // single-user one, whose traces and screenshots of a failure are in `test-results/`.
+  outputDir: "test-results/multi-user",
   use: {
     baseURL: `http://localhost:${studioPort}`,
     // No trace: one records every request with its headers, and here those carry a

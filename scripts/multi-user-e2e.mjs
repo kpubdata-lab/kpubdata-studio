@@ -15,6 +15,7 @@
  * Nothing here is DEV_MODE: Builder refuses to start in DEV_MODE with OIDC configured.
  */
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -49,13 +50,25 @@ function run(command, args, env) {
  *
  * @param {{ builderRoot: string, replayArgs: string[] }} options `replayArgs` as the
  *   single-user run passes them to `serve`; empty for a Builder without replay.
- * @returns {Promise<number>} The suite's exit status; 1 when the deployment did not start.
+ * @returns {Promise<number>} The suite's exit status; 1 when the deployment did not start,
+ *   is not one that verifies tokens, or wrote a user's provider key to its output.
  */
 export async function runMultiUserE2e({ builderRoot, replayArgs }) {
   const { builderPort, identityPort, studioPort, realm, clientId, audience, users } = MULTI_USER;
   const studioOrigin = `http://localhost:${studioPort}`;
   const builderUrl = `http://localhost:${builderPort}`;
   const log = (line) => console.log(`[multi-user-e2e] ${line}`);
+
+  // The provider key a test user types. A value of this run only, and one that holds the
+  // workflow's canary when there is one: the evidence check reads Builder's output and
+  // whatever a failed run leaves behind for the canary, so this key anywhere in them is
+  // found by value (`scripts/check-e2e-evidence.mjs`).
+  const sessionKey = `${process.env.CANARY_KEY ?? `e2e-canary-local-${randomUUID()}`}-alice-session`;
+  let keyInBuilderOutput = false;
+  const relay = (stream) => (chunk) => {
+    if (String(chunk).includes(sessionKey)) keyInBuilderOutput = true;
+    stream.write(`[builder:multi-user] ${String(chunk).split(sessionKey).join("<redacted>")}`);
+  };
 
   const identity = await startFakeKeycloak({
     port: identityPort,
@@ -80,6 +93,9 @@ export async function runMultiUserE2e({ builderRoot, replayArgs }) {
       "run",
       "--project",
       builderRoot,
+      // PyJWT: Builder verifies tokens with it and will not start with OIDC set without it.
+      "--extra",
+      "auth",
       "kpubdata-builder",
       "serve",
       "--output-dir",
@@ -106,10 +122,16 @@ export async function runMultiUserE2e({ builderRoot, replayArgs }) {
     },
   );
   // Read both pipes for as long as Builder runs (#726): a full pipe blocks its next log line.
-  builder.stdout.on("data", (chunk) => process.stdout.write(`[builder:multi-user] ${chunk}`));
-  builder.stderr.on("data", (chunk) => process.stderr.write(`[builder:multi-user] ${chunk}`));
+  builder.stdout.on("data", relay(process.stdout));
+  builder.stderr.on("data", relay(process.stderr));
+  // The runner leaves through `process.exit` — on Ctrl-C too — and a child outlives that.
+  const killOnExit = () => {
+    if (builder.exitCode === null) builder.kill("SIGTERM");
+  };
+  process.once("exit", killOnExit);
 
   const stop = async () => {
+    process.removeListener("exit", killOnExit);
     if (builder.exitCode === null) {
       const ended = new Promise((done) => builder.once("exit", done));
       builder.kill("SIGTERM");
@@ -137,29 +159,43 @@ export async function runMultiUserE2e({ builderRoot, replayArgs }) {
     }
 
     // Before a browser is started: is this the deployment the specs assume? A Builder
-    // that let an unsigned request in would make every isolation check pass for nothing.
-    const unsigned = await fetch(`${builderUrl}/providers`);
-    const signed = await fetch(`${builderUrl}/providers`, {
-      headers: { Authorization: `Bearer ${identity.accessTokenFor(users[0].id)}` },
-    });
-    if (unsigned.status !== 401 || signed.status !== 200) {
+    // that let a request in without a token, or with one it had not verified, would make
+    // every isolation check pass for nothing.
+    const refused = identity.tokensToRefuse(users[0].id);
+    const ask = async (token) =>
+      (await fetch(`${builderUrl}/providers`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })).status;
+    const answers = {
+      "without a token": [await ask(null), 401],
+      "with a token signed by another key": [await ask(refused.signedByAnotherKey), 401],
+      "with a token for another audience": [await ask(refused.forAnotherAudience), 401],
+      "with a token of the test realm": [await ask(identity.accessTokenFor(users[0].id)), 200],
+    };
+    const wrong = Object.entries(answers).filter(([, [got, expected]]) => got !== expected);
+    if (wrong.length > 0) {
       console.error(
-        `[multi-user-e2e] not a multi-user Builder: GET /providers answered ${unsigned.status} without a token ` +
-          `(expected 401) and ${signed.status} with one (expected 200)`,
+        "[multi-user-e2e] not a Builder that verifies tokens: GET /providers answered " +
+          wrong.map(([how, [got, expected]]) => `${got} ${how} (expected ${expected})`).join(", "),
       );
       return 1;
     }
-    log("builder verifies the test realm's tokens and refuses a request without one");
+    log("builder verifies the test realm's tokens: no token, another key and another audience are refused");
 
-    return await run("npx", ["playwright", "test", "-c", "playwright.multiuser.config.ts"], {
+    const status = await run("npx", ["playwright", "test", "-c", "playwright.multiuser.config.ts"], {
       ...process.env,
       MULTI_USER_E2E: "1",
+      MULTI_USER_SESSION_KEY: sessionKey,
       REAL_BUILDER_URL: builderUrl,
       MULTI_USER_ISSUER: identity.issuer,
       MULTI_USER_CLIENT_ID: clientId,
       MULTI_USER_STUDIO_PORT: String(studioPort),
       ...(replayArgs.length > 0 ? { REAL_BUILDER_REPLAY: "1" } : {}),
     });
+    if (keyInBuilderOutput) {
+      // Said without the key: this line is in the log the evidence check reads.
+      console.error("[multi-user-e2e] Builder wrote a user's provider key to its output");
+      return 1;
+    }
+    return status;
   } finally {
     await stop();
   }

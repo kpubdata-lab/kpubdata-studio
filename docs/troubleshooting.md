@@ -134,9 +134,11 @@ After the data-path suite, `npm run test:e2e:real` starts the same Builder check
 - **The identity provider is a stand-in** (`scripts/fake-keycloak.mjs`): just enough of a Keycloak realm for keycloak-js to sign in with Authorization Code + PKCE and for Builder to read the signing key. It makes its key when it starts and has two users, so no container, account or secret is needed. It signs in whoever is asked for and listens on localhost only — it is a test double, never a way to run Studio.
 - **Studio is served with the OIDC client configured** and no auth bypass (`playwright.multiuser.config.ts`, port 5175), so each test signs in from the login page.
 
-Before a browser starts, the runner checks that this Builder answers `GET /providers` with 401 without a token and 200 with one, and stops if it does not: the isolation checks would otherwise pass against a Builder that lets everyone in.
+Before a browser starts, the runner checks that this Builder answers `GET /providers` with 401 without a token, with a token signed by a key the realm does not publish, and with a token for another audience — and with 200 for a token of the realm. It stops otherwise: the isolation checks would pass for nothing against a Builder that does not verify what it is sent.
 
-Ports: Builder 8903, identity provider 8904, Studio 5175. What it does **not** cover is Keycloak itself — sign-up, e-mail verification, the Google broker; those remain the manual smoke above. The suite records no Playwright trace, because a trace holds every request's headers and the workflow refuses to upload evidence that carries a token.
+The provider key a test user types is a value of that run only, built around the workflow's canary key when there is one. The second test checks that the other user's provider list does not read as if he held it and that it is in nothing he is sent; the runner fails the run if Builder writes it to its output, and the evidence check finds it by value in anything a failed run leaves behind.
+
+Ports: Builder 8903, identity provider 8904, Studio 5175. What it does **not** cover is Keycloak itself — sign-up, e-mail verification, the Google broker; those remain the manual smoke above. The suite records no Playwright trace, because a trace holds every request's headers and the workflow refuses to upload evidence that carries a token. Its screenshots go to `test-results/multi-user/`, so that the single-user suite's evidence of a failure in `test-results/` is not emptied when this one starts.
 
 ### Keycloak → Builder OIDC Smoke Test (Manual)
 
