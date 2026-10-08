@@ -157,3 +157,18 @@ Run this to confirm the real authentication path end to end. It requires a runni
 - [ ] Builder logs show `oidc` principal (`kind="oidc"`).
 - [ ] No raw tokens in `localStorage` or `sessionStorage`.
 - [ ] Logout triggers Keycloak logout; protected routes re-prompt for login.
+
+## 오류 ID와 문의처 (`VITE_SUPPORT_CONTACT`, #839)
+
+화면이 오류로 대체되면 Studio 는 `E-20261008-3F9A2C` 같은 오류 ID 를 보여 주고, 같은 ID 로
+시작하는 줄을 브라우저 콘솔에 남깁니다. 사용자가 알려 준 ID 로 콘솔 기록을 찾을 수 있습니다.
+
+```bash
+# 메일 주소 또는 https 페이지. 빌드 시점에 번들에 들어가는 공개 값입니다.
+VITE_SUPPORT_CONTACT=help@example.org
+```
+
+- 메일 주소면 오류 화면에 문의 링크가 생기고, 메일 제목에 오류 ID 가 들어갑니다.
+- `https:` 페이지면 그 페이지로 연결합니다.
+- 그 밖의 값(`http:`, `javascript:`, 상대 경로, 일반 텍스트)은 링크를 만들지 않습니다.
+  설정하지 않은 것과 같게, 관리자에게 ID 를 알려 달라는 안내만 나옵니다.
