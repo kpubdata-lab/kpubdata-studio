@@ -1,20 +1,16 @@
 /**
  * Build-result preview API entry point (#93).
  *
- * Real mode (`VITE_USE_REAL_BUILDER=true`) calls Builder `/preview`; otherwise
- * returns deterministic mock data for UI development/verification. Converts
- * the per-source sample rows and schema Builder returns into the
- * UI-ready `{ rows, schema }` shape (same real-mode branch pattern as
- * runs/api).
+ * Asks the client in force (`./client`) for Builder's `/preview` response — a
+ * Builder's when one is configured (`VITE_USE_REAL_BUILDER=true`), the demo's
+ * otherwise — and converts the per-source sample rows and schema into the UI-ready
+ * `{ rows, schema }` shape. Which of the two answers is decided there and nowhere in
+ * this file (#794).
  */
 import { i18n } from "@/shared/i18n";
-import { serializeSpec } from "@/features/build-spec/specMapping";
-import {
-  builderApi,
-  isRealBuilderEnabled,
-  type PreviewResponse,
-} from "@/shared/lib/builderApi";
+import type { PreviewResponse } from "@/shared/lib/builderApi";
 import type { BuildSpec } from "@/shared/lib/types";
+import { previewClient, type PreviewOptions } from "./client";
 
 export interface PreviewSourceFailure {
   sourceKey: string;
@@ -34,20 +30,6 @@ export interface PreviewResult {
   schema: Record<string, string>;
   warnings: PreviewSourceFailure[];
 }
-
-/** Deterministic sample rows for mock mode. */
-const MOCK_ROWS: Record<string, unknown>[] = [
-  { region: "서울", value: 42, measured_at: "2026-06-21T09:00:00Z" },
-  { region: "부산", value: 37, measured_at: "2026-06-21T09:00:00Z" },
-  { region: "대구", value: 51, measured_at: "2026-06-21T09:00:00Z" },
-];
-
-/** Deterministic column schema for mock mode. */
-const MOCK_SCHEMA: Record<string, string> = {
-  region: "string",
-  value: "int64",
-  measured_at: "string",
-};
 
 function formatFailures(failures: readonly PreviewSourceFailure[]): string {
   return failures.map((failure) => `${failure.sourceKey}: ${failure.error}`).join("; ");
@@ -97,12 +79,7 @@ function transformPreviewResponse(response: PreviewResponse): PreviewResult {
  * @returns Sample row array and column schema map.
  */
 export async function previewBuild(spec: BuildSpec, signal?: AbortSignal): Promise<PreviewResult> {
-  if (!isRealBuilderEnabled()) {
-    return { rows: MOCK_ROWS, schema: MOCK_SCHEMA, warnings: [] };
-  }
-
-  const response = await builderApi.preview(serializeSpec(spec), undefined, signal);
-  return transformPreviewResponse(response);
+  return transformPreviewResponse(await previewClient().preview(spec, undefined, signal));
 }
 
 /**
@@ -113,8 +90,6 @@ export async function previewBuild(spec: BuildSpec, signal?: AbortSignal): Promi
  * entire per-source response verbatim (diff_available/sample_mode/
  * quality_results etc.), so this is separate.
  *
- * Mock mode returns a deterministic mock response without touching the network.
- *
  * @param spec - Build spec to preview.
  * @param options - limit (1..1000, default 5)/sample_mode (first|random)/seed.
  * @param signal - Optional AbortSignal for cancellation.
@@ -122,35 +97,8 @@ export async function previewBuild(spec: BuildSpec, signal?: AbortSignal): Promi
  */
 export async function previewBuildDetailed(
   spec: BuildSpec,
-  options?: { limit?: number; sample_mode?: "first" | "random"; seed?: number },
+  options?: PreviewOptions,
   signal?: AbortSignal,
 ): Promise<PreviewResponse> {
-  if (!isRealBuilderEnabled()) {
-    return {
-      dataset_id: spec.datasetId,
-      previews: [
-        {
-          source_key: spec.sources[0]?.alias || spec.sources[0]?.dataset || "source",
-          status: "ok",
-          error: null,
-          schema: [
-            { name: "region", dtype: "string", nullable: false, unique_count: 3 },
-            { name: "value", dtype: "int64", nullable: true, unique_count: 3 },
-          ],
-          sample: MOCK_ROWS,
-          total_rows: MOCK_ROWS.length,
-          statistics: { row_count: MOCK_ROWS.length, null_counts: { region: 0, value: 0 }, duplicate_rate: 0 },
-          quality_results: [],
-          source_sample: MOCK_ROWS,
-          sample_mode: options?.sample_mode ?? "first",
-          diff_available: false,
-          diffs: [],
-          transform_summary: null,
-          diff_truncated: false,
-        },
-      ],
-    };
-  }
-
-  return builderApi.preview(serializeSpec(spec), options, signal);
+  return previewClient().preview(spec, options, signal);
 }
