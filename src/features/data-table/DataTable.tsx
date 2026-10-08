@@ -5,9 +5,11 @@
  * table's pages — renders them here, so precision, column metadata and the difference
  * between "rows shown" and "rows there are" are decided once:
  *
- * - A cell is always `cellValue(encoding, value)` (#484). Nothing here calls `Number()`
- *   or `parseFloat`, so a zero-led code, a 19-digit code, an unsafe integer or a Decimal
- *   arrives as the text the Builder sent.
+ * - A cell is the text `cellValue(encoding, value)` gives (#484), drawn by what its column
+ *   holds (`TypedCell`, #844): a number right-aligned with its digits grouped, a date on
+ *   one line, a web address as a link, a long text openable in place. Nothing here calls
+ *   `Number()` or `parseFloat`, so a zero-led code, a 19-digit code, an unsafe integer or
+ *   a Decimal keeps every digit the Builder sent.
  * - A header shows the column's name and, when the Builder described it (builder#813),
  *   its display label, logical type and unit. A hint with origin `engine_inferred` is an
  *   estimate and says so.
@@ -25,10 +27,11 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { ColumnWireInfo } from "@/shared/lib/builderApi";
-import { cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
+import { cellDisplay, cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
 import { Button, Card } from "@/shared/ui";
 
 import { MaskedCell, MaskedColumnBadge, maskedSet } from "./masked";
+import { cellAlignment, TypedCell } from "./TypedCell";
 
 /**
  * How the total is known. `sample` is a stored sample with nothing behind it to page
@@ -81,6 +84,18 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
   const encodings = encodingsOf(columnMeta);
   const meta = new Map((columnMeta ?? []).map((column) => [column.name, column]));
   const cell = compact ? "px-3 py-1.5" : "px-4 py-2";
+  // A column is aligned by what it holds, the header with it. A masked column holds
+  // mask tokens, not quantities.
+  const alignments = new Map(
+    columns.map((column) => [
+      column,
+      masked.has(column)
+        ? ""
+        : cellAlignment(
+            cellDisplay(encodings.get(column), meta.get(column)?.logical_type, 0, meta.get(column)?.semantic?.kind).kind,
+          ),
+    ]),
+  );
   return (
     <Card className="min-w-0 overflow-hidden p-0">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
@@ -96,7 +111,13 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
           <thead className="bg-muted/60">
             <tr>
               {columns.map((column) => (
-                <ColumnHeader className={cell} column={column} key={column} masked={masked.has(column)} meta={meta.get(column)} />
+                <ColumnHeader
+                  className={`${cell} ${alignments.get(column) ?? ""}`}
+                  column={column}
+                  key={column}
+                  masked={masked.has(column)}
+                  meta={meta.get(column)}
+                />
               ))}
             </tr>
           </thead>
@@ -104,11 +125,19 @@ export function DataTable({ columns, columnMeta, rows, rowTotal, truncated, capt
             {rows.map((row, index) => (
               <tr className="border-t border-border" key={index}>
                 {columns.map((column) => (
-                  <td className={`${cell} max-w-72 truncate font-mono text-xs`} key={column}>
+                  <td className={`${cell} font-mono text-xs ${alignments.get(column) ?? ""}`} key={column}>
                     {masked.has(column) ? (
-                      <MaskedCell fallback={cellValue(encodings.get(column), row[column])} value={row[column]} />
+                      <span className="block max-w-72 truncate">
+                        <MaskedCell fallback={cellValue(encodings.get(column), row[column])} value={row[column]} />
+                      </span>
                     ) : (
-                      cellValue(encodings.get(column), row[column])
+                      <TypedCell
+                        column={column}
+                        encoding={encodings.get(column)}
+                        logicalType={meta.get(column)?.logical_type}
+                        semanticKind={meta.get(column)?.semantic?.kind}
+                        value={row[column]}
+                      />
                     )}
                   </td>
                 ))}
