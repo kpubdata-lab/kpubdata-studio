@@ -31,8 +31,16 @@ const LOCALES = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "shar
 
 /** Keys whose "dataset" is Hugging Face's term for a publish destination, not ours. */
 const HUGGING_FACE_KEYS = new Set(["buildPublish.privateLabel"]);
-/** Creation-wizard keys that describe edit mode, which does refresh an existing table. */
-const EDIT_MODE_KEYS = new Set(["newBuild.page.eyebrowEdit", "newBuild.page.specEditing", "newBuild.review.runRefresh"]);
+/**
+ * Creation-wizard keys that do refresh an existing table: edit mode, and the choice to
+ * build over a table that is already there instead of making a new one (#837).
+ */
+const EDIT_MODE_KEYS = new Set([
+  "newBuild.page.eyebrowEdit",
+  "newBuild.page.specEditing",
+  "newBuild.review.runRefresh",
+  "addData.review.existingChoiceRefresh",
+]);
 
 function flatten(tree: unknown, path = ""): [string, string][] {
   if (typeof tree === "string") return [[path, tree]];

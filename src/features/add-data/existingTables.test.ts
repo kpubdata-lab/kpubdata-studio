@@ -1,0 +1,206 @@
+// @vitest-environment jsdom
+/**
+ * Whether adding a dataset would replace a table that is already there (#837).
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { resetAuthRenewalForTests, type WarehouseTable } from "@/shared/lib/builderApi";
+import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
+import type { BuildSpec } from "@/shared/lib/types";
+import {
+  datasetIdToBuild,
+  existingTablesAmong,
+  findExistingTables,
+  freeDatasetId,
+  specToBuild,
+  type ExistingTables,
+} from "./existingTables";
+
+/** A table as Builder lists it. `datasetId` undefined is an older Builder that does not send it. */
+function table(logicalName: string, datasetId?: string | null, rows: number | null = 22): WarehouseTable {
+  return {
+    table_id: `tbl_${logicalName}`,
+    logical_name: logicalName,
+    current_snapshot_id: "snap_1",
+    revision: 1,
+    current_snapshot: { snapshot_id: "snap_1", row_count: rows, committed_at: "2026-10-08T01:00:00Z", coverage: null },
+    ...(datasetId === undefined ? {} : { dataset_id: datasetId }),
+  };
+}
+
+const STATIONS = table("datago-air-station.datago.air_station", "datago-air-station");
+
+const SPEC: BuildSpec = {
+  datasetId: "datago-air-station",
+  title: "Air stations",
+  description: "Measuring stations",
+  sources: [{ provider: "datago", dataset: "air_station", params: { station: "B" } }],
+  exports: [{ format: "jsonl" }],
+  metadata: {},
+};
+
+describe("existingTablesAmong", () => {
+  it("finds the table the dataset id already has, and the id that is free", () => {
+    const found = existingTablesAmong("datago-air-station", [table("other.x", "other"), STATIONS]);
+
+    expect(found).toStrictEqual({ status: "found", tables: [STATIONS], freeId: "datago-air-station-2" });
+  });
+
+  it("finds every table of a dataset with several sources", () => {
+    const first = table("weather.a", "weather");
+    const second = table("weather.b", "weather");
+
+    expect(existingTablesAmong("weather", [first, table("weather-2.a", "weather-2"), second])).toStrictEqual({
+      status: "found",
+      tables: [first, second],
+      freeId: "weather-3",
+    });
+  });
+
+  it("reads an older Builder's tables by their names", () => {
+    const old = table("datago-air-station.datago.air_station");
+
+    expect(existingTablesAmong("datago-air-station", [old])).toMatchObject({ status: "found", tables: [old] });
+  });
+
+  it("says none when no table belongs to the id", () => {
+    // A table whose name starts with the id but which Builder says is another dataset's.
+    const other = table("datago-air-station.x", "datago-air-station-archive");
+
+    expect(existingTablesAmong("datago-air-station", [other, table("datago-air.y", "datago-air")])).toStrictEqual({
+      status: "none",
+    });
+    expect(existingTablesAmong("datago-air-station", [])).toStrictEqual({ status: "none" });
+  });
+
+  it("does not take a table Builder could not attribute as this dataset's", () => {
+    expect(existingTablesAmong("datago-air-station", [table("datago-air-station.x", null)])).toStrictEqual({
+      status: "none",
+    });
+  });
+});
+
+describe("freeDatasetId", () => {
+  it("skips the suffixes that already have a table", () => {
+    const tables = [STATIONS, table("datago-air-station-2.s", "datago-air-station-2"), table("datago-air-station-3.s", "datago-air-station-3")];
+
+    expect(freeDatasetId("datago-air-station", tables)).toBe("datago-air-station-4");
+  });
+
+  it("stays inside the length a dataset id may have", () => {
+    const long = "a".repeat(80);
+
+    const free = freeDatasetId(long, [table(`${long}.s`, long)]);
+
+    expect(free).toBe(`${"a".repeat(78)}-2`);
+    expect(free).toHaveLength(80);
+  });
+});
+
+describe("datasetIdToBuild and specToBuild", () => {
+  const found: ExistingTables = { status: "found", tables: [STATIONS], freeId: "datago-air-station-2" };
+
+  it("builds under the free id unless the user chose to refresh the table", () => {
+    expect(datasetIdToBuild("datago-air-station", found, "new")).toBe("datago-air-station-2");
+    expect(datasetIdToBuild("datago-air-station", found, "refresh")).toBe("datago-air-station");
+  });
+
+  it.each<ExistingTables>([{ status: "none" }, { status: "checking" }, { status: "unknown" }])(
+    "keeps the id when the answer is $status",
+    (existing) => {
+      expect(datasetIdToBuild("datago-air-station", existing, "new")).toBe("datago-air-station");
+    },
+  );
+
+  it("changes nothing of the spec but the id, and not the spec it was given", () => {
+    const built = specToBuild(SPEC, found, "new");
+
+    expect(built).toStrictEqual({ ...SPEC, datasetId: "datago-air-station-2" });
+    expect(SPEC.datasetId).toBe("datago-air-station");
+    expect(specToBuild(SPEC, found, "refresh")).toBe(SPEC);
+    expect(specToBuild(SPEC, { status: "none" }, "new")).toBe(SPEC);
+  });
+});
+
+describe("findExistingTables", () => {
+  function json(status: number, body: unknown): Response {
+    return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  }
+
+  /** A Builder whose table list is `answer`. Records the paths it was asked for. */
+  function builder(answer: () => Promise<Response> | Response): string[] {
+    const asked: string[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      const signal = init?.signal ?? undefined;
+      if (signal?.aborted) throw signal.reason ?? new DOMException("Aborted", "AbortError");
+      asked.push(new URL(String(input), "http://builder.test").pathname);
+      return answer();
+    });
+    return asked;
+  }
+
+  beforeEach(() => {
+    clearSessionRefusal();
+    resetAuthRenewalForTests();
+    window.__KPUBDATA_CONFIG__ = { useRealBuilder: "true" };
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete window.__KPUBDATA_CONFIG__;
+  });
+
+  it("asks Builder for the caller's tables and finds the one of this id", async () => {
+    const asked = builder(() => json(200, { tables: [STATIONS] }));
+
+    const existing = await findExistingTables("datago-air-station");
+
+    expect(existing).toStrictEqual({ status: "found", tables: [STATIONS], freeId: "datago-air-station-2" });
+    expect(asked.filter((path) => path.endsWith("/warehouse/tables"))).toHaveLength(1);
+  });
+
+  it("uses the id it was given", async () => {
+    builder(() => json(200, { tables: [STATIONS] }));
+
+    expect(await findExistingTables("something-else")).toStrictEqual({ status: "none" });
+  });
+
+  it("reads a deployment without a warehouse as having no table to replace", async () => {
+    builder(() => json(404, { error: "warehouse_not_configured" }));
+
+    expect(await findExistingTables("datago-air-station")).toStrictEqual({ status: "none" });
+  });
+
+  it.each([500, 503, 403])("does not read a %i as no table", async (status) => {
+    builder(() => json(status, { error: "nope" }));
+
+    expect(await findExistingTables("datago-air-station")).toStrictEqual({ status: "unknown" });
+  });
+
+  it("does not read an unreachable Builder as no table", async () => {
+    builder(() => {
+      throw new TypeError("network down");
+    });
+
+    expect(await findExistingTables("datago-air-station")).toStrictEqual({ status: "unknown" });
+  });
+
+  it("rejects, without an answer, when the question was withdrawn", async () => {
+    const asked = builder(() => json(200, { tables: [STATIONS] }));
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(findExistingTables("datago-air-station", controller.signal)).rejects.toMatchObject({ name: "AbortError" });
+    expect(asked).toEqual([]);
+  });
+
+  it("asks the demo warehouse in the demo", async () => {
+    delete window.__KPUBDATA_CONFIG__;
+    const asked = builder(() => json(500, {}));
+
+    const existing = await findExistingTables("air-quality");
+
+    expect(existing.status).toBe("found");
+    expect(asked).toEqual([]);
+  });
+});

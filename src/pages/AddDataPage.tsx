@@ -29,6 +29,12 @@ import {
 import { ConfigureStep, type CatalogState, type UploadState } from "@/features/add-data/components/ConfigureStep";
 import { PreviewValidationStep, type PreviewState } from "@/features/add-data/components/PreviewValidationStep";
 import { ReviewBuildStep } from "@/features/add-data/components/ReviewBuildStep";
+import {
+  findExistingTables,
+  specToBuild,
+  type ExistingTableChoice,
+  type ExistingTables,
+} from "@/features/add-data/existingTables";
 import { SourceStep } from "@/features/add-data/components/SourceStep";
 import { getSavedSpec } from "@/features/workspace/savedSpecs";
 import { clearAddDataDraft, hasAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
@@ -124,6 +130,10 @@ export function AddDataPage() {
   const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
+  const [existing, setExisting] = useState<ExistingTables>({ status: "checking" });
+  const [tableChoice, setTableChoice] = useState<ExistingTableChoice>("new");
+  // Raised to ask again after the tables could not be read.
+  const [existingAsked, setExistingAsked] = useState(0);
 
   const preselectApplied = useRef(false);
   const savedSpecApplied = useRef(false);
@@ -586,6 +596,24 @@ export function AddDataPage() {
   const editableSpec = buildEditableSpecFromDraft(draft);
   const previewSources = preview.status === "loaded" ? preview.response.previews : [];
 
+  // Adding a dataset whose id already has a table would replace that table (#837). The
+  // review step asks Builder each time it is entered and whenever the id changes, and the
+  // spec it shows and submits goes under a free id unless the user chose to refresh.
+  const requestedDatasetId = specResult.spec?.datasetId;
+  useEffect(() => {
+    if (step !== STEP_IDS.indexOf("create") || !requestedDatasetId) return;
+    const controller = new AbortController();
+    setExisting({ status: "checking" });
+    setTableChoice("new");
+    findExistingTables(requestedDatasetId, controller.signal)
+      .then(setExisting)
+      .catch(() => {
+        // Aborted: a newer question is on its way, or the step was left.
+      });
+    return () => controller.abort();
+  }, [step, requestedDatasetId, existingAsked]);
+  const specForBuild = specResult.spec ? specToBuild(specResult.spec, existing, tableChoice) : undefined;
+
   // Build success (real-mode always uses actual run_id from Builder, mock-mode uses existing
   // mock path) → navigate to Builds/Runs. Don't create new mock run id — useBuildJob
   // already guarantees real run_id / mock-run distinction.
@@ -713,13 +741,17 @@ export function AddDataPage() {
         {step === 2 ? (
           <ReviewBuildStep
             draft={draft}
-            spec={specResult.spec}
+            spec={specForBuild}
             specError={specResult.error}
             validation={validation}
             previewSources={previewSources}
             previewLimit={draft.previewLimit}
             previewSampleMode={draft.previewSampleMode}
             isStale={isStale}
+            existing={existing}
+            tableChoice={tableChoice}
+            onChooseTable={setTableChoice}
+            onRecheckExisting={() => setExistingAsked((asked) => asked + 1)}
             jobStatus={job.status}
             jobError={job.error}
             keyNotice={<BuildKeyNotice job={job} />}
@@ -727,7 +759,7 @@ export function AddDataPage() {
             onBuild={() => {
               // Started again after an attempt that failed here, it is a retry of that
               // attempt and says so (#757, #787).
-              if (specResult.spec) void job.start(specResult.spec, { retryOf: retryOfFor(job.run) });
+              if (specForBuild) void job.start(specForBuild, { retryOf: retryOfFor(job.run) });
             }}
             onCancel={job.cancel}
           />

@@ -13,6 +13,10 @@
  * may contain secret query/param values (api_key/serviceKey/token/secret, high-entropy), so redactBuildSpecForDisplay/
  * redactSourceParamsText create separate display copies — actual build submission (AddDataPage onBuild → job.start(specResult.spec))
  * bypasses this component and uses the original spec, so display redaction does not affect submitted values.
+ *
+ * `spec` is the spec as it will be submitted: where a table of the draft's id is already
+ * there, the page has put it under a free id unless the user chose to refresh that table
+ * (#837, `existingTables.ts`). `draft.datasetId` stays the id the draft asked for.
  */
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,6 +27,8 @@ import { QualityBadge } from "@/features/quality/QualityBadge";
 import { redactBuildSpecForDisplay } from "@/features/add-data/model";
 import { redactUrlEndpoint } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsText } from "@/features/add-data/paramsRedaction";
+import { ExistingTableNotice } from "@/features/add-data/components/ExistingTableNotice";
+import type { ExistingTableChoice, ExistingTables } from "@/features/add-data/existingTables";
 import type { PreviewSource } from "@/shared/lib/builderApi";
 import type { BuildJobStatus } from "@/features/runs/useBuildJob";
 import type { AddDataDraft, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
@@ -39,6 +45,11 @@ export interface ReviewBuildStepProps {
   previewLimit: PreviewLimit;
   previewSampleMode: PreviewSampleMode;
   isStale: boolean;
+  /** Whether a table of the draft's dataset id is already there (#837). */
+  existing: ExistingTables;
+  tableChoice: ExistingTableChoice;
+  onChooseTable: (choice: ExistingTableChoice) => void;
+  onRecheckExisting: () => void;
   jobStatus: BuildJobStatus;
   jobError?: string;
   /** Shown under the failure when a provider key is what the build needs (#787). */
@@ -87,6 +98,10 @@ export function ReviewBuildStep({
   previewLimit,
   previewSampleMode,
   isStale,
+  existing,
+  tableChoice,
+  onChooseTable,
+  onRecheckExisting,
   jobStatus,
   jobError,
   keyNotice,
@@ -113,6 +128,8 @@ export function ReviewBuildStep({
     validation.status === "validated" &&
     validation.valid &&
     !isStale &&
+    // Not while it is unknown whether the build would replace a table (#837).
+    (existing.status === "none" || existing.status === "found") &&
     jobStatus !== "running";
 
   return (
@@ -177,6 +194,14 @@ export function ReviewBuildStep({
         )}
         <p className="mt-1 text-xs text-muted-foreground">{t("addData.review.logicalNameNote")}</p>
       </Card>
+
+      <ExistingTableNotice
+        choice={tableChoice}
+        datasetId={draft.datasetId}
+        existing={existing}
+        onChoose={onChooseTable}
+        onRecheck={onRecheckExisting}
+      />
 
       {isStale ? (
         <Card variant="error" className="p-4">
