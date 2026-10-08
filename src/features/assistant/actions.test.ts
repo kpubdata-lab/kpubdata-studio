@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadBuildSpec, saveBuildSpec } from "@/features/build-spec/specStore";
 import { loadDraft } from "@/features/build-spec/draftStorage";

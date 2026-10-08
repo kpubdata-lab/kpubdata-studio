@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Source-level contract fields survive every spec round trip (#601).
  *

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Add Data local draft — secret redaction on save (PR #283 review response, Epic #246).
  *

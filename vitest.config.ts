@@ -21,11 +21,17 @@ export default defineConfig({
     // 느린 러너에서 RTL 이 기다리기도 전에 테스트 래퍼가 먼저 끊고,
     // "무엇을 기다리다 실패했는지"가 사라진 메시지만 남는다.
     testTimeout: 60_000,
-    environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     // e2e/는 Playwright 슈트다(#268) — vitest 수집/변환 대상에서 제외한다.
     exclude: ["node_modules/**", "dist/**", "e2e/**"],
+    // A `.test.tsx` renders components and runs in jsdom. A `.test.ts` runs in Node,
+    // which starts far faster; one that needs `window`, `localStorage` or a rendered
+    // hook says so with a `// @vitest-environment jsdom` line at its top.
+    projects: [
+      { extends: true, test: { name: "node", environment: "node", include: ["**/*.test.ts"] } },
+      { extends: true, test: { name: "jsdom", environment: "jsdom", include: ["**/*.test.tsx"] } },
+    ],
     // 커버리지 게이트 (#380). 목적은 새 커버리지를 강제하는 게 아니라 이미 도달한
     // 수준이 조용히 내려가지 않게 잠그는 것이다. 하한은 실측보다 2%p 낮게 둔다.
     //

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Saved BuildSpec local store (#260) tests.
  *

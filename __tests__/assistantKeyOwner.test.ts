@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * The Ask KPubData LLM key belongs to the signed-in user (kpubdata#812).
  *

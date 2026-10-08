@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Provider keys held for this page load (#652, kpubdata-builder#683, contract 1.56.0).
  *
