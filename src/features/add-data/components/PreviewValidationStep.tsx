@@ -28,6 +28,7 @@ import { MaskedCell, MaskedColumnBadge, maskedSet } from "@/features/data-table/
 import { QualityBadge } from "@/features/quality/QualityBadge";
 import type { PreviewResponse, PreviewSource } from "@/shared/lib/builderApi";
 import type { PreviewColumnView, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
+import { previewCoverage, sampleExtentText } from "@/features/add-data/previewCoverage";
 import { Button, Card, EmptyState, Select } from "@/shared/ui";
 import { useTabs } from "@/shared/ui/useTabs";
 import { cellValue, encodingsOf } from "@/shared/lib/cellValue";
@@ -91,6 +92,7 @@ export function PreviewValidationStep({
 
   const safeIndex = Math.min(activeIndex, Math.max(previews.length - 1, 0));
   const source: PreviewSource | undefined = previews[safeIndex];
+  const coverage = source ? previewCoverage(source) : null;
   const { mixed, perSource } = summarizePreviewSources(previews);
   // One tab per source; the preview below is their panel (#795).
   const tabs = useTabs({
@@ -204,6 +206,16 @@ export function PreviewValidationStep({
               </div>
             </div>
 
+            {coverage?.kind === "sample" ? (
+              <p
+                className="rounded-lg border border-status-warning-border bg-status-warning-subtle px-3 py-2 text-xs text-status-warning"
+                data-testid="preview-sample-notice"
+                role="status"
+              >
+                {t("addData.preview.sampleNotice", { extent: sampleExtentText(coverage) })}
+              </p>
+            ) : null}
+
             {source.status === "failed" ? (
               <EmptyState title={t("addData.preview.sourceFailedTitle")} description={source.error ?? t("addData.preview.unknownError")} />
             ) : source.total_rows === 0 ? (
@@ -276,6 +288,7 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
   const cols = columnView === "all" ? allColumns : allColumns.slice(0, KEY_COLUMN_COUNT);
   // Declared PII Builder masked in this sample (builder#900, #641) — only the columns it names.
   const masked = maskedSet(source.masked_columns);
+  const coverage = previewCoverage(source);
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
@@ -307,12 +320,18 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
           ))}
         </tbody>
       </table>
-      <p className="mt-2 text-xs text-muted-foreground">
-        {t("addData.preview.sampleFooter", {
-          total: source.total_rows,
-          shown: source.sample.length,
-          columns: allColumns.length,
-        })}
+      <p className="mt-2 text-xs text-muted-foreground" data-testid="sample-footer">
+        {coverage.kind === "sample"
+          ? t("addData.preview.sampleFooterPartial", {
+              extent: sampleExtentText(coverage),
+              shown: source.sample.length,
+              columns: allColumns.length,
+            })
+          : t("addData.preview.sampleFooter", {
+              total: coverage.rows,
+              shown: source.sample.length,
+              columns: allColumns.length,
+            })}
       </p>
       {masked.size ? (
         <p className="mt-1 text-xs text-muted-foreground" data-testid="masked-note">
@@ -325,6 +344,7 @@ function SampleTable({ source, columnView }: { source: PreviewSource; columnView
 
 function ValidationPanel({ source }: { source: PreviewSource }) {
   const { t } = useTranslation();
+  const coverage = previewCoverage(source);
   const overall = summarizeChecksPassed(source.quality_results);
   const buckets: Array<{ label: string; summary: ReturnType<typeof summarizeChecksPassed> }> = [
     { label: t("labels.schema"), summary: qualityBucket(source, isSchemaCategory) },
@@ -346,6 +366,11 @@ function ValidationPanel({ source }: { source: PreviewSource }) {
           <span className="text-xs text-muted-foreground">{t("addData.preview.checksPassed")}</span>
         </div>
       )}
+      {coverage.kind === "sample" && source.quality_results.length > 0 ? (
+        <p className="text-xs text-muted-foreground" data-testid="validation-sample-note">
+          {t("addData.preview.validationOfSample", { fetched: coverage.fetched })}
+        </p>
+      ) : null}
       <div className="space-y-1.5">
         {buckets.map((b) => (
           <div key={b.label} className="flex items-center justify-between text-sm">
