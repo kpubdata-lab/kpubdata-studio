@@ -37,7 +37,7 @@ const CONTENT_NOT_UI = [
   /\/api\/mockData\.ts$/,
   /^shared\/lib\/demoDatasets\.ts$/,
   /^features\/add-data\/api\.ts$/,
-  /^features\/discover\/api\.ts$/,
+  /^features\/discover\/client\.ts$/,
   /^features\/preview\/api\/index\.ts$/,
   /^features\/assistant\/(demo|prompt)\.ts$/,
   /^features\/assistant\/(columnMeaning|AssistantChat)\.tsx?$/,
