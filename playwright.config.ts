@@ -48,7 +48,8 @@ export default defineConfig({
     },
   ],
   // @real-builder 스펙(실 Builder 기동 필요)은 기본 슈트에서 제외한다.
-  grep: /^(?!.*@real-builder).*$/,
+  // @multi-user specs need a Builder with OIDC and an identity provider as well (#773).
+  grep: /^(?!.*@(real-builder|multi-user)).*$/,
   projects: [
     { name: "desktop-chromium", testIgnore: BUILT_APP_SPECS, use: { ...devices["Desktop Chrome"] } },
     { name: "mobile-chromium", testIgnore: BUILT_APP_SPECS, use: { ...devices["Pixel 7"] } },
