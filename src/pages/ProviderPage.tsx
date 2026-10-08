@@ -178,6 +178,10 @@ export function ProviderPage() {
   // Whether a credential was saved during this visit — the returnTo CTA
   // shows only after a successful save (§4). Reset on provider switch.
   const [justSavedCredential, setJustSavedCredential] = useState(false);
+  // The provider whose line in the list is older than a delete of its key, and whether
+  // the list is being read again or could not be. The list's `configured` may have been
+  // true only for the key that was deleted, so it says nothing until read again (#845).
+  const [staleSummary, setStaleSummary] = useState<{ provider: string; reread: "reading" | "failed" } | null>(null);
   // The credential meta fetch/update race guard watches two axes together:
   // (1) request-generation — a fetch started later always wins.
   // (2) selectedProviderIdRef — the fetch's target provider must equal the
@@ -202,7 +206,7 @@ export function ProviderPage() {
     if (isRealBuilderEnabled()) void ensureVersionChecked();
   }, []);
 
-  const loadProviders = useCallback(async () => {
+  const loadProviders = useCallback(async (): Promise<boolean> => {
     setLoading(true);
     setError(null);
     try {
@@ -213,6 +217,8 @@ export function ProviderPage() {
         const response = await builderApi.listProviders();
         const mapped = response.providers.map(mapProviderSummary);
         setProviders(mapped);
+        // Every line of the list is as new as this answer.
+        setStaleSummary(null);
         // The ref is the synchronous source of truth for user selection.
         // State updaters/effects run late; flipping an already-B ref back to A
         // could start a stale mutation refresh — so the list response never
@@ -230,9 +236,11 @@ export function ProviderPage() {
         // Use the mock list only in explicit mock/demo mode.
         setProviders(getMockProviders());
       }
+      return true;
     } catch {
       setError(i18n.t("provider.errors.loadProvider"));
       setProviders([]);
+      return false;
     } finally {
       setLoading(false);
     }
@@ -248,7 +256,7 @@ export function ProviderPage() {
    * requires_credential=false (nothing to register or delete).
    */
   const loadCredentialMeta = useCallback(
-    async (provider: ProviderConfig) => {
+    async (provider: ProviderConfig, options: { afterMutation?: boolean } = {}) => {
       const generation = ++credentialRequestGeneration.current;
       // Whether this fetch's result may reach the screen: only when it is
       // the latest fetch AND its target is still the selected provider.
@@ -260,7 +268,10 @@ export function ProviderPage() {
         if (stillCurrent()) setCredentialMeta({ status: "not_applicable" });
         return;
       }
-      if (stillCurrent()) setCredentialMeta({ status: "loading" });
+      // After a save or a delete the panel already shows what that did (#845). Going
+      // back to "loading" for the confirming read would make it say, for as long as the
+      // read takes, that the Builder's default credential is in use.
+      if (stillCurrent() && !options.afterMutation) setCredentialMeta({ status: "loading" });
       try {
         if (isRealBuilderEnabled()) {
           const meta = await builderApi.getProviderCredential(provider.id);
@@ -277,6 +288,9 @@ export function ProviderPage() {
         }
       } catch (cause) {
         if (!stillCurrent()) return;
+        // The save or delete itself succeeded; a confirming read that fails does not
+        // undo it, and what the panel shows stays.
+        if (options.afterMutation) return;
         if (isCredentialStoreUnavailable(cause)) {
           setCredentialMeta({ status: "store_unavailable" });
           return;
@@ -378,13 +392,18 @@ export function ProviderPage() {
         setCredentialForm({ credential: "" });
         setShowCredentialForm(false);
         setJustSavedCredential(true);
+        // The save succeeded, so this user's key is what the provider uses from now —
+        // said at once, not after the two reads below (#845). Its masked form and
+        // time come with the confirming read.
+        ++credentialRequestGeneration.current;
+        setCredentialMeta({ status: "loaded", configured: true, masked: null, updatedAt: null });
       }
       // Refresh the list authoritatively, but do not start A's
       // provider-specific refresh while viewing another provider — starting
       // it would raise the global generation and could stale B's pending GET.
       await loadProviders();
       if (selectedProviderIdRef.current === provider.id) {
-        await loadCredentialMeta(provider);
+        await loadCredentialMeta(provider, { afterMutation: true });
       }
     } catch (cause) {
       if (isCredentialStorageDisabled(cause)) {
@@ -413,10 +432,20 @@ export function ProviderPage() {
       if (isRealBuilderEnabled()) {
         await builderApi.deleteProviderCredential(provider.id);
       }
-      // Same as save: no metadata refresh for a provider the user left.
-      await loadProviders();
       if (selectedProviderIdRef.current === provider.id) {
-        await loadCredentialMeta(provider);
+        // Deleted, so this user has no key of their own here any more (#845). Whether a
+        // default key is left is the list's to say, once it has been read again.
+        ++credentialRequestGeneration.current;
+        setCredentialMeta({ status: "loaded", configured: false, masked: null, updatedAt: null });
+        setStaleSummary({ provider: provider.id, reread: "reading" });
+      }
+      // Same as save: no metadata refresh for a provider the user left.
+      const listRead = await loadProviders();
+      setStaleSummary((stale) =>
+        stale?.provider !== provider.id ? stale : listRead ? null : { provider: provider.id, reread: "failed" },
+      );
+      if (selectedProviderIdRef.current === provider.id) {
+        await loadCredentialMeta(provider, { afterMutation: true });
       }
     } catch (cause) {
       // If the user moved to another provider mid-delete, do not surface
@@ -448,6 +477,27 @@ export function ProviderPage() {
         userCredentialConfigured,
       })
     : null;
+  // The list's line for this provider, unless a delete has made it older than the truth.
+  const summaryReread = staleSummary && staleSummary.provider === selectedProvider?.id ? staleSummary.reread : null;
+  // "The Builder's default credential is in use" takes two things to say: that this user
+  // has no key of their own here, and that the list still calls the provider configured.
+  // Until this provider's own state is read the first is a guess; after a delete, until
+  // the list is read again, the second is (#845). Without a credential store there can be
+  // no key of the user's, so that state is known too. Nothing else the readiness line
+  // says depends on either.
+  const wouldSayDefaultKey =
+    !!selectedProvider &&
+    selectedProvider.requiresCredential &&
+    selectedProvider.summaryConfigured &&
+    !userCredentialConfigured;
+  const ownCredentialKnown =
+    keysPerRequest ||
+    credentialMeta.status === "loaded" ||
+    credentialMeta.status === "not_applicable" ||
+    credentialMeta.status === "store_unavailable";
+  const credentialOwnerKnown = !wouldSayDefaultKey || (ownCredentialKnown && summaryReread === null);
+  // After a delete even "ready" comes from the old line of the list.
+  const readinessKnown = !wouldSayDefaultKey || summaryReread === null;
   const canRegisterCredential =
     !!selectedProvider &&
     selectedProvider.requiresCredential &&
@@ -512,11 +562,17 @@ export function ProviderPage() {
                     <h2 className="text-sm font-semibold text-foreground" id="credential-title">
                       {t("provider.detail.credTitle")} — <span className="font-mono">{selectedProvider.id}</span>
                     </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">{selectedReadiness?.label}</span>
-                      {" — "}
-                      {selectedReadiness?.detail}
-                    </p>
+                    {readinessKnown ? (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">{selectedReadiness?.label}</span>
+                        {credentialOwnerKnown ? (
+                          <>
+                            {" — "}
+                            {selectedReadiness?.detail}
+                          </>
+                        ) : null}
+                      </p>
+                    ) : null}
                   </div>
                   {keysPerRequest ? null : userCredentialConfigured ? (
                     <Button size="sm" variant="danger" onClick={handleCredentialDelete}>
@@ -524,7 +580,9 @@ export function ProviderPage() {
                     </Button>
                   ) : canRegisterCredential && !showCredentialForm ? (
                     <Button size="sm" onClick={() => setShowCredentialForm(true)}>
-                      {selectedProvider.summaryConfigured ? t("provider.detail.registered") : t("provider.detail.register")}
+                      {selectedProvider.summaryConfigured && summaryReread === null
+                        ? t("provider.detail.registered")
+                        : t("provider.detail.register")}
                     </Button>
                   ) : null}
                 </div>
@@ -669,6 +727,14 @@ export function ProviderPage() {
                       </div>
                     ) : null}
                   </div>
+                ) : summaryReread === "reading" ? (
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    {t("provider.detail.loading")}
+                  </p>
+                ) : summaryReread === "failed" ? (
+                  <p className="mt-4 text-sm text-status-failure">
+                    {t("provider.errors.credStatus")}
+                  </p>
                 ) : selectedProvider.summaryConfigured ? (
                   <p className="mt-4 text-sm text-muted-foreground">
                     {t("provider.detail.defaultCredNote")}
