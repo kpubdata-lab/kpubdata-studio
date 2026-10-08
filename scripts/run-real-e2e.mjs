@@ -47,10 +47,20 @@ if (replayDir !== null && !existsSync(replayDir)) {
 
 // Ask Builder's CLI rather than its source tree: replay arrived in kpubdata-builder#837, and an
 // older checkout's `serve` does not know the flag.
+// UV_NO_SOURCES resolves kpubdata from the lock's PyPI pin, the way the workflow
+// does (real-e2e.yml sets the same variable). Locally it used to be unset, so uv
+// tried the editable ../kpubdata source and failed — and that failure was
+// reported as "this Builder checkout has no replay mode" (#840).
 const serveHelp = spawnSync("uv", ["run", "--project", builderRoot, "kpubdata-builder", "serve", "--help"], {
   encoding: "utf8",
+  env: { ...process.env, UV_NO_SOURCES: "1" },
 });
-const replayAvailable = serveHelp.status === 0 && serveHelp.stdout.includes("--replay");
+if (serveHelp.status !== 0) {
+  console.error("[real-e2e] could not ask this Builder checkout anything — uv run failed:");
+  console.error((serveHelp.stderr || serveHelp.stdout || "(no output)").trim());
+  process.exit(1);
+}
+const replayAvailable = serveHelp.stdout.includes("--replay");
 const replayArgs = !replayAvailable ? [] : replayDir !== null ? ["--replay-dir", replayDir] : ["--replay"];
 
 const port = "8902";
@@ -83,6 +93,7 @@ const builder = spawn(
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
+      UV_NO_SOURCES: "1",
       KPUBDATA_BUILDER_DEV_MODE: "true",
       // Studio dev 서버(5174) 오리진 허용 — CORS는 default-deny(ADR 0006).
       KPUBDATA_BUILDER_ALLOWED_ORIGINS: "http://localhost:5174",
