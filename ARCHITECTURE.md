@@ -151,6 +151,31 @@ sequenceDiagram
 
 ---
 
+### 실제 Builder 와 데모: 하나의 클라이언트 인터페이스 (#794)
+
+Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다. 기능의 API 함수마다
+`if (isRealBuilderEnabled()) … else …` 로 둘을 가르면, 두 쪽이 같은 질문에 같은 방식으로 답한다는
+것을 아무것도 말해 주지 않는다. 그래서 기능은 **클라이언트 인터페이스 하나**를 두고 구현 둘이 그것을
+만족하게 한다.
+
+지금 이 구조인 기능은 **datasets** 하나다(`src/features/datasets/api/client.ts`).
+
+| | 무엇 |
+|---|---|
+| `DatasetsClient` | 화면이 기대해도 되는 것: 계약의 응답 모양, 없는 id 에는 `ApiError` 404, 이미 취소된 요청에는 답 없이 거부 |
+| `realDatasetsClient` | `builderApi` 를 부른다 |
+| `demoDatasetsClient` | fixture 를 읽는다 |
+| `datasetsClient()` | 지금 쓸 구현을 고른다. 고르는 곳은 여기 하나다 |
+| `api/index.ts` 의 함수들 | `datasetsClient()` 에 묻는다. 화면이 부르는 이름과 인자는 그대로다 |
+
+`client.contract.test.ts` 가 같은 기대를 두 구현에 돌린다. 실제 클라이언트는 **데모의 데이터로 답하는
+Builder**(fetch 를 바꿔 끼운 것)에 붙여서, 데모의 답이 JSON 과 계약의 응답 스키마를 거쳐도 그대로인지
+본다. 데모가 계약에 없는 필드나 값을 화면에 넘기면 두 답이 달라져 테스트가 실패한다.
+
+나머지 기능(`publish`, `add-data`, `discover`, `artifacts`, `runs`, `preview` 등)과 일부 페이지에는 분기가
+그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
+전제하지 않는다.
+
 ## 6. 주요 프런트엔드 영역
 
 - 홈(데이터셋·최근 run·warehouse 요약)
