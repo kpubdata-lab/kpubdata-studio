@@ -1,0 +1,9 @@
+# Response headers where Studio is served by Cloudflare Pages (#841) — the reference
+# deployment of kpubdata-builder's ADR 0017. Pages reads this file from the site's root;
+# the nginx image does not, and sends the same headers from docker/security-headers.conf.
+# __tests__/securityHeaders.test.ts holds the two to the same values.
+/*
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff

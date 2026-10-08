@@ -77,6 +77,27 @@ describe("docker/security-headers.conf", () => {
   });
 });
 
+describe("public/_headers", () => {
+  // Cloudflare Pages reads this file; nginx reads its own. One deployment must not be
+  // sent less than the other.
+  const pages = read("public/_headers");
+  const rule = Object.fromEntries(
+    [...pages.matchAll(/^ {2}([A-Za-z-]+): (.+)$/gm)].map((match) => [match[1], match[2]]),
+  );
+
+  it("applies to every path", () => {
+    expect(pages.match(/^\S.*$/gm)?.filter((line) => !line.startsWith("#"))).toEqual(["/*"]);
+  });
+
+  it("sends what nginx sends", () => {
+    const nginx = Object.fromEntries(
+      [...read("docker/security-headers.conf").matchAll(/^add_header (\S+) "([^"]*)" always;$/gm)].map((match) => [match[1], match[2]]),
+    );
+
+    expect(rule).toStrictEqual({ ...nginx, "X-Content-Type-Options": "nosniff" });
+  });
+});
+
 describe("the page's language", () => {
   afterEach(async () => {
     await i18n.changeLanguage("ko");
