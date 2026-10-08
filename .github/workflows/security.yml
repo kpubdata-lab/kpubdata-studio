@@ -22,10 +22,13 @@ on:
 permissions:
   contents: read
 
+# A pull request's new push replaces only that pull request's earlier run. Every other
+# run — a merge to main above all — must finish and leave its result behind (#833), so
+# it gets a group of its own: runs that share a group replace one another while they
+# wait, whatever cancel-in-progress says, and a third push would cancel the second's
+# run before it started (the same thing deploy.yml met in #586).
 concurrency:
-  group: security-${{ github.workflow }}-${{ github.ref }}
-  # A pull request's new push replaces only that pull request's earlier run. A
-  # merge to main must finish and leave its result behind (#833).
+  group: security-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:

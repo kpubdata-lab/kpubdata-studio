@@ -13,10 +13,13 @@ on:
 permissions:
   contents: read
 
+# A pull request's new push replaces only that pull request's earlier run. Every other
+# run — a merge to main above all — must finish and leave its result behind (#833), so
+# it gets a group of its own: runs that share a group replace one another while they
+# wait, whatever cancel-in-progress says, and a third push would cancel the second's
+# run before it started (the same thing deploy.yml met in #586).
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  # A pull request's new push replaces only that pull request's earlier run. A
-  # merge to main must finish and leave its result behind (#833).
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -250,12 +253,12 @@ jobs:
   gate:
     name: CI gate
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     needs: [quality, e2e, coverage, contract-drift, release-freeze, docker-csp]
     # `always()` so a failed job still reaches this step. Without it the gate is
     # skipped when something upstream fails, and a skipped required check is the same
     # absence this job exists to remove.
     if: always()
+    timeout-minutes: 5
     steps:
       - name: Every job this gate covers must have succeeded
         run: |

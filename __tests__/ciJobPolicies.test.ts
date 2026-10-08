@@ -17,7 +17,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 type Job = Record<string, unknown> & { "timeout-minutes"?: number };
 type Workflow = {
-  concurrency?: { "cancel-in-progress"?: string | boolean };
+  concurrency?: { group?: string; "cancel-in-progress"?: string | boolean };
   jobs: Record<string, Job>;
 };
 
@@ -30,6 +30,17 @@ describe("run cancellation", () => {
     for (const name of ["ci.yml", "security.yml"]) {
       expect(load(name).concurrency?.["cancel-in-progress"], name).toBe(
         "${{ github.event_name == 'pull_request' }}",
+      );
+    }
+  });
+
+  // Runs that share a group replace one another while they wait, whatever
+  // cancel-in-progress says: of three quick merges the second's run would be cancelled
+  // before it started. Only a pull request's runs may share one.
+  it("gives every run that is not a pull request's a group of its own", () => {
+    for (const name of ["ci.yml", "security.yml"]) {
+      expect(load(name).concurrency?.group, name).toContain(
+        "${{ github.event_name == 'pull_request' && github.ref || github.run_id }}",
       );
     }
   });
