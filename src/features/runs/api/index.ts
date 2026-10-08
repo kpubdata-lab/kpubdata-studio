@@ -135,7 +135,8 @@ export async function executeBuild(
 
   // Builder does not persist spec (#120), so Studio saves the spec bound to
   // run_id for edit screen restoration. Save failures are ignored and do not
-  // affect build results.
+  // affect build results. It was saved when the job was submitted too; this keeps
+  // it under the id the finished job reports.
   saveBuildSpec(result.id, spec);
 
   return result;
@@ -202,6 +203,10 @@ async function runAsyncBuild(
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
   onHandle?.({ runId: submitted.run_id, mode: "async" });
+  // Kept now, not when the run ends (#846). A job can wait an hour for a worker; the
+  // user leaves, the tab closes or polling fails long before that, and a run that then
+  // never starts has no spec anywhere else — Builder snapshots it only once it runs.
+  saveBuildSpec(submitted.run_id, spec);
   onJobStatus?.(submitted.status);
 
   // If terminal immediately after submit (same run_id resubmit, etc.), decide

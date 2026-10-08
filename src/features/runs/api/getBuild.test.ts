@@ -85,11 +85,20 @@ describe("getBuild, for a run that has only a job", () => {
     expect(build.spec.datasetId).toBe("air-quality");
   });
 
-  it.each(["queued", "running", "cancelling", "cancelled", "succeeded"])("reads a %s job's status as it is", async (status) => {
+  it.each(["cancelled", "succeeded"])("reads a %s job's status as it is", async (status) => {
     saveBuildSpec(RUN, SPEC);
     builderThatKnows({ job: { ...LOST_KEYS_JOB, status, error: null, code: undefined } });
 
     expect((await getBuild(RUN)).status).toBe(status);
+  });
+
+  it.each(["queued", "running", "cancelling"])("does not load a run whose job is still %s", async (status) => {
+    // As before this change: the edit, run and publish pages take a run from here and
+    // are written for one that has ended.
+    saveBuildSpec(RUN, SPEC);
+    builderThatKnows({ job: { ...LOST_KEYS_JOB, status, error: null, code: undefined } });
+
+    await expect(getBuild(RUN)).rejects.toThrow(RUN);
   });
 
   it("asks the job only after the history list and the manifest had nothing", async () => {
