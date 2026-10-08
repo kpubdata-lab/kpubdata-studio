@@ -53,6 +53,11 @@ describe("keysWereLost (#787)", () => {
     expect(keysWereLost({ status: "failed", code: null, error: null, response: { code: "credentials_required" } })).toBe(true);
   });
 
+  it("reads an empty reason at the top as none", () => {
+    expect(keysWereLost({ status: "failed", code: "", error: "", response: { code: "credentials_required" } })).toBe(true);
+    expect(keysWereLost({ status: "failed", code: null, error: "", response: { code: "other" } })).toBe(false);
+  });
+
   it("reads the sentence in the job's response the same way", () => {
     expect(keysWereLost({ status: "failed", response: { error: "credentials_required: the keys are gone" } })).toBe(true);
   });
