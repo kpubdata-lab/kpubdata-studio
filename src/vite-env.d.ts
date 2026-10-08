@@ -19,6 +19,8 @@ interface ImportMetaEnv {
   readonly VITE_OIDC_CLIENT_ID?: string;
   /** Studio's own version, injected from `package.json` by vite `define` (#430). */
   readonly VITE_APP_VERSION?: string;
+  /** Where users report errors (#839): a mail address or an https page. Public value. */
+  readonly VITE_SUPPORT_CONTACT?: string;
 }
 
 interface ImportMeta {

@@ -108,7 +108,9 @@ describe("Dataset Detail P0 (#253)", () => {
     renderDetail("/tables/air-quality?stage=silver&tab=preview");
     expect(await screen.findByText("2026-08-14T00:00:00Z")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Stage 선택"), { target: { value: "gold" } });
-    expect(await screen.findByText("미리보기 없음/지원되지 않음")).toBeInTheDocument();
+    // Gold keeps no sample: that is "not supported", not "0 rows" (#844).
+    expect(await screen.findByText("이 단계는 미리보기를 지원하지 않습니다")).toBeInTheDocument();
+    expect(screen.queryByText(/0행/)).toBeNull();
   });
 
   it("shows the table's five status axes separately (#422)", async () => {
