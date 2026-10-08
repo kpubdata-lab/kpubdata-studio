@@ -101,3 +101,33 @@ describe("PreviewValidationStep — source tabs (#795)", () => {
     expect(screen.queryByRole("tabpanel")).not.toBeInTheDocument();
   });
 });
+
+describe("PreviewValidationStep — diff values (#844)", () => {
+  it("shows a nested value as its JSON and a missing one as a dash, never [object Object]", () => {
+    const changed: PreviewSource = {
+      source_key: "datago__air",
+      status: "ok",
+      error: null,
+      schema: [{ name: "detail", dtype: "struct", nullable: true }] as PreviewSource["schema"],
+      sample: [{ detail: null }],
+      total_rows: 1,
+      statistics: { row_count: 1, null_counts: {}, duplicate_rate: 0 },
+      quality_results: [],
+      source_sample: [],
+      sample_mode: "first",
+      diff_available: true,
+      diffs: [{ row: 0, column: "detail", before: { grade: "A", scores: [1, 2] }, after: null, transform: "drop_nested" }],
+      transform_summary: { changed_cells: 1, changed_rows: 1 },
+      diff_truncated: false,
+    };
+
+    renderStep({ preview: { status: "loaded", response: { dataset_id: "d", previews: [changed] } }, view: "diff" });
+
+    expect(screen.getByText('{"grade":"A","scores":[1,2]}')).toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("[object Object]");
+    // The missing value is a dash, not the word "null".
+    const row = screen.getByText("drop_nested").closest("tr");
+    expect(row?.textContent).toContain("—");
+    expect(row?.textContent).not.toContain("null");
+  });
+});
