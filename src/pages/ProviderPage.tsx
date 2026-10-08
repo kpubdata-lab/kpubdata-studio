@@ -248,7 +248,7 @@ export function ProviderPage() {
    * requires_credential=false (nothing to register or delete).
    */
   const loadCredentialMeta = useCallback(
-    async (provider: ProviderConfig) => {
+    async (provider: ProviderConfig, options: { afterMutation?: boolean } = {}) => {
       const generation = ++credentialRequestGeneration.current;
       // Whether this fetch's result may reach the screen: only when it is
       // the latest fetch AND its target is still the selected provider.
@@ -260,7 +260,10 @@ export function ProviderPage() {
         if (stillCurrent()) setCredentialMeta({ status: "not_applicable" });
         return;
       }
-      if (stillCurrent()) setCredentialMeta({ status: "loading" });
+      // After a save or a delete the panel already shows what that did (#845). Going
+      // back to "loading" for the confirming read would make it say, for as long as the
+      // read takes, that the Builder's default credential is in use.
+      if (stillCurrent() && !options.afterMutation) setCredentialMeta({ status: "loading" });
       try {
         if (isRealBuilderEnabled()) {
           const meta = await builderApi.getProviderCredential(provider.id);
@@ -277,6 +280,9 @@ export function ProviderPage() {
         }
       } catch (cause) {
         if (!stillCurrent()) return;
+        // The save or delete itself succeeded; a confirming read that fails does not
+        // undo it, and what the panel shows stays.
+        if (options.afterMutation) return;
         if (isCredentialStoreUnavailable(cause)) {
           setCredentialMeta({ status: "store_unavailable" });
           return;
@@ -378,13 +384,18 @@ export function ProviderPage() {
         setCredentialForm({ credential: "" });
         setShowCredentialForm(false);
         setJustSavedCredential(true);
+        // The save succeeded, so this user's key is what the provider uses from now —
+        // said at once, not after the two reads below (#845). Its masked form and
+        // time come with the confirming read.
+        ++credentialRequestGeneration.current;
+        setCredentialMeta({ status: "loaded", configured: true, masked: null, updatedAt: null });
       }
       // Refresh the list authoritatively, but do not start A's
       // provider-specific refresh while viewing another provider — starting
       // it would raise the global generation and could stale B's pending GET.
       await loadProviders();
       if (selectedProviderIdRef.current === provider.id) {
-        await loadCredentialMeta(provider);
+        await loadCredentialMeta(provider, { afterMutation: true });
       }
     } catch (cause) {
       if (isCredentialStorageDisabled(cause)) {
@@ -413,10 +424,15 @@ export function ProviderPage() {
       if (isRealBuilderEnabled()) {
         await builderApi.deleteProviderCredential(provider.id);
       }
+      if (selectedProviderIdRef.current === provider.id) {
+        // Deleted, so this user has no key of their own here any more (#845).
+        ++credentialRequestGeneration.current;
+        setCredentialMeta({ status: "loaded", configured: false, masked: null, updatedAt: null });
+      }
       // Same as save: no metadata refresh for a provider the user left.
       await loadProviders();
       if (selectedProviderIdRef.current === provider.id) {
-        await loadCredentialMeta(provider);
+        await loadCredentialMeta(provider, { afterMutation: true });
       }
     } catch (cause) {
       // If the user moved to another provider mid-delete, do not surface
@@ -448,6 +464,13 @@ export function ProviderPage() {
         userCredentialConfigured,
       })
     : null;
+  // Whose key it is, is known only once this provider's own credential state is: until
+  // then "the Builder's default credential is in use" would be a guess (#845).
+  const credentialOwnerKnown =
+    keysPerRequest ||
+    !selectedProvider?.requiresCredential ||
+    credentialMeta.status === "loaded" ||
+    credentialMeta.status === "not_applicable";
   const canRegisterCredential =
     !!selectedProvider &&
     selectedProvider.requiresCredential &&
@@ -514,8 +537,12 @@ export function ProviderPage() {
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       <span className="font-medium text-foreground">{selectedReadiness?.label}</span>
-                      {" — "}
-                      {selectedReadiness?.detail}
+                      {credentialOwnerKnown ? (
+                        <>
+                          {" — "}
+                          {selectedReadiness?.detail}
+                        </>
+                      ) : null}
                     </p>
                   </div>
                   {keysPerRequest ? null : userCredentialConfigured ? (
