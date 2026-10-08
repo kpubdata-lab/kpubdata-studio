@@ -1361,7 +1361,9 @@
     "tabsHint": "Source: {{source}} · lineage, schema and quality details are in their own tabs.",
     "schemaNone": "No schema / not supported",
     "schemaNoneDesc": "The {{stage}} stage response does not provide a schema.",
-    "previewNone": "No preview / not supported",
+    "previewZeroRows": "No rows (0 rows)",
+    "previewZeroRowsDesc": "The {{stage}} stage produced no rows at all. No data matched the conditions, or an earlier stage filtered everything out.",
+    "previewUnsupported": "This stage does not support a preview",
     "askAboutThis": "Ask about this table",
     "labels": {
       "rows": "Rows",
@@ -2893,6 +2895,8 @@
   },
   "dataTable": {
     "truncated": "Truncated — cut at the limit. Unless the query ordered it, this is not the \"top N\"",
+    "expand": "Expand",
+    "collapse": "Collapse",
     "shownRange": "rows {{from}}–{{to}} shown",
     "totalNotComputed": "total not computed",
     "totalUnknown": "total unknown",

@@ -447,7 +447,7 @@ export function PreviewTab({ state, qualityState, qualityStatus, qualityResults,
   if (state.status === "loading" || state.status === "idle") return <Card><Skeleton className="h-40 w-full" /></Card>;
   if (state.status === "error" || !state.data) return <Card variant="error" role="alert">{state.error}</Card>;
   // A withheld sample (#642) is a policy notice, not "no preview": the rows exist but do not leave Builder.
-  if (state.data.stage !== "silver" || state.data.sample.length === 0) return <StageSampleEmpty stage={state.data.stage} withheld={state.data.stage === "silver" ? state.data.sample_withheld : undefined} />;
+  if (state.data.stage !== "silver" || state.data.sample.length === 0) return <StageSampleEmpty empty={state.data.stage === "silver" ? "zero_rows" : "unsupported"} stage={state.data.stage} withheld={state.data.stage === "silver" ? state.data.sample_withheld : undefined} />;
   const columns = [...new Set(state.data.sample.flatMap((row) => Object.keys(row)))];
   // Without a warehouse there is no snapshot to page: this is the run's stored stage sample,
   // so it says "N rows · sample" and offers no paging (#537). The stage's own row count

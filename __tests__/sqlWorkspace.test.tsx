@@ -123,8 +123,9 @@ describe("SQL Workspace against KPubData Builder (#417)", () => {
     renderAt("/sql?table=t1");
     await screen.findByRole("option", { name: /r9/ });
     fireEvent.click(screen.getByRole("button", { name: /실행/ }));
-    expect(await screen.findByText("9007199254740993")).toBeInTheDocument();
-    expect(screen.getByText("0.10")).toBeInTheDocument();
-    expect(screen.queryByText("9007199254740992")).not.toBeInTheDocument();
+    // The cell's whole text: its digits are drawn in threes, in elements of their own (#844).
+    expect(await screen.findByRole("cell", { name: "9007199254740993" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "0.10" })).toBeInTheDocument();
+    expect(screen.queryByRole("cell", { name: "9007199254740992" })).not.toBeInTheDocument();
   });
 });

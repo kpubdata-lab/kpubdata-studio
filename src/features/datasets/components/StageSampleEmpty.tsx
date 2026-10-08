@@ -9,6 +9,10 @@
  *
  * The notice is a known value that needs no action of the user here, so it reads as plain
  * text (`NormalStatus`, #524), not as a failure: nothing went wrong. No row value is shown.
+ *
+ * An empty state is two facts as well (#844): the stage keeps no sample to show — Bronze
+ * and Gold do not — or it does and the result has no rows. "No preview / not supported"
+ * said neither. The caller says which, and each has its own words.
  */
 import { useTranslation } from "react-i18next";
 
@@ -21,14 +25,28 @@ import { NormalStatus } from "@/shared/ui/StatusState";
  *
  * @param props.stage - The stage whose detail had no sample rows.
  * @param props.withheld - `sample_withheld` from the Silver stage detail, when present.
+ * @param props.empty - Why there is nothing to show when nothing was withheld: the stage
+ *   keeps no sample (`unsupported`), or it has no rows (`zero_rows`).
  * @returns A policy notice when the sample was withheld, otherwise the empty state.
  */
-export function StageSampleEmpty({ stage, withheld }: { stage: string; withheld?: SampleWithheldReason }) {
+export function StageSampleEmpty({
+  stage,
+  withheld,
+  empty,
+}: {
+  stage: string;
+  withheld?: SampleWithheldReason;
+  empty: "unsupported" | "zero_rows";
+}) {
   const { t } = useTranslation();
   if (!withheld) {
     return (
-      <Card>
-        <EmptyState title={t("datasetDetail.previewNone")} description={t("datasetDetail.previewNoneDesc", { stage })} />
+      <Card data-sample-empty={empty}>
+        {empty === "zero_rows" ? (
+          <EmptyState title={t("datasetDetail.previewZeroRows")} description={t("datasetDetail.previewZeroRowsDesc", { stage })} />
+        ) : (
+          <EmptyState title={t("datasetDetail.previewUnsupported")} description={t("datasetDetail.previewNoneDesc", { stage })} />
+        )}
       </Card>
     );
   }

@@ -1361,7 +1361,9 @@
     "tabsHint": "Source: {{source}} · Lineage/Schema/Quality 상세는 각 탭에서 확인할 수 있습니다.",
     "schemaNone": "Schema 없음/지원되지 않음",
     "schemaNoneDesc": "{{stage}} stage 응답이 schema를 제공하지 않습니다.",
-    "previewNone": "미리보기 없음/지원되지 않음",
+    "previewZeroRows": "행이 없습니다 (0행)",
+    "previewZeroRowsDesc": "{{stage}} 단계의 결과에 행이 하나도 없습니다. 조건에 맞는 데이터가 없었거나, 앞 단계에서 모두 걸러졌습니다.",
+    "previewUnsupported": "이 단계는 미리보기를 지원하지 않습니다",
     "askAboutThis": "이 테이블에 대해 묻기",
     "labels": {
       "rows": "행",
@@ -2893,6 +2895,8 @@
   },
   "dataTable": {
     "truncated": "잘림 — 한도에서 잘린 결과입니다. 정렬하지 않았다면 \"상위 N\" 이 아닙니다",
+    "expand": "펼치기",
+    "collapse": "접기",
     "shownRange": "{{from}}–{{to}}행 표시",
     "totalNotComputed": "전체 건수 계산 안 함",
     "totalUnknown": "전체 건수 알 수 없음",
