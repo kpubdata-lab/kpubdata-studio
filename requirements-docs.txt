@@ -1,0 +1,4 @@
+# The docs site's build tools, at the exact versions deploy.yml installs
+# (`pip install -r requirements-docs.txt`). Dependabot raises them.
+mkdocs==1.6.1
+mkdocs-material==9.7.7

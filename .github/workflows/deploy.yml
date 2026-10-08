@@ -28,6 +28,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -39,17 +40,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        env:
-          # npm이 runner-writable 경로 사용하도록 강제 설정
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
-          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
       - run: npm run build # base=/kpubdata-studio/, mock 모드(실 Builder 미설정)
 
       # --- 문서 빌드: site/ ---
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: "3.12"
-      - run: pip install mkdocs-material
+      # Exact versions, so a new mkdocs-material release cannot fail --strict on a pull
+      # request that did not touch the docs. Dependabot raises them.
+      - run: pip install -r requirements-docs.txt
       - run: mkdocs build --strict
 
       # --- 배포 아티팩트 합치기: 앱은 루트, 문서는 /docs ---
@@ -71,6 +70,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write
       id-token: write

@@ -3,7 +3,7 @@
  *
  * The codes are Studio's checked-in `PUBLISH_ISSUE_CODES`. Against Builder's contract
  * (`BUILDER_CONTRACT`), the same checks run in `src/shared/lib/contractDrift.test.ts`,
- * which CI's `Builder contract drift` job runs against Builder's main: there the list
+ * which CI's `Test (Node 22)` leg runs against Builder's main: there the list
  * must equal the contract's `x-codes`, and every contract code needs a ko and en entry.
  * When `BUILDER_CONTRACT` is set here too, this file checks the contract's codes.
  */

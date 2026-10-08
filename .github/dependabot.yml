@@ -36,3 +36,11 @@ updates:
     # `node scripts/check-action-pins.mjs --bump-kpubdata SHA` (#729).
     ignore:
       - dependency-name: "kpubdata-lab/kpubdata*"
+  # requirements-docs.txt: the exact mkdocs versions deploy.yml builds the docs with.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"

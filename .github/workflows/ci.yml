@@ -13,41 +13,35 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels the older run, which reports on a head that is
+# no longer the pull request's. A run on main is never cancelled, and gets a group of its
+# own: in a shared group a run waiting behind another is replaced by the next push and
+# cancelled (#586), so every push to main keeps its own result and a failure names the
+# commit that caused it.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  quality:
-    name: Lint, type check, test, build
+  # Lint, type check, the source gates and the production build run once, on Node 22.
+  # Their result does not depend on the Node version the suite runs on, so a second
+  # copy on Node 24 bought nothing but runner time.
+  static:
+    name: Lint, type check, build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Node 20 은 빼야 한다. vitest 의 jsdom 경로가 undici 를 통해
-        # ``webidl.util.markAsUncloneable`` 을 호출하고, 그 내부 API 는 Node 22
-        # 부터 있다 — 20.20.2 에서 워커가 전부 기동에 실패한다(#400).
-        #
-        # 이것은 **개발 도구의 요구**이고 사용자 요구가 아니다. 배포 산출물은
-        # 정적 빌드라 최종 사용자에게 Node 가 필요하지 않다. Node 20 을 유지하면
-        # undici/jsdom/vitest 를 고정해야 하고, 그러면 보안 업데이트가 막힌다.
-        node-version: ["22", "24"]
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Setup Node ${{ matrix.node-version }}
+      - name: Setup Node 22
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "22"
           cache: npm
 
       - name: Install dependencies
         run: npm ci
-        env:
-          # npm이 runner-writable 경로 사용하도록 강제 설정
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
-          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
       - name: Lint (ESLint)
         run: npm run lint
@@ -68,7 +62,7 @@ jobs:
 
       # A key that no locale file has renders as the key itself, so the user reads
       # "layout.homeLink" where a label should be — nothing else in the build fails
-      # on it (#448). Runs before the suite: it takes a second and names the file.
+      # on it (#448).
       - name: i18n key gate (#448)
         run: npm run i18n:keys
 
@@ -86,11 +80,69 @@ jobs:
           git fetch --no-tags --depth=1 origin main || true
           npm run check:stale-ui
 
-      - name: Test (Vitest)
-        run: npm test
-
       - name: Build
         run: npm run build
+
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node 20 은 빼야 한다. vitest 의 jsdom 경로가 undici 를 통해
+        # ``webidl.util.markAsUncloneable`` 을 호출하고, 그 내부 API 는 Node 22
+        # 부터 있다 — 20.20.2 에서 워커가 전부 기동에 실패한다(#400).
+        #
+        # 이것은 **개발 도구의 요구**이고 사용자 요구가 아니다. 배포 산출물은
+        # 정적 빌드라 최종 사용자에게 Node 가 필요하지 않다. Node 20 을 유지하면
+        # undici/jsdom/vitest 를 고정해야 하고, 그러면 보안 업데이트가 막힌다.
+        #
+        # The Node 22 leg is the only instrumented run: it owns the coverage gate (#380)
+        # and the Builder contract drift check. The thresholds live in one place,
+        # vitest.config.ts' coverage.thresholds.
+        include:
+          - node-version: "22"
+            coverage: true
+          - node-version: "24"
+            coverage: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      # Studio's response schemas against Builder's contract (kpubdata-builder#693).
+      # Builder main is what Studio is developed against and released with (ADR 0004).
+      # A Builder enum value Studio does not accept makes every response carrying it
+      # fail to parse — run_cancelled did, until #473 — so this fails the build instead.
+      # When Builder cannot be checked out this step fails, and so does the leg.
+      - name: Checkout Builder's contract
+        if: matrix.coverage
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: kpubdata-lab/kpubdata-builder
+          path: .builder
+          sparse-checkout: contract
+
+      - name: Setup Node ${{ matrix.node-version }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # With BUILDER_CONTRACT set, src/shared/lib/contractDrift.test.ts (and the
+      # contract half of __tests__/publishIssueCodes.test.ts) run instead of skipping.
+      - name: Test with coverage and the Builder contract (Vitest)
+        if: matrix.coverage
+        env:
+          BUILDER_CONTRACT: .builder/contract/builder-api.yaml
+        run: npm run test:coverage
+
+      - name: Test (Vitest)
+        if: ${{ !matrix.coverage }}
+        run: npm test
 
   e2e:
     # Playwright 스펙을 CI 에 편입한다 (#377). 지금까지는 `npm run test:e2e` 를 사람이
@@ -122,9 +174,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        env:
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
-          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
 
       # Browsers are not downloaded: the image already holds them (PLAYWRIGHT_BROWSERS_PATH).
       - name: Run E2E
@@ -145,67 +194,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  coverage:
-    # 커버리지 게이트 (#380). 지금 도달한 수준이 조용히 내려가지 않게 잠근다.
-    # 하한은 vitest.config.ts 의 coverage.thresholds 한 곳에서만 관리한다.
-    # quality 잡은 Node 20/22 두 번 도는데, 계측을 거기 얹으면 같은 정보를 두 배
-    # 비용으로 사게 된다 — 이 잡 하나만 계측한다.
-    name: Coverage gate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
-          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-  contract-drift:
-    # Studio's response schemas against Builder's contract (kpubdata-builder#693).
-    # Builder main is what Studio is developed against and released with (ADR 0004).
-    # A Builder enum value Studio does not accept makes every response carrying it
-    # fail to parse — run_cancelled did, until #473 — so this fails the build instead.
-    name: Builder contract drift
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-
-      - name: Checkout Builder's contract
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          repository: kpubdata-lab/kpubdata-builder
-          path: .builder
-          sparse-checkout: contract
-
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          npm_config_cache: ${{ runner.temp }}/.npm-cache
-          npm_config_tmp: ${{ runner.temp }}/.npm-tmp
-
-      - name: Compare schemas with the contract
-        env:
-          BUILDER_CONTRACT: .builder/contract/builder-api.yaml
-        run: npx vitest run src/shared/lib/contractDrift.test.ts
-
   # The release freeze (kpubdata #701, kpubdata docs/compatibility.md §5.1): while
   # main is frozen — from the release week's Monday until Studio ships in that week —
   # only release pull requests may merge. The action exits 0 when the freeze does not
@@ -214,6 +202,7 @@ jobs:
   release-freeze:
     name: Release freeze
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
@@ -244,7 +233,8 @@ jobs:
   gate:
     name: CI gate
     runs-on: ubuntu-latest
-    needs: [quality, e2e, coverage, contract-drift, release-freeze, docker-csp]
+    timeout-minutes: 5
+    needs: [static, test, e2e, release-freeze, docker-csp]
     # `always()` so a failed job still reaches this step. Without it the gate is
     # skipped when something upstream fails, and a skipped required check is the same
     # absence this job exists to remove.
