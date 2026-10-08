@@ -50,6 +50,8 @@ function renderReview(draft: AddDataDraft) {
         previewLimit={5}
         previewSampleMode="first"
         isStale={false}
+        previewProblem={null}
+        onBackToPreview={vi.fn()}
         jobStatus="idle"
         onBuild={vi.fn()}
         onCancel={vi.fn()}
@@ -121,6 +123,8 @@ describe("ReviewBuildStep — cancelled wording", () => {
         previewLimit={5}
         previewSampleMode="first"
         isStale={false}
+        previewProblem={null}
+        onBackToPreview={vi.fn()}
         jobStatus={props.jobStatus}
         onBuild={vi.fn()}
         onCancel={vi.fn()}

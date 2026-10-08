@@ -24,6 +24,8 @@ import { redactBuildSpecForDisplay } from "@/features/add-data/model";
 import { redactUrlEndpoint } from "@/features/add-data/urlRedaction";
 import { redactSourceParamsText } from "@/features/add-data/paramsRedaction";
 import { previewCoverage, sampleExtentText } from "@/features/add-data/previewCoverage";
+import { PreviewProblemNotice } from "@/features/add-data/components/PreviewProblemNotice";
+import type { PreviewProblem } from "@/features/add-data/previewGate";
 import type { PreviewSource } from "@/shared/lib/builderApi";
 import type { BuildJobStatus } from "@/features/runs/useBuildJob";
 import type { AddDataDraft, PreviewLimit, PreviewSampleMode } from "@/features/add-data/model";
@@ -40,6 +42,9 @@ export interface ReviewBuildStepProps {
   previewLimit: PreviewLimit;
   previewSampleMode: PreviewSampleMode;
   isStale: boolean;
+  /** What of the preview stops the build, or null (#842). */
+  previewProblem: PreviewProblem | null;
+  onBackToPreview: () => void;
   jobStatus: BuildJobStatus;
   jobError?: string;
   /** Shown under the failure when a provider key is what the build needs (#787). */
@@ -88,6 +93,8 @@ export function ReviewBuildStep({
   previewLimit,
   previewSampleMode,
   isStale,
+  previewProblem,
+  onBackToPreview,
   jobStatus,
   jobError,
   keyNotice,
@@ -114,11 +121,15 @@ export function ReviewBuildStep({
   const quality = previewSources.length > 0
     ? summarizeChecksPassed(previewSources.flatMap((s) => s.quality_results))
     : null;
+  // A preview that was run and failed is not "a sample of 0 rows", nor "not run" (#842).
+  const previewFailed = !isStale && (previewProblem?.kind === "request_failed" || previewProblem?.kind === "sources_failed");
   const canBuild =
     Boolean(spec) &&
     validation.status === "validated" &&
     validation.valid &&
     !isStale &&
+    // Not on a preview that failed or was never run: the build would fail the same way (#842).
+    previewProblem === null &&
     jobStatus !== "running";
 
   return (
@@ -141,8 +152,12 @@ export function ReviewBuildStep({
                     count: previewSources.length,
                     mixed: previewsSummary.mixed ? " · mixed" : "",
                   })
-                : sampleExtent ?? t("addData.review.previewSingle", { total: totalRows })
-              : t("addData.review.notRun")}
+                : previewFailed
+                  ? t("addData.review.previewFailed")
+                  : (sampleExtent ?? t("addData.review.previewSingle", { total: totalRows }))
+              : previewFailed
+                ? t("addData.review.previewFailed")
+                : t("addData.review.notRun")}
           </p>
         </Card>
         <Card className="p-4">
@@ -189,6 +204,9 @@ export function ReviewBuildStep({
         <p className="mt-1 text-xs text-muted-foreground">{t("addData.review.logicalNameNote")}</p>
       </Card>
 
+      {/* A stale preview has its own notice below; this one is about the preview it replaced. */}
+      {isStale ? null : <PreviewProblemNotice onBackToPreview={onBackToPreview} problem={previewProblem} />}
+
       {isStale ? (
         <Card variant="error" className="p-4">
           <p role="alert" className="text-sm text-status-failure">
@@ -221,7 +239,9 @@ export function ReviewBuildStep({
               [t("addData.review.planQuery"), querySummary(draft)],
               [
                 t("addData.review.planPreview"),
-                previewSources.length > 0
+                previewFailed
+                  ? t("addData.review.previewFailed")
+                  : previewSources.length > 0
                   ? previewSources.length > 1
                     ? t("addData.review.planPreviewMulti", {
                         limit: previewLimit,
