@@ -117,7 +117,7 @@ describe("ReportsPage states", () => {
     await waitFor(() => expect(screen.getByLabelText("테이블")).toBeEnabled());
     expect(screen.getByLabelText("테이블")).toHaveValue("air");
     await waitFor(() => expect(screen.getByLabelText("실행")).toHaveValue("air-r2"));
-    // The run picker words Builder's status: a summary's `ok` reads "성공" (#843).
+    // The run picker words Builder's status instead of showing a summary's `ok` (#843).
     expect(screen.getByRole("option", { name: "air-r2 · 성공" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Report 만들기" })).toBeEnabled();
   });
