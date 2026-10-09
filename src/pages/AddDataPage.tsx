@@ -17,7 +17,7 @@
  *    `features/runs/useBuildJob` (inherit mock/real branching and real run_id guarantee)
  *  - Quality display — `features/quality/model.ts`, `features/quality/QualityBadge`
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchCatalog, fetchProviderConfigured, uploadSourceFile } from "@/features/add-data/api";
@@ -141,6 +141,21 @@ export function AddDataPage() {
   const [existingAsked, setExistingAsked] = useState(0);
 
   const preselectApplied = useRef(false);
+  const kindPreset = useRef(false);
+  // The dataset the Catalog sent the user here for (`?provider=…&dataset=…`), if any.
+  const fromCatalogProvider = searchParams.get("provider");
+  const fromCatalogDataset = searchParams.get("dataset");
+  const fromCatalog = useMemo(
+    () =>
+      fromCatalogProvider && fromCatalogDataset
+        ? { provider: fromCatalogProvider, dataset: fromCatalogDataset }
+        : null,
+    [fromCatalogProvider, fromCatalogDataset],
+  );
+  /** That dataset is not in the catalogue this page read; the fields were left to pick. */
+  const [notListed, setNotListed] = useState(false);
+  /** Counts the times the catalogue is asked for again after it failed to load. */
+  const [catalogAttempt, setCatalogAttempt] = useState(0);
   const savedSpecApplied = useRef(false);
   // Ref storing the source identity key after last auto-sync (#250 final validation §1).
   // When source identity changes (provider+dataset/URL/file — real replacement, not
@@ -178,7 +193,7 @@ export function AddDataPage() {
         });
       });
     return () => controller.abort();
-  }, []);
+  }, [catalogAttempt]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -193,19 +208,26 @@ export function AddDataPage() {
     return () => controller.abort();
   }, []);
 
+  // Coming from the Catalog means a public API whatever else is known, and whether or not
+  // this page's own reading of the catalogue succeeds: the kind is set at once, so it is
+  // not asked for again while the list loads or after it failed to (#842).
+  useEffect(() => {
+    if (kindPreset.current || !fromCatalog) return;
+    kindPreset.current = true;
+    setDraft((current) => ({ ...current, sourceKind: "public_api" }));
+  }, [fromCatalog]);
+
   // Discover preselection (#249 — don't hard-block completion, just read query params).
   useEffect(() => {
-    if (preselectApplied.current || catalog.status !== "loaded") return;
-    const provider = searchParams.get("provider");
-    const dataset = searchParams.get("dataset");
-    if (!provider || !dataset) return;
+    if (preselectApplied.current || catalog.status !== "loaded" || !fromCatalog) return;
+    const { provider, dataset } = fromCatalog;
     const knownProvider = catalog.providers.find((p) => p.name === provider);
     const found = knownProvider?.datasets.find((d) => d.name === dataset);
     preselectApplied.current = true;
     // Source and its settings share the Configure step, so there is no step to skip.
-    // Coming from the Catalog means a public API whatever else is known: the kind is set
-    // even when this catalogue does not list the dataset, so it is not asked for again
-    // (#842). What it does not list is left for the user to pick — never guessed.
+    // What this catalogue does not list is left for the user to pick — never guessed —
+    // and the page says that it was not found rather than showing an empty field.
+    setNotListed(!found);
     setDraft((current) => ({
       ...current,
       sourceKind: "public_api",
@@ -215,7 +237,7 @@ export function AddDataPage() {
           ? { ...current.publicApi, provider, dataset: "" }
           : current.publicApi,
     }));
-  }, [catalog, searchParams]);
+  }, [catalog, fromCatalog]);
 
   // Workspace "open saved spec" (#260), formerly handled by the second wizard. Applied
   // once; the saved spec itself is not changed by opening it.
@@ -708,6 +730,36 @@ export function AddDataPage() {
       {inputKept ? (
         <div role="status" className="rounded-xl border border-border bg-muted/50 p-4">
           <p className="text-sm text-foreground">{t("addData.draft.inputKept")}</p>
+        </div>
+      ) : null}
+
+      {fromCatalog && catalog.status === "error" ? (
+        <div
+          role="status"
+          data-from-catalog="catalog-failed"
+          className="flex flex-col gap-3 rounded-xl border border-status-warning-border bg-status-warning-subtle p-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-sm text-foreground">{t("addData.fromCatalog.catalogFailed", fromCatalog)}</p>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setCatalog({ status: "loading", providers: [] });
+              setCatalogAttempt((attempt) => attempt + 1);
+            }}
+          >
+            {t("addData.fromCatalog.retry")}
+          </Button>
+        </div>
+      ) : null}
+
+      {fromCatalog && notListed && draft.sourceKind === "public_api" && draft.publicApi.dataset === "" ? (
+        <div
+          role="status"
+          data-from-catalog="not-listed"
+          className="rounded-xl border border-status-warning-border bg-status-warning-subtle p-4"
+        >
+          <p className="text-sm text-foreground">{t("addData.fromCatalog.notListed", fromCatalog)}</p>
         </div>
       ) : null}
 
