@@ -12,6 +12,7 @@ import {
   existingTablesAmong,
   findExistingTables,
   freeDatasetId,
+  sameExistingTables,
   specToBuild,
   type ExistingTables,
 } from "./existingTables";
@@ -181,6 +182,33 @@ describe("datasetIdToBuild and specToBuild", () => {
     expect(SPEC).toMatchObject({ datasetId: "datago-air-station", title: "Air stations" });
     expect(specToBuild(SPEC, found, "same")).toBe(SPEC);
     expect(specToBuild(SPEC, { status: "none" }, "new")).toBe(SPEC);
+  });
+});
+
+describe("sameExistingTables", () => {
+  const found: ExistingTables = {
+    status: "found",
+    tables: [STATIONS],
+    replaced: [STATIONS],
+    freeId: "datago-air-station-2",
+    freeNumber: 2,
+  };
+
+  it("is the same answer when nothing the user read has changed", () => {
+    expect(sameExistingTables(found, { ...found, tables: [{ ...STATIONS, revision: 9 }], replaced: [{ ...STATIONS, revision: 9 }] })).toBe(true);
+    expect(sameExistingTables({ status: "none" }, { status: "none" })).toBe(true);
+    expect(sameExistingTables({ status: "unknown" }, { status: "unknown" })).toBe(true);
+  });
+
+  it.each<[string, ExistingTables]>([
+    ["no table any more", { status: "none" }],
+    ["cannot be read", { status: "unknown" }],
+    ["another free id", { ...found, freeId: "datago-air-station-3", freeNumber: 3 }],
+    ["another table under the id", { ...found, tables: [STATIONS, table("datago-air-station.other", "datago-air-station")] }],
+    ["nothing replaced after all", { ...found, replaced: [] }],
+  ])("is another answer when there is %s", (_what, now) => {
+    expect(sameExistingTables(found, now)).toBe(false);
+    expect(sameExistingTables(now, found)).toBe(false);
   });
 });
 

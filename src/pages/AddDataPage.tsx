@@ -31,6 +31,7 @@ import { PreviewValidationStep, type PreviewState } from "@/features/add-data/co
 import { ReviewBuildStep } from "@/features/add-data/components/ReviewBuildStep";
 import {
   findExistingTables,
+  sameExistingTables,
   specToBuild,
   type ExistingTableChoice,
   type ExistingTables,
@@ -135,6 +136,9 @@ export function AddDataPage() {
   const [tableChoice, setTableChoice] = useState<ExistingTableChoice>("new");
   // Raised to ask again after the tables could not be read.
   const [existingAsked, setExistingAsked] = useState(0);
+  // The answer changed between the review step showing it and "Create table" (#861).
+  const [existingChanged, setExistingChanged] = useState(false);
+  const askingAgainRef = useRef(false);
 
   const preselectApplied = useRef(false);
   const savedSpecApplied = useRef(false);
@@ -622,6 +626,7 @@ export function AddDataPage() {
     if (step !== STEP_IDS.indexOf("create") || !requestedDatasetId) return;
     const controller = new AbortController();
     setExisting({ status: "checking" });
+    setExistingChanged(false);
     setTableChoice("new");
     const sourceKeys = previewedSourceKeys === "" ? [] : previewedSourceKeys.split("\n");
     findExistingTables(requestedDatasetId, controller.signal, sourceKeys)
@@ -632,6 +637,32 @@ export function AddDataPage() {
     return () => controller.abort();
   }, [step, requestedDatasetId, previewedSourceKeys, existingAsked]);
   const specForBuild = specResult.spec ? specToBuild(specResult.spec, existing, tableChoice) : undefined;
+
+  /**
+   * Ask about the tables once more, and build only on the answer the review step showed
+   * (#861). The answer on screen is as old as the step has been open; if another tab has
+   * made a table under the free id since, this build would commit over it. A different
+   * answer is shown instead of acted on: the user reads it and presses again.
+   */
+  async function buildOnTheAnswerShown() {
+    if (!specForBuild || !requestedDatasetId || askingAgainRef.current) return;
+    askingAgainRef.current = true;
+    try {
+      const sourceKeys = previewedSourceKeys === "" ? [] : previewedSourceKeys.split("\n");
+      const now = await findExistingTables(requestedDatasetId, undefined, sourceKeys);
+      if (!sameExistingTables(existing, now)) {
+        setExisting(now);
+        setExistingChanged(true);
+        return;
+      }
+      setExistingChanged(false);
+      // Started again after an attempt that failed here, it is a retry of that attempt
+      // and says so (#757, #787).
+      void job.start(specForBuild, { retryOf: retryOfFor(job.run) });
+    } finally {
+      askingAgainRef.current = false;
+    }
+  }
 
   // Build success (real-mode always uses actual run_id from Builder, mock-mode uses existing
   // mock path) → navigate to Builds/Runs. Don't create new mock run id — useBuildJob
@@ -777,11 +808,8 @@ export function AddDataPage() {
             jobError={job.error}
             keyNotice={<BuildKeyNotice job={job} />}
             runId={job.run?.id}
-            onBuild={() => {
-              // Started again after an attempt that failed here, it is a retry of that
-              // attempt and says so (#757, #787).
-              if (specForBuild) void job.start(specForBuild, { retryOf: retryOfFor(job.run) });
-            }}
+            existingChanged={existingChanged}
+            onBuild={() => void buildOnTheAnswerShown()}
             onCancel={job.cancel}
           />
         ) : null}

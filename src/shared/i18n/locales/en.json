@@ -1113,6 +1113,7 @@
       "existingChecking": "Checking whether a table with this ID already exists.",
       "existingUnknown": "Could not check whether a table with this ID already exists. So that an existing table is not replaced unknowingly, the table is not created until this is known.",
       "existingRecheck": "Check again",
+      "existingChanged": "The tables were checked again just before creating, and they are no longer what this screen showed. Nothing has been created. Read what is below, then press again.",
       "existingTitle": "A table with this ID already exists",
       "existingBody": "A table was already created under the table ID {{id}}. Creating it again under the same ID replaces that table’s contents with the data fetched this time. If you are adding it again with different conditions, the rows shown now leave that table’s current contents.",
       "existingChoiceLegend": "How should it be created?",

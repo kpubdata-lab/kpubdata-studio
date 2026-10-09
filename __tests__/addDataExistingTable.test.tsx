@@ -273,3 +273,90 @@ describe("Add Data — a table of this id is already there (#837)", () => {
     expect(builder.listed()).toBeGreaterThan(asked);
   });
 });
+
+describe("Add Data — the tables changed while the review step was open (#861)", () => {
+  // The review step's answer is as old as the step has been open. Another tab that made a
+  // table meanwhile — under the id this one was about to use — would be committed over.
+  it("does not build over a table another tab made under the free id, and builds under the next", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    let tables = [existingTable("datago-air-quality", 22)];
+    const builder = builderWith(() => HttpResponse.json({ tables }));
+
+    await reachReview();
+    await screen.findByRole("radio", { name: /새 테이블로 만들기/ });
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    expect(shownSpec().dataset_id).toBe("datago-air-quality-2");
+
+    // Meanwhile, elsewhere: the same dataset added again, as `-2`.
+    tables = [...tables, existingTable("datago-air-quality-2", 7)];
+    fireEvent.click(buildButton());
+
+    await waitFor(() => expect(document.querySelector("[data-existing-table-changed]")).not.toBeNull());
+    expect(builder.submitted).toEqual([]);
+    expect(shownSpec().dataset_id).toBe("datago-air-quality-3");
+    expect(screen.queryByText(/^run=/)).toBeNull();
+
+    // Read, and pressed again: the answer is the one shown now.
+    fireEvent.click(buildButton());
+
+    await screen.findByText("run=run-of-datago-air-quality-3");
+    expect(builder.submitted).toEqual(["datago-air-quality-3"]);
+  });
+
+  it("does not replace a table that appeared under the id itself", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    let tables: Array<ReturnType<typeof existingTable>> = [];
+    const builder = builderWith(() => HttpResponse.json({ tables }));
+
+    await reachReview();
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    expect(document.querySelector("[data-existing-table]")).toBeNull();
+
+    tables = [existingTable("datago-air-quality", 22)];
+    fireEvent.click(buildButton());
+
+    // Asked now, as it would have been had the table been there when the step opened.
+    expect(await screen.findByRole("radio", { name: /새 테이블로 만들기/ })).toBeChecked();
+    expect(document.querySelector("[data-existing-table-changed]")).not.toBeNull();
+    expect(builder.submitted).toEqual([]);
+
+    fireEvent.click(buildButton());
+    await screen.findByText("run=run-of-datago-air-quality-2");
+    expect(builder.submitted).toEqual(["datago-air-quality-2"]);
+  });
+
+  it("does not build when the tables cannot be read at that moment", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    let readable = true;
+    const builder = builderWith(() =>
+      readable ? HttpResponse.json({ tables: [] }) : HttpResponse.json({ error: "forbidden" }, { status: 403 }),
+    );
+
+    await reachReview();
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    readable = false;
+    fireEvent.click(buildButton());
+
+    await waitFor(() => expect(document.querySelector('[data-existing-table="unknown"]')).not.toBeNull());
+    expect(buildButton()).toBeDisabled();
+    expect(builder.submitted).toEqual([]);
+  });
+
+  it("asks once per press and builds at once when nothing changed", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const builder = builderWith(() => HttpResponse.json({ tables: [existingTable("datago-air-quality", 22)] }));
+
+    await reachReview();
+    await screen.findByRole("radio", { name: /새 테이블로 만들기/ });
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    const asked = builder.listed();
+    fireEvent.click(buildButton());
+    // A second press while the first is still asking starts nothing of its own.
+    fireEvent.click(buildButton());
+
+    await screen.findByText("run=run-of-datago-air-quality-2");
+    expect(builder.listed()).toBe(asked + 1);
+    expect(builder.submitted).toEqual(["datago-air-quality-2"]);
+    expect(document.querySelector("[data-existing-table-changed]")).toBeNull();
+  });
+});

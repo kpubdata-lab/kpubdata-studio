@@ -16,6 +16,11 @@
  * tables the id would replace and which suffixed id is free. A deployment without a
  * warehouse (404) keeps no table to replace. Any other failure is not read as "nothing
  * there" — the review step holds the build until the question has an answer.
+ *
+ * The answer is of the moment it was given. The page asks once more when "Create table"
+ * is pressed and builds only if the answer is the one it showed (#861): another tab may
+ * have made the free id's table meanwhile. That narrows the gap between asking and
+ * building; only Builder refusing to commit over a table could close it.
  */
 import { sourceKeyOf, sourceKeyUnder } from "@/features/datasets/warehouseTables";
 import { warehouseApi } from "@/features/sql/warehouseApi";
@@ -104,6 +109,18 @@ export async function findExistingTables(
     if (cause instanceof ApiError && cause.status === 404) return { status: "none" };
     return { status: "unknown" };
   }
+}
+
+/**
+ * Whether two answers say the same of the tables: the same state, the same tables there,
+ * the same ones replaced, the same free id. What the user read and chose from is what is
+ * compared — a table's revision moving on does not make the answer another one.
+ */
+export function sameExistingTables(a: ExistingTables, b: ExistingTables): boolean {
+  if (a.status !== b.status) return false;
+  if (a.status !== "found" || b.status !== "found") return true;
+  const names = (tables: WarehouseTable[]) => tables.map((table) => table.logical_name).sort().join("\n");
+  return a.freeId === b.freeId && names(a.tables) === names(b.tables) && names(a.replaced) === names(b.replaced);
 }
 
 /** The dataset id the build goes under, given what is there and what the user chose. */

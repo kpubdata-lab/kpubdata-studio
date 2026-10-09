@@ -220,6 +220,10 @@ describe.each(SCREENS)("%s after a build that wanted a key (#787)", (_name, reac
     fireEvent.click(runButton);
     fireEvent.click(runButton);
 
+    // The build is sent once the tables have been asked about again (#861), so not in
+    // the same tick as the press — and still once for the two presses.
+    await waitFor(() => expect(executeBuild).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(executeBuild).toHaveBeenCalledTimes(1);
     release(lostRun({} as BuildSpec));
     await waitFor(() => expect(document.querySelector("[data-missing-provider-keys]")).not.toBeNull());

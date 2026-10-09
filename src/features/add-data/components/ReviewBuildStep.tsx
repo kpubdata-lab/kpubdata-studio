@@ -54,6 +54,8 @@ export interface ReviewBuildStepProps {
   tableChoice: ExistingTableChoice;
   onChooseTable: (choice: ExistingTableChoice) => void;
   onRecheckExisting: () => void;
+  /** The tables were asked about again at "Create table" and the answer was another (#861). */
+  existingChanged?: boolean;
   /** What of the preview stops the build, or null (#842). */
   previewProblem: PreviewProblem | null;
   onBackToPreview: () => void;
@@ -109,6 +111,7 @@ export function ReviewBuildStep({
   tableChoice,
   onChooseTable,
   onRecheckExisting,
+  existingChanged,
   previewProblem,
   onBackToPreview,
   jobStatus,
@@ -227,6 +230,11 @@ export function ReviewBuildStep({
         <p className="mt-1 text-xs text-muted-foreground">{t("addData.review.logicalNameNote")}</p>
       </Card>
 
+      {existingChanged ? (
+        <Card className="p-4" data-existing-table-changed="" variant="error">
+          <p className="text-sm" role="alert">{t("addData.review.existingChanged")}</p>
+        </Card>
+      ) : null}
       <ExistingTableNotice
         choice={tableChoice}
         datasetId={draft.datasetId}
