@@ -229,14 +229,14 @@ describe("Add Data — coming from the Catalog (#842)", () => {
     expect(notice.closest('[data-from-catalog="not-listed"]')).not.toBeNull();
 
     // Once a dataset is picked there is nothing left to explain.
-    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
+    fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await waitFor(() => expect(document.querySelector("[data-from-catalog]")).toBeNull());
   });
 
   it("says nothing of the kind when the dataset is listed", async () => {
     renderAt("/add?provider=datago&dataset=apt_trade");
 
-    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("apt_trade"));
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("apt_trade"));
     expect(document.querySelector("[data-from-catalog]")).toBeNull();
   });
 
@@ -248,12 +248,12 @@ describe("Add Data — coming from the Catalog (#842)", () => {
     // The kind is not asked for again: the form of a public API is what is on screen.
     const notice = await screen.findByText(/datago \/ apt_trade 을\(를\) 채우지 못했습니다/);
     expect(notice.closest('[data-from-catalog="catalog-failed"]')).not.toBeNull();
-    expect(screen.getByLabelText(/제공자 \(Provider\)/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^제공자/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "목록 다시 불러오기" }));
 
-    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("apt_trade"));
-    expect(screen.getByLabelText(/제공자 \(Provider\)/)).toHaveValue("datago");
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("apt_trade"));
+    expect(screen.getByLabelText(/^제공자/)).toHaveValue("datago");
     expect(document.querySelector("[data-from-catalog]")).toBeNull();
     expect(read).toHaveBeenCalledTimes(2);
   });
