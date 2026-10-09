@@ -39,6 +39,26 @@ describe("docker/nginx.conf", () => {
     expect(body).toContain("add_header X-Content-Type-Options nosniff always;");
   });
 
+  it("caches a bundle for a year only when it was found (#868)", () => {
+    const assets = Object.fromEntries(locations(conf))["/assets/"];
+    const map = conf.match(/^map \$status \$kpubdata_assets_cache_control \{([^}]*)\}/m);
+
+    expect(assets).toContain("add_header Cache-Control $kpubdata_assets_cache_control always;");
+    expect(assets).not.toContain("max-age");
+    expect(map).not.toBeNull();
+    const rules = Object.fromEntries(
+      [...(map?.[1] ?? "").matchAll(/^\s*(\S+)\s+"([^"]*)";/gm)].map((rule) => [rule[1], rule[2]]),
+    );
+    // Found, a range of it, or not modified: the bundle exists. Anything else, a 404
+    // above all, is not kept.
+    expect(rules).toEqual({
+      "200": "public, max-age=31536000, immutable",
+      "206": "public, max-age=31536000, immutable",
+      "304": "public, max-age=31536000, immutable",
+      default: "no-store",
+    });
+  });
+
   it("sets no header at the server, where a location's own would replace it", () => {
     const outside = conf.replace(/^\s*location\s+[^{]+\{[^}]*\}/gm, "");
 
