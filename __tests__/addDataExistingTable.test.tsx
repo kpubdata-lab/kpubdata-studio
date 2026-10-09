@@ -36,8 +36,10 @@ function existingTable(datasetId: string, rows: number, sourceKey = SOURCE_KEY, 
 }
 
 /** A Builder with `tables`, that records the dataset id of every spec submitted to it. */
-function builderWith(tables: () => Response): { submitted: string[]; listed: () => number } {
+function builderWith(tables: () => Response): { submitted: string[]; ifAbsent: boolean[]; listed: () => number } {
   const submitted: string[] = [];
+  // Whether each submission asked for new tables only (#881, builder#1223).
+  const ifAbsent: boolean[] = [];
   let listed = 0;
   mswServer.use(
     http.get(`${API_BASE}/providers`, () =>
@@ -54,6 +56,7 @@ function builderWith(tables: () => Response): { submitted: string[]; listed: () 
       const datasetId =
         typeof spec === "object" && spec !== null && "dataset_id" in spec ? String(spec.dataset_id) : "(none)";
       submitted.push(datasetId);
+      ifAbsent.push(typeof body === "object" && body !== null && "if_absent" in body && body.if_absent === true);
       const runId = `run-of-${datasetId}`;
       return HttpResponse.json(
         {
@@ -67,7 +70,7 @@ function builderWith(tables: () => Response): { submitted: string[]; listed: () 
       );
     }),
   );
-  return { submitted, listed: () => listed };
+  return { submitted, ifAbsent, listed: () => listed };
 }
 
 /** Source → Configure → Preview → the review step, for `datago.air_quality`. */
@@ -137,6 +140,8 @@ describe("Add Data — a table of this id is already there (#837)", () => {
 
     await screen.findByText("run=run-of-datago-air-quality-2");
     expect(builder.submitted).toEqual(["datago-air-quality-2"]);
+    // A new table asks Builder to refuse one that is there by the commit (#881).
+    expect(builder.ifAbsent).toEqual([true]);
   });
 
   it("refreshes the existing table only when the user chooses to", async () => {
@@ -152,6 +157,8 @@ describe("Add Data — a table of this id is already there (#837)", () => {
 
     await screen.findByText("run=run-of-datago-air-quality");
     expect(builder.submitted).toEqual(["datago-air-quality"]);
+    // A refresh replaces the table on purpose.
+    expect(builder.ifAbsent).toEqual([false]);
   });
 
   it("skips the ids that are taken too", async () => {
