@@ -141,7 +141,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
     expect(screen.getByText("AI 작성 · Ask KPubData")).toBeInTheDocument();
   });
 
-  it("Report Context sidebar가 실제 base dataset/run/evidence 상태를 보여준다", async () => {
+  it("Report Context sidebar가 실제 base dataset/run/근거 상태를 보여준다", async () => {
     const report = await makeReport("air-quality", "air-2026-08-14");
     renderReport(report.id);
 

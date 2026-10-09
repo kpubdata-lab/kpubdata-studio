@@ -81,7 +81,7 @@ describe("fetchReportEvidence (#258)", () => {
 
     expect(evidence.dataset.ok).toBe(true);
     expect(evidence.run.ok).toBe(false);
-    if (!evidence.run.ok) expect(evidence.run.reason).toContain("run 목록");
+    if (!evidence.run.ok) expect(evidence.run.reason).toContain("실행 목록");
   });
 
   it("존재하지 않는 dataset이면 dataset을 실패로 표시하지만 전체를 던지지 않는다", async () => {

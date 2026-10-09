@@ -39,7 +39,7 @@ describe("build-centric routes", () => {
   it("shows an explicit not-found state instead of placeholder data for an unknown buildId (#255)", async () => {
     renderAt("/refresh-jobs/does-not-exist", <BuildsPage />);
     // 존재하지 않는 빌드를 실제 데이터처럼 보여주면 안 된다 (#119, #120, #255).
-    expect(await screen.findByText(/Run을 찾을 수 없습니다/)).toBeInTheDocument();
+    expect(await screen.findByText(/실행을 찾을 수 없습니다/)).toBeInTheDocument();
   });
 
   it("renders the run page with the build's actual canonical status, not fake progress steps (UI audit #3)", async () => {
@@ -47,14 +47,14 @@ describe("build-centric routes", () => {
     // run(dur-pregnancy-taboo-20260621, status: running)으로 canonical 상태를 확인한다.
     renderAt("/refresh-jobs/dur-pregnancy-taboo-20260621/run", <BuildRunPage />);
     expect(await screen.findByText("실행 중")).toBeInTheDocument();
-    expect(screen.getByText("상세 진행은 Run 상세에서 확인하세요")).toBeInTheDocument();
+    expect(screen.getByText("상세 진행은 실행 상세에서 확인하세요")).toBeInTheDocument();
     expect(screen.queryByText(/미지원/)).not.toBeInTheDocument();
   });
 
   it("renders the artifacts page with a manifest section", async () => {
     renderAt("/refresh-jobs/abc/artifacts", <BuildArtifactsPage />);
     // manifest는 비동기로 로드되므로 로드 후 요약이 나타난다.
-    expect(await screen.findByText("Manifest 요약")).toBeInTheDocument();
+    expect(await screen.findByText("매니페스트 요약")).toBeInTheDocument();
     expect(screen.getByText(/12,304/)).toBeInTheDocument();
   });
 

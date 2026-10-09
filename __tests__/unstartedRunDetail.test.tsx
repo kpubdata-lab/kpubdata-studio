@@ -82,7 +82,7 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     const retry = await screen.findByRole("link", { name: "키를 다시 넣고 재시도" });
     expect(retry.getAttribute("href")).toBe(`/refresh-jobs/${RUN}/edit`);
     expect(container.querySelector(`[data-keys-lost="${RUN}"]`)).not.toBeNull();
-    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
   });
 
   it("shows a queued run opened by its link, with its cancel button", async () => {
@@ -91,7 +91,7 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     renderDetail();
 
     expect(await screen.findByRole("button", { name: "실행 취소" })).toBeEnabled();
-    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
   });
 
   it("does not say 'not found' before the job registry has answered", async () => {
@@ -109,8 +109,8 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     });
     observer.disconnect();
 
-    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
-    expect(seen.some((text) => text.includes("Run을 찾을 수 없습니다"))).toBe(false);
+    expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(seen.some((text) => text.includes("실행을 찾을 수 없습니다"))).toBe(false);
   });
 
   it("still says 'not found' when the job registry does not know the run either", async () => {
@@ -118,7 +118,7 @@ describe("a run with no stages that the job registry knows (#846)", () => {
 
     renderDetail();
 
-    expect(await screen.findByText(/Run을 찾을 수 없습니다/)).toBeInTheDocument();
+    expect(await screen.findByText(/실행을 찾을 수 없습니다/)).toBeInTheDocument();
   });
 
   it("never flashes 'not found' while the history is still loading behind a 404 on the stages", async () => {
@@ -158,7 +158,7 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     renderDetail();
 
     expect(await screen.findByText(/존재 여부를 확인하지 못했습니다/)).toBeInTheDocument();
-    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "다시 확인" }));
 
@@ -173,7 +173,7 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     renderDetail();
 
     expect(await screen.findByText(/존재 여부를 확인하지 못했습니다/)).toBeInTheDocument();
-    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
   });
 
   // --- #875: what the detail says of such a run, and what it does when the run starts.

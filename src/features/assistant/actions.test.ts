@@ -110,7 +110,7 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
       };
       const preview = previewBuildSpecPatch(action);
       expect(preview.ok).toBe(false);
-      if (!preview.ok) expect(preview.reason).toMatch(/credential/);
+      if (!preview.ok) expect(preview.reason).toMatch(/자격 증명/);
     },
   );
 
@@ -264,7 +264,7 @@ describe("draftValuesFromAction / applyCreateBuildDraft (#256)", () => {
         ...base,
         values: { ...base.values, sourceParams: '{"serviceKey":"secret"}' },
       }),
-    ).toThrow(/credential/);
+    ).toThrow(/자격 증명/);
     expect(() =>
       draftValuesFromAction({
         ...base,

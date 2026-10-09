@@ -90,7 +90,7 @@ test("테이블 → SQL → 저장 → 갱신 → 저장된 분석 재실행이 
 
   const editor = page.locator("#sql-editor");
   await editor.fill("SELECT COUNT(*) AS n\nFROM dataset");
-  await page.getByRole("button", { name: /^(실행|Run)( |$)/ }).click();
+  await page.getByRole("button", { name: /^실행( |$)/ }).click();
   const footer = page.getByTestId("result-footer");
   await expect(footer).toContainText(saved, { timeout: 30_000 });
 

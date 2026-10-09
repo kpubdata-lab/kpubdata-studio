@@ -25,7 +25,7 @@ function runEvent(overrides: Partial<BuildEvent> = {}): BuildEvent {
 describe("EventTimeline", () => {
   it("shows an empty state when there are no events (not a fabricated row)", () => {
     render(<EventTimeline events={[]} />);
-    expect(screen.getByText("기록된 event가 없습니다.")).toBeInTheDocument();
+    expect(screen.getByText("기록된 이벤트가 없습니다.")).toBeInTheDocument();
   });
 
   it("renders each source's events distinctly instead of collapsing into the first source", () => {
@@ -43,7 +43,7 @@ describe("EventTimeline", () => {
 
   it("marks run-scoped events (no source_key) distinctly instead of guessing a source", () => {
     render(<EventTimeline events={[runEvent({ seq: 1, source_key: null, event: "run_started" })]} />);
-    expect(screen.getByText("run 전체")).toBeInTheDocument();
+    expect(screen.getByText("실행 전체")).toBeInTheDocument();
   });
 
   it("marks the last ok event and highlights fail events", () => {
@@ -57,7 +57,7 @@ describe("EventTimeline", () => {
     );
     expect(screen.getByText("마지막 정상")).toBeInTheDocument();
     expect(screen.getByText("boom")).toBeInTheDocument();
-    expect(screen.getByText("FAIL")).toBeInTheDocument();
+    expect(screen.getByText("실패")).toBeInTheDocument();
   });
 
   it("shows a compact metrics summary when present, and a dash when absent", () => {

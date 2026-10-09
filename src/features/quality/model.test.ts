@@ -110,7 +110,7 @@ describe("summarizePreviewSources (#250 §3, mixed/partial preview)", () => {
 describe("qualityAssistantSeedQuestion (real Builder E2E — 상태별 seed 질문)", () => {
   it("평가된 check가 없으면(evaluated=0) 규칙 미설정 상태를 묻는다", () => {
     const q = qualityAssistantSeedQuestion(summarizeChecksPassed([]));
-    expect(q).toContain("평가된 Quality check가 없습니다");
+    expect(q).toContain("평가된 품질 check가 없습니다");
     expect(q).not.toContain("WARN/FAIL의 원인");
   });
 

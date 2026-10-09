@@ -6,6 +6,7 @@
  * renders append-only event evidence chronologically ascending as received.
  */
 import { useTranslation } from "react-i18next";
+import { codeLabel } from "@/shared/i18n/codeLabels";
 import { formatDateTime } from "@/features/datasets/model";
 import { lastOkRunEvent, summarizeEventMetrics } from "@/features/runs/model";
 import type { BuildEvent } from "@/shared/lib/builderApi";
@@ -17,9 +18,10 @@ const STATUS_STYLES: Record<BuildEvent["status"], string> = {
 };
 
 function EventStatusBadge({ status }: { status: BuildEvent["status"] }) {
+  const { t } = useTranslation();
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium uppercase ${STATUS_STYLES[status]}`}>
-      {status.toUpperCase()}
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[status]}`}>
+      {codeLabel(t, "eventStatus", status)}
     </span>
   );
 }
@@ -74,12 +76,14 @@ export function EventTimeline({ events }: { events: BuildEvent[] }) {
                 <td className="py-2 pr-3 align-top">
                   <EventSourceLabel sourceKey={event.source_key ?? null} />
                 </td>
-                <td className="py-2 pr-3 align-top text-xs capitalize text-muted-foreground">
-                  {event.stage ?? "—"}
+                <td className="py-2 pr-3 align-top text-xs text-muted-foreground">
+                  {event.stage ? codeLabel(t, "eventStage", event.stage) : "—"}
                 </td>
                 <td className="py-2 pr-3 align-top">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs">{event.event}</span>
+                    <span className="text-xs" title={event.event}>
+                      {codeLabel(t, "event", event.event)}
+                    </span>
                     <EventStatusBadge status={event.status} />
                     {isLastOk ? (
                       <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-[10px] font-medium text-brand-text">

@@ -13,6 +13,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { runStatusLabel } from "@/shared/i18n/codeLabels";
 import { useSearchParams } from "react-router-dom";
 
 import { listBuildStages, listDatasetRuns, listDatasets } from "@/features/datasets/api";
@@ -152,7 +153,7 @@ function RunWorkspace() {
                 <option key={item.run_id} value={item.run_id}>
                   {item.run_id}
                   {index === 0 ? ` (${t("sql.latest")})` : ""}
-                  {item.status === "ok" ? "" : ` · ${item.status}`}
+                  {item.status === "ok" ? "" : ` · ${runStatusLabel(t, item.status)}`}
                 </option>
               ))}
             </select>

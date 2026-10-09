@@ -93,7 +93,7 @@ const SCREENS: Screen[] = [
     name: "sql",
     path: "/sql",
     ready: async (page) => {
-      await expect(page.getByRole("heading", { level: 1, name: "SQL Workspace" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "SQL 작업 공간" })).toBeVisible();
       await expect(page.getByRole("treeitem", { name: "air-quality.datago__air" })).toBeVisible();
     },
   },

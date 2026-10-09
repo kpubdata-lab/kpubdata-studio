@@ -83,7 +83,7 @@ describe("topbar (#523)", () => {
     expect(input).toHaveFocus();
 
     fireEvent.change(input, { target: { value: "SQL" } });
-    expect(within(dialog).getAllByRole("option")[0]).toHaveTextContent("SQL Workspace");
+    expect(within(dialog).getAllByRole("option")[0]).toHaveTextContent("SQL 작업 공간");
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(screen.getByTestId("location")).toHaveTextContent("/sql");

@@ -115,7 +115,7 @@ describe("Spec edit wizard", () => {
     await screen.findByRole("heading", { name: "데이터 소스" });
     fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
 
-    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("air_quality"));
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("air_quality"));
     expect(screen.getByRole("option", { name: /대기오염/ })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: /population/ })).not.toBeInTheDocument();
   });
@@ -143,7 +143,7 @@ describe("Spec edit wizard", () => {
 
     await screen.findByRole("heading", { name: "데이터 소스" });
     fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
-    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
+    fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "파라미터" });

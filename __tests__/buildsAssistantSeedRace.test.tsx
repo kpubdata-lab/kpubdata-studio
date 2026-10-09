@@ -1,7 +1,7 @@
 /**
- * C1 regression — Builds "이 Run 분석" seed vs. normalizeBuildContextSearch race (#255 §2 / #256 stale guard).
+ * C1 regression — Builds "이 실행 분석" seed vs. normalizeBuildContextSearch race (#255 §2 / #256 stale guard).
  *
- * 버그: spec/stages 응답이 아직 loading인 상태에서 "이 Run 분석"을 즉시 누르면 `AssistantRunAnalysis`가
+ * 버그: spec/stages 응답이 아직 loading인 상태에서 "이 실행 분석"을 즉시 누르면 `AssistantRunAnalysis`가
  * mount되며 pending seed를 소비해 `ask()`가 그 순간의 `liveContext`(= `?run=` 하나뿐, dataset/
  * stage/source 없음)를 그대로 turn.context로 고정한다. 잠시 뒤 `normalizeBuildContextSearch`가
  * `?dataset=`을 URL에 채우면 `contextsMatch`가 깨져 방금 만든 turn이 stale로 분류되고,
@@ -178,11 +178,11 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     renderBuilds();
 
-    const analyzeButton = await screen.findByRole("button", { name: "이 Run 분석" });
+    const analyzeButton = await screen.findByRole("button", { name: "이 실행 분석" });
     fireEvent.click(analyzeButton);
 
     // 카드는 즉시 열린다.
-    expect(await screen.findByRole("heading", { name: "Run 분석" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "실행 분석" })).toBeInTheDocument();
     // 아직 context가 canonical하지 않으므로 seed하지 않는다 — turn이 생기지 않는다.
     expect(useAssistantStore.getState().turns).toHaveLength(0);
     expect(screen.getByText("분석 준비 중…")).toBeInTheDocument();
@@ -223,12 +223,12 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     renderBuilds();
 
-    const analyzeButton = await screen.findByRole("button", { name: "이 Run 분석" });
+    const analyzeButton = await screen.findByRole("button", { name: "이 실행 분석" });
     // spec 정규화(?dataset=)가 방금 반영됐어도 stages는 아직 pending → context는 canonical 아님.
     await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
     fireEvent.click(analyzeButton);
 
-    expect(await screen.findByRole("heading", { name: "Run 분석" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "실행 분석" })).toBeInTheDocument();
     expect(useAssistantStore.getState().turns).toHaveLength(0);
 
     // stages 도착 → normalizeBuildContextSearch가 ?stage=silver&source=datago__air 추가.
@@ -258,8 +258,8 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     renderBuilds();
 
-    fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
-    expect(await screen.findByRole("heading", { name: "Run 분석" }));
+    fireEvent.click(await screen.findByRole("button", { name: "이 실행 분석" }));
+    expect(await screen.findByRole("heading", { name: "실행 분석" }));
     expect(useAssistantStore.getState().turns).toHaveLength(0);
 
     // 다른 run 선택 → 이전 pending analyze 의도가 폐기돼야 한다.
@@ -272,10 +272,10 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     expect(useAssistantStore.getState().pendingSeed).toBeNull();
   });
 
-  it("re-clicking '이 Run 분석' on the same run re-analyzes (retry after an errored analysis is not blocked)", async () => {
+  it("re-clicking '이 실행 분석' on the same run re-analyzes (retry after an errored analysis is not blocked)", async () => {
     // C1 보류 로직이 "run 수명 동안 1회"가 아니라 "클릭 1회당 seed 1회"여야 한다 —
     // 인라인 분석이 LLM 오류로 실패했을 때 재시도할 다른 affordance가 없으므로(ErrorNotice에
-    // inline retry 없음) "이 Run 분석" 재클릭이 유일한 재시도 경로다.
+    // inline retry 없음) "이 실행 분석" 재클릭이 유일한 재시도 경로다.
     vi.spyOn(runsApi, "listBuilds").mockResolvedValue([listItem]);
     vi.spyOn(datasetsApi, "getBuildQuality").mockResolvedValue(quality);
     vi.spyOn(runDetailApi, "getBuildSpecSnapshot").mockResolvedValue(specSnapshot);
@@ -284,7 +284,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     renderBuilds();
 
-    const analyzeButton = await screen.findByRole("button", { name: "이 Run 분석" });
+    const analyzeButton = await screen.findByRole("button", { name: "이 실행 분석" });
     fireEvent.click(analyzeButton);
 
     // 1차: LLM 오류로 실패한 turn이 인라인 카드에 표시된다.
@@ -308,7 +308,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stagesResponse);
 
     renderBuilds();
-    const analyzeButton = await screen.findByRole("button", { name: "이 Run 분석" });
+    const analyzeButton = await screen.findByRole("button", { name: "이 실행 분석" });
 
     fireEvent.click(analyzeButton);
     expect(await screen.findByText(ANSWER)).toBeInTheDocument();
@@ -333,7 +333,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockReturnValue(stages.promise);
 
     renderBuilds();
-    const analyzeButton = await screen.findByRole("button", { name: "이 Run 분석" });
+    const analyzeButton = await screen.findByRole("button", { name: "이 실행 분석" });
 
     // context가 canonical해지기 전에 여러 번 클릭 = 한 의도로 합쳐진다(analyzePending은 boolean).
     fireEvent.click(analyzeButton);
@@ -367,8 +367,8 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
 
     renderBuilds();
 
-    fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
-    expect(await screen.findByRole("heading", { name: "Run 분석" }));
+    fireEvent.click(await screen.findByRole("button", { name: "이 실행 분석" }));
+    expect(await screen.findByRole("heading", { name: "실행 분석" }));
     expect(useAssistantStore.getState().turns).toHaveLength(0);
 
     // run 변경 → 이전 pending 폐기. B의 context가 canonical해져도 클릭 없이 자동 분석하지 않는다.
@@ -388,7 +388,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue(stagesResponse);
 
     renderBuilds();
-    fireEvent.click(await screen.findByRole("button", { name: "이 Run 분석" }));
+    fireEvent.click(await screen.findByRole("button", { name: "이 실행 분석" }));
 
     // spec error도 settled로 취급되므로 seed가 실행되고 분석이 진행된다.
     expect(await screen.findByText(ANSWER)).toBeInTheDocument();

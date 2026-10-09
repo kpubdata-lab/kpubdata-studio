@@ -24,6 +24,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { runStatusLabel } from "@/shared/i18n/codeLabels";
 
 import { formatDateTime } from "@/features/datasets/model";
 import { UsersSection } from "@/features/admin/UsersSection";
@@ -207,7 +208,7 @@ export function AdminPage() {
                     {runs.data.runs.map((run) => (
                       <tr className="border-t border-border" key={run.run_id}>
                         <td className="px-4 py-2 font-mono text-xs">{run.run_id}</td>
-                        <td className="px-4 py-2">{run.status}</td>
+                        <td className="px-4 py-2">{runStatusLabel(t, run.status)}</td>
                         <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{run.owner_id ? run.owner_id.slice(0, 12) : "—"}</td>
                         <td className="px-4 py-2 text-xs">{run.started_at ? formatDateTime(run.started_at) : "—"}</td>
                         <td className="px-4 py-2 text-xs">{run.finished_at ? formatDateTime(run.finished_at) : "—"}</td>

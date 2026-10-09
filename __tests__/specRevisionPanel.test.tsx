@@ -186,7 +186,7 @@ describe("SpecRevisionPanel", () => {
       );
     fireEvent.click(screen.getByRole("button", { name: "리비전으로 저장" }));
     const refusal = await screen.findByTestId("spec-revision-credential");
-    expect(refusal).toHaveTextContent("credential 포함");
+    expect(refusal).toHaveTextContent("자격 증명 포함");
     expect(refusal).toHaveTextContent("remove them from: content.yaml");
   });
 

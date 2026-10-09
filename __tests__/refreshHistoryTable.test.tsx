@@ -75,7 +75,7 @@ describe("Refresh history (#535)", () => {
     expect(screen.queryByRole("row", { name: /run-ok/ })).not.toBeInTheDocument();
     expect(screen.getByRole("row", { name: /run-failed/ })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText("Run 검색"), { target: { value: "nothing-matches" } });
+    fireEvent.change(screen.getByLabelText("실행 검색"), { target: { value: "nothing-matches" } });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("q=nothing-matches"));
     expect(screen.queryByRole("table", { name: "갱신 이력" })).not.toBeInTheDocument();
   });

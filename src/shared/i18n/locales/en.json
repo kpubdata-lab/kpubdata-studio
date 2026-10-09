@@ -165,7 +165,7 @@
       "retryOf": "Retry of",
       "refreshFailed": "Live status refresh failed (transient) — showing the last known status.",
       "refreshForbidden": "No permission to poll live status for this run — showing the status from the list instead.",
-      "outOfScopeDetail": "This run is outside the current list scope (limit). Stage/quality were fetched directly by run_id.",
+      "outOfScopeDetail": "This run is outside the current list range. Its stages and quality were looked up by run ID.",
       "startedAt": "Started: {{time}}",
       "finishedAt": "Finished: {{time}}",
       "edit": "Edit",
@@ -206,11 +206,11 @@
       "forbidden": "No permission to view quality results for this run (403).",
       "notFound": "Quality results for this run not found (404).",
       "loadError": "Failed to load quality: {{error}}",
-      "unavailableTitle": "No quality results (unavailable)",
-      "unavailableDesc": "Legacy run or quality was not computed (N/A ≠ PASS).",
+      "unavailableTitle": "No quality results",
+      "unavailableDesc": "The run is from an earlier version, or quality was not computed. No result does not mean a pass.",
       "noChecksTitle": "No evaluated checks",
-      "noChecksDesc": "Availability is available but evaluated_checks=0.",
-      "evaluated": "evaluated {{count}}",
+      "noChecksDesc": "Quality results exist, but no check was evaluated.",
+      "evaluated": "{{count}} evaluated",
       "perSource": "Per-source evaluation",
       "noEvalResult": "No evaluated result (N/A)",
       "noWarnFail": "No WARN/FAIL findings.",
@@ -219,7 +219,7 @@
     },
     "events": {
       "failedCount": "{{count}} failed",
-      "note": "Append-only evidence; does not replace Stage Progress (#488) / Quality (#486) verdicts.",
+      "note": "Events recorded while the run ran. They do not replace the stage progress or the quality verdict.",
       "notFound": "Event timeline for this run not found (404).",
       "forbidden": "No permission to view the event timeline for this run.",
       "loadError": "Failed to load event timeline: {{error}}"
@@ -227,7 +227,7 @@
     "spec": {
       "forbidden": "No permission to view the BuildSpec snapshot for this run.",
       "viewDataset": "View table ({{id}})",
-      "note": "Edit/re-run integration arrives after Add Data Workbench (#250) merges — only snapshot viewing is supported for now."
+      "note": "The spec this run used. It is read-only here."
     },
     "outcome": {
       "allSucceeded": "All sources succeeded",
@@ -537,7 +537,7 @@
       "unknownProvider": "sources[{{index}}].provider: provider '{{provider}}' is not in the catalog.",
       "unknownDataset": "sources[{{index}}].dataset: source dataset '{{dataset}}' does not exist on provider '{{provider}}'.",
       "yamlParse": "The YAML could not be parsed.",
-      "mockDisabled": "Generation is disabled in mock mode (ST-A8, #211)",
+      "mockDisabled": "Generation is disabled in mock mode.",
       "noValidate": "BuildSpec generation stopped: no connection to Builder /validate.",
       "noCatalog": "BuildSpec generation stopped: the catalog could not be read.",
       "emptyOutput": "The output was empty.",
@@ -1534,7 +1534,7 @@
       "title": "Privacy Notice",
       "llm": "Using Ask KPubData sends conversation content to the external LLM provider (OpenAI, etc.) configured by you. API keys and costs are your responsibility.",
       "noPublic": "Do not inject public API keys via VITE_* environment variables — they are bundled in plaintext.",
-      "scrub": "Secret scrubbing (#206) automatically masks service keys in sourceParams, but sensitive information typed directly into conversations is not masked."
+      "scrub": "Secret scrubbing automatically masks service keys in sourceParams, but sensitive information typed directly into conversations is not masked."
     },
     "account": {
       "title": "Account",
@@ -2765,7 +2765,12 @@
     "truncated": "Truncated — more rows exist",
     "saveLater": "Saving an analysis waits for server storage in KPubData Builder; a browser-only save would be lost on another device.",
     "errors": {
-      "unknown": "The query failed for an unknown reason."
+      "unknown": "The query failed for an unknown reason.",
+      "unsafe_query": "This SQL cannot be run. Check its syntax, and that it is a single SELECT statement.",
+      "query_busy": "Too many queries are running right now. Run it again in a moment.",
+      "query_timeout": "The query did not finish in the time allowed. Narrow the conditions or lower the LIMIT.",
+      "query_resource_limit": "The query went over the memory or result size allowed. Narrow the conditions or select only the columns you need.",
+      "query_execution_failed": "The query failed while running. Check the column names and types."
     },
     "snapshotLabel": "Snapshot",
     "currentSnapshot": "Current (at query start)",
@@ -3382,5 +3387,39 @@
     "tryAgain": "Try again",
     "signOut": "Sign out",
     "nextEmail": "The e-mail address of this account is not verified yet. Open the link in the verification mail from your sign-in provider, then press \"Try again\". Until then the screens do not resend their queries."
+  },
+  "codes": {
+    "event": {
+      "run_submitted": "Run submitted",
+      "run_started": "Run started",
+      "run_finished": "Run finished",
+      "run_failed": "Run failed",
+      "run_cancelled": "Run cancelled",
+      "source_fetch_started": "Fetch started",
+      "source_fetch_progress": "Fetch progress",
+      "source_fetch_completed": "Fetch completed",
+      "source_fetch_failed": "Fetch failed",
+      "stage_started": "Stage started",
+      "stage_completed": "Stage completed",
+      "stage_failed": "Stage failed",
+      "quality_evaluated": "Quality evaluated"
+    },
+    "eventStatus": {
+      "ok": "OK",
+      "warn": "Warning",
+      "fail": "Failed"
+    },
+    "eventStage": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "export": "Export"
+    },
+    "stageStatus": {
+      "completed": "Completed",
+      "failed": "Failed",
+      "not_run": "Not run",
+      "unavailable": "Unavailable"
+    }
   }
 }

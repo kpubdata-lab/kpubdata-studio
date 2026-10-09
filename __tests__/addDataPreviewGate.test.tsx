@@ -95,13 +95,13 @@ async function reachPreview() {
   fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
   next();
   await waitFor(() => expect(document.querySelector('#add-data-provider option[value="datago"]')).not.toBeNull());
-  fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-  await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
-  fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
+  fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+  await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
+  fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
   await screen.findByText(/ID: datago-air-quality/);
   next();
-  await screen.findByRole("heading", { name: "Preview · 검증" });
-  fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+  await screen.findByRole("heading", { name: "미리보기 · 검증" });
+  fireEvent.click(screen.getByRole("button", { name: "미리보기 새로고침" }));
 }
 
 function buildButton(): HTMLElement {
@@ -132,10 +132,10 @@ describe("Add Data — a preview that failed (#842)", () => {
     expect(builds).toEqual([]);
 
     // The way back, a preview that works, and the build is there.
-    fireEvent.click(screen.getByRole("button", { name: "Preview 단계로 돌아가기" }));
-    await screen.findByRole("heading", { name: "Preview · 검증" });
+    fireEvent.click(screen.getByRole("button", { name: "미리보기 단계로 돌아가기" }));
+    await screen.findByRole("heading", { name: "미리보기 · 검증" });
     previewIs = "ok";
-    fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+    fireEvent.click(screen.getByRole("button", { name: "미리보기 새로고침" }));
     await waitFor(() => expect(screen.queryByText(/SERVICE_KEY_IS_NOT_REGISTERED/)).toBeNull());
     next();
     await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
@@ -155,7 +155,7 @@ describe("Add Data — a preview that failed after the settings changed (#842)",
     await waitFor(() => expect(document.querySelector("#add-data-params")).not.toBeNull());
     fireEvent.change(document.querySelector("#add-data-params")!, { target: { value: JSON.stringify({ sidoName: "부산" }) } });
     next();
-    await screen.findByRole("heading", { name: "Preview · 검증" });
+    await screen.findByRole("heading", { name: "미리보기 · 검증" });
   }
 
   it("says why the new preview failed, not that the settings changed", async () => {
@@ -169,7 +169,7 @@ describe("Add Data — a preview that failed after the settings changed (#842)",
     await waitFor(() => expect(screen.getByText("검증 결과 (Validation)")).toBeInTheDocument());
     await changeTheSettings();
     previewIs = "refused";
-    fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+    fireEvent.click(screen.getByRole("button", { name: "미리보기 새로고침" }));
     await screen.findByText(/Missing required parameter: station/);
     next();
     await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
@@ -180,7 +180,7 @@ describe("Add Data — a preview that failed after the settings changed (#842)",
       return found!;
     });
     expect(notice.textContent).toContain("Missing required parameter: station");
-    expect(screen.queryByText(/Preview 실행 이후 source\/설정이 변경되어/)).toBeNull();
+    expect(screen.queryByText(/미리보기 실행 이후 소스나 설정이 바뀌어/)).toBeNull();
     expect(buildButton()).toBeDisabled();
     expect(builds).toEqual([]);
   });
@@ -198,7 +198,7 @@ describe("Add Data — a preview that failed after the settings changed (#842)",
 
     // The failure was of other settings. What holds the build now is that no preview of
     // these has been run.
-    expect(await screen.findByText(/Preview 실행 이후 source\/설정이 변경되어/)).toBeInTheDocument();
+    expect(await screen.findByText(/미리보기 실행 이후 소스나 설정이 바뀌어/)).toBeInTheDocument();
     expect(document.querySelector("[data-preview-problem]")).toBeNull();
     expect(screen.queryByText(/같은 이유로 실패합니다/)).toBeNull();
     expect(buildButton()).toBeDisabled();
@@ -210,16 +210,16 @@ describe("Add Data — coming from the Catalog (#842)", () => {
   it("has the public API chosen and the dataset filled in", async () => {
     renderAt("/add?provider=datago&dataset=apt_trade");
 
-    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("apt_trade"));
-    expect(screen.getByLabelText(/제공자 \(Provider\)/)).toHaveValue("datago");
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("apt_trade"));
+    expect(screen.getByLabelText(/^제공자/)).toHaveValue("datago");
   });
 
   it("has the public API chosen even when this catalogue does not list the dataset", async () => {
     // The kind is not asked for again; what is not listed is left to pick, not guessed.
     renderAt("/add?provider=datago&dataset=not-in-this-catalogue");
 
-    await waitFor(() => expect(screen.getByLabelText(/제공자 \(Provider\)/)).toHaveValue("datago"));
-    expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("");
+    await waitFor(() => expect(screen.getByLabelText(/^제공자/)).toHaveValue("datago"));
+    expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("");
   });
 
   it("says that the dataset was not found instead of leaving an empty field unexplained", async () => {
@@ -271,7 +271,7 @@ describe("Add Data — coming from the Catalog (#842)", () => {
   it("has the public API chosen when the provider is unknown too", async () => {
     renderAt("/add?provider=nobody&dataset=nothing");
 
-    const provider = await screen.findByLabelText(/제공자 \(Provider\)/);
+    const provider = await screen.findByLabelText(/^제공자/);
     await waitFor(() => expect(document.querySelector('#add-data-provider option[value="datago"]')).not.toBeNull());
     expect(provider).toHaveValue("");
   });
@@ -280,6 +280,6 @@ describe("Add Data — coming from the Catalog (#842)", () => {
     renderAt("/add");
 
     expect(screen.getByRole("heading", { name: "데이터 선택" })).toBeInTheDocument();
-    expect(screen.queryByLabelText(/제공자 \(Provider\)/)).toBeNull();
+    expect(screen.queryByLabelText(/^제공자/)).toBeNull();
   });
 });
