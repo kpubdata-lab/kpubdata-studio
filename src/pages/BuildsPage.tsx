@@ -198,12 +198,17 @@ export function BuildsPage() {
 
   // Criteria for determining run doesn't exist: out of list scope AND stage query returns 404.
   // (stage endpoint can query any run_id directly regardless of list limit, making it a more reliable signal)
+  // — AND the job registry does not know it either. A run that has not started has no stages:
+  // a queued one, or one that ended before it started because its keys were gone (#846). The
+  // registry has it, and its detail — the lost-keys card, the cancel button — is what to show.
   const runNotFound =
     Boolean(selectedRunId) &&
     listState.status === "loaded" &&
     !selectedListItem &&
     stagesState.status === "error" &&
-    stagesState.notFound;
+    stagesState.notFound &&
+    live.kind !== "job" &&
+    live.kind !== "loading";
 
   // When out of list scope so we lack listItem to judge existence, if the stage query we relied on
   // returns 403, distinguish "no permission to view" from "doesn't exist" (#255 P0).
