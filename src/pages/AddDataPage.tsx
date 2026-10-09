@@ -433,8 +433,14 @@ export function AddDataPage() {
     // stale (#283 follow-up review §4), so increment requestId before specResult check/return.
     // This ensures late-arriving previous request responses don't overwrite current error state.
     const requestId = ++previewRequestIdRef.current;
+    // Which settings this attempt is of, whatever comes of it. A preview that failed is a
+    // preview of these settings too: recorded only on success, the review step took a
+    // failure after a change of settings for "the settings changed, run it again" — and
+    // said so again however often it was run (#842).
+    const signatureAtRequest = draftSignature(draft);
     const specResult = buildSpecFromDraft(draft);
     if (specResult.error || !specResult.spec) {
+      setLastPreviewSignature(signatureAtRequest);
       setPreview({ status: "error", error: specResult.error ?? i18n.t("addData.errors.spec") });
       setValidation({
         status: "validated",
@@ -456,6 +462,7 @@ export function AddDataPage() {
       const prerequisite = checkCredentialPrerequisite(selected, providerConfigured, draft.publicApi.provider);
       if (prerequisite.blocked) {
         const message = credentialPrerequisiteNotice(credentialPrerequisiteMessage());
+        setLastPreviewSignature(signatureAtRequest);
         setPreview({ status: "error", error: message });
         setValidation({ status: "validated", valid: false, errors: [message] });
         return;
@@ -463,13 +470,13 @@ export function AddDataPage() {
 
       const requiredCheck = checkRequiredParams(draft.publicApi.sourceParams, selected?.request_parameters);
       if (requiredCheck.error) {
+        setLastPreviewSignature(signatureAtRequest);
         setPreview({ status: "error", error: requiredCheck.error });
         setValidation({ status: "validated", valid: false, errors: [requiredCheck.error] });
         return;
       }
     }
 
-    const signatureAtRequest = draftSignature(draft);
     setPreview({ status: "loading" });
     setValidation({ status: "validating", valid: false, errors: [] });
 
@@ -479,9 +486,9 @@ export function AddDataPage() {
     ]);
 
     if (requestId !== previewRequestIdRef.current) return;
+    setLastPreviewSignature(signatureAtRequest);
     if (previewOutcome.status === "fulfilled") {
       setPreview({ status: "loaded", response: previewOutcome.value });
-      setLastPreviewSignature(signatureAtRequest);
     } else {
       setPreview({
         status: "error",
