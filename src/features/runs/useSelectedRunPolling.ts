@@ -35,9 +35,10 @@ export type SelectedRunLiveState =
 
 /**
  * @param runId - Run id to watch; null disables polling.
+ * @param attempt - Change it to look the job up again, as a retry after the lookup itself failed.
  * @returns Latest async job state when present; a signal to use historical data when absent from the registry.
  */
-export function useSelectedRunPolling(runId: string | null): SelectedRunLiveState {
+export function useSelectedRunPolling(runId: string | null, attempt = 0): SelectedRunLiveState {
   const [state, setState] = useState<SelectedRunLiveState>({ kind: "idle" });
   const controllerRef = useRef<AbortController | null>(null);
   // Last confirmed job. Keep separately so transient errors don't overwrite it as "failed".
@@ -96,7 +97,7 @@ export function useSelectedRunPolling(runId: string | null): SelectedRunLiveStat
       controllerRef.current?.abort();
     };
     // fetchNow is derived only from runId (useCallback deps: [runId]), so runId alone is sufficient.
-  }, [runId]);
+  }, [runId, attempt]);
 
   // Interval polling starts only after confirming the first fetch found a non-terminal job
   // (#245 original behavior) — do not poll while still "loading". First fetch is immediate via effect above,

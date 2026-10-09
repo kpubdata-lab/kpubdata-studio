@@ -173,7 +173,8 @@ export function BuildsPage() {
   // it may actually be running/queued/cancelling, so we check with getBuildJob as before.
   const shouldPollLiveStatus =
     Boolean(selectedRunId) && isRealBuilderEnabled() && listState.status === "loaded" && !selectedListItem;
-  const live = useSelectedRunPolling(shouldPollLiveStatus ? selectedRunId : null);
+  const [liveAttempt, setLiveAttempt] = useState(0);
+  const live = useSelectedRunPolling(shouldPollLiveStatus ? selectedRunId : null, liveAttempt);
 
   // Event polling also follows the same "continue if non-terminal, stop if terminal" policy as
   // selected Run polling (#255 §3). ListItem's historical status is used for display (RunDetailPanel's
@@ -196,14 +197,24 @@ export function BuildsPage() {
     if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
   }, [selectedRunId, pathRunId, specState, stagesState, searchParams, setSearchParams]);
 
-  // Criteria for determining run doesn't exist: out of list scope AND stage query returns 404.
+  // Criteria for determining run doesn't exist: out of list scope AND stage query returns 404
   // (stage endpoint can query any run_id directly regardless of list limit, making it a more reliable signal)
-  const runNotFound =
+  // AND Builder's job lookup says it does not know the run either. A run that has not started has no
+  // stages: a queued one, or one that ended before it started because its keys were gone (#846). The
+  // registry has it, and its detail — the lost-keys card, the cancel button — is what to show.
+  // "Not found" is decided positively: while the lookup is idle or loading, or when it failed, we do
+  // not know — only an answer of "unknown run" counts. Mock mode has no live lookup to wait for.
+  const liveSaysUnknown =
+    !isRealBuilderEnabled() || live.kind === "not_in_registry" || live.kind === "permission_denied";
+  const listedNowhere =
     Boolean(selectedRunId) &&
     listState.status === "loaded" &&
     !selectedListItem &&
     stagesState.status === "error" &&
     stagesState.notFound;
+  const runNotFound = listedNowhere && liveSaysUnknown;
+  // The lookup itself failed (network, 5xx): Studio cannot tell a missing run from a failed check.
+  const runCheckFailed = listedNowhere && isRealBuilderEnabled() && live.kind === "error";
 
   // When out of list scope so we lack listItem to judge existence, if the stage query we relied on
   // returns 403, distinguish "no permission to view" from "doesn't exist" (#255 P0).
@@ -235,6 +246,18 @@ export function BuildsPage() {
             <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.notFoundDesc", { limit: listLimit })}</p>
             <button className="mt-4 text-sm font-medium text-brand-text underline" onClick={clearSelection} type="button">
               {t("builds.run.clearSelection")}
+            </button>
+          </Card>
+        ) : runCheckFailed ? (
+          <Card variant="error" role="alert">
+            <p className="font-semibold">{t("builds.run.checkFailedTitle", { id: selectedRunId })}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("builds.run.checkFailedDesc")}</p>
+            <button
+              className="mt-4 text-sm font-medium text-brand-text underline"
+              onClick={() => setLiveAttempt((n) => n + 1)}
+              type="button"
+            >
+              {t("builds.run.checkRetry")}
             </button>
           </Card>
         ) : runPermissionDenied ? (

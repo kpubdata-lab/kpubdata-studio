@@ -248,6 +248,16 @@ describe("the real-e2e runner", () => {
     expect(multiUser).toContain('.split(sessionKey).join("<redacted>")');
   });
 
+  it("gives that Builder one build slot and short-lived job keys, and tells the specs (#846)", () => {
+    // A queued job can only outwait its keys behind a build that holds the only slot, and
+    // only within a test's time if they are kept for a second, not Builder's hour.
+    expect(multiUser).toMatch(/\bmaxBuilds: 1,/);
+    expect(multiUser).toMatch(/\bjobKeyTtlSeconds: 1,/);
+    expect(multiUser).toContain("KPUBDATA_BUILDER_JOB_CREDENTIAL_TTL_SECONDS: String(jobKeyTtlSeconds)");
+    expect(multiUser).toContain("KPUBDATA_BUILDER_MAX_BUILDS: String(maxBuilds)");
+    expect(multiUser).toContain("MULTI_USER_JOB_KEY_TTL_SECONDS: String(jobKeyTtlSeconds)");
+  });
+
   it("keeps the multi-user specs out of the suites that have no such Builder", () => {
     expect(readFileSync(join(ROOT, "playwright.config.ts"), "utf8")).toContain("@(real-builder|multi-user)");
     expect(readFileSync(join(ROOT, "playwright.real.config.ts"), "utf8")).toContain("grep: /@real-builder/");
