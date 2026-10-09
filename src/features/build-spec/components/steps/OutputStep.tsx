@@ -12,9 +12,16 @@ const exportFormats = exportFormatSchema.options;
 export interface OutputStepProps {
   register: UseFormRegister<BuildFormValues>;
   errors: FieldErrors<BuildFormValues>;
+  /**
+   * Where the build writes when the path is left empty — given only for a spec that was
+   * submitted without one (#883). Add Data leaves the path out and Builder accepted that
+   * spec, so running it again must not ask for a value it never had: the field is then
+   * optional and says where an empty one goes. Without this the path is required.
+   */
+  pathWhenEmpty?: string;
 }
 
-export function OutputStep({ register, errors }: OutputStepProps) {
+export function OutputStep({ register, errors, pathWhenEmpty }: OutputStepProps) {
   const { t } = useTranslation();
   return (
     <div className="space-y-4">
@@ -46,12 +53,20 @@ export function OutputStep({ register, errors }: OutputStepProps) {
           </p>
         ) : null}
       </fieldset>
-      <FormField id="outputPath" label={t("newBuild.output.pathLabel")} required error={errors.outputPath?.message}>
+      <FormField
+        id="outputPath"
+        label={t("newBuild.output.pathLabel")}
+        required={pathWhenEmpty === undefined}
+        help={pathWhenEmpty === undefined ? undefined : t("newBuild.output.pathWhenEmpty", { path: pathWhenEmpty })}
+        error={errors.outputPath?.message}
+      >
         {(field) => (
           <TextInput
-            placeholder="artifacts/builds/air-quality"
+            placeholder={pathWhenEmpty ?? "artifacts/builds/air-quality"}
             {...field}
-            {...register("outputPath", { required: i18n.t("newBuild.errors.outputPathRequired") })}
+            {...register("outputPath", {
+              required: pathWhenEmpty === undefined ? i18n.t("newBuild.errors.outputPathRequired") : false,
+            })}
           />
         )}
       </FormField>
