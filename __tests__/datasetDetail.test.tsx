@@ -94,6 +94,10 @@ describe("Dataset Detail P0 (#253)", () => {
     expect(screen.getByRole("button", { name: /bronze 완료/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /silver 실패/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /gold 실행 안 됨/ })).toBeInTheDocument();
+    // The stage picker words the same statuses instead of showing Builder's codes (#843).
+    const stageSelect = screen.getByLabelText("단계 선택");
+    expect(within(stageSelect).getByRole("option", { name: "silver · 실패" })).toBeInTheDocument();
+    expect(within(stageSelect).getByRole("option", { name: "gold · 실행 안 됨" })).toBeInTheDocument();
   });
 
   it("updates the stage URL from lineage and applies it to Schema context", async () => {

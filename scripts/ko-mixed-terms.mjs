@@ -13,7 +13,8 @@
  *
  * `{{placeholders}}`, `` `code` ``, `<tags>` and URLs are not read: they are not words
  * the user reads as prose. A word joined to `_`, `.`, `[` or `-` is part of a code or a
- * path (`run_id`, `sources[0]`) and is not reported. A word joined by `/` is prose when
+ * path (`run_id`, `sources[0]`) and is not reported; neither is a word followed by `=`,
+ * which names a parameter (`/refresh-jobs?run=...`). A word joined by `/` is prose when
  * the other side is Hangul or another glossary word, or the word is capitalized
  * ("테이블/Run", "source/stage"), and a path otherwise (`admin/runs`).
  *
@@ -53,7 +54,7 @@ export const KO_GLOSSARY = new Map([
 const HANGUL = /[가-힣]/;
 const NOT_PROSE = /\{\{[^}]*\}\}|`[^`]*`|<[^>]+>|https?:\/\/\S+/g;
 const WORD = new RegExp(
-  String.raw`(?<![A-Za-z_.#\[-])(${[...KO_GLOSSARY.keys()].join("|")})s?(?![A-Za-z_.\[-])`,
+  String.raw`(?<![A-Za-z_.#\[-])(${[...KO_GLOSSARY.keys()].join("|")})s?(?![A-Za-z_.\[=-])`,
   "gi",
 );
 

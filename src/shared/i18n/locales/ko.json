@@ -264,7 +264,7 @@
   "api": {
     "timeout": "Builder API 응답이 시간 내에 오지 않았습니다.",
     "connFail": "Builder API에 연결하지 못했습니다.",
-    "specRepeatedMergeKey": "이 spec 은 보내지 않았습니다. 한 매핑에 '<<' 병합 키가 둘 이상이라, 어느 제공자 를 가리키는지 Builder 가 다르게 읽을 수 있습니다. '<<: [*a, *b]' 처럼 하나로 합쳐 주세요.",
+    "specRepeatedMergeKey": "이 spec 은 보내지 않았습니다. 한 매핑에 '<<' 병합 키가 둘 이상이라, 어느 제공자를 가리키는지 Builder 가 다르게 읽을 수 있습니다. '<<: [*a, *b]' 처럼 하나로 합쳐 주세요.",
     "badJson": "응답 JSON을 파싱하지 못했습니다.",
     "unsupportedEncoding": "지원하지 않는 형식",
     "schemaMismatch": "Builder API 응답이 예상된 형식과 일치하지 않습니다: {{details}}",
@@ -764,7 +764,7 @@
     },
     "legacyRun": {
       "text": "이 화면은 각 테이블의 최근 갱신만 봅니다. 링크의 실행 `{{run}}` 은 최근 갱신이 아닙니다 —",
-      "link": "그 실행 을 테이블 상세의 품질 탭에서 보기"
+      "link": "그 실행을 테이블 상세의 품질 탭에서 보기"
     },
     "filters": {
       "status": "상태",
@@ -1061,7 +1061,7 @@
       "run": "실행",
       "empty": "아직 커밋된 스냅샷이 없습니다.",
       "error": "최근 스냅샷을 불러오지 못했습니다.",
-      "runMissing": "실행: 테이블 목록의 스냅샷 요약은 실행 을 알려 주지 않습니다 — 테이블 상세에서 볼 수 있습니다"
+      "runMissing": "실행: 테이블 목록의 스냅샷 요약은 실행을 알려 주지 않습니다 — 테이블 상세에서 볼 수 있습니다"
     },
     "analyses": {
       "title": "최근 분석",
@@ -1100,9 +1100,9 @@
       "planPreviewSingle": "{{limit}}행({{mode}}) · {{total}}건 중 표본",
       "planPreviewPartial": "{{limit}}행({{mode}}) · {{extent}}",
       "qualityOfSample": "소스 전체가 아니라 미리보기 표본에 대한 결과입니다.",
-      "previewGateTitle": "미리보기 가 성공해야 테이블을 만들 수 있습니다",
-      "previewGateNotRun": "이 설정으로 미리보기 를 아직 실행하지 않았습니다. 미리보기 단계에서 데이터를 확인한 뒤 계속하세요.",
-      "previewGateSameReason": "같은 설정으로 테이블을 만들면 같은 이유로 실패합니다. 조건이나 연결을 고친 뒤 미리보기 를 다시 실행하세요.",
+      "previewGateTitle": "미리보기가 성공해야 테이블을 만들 수 있습니다",
+      "previewGateNotRun": "이 설정으로 미리보기를 아직 실행하지 않았습니다. 미리보기 단계에서 데이터를 확인한 뒤 계속하세요.",
+      "previewGateSameReason": "같은 설정으로 테이블을 만들면 같은 이유로 실패합니다. 조건이나 연결을 고친 뒤 미리보기를 다시 실행하세요.",
       "previewGateBack": "미리보기 단계로 돌아가기",
       "previewFailed": "미리보기 실패",
       "ofSample": "표본 기준",
@@ -1116,8 +1116,8 @@
       "buildCancelled": "실행이 취소되었습니다.",
       "planTitle": "테이블 생성 계획",
       "logicalNameLabel": "만들어질 테이블 이름",
-      "logicalNameAfterPreview": "최신 미리보기 를 실행하면 표시됩니다.",
-      "logicalNameNote": "테이블 ID 와 KPubData Builder 미리보기 가 알려 준 소스 key 입니다.",
+      "logicalNameAfterPreview": "최신 미리보기를 실행하면 표시됩니다.",
+      "logicalNameNote": "테이블 ID 와 KPubData Builder 미리보기가 알려 준 소스 key 입니다.",
       "existingChecking": "같은 ID 의 테이블이 이미 있는지 확인하고 있습니다.",
       "existingUnknown": "같은 ID 의 테이블이 이미 있는지 확인하지 못했습니다. 있는 테이블을 모르고 바꾸지 않도록, 확인되기 전에는 테이블을 만들지 않습니다.",
       "existingChanged": "테이블을 만들기 직전에 다시 확인해 보니, 다른 곳에서 테이블이 새로 생겼습니다. 아래 내용을 다시 보고 만들어 주세요. 아직 아무것도 만들지 않았습니다.",
@@ -1168,7 +1168,7 @@
       "extentFirstOne": "처음 1건",
       "extentFirstOneOf": "약 {{reported}}건 중 처음 1건",
       "sampleFooterPartial": "{{extent}}을 읽어 {{shown}}건 표시 · {{columns}}개 컬럼",
-      "sampleNotice": "이 미리보기 는 소스 전체가 아니라 표본입니다 — {{extent}}만 읽었습니다. 아래 검증 결과도 이 표본에 대한 것입니다.",
+      "sampleNotice": "이 미리보기는 소스 전체가 아니라 표본입니다 — {{extent}}만 읽었습니다. 아래 검증 결과도 이 표본에 대한 것입니다.",
       "validationOfSample": "소스 전체가 아니라 읽어 온 표본 {{fetched}}건에 대한 결과입니다.",
       "validationTitle": "검증 결과 (Validation)",
       "notEvaluated": "Not evaluated / N/A — 이 미리보기에서 평가된 품질 check가 없습니다.",
@@ -1418,8 +1418,8 @@
       "specDigest": "BuildSpec 다이제스트",
       "snapshotFiles": "스냅샷 파일"
     },
-    "runLookupUnsupportedTitle": "이 Builder 는 오래된 실행 을 찾을 수 없습니다",
-    "runLookupUnsupportedBody": "실행 `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 실행 을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. 실행 이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest 실행 으로 자동 변경하지 않았습니다.",
+    "runLookupUnsupportedTitle": "이 Builder 는 오래된 실행을 찾을 수 없습니다",
+    "runLookupUnsupportedBody": "실행 `{{run}}` 은 최신 실행 목록에 없고, 이 KPubData Builder 는 실행을 id 로 찾는 기능이 생긴 API {{version}} 보다 오래됐습니다. 실행이 있을 수도 있습니다 — Builder 를 올리면 열 수 있습니다. latest 실행으로 자동 변경하지 않았습니다.",
     "passportTitle": "데이터 여권",
     "runValue": "실행 {{id}}",
     "columnCount": "컬럼 {{count}}개",
@@ -1459,7 +1459,7 @@
     "notReadyNoReason": "KPubData Builder가 이 실행을 게시 준비되지 않음으로 판정했지만 구체적인 사유(blocker)를 제공하지 않았습니다.",
     "credentialNote": "이 blocker는 소스 제공자 자격 증명이 아니라 publish 대상(Hugging Face/Kaggle) 자격 증명을 뜻합니다. Builder 배포 설정에 따라 서버 자격 증명, 본인이 저장한 자격 증명, 또는 요청에 실어 보낸 토큰이 쓰입니다. Studio는 게시 토큰을 저장하지 않습니다.",
     "settingsTitle": "게시 설정",
-    "settingsNote": "Readiness와 별개인 로컬 입력 검증입니다. Builder readiness는 게시 위치이나 공개 설정을 검증하지 않습니다.",
+    "settingsNote": "Readiness와 별개인 로컬 입력 검증입니다. Builder readiness는 게시 위치나 공개 설정을 검증하지 않습니다.",
     "destinationHint": "KPubData Builder가 허용하는 owner/dataset 식별자",
     "privateLabel": "비공개 Dataset",
     "privateDefault": "기본값: 비공개",
@@ -1497,13 +1497,13 @@
       "reconcile": "원격 확인",
       "reset": "기록 초기화",
       "resetConfirm": "초기화 확정",
-      "resetWarning": "원격을 확인하지 않고 기록만 지웁니다. 이미 올라간 것이 있다면 지워지지 않고, 다시 게시하면 같은 게시 위치 에 한 번 더 올라갑니다.",
+      "resetWarning": "원격을 확인하지 않고 기록만 지웁니다. 이미 올라간 것이 있다면 지워지지 않고, 다시 게시하면 같은 게시 위치에 한 번 더 올라갑니다.",
       "tokenLabel": "원격 확인에 쓸 Hugging Face 토큰",
       "tokenHint": "원격 확인 한 번에만 실어 보내고 바로 지웁니다. 저장하지 않습니다. 기록 초기화에는 쓰이지 않습니다.",
       "tokenNeeded": "원격을 확인하려면 게시 토큰이 필요합니다. 바로 위 칸에 토큰을 입력한 뒤 눌러 주세요.",
       "publishAgain": "다시 게시 준비",
       "outcome": {
-        "confirmed": "원격에 이 게시 위치 이 있습니다. 게시는 이루어졌습니다 — 다시 보낼 필요가 없습니다.",
+        "confirmed": "원격에 이 게시 위치가 있습니다. 게시는 이루어졌습니다 — 다시 보낼 필요가 없습니다.",
         "absent": "원격에 없습니다. 게시되지 않은 것으로 확인되어 기록을 지웠습니다. 다시 게시할 수 있습니다.",
         "reset": "기록을 지웠습니다. 원격에 이미 올라간 것은 그대로입니다. 다시 게시할 수 있습니다.",
         "nothing_to_settle": "정리할 게시 기록이 없습니다. 다시 게시할 수 있습니다.",
@@ -2492,7 +2492,7 @@
       },
       "dashboard-overview": {
         "title": "작업 현황 확인",
-        "copy": "현재 테이블과 실행 실행 현황을 이 Dashboard에서 확인할 수 있습니다."
+        "copy": "현재 테이블과 실행 현황을 이 Dashboard에서 확인할 수 있습니다."
       },
       "dashboard-quality": {
         "title": "품질 결과 확인",
@@ -2529,7 +2529,7 @@
     "liveForbidden": "이 실행의 실시간 상태를 조회할 권한이 없습니다 — 마지막으로 확인된 상태를 대신 표시합니다.",
     "detailHint": {
       "title": "상세 진행은 실행 상세에서 확인하세요",
-      "desc": "이 화면은 실행 목록/상세와 동일한 canonical 실행 상태만 보여줍니다. 단계별 진행(Bronze/Silver/Gold), 실행 이벤트 타임라인, 협조적 실행 취소는 실행 상세(/refresh-jobs?실행=...)에서 제공됩니다."
+      "desc": "이 화면은 실행 목록/상세와 동일한 canonical 실행 상태만 보여줍니다. 단계별 진행(Bronze/Silver/Gold), 실행 이벤트 타임라인, 협조적 실행 취소는 실행 상세(/refresh-jobs?run=...)에서 제공됩니다."
     },
     "openDetail": "실행 상세 보기",
     "openArtifacts": "스냅샷 파일 보기",
@@ -2688,9 +2688,9 @@
     "split": {
       "title": "분할 방식",
       "unfamiliar": "Studio 가 모르는 알고리즘입니다 — KPubData Builder 가 기록한 값을 그대로 보여 줍니다.",
-      "legacy": "매니페스트 에 기록되지 않았습니다. KPubData Builder 는 이전 매니페스트 의 비율 분할을 shuffle-v1 로 읽습니다.",
+      "legacy": "매니페스트에 기록되지 않았습니다. KPubData Builder 는 이전 매니페스트의 비율 분할을 shuffle-v1 로 읽습니다.",
       "key": "키 분할 — 알고리즘이 아니라 키 값으로 구성원이 정해집니다.",
-      "cannotTell": "알 수 없음: 매니페스트 나 BuildSpec 을 읽지 못했습니다.",
+      "cannotTell": "알 수 없음: 매니페스트나 BuildSpec 을 읽지 못했습니다.",
       "differs": "이전 실행 {{run}}은(는) {{algorithm}}(으)로 분할했습니다. split 방식이 달라 같은 seed 라도 train/test 구성원이 다를 수 있습니다."
     }
   },

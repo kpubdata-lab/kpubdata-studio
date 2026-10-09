@@ -39,6 +39,7 @@ describe("the mixed-term detector", () => {
       path: "sources[{{index}}].provider: 없는 값입니다.",
       placeholder: "{{run}} 실행을 열었습니다.",
       backticks: "`stage` 필드가 필요합니다.",
+      parameter: "실행 상세(/refresh-jobs?run=...)에서 제공됩니다.",
       tag: "<run>열기</run> 버튼",
       english: "Run details",
     });

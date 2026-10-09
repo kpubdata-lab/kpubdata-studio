@@ -7,6 +7,7 @@
  */
 import { useTranslation } from "react-i18next";
 import { i18n } from "@/shared/i18n";
+import { runStatusLabel } from "@/shared/i18n/codeLabels";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listDatasetRuns, listDatasets } from "@/features/datasets/api";
@@ -197,7 +198,7 @@ export function ReportsPage() {
               >
                 {(runsState.data ?? []).map((run) => (
                   <option key={run.run_id} value={run.run_id}>
-                    {run.run_id} · {run.status}
+                    {run.run_id} · {runStatusLabel(t, run.status)}
                   </option>
                 ))}
               </Select>
