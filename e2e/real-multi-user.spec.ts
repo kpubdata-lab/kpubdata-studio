@@ -254,6 +254,205 @@ test("두 사용자는 서로의 실행도 키도 볼 수 없다 @multi-user", a
   await bob.close();
 });
 
+test("두 계정의 테이블·업로드·저장된 분석·내보내기와 브라우저에 둔 초안은 서로 닿지 않는다 (#773) @multi-user", async ({
+  browser,
+  request,
+}) => {
+  const stamp = Date.now();
+  const datasetId = `e2e.alice-private-${stamp}`;
+  const tableTitle = `Alice private ${stamp}`;
+
+  // 1) Alice signs in, and makes one of everything Builder keeps for a user: an upload,
+  //    a run, the warehouse table it commits, a saved analysis and an export.
+  const alice = await browser.newContext();
+  cleanups.push(() => alice.close());
+  const alicePage = await alice.newPage();
+  const alicesToken = nextBuilderToken(alicePage);
+  await signIn(alicePage, ALICE);
+  const aliceAuth = { Authorization: await alicesToken };
+
+  const upload = await request.post(`${BUILDER_URL}/uploads?format=csv&filename=alice-private.csv`, {
+    headers: { ...aliceAuth, "Content-Type": "application/octet-stream" },
+    data: Buffer.from("id,name\n1,alpha\n2,beta\n", "utf8"),
+  });
+  expect(upload.status(), await upload.text()).toBe(200);
+  const { upload_id: uploadId } = (await upload.json()) as { upload_id: string };
+  const spec = [
+    `dataset_id: ${datasetId}`,
+    `title: ${tableTitle}`,
+    "description: Only Alice may see this",
+    "sources:",
+    "  - kind: file",
+    `    upload_id: ${uploadId}`,
+    "    format: csv",
+    "    alias: rows",
+    "exports:",
+    "  - kind: jsonl",
+    "    output_path: data.jsonl",
+  ].join("\n");
+  const built = await request.post(`${BUILDER_URL}/build`, { headers: aliceAuth, data: { spec }, timeout: 60_000 });
+  expect(built.status(), await built.text()).toBe(200);
+  const runId = ((await built.json()) as { run_id: string }).run_id;
+
+  type Table = { logical_name: string; current_snapshot_id: string | null };
+  const tablesOf = async (auth: Record<string, string>): Promise<Table[]> => {
+    const answer = await request.get(`${BUILDER_URL}/warehouse/tables`, { headers: auth });
+    expect(answer.status(), "GET /warehouse/tables").toBe(200);
+    return ((await answer.json()) as { tables: Table[] }).tables;
+  };
+  const table = (await tablesOf(aliceAuth)).find((entry) => entry.logical_name.startsWith(`${datasetId}.`));
+  expect(table?.current_snapshot_id, "Alice's build committed a table").toBeTruthy();
+  const tableName = table?.logical_name ?? "";
+
+  const saved = await request.post(`${BUILDER_URL}/analyses`, {
+    headers: aliceAuth,
+    data: { name: `alice-analysis-${stamp}`, table: tableName, sql: "SELECT COUNT(*) AS n FROM dataset" },
+  });
+  expect(saved.status(), await saved.text()).toBe(200);
+  const analysisId = ((await saved.json()) as { analysis: { analysis_id: string } }).analysis.analysis_id;
+  expect(analysisId).toBeTruthy();
+
+  const exported = await request.post(`${BUILDER_URL}/warehouse/exports`, {
+    headers: aliceAuth,
+    data: { table: tableName, sql: "SELECT * FROM dataset", format: "csv" },
+  });
+  expect(exported.status(), await exported.text()).toBe(200);
+  const exportId = ((await exported.json()) as { export_id: string }).export_id;
+
+  // 2) Bob signs in, in a browser of his own.
+  const bob = await browser.newContext();
+  cleanups.push(() => bob.close());
+  const bobPage = await bob.newPage();
+  const bobsToken = nextBuilderToken(bobPage);
+  await signIn(bobPage, BOB);
+  const bobAuth = { Authorization: await bobsToken };
+
+  //    None of it is in anything Builder lists for him…
+  const lists: Array<[string, string[]]> = [
+    ["/builds?limit=200", [runId, datasetId]],
+    ["/warehouse/tables", [tableName, datasetId]],
+    ["/uploads", [uploadId, "alice-private.csv"]],
+    ["/analyses", [analysisId, `alice-analysis-${stamp}`]],
+    ["/warehouse/exports", [exportId, tableName]],
+  ];
+  for (const [path, hers] of lists) {
+    const mine = await request.get(`${BUILDER_URL}${path}`, { headers: aliceAuth });
+    expect(mine.status(), `${path} as Alice`).toBe(200);
+    // The check below is worth something only if her list does name it.
+    expect(await mine.text(), `${path} as Alice names ${hers[0]}`).toContain(hers[0]);
+    const his = await request.get(`${BUILDER_URL}${path}`, { headers: bobAuth });
+    expect(his.status(), `${path} as Bob`).toBe(200);
+    const text = await his.text();
+    for (const value of hers) expect(text.includes(value), `${value} in Bob's ${path}`).toBe(false);
+  }
+
+  //    …and every way to it by name answers him as it would for something that is not there.
+  const table404 = encodeURIComponent(tableName);
+  const reads: Array<[string, string, unknown?]> = [
+    ["GET", `/builds/${encodeURIComponent(runId)}`],
+    ["GET", `/builds/${encodeURIComponent(runId)}/manifest`],
+    ["GET", `/builds/${encodeURIComponent(runId)}/spec`],
+    ["GET", `/builds/${encodeURIComponent(runId)}/events`],
+    ["GET", `/warehouse/tables/${table404}`],
+    ["GET", `/warehouse/tables/${table404}/profile`],
+    ["POST", "/warehouse/rows", { table: tableName }],
+    ["POST", "/warehouse/query", { table: tableName, sql: "SELECT * FROM dataset" }],
+    ["POST", "/warehouse/exports", { table: tableName, sql: "SELECT * FROM dataset", format: "csv" }],
+    ["POST", "/analyses", { name: "bob-reads-alice", table: tableName, sql: "SELECT * FROM dataset" }],
+    ["GET", `/uploads/${uploadId}`],
+    ["DELETE", `/uploads/${uploadId}`],
+    ["GET", `/analyses/${analysisId}`],
+    ["POST", `/analyses/${analysisId}/run`, {}],
+    ["DELETE", `/analyses/${analysisId}`],
+    ["GET", `/warehouse/exports/${exportId}`],
+    ["GET", `/warehouse/exports/${exportId}/download`],
+    ["DELETE", `/warehouse/exports/${exportId}`],
+  ];
+  for (const [method, path, data] of reads) {
+    const answer = await request.fetch(`${BUILDER_URL}${path}`, { method, headers: bobAuth, data });
+    expect(answer.status(), `${method} ${path} as Bob: ${await answer.text()}`).toBe(404);
+  }
+  //    A build of his that names her upload does not read it either.
+  const borrowed = await request.post(`${BUILDER_URL}/build`, {
+    headers: bobAuth,
+    data: { spec: spec.replace(datasetId, `e2e.bob-borrows-${stamp}`) },
+    timeout: 60_000,
+  });
+  expect(borrowed.ok(), `Bob's build on Alice's upload: ${borrowed.status()}`).toBe(false);
+  expect(await borrowed.text()).not.toContain("alpha");
+
+  //    What he tried deleted nothing of hers.
+  for (const path of [`/uploads/${uploadId}`, `/analyses/${analysisId}`, `/warehouse/exports/${exportId}`]) {
+    expect((await request.get(`${BUILDER_URL}${path}`, { headers: aliceAuth })).status(), `${path} as Alice`).toBe(200);
+  }
+
+  // 3) There is no way around the token: this Builder has no API key, and a request that
+  //    carries one instead of a token is refused before anything is listed.
+  for (const path of ["/builds", "/warehouse/tables", "/uploads", "/analyses", "/warehouse/exports", "/providers"]) {
+    const withoutAToken: Array<Record<string, string>> = [
+      { "X-API-Key": "anything" },
+      { Authorization: "Bearer anything" },
+      { "X-User-Id": ALICE },
+    ];
+    for (const headers of withoutAToken) {
+      const answer = await request.get(`${BUILDER_URL}${path}`, { headers });
+      expect(answer.status(), `GET ${path} with ${Object.keys(headers)[0]}`).toBe(401);
+      expect(await answer.text()).not.toContain(datasetId);
+    }
+  }
+
+  // 4) In Studio, his Tables page has been answered and does not show her table.
+  const bobsTables = bobPage.waitForResponse(
+    (answer) => answer.url() === `${BUILDER_URL}/warehouse/tables` && answer.ok(),
+  );
+  await openFromMenu(bobPage, /^(Tables|테이블)$/);
+  await bobsTables;
+  await expect(bobPage.getByText(tableTitle)).toHaveCount(0);
+
+  // 5) The same browser, another account. Alice leaves a table half made — Studio keeps
+  //    that draft in this browser — and signs out; Bob signs in where she was.
+  const draftTitle = `alice-draft-${stamp}`;
+  await openCreateTable(alicePage);
+  await alicePage.getByRole("button", { name: "파일 업로드" }).first().click();
+  await alicePage.getByRole("button", { name: "다음" }).first().click();
+  await alicePage.getByText(t("addData.configure.advancedTitle")).click();
+  await alicePage.locator("#add-data-title").fill(draftTitle);
+  await alicePage.getByRole("button", { name: t("addData.nav.saveDraft") }).click();
+  await expect
+    .poll(() => alicePage.evaluate(() => JSON.stringify({ ...localStorage })))
+    .toContain(draftTitle);
+
+  const studio = new URL(alicePage.url()).origin;
+  await alicePage.getByRole("button", { name: /계정 메뉴/ }).click();
+  await alicePage.getByRole("button", { name: t("layout.account.signOut") }).click();
+  await alicePage.waitForURL((url) => url.origin === studio && url.pathname.startsWith("/login"), { timeout: 30_000 });
+  await signIn(alicePage, BOB);
+
+  //    He starts a table of his own and is not offered hers: no saved draft waits for him,
+  //    and the form is empty.
+  await openCreateTable(alicePage);
+  await expect(alicePage.getByText(t("addData.draft.prompt"))).toHaveCount(0);
+  await alicePage.getByRole("button", { name: "파일 업로드" }).first().click();
+  await alicePage.getByRole("button", { name: "다음" }).first().click();
+  await alicePage.getByText(t("addData.configure.advancedTitle")).click();
+  await expect(alicePage.locator("#add-data-title")).toBeVisible();
+  await expect(alicePage.locator("#add-data-title")).not.toHaveValue(draftTitle);
+  await expect(alicePage.getByText(draftTitle)).toHaveCount(0);
+  //    Her draft is not gone, only kept apart: Studio files what a browser keeps under the
+  //    account it belongs to, so it is still in this browser's storage under hers, and
+  //    it is offered to her again when she signs back in.
+  await alicePage.getByRole("button", { name: /계정 메뉴/ }).click();
+  await alicePage.getByRole("button", { name: t("layout.account.signOut") }).click();
+  await alicePage.waitForURL((url) => url.origin === studio && url.pathname.startsWith("/login"), { timeout: 30_000 });
+  await signIn(alicePage, ALICE);
+  await openCreateTable(alicePage);
+  await expect(alicePage.getByText(t("addData.draft.prompt"))).toBeVisible();
+  await alicePage.getByRole("button", { name: t("addData.draft.restore") }).click();
+  await alicePage.getByRole("button", { name: "다음" }).first().click();
+  await alicePage.getByText(t("addData.configure.advancedTitle")).click();
+  await expect(alicePage.locator("#add-data-title")).toHaveValue(draftTitle);
+});
+
 /**
  * Builder's answers for a missing key, as recorded for the unit test that plays them back
  * through Studio's client (`missingProviderKey.recorded.test.ts`, #787). What this Builder
