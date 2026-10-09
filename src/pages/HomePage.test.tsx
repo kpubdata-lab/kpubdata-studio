@@ -133,7 +133,7 @@ describe("Home on a warehouse (#527)", () => {
     expect(screen.queryByText("RUNNING")).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(requested).toEqual([]);
-    expect(screen.getByRole("link", { name: "새 SQL 쿼리" })).toHaveAttribute("href", "/sql");
+    expect(screen.getByRole("link", { name: "새 SQL 질의" })).toHaveAttribute("href", "/sql");
   });
 
   it("lists only Stale, Degraded, Partial, Failed and Access problems, each one click from its table", async () => {
@@ -165,7 +165,7 @@ describe("Home on a warehouse (#527)", () => {
     renderHome();
     await waitFor(() => expect(within(section("최근 스냅샷")).getAllByRole("row")).toHaveLength(3));
     const table = section("최근 스냅샷");
-    expect(within(table).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["테이블", "스냅샷", "행", "커밋 시각", "실행(run)"]);
+    expect(within(table).getAllByRole("columnheader").map((cell) => cell.textContent)).toEqual(["테이블", "스냅샷", "행", "커밋 시각", "실행"]);
     const [, water, air] = within(table).getAllByRole("row");
     expect(within(water).getByRole("link", { name: "water.kma" })).toHaveAttribute("href", "/tables/water?source=kma");
     expect(water.querySelector('[data-status="missing"]')).not.toBeNull();

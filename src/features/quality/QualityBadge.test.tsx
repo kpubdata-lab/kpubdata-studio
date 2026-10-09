@@ -49,7 +49,7 @@ describe("QualityStateBadge keeps not-evaluated and unavailable apart (#254, #52
     unmount();
     render(<QualityStateBadge state="UNAVAILABLE" />);
     expect(mark()).toHaveAttribute("data-status", "unknown");
-    expect(mark()).toHaveTextContent("결과 없음(unavailable)");
+    expect(mark()).toHaveTextContent("결과 없음");
   });
 
   it("PASS is plain text and FAIL a badge", () => {

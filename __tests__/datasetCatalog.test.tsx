@@ -38,7 +38,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
   it("searches table/provider and preserves q in the URL", async () => {
     renderCatalog();
     await screen.findByText("air-quality");
-    fireEvent.change(screen.getByLabelText("테이블 / Provider 검색"), { target: { value: "population" } });
+    fireEvent.change(screen.getByLabelText("테이블 / 제공자 검색"), { target: { value: "population" } });
     expect(screen.getByText("population")).toBeInTheDocument();
     expect(screen.queryByText("air-quality")).not.toBeInTheDocument();
     expect(screen.getByTestId("location")).toHaveTextContent("?q=population");

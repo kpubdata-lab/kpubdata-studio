@@ -282,7 +282,7 @@ describe("profile refusals, each with its next step (#647)", () => {
     renderDetail("/tables/air?tab=profile");
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveAttribute("data-refusal", "query_busy");
-    expect(alert).toHaveTextContent("쿼리 자리가 모두 사용 중입니다");
+    expect(alert).toHaveTextContent("질의 자리가 모두 사용 중입니다");
     answer = (snapshotId) => HttpResponse.json(profileBody(snapshotId));
     fireEvent.click(within(alert).getByRole("button", { name: "다시 시도" }));
     await screen.findByText("pm10");

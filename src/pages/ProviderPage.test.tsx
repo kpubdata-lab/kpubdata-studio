@@ -125,14 +125,14 @@ describe("ProviderPage credential 상태", () => {
     fireEvent.click(await screen.findByRole("button", { name: "등록하기" }));
     fireEvent.change(screen.getByPlaceholderText("API Key를 입력하세요"), { target: { value: "secret" } });
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
-    expect(await screen.findByText("Credential 저장에 실패했습니다")).toBeInTheDocument();
+    expect(await screen.findByText("자격 증명 저장에 실패했습니다")).toBeInTheDocument();
     expect(screen.queryByText(/master key/)).not.toBeInTheDocument();
 
     configured = true;
     fireEvent.click(screen.getByRole("button", { name: "자격 증명 관리 — datago" }));
     expect(await screen.findByRole("button", { name: "삭제" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "삭제" }));
-    expect(await screen.findByText("Credential 삭제에 실패했습니다")).toBeInTheDocument();
+    expect(await screen.findByText("자격 증명 삭제에 실패했습니다")).toBeInTheDocument();
     expect(screen.queryByText(/master key/)).not.toBeInTheDocument();
   });
 });
@@ -153,10 +153,10 @@ describe("ProviderPage 연결 상태 표현 (credential readiness)", () => {
     await selectProvider("datago");
 
     expect(await screen.findByText(/dg••••99/)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /자격 증명 \(Credential\) 상태 — datago/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /자격 증명 상태 — datago/ })).toBeInTheDocument();
     // With a user-saved credential: "API Key registered" + Preview guidance.
     expect(screen.getAllByText("API Key 등록됨").length).toBeGreaterThan(0);
-    expect(screen.getByText(/실제 소스 데이터셋 API 사용 가능 여부는 Add Data의 Preview/)).toBeInTheDocument();
+    expect(screen.getByText(/실제 소스 데이터셋 API 사용 가능 여부는 Add Data의 미리보기/)).toBeInTheDocument();
     // There is no generic probe UI.
     expect(screen.queryByRole("button", { name: "연결 테스트" })).not.toBeInTheDocument();
     expect(screen.queryByText("연결 / 실제 API 확인")).not.toBeInTheDocument();

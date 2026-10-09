@@ -81,7 +81,7 @@ describe("Connections table (#538)", () => {
     expect(manage).toHaveAttribute("aria-pressed", "false");
     fireEvent.click(manage);
 
-    expect(await screen.findByRole("heading", { name: /자격 증명 \(Credential\) 상태 — datago/ })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /자격 증명 상태 — datago/ })).toBeInTheDocument();
     expect(manage).toHaveAttribute("aria-pressed", "true");
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
   });

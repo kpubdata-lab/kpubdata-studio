@@ -105,7 +105,7 @@ describe("ProviderPage multi-user credential mode (#652)", () => {
     );
     renderProviders();
 
-    expect(await screen.findByText("이 KPubData Builder는 provider 키를 저장하지 않습니다")).toBeInTheDocument();
+    expect(await screen.findByText("이 KPubData Builder는 제공자 키를 저장하지 않습니다")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "등록하기" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "저장" })).not.toBeInTheDocument();
 
@@ -150,7 +150,7 @@ describe("ProviderPage multi-user credential mode (#652)", () => {
     );
     renderProviders();
 
-    await screen.findByText("이 KPubData Builder는 provider 키를 저장하지 않습니다");
+    await screen.findByText("이 KPubData Builder는 제공자 키를 저장하지 않습니다");
     // No key yet: nothing to probe with.
     expect(screen.queryByRole("button", { name: "확인하기" })).not.toBeInTheDocument();
 
@@ -192,9 +192,9 @@ describe("ProviderPage multi-user credential mode (#652)", () => {
     fireEvent.change(screen.getByPlaceholderText("API Key를 입력하세요"), { target: { value: KEY } });
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
 
-    expect(await screen.findByText(/provider 키를 저장하지 않는 다중 사용자 배포라서 저장되지 않았습니다/)).toBeInTheDocument();
+    expect(await screen.findByText(/제공자 키를 저장하지 않는 다중 사용자 배포라서 저장되지 않았습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/master key/)).not.toBeInTheDocument();
-    expect(screen.queryByText("Credential 저장에 실패했습니다")).not.toBeInTheDocument();
+    expect(screen.queryByText("자격 증명 저장에 실패했습니다")).not.toBeInTheDocument();
     expect(seen.puts).toBe(1);
 
     // Next action: the typed key is still in the form, one click from this session's use.
@@ -234,7 +234,7 @@ describe("ProviderPage multi-user credential mode (#652)", () => {
     renderProviders();
 
     fireEvent.click(await screen.findByRole("button", { name: "등록하기" }));
-    expect(screen.queryByText("이 KPubData Builder는 provider 키를 저장하지 않습니다")).not.toBeInTheDocument();
+    expect(screen.queryByText("이 KPubData Builder는 제공자 키를 저장하지 않습니다")).not.toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText("API Key를 입력하세요"), { target: { value: KEY } });
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
 

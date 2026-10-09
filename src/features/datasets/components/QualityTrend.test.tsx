@@ -54,7 +54,7 @@ describe("QualityTrendView (#650)", () => {
     expect(unevaluated.querySelector("[data-segment]")).toBeNull();
     // A null validated_rows is "not reported", not 0.
     expect(unevaluated.querySelector('[data-status="missing"]')).not.toBeNull();
-    expect(within(unevaluated).getByText("run 실패")).toBeInTheDocument();
+    expect(within(unevaluated).getByText("실행 실패")).toBeInTheDocument();
   });
 
   it("says unknown, not 0%, when checks ran but Builder sent no rate", () => {
@@ -63,7 +63,7 @@ describe("QualityTrendView (#650)", () => {
     const cell = row("air-norate");
     expect(cell.querySelector('[data-status="unknown"]')).not.toBeNull();
     expect(within(cell).queryByText(/%/)).toBeNull();
-    expect(screen.getByText("이 이력에는 아직 통과율이 평가된 run이 없습니다.")).toBeInTheDocument();
+    expect(screen.getByText("이 이력에는 아직 통과율이 평가된 실행이 없습니다.")).toBeInTheDocument();
   });
 
   it("marks a legacy run with a null timestamp as 'time not recorded'", () => {
@@ -81,7 +81,7 @@ describe("QualityTrendView (#650)", () => {
     expect(points).toEqual(["air-0813", "air-0815"]);
     // air-0814 sits between the two rated runs, so no line joins them.
     expect(chart!.querySelectorAll("path")).toHaveLength(0);
-    expect(screen.getByText(/끊긴 구간은 평가된 검사가 없는 run입니다\(2개\)/)).toBeInTheDocument();
+    expect(screen.getByText(/끊긴 구간은 평가된 검사가 없는 실행입니다\(2개\)/)).toBeInTheDocument();
   });
 
   it("shows an empty state for an empty history", () => {
@@ -136,6 +136,6 @@ describe("QualityTrend loading (#650)", () => {
       </MemoryRouter>,
     );
     await waitFor(() => expect(document.querySelector('tr[data-run-id="air-0815"]')).not.toBeNull());
-    expect(screen.getByText("run별 품질 추이")).toBeInTheDocument();
+    expect(screen.getByText("실행별 품질 추이")).toBeInTheDocument();
   });
 });

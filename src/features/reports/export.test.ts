@@ -66,7 +66,7 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
     expect(md).toContain("Table: air-quality");
     expect(md).toContain("Base Run: air-2026-08-14");
     expect(md).toContain("생성 시각");
-    expect(md).toContain("Evidence 조회 시각");
+    expect(md).toContain("근거 조회 시각");
   });
 
   it("Builder Evidence/AI/사용자 블록을 provenance 태그로 구분한다", () => {
@@ -112,9 +112,9 @@ describe("generateMarkdownExport / generateHtmlExport (#258 §12, §13)", () => 
       ],
     });
     const md = generateMarkdownExport(report, "current");
-    expect(md).toContain("다른 Run 기준");
+    expect(md).toContain("다른 실행 기준");
     const html = generateHtmlExport(report, "current");
-    expect(html).toContain("다른 Run 기준");
+    expect(html).toContain("다른 실행 기준");
   });
 
   it("BUILDER_EVIDENCE 블록에 summary가 있으면 Markdown export가 summary와 상세 표를 모두 포함한다", () => {

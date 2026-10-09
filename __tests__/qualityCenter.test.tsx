@@ -39,7 +39,7 @@ describe("Quality Center across tables (#536)", () => {
 
     const table = await screen.findByRole("table", { name: CAPTION });
     const headers = within(table).getAllByRole("columnheader").map((cell) => cell.textContent);
-    expect(headers).toEqual(["테이블", "소스", "규칙", "컬럼", "상태", "실제값 / 기준", "영향 행 / 검사 행", "스냅샷(run)"]);
+    expect(headers).toEqual(["테이블", "소스", "규칙", "컬럼", "상태", "실제값 / 기준", "영향 행 / 검사 행", "스냅샷(실행)"]);
 
     const fail = within(table).getByRole("row", { name: /required_column/ });
     expect(fail).toHaveTextContent("대기질 통합 데이터");
@@ -63,8 +63,8 @@ describe("Quality Center across tables (#536)", () => {
     renderQuality();
     await screen.findByRole("table", { name: CAPTION });
     expect(screen.queryByText("Checks Passed")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Run 선택")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Source 선택")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("실행 선택")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("소스 선택")).not.toBeInTheDocument();
     expect(screen.getByLabelText("상태")).toBeInTheDocument();
     expect(screen.getByLabelText("테이블")).toBeInTheDocument();
     expect(screen.getByLabelText("분류")).toBeInTheDocument();

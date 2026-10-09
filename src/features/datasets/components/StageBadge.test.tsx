@@ -20,18 +20,18 @@ describe("StageBadge renders the four meanings differently (#524)", () => {
     expect(mark()).toHaveAttribute("data-status", kind);
   });
 
-  it("keeps Builder's word on every known state", () => {
+  it("words every known state in the user's language (#843)", () => {
     const { unmount } = render(<StageBadge status="failed" />);
-    expect(mark()).toHaveTextContent("failed");
+    expect(mark()).toHaveTextContent("실패");
     unmount();
     render(<StageBadge status="not_run" />);
-    expect(mark()).toHaveTextContent("not_run");
+    expect(mark()).toHaveTextContent("실행 안 됨");
   });
 
   it("an absent stage status is a dash, not unavailable", () => {
     render(<StageBadge status={undefined} />);
     expect(mark()).toHaveAttribute("data-status", "missing");
     expect(mark()).toHaveTextContent("—");
-    expect(mark()).not.toHaveTextContent("unavailable");
+    expect(mark()).not.toHaveTextContent("정보 없음");
   });
 });

@@ -66,6 +66,12 @@ jobs:
       - name: i18n key gate (#448)
         run: npm run i18n:keys
 
+      # A Korean string with "run" or "provider" left in English, and an issue number
+      # in a user string (#843). The first is a warning: the screen still works and a
+      # quoted field name may be English on purpose. The second fails (baseline 0).
+      - name: Korean screen terms (#843)
+        run: node scripts/ko-mixed-terms.mjs --github
+
       # ADR 0003 (kpubdata) puts comments in English. The debt is at ZERO
       # (#427): any Korean comment now fails the build outright.
       - name: Korean comment gate (#427)

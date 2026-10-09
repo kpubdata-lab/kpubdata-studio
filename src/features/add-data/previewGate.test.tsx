@@ -155,9 +155,9 @@ describe("ReviewBuildStep, by what the preview says", () => {
     expect(notice?.textContent).toContain("같은 이유로 실패합니다");
     // Not "sample of 0 rows", nor "not run": it was run, and failed.
     // In the summary card and in the plan.
-    expect(screen.getAllByText("Preview 실패")).toHaveLength(2);
+    expect(screen.getAllByText("미리보기 실패")).toHaveLength(2);
     expect(screen.queryByText(/중 표본/)).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Preview 단계로 돌아가기" }));
+    fireEvent.click(screen.getByRole("button", { name: "미리보기 단계로 돌아가기" }));
     expect(handlers.onBackToPreview).toHaveBeenCalledTimes(1);
     expect(handlers.onBuild).not.toHaveBeenCalled();
   });
@@ -170,7 +170,7 @@ describe("ReviewBuildStep, by what the preview says", () => {
     expect(notice?.textContent).toContain("datago.broken");
     expect(notice?.textContent).toContain("SERVICE_KEY_IS_NOT_REGISTERED");
     expect(screen.queryByText(/0건 중 표본/)).toBeNull();
-    expect(screen.getAllByText("Preview 실패").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("미리보기 실패").length).toBeGreaterThan(0);
   });
 
   it("holds the build until a preview has been run", () => {

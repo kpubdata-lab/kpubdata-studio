@@ -62,7 +62,7 @@ describe("SettingsPage 통합 (#301)", () => {
     expect(screen.getByTestId("settings-assistant-byok")).toBeInTheDocument();
     expect(
       screen
-        .getAllByText("데이터 Provider 자격 증명", { exact: false })
+        .getAllByText("데이터 제공자 자격 증명", { exact: false })
         .some((node) => node.closest('[data-testid="settings-provider-credentials"]') !== null),
     ).toBe(true);
     expect(screen.getByText(/BYOK LLM 키/)).toBeInTheDocument();
@@ -72,10 +72,10 @@ describe("SettingsPage 통합 (#301)", () => {
     renderSettings();
 
     expect(
-      screen.getByText(/Provider 페이지에서 동작을 시연할 수 있습니다/),
+      screen.getByText(/제공자 페이지에서 동작을 시연할 수 있습니다/),
     ).toBeInTheDocument();
     expect(builderApi.listProviders).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Provider 설정에서 관리" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "제공자 설정에서 관리" })).toHaveAttribute(
       "href",
       "/connections",
     );
@@ -99,11 +99,11 @@ describe("SettingsPage 통합 (#301)", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("자격 증명이 필요한 Provider 2개 중 1개가 구성되었습니다."),
+        screen.getByText("자격 증명이 필요한 제공자 2개 중 1개가 구성되었습니다."),
       ).toBeInTheDocument();
     });
     // 배지는 provider명·상태가 분할 텍스트 노드로 렌더링된다 — 목록 기준으로 확인.
-    const badgeList = screen.getByLabelText("provider 구성 상태");
+    const badgeList = screen.getByLabelText("제공자 구성 상태");
     expect(badgeList.textContent).toContain("datago");
     expect(badgeList.textContent).toContain("구성됨");
     expect(badgeList.textContent).toContain("kosis");
@@ -127,7 +127,7 @@ describe("SettingsPage 통합 (#301)", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("link", { name: "Provider 설정에서 관리" }));
+    fireEvent.click(screen.getByRole("link", { name: "제공자 설정에서 관리" }));
 
     await waitFor(() => expect(locationRef.current).not.toBeNull());
     expect(locationRef.current?.pathname).toBe("/connections");

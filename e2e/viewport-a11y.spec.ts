@@ -143,7 +143,7 @@ test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮�
   await page.locator("#add-data-provider").selectOption({ index: 1 });
   await page.locator("#add-data-dataset").selectOption({ index: 1 });
   await page.getByRole("button", { name: "다음" }).click();
-  await page.getByRole("button", { name: /Preview 새로고침/ }).click();
+  await page.getByRole("button", { name: /미리보기 새로고침/ }).click();
   await page.getByRole("button", { name: "다음" }).click();
 
   const buildButton = page.getByRole("button", { name: "테이블 만들기" });

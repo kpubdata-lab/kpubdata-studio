@@ -81,7 +81,7 @@ describe("Saved Analyses after Builder's SQL changed (#565)", () => {
     const legacy = await card("예전 분석");
     expect(within(legacy).getByRole("button", { name: "다시 실행" })).toBeDisabled();
     expect(within(legacy).getByRole("status")).toHaveTextContent("다시 실행하기 전에 확인이 필요합니다");
-    expect(within(legacy).getByRole("link", { name: "SQL Workspace 에서 열기" })).toHaveAttribute(
+    expect(within(legacy).getByRole("link", { name: "SQL 작업 공간에서 열기" })).toHaveAttribute(
       "href",
       expect.stringContaining("analysis=a_old"),
     );

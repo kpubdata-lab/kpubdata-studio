@@ -60,7 +60,7 @@ describe("getSuggestedQuestions — context별 초기 추천", () => {
 
   it("C. Run context가 있으면 Run 질문을 노출한다", () => {
     const result = ask({ page: "build-detail", runId: "run-1" });
-    expect(result.some((q) => q.includes("Run 결과를 요약"))).toBe(true);
+    expect(result.some((q) => q.includes("실행 결과를 요약"))).toBe(true);
   });
 
   it("C. Run이 없으면 실패/경고 단계 질문을 강제로 넣지 않는다", () => {
@@ -74,7 +74,7 @@ describe("getSuggestedQuestions — context별 초기 추천", () => {
 
   it("D. Quality page + run이 있으면 Quality 질문을 노출한다", () => {
     const result = ask({ page: "quality", runId: "run-1" });
-    expect(result.some((q) => q.includes("Quality 이슈의 원인"))).toBe(true);
+    expect(result.some((q) => q.includes("품질 이슈의 원인"))).toBe(true);
   });
 
   it("silver/gold stage면 컬럼/SQL 질문을 노출한다", () => {

@@ -63,7 +63,7 @@ describe("describeCredentialReadiness", () => {
     });
     expect(r.tone).toBe("success");
     expect(r.label).toBe("API Key 등록됨");
-    expect(r.detail).toMatch(/Preview에서 확인/);
+    expect(r.detail).toMatch(/미리보기에서 확인/);
   });
 
   it("요약 configured=true지만 사용자 credential 없음(server default)은 별도 문구", () => {
