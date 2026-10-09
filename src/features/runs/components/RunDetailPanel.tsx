@@ -39,6 +39,7 @@ import {
   MultiSourceOutcomeBadge,
   SourcePipelineRow,
 } from "@/features/runs/components/SourcePipeline";
+import { isTerminalBuilderStatus } from "@/features/runs/api";
 import type { RunEventsState } from "@/features/runs/useRunEvents";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
@@ -137,6 +138,17 @@ export function RunDetailPanel({
   const outcome = stagesState.status === "loaded" ? summarizeMultiSourceOutcome(sources) : "unavailable";
   const failureEvidence = stagesState.status === "loaded" ? collectFailureEvidence(sources) : [];
   const stageDetails = useStageDetails(runId, stagesState);
+  // A job the registry knows, with no stages on Builder (#875): the run is waiting, has
+  // only just been taken, or ended before it started — keys lost while it waited, or
+  // cancelled in the queue. A 404 on its stages is then what is expected, not a failure.
+  const notStarted: "queued" | "running" | "ended" | null =
+    live.kind === "job" && stagesState.status === "error" && stagesState.notFound && !stagesState.permissionDenied
+      ? live.job.status === "queued"
+        ? "queued"
+        : isTerminalBuilderStatus(live.job.status)
+          ? "ended"
+          : "running"
+      : null;
   const goldHasSplits = Object.values(stageDetails).some(
     (entry) => entry.status === "loaded" && entry.data.stage === "gold" && Boolean(entry.data.splits),
   );
@@ -273,6 +285,11 @@ export function RunDetailPanel({
         <div className="mt-3"><StageLegend /></div>
         {stagesState.status === "loading" || stagesState.status === "idle" ? (
           <Skeleton className="mt-4 h-24 w-full" />
+        ) : notStarted ? (
+          // Nothing failed: the run has made no stage yet, or ended before it made one.
+          <p className="mt-3 text-sm text-muted-foreground" data-run-not-started={notStarted}>
+            {t(`builds.detail.notStarted.${notStarted}`)}
+          </p>
         ) : stagesState.status === "error" ? (
           <p className="mt-3 text-sm text-status-failure">
             {stagesState.permissionDenied
@@ -321,6 +338,8 @@ export function RunDetailPanel({
         </div>
         {qualityState.status === "loading" || qualityState.status === "idle" ? (
           <Skeleton className="mt-4 h-16 w-full" />
+        ) : notStarted && qualityState.status === "error" && qualityState.notFound ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("builds.detail.notStarted.noQuality")}</p>
         ) : qualityState.status === "error" ? (
           // (B) Request failure — never merged into the same state as
           // Builder semantic unavailable (a normal response) (#255 follow-up

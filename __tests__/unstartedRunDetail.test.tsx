@@ -18,6 +18,7 @@ import * as runsApi from "@/features/runs/api";
 import * as runDetailApi from "@/features/runs/api/runDetail";
 import { BuildsPage } from "@/pages/BuildsPage";
 import { ApiError, builderApi, type BuildJob } from "@/shared/lib/builderApi";
+import { runStagesResponseSchema } from "@/shared/lib/builderApi.schema";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const RUN = "datago-air-station-1";
@@ -172,5 +173,80 @@ describe("a run with no stages that the job registry knows (#846)", () => {
 
     expect(await screen.findByText(/존재 여부를 확인하지 못했습니다/)).toBeInTheDocument();
     expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+  });
+
+  // --- #875: what the detail says of such a run, and what it does when the run starts.
+
+  /** The text of everything drawn in a failure colour. */
+  function failureText(): string {
+    return [...document.querySelectorAll('[class*="text-status-failure"]')].map((node) => node.textContent ?? "").join(" | ");
+  }
+
+  it("says a queued run has not started, in no failure colour", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
+
+    renderDetail();
+
+    expect(await screen.findByText(/아직 시작하지 않은 실행입니다/)).toBeInTheDocument();
+    expect(document.querySelector("[data-run-not-started]")).toHaveAttribute("data-run-not-started", "queued");
+    expect(screen.getByText("시작하지 않은 실행이라 품질 결과가 없습니다.")).toBeInTheDocument();
+    // The 404s of a run that has made nothing yet are not failures to show.
+    expect(failureText()).toBe("");
+    expect(screen.queryByText("run not found")).not.toBeInTheDocument();
+  });
+
+  it("says a run that lost its keys ended before it started", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("failed", "credentials_required"));
+    saveBuildSpec(RUN, SPEC);
+
+    renderDetail();
+
+    expect(await screen.findByText(/시작하기 전에 끝난 실행입니다/)).toBeInTheDocument();
+    expect(document.querySelector("[data-run-not-started]")).toHaveAttribute("data-run-not-started", "ended");
+    expect(screen.queryByText("run not found")).not.toBeInTheDocument();
+  });
+
+  it("still shows a failure to read the stages of a run that did start as a failure", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("running"));
+    vi.spyOn(datasetsApi, "listBuildStages").mockRejectedValue(new ApiError(500, "stage store unreachable"));
+
+    renderDetail();
+
+    expect(await screen.findByText("stage store unreachable")).toBeInTheDocument();
+    expect(document.querySelector("[data-run-not-started]")).toBeNull();
+    expect(failureText()).toContain("stage store unreachable");
+  });
+
+  it("fills the pipeline when the run starts and ends, without a reload", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      // Queued when opened; then Builder runs it and it ends.
+      const lookup = vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
+      const stages = vi.spyOn(datasetsApi, "listBuildStages");
+
+      renderDetail();
+      expect(await screen.findByText(/아직 시작하지 않은 실행입니다/)).toBeInTheDocument();
+      const readsWhileQueued = stages.mock.calls.length;
+
+      lookup.mockResolvedValue(job("succeeded"));
+      const done = { status: "completed", available: true };
+      stages.mockResolvedValue(
+        runStagesResponseSchema.parse({
+          run_id: RUN,
+          sources: [{ source_key: "datago.air_station", bronze: done, silver: done, gold: done }],
+        }),
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(runsApi.POLL_INTERVAL_MS + 100);
+      });
+
+      await waitFor(() => expect(screen.getByText("datago.air_station")).toBeInTheDocument());
+      expect(screen.queryByText(/아직 시작하지 않은 실행입니다/)).not.toBeInTheDocument();
+      expect(document.querySelector("[data-run-not-started]")).toBeNull();
+      // Asked again because the job's status changed, not because the page was opened again.
+      expect(stages.mock.calls.length).toBeGreaterThan(readsWhileQueued);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
