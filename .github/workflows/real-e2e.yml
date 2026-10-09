@@ -44,6 +44,9 @@ on:
       - "playwright.multiuser.config.ts"
       - "scripts/check-e2e-evidence.mjs"
       - ".github/workflows/real-e2e.yml"
+      # Recordings the specs hold Builder's real answers to (#885): a pull request that
+      # changes only a recording must run the suite that compares it with Builder.
+      - "src/shared/lib/__recordings__/**"
 
 permissions:
   contents: read

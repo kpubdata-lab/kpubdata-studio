@@ -363,7 +363,8 @@
     "output": {
       "title": "출력 형식",
       "formatsLabel": "스냅샷 파일 형식 (최소 1개)",
-      "pathLabel": "출력 경로 (Output path)"
+      "pathLabel": "출력 경로 (Output path)",
+      "pathWhenEmpty": "비워 두면 처음 제출한 대로, 이 실행의 결과 폴더 안 {{path}} 아래에 씁니다."
     },
     "review": {
       "title": "검증·실행",
@@ -1302,6 +1303,11 @@
         "file": "파일 업로드",
         "url": "URL / REST API"
       }
+    },
+    "fromCatalog": {
+      "notListed": "카탈로그에서 고른 {{provider}} / {{dataset}} 은(는) 이 화면이 읽은 소스 데이터셋 목록에 없어 채우지 않았습니다. 아래에서 제공자와 소스 데이터셋을 직접 골라 주세요.",
+      "catalogFailed": "카탈로그에서 고른 {{provider}} / {{dataset}} 을(를) 채우지 못했습니다. 소스 데이터셋 목록을 불러오지 못했기 때문입니다.",
+      "retry": "목록 다시 불러오기"
     },
     "credential": {
       "title": "API 연결이 필요합니다",

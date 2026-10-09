@@ -363,7 +363,8 @@
     "output": {
       "title": "Output",
       "formatsLabel": "Snapshot file formats (at least 1)",
-      "pathLabel": "Output path"
+      "pathLabel": "Output path",
+      "pathWhenEmpty": "Left empty, the build writes under {{path}} inside this run's result folder, as when it was first submitted."
     },
     "review": {
       "title": "Validate & Run",
@@ -1302,6 +1303,11 @@
         "file": "File Upload",
         "url": "URL / REST API"
       }
+    },
+    "fromCatalog": {
+      "notListed": "{{provider}} / {{dataset}}, chosen in the Catalog, is not in the list of source datasets this page read, so it was not filled in. Pick the provider and the source dataset below.",
+      "catalogFailed": "{{provider}} / {{dataset}}, chosen in the Catalog, could not be filled in: the list of source datasets failed to load.",
+      "retry": "Load the list again"
     },
     "credential": {
       "title": "An API connection is required",

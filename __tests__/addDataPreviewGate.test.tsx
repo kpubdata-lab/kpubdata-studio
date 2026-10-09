@@ -7,6 +7,7 @@ import { http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes, useParams } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import * as addDataApi from "@/features/add-data/api";
 import { AddDataPage } from "@/pages/AddDataPage";
 import { API_BASE } from "@/shared/config/env";
 import { mswServer } from "../vitest.setup";
@@ -108,6 +109,7 @@ function buildButton(): HTMLElement {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
   localStorage.clear();
 });
@@ -218,6 +220,52 @@ describe("Add Data — coming from the Catalog (#842)", () => {
 
     await waitFor(() => expect(screen.getByLabelText(/제공자 \(Provider\)/)).toHaveValue("datago"));
     expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("");
+  });
+
+  it("says that the dataset was not found instead of leaving an empty field unexplained", async () => {
+    renderAt("/add?provider=datago&dataset=not-in-this-catalogue");
+
+    const notice = await screen.findByText(/datago \/ not-in-this-catalogue 은\(는\) 이 화면이 읽은 소스 데이터셋 목록에 없어/);
+    expect(notice.closest('[data-from-catalog="not-listed"]')).not.toBeNull();
+
+    // Once a dataset is picked there is nothing left to explain.
+    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
+    await waitFor(() => expect(document.querySelector("[data-from-catalog]")).toBeNull());
+  });
+
+  it("says nothing of the kind when the dataset is listed", async () => {
+    renderAt("/add?provider=datago&dataset=apt_trade");
+
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("apt_trade"));
+    expect(document.querySelector("[data-from-catalog]")).toBeNull();
+  });
+
+  it("keeps the public API chosen when the catalogue fails to load, and fills the dataset in once it loads", async () => {
+    const read = vi.spyOn(addDataApi, "fetchCatalog");
+    read.mockRejectedValueOnce(new Error("catalogue unavailable"));
+    renderAt("/add?provider=datago&dataset=apt_trade");
+
+    // The kind is not asked for again: the form of a public API is what is on screen.
+    const notice = await screen.findByText(/datago \/ apt_trade 을\(를\) 채우지 못했습니다/);
+    expect(notice.closest('[data-from-catalog="catalog-failed"]')).not.toBeNull();
+    expect(screen.getByLabelText(/제공자 \(Provider\)/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "목록 다시 불러오기" }));
+
+    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).toHaveValue("apt_trade"));
+    expect(screen.getByLabelText(/제공자 \(Provider\)/)).toHaveValue("datago");
+    expect(document.querySelector("[data-from-catalog]")).toBeNull();
+    expect(read).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not speak of the Catalog when a catalogue failure has nothing to do with it", async () => {
+    vi.spyOn(addDataApi, "fetchCatalog").mockRejectedValueOnce(new Error("catalogue unavailable"));
+    renderAt("/add");
+
+    fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
+    next();
+    expect(await screen.findByText("catalogue unavailable")).toBeInTheDocument();
+    expect(document.querySelector("[data-from-catalog]")).toBeNull();
   });
 
   it("has the public API chosen when the provider is unknown too", async () => {

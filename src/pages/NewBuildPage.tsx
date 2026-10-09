@@ -334,7 +334,18 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
 
               {step === 3 ? <PreviewStep preview={preview} onRefresh={() => void runPreview()} /> : null}
 
-              {step === 4 ? <OutputStep register={register} errors={errors} /> : null}
+              {step === 4 ? (
+                <OutputStep
+                  register={register}
+                  errors={errors}
+                  // A spec submitted without an output path is run again without one (#883).
+                  pathWhenEmpty={
+                    baseSpec && typeof baseSpec.metadata.outputPath !== "string"
+                      ? `artifacts/builds/${values.datasetId}`
+                      : undefined
+                  }
+                />
+              ) : null}
 
               {step === 5 ? (
                 <ReviewStep
