@@ -4,7 +4,8 @@
  * screen as words.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -80,6 +81,36 @@ describe("the mixed-term detector", () => {
     });
 
     expect(out).toContain("Issue references in user strings: 0 (baseline 0).");
+  });
+
+  it("exits 1 when a user string carries an issue number, and only warns on a mixed word", () => {
+    const dir = mkdtempSync(join(tmpdir(), "ko-terms-"));
+    try {
+      const script = join(HERE, "..", "scripts", "ko-mixed-terms.mjs");
+      const write = (ko: object, en: object) => {
+        writeFileSync(join(dir, "ko.json"), JSON.stringify(ko));
+        writeFileSync(join(dir, "en.json"), JSON.stringify(en));
+      };
+
+      write({ a: "이 Run을 엽니다." }, { a: "Open this run." });
+      const warned = execFileSync("node", [script, "--locales", dir, "--github"], { encoding: "utf8" });
+      expect(warned).toContain("::warning title=English word in a Korean string (#843)::a: \"Run\"");
+
+      write({ a: "단계 진행(#488)입니다." }, { a: "Stage progress" });
+      let status = 0;
+      let out = "";
+      try {
+        execFileSync("node", [script, "--locales", dir, "--github"], { encoding: "utf8", stdio: "pipe" });
+      } catch (error) {
+        const failed = error as { status?: number; stdout?: string };
+        status = failed.status ?? -1;
+        out = failed.stdout ?? "";
+      }
+      expect(status).toBe(1);
+      expect(out).toContain("::error title=Issue number in a user string (#843)::ko a: issue reference #488");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("matches the glossary document word for word", () => {

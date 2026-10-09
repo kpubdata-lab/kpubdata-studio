@@ -21,6 +21,7 @@
  * Usage:
  *   node scripts/ko-mixed-terms.mjs            # report; exit 1 on an issue reference
  *   node scripts/ko-mixed-terms.mjs --github   # the same, with ::warning:: annotations
+ *   node scripts/ko-mixed-terms.mjs --locales D  # read ko.json and en.json from D (tests)
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -45,7 +46,7 @@ export const KO_GLOSSARY = new Map([
   ["timeline", "타임라인"],
   ["snapshot", "스냅샷"],
   ["schema", "스키마"],
-  ["query", "쿼리"],
+  ["query", "질의"],
   ["catalog", "카탈로그"],
   ["manifest", "매니페스트"],
   ["destination", "게시 위치"],
@@ -105,7 +106,11 @@ export function issueReferences(locales) {
 }
 
 function main() {
-  const root = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "shared", "i18n", "locales");
+  const at = process.argv.indexOf("--locales");
+  const root =
+    at >= 0 && process.argv[at + 1]
+      ? process.argv[at + 1]
+      : join(dirname(fileURLToPath(import.meta.url)), "..", "src", "shared", "i18n", "locales");
   const read = (lang) => JSON.parse(readFileSync(join(root, `${lang}.json`), "utf8"));
   const ko = read("ko");
   const en = read("en");

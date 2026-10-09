@@ -213,7 +213,7 @@ describe("Table Detail on a warehouse (#526)", () => {
     expect(within(attention).getAllByRole("listitem").map((item) => item.textContent)).toEqual(["상태오래됨", "완전성부분"]);
     expect(screen.getByRole("button", { name: "이 테이블에 대해 묻기" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "갱신" })).toHaveAttribute("href", "/refresh-jobs/run-2/edit");
-    expect(screen.getByRole("link", { name: "쿼리" })).toHaveAttribute("href", "/sql?table=air.datago");
+    expect(screen.getByRole("link", { name: "질의" })).toHaveAttribute("href", "/sql?table=air.datago");
 
     // Overview: the snapshot, its rows, its coverage from WarehouseSnapshot.coverage, and the run as provenance.
     const panel = screen.getByRole("tabpanel");
@@ -267,7 +267,7 @@ describe("Table Detail on a warehouse (#526)", () => {
     expect(within(overview).getByRole("link", { name: "run-1" })).toBeInTheDocument();
     // The revision belongs to the current snapshot; a past one's is not in the contract.
     expect(within(overview).getAllByText((_, element) => element?.getAttribute("data-status") === "missing").length).toBeGreaterThan(0);
-    expect(screen.getByRole("link", { name: "쿼리" })).toHaveAttribute("href", "/sql?table=air.datago&snapshot=snap_1");
+    expect(screen.getByRole("link", { name: "질의" })).toHaveAttribute("href", "/sql?table=air.datago&snapshot=snap_1");
 
     fireEvent.click(screen.getByRole("button", { name: "현재 스냅샷으로" }));
     await waitFor(() => expect(location()).toBe("/tables/air"));

@@ -84,7 +84,7 @@ test("테이블 → SQL → 저장 → 갱신 → 저장된 분석 재실행이 
   await expect(page).toHaveURL(new RegExp(`/tables/${DATASET_ID.replace(".", "\\.")}`));
 
   // 2) Table → SQL Workspace, bound to that table's logical name.
-  await page.getByRole("link", { name: /^(쿼리|Query)$/ }).click();
+  await page.getByRole("link", { name: /^(질의|Query)$/ }).click();
   await expect(page).toHaveURL(/\/sql\?/);
   await expect(page.getByRole("treeitem", { name: LOGICAL_NAME })).toHaveAttribute("aria-selected", "true", { timeout: 30_000 });
 
