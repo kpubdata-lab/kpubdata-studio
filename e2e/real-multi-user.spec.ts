@@ -586,7 +586,7 @@ test("새로고침하면 입력한 키는 사라지고, 다시 넣으면 미리�
     .fill(JSON.stringify({ station: "강남구", term: "daily", page: 1, page_size: 100 }));
   await expect(page.getByText(t("addData.credential.title"))).toHaveCount(0);
   await page.getByRole("button", { name: "다음" }).first().click();
-  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   expect(previewsSent).toEqual([`datago=${SESSION_KEY}`]);
 
