@@ -45,7 +45,7 @@ describe("Builds run history (#12, #255 master-detail)", () => {
     renderBuilds();
     await screen.findByRole("link", { name: "대기오염 정보" });
 
-    fireEvent.change(screen.getByLabelText("Run 검색"), { target: { value: "병용" } });
+    fireEvent.change(screen.getByLabelText("실행 검색"), { target: { value: "병용" } });
 
     await waitFor(() => {
       expect(screen.queryByRole("link", { name: "대기오염 정보" })).not.toBeInTheDocument();
@@ -82,8 +82,8 @@ describe("selected Run permission state (#255 P0)", () => {
 
     renderBuilds("/refresh-jobs?run=not-in-scope-run");
 
-    expect(await screen.findByText(/이 Run을 조회할 권한이 없습니다/)).toBeInTheDocument();
-    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/이 실행을 조회할 권한이 없습니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
 
     // The way back to the refresh history stays available (#535: the list is its own page).
     expect(screen.getByRole("link", { name: "← 갱신 이력" })).toHaveAttribute("href", "/refresh-jobs");
@@ -96,8 +96,8 @@ describe("selected Run permission state (#255 P0)", () => {
 
     renderBuilds("/refresh-jobs?run=not-in-scope-run");
 
-    expect(await screen.findByText(/Run을 찾을 수 없습니다/)).toBeInTheDocument();
-    expect(screen.queryByText(/이 Run을 조회할 권한이 없습니다/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/실행을 찾을 수 없습니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/이 실행을 조회할 권한이 없습니다/)).not.toBeInTheDocument();
   });
 
   it("Quality/Stage supplementary 403에서도 목록에 있는 run의 core 정보(제목/상태)는 유지된다", async () => {
@@ -110,8 +110,8 @@ describe("selected Run permission state (#255 P0)", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
     });
-    expect(screen.getByText(/이 Run의 Quality 결과를 조회할 권한이 없습니다/)).toBeInTheDocument();
-    expect(screen.getByText(/이 Run의 단계 진행을 조회할 권한이 없습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/이 실행의 품질 결과를 조회할 권한이 없습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/이 실행의 단계 진행을 조회할 권한이 없습니다/)).toBeInTheDocument();
   });
 });
 
@@ -131,11 +131,11 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
     expect(screen.getByText("1 PASS")).toBeInTheDocument();
     expect(screen.getByText("0 WARN")).toBeInTheDocument();
     expect(screen.getByText("1 FAIL")).toBeInTheDocument();
-    expect(screen.getByText(/evaluated 2건/)).toBeInTheDocument();
+    expect(screen.getByText(/평가 2건/)).toBeInTheDocument();
 
     // multi-source면 source별 평가 현황을 compact하게 보여준다(Pipeline 카드에도 같은
     // source_key가 나오므로 getAllByText로 확인한다).
-    expect(screen.getByText("Source별 평가 현황")).toBeInTheDocument();
+    expect(screen.getByText("소스별 평가 현황")).toBeInTheDocument();
     expect(screen.getAllByText("datago__air").length).toBeGreaterThan(0);
     expect(screen.getAllByText("kma__weather").length).toBeGreaterThan(0);
 
@@ -154,8 +154,8 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   it("정상 응답 + availability=unavailable은 '결과 없음(unavailable)'로 표시하고 조회 실패로 취급하지 않는다(#255 후속 보완 §5-A)", async () => {
     renderBuilds("/refresh-jobs?run=population-2026-08-13");
 
-    expect(await screen.findByText(/Quality 결과 없음 \(unavailable\)/)).toBeInTheDocument();
-    expect(screen.queryByText(/Quality 조회 실패/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/품질 결과 없음/)).toBeInTheDocument();
+    expect(screen.queryByText(/품질 조회 실패/)).not.toBeInTheDocument();
   });
 
   it("Quality 404 요청 실패는 UNAVAILABLE로 표시하지 않고 조회 실패로 구분한다(#255 후속 보완 §5-B)", async () => {
@@ -163,18 +163,18 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
 
     renderBuilds("/refresh-jobs?run=air-quality-20260621");
 
-    expect(await screen.findByText("Quality 조회 실패")).toBeInTheDocument();
+    expect(await screen.findByText("품질 조회 실패")).toBeInTheDocument();
     expect(screen.getByText(/찾을 수 없습니다\(404\)/)).toBeInTheDocument();
     expect(screen.queryByText(/결과 없음 \(unavailable\)/)).not.toBeInTheDocument();
-    expect(screen.queryByText("결과 없음(unavailable)")).not.toBeInTheDocument(); // QualityStateBadge UNAVAILABLE 라벨
+    expect(screen.queryByText("결과 없음")).not.toBeInTheDocument(); // QualityStateBadge UNAVAILABLE 라벨
   });
 
   it("Quality 403/network 오류도 UNAVAILABLE로 표시하지 않는다(#255 후속 보완 §5-B)", async () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
     renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    expect(await screen.findByText("Quality 조회 실패")).toBeInTheDocument();
+    expect(await screen.findByText("품질 조회 실패")).toBeInTheDocument();
     expect(screen.getByText(/조회할 권한이 없습니다\(403\)/)).toBeInTheDocument();
-    expect(screen.queryByText("결과 없음(unavailable)")).not.toBeInTheDocument();
+    expect(screen.queryByText("결과 없음")).not.toBeInTheDocument();
   });
 });
 
@@ -225,9 +225,9 @@ describe("Builds/Runs mock fixture 정합성 (#255 후속 보완 §4)", () => {
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "DUR 품목정보" })).toBeInTheDocument();
     });
-    expect(screen.queryByText(/Stage 상태를 불러오지 못했습니다/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Quality를 불러오지 못했습니다/)).not.toBeInTheDocument();
-    expect(screen.getAllByText("completed").length).toBeGreaterThan(0);
+    expect(screen.queryByText(/단계 상태를 불러오지 못했습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/품질을 불러오지 못했습니다/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("완료").length).toBeGreaterThan(0);
   });
 });
 
@@ -350,14 +350,14 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
     expect(screen.getByText("Silver")).toBeInTheDocument();
     expect(screen.getByText("Gold")).toBeInTheDocument();
     expect(screen.getByText("출력")).toBeInTheDocument();
-    expect(screen.getAllByText("completed").length).toBe(3);
+    expect(screen.getAllByText("완료").length).toBe(3);
   });
 
   it("failed run: failed stage 이후 not_run은 '미도달'로 표시된다", async () => {
     renderBuilds("/refresh-jobs?run=dur-older-adult-caution-20260618");
     await screen.findByRole("heading", { name: "노인주의 의약품" });
 
-    expect(screen.getByText("failed")).toBeInTheDocument();
+    expect(screen.getAllByText("실패").length).toBeGreaterThan(0);
     // silver/gold 둘 다 not_run이면서 failed 이후이므로 "미도달"이 두 번 나온다.
     expect(screen.getAllByText("미도달")).toHaveLength(2);
   });
@@ -378,11 +378,11 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
     useAssistantStore.setState({ pendingSeed: null });
   });
 
-  it("API Key 미설정: '이 Run 분석' 클릭 시 seed하지 않고 inline card에 설정 안내만 연다", async () => {
+  it("API Key 미설정: '이 실행 분석' 클릭 시 seed하지 않고 inline card에 설정 안내만 연다", async () => {
     renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
-    fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 실행 분석" }));
 
     // seed 자체가 발생하지 않는다 — mock mode의 session.isDemoAvailable로 우회하지 않는다.
     expect(useAssistantStore.getState().pendingSeed).toBeNull();
@@ -399,7 +399,7 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
     renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
-    fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 실행 분석" }));
     fireEvent.click(await screen.findByRole("button", { name: "Ask KPubData 설정 열기" }));
 
     // App shell(전역 Ask KPubData drawer)이 이 화면 트리 밖에 있어 직접 열림을 확인할 수는 없지만,
@@ -407,13 +407,13 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
     expect(screen.queryByLabelText(/API Key/)).not.toBeInTheDocument();
   });
 
-  it("API Key 설정됨: '이 Run 분석' 클릭 시 기존처럼 seed하고 분석을 시작한다(no-key 안내가 뜨지 않음)", async () => {
+  it("API Key 설정됨: '이 실행 분석' 클릭 시 기존처럼 seed하고 분석을 시작한다(no-key 안내가 뜨지 않음)", async () => {
     useAssistConfig.getState().setConfig({ apiKey: "sk-test" });
 
     renderBuilds("/refresh-jobs?run=air-quality-20260621");
     await screen.findByRole("heading", { name: "대기오염 정보" });
 
-    fireEvent.click(screen.getByRole("button", { name: "이 Run 분석" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 실행 분석" }));
 
     // seed가 실제로 소비되어(기존 useAssistantSession ask 경로) pendingSeed가 비워진다.
     await waitFor(() => expect(useAssistantStore.getState().pendingSeed).toBeNull());

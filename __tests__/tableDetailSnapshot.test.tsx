@@ -199,11 +199,11 @@ describe("Table Detail on a warehouse (#526)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "대기질" })).toBeInTheDocument();
     await screen.findByText("snap_2");
 
-    expect(screen.queryByLabelText("Run 선택")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Source 선택")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("Stage 선택")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("실행 선택")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("소스 선택")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("단계 선택")).not.toBeInTheDocument();
     expect(screen.queryAllByRole("combobox")).toHaveLength(0);
-    expect(screen.queryByRole("link", { name: "이 Run 게시" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "이 실행 게시" })).not.toBeInTheDocument();
 
     expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["개요", "스키마", "프로파일", "미리보기", "품질", "스냅샷"]);
 
@@ -254,7 +254,7 @@ describe("Table Detail on a warehouse (#526)", () => {
     expect(current).toHaveTextContent("현재");
     const past = within(panel).getByText("snap_1").closest("tr")!;
     expect(within(past).getByText("run-1")).toHaveClass("font-mono");
-    expect(within(past).getByRole("link", { name: "이 Run 게시" })).toHaveAttribute("href", "/refresh-jobs/run-1/publish?dataset=air");
+    expect(within(past).getByRole("link", { name: "이 실행 게시" })).toHaveAttribute("href", "/refresh-jobs/run-1/publish?dataset=air");
     expect(within(past).getByRole("link", { name: "스펙 편집·갱신" })).toHaveAttribute("href", "/refresh-jobs/run-1/edit");
 
     // Runs stay as provenance under the snapshots, including one that produced none.
@@ -304,8 +304,8 @@ describe("Table Detail without a snapshot to open on (#526)", () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
     hideDemoWarehouse();
     renderDetail("/tables/air-quality");
-    expect(await screen.findByText("이 배포에는 warehouse 가 없어 실행(run) 기준으로 보여 줍니다.")).toBeInTheDocument();
-    expect(screen.getByLabelText("Run 선택")).toBeInTheDocument();
+    expect(await screen.findByText("이 배포에는 warehouse 가 없어 실행 기준으로 보여 줍니다.")).toBeInTheDocument();
+    expect(screen.getByLabelText("실행 선택")).toBeInTheDocument();
   });
 
   it("keeps the run view when the warehouse has nothing committed for the table", async () => {
@@ -314,7 +314,7 @@ describe("Table Detail without a snapshot to open on (#526)", () => {
       http.get(`${API_BASE}/datasets/fresh/runs`, () => HttpResponse.json({ dataset_id: "fresh", runs: [] })),
     );
     renderDetail("/tables/fresh");
-    expect(await screen.findByText("이 테이블에는 아직 커밋된 스냅샷이 없어 실행(run) 기준으로 보여 줍니다.")).toBeInTheDocument();
+    expect(await screen.findByText("이 테이블에는 아직 커밋된 스냅샷이 없어 실행 기준으로 보여 줍니다.")).toBeInTheDocument();
     expect(requests.filter((request) => request.startsWith("table "))).toEqual([]);
   });
 });

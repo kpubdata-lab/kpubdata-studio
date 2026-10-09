@@ -66,13 +66,31 @@ export function QueryError({
       </div>
     );
   }
+  const explained = QUERY_ERROR_CODES.includes(code);
   return (
     <Card role="alert" variant="error">
       <p className="font-semibold">{t("sql.failed", { code })}</p>
-      <p className="mt-1 text-sm">{message}</p>
+      {explained ? (
+        <>
+          <p className="mt-1 text-sm">{t(`sql.errors.${code}`)}</p>
+          {/* Builder's own sentence stays, as the detail behind the explanation. */}
+          <p className="mt-1 text-xs text-muted-foreground">{message}</p>
+        </>
+      ) : (
+        <p className="mt-1 text-sm">{message}</p>
+      )}
     </Card>
   );
 }
+
+/** The query refusals Builder names with a `code` (#843); others show Builder's sentence. */
+const QUERY_ERROR_CODES: readonly string[] = [
+  "unsafe_query",
+  "query_busy",
+  "query_timeout",
+  "query_resource_limit",
+  "query_execution_failed",
+];
 
 /**
  * A query result with a header naming what it read. Shared by both workspaces and saved

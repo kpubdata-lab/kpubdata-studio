@@ -242,7 +242,7 @@ describe("BuildPublishPage in a multi-user deployment (#615)", () => {
     await screen.findByText(/아래에 본인 Hugging Face 토큰을 입력하고/);
     fireEvent.change(screen.getByLabelText("Hugging Face 토큰"), { target: { value: TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "이 토큰으로 확인" }));
-    expect(await screen.findByText(/토큰을 보냈는데도 KPubData Builder가 credential을 요구합니다/)).toBeInTheDocument();
+    expect(await screen.findByText(/토큰을 보냈는데도 KPubData Builder가 자격 증명을 요구합니다/)).toBeInTheDocument();
   });
 
   it("forgets the token and stops sending it", async () => {
@@ -406,7 +406,7 @@ describe("BuildPublishPage follows Builder's publish credential source (#637)", 
   it("stored: no field, and credential_required asks for a credential stored in Builder", async () => {
     vi.stubGlobal("fetch", builderFetch("stored", () => response(200, STORED_BLOCKED)));
     renderPublish();
-    expect(await screen.findByText(/KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤/)).toBeInTheDocument();
+    expect(await screen.findByText(/KPubData Builder에 본인 Hugging Face publish 자격 증명을 저장한 뒤/)).toBeInTheDocument();
     expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
     expect(screen.queryByText(/아래에 본인 Hugging Face 토큰을 입력하고/)).not.toBeInTheDocument();
   });
@@ -418,7 +418,7 @@ describe("BuildPublishPage follows Builder's publish credential source (#637)", 
       response(200, init.method === "POST" ? SUCCESS : stored ? READY : STORED_BLOCKED));
     vi.stubGlobal("fetch", fetchMock);
     renderPublish();
-    await screen.findByText(/KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤/);
+    await screen.findByText(/KPubData Builder에 본인 Hugging Face publish 자격 증명을 저장한 뒤/);
 
     // Whatever the page offers, try to hand it a value.
     const field = screen.queryByLabelText("Hugging Face 토큰");
@@ -471,7 +471,7 @@ describe("BuildPublishPage follows Builder's publish credential source (#637)", 
     const fetchMock = builderFetch("stored_or_server", () => response(200, STORED_BLOCKED));
     vi.stubGlobal("fetch", fetchMock);
     renderPublish();
-    await screen.findByText(/KPubData Builder에 본인 Hugging Face publish credential을 저장한 뒤/);
+    await screen.findByText(/KPubData Builder에 본인 Hugging Face publish 자격 증명을 저장한 뒤/);
     expect(screen.queryByLabelText("Hugging Face 토큰")).not.toBeInTheDocument();
     expect(sentHeaders(fetchMock).every((value) => value === undefined)).toBe(true);
   });

@@ -214,7 +214,7 @@ describe("ReviewBuildStep, for a preview that read part of the source", () => {
 
     expect(screen.getAllByText(/약 2,000,000건 중 처음 5건/).length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText(/5건 중 표본/)).toBeNull();
-    expect(screen.getByTestId("review-sample-note")).toHaveTextContent("Preview 표본에 대한 결과");
+    expect(screen.getByTestId("review-sample-note")).toHaveTextContent("미리보기 표본에 대한 결과");
     // The plan's Validation line says so too: a row-count rule judged the sample.
     expect(screen.getByText(/^1\/1 · .+ · 표본 기준$/)).toBeInTheDocument();
     // Rows are counted in one unit down the plan, sample or not.

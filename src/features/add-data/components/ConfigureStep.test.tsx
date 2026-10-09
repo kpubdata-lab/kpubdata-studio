@@ -86,7 +86,7 @@ describe("ConfigureStep — remove generic provider probe", () => {
   it("If provider is configured, shows auth ready status and Preview guide only", () => {
     renderStep({ providerConfigured: { datago: true } });
     expect(screen.getByText("인증 정보 준비됨")).toBeInTheDocument();
-    expect(screen.getByText(/실제 데이터 인출 가능 여부는\s*다음 단계 Preview에서 확인/)).toBeInTheDocument();
+    expect(screen.getByText(/실제 데이터 인출 가능 여부는\s*다음 단계 미리보기에서 확인/)).toBeInTheDocument();
   });
 
   it("If configured status unknown (null), shows neither ready nor blocked", () => {
@@ -145,7 +145,7 @@ describe("ConfigureStep — API connection credential prerequisite", () => {
     renderStep({ providerConfigured: { datago: false }, onConnectProvider });
 
     expect(screen.getByText("API 연결이 필요합니다")).toBeInTheDocument();
-    expect(screen.getByText(/API Key가 필요한 Provider를 사용합니다/)).toBeInTheDocument();
+    expect(screen.getByText(/API Key가 필요한 제공자를 사용합니다/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "API 연결하기" }));
     expect(onConnectProvider).toHaveBeenCalledWith("datago");

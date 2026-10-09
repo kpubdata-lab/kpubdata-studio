@@ -208,7 +208,7 @@ describe("BuildArtifactsPage - artifact 실제 다운로드", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("파일을 찾을 수 없습니다 (404)");
     expect(mockSaveBlobAsFile).not.toHaveBeenCalled();
-    expect(screen.getByText("Manifest 요약")).toBeInTheDocument();
+    expect(screen.getByText("매니페스트 요약")).toBeInTheDocument();
     expect(screen.queryByText("스냅샷 파일을 불러오지 못했습니다")).not.toBeInTheDocument();
   });
 
@@ -239,7 +239,7 @@ describe("BuildArtifactsPage - artifact 실제 다운로드", () => {
     );
 
     expect(await screen.findByText("파일 목록을 불러오지 못했습니다")).toBeInTheDocument();
-    expect(screen.getByText("Manifest 요약")).toBeInTheDocument();
+    expect(screen.getByText("매니페스트 요약")).toBeInTheDocument();
     expect(screen.queryByText("스냅샷 파일을 불러오지 못했습니다")).not.toBeInTheDocument();
   });
 });
@@ -267,7 +267,7 @@ describe("BuildArtifactsPage - manifest truthfulness (F05A)", () => {
     };
 
     renderWithManifest(full);
-    await waitFor(() => expect(screen.getByText("Manifest 요약")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("매니페스트 요약")).toBeInTheDocument());
     expect(screen.queryByText(/아직 연동되지 않아/)).not.toBeInTheDocument();
     expect(screen.queryByText(/manifest가 아직 연동/)).not.toBeInTheDocument();
   });
@@ -283,7 +283,7 @@ describe("BuildArtifactsPage - manifest truthfulness (F05A)", () => {
     };
 
     renderWithManifest(partial);
-    await waitFor(() => expect(screen.getByText("Manifest 요약")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("매니페스트 요약")).toBeInTheDocument());
     expect(screen.getByText(/일부 메타데이터 필드/)).toBeInTheDocument();
     expect(screen.queryByText(/아직 연동되지 않아/)).not.toBeInTheDocument();
   });

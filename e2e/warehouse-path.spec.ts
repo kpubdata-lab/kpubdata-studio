@@ -29,7 +29,7 @@ test("카탈로그에서 테이블을 거쳐 SQL 로 질의한다", async ({ pag
   // Table → SQL, bound to that table in the demo warehouse (#530).
   await page.getByRole("link", { name: "쿼리", exact: true }).click();
   await expect(page).toHaveURL(/\/sql\?.*table=air-quality/);
-  await expect(page.getByRole("heading", { name: "SQL Workspace" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "SQL 작업 공간" })).toBeVisible();
   await expect(page.getByRole("treeitem", { name: "air-quality.datago__air" })).toHaveAttribute("aria-selected", "true");
 
   // The demo has no Builder to run SQL: it says so instead of showing made-up rows.
@@ -37,7 +37,7 @@ test("카탈로그에서 테이블을 거쳐 SQL 로 질의한다", async ({ pag
   await expect(page.getByRole("alert")).toContainText(t("sql.demoWarehouse.needsBuilder"));
 
   // The breadcrumb names where we are, not the product.
-  await expect(page.getByRole("navigation", { name: "현재 위치" })).toContainText("SQL Workspace");
+  await expect(page.getByRole("navigation", { name: "현재 위치" })).toContainText("SQL 작업 공간");
 
   await expectNoPageErrors(errors);
 });

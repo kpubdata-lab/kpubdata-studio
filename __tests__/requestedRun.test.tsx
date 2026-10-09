@@ -95,7 +95,7 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
     getDatasetRunMock.mockResolvedValue({ dataset_id: "air-quality", run: OLDER });
     renderDetail(`/tables/air-quality?run=${OLDER.run_id}`);
 
-    await waitFor(() => expect(screen.getByLabelText("Run 선택")).toHaveValue(OLDER.run_id));
+    await waitFor(() => expect(screen.getByLabelText("실행 선택")).toHaveValue(OLDER.run_id));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await waitFor(() => expect(listBuildStagesMock).toHaveBeenCalledWith(OLDER.run_id, expect.any(AbortSignal)));
   });
@@ -104,7 +104,7 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
     getDatasetRunMock.mockRejectedValue(new ApiError(403, "forbidden: not run owner"));
     renderDetail("/tables/air-quality?run=someone-elses-run");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("이 run에 접근할 권한이 없습니다");
+    expect(await screen.findByRole("alert")).toHaveTextContent("이 실행에 접근할 권한이 없습니다");
     expect(listBuildStagesMock).not.toHaveBeenCalledWith("someone-elses-run", expect.anything());
   });
 
@@ -112,6 +112,6 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
     getDatasetRunMock.mockRejectedValue(new ApiError(404, "run not found in dataset"));
     renderDetail("/tables/air-quality?run=missing-run");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
+    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 실행을 찾을 수 없습니다");
   });
 });

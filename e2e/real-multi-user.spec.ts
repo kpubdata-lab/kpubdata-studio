@@ -133,8 +133,8 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
     .locator("#add-data-params")
     .fill(JSON.stringify({ station: "강남구", term: "daily", page: 1, page_size: 100 }));
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
-  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByRole("heading", { name: "미리보기 · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(page.getByText(t("addData.credential.title")).first()).toBeVisible();
   await expect(page.getByText("검증 결과 (Validation)")).toHaveCount(0);
   expect(previewsSent, "no preview is sent without the key").toEqual([]);
@@ -159,8 +159,8 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
 
   // 4) Preview: Builder takes the key from the request and replay answers for the provider.
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
-  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByRole("heading", { name: "미리보기 · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
 
   // The key is in memory only: not in the address, not in anything the browser keeps.
@@ -193,7 +193,7 @@ test("두 사용자는 서로의 실행도 키도 볼 수 없다 @multi-user", a
   });
   await expect(alicePage.getByText(`업로드 완료: ${fileName}`).first()).toBeVisible({ timeout: 30_000 });
   await alicePage.getByRole("button", { name: "다음" }).first().click();
-  await alicePage.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await alicePage.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(alicePage.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   await alicePage.getByRole("button", { name: "다음" }).first().click();
   const build = alicePage.getByRole("button", { name: "테이블 만들기" });
@@ -586,7 +586,7 @@ test("새로고침하면 입력한 키는 사라지고, 다시 넣으면 미리�
     .fill(JSON.stringify({ station: "강남구", term: "daily", page: 1, page_size: 100 }));
   await expect(page.getByText(t("addData.credential.title"))).toHaveCount(0);
   await page.getByRole("button", { name: "다음" }).first().click();
-  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   expect(previewsSent).toEqual([`datago=${SESSION_KEY}`]);
 
@@ -665,7 +665,7 @@ test("대기 중 키가 만료된 실행은 편집 화면에서 키를 다시 �
     .locator("#add-data-params")
     .fill(JSON.stringify({ station: "강남구", term: "daily", page: 1, page_size: 100 }));
   await alicePage.getByRole("button", { name: "다음" }).first().click();
-  await alicePage.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await alicePage.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(alicePage.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   await alicePage.getByRole("button", { name: "다음" }).first().click();
   const build = alicePage.getByRole("button", { name: "테이블 만들기" });

@@ -87,6 +87,6 @@ describe("새 IA placeholder 화면 (#247)", () => {
     );
 
     expect(await screen.findByRole("heading", { name: "대기질 통합 데이터" })).toBeInTheDocument();
-    expect(screen.getByLabelText("Run 선택")).toHaveValue("air-2026-08-14");
+    expect(screen.getByLabelText("실행 선택")).toHaveValue("air-2026-08-14");
   });
 });

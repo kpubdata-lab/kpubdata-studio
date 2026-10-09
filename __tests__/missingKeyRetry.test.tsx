@@ -130,13 +130,13 @@ async function addDataAtReview() {
   fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
   next();
   await screen.findByText("API 사용 준비");
-  fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-  await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
-  fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
+  fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+  await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
+  fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
   await screen.findByText("아파트 실거래가");
   next();
-  await screen.findByRole("heading", { name: "Preview · 검증" });
-  fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+  await screen.findByRole("heading", { name: "미리보기 · 검증" });
+  fireEvent.click(screen.getByRole("button", { name: "미리보기 새로고침" }));
   next();
   await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
   const button = await screen.findByRole("button", { name: "테이블 만들기" });

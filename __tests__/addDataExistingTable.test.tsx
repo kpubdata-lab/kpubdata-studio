@@ -89,13 +89,13 @@ async function reachReview() {
   await screen.findByText("API 사용 준비");
   // The catalogue has arrived: until then the provider cannot be chosen.
   await waitFor(() => expect(document.querySelector('#add-data-provider option[value="datago"]')).not.toBeNull());
-  fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-  await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
-  fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
+  fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+  await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
+  fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
   await screen.findByText(/ID: datago-air-quality/);
   next();
-  await screen.findByRole("heading", { name: "Preview · 검증" });
-  fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+  await screen.findByRole("heading", { name: "미리보기 · 검증" });
+  fireEvent.click(screen.getByRole("button", { name: "미리보기 새로고침" }));
   await waitFor(() => expect(screen.getByRole("button", { name: "다음" })).toBeEnabled());
   next();
   await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
@@ -271,7 +271,7 @@ describe("Add Data — a table of this id is already there (#837)", () => {
     fireEvent.click(await screen.findByRole("radio", { name: /기존 테이블 갱신/ }));
     const asked = builder.listed();
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
-    await screen.findByRole("heading", { name: "Preview · 검증" });
+    await screen.findByRole("heading", { name: "미리보기 · 검증" });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
     await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
 

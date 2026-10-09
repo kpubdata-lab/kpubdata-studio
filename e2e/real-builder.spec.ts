@@ -86,8 +86,8 @@ test("File Upload → Preview → Build → Builds 이력 전체 경로 @real-bu
 
   // 3) Preview & Validate step — calls real Builder /preview·/validate
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
-  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByRole("heading", { name: "미리보기 · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   // File source without quality checks displays "Not evaluated / N/A" (#516 principle).
   await expect(
@@ -188,8 +188,8 @@ test("같은 데이터셋을 다시 추가해도 이미 있는 테이블은 그�
   await page.locator("summary").filter({ hasText: /고급 설정/ }).click();
   await page.locator("#add-data-dataset-id").fill(id);
   await page.getByRole("button", { name: "다음" }).first().click();
-  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
-  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByRole("heading", { name: "미리보기 · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
   await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "다음" }).first().click();
   await expect(page.getByRole("heading", { name: "검토 · 테이블 만들기" })).toBeVisible();

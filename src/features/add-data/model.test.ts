@@ -19,7 +19,7 @@ function draftWith(overrides: Partial<AddDataDraft>): AddDataDraft {
 describe("buildSpecFromDraft", () => {
   it("소스를 선택하지 않으면 오류를 반환한다", () => {
     const result = buildSpecFromDraft(INITIAL_DRAFT);
-    expect(result.error).toMatch(/Source를 먼저 선택/);
+    expect(result.error).toMatch(/소스를 먼저 선택/);
     expect(result.spec).toBeUndefined();
   });
 

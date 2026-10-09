@@ -48,10 +48,10 @@ describe("router 딥링크 회귀 (#247)", () => {
     render(<RouterProvider router={router} />);
 
     await navigateTo("/refresh-jobs/abc/run");
-    expect(await screen.findByText("상세 진행은 Run 상세에서 확인하세요")).toBeInTheDocument();
+    expect(await screen.findByText("상세 진행은 실행 상세에서 확인하세요")).toBeInTheDocument();
 
     await navigateTo("/refresh-jobs/abc/artifacts");
-    expect(await screen.findByText("Manifest 요약")).toBeInTheDocument();
+    expect(await screen.findByText("매니페스트 요약")).toBeInTheDocument();
 
     await navigateTo("/refresh-jobs/abc/publish");
     expect(await screen.findByRole("heading", { name: "abc 게시" })).toBeInTheDocument();
