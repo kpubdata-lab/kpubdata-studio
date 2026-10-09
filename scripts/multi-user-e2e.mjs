@@ -8,7 +8,9 @@
  *
  * - a stand-in for Keycloak (`scripts/fake-keycloak.mjs`) with two test users;
  * - a second Builder with real OIDC settings pointing at it, its own data directory and
- *   the same replay fixtures, so no network and no service key are needed;
+ *   the same replay fixtures, so no network and no service key are needed — and one
+ *   build slot with job keys kept for a second, so a job can lose its keys while it
+ *   waits (#846);
  * - Studio with the OIDC client configured (`playwright.multiuser.config.ts`), and the
  *   specs tagged `@multi-user`.
  *
@@ -34,6 +36,11 @@ export const MULTI_USER = {
     { id: "e2e-alice", email: "alice@e2e.kpubdata.test", name: "Alice" },
     { id: "e2e-bob", email: "bob@e2e.kpubdata.test", name: "Bob" },
   ],
+  // A job's provider keys wait this long for a worker (#846). Builder's default is an
+  // hour; a second lets a spec make a job outwait its keys behind one long build.
+  jobKeyTtlSeconds: 1,
+  // One build at a time, so that one long build is enough to keep a job waiting.
+  maxBuilds: 1,
 };
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
@@ -55,7 +62,8 @@ function run(command, args, env) {
  *   is not one that verifies tokens, or wrote a user's provider key to its output.
  */
 export async function runMultiUserE2e({ builderRoot, replayArgs }) {
-  const { builderPort, identityPort, studioPort, realm, clientId, audience, users } = MULTI_USER;
+  const { builderPort, identityPort, studioPort, realm, clientId, audience, users, jobKeyTtlSeconds, maxBuilds } =
+    MULTI_USER;
   const studioOrigin = `http://localhost:${studioPort}`;
   const builderUrl = `http://localhost:${builderPort}`;
   const log = (line) => console.log(`[multi-user-e2e] ${line}`);
@@ -119,6 +127,11 @@ export async function runMultiUserE2e({ builderRoot, replayArgs }) {
         // The allowlist a multi-user Builder will not start without.
         OIDC_ALLOWED_EMAILS: users.map((user) => user.email).join(","),
         KPUBDATA_BUILDER_ALLOWED_ORIGINS: studioOrigin,
+        // What a queued job that lost its keys needs to happen in a run (#846). A build
+        // whose keys a worker has taken keeps them however long it runs, so the other
+        // specs, which never wait for a slot, are not affected.
+        KPUBDATA_BUILDER_JOB_CREDENTIAL_TTL_SECONDS: String(jobKeyTtlSeconds),
+        KPUBDATA_BUILDER_MAX_BUILDS: String(maxBuilds),
       },
     },
   );
@@ -189,6 +202,7 @@ export async function runMultiUserE2e({ builderRoot, replayArgs }) {
       MULTI_USER_ISSUER: identity.issuer,
       MULTI_USER_CLIENT_ID: clientId,
       MULTI_USER_STUDIO_PORT: String(studioPort),
+      MULTI_USER_JOB_KEY_TTL_SECONDS: String(jobKeyTtlSeconds),
       ...(replayArgs.length > 0 ? { REAL_BUILDER_REPLAY: "1" } : {}),
     });
     if (keyInBuilderOutput) {
