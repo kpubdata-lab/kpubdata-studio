@@ -62,7 +62,7 @@ describe("the edit form and a spec without an output path (#883)", () => {
     const path = screen.getByLabelText(/출력 경로/);
     expect(path).toHaveValue("");
     expect(screen.queryByText("(필수)")).not.toBeInTheDocument();
-    expect(screen.getByText("비워 두면 처음 제출한 대로 artifacts/builds/datago-air-station 아래에 씁니다.")).toBeInTheDocument();
+    expect(screen.getByText("비워 두면 처음 제출한 대로, 이 실행의 결과 폴더 안 artifacts/builds/datago-air-station 아래에 씁니다.")).toBeInTheDocument();
 
     next();
 

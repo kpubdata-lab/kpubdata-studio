@@ -143,7 +143,7 @@ describe("OutputStep", () => {
     );
     expect(screen.getByPlaceholderText("artifacts/builds/station")).toBeInTheDocument();
     expect(screen.queryByText("(필수)")).not.toBeInTheDocument();
-    expect(screen.getByText("비워 두면 처음 제출한 대로 artifacts/builds/station 아래에 씁니다.")).toBeInTheDocument();
+    expect(screen.getByText("비워 두면 처음 제출한 대로, 이 실행의 결과 폴더 안 artifacts/builds/station 아래에 씁니다.")).toBeInTheDocument();
   });
 });
 
