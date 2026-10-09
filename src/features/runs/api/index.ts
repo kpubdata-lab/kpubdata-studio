@@ -261,6 +261,19 @@ export function warehouseFailureMessage(body: BuildJobResponse | null): string |
 }
 
 /**
+ * The same sentence for a job read by its run id (`GET /builds/{run_id}`), or null (#881).
+ *
+ * Add Data opens the run's page as soon as Builder accepts the job (#842), so that page,
+ * not the wizard, is where a refused `if_absent` commit is read. Only a failed job is
+ * asked: a refused commit always ends the job as `failed`.
+ */
+export function jobWarehouseFailureMessage(job: BuildJob): string | null {
+  if (job.status !== "failed" || !job.response) return null;
+  const parsed = buildJobResponseSchema.safeParse(job.response);
+  return parsed.success ? warehouseFailureMessage(parsed.data) : null;
+}
+
+/**
  * Decide a terminal async job's BuildRun (#603).
  *
  * The job's own `status` and `error` decide first: a failed job shows Builder's reason,

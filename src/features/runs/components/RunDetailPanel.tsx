@@ -39,7 +39,7 @@ import {
   MultiSourceOutcomeBadge,
   SourcePipelineRow,
 } from "@/features/runs/components/SourcePipeline";
-import { isTerminalBuilderStatus } from "@/features/runs/api";
+import { isTerminalBuilderStatus, jobWarehouseFailureMessage } from "@/features/runs/api";
 import type { RunEventsState } from "@/features/runs/useRunEvents";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
@@ -138,6 +138,10 @@ export function RunDetailPanel({
   const outcome = stagesState.status === "loaded" ? summarizeMultiSourceOutcome(sources) : "unavailable";
   const failureEvidence = stagesState.status === "loaded" ? collectFailureEvidence(sources) : [];
   const stageDetails = useStageDetails(runId, stagesState);
+  // A run whose stages all completed but whose table Builder did not commit (#881): no
+  // stage failed, so there is no failure evidence, and the job's error is only "build
+  // failed". The reason is in the job's `warehouse_failures`.
+  const commitRefusal = live.kind === "job" ? jobWarehouseFailureMessage(live.job) : null;
   // A job the registry knows, with no stages on Builder (#875): the run is waiting, is
   // running — Builder has its stages only once it has ended — or ended before it started,
   // its keys lost while it waited or cancelled in the queue. Its stages are then not
@@ -448,9 +452,12 @@ export function RunDetailPanel({
         <KeysLostCard runId={live.job.run_id} />
       ) : null}
 
-      {failureEvidence.length > 0 || qualityFails.length > 0 ? (
+      {failureEvidence.length > 0 || qualityFails.length > 0 || commitRefusal ? (
         <Card variant="error">
           <h3 className="text-sm font-semibold">{t("builds.detail.failureEvidence")}</h3>
+          {commitRefusal ? (
+            <p className="mt-2 text-sm" data-commit-refused={runId}>{commitRefusal}</p>
+          ) : null}
           {failureEvidence.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-2 text-sm">
               {failureEvidence.map((item) => (
