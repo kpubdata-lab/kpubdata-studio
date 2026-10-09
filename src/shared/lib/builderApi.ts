@@ -753,11 +753,13 @@ export function publishCredentialHeaders(
  * build retries (builder#1042, contract 1.85.0): a run id is one attempt, so a retry is a
  * new run that points back. Each optional field is sent only when it has a value.
  */
-function buildRequestBody(specYaml: string, runId?: string, retryOf?: string) {
+function buildRequestBody(specYaml: string, runId?: string, retryOf?: string, ifAbsent?: boolean) {
   return {
     spec: specYaml,
     ...(runId ? { run_id: runId } : {}),
     ...(retryOf ? { retry_of: retryOf } : {}),
+    // Only for a build that must make new tables (builder#1223); a refresh sends nothing.
+    ...(ifAbsent ? { if_absent: true } : {}),
   };
 }
 
@@ -931,11 +933,11 @@ export const builderApi = {
     apiFetch<unknown>(`/uploads/${encodeURIComponent(uploadId)}`, { method: "DELETE", signal, retries: 0 }),
 
   /** POST /builds — async build job submission (#245, builder #482/#480). do not retry. */
-  submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string) =>
+  submitBuild: (specYaml: string, runId?: string, signal?: AbortSignal, retryOf?: string, ifAbsent?: boolean) =>
     withSpecKeys(specYaml, (headers) =>
       apiFetch(
         "/builds",
-        { method: "POST", body: buildRequestBody(specYaml, runId, retryOf), signal, retries: 0, headers },
+        { method: "POST", body: buildRequestBody(specYaml, runId, retryOf, ifAbsent), signal, retries: 0, headers },
         schemas.buildJobSchema,
       ),
     ),

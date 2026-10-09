@@ -638,17 +638,27 @@ export function AddDataPage() {
   }, [step, requestedDatasetId, previewedSourceKeys, existingAsked]);
   const specForBuild = specResult.spec ? specToBuild(specResult.spec, existing, tableChoice) : undefined;
 
-  // Build success (real-mode always uses actual run_id from Builder, mock-mode uses existing
-  // mock path) → navigate to Builds/Runs. Don't create new mock run id — useBuildJob
-  // already guarantees real run_id / mock-run distinction.
+  // The run is shown as soon as Builder has accepted it (#842). The page used to wait
+  // here, polling, until the run ended: a run that waited for a worker kept the wizard on
+  // "running", and leaving stopped the polling with nothing to say the run went on. The
+  // run's own page shows a run that has not started, follows it, and offers its cancel
+  // and its way on if it fails (#874, #875), and the spec was kept when the job was
+  // accepted (#846) — so nothing here is needed after that moment.
+  //
+  // The demo has no job to follow: its run is known only when it has ended, and is
+  // opened then, as before.
+  const openedRunId = job.submittedRunId ?? (job.status === "succeeded" ? job.run?.id : undefined);
   useEffect(() => {
-    if (job.status === "succeeded" && job.run) {
-      clearAddDataDraft();
-      // The Ask KPubData draft that could not open whole was kept for this table; it is done.
-      if (formDraftError !== null) discardFormDraft();
-      navigate(`/refresh-jobs/${encodeURIComponent(job.run.id)}`);
-    }
-  }, [job.status, job.run, navigate, formDraftError]);
+    if (!openedRunId) return;
+    clearAddDataDraft();
+    // The Ask KPubData draft that could not open whole was kept for this table; it is done.
+    if (formDraftError !== null) discardFormDraft();
+    // Told that the job was only just accepted, the run's page does not ask Builder for
+    // what a run has only once it has ended.
+    navigate(`/refresh-jobs/${encodeURIComponent(openedRunId)}`, {
+      state: job.submittedRunId ? { submittedRunId: job.submittedRunId } : undefined,
+    });
+  }, [openedRunId, job.submittedRunId, navigate, formDraftError]);
 
   return (
     // Sticky bottom actions (Prev/Draft Save/Next, below) are sticky only on sm<, and even
@@ -801,7 +811,12 @@ export function AddDataPage() {
                 .then(({ unchanged, existing: now }) => {
                   if (unchanged) {
                     setExistingChanged(false);
-                    void job.start(specToBuild(spec, now, choice), { retryOf: retryOfFor(job.run) });
+                    // A new table is made only if none is there by the time Builder commits
+                    // (#881, builder#1223): the check above narrows the gap, this closes it.
+                    void job.start(specToBuild(spec, now, choice), {
+                      retryOf: retryOfFor(job.run),
+                      ifAbsent: choice === "new",
+                    });
                     return;
                   }
                   // Not what the step showed: show the new answer, back on a new table,

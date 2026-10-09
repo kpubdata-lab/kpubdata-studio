@@ -15,14 +15,23 @@ export type AsyncState<T> =
   | { status: "loaded"; data: T }
   | { status: "error"; error: string; notFound?: boolean; permissionDenied?: boolean };
 
+/**
+ * @param enabled - False leaves the surface `idle` and asks nothing: for a read whose
+ *   answer is known not to be there yet (#842).
+ */
 export function useAsync<T>(
   load: (signal: AbortSignal) => Promise<T>,
   deps: unknown[],
   errorMessage: string,
+  enabled = true,
 ): AsyncState<T> {
   const [state, setState] = useState<AsyncState<T>>({ status: "idle" });
 
   useEffect(() => {
+    if (!enabled) {
+      setState({ status: "idle" });
+      return;
+    }
     const controller = new AbortController();
     setState({ status: "loading" });
     load(controller.signal)
@@ -40,7 +49,7 @@ export function useAsync<T>(
         });
       });
     return () => controller.abort();
-  }, deps);
+  }, [...deps, enabled]);
 
   return state;
 }

@@ -7,7 +7,7 @@
  */
 
 /** The contract version this snapshot was generated from. */
-export const BUILDER_ENUMS_CONTRACT_VERSION = "1.108.0";
+export const BUILDER_ENUMS_CONTRACT_VERSION = "1.114.0";
 
 export const BUILDER_ENUMS = {
   "AdminUser.status": ["pending","approved","rejected"],
@@ -19,6 +19,7 @@ export const BUILDER_ENUMS = {
   "BuildJob.code": ["credentials_required"],
   "BuildJob.status": ["queued","running","cancelling","succeeded","failed","cancelled"],
   "BuildManifest.checkpoints_not_reused.reason": ["expired","spec_changed"],
+  "BuildManifest.failures.stage": ["bronze","silver","gold","export","composition","warehouse"],
   "BuildManifest.pii_masking.masked.declared_by": ["kpubdata_spec","build_spec"],
   "BuildManifest.pii_masking.masked.masked_as": ["token","null"],
   "BuildManifest.pii_masking.unmasked.declared_by": ["kpubdata_spec","build_spec"],
@@ -27,7 +28,7 @@ export const BUILDER_ENUMS = {
   "BuildOutcome.status": ["ok","failed"],
   "BuildQualityResponse.availability": ["available","partial","unavailable"],
   "BuildSuccessResponse.status": ["ok"],
-  "BuildSuccessResponse.warehouse_failures.reason": ["conflict","commit_failed"],
+  "BuildSuccessResponse.warehouse_failures.reason": ["conflict","empty_result","table_exists","commit_failed"],
   "BuildSummary.status": ["ok","failed","cancelled"],
   "CallTotal.status": ["reported","unknown","inconsistent"],
   "CatalogDataset.operations": ["list","get","schema","raw","download"],
@@ -104,6 +105,7 @@ export const BUILDER_ENUMS = {
   "SnapshotCoverage.status": ["complete","partial","unknown"],
   "SnapshotProfile.accuracy": ["exact"],
   "SnapshotProfile.scope.mode": ["full"],
+  "SourceFailureReason": ["application_required","auth_unknown","params_invalid","rate_limited","temporarily_unavailable","network_error","retired"],
   "SourcePreview.sample_mode": ["first","random"],
   "SourcePreview.status": ["ok","failed"],
   "SourceRef.format": ["csv","json","jsonl","parquet"],
