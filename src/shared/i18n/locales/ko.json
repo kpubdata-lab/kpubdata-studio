@@ -375,11 +375,11 @@
       "cancel": "취소",
       "success": "실행 성공 (실행 {{id}})",
       "cancelled": "실행이 취소되었습니다.",
-      "saveSpec": "이 스펙 저장 (Workspace)",
+      "saveSpec": "이 스펙 저장 (작업대)",
       "saveSpecDesc": "이름을 붙여 이 브라우저에 저장합니다 — KPubData Builder에는 전송되지 않습니다.",
       "savePrompt": "저장할 이름을 입력하세요",
       "unnamed": "이름 없는 BuildSpec",
-      "savedAs": "\"{{name}}\" 이름으로 Workspace에 저장했습니다.",
+      "savedAs": "\"{{name}}\" 이름으로 작업대에 저장했습니다.",
       "runRefresh": "갱신"
     },
     "nav": {
@@ -1066,7 +1066,7 @@
     "analyses": {
       "title": "최근 분석",
       "viewAll": "모두 보기",
-      "empty": "저장된 분석이 없습니다. SQL Workspace 에서 실행하고 저장하면 여기에 보입니다.",
+      "empty": "저장된 분석이 없습니다. SQL 작업 공간에서 실행하고 저장하면 여기에 보입니다.",
       "error": "저장된 분석을 불러오지 못했습니다."
     },
     "connections": {
@@ -2931,12 +2931,12 @@
     "title": "저장된 분석",
     "desc": "SQL 을 읽은 스냅샷과 함께 보관합니다. 테이블이 갱신된 뒤 다시 실행해도 같은 입력을 읽습니다.",
     "newQuery": "새 SQL 쿼리",
-    "noWarehouse": "분석 저장에는 웨어하우스가 있는 KPubData Builder 가 필요합니다. 이 배포에는 없어서 SQL Workspace 는 실행 결과를 직접 질의하고 저장할 수 없습니다.",
+    "noWarehouse": "분석 저장에는 웨어하우스가 있는 KPubData Builder 가 필요합니다. 이 배포에는 없어서 SQL 작업 공간은 실행 결과를 직접 질의하고 저장할 수 없습니다.",
     "emptyTitle": "저장된 분석이 없습니다",
-    "emptyDesc": "SQL Workspace 에서 질의를 실행하고 이름을 붙여 저장하세요.",
+    "emptyDesc": "SQL 작업 공간에서 질의를 실행하고 이름을 붙여 저장하세요.",
     "savedMeta": "{{at}} 저장 · {{count}}행",
     "rerun": "다시 실행",
-    "open": "SQL Workspace 에서 열기",
+    "open": "SQL 작업 공간에서 열기",
     "delete": "삭제",
     "confirmDelete": "\"{{name}}\" 을 삭제할까요? 이 분석을 위해 보관하던 스냅샷도 더 이상 보관하지 않습니다.",
     "nameLabel": "분석 이름",
@@ -2945,7 +2945,7 @@
     "saved": "\"{{name}}\" 을 읽은 스냅샷과 함께 저장했습니다.",
     "openList": "저장된 분석",
     "migrationTitle": "다시 실행하기 전에 확인이 필요합니다",
-    "migrationBody": "이 분석을 저장한 뒤 Builder SQL 이 바뀌어서 그대로 다시 실행하지 않습니다. SQL Workspace 에서 열어 SQL 을 확인한 뒤 새 분석으로 저장하세요.",
+    "migrationBody": "이 분석을 저장한 뒤 Builder SQL 이 바뀌어서 그대로 다시 실행하지 않습니다. SQL 작업 공간에서 열어 SQL 을 확인한 뒤 새 분석으로 저장하세요.",
     "migrationWorkspace": "이 분석은 Builder SQL 이 바뀌기 전에 저장되었습니다. 아래 SQL 을 확인한 뒤 새 분석으로 저장하세요. 기존 분석은 그대로 남습니다."
   },
   "dataTable": {

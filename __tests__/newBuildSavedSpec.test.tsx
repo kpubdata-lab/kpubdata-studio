@@ -66,9 +66,9 @@ describe("이 스펙 저장 (Review 단계)", () => {
     vi.spyOn(window, "prompt").mockReturnValue("내 대기오염 스펙");
     await goToReviewAndValidate();
 
-    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (Workspace)" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (작업대)" }));
 
-    expect(await screen.findByText(/내 대기오염 스펙.*Workspace에 저장했습니다/)).toBeInTheDocument();
+    expect(await screen.findByText(/내 대기오염 스펙.*작업대에 저장했습니다/)).toBeInTheDocument();
     const summaries = listSavedSpecSummaries();
     expect(summaries).toHaveLength(1);
     expect(summaries[0]).toMatchObject({ name: "내 대기오염 스펙", provider: "datago", validationStatus: "validated_pass" });
@@ -96,9 +96,9 @@ describe("이 스펙 저장 (Review 단계)", () => {
     await screen.findByRole("heading", { name: "검증·실행" });
     // "다시 검증"을 누르지 않고 바로 저장한다.
 
-    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (Workspace)" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (작업대)" }));
 
-    await screen.findByText(/Workspace에 저장했습니다/);
+    await screen.findByText(/작업대에 저장했습니다/);
     expect(listSavedSpecSummaries()[0].validationStatus).toBe("not_validated");
   });
 
@@ -106,7 +106,7 @@ describe("이 스펙 저장 (Review 단계)", () => {
     vi.spyOn(window, "prompt").mockReturnValue(null);
     await goToReviewAndValidate();
 
-    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (Workspace)" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (작업대)" }));
 
     expect(listSavedSpecSummaries()).toHaveLength(0);
   });
@@ -118,7 +118,7 @@ describe("이 스펙 저장 (Review 단계)", () => {
     });
     await goToReviewAndValidate();
 
-    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (Workspace)" }));
+    fireEvent.click(screen.getByRole("button", { name: "이 스펙 저장 (작업대)" }));
 
     expect(await screen.findByText(/저장 공간이 부족합니다/)).toBeInTheDocument();
   });
