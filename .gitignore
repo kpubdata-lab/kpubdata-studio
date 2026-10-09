@@ -64,5 +64,5 @@ yarn-error.log*
 e2e/**/*-darwin.png
 e2e/**/*-win32.png
 
-# Builder contract checkout used by the contract-drift CI job
+# Builder contract checkout used by the Node 22 test leg in CI (ci.yml `test`)
 .builder/

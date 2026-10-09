@@ -22,14 +22,18 @@ on:
 permissions:
   contents: read
 
+# As in ci.yml: a pull request's new push replaces only that pull request's earlier
+# run, and every other run gets a group of its own so that none waiting behind another
+# is replaced and cancelled (#833, #586).
 concurrency:
-  group: security-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: security-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   dependency-audit:
     name: Dependency audit (npm audit)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
@@ -43,6 +47,7 @@ jobs:
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       GITLEAKS_VERSION: "8.28.0"
     steps:
@@ -105,6 +110,7 @@ jobs:
   codeql:
     name: CodeQL (javascript-typescript)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
       security-events: write

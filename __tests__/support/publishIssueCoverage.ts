@@ -1,7 +1,7 @@
 /**
  * Shared by `__tests__/publishIssueCodes.test.ts` and the contract drift check
- * (`src/shared/lib/contractDrift.test.ts`, the file CI's `Builder contract drift` job
- * runs against Builder's main): which `PublishIssue.code` values the contract lists, and
+ * (`src/shared/lib/contractDrift.test.ts`, which CI's `Test (Node 22)` leg runs
+ * against Builder's main): which `PublishIssue.code` values the contract lists, and
  * which of them lack a localized message or next step (#644).
  */
 import { readFileSync } from "node:fs";

@@ -1,0 +1,5 @@
+# The docs site's build tools, at the exact versions ci.yml's `docs` job and deploy.yml
+# install (`pip install -r requirements-docs.txt`). Dependabot raises them.
+# Only these two are pinned: what they depend on is resolved at install time.
+mkdocs==1.6.1
+mkdocs-material==9.7.7
