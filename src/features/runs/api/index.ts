@@ -202,11 +202,13 @@ async function runAsyncBuild(
   // Server-returned run_id is authoritative. Only from here can cooperative cancel
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
-  onHandle?.({ runId: submitted.run_id, mode: "async" });
   // Kept now, not when the run ends (#846). A job can wait an hour for a worker; the
   // user leaves, the tab closes or polling fails long before that, and a run that then
   // never starts has no spec anywhere else — Builder snapshots it only once it runs.
+  // Before the handle is handed out: a caller that opens the run's page at once (Add
+  // Data, #842) finds the spec already there.
   saveBuildSpec(submitted.run_id, spec);
+  onHandle?.({ runId: submitted.run_id, mode: "async" });
   onJobStatus?.(submitted.status);
 
   // If terminal immediately after submit (same run_id resubmit, etc.), decide
