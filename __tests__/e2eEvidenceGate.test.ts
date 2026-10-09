@@ -5,9 +5,9 @@
  * these feed it one and expect a finding. The workflow is read as YAML: it has to run
  * the suite, check the evidence before uploading it, and stay out of `CI gate`.
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -121,6 +121,29 @@ function filesTheRunnerLoads(entry: string): string[] {
   return [...seen].sort();
 }
 
+/** Every `__recordings__` file a real-Builder spec reads, as a path from the repository root. */
+function recordingsTheSpecsRead(): string[] {
+  const specs = readdirSync(join(ROOT, "e2e")).filter((name) => /^real-.*\.spec\.ts$/.test(name));
+  const found = new Set<string>();
+  for (const spec of specs) {
+    const source = readFileSync(join(ROOT, "e2e", spec), "utf8");
+    for (const [, relative] of source.matchAll(/new URL\("(\.\.?\/[^"]+)",\s*import\.meta\.url\)/g)) {
+      const file = join("e2e", relative!).split(sep).join("/");
+      if (file.includes("/__recordings__/")) found.add(file);
+    }
+  }
+  return [...found].sort();
+}
+
+/** GitHub's path filter: `*` within one directory, `**` across directories. */
+function globMatches(pattern: string, file: string): boolean {
+  const source = pattern
+    .split("**")
+    .map((part) => part.split("*").map((text) => text.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join("[^/]*"))
+    .join(".*");
+  return new RegExp(`^${source}$`).test(file);
+}
+
 describe("real-e2e.yml", () => {
   type Step = { name?: string; id?: string; if?: string; run?: string; uses?: string; env?: Record<string, string> };
   const workflow = parse(readFileSync(join(ROOT, ".github", "workflows", "real-e2e.yml"), "utf8")) as {
@@ -151,6 +174,24 @@ describe("real-e2e.yml", () => {
     expect(loaded).toContain("scripts/run-real-e2e.mjs");
     expect(loaded).toContain("playwright.real.config.ts");
     expect(loaded.filter((file) => !paths.includes(file))).toEqual([]);
+  });
+
+  // A spec compares Builder's real answer with a recording that unit tests also read
+  // (#885). A pull request that changes only the recording passes its unit tests, which
+  // compare the recording with itself; only this suite can say Builder answers otherwise.
+  it("runs on a pull request that changes a recording a real spec compares with", () => {
+    const paths = workflow.on.pull_request?.paths ?? [];
+    const recordings = recordingsTheSpecsRead();
+    expect(recordings).toContain("src/shared/lib/__recordings__/missingProviderKey.json");
+    expect(recordings.filter((file) => !paths.some((pattern) => globMatches(pattern, file)))).toEqual([]);
+  });
+
+  it("reads a pattern as the workflow's path filter does", () => {
+    expect(globMatches("src/shared/lib/__recordings__/**", "src/shared/lib/__recordings__/a.json")).toBe(true);
+    expect(globMatches("src/shared/lib/__recordings__/**", "src/shared/lib/__recordings__/x/b.json")).toBe(true);
+    expect(globMatches("e2e/real-*.spec.ts", "e2e/real-builder.spec.ts")).toBe(true);
+    expect(globMatches("e2e/real-*.spec.ts", "e2e/real/x.spec.ts")).toBe(false);
+    expect(globMatches("src/shared/lib/__recordings__/**", "src/shared/lib/other.json")).toBe(false);
   });
 
   it("runs the suite against a Builder checkout with a canary key", () => {
