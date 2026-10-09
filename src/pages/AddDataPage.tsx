@@ -33,6 +33,7 @@ import {
   findExistingTables,
   specToBuild,
   type ExistingTableChoice,
+  confirmExistingTables,
   type ExistingTables,
 } from "@/features/add-data/existingTables";
 import { previewProblem } from "@/features/add-data/previewGate";
@@ -133,6 +134,9 @@ export function AddDataPage() {
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
   const [existing, setExisting] = useState<ExistingTables>({ status: "checking" });
   const [tableChoice, setTableChoice] = useState<ExistingTableChoice>("new");
+  // The tables changed between the review step's answer and the build button (#861).
+  const [existingChanged, setExistingChanged] = useState(false);
+  const confirmingBuild = useRef(false);
   // Raised to ask again after the tables could not be read.
   const [existingAsked, setExistingAsked] = useState(0);
 
@@ -433,8 +437,14 @@ export function AddDataPage() {
     // stale (#283 follow-up review §4), so increment requestId before specResult check/return.
     // This ensures late-arriving previous request responses don't overwrite current error state.
     const requestId = ++previewRequestIdRef.current;
+    // Which settings this attempt is of, whatever comes of it. A preview that failed is a
+    // preview of these settings too: recorded only on success, the review step took a
+    // failure after a change of settings for "the settings changed, run it again" — and
+    // said so again however often it was run (#842).
+    const signatureAtRequest = draftSignature(draft);
     const specResult = buildSpecFromDraft(draft);
     if (specResult.error || !specResult.spec) {
+      setLastPreviewSignature(signatureAtRequest);
       setPreview({ status: "error", error: specResult.error ?? i18n.t("addData.errors.spec") });
       setValidation({
         status: "validated",
@@ -456,6 +466,7 @@ export function AddDataPage() {
       const prerequisite = checkCredentialPrerequisite(selected, providerConfigured, draft.publicApi.provider);
       if (prerequisite.blocked) {
         const message = credentialPrerequisiteNotice(credentialPrerequisiteMessage());
+        setLastPreviewSignature(signatureAtRequest);
         setPreview({ status: "error", error: message });
         setValidation({ status: "validated", valid: false, errors: [message] });
         return;
@@ -463,13 +474,13 @@ export function AddDataPage() {
 
       const requiredCheck = checkRequiredParams(draft.publicApi.sourceParams, selected?.request_parameters);
       if (requiredCheck.error) {
+        setLastPreviewSignature(signatureAtRequest);
         setPreview({ status: "error", error: requiredCheck.error });
         setValidation({ status: "validated", valid: false, errors: [requiredCheck.error] });
         return;
       }
     }
 
-    const signatureAtRequest = draftSignature(draft);
     setPreview({ status: "loading" });
     setValidation({ status: "validating", valid: false, errors: [] });
 
@@ -479,9 +490,9 @@ export function AddDataPage() {
     ]);
 
     if (requestId !== previewRequestIdRef.current) return;
+    setLastPreviewSignature(signatureAtRequest);
     if (previewOutcome.status === "fulfilled") {
       setPreview({ status: "loaded", response: previewOutcome.value });
-      setLastPreviewSignature(signatureAtRequest);
     } else {
       setPreview({
         status: "error",
@@ -616,6 +627,7 @@ export function AddDataPage() {
     const controller = new AbortController();
     setExisting({ status: "checking" });
     setTableChoice("new");
+    setExistingChanged(false);
     const sourceKeys = previewedSourceKeys === "" ? [] : previewedSourceKeys.split("\n");
     findExistingTables(requestedDatasetId, controller.signal, sourceKeys)
       .then(setExisting)
@@ -762,7 +774,11 @@ export function AddDataPage() {
             isStale={isStale}
             existing={existing}
             tableChoice={tableChoice}
-            onChooseTable={setTableChoice}
+            onChooseTable={(choice) => {
+              setTableChoice(choice);
+              setExistingChanged(false);
+            }}
+            existingChanged={existingChanged}
             onRecheckExisting={() => setExistingAsked((asked) => asked + 1)}
             previewProblem={previewProblem(preview)}
             onBackToPreview={() => setStep(STEP_IDS.indexOf("preview"))}
@@ -773,7 +789,30 @@ export function AddDataPage() {
             onBuild={() => {
               // Started again after an attempt that failed here, it is a retry of that
               // attempt and says so (#757, #787).
-              if (specForBuild) void job.start(specForBuild, { retryOf: retryOfFor(job.run) });
+              const spec = specResult.spec;
+              if (!spec || !requestedDatasetId || confirmingBuild.current) return;
+              // Ask once more right before submitting (#861): another tab may have made
+              // a table under this id, or under the free id, since the step asked.
+              confirmingBuild.current = true;
+              const shown = existing;
+              const choice = tableChoice;
+              const sourceKeys = previewedSourceKeys === "" ? [] : previewedSourceKeys.split("\n");
+              void confirmExistingTables(requestedDatasetId, shown, undefined, sourceKeys)
+                .then(({ unchanged, existing: now }) => {
+                  if (unchanged) {
+                    setExistingChanged(false);
+                    void job.start(specToBuild(spec, now, choice), { retryOf: retryOfFor(job.run) });
+                    return;
+                  }
+                  // Not what the step showed: show the new answer, back on a new table,
+                  // and submit nothing until the user looks again.
+                  setExisting(now);
+                  setTableChoice("new");
+                  setExistingChanged(now.status !== "unknown");
+                })
+                .finally(() => {
+                  confirmingBuild.current = false;
+                });
             }}
             onCancel={job.cancel}
           />

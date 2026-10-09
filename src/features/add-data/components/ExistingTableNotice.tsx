@@ -19,13 +19,29 @@ export interface ExistingTableNoticeProps {
   choice: ExistingTableChoice;
   onChoose: (choice: ExistingTableChoice) => void;
   onRecheck: () => void;
+  /** Asked again at the build button, the answer was not the one shown (#861). */
+  changed?: boolean;
 }
 
-export function ExistingTableNotice({ datasetId, existing, choice, onChoose, onRecheck }: ExistingTableNoticeProps) {
+export function ExistingTableNotice({
+  datasetId,
+  existing,
+  choice,
+  onChoose,
+  onRecheck,
+  changed = false,
+}: ExistingTableNoticeProps) {
   const { t } = useTranslation();
   const group = useId();
 
-  if (existing.status === "none") return null;
+  if (existing.status === "none") {
+    // Asked again, the tables that were there are gone: the id shown has changed (#861).
+    return changed ? (
+      <p className="text-sm font-semibold" data-existing-table-changed="true" role="alert">
+        {t("addData.review.existingChanged")}
+      </p>
+    ) : null;
+  }
 
   if (existing.status === "checking") {
     return (
@@ -50,6 +66,11 @@ export function ExistingTableNotice({ datasetId, existing, choice, onChoose, onR
   return (
     <Card className="space-y-3 p-4" data-existing-table="found" data-existing-table-replaces={String(replaces)} variant="error">
       <div role="alert" className="space-y-1">
+        {changed ? (
+          <p className="text-sm font-semibold" data-existing-table-changed="true">
+            {t("addData.review.existingChanged")}
+          </p>
+        ) : null}
         <p className="text-sm font-semibold">{t("addData.review.existingTitle")}</p>
         <p className="text-sm">
           {replaces
