@@ -161,6 +161,7 @@
     "detail": {
       "analyzeQuestion": "Analyze the status and failure cause of run {{id}}.",
       "refreshing": "Refreshing live…",
+      "continuesWithoutPage": "The run goes on if you leave this page. You can open it again from Refresh History.",
       "retryOf": "Retry of",
       "refreshFailed": "Live status refresh failed (transient) — showing the last known status.",
       "refreshForbidden": "No permission to poll live status for this run — showing the status from the list instead.",
@@ -177,9 +178,9 @@
       "pipelineTitle": "Pipeline / Stage Progress",
       "notStarted": {
         "queued": "This run has not started yet. Its stages appear here once its turn comes and it starts.",
-        "running": "This run has just started. No stage has been recorded yet.",
+        "running": "This run is in progress. Its stages appear here once it has ended.",
         "ended": "This run ended before it started. It has no stages.",
-        "noQuality": "The run did not start, so there are no quality results."
+        "noQuality": "The run has not ended yet, or never started, so there are no quality results."
       },
       "qualityCheckpoint": "Quality checkpoint",
       "availability": "availability: {{value}}",
@@ -2654,7 +2655,11 @@
       "ownerLimit": "You already have {{limit}} runs queued or running. Try again when one of them has finished.",
       "ownerLimitOne": "You already have 1 run queued or running. Try again when it has finished.",
       "ownerLimitUnstated": "You have reached the number of runs one user may have at a time. Try again when one of your queued or running runs has finished.",
-      "queueFull": "The server's run queue is full. Try again shortly."
+      "queueFull": "The server's run queue is full. Try again shortly.",
+      "tableExists": "The \"{{table}}\" table already exists (it was there, or another build made it first), so it was not overwritten. Build under another name, or refresh that table.",
+      "emptyResult": "This build found no rows for the \"{{table}}\" table, so its data was kept as it was.",
+      "commitConflict": "Another build refreshed the \"{{table}}\" table while this one ran; the newer one was kept.",
+      "commitFailed": "The result could not be committed to the \"{{table}}\" table."
     },
     "mock": {
       "noSpecSnapshot": "Mock mode does not simulate a BuildSpec snapshot. Check it in real-integration mode.",

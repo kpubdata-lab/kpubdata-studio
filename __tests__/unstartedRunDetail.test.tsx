@@ -13,6 +13,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { clearBuildSpecs, saveBuildSpec } from "@/features/build-spec/specStore";
+import * as artifactsApi from "@/features/artifacts/api";
 import * as datasetsApi from "@/features/datasets/api";
 import * as runsApi from "@/features/runs/api";
 import * as runDetailApi from "@/features/runs/api/runDetail";
@@ -189,7 +190,9 @@ describe("a run with no stages that the job registry knows (#846)", () => {
 
     expect(await screen.findByText(/아직 시작하지 않은 실행입니다/)).toBeInTheDocument();
     expect(document.querySelector("[data-run-not-started]")).toHaveAttribute("data-run-not-started", "queued");
-    expect(screen.getByText("시작하지 않은 실행이라 품질 결과가 없습니다.")).toBeInTheDocument();
+    // Watching is not what keeps it going (#842).
+    expect(screen.getByText(/이 화면을 떠나도 실행은 계속됩니다/)).toBeInTheDocument();
+    expect(screen.getByText("아직 끝나지 않았거나 시작하지 못한 실행이라 품질 결과가 없습니다.")).toBeInTheDocument();
     // The 404s of a run that has made nothing yet are not failures to show.
     expect(failureText()).toBe("");
     expect(screen.queryByText("run not found")).not.toBeInTheDocument();
@@ -203,11 +206,13 @@ describe("a run with no stages that the job registry knows (#846)", () => {
 
     expect(await screen.findByText(/시작하기 전에 끝난 실행입니다/)).toBeInTheDocument();
     expect(document.querySelector("[data-run-not-started]")).toHaveAttribute("data-run-not-started", "ended");
+    // It has ended: there is nothing left to go on.
+    expect(document.querySelector("[data-run-continues]")).toBeNull();
     expect(screen.queryByText("run not found")).not.toBeInTheDocument();
   });
 
-  it("still shows a failure to read the stages of a run that did start as a failure", async () => {
-    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("running"));
+  it("still shows a failure to read the stages of a run that ended as a failure", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("succeeded"));
     vi.spyOn(datasetsApi, "listBuildStages").mockRejectedValue(new ApiError(500, "stage store unreachable"));
 
     renderDetail();
@@ -248,5 +253,67 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  // --- #842: a run on its way is not asked for what it has only once it has ended.
+
+  it("says a running run is in progress, and stops asking Builder for its stages", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("running"));
+    const stages = vi.spyOn(datasetsApi, "listBuildStages");
+
+    renderDetail();
+
+    expect(await screen.findByText(/실행 중입니다\. 단계 기록은 실행이 끝나면/)).toBeInTheDocument();
+    expect(document.querySelector("[data-run-not-started]")).toHaveAttribute("data-run-not-started", "running");
+    expect(failureText()).toBe("");
+    // Asked once, before the registry had said the run was on its way; not again.
+    const asked = stages.mock.calls.length;
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(stages.mock.calls.length).toBe(asked);
+    expect(asked).toBeLessThanOrEqual(1);
+  });
+
+  it("asks for nothing a run has only at its end, of a run Add Data has just submitted", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
+    const reads = [
+      vi.spyOn(datasetsApi, "listBuildStages"),
+      vi.spyOn(datasetsApi, "getBuildQuality"),
+      vi.spyOn(runDetailApi, "getBuildSpecSnapshot"),
+      // The manifest, which the split card reads: found by the real-Builder e2e, where the
+      // browser logged its 404.
+      vi.spyOn(artifactsApi, "getBuildManifest"),
+    ];
+
+    render(
+      <MemoryRouter initialEntries={[{ pathname: `/refresh-jobs/${RUN}`, state: { submittedRunId: RUN } }]}>
+        <Routes>
+          <Route path="/refresh-jobs/:buildId" element={<BuildsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText(/아직 시작하지 않은 실행입니다/)).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "실행 취소" })).toBeEnabled();
+    // Not one request that Builder could only have answered 404.
+    expect(reads.map((read) => read.mock.calls.length)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("reads them as before for a run someone else's page says was submitted", async () => {
+    // The hint is for the run it names, not for whatever is opened next.
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
+    const stages = vi.spyOn(datasetsApi, "listBuildStages");
+
+    render(
+      <MemoryRouter initialEntries={[{ pathname: `/refresh-jobs/${RUN}`, state: { submittedRunId: "another-run" } }]}>
+        <Routes>
+          <Route path="/refresh-jobs/:buildId" element={<BuildsPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await screen.findByText(/아직 시작하지 않은 실행입니다/);
+    expect(stages.mock.calls.length).toBe(1);
   });
 });

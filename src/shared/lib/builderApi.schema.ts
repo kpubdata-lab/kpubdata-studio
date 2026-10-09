@@ -147,6 +147,11 @@ export const buildJobResponseSchema = z.object({
   status: z.string().optional(),
   error: z.string().nullable().optional(),
   outcomes: z.array(z.object({ error: z.string().nullable().optional() })).optional(),
+  /**
+   * Tables Builder did not commit, by source (builder#788, #1186, #1223). A reason is a
+   * string, not an enum: one added later must not make the whole job unreadable.
+   */
+  warehouse_failures: z.record(z.string(), z.object({ reason: z.string() }).passthrough()).optional(),
 });
 
 export type BuildJob = z.infer<typeof buildJobSchema>;

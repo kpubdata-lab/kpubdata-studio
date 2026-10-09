@@ -40,6 +40,11 @@ export interface BuildJob {
   builderStatus?: BuilderJobStatus;
   /** Completed run result (on success/failure). */
   run?: BuildRun;
+  /**
+   * The run id Builder gave the job when it accepted it (#842) — known long before the
+   * run ends, and what a caller needs to show the run instead of waiting here for it.
+   */
+  submittedRunId?: string;
   /** Error message on failure. */
   error?: string;
   /**
@@ -62,6 +67,7 @@ export function useBuildJob(): BuildJob {
   const [status, setStatus] = useState<BuildJobStatus>("idle");
   const [builderStatus, setBuilderStatus] = useState<BuilderJobStatus>();
   const [run, setRun] = useState<BuildRun>();
+  const [submittedRunId, setSubmittedRunId] = useState<string>();
   const [error, setError] = useState<string>();
   const [missingKeys, setMissingKeys] = useState<MissingProviderKeys>();
   // Controller used only for unmount/restart (lifecycle) cancellation.
@@ -100,6 +106,7 @@ export function useBuildJob(): BuildJob {
     setError(undefined);
     setMissingKeys(undefined);
     setRun(undefined);
+    setSubmittedRunId(undefined);
     try {
       const result = await executeBuild(
         spec,
@@ -109,6 +116,7 @@ export function useBuildJob(): BuildJob {
         },
         (handle) => {
           handleRef.current = handle;
+          if (!controller.signal.aborted) setSubmittedRunId(handle.runId);
           // If Cancel was pressed before submit, fire the cooperative
           // cancel exactly once now that the authoritative run_id is settled
           // (F03).
@@ -181,5 +189,5 @@ export function useBuildJob(): BuildJob {
   // (#73).
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  return { status, builderStatus, run, error, missingKeys, start, cancel };
+  return { status, builderStatus, run, submittedRunId, error, missingKeys, start, cancel };
 }

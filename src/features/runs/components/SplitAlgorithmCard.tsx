@@ -64,7 +64,10 @@ export function SplitAlgorithmCard({
   goldHasSplits: boolean;
 }) {
   const { t } = useTranslation();
-  const manifest = useAsync((signal) => getBuildManifest(runId, signal), [runId], "");
+  // The manifest is written when the run ends. While the page holds back the run's spec
+  // because the run is still on its way (`idle`, #842), the manifest is not there either.
+  const runHasEnded = specState.status !== "idle";
+  const manifest = useAsync((signal) => getBuildManifest(runId, signal), [runId, runHasEnded], "", runHasEnded);
 
   const specSettled = specState.status === "loaded" || specState.status === "error";
   const manifestSettled = manifest.status === "loaded" || manifest.status === "error";
