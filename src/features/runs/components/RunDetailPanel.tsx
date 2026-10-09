@@ -138,15 +138,21 @@ export function RunDetailPanel({
   const outcome = stagesState.status === "loaded" ? summarizeMultiSourceOutcome(sources) : "unavailable";
   const failureEvidence = stagesState.status === "loaded" ? collectFailureEvidence(sources) : [];
   const stageDetails = useStageDetails(runId, stagesState);
-  // A job the registry knows, with no stages on Builder (#875): the run is waiting, has
-  // only just been taken, or ended before it started — keys lost while it waited, or
-  // cancelled in the queue. A 404 on its stages is then what is expected, not a failure.
+  // A job the registry knows, with no stages on Builder (#875): the run is waiting, is
+  // running — Builder has its stages only once it has ended — or ended before it started,
+  // its keys lost while it waited or cancelled in the queue. Its stages are then not
+  // asked for (`idle`, #842), or were and answered 404; neither is a failure.
+  const stagesMissing =
+    stagesState.status === "idle" ||
+    (stagesState.status === "error" && stagesState.notFound === true && !stagesState.permissionDenied);
   const notStarted: "queued" | "running" | "ended" | null =
-    live.kind === "job" && stagesState.status === "error" && stagesState.notFound && !stagesState.permissionDenied
+    live.kind === "job" && stagesMissing
       ? live.job.status === "queued"
         ? "queued"
         : isTerminalBuilderStatus(live.job.status)
-          ? "ended"
+          ? stagesState.status === "idle"
+            ? null
+            : "ended"
           : "running"
       : null;
   const goldHasSplits = Object.values(stageDetails).some(
@@ -200,7 +206,11 @@ export function RunDetailPanel({
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-xs text-muted-foreground">{runId}</span>
           {live.kind === "job" && (live.job.status === "queued" || live.job.status === "running" || live.job.status === "cancelling") ? (
-            <span className="text-xs text-muted-foreground">{t("builds.detail.refreshing")}</span>
+            <>
+              <span className="text-xs text-muted-foreground">{t("builds.detail.refreshing")}</span>
+              {/* Watching is not what keeps it going (#842). */}
+              <span className="text-xs text-muted-foreground" data-run-continues="">{t("builds.detail.continuesWithoutPage")}</span>
+            </>
           ) : null}
           {live.kind === "job" && live.job.retry_of ? (
             <span className="text-xs text-muted-foreground" data-retry-of={live.job.retry_of}>
@@ -283,13 +293,13 @@ export function RunDetailPanel({
           {stagesState.status === "loaded" ? <MultiSourceOutcomeBadge outcome={outcome} /> : null}
         </div>
         <div className="mt-3"><StageLegend /></div>
-        {stagesState.status === "loading" || stagesState.status === "idle" ? (
-          <Skeleton className="mt-4 h-24 w-full" />
-        ) : notStarted ? (
+        {notStarted ? (
           // Nothing failed: the run has made no stage yet, or ended before it made one.
           <p className="mt-3 text-sm text-muted-foreground" data-run-not-started={notStarted}>
             {t(`builds.detail.notStarted.${notStarted}`)}
           </p>
+        ) : stagesState.status === "loading" || stagesState.status === "idle" ? (
+          <Skeleton className="mt-4 h-24 w-full" />
         ) : stagesState.status === "error" ? (
           <p className="mt-3 text-sm text-status-failure">
             {stagesState.permissionDenied
@@ -336,10 +346,10 @@ export function RunDetailPanel({
             ) : null}
           </div>
         </div>
-        {qualityState.status === "loading" || qualityState.status === "idle" ? (
-          <Skeleton className="mt-4 h-16 w-full" />
-        ) : notStarted && qualityState.status === "error" && qualityState.notFound ? (
+        {notStarted && (qualityState.status === "idle" || (qualityState.status === "error" && qualityState.notFound)) ? (
           <p className="mt-3 text-sm text-muted-foreground">{t("builds.detail.notStarted.noQuality")}</p>
+        ) : qualityState.status === "loading" || qualityState.status === "idle" ? (
+          <Skeleton className="mt-4 h-16 w-full" />
         ) : qualityState.status === "error" ? (
           // (B) Request failure — never merged into the same state as
           // Builder semantic unavailable (a normal response) (#255 follow-up

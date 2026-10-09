@@ -161,6 +161,7 @@
     "detail": {
       "analyzeQuestion": "Analyze the status and failure cause of run {{id}}.",
       "refreshing": "Refreshing live…",
+      "continuesWithoutPage": "The run goes on if you leave this page. You can open it again from Refresh History.",
       "retryOf": "Retry of",
       "refreshFailed": "Live status refresh failed (transient) — showing the last known status.",
       "refreshForbidden": "No permission to poll live status for this run — showing the status from the list instead.",
@@ -177,9 +178,9 @@
       "pipelineTitle": "Pipeline / Stage Progress",
       "notStarted": {
         "queued": "This run has not started yet. Its stages appear here once its turn comes and it starts.",
-        "running": "This run has just started. No stage has been recorded yet.",
+        "running": "This run is in progress. Its stages appear here once it has ended.",
         "ended": "This run ended before it started. It has no stages.",
-        "noQuality": "The run did not start, so there are no quality results."
+        "noQuality": "The run has not ended yet, or never started, so there are no quality results."
       },
       "qualityCheckpoint": "Quality checkpoint",
       "availability": "availability: {{value}}",
