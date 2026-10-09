@@ -155,7 +155,7 @@ const SCREENS: Array<[string, () => Promise<HTMLElement>]> = [
   ["Add Data", addDataAtReview],
 ];
 
-describe.each(SCREENS)("%s after a build that wanted a key (#787)", (_name, reachRunButton) => {
+describe.each(SCREENS)("%s after a build that wanted a key (#787)", (name, reachRunButton) => {
   it("a run that lost its keys is run again as a retry of that run, with the same spec", async () => {
     executeBuild.mockImplementationOnce(async (spec) => lostRun(spec));
     executeBuild.mockImplementationOnce(async (spec) => ({ ...lostRun(spec), id: "attempt-2", status: "succeeded", error: undefined, keysLost: undefined }));
@@ -175,7 +175,11 @@ describe.each(SCREENS)("%s after a build that wanted a key (#787)", (_name, reac
     // The spec the user had is the spec that goes again.
     expect(second![0]).toEqual(first![0]);
     // The new run says which attempt it retries; the first named no such attempt.
-    expect(second![4]).toEqual({ retryOf: "attempt-1" });
+    // Add Data builds a new table, so it also asks Builder to refuse one made meanwhile
+    // (#881); the edit page refreshes the run's own table and does not.
+    expect(second![4]).toEqual(
+      name === "Add Data" ? { retryOf: "attempt-1", ifAbsent: true } : { retryOf: "attempt-1" },
+    );
     expect(first![4]?.retryOf).not.toBe("attempt-1");
     expectKeyOnlyInMemory();
   });

@@ -811,7 +811,12 @@ export function AddDataPage() {
                 .then(({ unchanged, existing: now }) => {
                   if (unchanged) {
                     setExistingChanged(false);
-                    void job.start(specToBuild(spec, now, choice), { retryOf: retryOfFor(job.run) });
+                    // A new table is made only if none is there by the time Builder commits
+                    // (#881, builder#1223): the check above narrows the gap, this closes it.
+                    void job.start(specToBuild(spec, now, choice), {
+                      retryOf: retryOfFor(job.run),
+                      ifAbsent: choice === "new",
+                    });
                     return;
                   }
                   // Not what the step showed: show the new answer, back on a new table,
