@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildRunFromJob, executeBuild, POLL_INTERVAL_MS, warehouseFailureMessage } from "@/features/runs/api";
 import { i18n } from "@/shared/i18n";
 import { builderApi } from "@/shared/lib/builderApi";
+import { BUILDER_ENUMS } from "@/shared/lib/builderEnums";
 import type { BuildJob } from "@/shared/lib/builderApi.schema";
 import type { BuildSpec } from "@/shared/lib/types";
 
@@ -102,6 +103,19 @@ describe("a refused table commit says why", () => {
     expect(run.status).toBe("failed");
     expect(run.error).toBe(i18n.t(key, { table: "m" }));
     expect(run.error).not.toBe("build failed");
+  });
+
+  it("every reason the contract lists has its own sentence, and commit_failed the generic one", () => {
+    const keys: Record<string, string> = {
+      table_exists: "runs.build.tableExists",
+      empty_result: "runs.build.emptyResult",
+      conflict: "runs.build.commitConflict",
+      commit_failed: "runs.build.commitFailed",
+    };
+    for (const reason of BUILDER_ENUMS["BuildSuccessResponse.warehouse_failures.reason"]) {
+      expect(keys[reason], `no sentence for ${reason}`).toBeDefined();
+      expect(buildRunFromJob(failed(reason), SPEC, "start").error).toBe(i18n.t(keys[reason], { table: "m" }));
+    }
   });
 
   it("a job with no refused table keeps Builder's error", () => {
