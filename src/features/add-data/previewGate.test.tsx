@@ -52,6 +52,31 @@ describe("previewProblem", () => {
     expect(previewProblem(loaded(source({ total_rows: 0, sample: [] })))).toBeNull();
   });
 
+  it("is nothing for a preview that read part of the source, or whose checks failed", () => {
+    // Neither is the preview failing. A sample is how a preview of a large source ends
+    // (#847), and a failed quality check is a result the user is shown and may build on.
+    const sampleOnly = source({ fetch_complete: false, source_reported_total: 2_000_000 });
+    const failedCheck = source({
+      quality_results: [
+        {
+          source_key: "datago.air_station",
+          category: "row_count",
+          rule: "min_rows",
+          column: null,
+          status: "fail",
+          actual: 22,
+          threshold: 100,
+          affected_rows: null,
+          evaluated_rows: 22,
+          detail: null,
+        },
+      ],
+    });
+
+    expect(previewProblem(loaded(sampleOnly))).toBeNull();
+    expect(previewProblem(loaded(failedCheck))).toBeNull();
+  });
+
   it.each<PreviewState>([{ status: "idle" }, { status: "loading" }, loaded()])(
     "says no preview was run for $status",
     (preview) => {
