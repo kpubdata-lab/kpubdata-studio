@@ -10,6 +10,7 @@ import type { BuildSpec } from "@/shared/lib/types";
 import {
   datasetIdToBuild,
   existingTablesAmong,
+  sameExistingTables,
   findExistingTables,
   freeDatasetId,
   specToBuild,
@@ -270,5 +271,34 @@ describe("findExistingTables", () => {
 
     expect(existing.status).toBe("found");
     expect(asked).toEqual([]);
+  });
+});
+
+describe("sameExistingTables (#861)", () => {
+  const ID = "datago-air-station";
+  const KEYS = ["datago.air_station"];
+
+  it("is the same answer when the tables and the free id are", () => {
+    const shown = existingTablesAmong(ID, [STATIONS], KEYS);
+    const again = existingTablesAmong(ID, [table(STATIONS.logical_name, ID, 999)], KEYS);
+
+    // Row counts are not what the step decided on.
+    expect(sameExistingTables(shown, again)).toBe(true);
+  });
+
+  it("is a different answer when the free id was taken meanwhile", () => {
+    const shown = existingTablesAmong(ID, [STATIONS], KEYS);
+    const again = existingTablesAmong(ID, [STATIONS, table(`${ID}-2.datago.air_station`, `${ID}-2`)], KEYS);
+
+    expect(sameExistingTables(shown, again)).toBe(false);
+  });
+
+  it("is a different answer when a table appeared or went", () => {
+    const none = existingTablesAmong(ID, [], KEYS);
+    const found = existingTablesAmong(ID, [STATIONS], KEYS);
+
+    expect(sameExistingTables(none, found)).toBe(false);
+    expect(sameExistingTables(found, none)).toBe(false);
+    expect(sameExistingTables(none, existingTablesAmong(ID, [], KEYS))).toBe(true);
   });
 });

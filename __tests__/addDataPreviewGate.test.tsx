@@ -55,7 +55,7 @@ function previewAnswer(status: "ok" | "failed") {
 }
 
 /** A Builder whose preview is what `answer` says at the time, counting the builds sent to it. */
-function builder(answer: () => "ok" | "failed") {
+function builder(answer: () => "ok" | "failed" | "refused") {
   const builds: string[] = [];
   mswServer.use(
     http.get(`${API_BASE}/providers`, () =>
@@ -63,7 +63,12 @@ function builder(answer: () => "ok" | "failed") {
     ),
     // No table of this id yet: the review step's question about one has an answer (#837).
     http.get(`${API_BASE}/warehouse/tables`, () => HttpResponse.json({ tables: [] })),
-    http.post(`${API_BASE}/preview`, () => HttpResponse.json(previewAnswer(answer()))),
+    http.post(`${API_BASE}/preview`, () => {
+      const now = answer();
+      // The request itself turned away: nothing comes back to look at.
+      if (now === "refused") return HttpResponse.json({ error: "Missing required parameter: station" }, { status: 400 });
+      return HttpResponse.json(previewAnswer(now));
+    }),
     http.post(`${API_BASE}/builds`, async ({ request }) => {
       const body: unknown = await request.json();
       const runId = typeof body === "object" && body !== null && "run_id" in body ? String(body.run_id) : "run";
@@ -138,6 +143,64 @@ describe("Add Data — a preview that failed (#842)", () => {
 
     await screen.findByText(/^run=/);
     expect(builds).toHaveLength(1);
+  });
+});
+
+describe("Add Data — a preview that failed after the settings changed (#842)", () => {
+  /** Back to Configure, another request parameter, and forward to the Preview step. */
+  async function changeTheSettings() {
+    fireEvent.click(screen.getByRole("button", { name: "이전" }));
+    await waitFor(() => expect(document.querySelector("#add-data-params")).not.toBeNull());
+    fireEvent.change(document.querySelector("#add-data-params")!, { target: { value: JSON.stringify({ sidoName: "부산" }) } });
+    next();
+    await screen.findByRole("heading", { name: "Preview · 검증" });
+  }
+
+  it("says why the new preview failed, not that the settings changed", async () => {
+    // The failed attempt was not recorded as a preview of the new settings, so the review
+    // step read the old success as stale and asked for a preview that had just been run.
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    let previewIs: "ok" | "refused" = "ok";
+    const builds = builder(() => previewIs);
+
+    await reachPreview();
+    await waitFor(() => expect(screen.getByText("검증 결과 (Validation)")).toBeInTheDocument());
+    await changeTheSettings();
+    previewIs = "refused";
+    fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+    await screen.findByText(/Missing required parameter: station/);
+    next();
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
+
+    const notice = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-preview-problem="request_failed"]');
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(notice.textContent).toContain("Missing required parameter: station");
+    expect(screen.queryByText(/Preview 실행 이후 source\/설정이 변경되어/)).toBeNull();
+    expect(buildButton()).toBeDisabled();
+    expect(builds).toEqual([]);
+  });
+
+  it("does not say the same settings would fail the same way once the settings are others", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const builds = builder(() => "refused");
+
+    await reachPreview();
+    await screen.findByText(/Missing required parameter: station/);
+    await changeTheSettings();
+    // Not run again: straight on to the review step.
+    next();
+    await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
+
+    // The failure was of other settings. What holds the build now is that no preview of
+    // these has been run.
+    expect(await screen.findByText(/Preview 실행 이후 source\/설정이 변경되어/)).toBeInTheDocument();
+    expect(document.querySelector("[data-preview-problem]")).toBeNull();
+    expect(screen.queryByText(/같은 이유로 실패합니다/)).toBeNull();
+    expect(buildButton()).toBeDisabled();
+    expect(builds).toEqual([]);
   });
 });
 

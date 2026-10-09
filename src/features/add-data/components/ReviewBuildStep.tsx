@@ -54,6 +54,8 @@ export interface ReviewBuildStepProps {
   tableChoice: ExistingTableChoice;
   onChooseTable: (choice: ExistingTableChoice) => void;
   onRecheckExisting: () => void;
+  /** The tables changed between this step's answer and the build button (#861). */
+  existingChanged?: boolean;
   /** What of the preview stops the build, or null (#842). */
   previewProblem: PreviewProblem | null;
   onBackToPreview: () => void;
@@ -109,6 +111,7 @@ export function ReviewBuildStep({
   tableChoice,
   onChooseTable,
   onRecheckExisting,
+  existingChanged = false,
   previewProblem,
   onBackToPreview,
   jobStatus,
@@ -230,6 +233,7 @@ export function ReviewBuildStep({
       <ExistingTableNotice
         choice={tableChoice}
         datasetId={draft.datasetId}
+        changed={existingChanged}
         existing={existing}
         onChoose={onChooseTable}
         onRecheck={onRecheckExisting}
