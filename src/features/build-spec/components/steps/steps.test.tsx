@@ -130,6 +130,20 @@ describe("OutputStep", () => {
     render(<FormHarness render={({ register, formState }) => <OutputStep register={register} errors={formState.errors} />} />);
     expect(screen.getAllByRole("checkbox").length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText("artifacts/builds/air-quality")).toBeInTheDocument();
+    expect(screen.getByText("(필수)")).toBeInTheDocument();
+  });
+
+  it("경로 없이 제출된 스펙이면 경로는 선택이고, 비우면 어디에 쓰는지 말한다 (#883)", () => {
+    render(
+      <FormHarness
+        render={({ register, formState }) => (
+          <OutputStep register={register} errors={formState.errors} pathWhenEmpty="artifacts/builds/station" />
+        )}
+      />,
+    );
+    expect(screen.getByPlaceholderText("artifacts/builds/station")).toBeInTheDocument();
+    expect(screen.queryByText("(필수)")).not.toBeInTheDocument();
+    expect(screen.getByText("비워 두면 처음 제출한 대로 artifacts/builds/station 아래에 씁니다.")).toBeInTheDocument();
   });
 });
 

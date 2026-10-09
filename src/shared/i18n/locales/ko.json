@@ -363,7 +363,8 @@
     "output": {
       "title": "출력 형식",
       "formatsLabel": "스냅샷 파일 형식 (최소 1개)",
-      "pathLabel": "출력 경로 (Output path)"
+      "pathLabel": "출력 경로 (Output path)",
+      "pathWhenEmpty": "비워 두면 처음 제출한 대로 {{path}} 아래에 씁니다."
     },
     "review": {
       "title": "검증·실행",

@@ -514,10 +514,10 @@ test("대기 중 키가 만료된 실행은 편집 화면에서 키를 다시 �
 
   // 8) She goes on to the review step without giving it. The build is refused the same
   //    way, before any run exists, and the notice there takes the key.
-  //    The edit form asks for an output path, which Add Data leaves to Builder: it is
-  //    the one thing she has to add to what she submitted (#883).
+  //    Nothing is added to what she submitted: the output path Add Data left out stays
+  //    out (#883).
   await next.click();
-  await runPage.locator("#outputPath").fill("out/data.jsonl");
+  await expect(runPage.locator("#outputPath")).toHaveValue("");
   await next.click();
   await runPage.getByRole("button", { name: t("newBuild.review.revalidate") }).click();
   await expect(runPage.getByText(t("newBuild.review.passed"))).toBeVisible({ timeout: 30_000 });

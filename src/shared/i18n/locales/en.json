@@ -363,7 +363,8 @@
     "output": {
       "title": "Output",
       "formatsLabel": "Snapshot file formats (at least 1)",
-      "pathLabel": "Output path"
+      "pathLabel": "Output path",
+      "pathWhenEmpty": "Left empty, the build writes under {{path}}, as when it was first submitted."
     },
     "review": {
       "title": "Validate & Run",
