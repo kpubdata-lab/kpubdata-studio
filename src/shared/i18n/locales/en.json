@@ -175,6 +175,12 @@
       "title": "Refresh detail",
       "back": "← Refresh History",
       "pipelineTitle": "Pipeline / Stage Progress",
+      "notStarted": {
+        "queued": "This run has not started yet. Its stages appear here once its turn comes and it starts.",
+        "running": "This run has just started. No stage has been recorded yet.",
+        "ended": "This run ended before it started. It has no stages.",
+        "noQuality": "The run did not start, so there are no quality results."
+      },
       "qualityCheckpoint": "Quality checkpoint",
       "availability": "availability: {{value}}",
       "actualVsThreshold": "actual {{actual}} / threshold {{threshold}}",

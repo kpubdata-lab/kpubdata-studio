@@ -175,6 +175,12 @@
       "title": "갱신 상세",
       "back": "← 갱신 이력",
       "pipelineTitle": "파이프라인 / 단계 진행",
+      "notStarted": {
+        "queued": "아직 시작하지 않은 실행입니다. 순서가 되어 시작하면 여기에 단계가 채워집니다.",
+        "running": "방금 시작한 실행입니다. 아직 기록된 단계가 없습니다.",
+        "ended": "시작하기 전에 끝난 실행입니다. 단계 기록이 없습니다.",
+        "noQuality": "시작하지 않은 실행이라 품질 결과가 없습니다."
+      },
       "qualityCheckpoint": "품질 점검",
       "availability": "평가 가능 여부: {{value}}",
       "actualVsThreshold": "실제값 {{actual}} / 기준값 {{threshold}}",

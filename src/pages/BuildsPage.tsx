@@ -146,22 +146,6 @@ export function BuildsPage() {
   const selectedListItem = items.find((item) => item.id === selectedRunId) ?? null;
   const outOfListScope = Boolean(selectedRunId) && listState.status === "loaded" && !selectedListItem;
 
-  const stagesState = useAsync<RunStagesResponse>(
-    (signal) => (selectedRunId ? listBuildStages(selectedRunId, signal) : Promise.reject(new Error("no run"))),
-    [selectedRunId],
-    t("builds.errors.loadStage"),
-  );
-  const qualityState = useAsync<BuildQualityResponse>(
-    (signal) => (selectedRunId ? getBuildQuality(selectedRunId, signal) : Promise.reject(new Error("no run"))),
-    [selectedRunId],
-    t("builds.errors.loadQuality"),
-  );
-  const specState = useAsync<BuildSpecSnapshotResponse>(
-    (signal) => (selectedRunId ? getBuildSpecSnapshot(selectedRunId, signal) : Promise.reject(new Error("no run"))),
-    [selectedRunId],
-    t("builds.errors.loadSpec"),
-  );
-
   // Selected Run live (job registry) polling is enabled only when state is genuinely uncertain (#286
   // follow-up §1). In mock mode, builderApi.getBuildJob is a stub that always attempts real fetch,
   // causing repeated failures even for succeeded/failed historical runs, producing unnecessary
@@ -175,6 +159,27 @@ export function BuildsPage() {
     Boolean(selectedRunId) && isRealBuilderEnabled() && listState.status === "loaded" && !selectedListItem;
   const [liveAttempt, setLiveAttempt] = useState(0);
   const live = useSelectedRunPolling(shouldPollLiveStatus ? selectedRunId : null, liveAttempt);
+
+  // What Builder keeps of a run is read again whenever the job's status changes (#875).
+  // Read once per run id, a run opened while it waited kept the 404s of that moment —
+  // stages, quality, spec — after it had started and ended, until the page was reloaded.
+  const liveStatus = live.kind === "job" ? live.job.status : null;
+  const stagesState = useAsync<RunStagesResponse>(
+    (signal) => (selectedRunId ? listBuildStages(selectedRunId, signal) : Promise.reject(new Error("no run"))),
+    [selectedRunId, liveStatus],
+    t("builds.errors.loadStage"),
+  );
+  const qualityState = useAsync<BuildQualityResponse>(
+    (signal) => (selectedRunId ? getBuildQuality(selectedRunId, signal) : Promise.reject(new Error("no run"))),
+    [selectedRunId, liveStatus],
+    t("builds.errors.loadQuality"),
+  );
+  const specState = useAsync<BuildSpecSnapshotResponse>(
+    (signal) => (selectedRunId ? getBuildSpecSnapshot(selectedRunId, signal) : Promise.reject(new Error("no run"))),
+    [selectedRunId, liveStatus],
+    t("builds.errors.loadSpec"),
+  );
+
 
   // Event polling also follows the same "continue if non-terminal, stop if terminal" policy as
   // selected Run polling (#255 §3). ListItem's historical status is used for display (RunDetailPanel's
