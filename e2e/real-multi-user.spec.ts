@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { expectNoPageErrors, t } from "./helpers";
 
@@ -70,13 +73,19 @@ async function enterSessionKey(page: Page): Promise<void> {
  * answer is 403, and the browser logs every failed load. DEV_MODE's one user is an
  * administrator, so the single-user suite never sees it.
  */
-function collectSignedInPageErrors(page: Page, bucket: string[], expected404s: () => string[] = () => []): void {
+function collectSignedInPageErrors(
+  page: Page,
+  bucket: string[],
+  expected404s: () => string[] = () => [],
+  expected400s: () => string[] = () => [],
+): void {
   page.on("pageerror", (error) => bucket.push(`pageerror: ${error.message}`));
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const from = message.location().url;
     if (from === `${BUILDER_URL}/admin/config` && message.text().includes("403")) return;
     if (expected404s().includes(from.split("?")[0]) && message.text().includes("404")) return;
+    if (expected400s().includes(from.split("?")[0]) && message.text().includes("400")) return;
     bucket.push(`console.error: ${message.text()} (${from})`);
   });
 }
@@ -113,6 +122,22 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
   await page.locator("#add-data-provider").selectOption("datago");
   await page.locator("#add-data-dataset").selectOption("air_station");
   await expect(page.getByText(t("addData.credential.title"))).toBeVisible({ timeout: 30_000 });
+
+  //    Going on without it does not reach Builder (#787): the preview step says the same
+  //    thing instead of sending a request that can only be refused.
+  const previewsSent: string[] = [];
+  page.on("request", (sent) => {
+    if (sent.url() === `${BUILDER_URL}/preview`) previewsSent.push(sent.method());
+  });
+  await page
+    .locator("#add-data-params")
+    .fill(JSON.stringify({ station: "강남구", term: "daily", page: 1, page_size: 100 }));
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "Preview · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByText(t("addData.credential.title")).first()).toBeVisible();
+  await expect(page.getByText("검증 결과 (Validation)")).toHaveCount(0);
+  expect(previewsSent, "no preview is sent without the key").toEqual([]);
 
   // 2) The key is entered for this session only: this Builder stores none.
   await enterSessionKey(page);
@@ -229,6 +254,28 @@ test("두 사용자는 서로의 실행도 키도 볼 수 없다 @multi-user", a
   await bob.close();
 });
 
+/**
+ * Builder's answers for a missing key, as recorded for the unit test that plays them back
+ * through Studio's client (`missingProviderKey.recorded.test.ts`, #787). What this Builder
+ * answers is compared with them here, so the recording cannot drift from Builder unseen.
+ * Read from the file: a JSON import needs an import attribute in Playwright's loader.
+ */
+const RECORDED = JSON.parse(
+  readFileSync(
+    fileURLToPath(new URL("../src/shared/lib/__recordings__/missingProviderKey.json", import.meta.url)),
+    "utf8",
+  ),
+) as {
+  refusals: Array<{ call: string; status: number; body: Record<string, unknown> }>;
+  keysLostJob: Record<string, unknown>;
+};
+
+function recordedRefusal(call: string, status: number): Record<string, unknown> {
+  const found = RECORDED.refusals.find((refusal) => refusal.call === call && refusal.status === status);
+  if (!found) throw new Error(`no recording of ${call} answering ${status}`);
+  return found.body;
+}
+
 /** How long this Builder keeps a waiting job's provider keys (`scripts/multi-user-e2e.mjs`). */
 const JOB_KEY_TTL_MS = Number(process.env.MULTI_USER_JOB_KEY_TTL_SECONDS ?? "1") * 1000;
 
@@ -256,9 +303,10 @@ async function openInNewTab(
   path: string,
   errors: string[],
   expected404s: () => string[],
+  expected400s: () => string[] = () => [],
 ): Promise<Page> {
   const page = await context.newPage();
-  collectSignedInPageErrors(page, errors, expected404s);
+  collectSignedInPageErrors(page, errors, expected404s, expected400s);
   await page.goto(path);
   const studio = new URL(page.url()).origin;
   const arrived = (url: URL) => url.origin === studio && url.pathname === path;
@@ -293,7 +341,7 @@ test.afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup().catch(() => undefined);
 });
 
-test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리는 편집 화면으로 간다 (#846) @multi-user", async ({
+test("대기 중 키가 만료된 실행은 편집 화면에서 키를 다시 넣어 같은 정의의 새 실행으로 성공한다 (#846, #787) @multi-user", async ({
   browser,
   request,
 }) => {
@@ -411,6 +459,16 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
     ).json()) as Job;
   await expect.poll(async () => (await alicesJobNow()).status, { timeout: 180_000 }).toBe("failed");
   expect((await alicesJobNow()).code).toBe("credentials_required");
+  //    Word for word the job Studio's readers are tested on, but for what names this run.
+  const { run_id: _runId, created_at: _createdAt, updated_at: _updatedAt, created_by: _createdBy, ...recordedJob } =
+    RECORDED.keysLostJob;
+  expect(await alicesJobNow()).toEqual({
+    ...recordedJob,
+    run_id: aliceRunId,
+    created_at: expect.any(String),
+    updated_at: expect.any(String),
+    created_by: expect.any(String),
+  });
   const builderSpec = await request.get(`${BUILDER_URL}/builds/${encodeURIComponent(aliceRunId)}/spec`, {
     headers: aliceAuth,
   });
@@ -419,7 +477,9 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
   // 6) She opens the run again in a new tab — by its address: Refresh History lists only
   //    runs that started — and the lost-keys card offers the retry on the edit page…
   const runPath = `/refresh-jobs/${encodeURIComponent(aliceRunId)}`;
-  const runPage = await openInNewTab(alice, ALICE, runPath, errors, expected404s);
+  //    This tab asks Builder twice without her key, further down, and is refused twice.
+  const refusedForWantOfAKey = () => [`${BUILDER_URL}/preview`, `${BUILDER_URL}/builds`];
+  const runPage = await openInNewTab(alice, ALICE, runPath, errors, expected404s, refusedForWantOfAKey);
   const card = runPage.locator(`[data-keys-lost="${aliceRunId}"]`);
   await expect(card).toBeVisible({ timeout: 30_000 });
   await expect(card.getByText(t("provider.missingKey.lostNoSpec"))).toHaveCount(0);
@@ -434,6 +494,104 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
   });
   await expect(runPage.getByText(t("newBuild.page.specNotFound").replace("{{id}}", aliceRunId))).toHaveCount(0);
   await expect(runPage.locator("#datasetId")).toHaveValue(DATASET_ID);
+
+  // 7) This tab is a new one: the key she typed lived in the memory of the tab she closed.
+  //    The preview is sent without it, Builder refuses and names the provider, and Studio
+  //    asks for that provider's key where she is instead of showing an error sentence (#787).
+  const next = runPage.getByRole("button", { name: t("newBuild.nav.next") });
+  for (let step = 0; step < 3; step += 1) await next.click();
+  const refusedPreview = runPage.waitForResponse(
+    (answer) => answer.url() === `${BUILDER_URL}/preview` && answer.request().method() === "POST",
+  );
+  await runPage.getByRole("button", { name: t("newBuild.preview.refresh") }).click();
+  const previewAnswer = await refusedPreview;
+  expect(previewAnswer.request().headers()["x-provider-key"], "no key in this tab yet").toBeUndefined();
+  expect(previewAnswer.status()).toBe(400);
+  expect(await previewAnswer.json()).toEqual(recordedRefusal("preview", 400));
+  const previewNotice = runPage.locator('[data-missing-provider-keys="datago"]');
+  await expect(previewNotice).toBeVisible();
+  await expect(previewNotice.locator('[data-key-needed="datago"]')).toBeVisible();
+
+  // 8) She goes on to the review step without giving it. The build is refused the same
+  //    way, before any run exists, and the notice there takes the key.
+  //    The edit form asks for an output path, which Add Data leaves to Builder: it is
+  //    the one thing she has to add to what she submitted (#883).
+  await next.click();
+  await runPage.locator("#outputPath").fill("out/data.jsonl");
+  await next.click();
+  await runPage.getByRole("button", { name: t("newBuild.review.revalidate") }).click();
+  await expect(runPage.getByText(t("newBuild.review.passed"))).toBeVisible({ timeout: 30_000 });
+  const run = runPage.getByRole("button", { name: t("newBuild.review.runRefresh") });
+  const refusedBuild = runPage.waitForResponse(
+    (answer) => answer.url() === `${BUILDER_URL}/builds` && answer.request().method() === "POST",
+  );
+  await run.click();
+  const buildAnswer = await refusedBuild;
+  expect(buildAnswer.status()).toBe(400);
+  expect(await buildAnswer.json()).toEqual(recordedRefusal("submitBuild", 400));
+  const buildNotice = runPage.locator('[data-missing-provider-keys="datago"]');
+  await expect(buildNotice).toBeVisible();
+  await buildNotice.locator("#missing-provider-key-datago").fill(SESSION_KEY);
+  await buildNotice.getByRole("button", { name: t("provider.missingKey.use") }).click();
+  await expect(buildNotice.locator('[data-key-held="datago"]')).toBeVisible();
+  //    The form she was on is as it was: the same table, the same step.
+  await expect(run).toBeEnabled();
+
+  // 9) The same definition is sent again, now with her key, as a new run that names the
+  //    one that lost its keys — and it succeeds.
+  const acceptedRetry = runPage.waitForResponse(
+    (answer) => answer.url() === `${BUILDER_URL}/builds` && answer.request().method() === "POST",
+  );
+  await run.click();
+  const retryAnswer = await acceptedRetry;
+  expect(retryAnswer.status(), await retryAnswer.text()).toBe(202);
+  expect(retryAnswer.request().headers()["x-provider-key"]).toBe(`datago=${SESSION_KEY}`);
+  const sent = retryAnswer.request().postDataJSON() as { spec: string; retry_of?: string; run_id?: string };
+  expect(sent.retry_of, "the new run names the one that lost its keys").toBe(aliceRunId);
+  expect(JSON.parse(sent.spec)).toMatchObject({
+    dataset_id: DATASET_ID,
+    sources: [{ provider: "datago", dataset: "air_station", params: { station: "강남구", term: "daily" } }],
+  });
+  //    The key travels in the header, never in the definition.
+  expect(sent.spec).not.toContain(SESSION_KEY);
+  const retryRunId = ((await retryAnswer.json()) as Job).run_id;
+  expect(retryRunId).not.toBe(aliceRunId);
+  const retryJob = async (): Promise<Job> =>
+    (await (
+      await request.get(`${BUILDER_URL}/builds/${encodeURIComponent(retryRunId)}`, { headers: aliceAuth })
+    ).json()) as Job;
+  await expect.poll(async () => (await retryJob()).status, { timeout: 120_000 }).toBe("succeeded");
+  await expect(runPage.getByText(t("newBuild.review.success").replace("{{id}}", retryRunId))).toBeVisible({
+    timeout: 60_000,
+  });
+  //    The run that lost its keys is still what it was: failed, and hers.
+  expect((await alicesJobNow()).status).toBe("failed");
+
+  //    The key is in this tab's memory only: not in the address, and in nothing the
+  //    browser keeps — IndexedDB included.
+  expect(runPage.url()).not.toContain(SESSION_KEY);
+  const kept = await runPage.evaluate(async () => {
+    const stores: unknown[] = [{ ...localStorage }, { ...sessionStorage }, document.cookie];
+    for (const { name } of await indexedDB.databases()) {
+      if (!name) continue;
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const opening = indexedDB.open(name);
+        opening.onsuccess = () => resolve(opening.result);
+        opening.onerror = () => reject(opening.error);
+      });
+      for (const store of Array.from(db.objectStoreNames)) {
+        const rows = await new Promise<unknown[]>((resolve, reject) => {
+          const reading = db.transaction(store, "readonly").objectStore(store).getAll();
+          reading.onsuccess = () => resolve(reading.result);
+          reading.onerror = () => reject(reading.error);
+        });
+        stores.push({ name, store, rows });
+      }
+      db.close();
+    }
+    return JSON.stringify(stores);
+  });
+  expect(kept).not.toContain(SESSION_KEY);
 
   await expectNoPageErrors(errors);
 });
