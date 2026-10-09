@@ -1112,6 +1112,7 @@
       "logicalNameNote": "Table ID and the source key from KPubData Builder’s Preview.",
       "existingChecking": "Checking whether a table with this ID already exists.",
       "existingUnknown": "Could not check whether a table with this ID already exists. So that an existing table is not replaced unknowingly, the table is not created until this is known.",
+      "existingChanged": "Checked again just before building: a table appeared elsewhere in the meantime. Look at the choice below again before building — nothing has been built yet.",
       "existingRecheck": "Check again",
       "existingTitle": "A table with this ID already exists",
       "existingBody": "A table was already created under the table ID {{id}}. Creating it again under the same ID replaces that table’s contents with the data fetched this time. If you are adding it again with different conditions, the rows shown now leave that table’s current contents.",

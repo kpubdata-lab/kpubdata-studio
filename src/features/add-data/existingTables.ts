@@ -119,3 +119,34 @@ export function specToBuild(spec: BuildSpec, existing: ExistingTables, choice: E
   if (existing.status !== "found" || choice !== "new") return spec;
   return { ...spec, datasetId: existing.freeId, title: `${spec.title} (${existing.freeNumber})` };
 }
+
+/**
+ * Whether two answers say the same about the id (#861): the same status and, when tables
+ * are there, the same tables, the same ones replaced and the same free id. Only what the
+ * review step showed and what the build would do is compared — not row counts.
+ */
+export function sameExistingTables(a: ExistingTables, b: ExistingTables): boolean {
+  if (a.status !== b.status) return false;
+  if (a.status !== "found" || b.status !== "found") return true;
+  const names = (tables: WarehouseTable[]) => tables.map((table) => table.logical_name).sort().join("\n");
+  return a.freeId === b.freeId && names(a.tables) === names(b.tables) && names(a.replaced) === names(b.replaced);
+}
+
+/**
+ * Ask again right before the build is submitted (#861).
+ *
+ * The review step read the tables when it was entered; another tab may have made a table
+ * since — the very `-2` this build was going to use. The build goes ahead only when the
+ * answer is what the step showed; otherwise the caller shows the new answer and submits
+ * nothing. This narrows the gap and does not close it: only Builder can refuse a commit
+ * to a table that appeared after it was asked (kpubdata-builder, `if_absent`).
+ */
+export async function confirmExistingTables(
+  datasetId: string,
+  shown: ExistingTables,
+  signal?: AbortSignal,
+  sourceKeys: readonly string[] = [],
+): Promise<{ unchanged: boolean; existing: ExistingTables }> {
+  const existing = await findExistingTables(datasetId, signal, sourceKeys);
+  return { unchanged: existing.status !== "unknown" && sameExistingTables(shown, existing), existing };
+}
