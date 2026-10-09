@@ -58,10 +58,10 @@ describe("ProviderPage real mode (#S01)", () => {
 
     renderPage();
 
-    expect(await screen.findByText("Provider 정보를 불러올 수 없습니다")).toBeInTheDocument();
+    expect(await screen.findByText("제공자 정보를 불러올 수 없습니다")).toBeInTheDocument();
     expect(screen.queryByText("데이터고")).not.toBeInTheDocument();
     expect(screen.queryByText("KOSIS")).not.toBeInTheDocument();
-    expect(screen.getByText("등록된 Provider가 없습니다")).toBeInTheDocument();
+    expect(screen.getByText("등록된 제공자가 없습니다")).toBeInTheDocument();
   });
 
   it("does NOT call the provider test (POST /test or GET /status) just by selecting a provider", async () => {

@@ -136,7 +136,7 @@ describe("Table Detail with dotted source keys (#602)", () => {
     // Its name reads as `air`'s, yet Builder did not say so: it is not guessed from the name.
     tables = [warehouseTable("air.air_quality", null, "snap_air")];
     renderDetail("/tables/air");
-    expect(await screen.findByText("이 테이블에는 아직 커밋된 스냅샷이 없어 실행(run) 기준으로 보여 줍니다.")).toBeInTheDocument();
+    expect(await screen.findByText("이 테이블에는 아직 커밋된 스냅샷이 없어 실행 기준으로 보여 줍니다.")).toBeInTheDocument();
     expect(rowsRequests).toEqual([]);
   });
 });

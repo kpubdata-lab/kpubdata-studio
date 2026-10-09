@@ -72,10 +72,10 @@ async function selectAirQuality() {
   // 계속 disabled로 남는다. sleep 대신 실제 selectable state — datago option이 렌더된
   // 것 — 를 기준으로 기다린다.
   await screen.findByRole("option", { name: "datago" });
-  fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
+  fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
   // provider 선택이 반영되면 Dataset select가 열리고 해당 provider의 dataset option이 붙는다.
   await screen.findByRole("option", { name: "대기오염 (air_quality)" });
-  fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
+  fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
   await screen.findByText("이 소스 데이터셋의 요청 파라미터");
 }
 
@@ -144,7 +144,7 @@ describe("Add Data credential prerequisite (real 모드)", () => {
     expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
 
     next();
-    await screen.findByRole("heading", { name: /Preview · 검증/ });
+    await screen.findByRole("heading", { name: /미리보기 · 검증/ });
     expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
   });
 
@@ -167,7 +167,7 @@ describe("Add Data credential prerequisite (real 모드)", () => {
     await waitFor(() => expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument());
 
     next();
-    await screen.findByRole("heading", { name: /Preview · 검증/ });
+    await screen.findByRole("heading", { name: /미리보기 · 검증/ });
     expect(screen.queryByText("API 연결이 필요합니다")).not.toBeInTheDocument();
   });
 });

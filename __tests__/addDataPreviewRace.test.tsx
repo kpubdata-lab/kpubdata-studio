@@ -1,7 +1,7 @@
 /**
  * Add Data Workbench — Preview latest-request race 전용 테스트 (#283 후속 리뷰 §4).
  *
- * 실제 `PreviewValidationStep`의 "Preview 새로고침" 버튼은 `preview.status === "loading"`
+ * 실제 `PreviewValidationStep`의 "미리보기 새로고침" 버튼은 `preview.status === "loading"`
  * 동안 정상적으로 disabled 처리된다(정당한 UI 안전장치, `Button`의 `loading` prop) —
  * React는 disabled인 DOM 노드의 클릭 리스너를 fiber의 `disabled` prop 기준으로 걸러내므로
  * (disabled DOM 속성을 테스트에서 강제로 바꿔도 무시한다), 그 버튼 자체로는 "이전 요청이
@@ -29,8 +29,8 @@ vi.mock("@/features/add-data/components/PreviewValidationStep", () => ({
   PreviewValidationStep: (props: { preview: { status: string; error?: string }; onRefresh: () => void }) => (
     <div>
       <h3>미리보기 · 검증 (stub)</h3>
-      <button onClick={props.onRefresh}>강제 Preview 새로고침</button>
-      {props.preview.status === "error" ? <p>{"Preview 요청에 실패했습니다"}</p> : null}
+      <button onClick={props.onRefresh}>강제 미리보기 새로고침</button>
+      {props.preview.status === "error" ? <p>{"미리보기 요청에 실패했습니다"}</p> : null}
       {props.preview.status === "error" && props.preview.error ? <p>{props.preview.error}</p> : null}
     </div>
   ),
@@ -82,32 +82,32 @@ describe("Add Data Workbench — Preview latest-request race (#283 후속 리뷰
 
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
-    await screen.findByLabelText("제공자 (Provider)");
+    await screen.findByLabelText(/^제공자/);
     await screen.findByRole("option", { name: "datago" });
-    fireEvent.change(screen.getByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     // 실연동 모드의 기본 MSW catalog handler는 dataset "air_quality"만 제공한다.
-    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "air_quality" } });
+    fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
     next();
     await screen.findByText("미리보기 · 검증 (stub)");
 
     // A: 유효한 draft로 Preview 요청을 시작한다 — 네트워크가 pendingPreview로 막혀 있어
     // 아직 완료되지 않는다.
-    fireEvent.click(screen.getByRole("button", { name: "강제 Preview 새로고침" }));
+    fireEvent.click(screen.getByRole("button", { name: "강제 미리보기 새로고침" }));
 
     // B: "불러오기"로 draft 전체를 invalid(INITIAL_DRAFT)로 바꿔치기한다 — step 이동 없이
     // 그대로 Preview 화면에 머무른 채 draft만 교체된다. 이어서 다시 Preview를 누르면
     // local error로 즉시 return해야 한다(네트워크 요청 없음).
     fireEvent.click(screen.getByRole("button", { name: "불러오기" }));
-    fireEvent.click(screen.getByRole("button", { name: "강제 Preview 새로고침" }));
+    fireEvent.click(screen.getByRole("button", { name: "강제 미리보기 새로고침" }));
 
-    expect(screen.getByText("Preview 요청에 실패했습니다")).toBeInTheDocument();
-    expect(screen.getByText(/Source를 먼저 선택/)).toBeInTheDocument();
+    expect(screen.getByText("미리보기 요청에 실패했습니다")).toBeInTheDocument();
+    expect(screen.getByText(/소스를 먼저 선택/)).toBeInTheDocument();
 
     // A가 뒤늦게 완료돼도 B의 error 상태를 덮어써서는 안 된다.
     resolvePreview();
     await pendingPreview;
-    await waitFor(() => expect(screen.getByText("Preview 요청에 실패했습니다")).toBeInTheDocument());
-    expect(screen.getByText(/Source를 먼저 선택/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("미리보기 요청에 실패했습니다")).toBeInTheDocument());
+    expect(screen.getByText(/소스를 먼저 선택/)).toBeInTheDocument();
   });
 });

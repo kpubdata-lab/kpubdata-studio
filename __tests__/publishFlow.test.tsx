@@ -142,7 +142,7 @@ describe("BuildPublishPage readiness and form (#270)", () => {
     expect(await screen.findByText("server credential missing")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "최종 확인" })).toBeDisabled();
     expect(fetchMock.mock.calls.filter(([, init]) => init.method === "POST")).toHaveLength(0);
-    expect(screen.getByText(/source Provider credential이 아니라/)).toBeInTheDocument();
+    expect(screen.getByText(/소스 제공자 자격 증명이 아니라/)).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: /token|credential/i })).not.toBeInTheDocument();
   });
 

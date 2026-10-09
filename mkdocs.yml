@@ -56,6 +56,7 @@ nav:
   - 개발 가이드:
       - 기여 방법: CONTRIBUTING.md
       - 에이전트 가이드: AGENTS.md
+      - 화면 용어집: ko-glossary.md
   - 프로젝트:
       - 요구사항 (PRD): PRD.md
       - 로드맵: ROADMAP.md

@@ -32,7 +32,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       const evidence = await fetchReportEvidence("does-not-exist", "does-not-exist-run");
       const summary = buildOverviewSummary(evidence);
       expect(summary).toContain("요약할 수 없습니다");
-      expect(summary).not.toMatch(/Provider의 Source로 구성되어 있습니다\.\s*$/);
+      expect(summary).not.toMatch(/제공자의 소스로 구성되어 있습니다\.\s*$/);
     });
   });
 
@@ -91,7 +91,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       expect(summary).toContain("observed_at");
       expect(summary).toContain("value");
       expect(summary).toContain("kma__weather");
-      expect(summary).toContain("해당 단계의 Schema를 확인할 수 없습니다");
+      expect(summary).toContain("해당 단계의 스키마를 확인할 수 없습니다");
     });
   });
 

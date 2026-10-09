@@ -59,21 +59,21 @@ describe("one table creation flow (#534)", () => {
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
 
     // Provider and dataset appear in the same step as the source choice.
-    expect(await screen.findByLabelText(/제공자 \(Provider\)/)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/^제공자/)).toBeInTheDocument();
     expect(screen.getByRole("listitem", { current: "step" })).toHaveTextContent("구성");
   });
 
   it("previews the logical table name from Builder's source key before creating", async () => {
     renderAt("/add");
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
-    fireEvent.change(await screen.findByLabelText(/제공자 \(Provider\)/), { target: { value: "datago" } });
-    await waitFor(() => expect(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/)).not.toBeDisabled());
-    fireEvent.change(screen.getByLabelText(/소스 데이터셋 \(Source Dataset\)/), { target: { value: "apt_trade" } });
+    fireEvent.change(await screen.findByLabelText(/^제공자/), { target: { value: "datago" } });
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
+    fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText("아파트 실거래가");
 
     next();
-    await screen.findByRole("heading", { name: "Preview · 검증" });
-    fireEvent.click(screen.getByRole("button", { name: "Preview 새로고침" }));
+    await screen.findByRole("heading", { name: "미리보기 · 검증" });
+    fireEvent.click(screen.getByRole("button", { name: "미리보기 새로고침" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "다음" })).toBeEnabled());
     next();
 

@@ -37,9 +37,9 @@ afterEach(() => vi.unstubAllEnvs());
 describe("Dataset Detail P0 (#253)", () => {
   it("defaults to latest run and the highest completed stage", async () => {
     renderDetail();
-    expect(await screen.findByLabelText("Run 선택")).toHaveValue("air-2026-08-14");
-    await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
-    expect(screen.getByRole("link", { name: "이 Run 게시" })).toHaveAttribute(
+    expect(await screen.findByLabelText("실행 선택")).toHaveValue("air-2026-08-14");
+    await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
+    expect(screen.getByRole("link", { name: "이 실행 게시" })).toHaveAttribute(
       "href",
       "/refresh-jobs/air-2026-08-14/publish?dataset=air-quality",
     );
@@ -47,9 +47,9 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("selects an accessible historical run from the URL", async () => {
     renderDetail("/tables/air-quality?run=air-2026-08-13");
-    expect(await screen.findByLabelText("Run 선택")).toHaveValue("air-2026-08-13");
+    expect(await screen.findByLabelText("실행 선택")).toHaveValue("air-2026-08-13");
     expect(screen.getByTestId("location")).toHaveTextContent("run=air-2026-08-13");
-    expect(screen.getByRole("link", { name: "이 Run 게시" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "이 실행 게시" })).toHaveAttribute(
       "href",
       "/refresh-jobs/air-2026-08-13/publish?dataset=air-quality",
     );
@@ -57,20 +57,20 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("does not silently replace an invalid run with latest", async () => {
     renderDetail("/tables/air-quality?run=missing-run");
-    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 run을 찾을 수 없습니다");
+    expect(await screen.findByRole("alert")).toHaveTextContent("선택한 실행을 찾을 수 없습니다");
     expect(screen.getByTestId("location")).toHaveTextContent("run=missing-run");
-    expect(screen.queryByLabelText("Run 선택")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "이 Run 게시" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("실행 선택")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "이 실행 게시" })).not.toBeInTheDocument();
   });
 
   it("keeps an invalid source visible in the select with a recovery path", async () => {
     renderDetail("/tables/air-quality?source=ghost__source");
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("ghost__source");
-    const sourceSelect = screen.getByLabelText("Source 선택");
+    const sourceSelect = screen.getByLabelText("소스 선택");
     expect(sourceSelect).toHaveValue("ghost__source");
     expect(within(sourceSelect).getByRole("option", { selected: true })).toHaveTextContent(
-      "존재하지 않는 source",
+      "존재하지 않는 소스",
     );
     fireEvent.change(sourceSelect, { target: { value: "datago__air" } });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=datago__air"));
@@ -78,36 +78,40 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("removes an invalid stage param from the URL to match the fallback UI", async () => {
     renderDetail("/tables/air-quality?stage=platinum");
-    await screen.findByLabelText("Run 선택");
+    await screen.findByLabelText("실행 선택");
     await waitFor(() => expect(screen.getByTestId("location")).not.toHaveTextContent("stage=platinum"));
     // The URL is cleaned at once, but the fallback stage is `bronze` until the stage
     // summary loads and becomes the highest completed stage after it (#459).
-    await waitFor(() => expect(screen.getByLabelText("Stage 선택")).toHaveValue("gold"));
+    await waitFor(() => expect(screen.getByLabelText("단계 선택")).toHaveValue("gold"));
   });
 
   it("synchronizes source selection and chooses bronze when no higher stage completed", async () => {
     renderDetail();
-    const sourceSelect = await screen.findByLabelText("Source 선택");
+    const sourceSelect = await screen.findByLabelText("소스 선택");
     await waitFor(() => expect(sourceSelect).toBeEnabled());
     fireEvent.change(sourceSelect, { target: { value: "kma__weather" } });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=kma__weather"));
-    expect(screen.getByRole("button", { name: /bronze completed/ })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /silver failed/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /gold not_run/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /bronze 완료/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /silver 실패/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /gold 실행 안 됨/ })).toBeInTheDocument();
+    // The stage picker words the same statuses instead of showing Builder's codes (#843).
+    const stageSelect = screen.getByLabelText("단계 선택");
+    expect(within(stageSelect).getByRole("option", { name: "silver · 실패" })).toBeInTheDocument();
+    expect(within(stageSelect).getByRole("option", { name: "gold · 실행 안 됨" })).toBeInTheDocument();
   });
 
   it("updates the stage URL from lineage and applies it to Schema context", async () => {
     renderDetail("/tables/air-quality?stage=silver&tab=schema");
     expect(await screen.findByText("observed_at")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Stage 선택"), { target: { value: "bronze" } });
+    fireEvent.change(screen.getByLabelText("단계 선택"), { target: { value: "bronze" } });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("stage=bronze"));
-    expect(await screen.findByText("Schema 없음/지원되지 않음")).toBeInTheDocument();
+    expect(await screen.findByText("스키마 없음/지원되지 않음")).toBeInTheDocument();
   });
 
   it("shows only the persisted Silver sample and no fake Gold preview", async () => {
     renderDetail("/tables/air-quality?stage=silver&tab=preview");
     expect(await screen.findByText("2026-08-14T00:00:00Z")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Stage 선택"), { target: { value: "gold" } });
+    fireEvent.change(screen.getByLabelText("단계 선택"), { target: { value: "gold" } });
     // Gold keeps no sample: that is "not supported", not "0 rows" (#844).
     expect(await screen.findByText("이 단계는 미리보기를 지원하지 않습니다")).toBeInTheDocument();
     expect(screen.queryByText(/0행/)).toBeNull();
@@ -132,9 +136,9 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it("shows unavailable lineage nodes without presenting them as completed", async () => {
     renderDetail("/tables/population");
-    const gold = await screen.findByRole("button", { name: "gold unavailable" });
+    const gold = await screen.findByRole("button", { name: "gold 정보 없음" });
     expect(gold).toHaveAttribute("aria-pressed", "false");
-    expect(within(gold).getByText("unavailable")).toBeInTheDocument();
+    expect(within(gold).getByText("정보 없음")).toBeInTheDocument();
   });
 
   it.each([
@@ -153,18 +157,18 @@ describe("Dataset Detail P0 (#253)", () => {
     // 기본 선택(latest run air-2026-08-14, source datago__air)은 gold stage가 completed/PASS이면서
     // run 전체 상태는 kma__weather의 silver 실패로 인해 failed다 — 두 상태 semantics는 서로 다른
     // scope(run 전체 vs 선택된 source/stage)이므로 값 자체를 숨기거나 조작하지 않는다.
-    await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
 
-    const runStatusRow = screen.getByTitle("선택된 source/stage가 아니라 이 run 전체(모든 source)의 결과입니다");
-    expect(runStatusRow).toHaveTextContent("Run 상태");
-    expect(runStatusRow).toHaveTextContent("failed");
+    const runStatusRow = screen.getByTitle("선택된 소스/단계가 아니라 이 실행 전체(모든 소스)의 결과입니다");
+    expect(runStatusRow).toHaveTextContent("실행 상태");
+    expect(runStatusRow).toHaveTextContent("실패");
 
-    const stageBadge = screen.getByTitle("선택된 source(datago__air)의 gold stage 상태");
+    const stageBadge = screen.getByTitle("선택된 소스(datago__air)의 gold 단계 상태");
     expect(stageBadge).toHaveTextContent("gold");
-    expect(stageBadge).toHaveTextContent("completed");
+    expect(stageBadge).toHaveTextContent("완료");
 
     const explanation = await screen.findByRole("alert");
-    expect(explanation).toHaveTextContent(/run 상태는 failed이지만/i);
+    expect(explanation).toHaveTextContent(/실행은 실패했지만/);
     expect(explanation).toHaveTextContent("kma__weather");
   });
 
@@ -184,7 +188,7 @@ describe("Dataset Detail P0 (#253)", () => {
     // Default entry (no ?run= in the URL, latest run chosen implicitly). Unlike stage, the run is not
     // otherwise written to the URL, which is how the RUN context used to show as "—".
     renderDetail();
-    await screen.findByLabelText("Run 선택");
+    await screen.findByLabelText("실행 선택");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "이 테이블에 대해 묻기" }));
 
@@ -233,8 +237,8 @@ describe("Dataset Detail P0 (#253)", () => {
     // air-2026-08-14 is a multi-source run, so the source has to be in the URL or stage evidence is
     // fail-closed (#319 follow-up) — which is what askAboutThis() writes before opening the drawer.
     renderDetail();
-    await screen.findByLabelText("Run 선택");
-    await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
+    await screen.findByLabelText("실행 선택");
+    await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
     fireEvent.click(screen.getByRole("button", { name: "이 테이블에 대해 묻기" }));
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=datago__air"));
     const panel = await findAssistant();
@@ -259,7 +263,7 @@ async function findPassport() {
 describe("Data Passport (#Phase2 UI polish)", () => {
   it("shows Provider/Source, dataset identity, run status, selected source·stage status, quality, schema, spec digest and artifact from the fetched fixture", async () => {
     renderDetail();
-    await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
 
     const passport = await findPassport();
     expect(within(passport).getByText("datago.air, kma.weather")).toBeInTheDocument();
@@ -274,16 +278,16 @@ describe("Data Passport (#Phase2 UI polish)", () => {
 
   it("labels run-level status and selected source/stage status separately, without collapsing them into one generic status (audit #2)", async () => {
     renderDetail();
-    await waitFor(() => expect(screen.getByRole("button", { name: /gold completed/ })).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
 
     const passport = await findPassport();
-    const runRow = within(passport).getByText("Run 상태(전체)").closest("div")!;
-    expect(runRow).toHaveTextContent("failed");
+    const runRow = within(passport).getByText("실행 상태(전체)").closest("div")!;
+    expect(runRow).toHaveTextContent("실패");
 
-    const stageRow = within(passport).getByText("선택된 Source·Stage 상태").closest("div")!;
-    expect(within(stageRow).getByText("completed")).toBeInTheDocument();
+    const stageRow = within(passport).getByText("선택된 소스·단계 상태").closest("div")!;
+    expect(within(stageRow).getByText("완료")).toBeInTheDocument();
     // 같은 값으로 뭉개지지 않는다 — run은 failed, 선택된 stage는 completed.
-    expect(within(stageRow).queryByText("failed")).not.toBeInTheDocument();
+    expect(within(stageRow).queryByText("실패")).not.toBeInTheDocument();
   });
 
   it("labels the spec value as a digest/fingerprint, not a version string", async () => {
@@ -296,7 +300,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
 
   it("does not crash and uses the defined fallback ('확인 불가') for a run with no spec digest, instead of inventing one", async () => {
     renderDetail("/tables/population");
-    await screen.findByLabelText("Run 선택");
+    await screen.findByLabelText("실행 선택");
     const passport = await findPassport();
     const digestRow = within(passport).getByText("BuildSpec 다이제스트").closest("div")!;
     expect(within(digestRow).getByText("확인 불가")).toBeInTheDocument();
@@ -304,7 +308,7 @@ describe("Data Passport (#Phase2 UI polish)", () => {
 
   it("shows the defined '제공되지 않음' fallback for schema when the selected stage carries no schema (bronze), without crashing", async () => {
     renderDetail("/tables/air-quality?stage=bronze");
-    await screen.findByLabelText("Run 선택");
+    await screen.findByLabelText("실행 선택");
     const passport = await findPassport();
     const schemaRow = within(passport).getByText("스키마").closest("div")!;
     expect(await within(schemaRow).findByText("제공되지 않음")).toBeInTheDocument();

@@ -41,7 +41,7 @@ describe("BuildPublishPage readiness (audit #4)", () => {
     // (Runs·Snapshot Files·딥링크 진입 경로 전부). 이제 canonical run 해석으로 채운다.
     renderPublish("air-quality-20260621");
 
-    const runCard = (await screen.findByText("선택한 Run")).closest("div");
+    const runCard = (await screen.findByText("선택한 실행")).closest("div");
     expect(runCard).toHaveTextContent("대기오염 정보");
     expect(runCard).toHaveTextContent("완료");
     expect(runCard).not.toHaveTextContent("확인되지 않음");
@@ -50,7 +50,7 @@ describe("BuildPublishPage readiness (audit #4)", () => {
   it("Run마다 자기 Dataset identity를 표시하고 다른 Run과 섞이지 않는다", async () => {
     renderPublish("dur-older-adult-caution-20260618");
 
-    const runCard = (await screen.findByText("선택한 Run")).closest("div");
+    const runCard = (await screen.findByText("선택한 실행")).closest("div");
     expect(runCard).toHaveTextContent("노인주의 의약품");
     expect(runCard).not.toHaveTextContent("대기오염 정보");
     expect(runCard).toHaveTextContent("dur-older-adult-caution-20260618");
@@ -102,7 +102,7 @@ describe("BuildPublishPage credential blockers (#399)", () => {
 
     renderPublish("run-no-credential");
 
-    expect(await screen.findByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).toBeInTheDocument();
+    expect(await screen.findByText(/publish 대상\(Hugging Face\/Kaggle\) 자격 증명/)).toBeInTheDocument();
   });
 
   it("credential_required 에는 본인 credential 저장 안내까지 보여준다", async () => {
@@ -115,8 +115,8 @@ describe("BuildPublishPage credential blockers (#399)", () => {
 
     renderPublish("run-needs-own-credential");
 
-    expect(await screen.findByText(/서버 publish credential을 빌려주지 않습니다/)).toBeInTheDocument();
-    expect(screen.getByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).toBeInTheDocument();
+    expect(await screen.findByText(/서버 publish 자격 증명을 빌려주지 않습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/publish 대상\(Hugging Face\/Kaggle\) 자격 증명/)).toBeInTheDocument();
   });
 
   it("credential 과 무관한 blocker 에는 credential 안내를 보여주지 않는다", async () => {
@@ -125,7 +125,7 @@ describe("BuildPublishPage credential blockers (#399)", () => {
     renderPublish("run-still-running");
 
     expect(await screen.findByText("Builder blocker가 있어 게시할 수 없습니다.")).toBeInTheDocument();
-    expect(screen.queryByText(/publish 대상\(Hugging Face\/Kaggle\) credential/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/서버 publish credential을 빌려주지 않습니다/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/publish 대상\(Hugging Face\/Kaggle\) 자격 증명/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/서버 publish 자격 증명을 빌려주지 않습니다/)).not.toBeInTheDocument();
   });
 });

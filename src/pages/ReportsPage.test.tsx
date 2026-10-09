@@ -117,6 +117,8 @@ describe("ReportsPage states", () => {
     await waitFor(() => expect(screen.getByLabelText("테이블")).toBeEnabled());
     expect(screen.getByLabelText("테이블")).toHaveValue("air");
     await waitFor(() => expect(screen.getByLabelText("실행")).toHaveValue("air-r2"));
+    // The run picker words Builder's status instead of showing a summary's `ok` (#843).
+    expect(screen.getByRole("option", { name: "air-r2 · 성공" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Report 만들기" })).toBeEnabled();
   });
 
@@ -125,7 +127,7 @@ describe("ReportsPage states", () => {
     renderPage();
 
     expect(await screen.findByText("저장된 Report가 없습니다")).toBeInTheDocument();
-    expect(screen.getByText("위에서 테이블/run을 선택해 첫 Report를 만들어보세요.")).toBeInTheDocument();
+    expect(screen.getByText("위에서 테이블/실행을 선택해 첫 Report를 만들어보세요.")).toBeInTheDocument();
   });
 
   it("shows an error instead of the pickers when the table list fails", async () => {
@@ -146,7 +148,7 @@ describe("ReportsPage states", () => {
     await waitFor(() => expect(screen.getByLabelText("테이블")).toBeEnabled());
     fireEvent.change(screen.getByLabelText("테이블"), { target: { value: "water" } });
 
-    expect(await screen.findByText("이 테이블에는 접근 가능한 run이 없습니다.")).toBeInTheDocument();
+    expect(await screen.findByText("이 테이블에는 접근 가능한 실행이 없습니다.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Report 만들기" })).toBeDisabled();
   });
 

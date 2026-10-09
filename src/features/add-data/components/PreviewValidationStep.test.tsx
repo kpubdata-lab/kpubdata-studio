@@ -39,7 +39,7 @@ function renderStep(overrides: Partial<React.ComponentProps<typeof PreviewValida
 describe("PreviewValidationStep — stale result warning", () => {
   it("If isStale, notifies that remaining Preview results differ from current settings", () => {
     renderStep({ isStale: true });
-    expect(screen.getByText(/설정이 변경되었습니다.*Preview를 다시 실행/)).toBeInTheDocument();
+    expect(screen.getByText(/설정이 변경되었습니다.*미리보기를 다시 실행/)).toBeInTheDocument();
   });
 
   it("If not isStale, does not show warning", () => {

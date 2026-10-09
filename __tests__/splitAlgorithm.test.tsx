@@ -132,7 +132,7 @@ describe("run detail split section (#671)", () => {
     renderDetail("run-old");
 
     expect(await screen.findByText("shuffle-v1")).toBeInTheDocument();
-    expect(screen.getByText(/manifest 에 기록되지 않았습니다/)).toBeInTheDocument();
+    expect(screen.getByText(/매니페스트에 기록되지 않았습니다/)).toBeInTheDocument();
   });
 
   it("unknown value: shown as sent, with a note", async () => {
@@ -160,7 +160,7 @@ describe("run detail split section (#671)", () => {
     renderDetail("run-hidden");
 
     expect(await screen.findByRole("heading", { name: "분할 방식" })).toBeInTheDocument();
-    expect(screen.getAllByText(/manifest 나 BuildSpec 을 읽지 못했습니다/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/매니페스트나 BuildSpec 을 읽지 못했습니다/).length).toBeGreaterThan(0);
     expect(screen.queryByText("shuffle-v1")).not.toBeInTheDocument();
   });
 

@@ -12,6 +12,7 @@
  */
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { runStatusLabel } from "@/shared/i18n/codeLabels";
 import { Link } from "react-router-dom";
 
 import { listDatasets } from "@/features/datasets/api";
@@ -291,7 +292,7 @@ function RecentRuns({ state }: { state: Loadable<BuildListItem[]> }) {
               >
                 <span className="min-w-0 truncate font-medium">{run.title ?? run.id}</span>
                 <span className="flex gap-3 text-xs text-muted-foreground">
-                  <span>{run.status}</span>
+                  <span>{runStatusLabel(t, run.status)}</span>
                   <span>{run.startedAt ? formatDateTime(run.startedAt) : "—"}</span>
                 </span>
               </Link>
