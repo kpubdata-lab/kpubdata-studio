@@ -53,6 +53,13 @@ for path in / /assets/none.js /config.js /silent-check-sso.html; do
 done
 echo "$body" | grep -q '<html lang="ko"' && ok "the page declares its language" || bad "the page does not declare lang=\"ko\""
 
+# A hashed bundle is cached for a year, a missing one not at all (#868).
+asset=$(docker exec csp-a sh -c 'ls /usr/share/nginx/html/assets | head -n 1')
+cache_found=$(curl -sI "http://localhost:18081/assets/${asset}" | grep -i '^Cache-Control:' | tr -d '\r' || true)
+check "Cache-Control on a bundle that exists" "$cache_found" "Cache-Control: public, max-age=31536000, immutable"
+cache_missing=$(curl -sI http://localhost:18081/assets/none.js | grep -i '^Cache-Control:' | tr -d '\r' || true)
+check "Cache-Control on a missing bundle" "$cache_missing" "Cache-Control: no-store"
+
 # --- Case 2: a different origin produces a different header ---
 say "Case 2: different origin"
 docker run -d --name csp-b -e BUILDER_API_URL=https://builder.other.net -p 18082:8080 "$IMAGE" >/dev/null
