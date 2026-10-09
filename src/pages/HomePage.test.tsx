@@ -133,7 +133,7 @@ describe("Home on a warehouse (#527)", () => {
     expect(screen.queryByText("RUNNING")).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(requested).toEqual([]);
-    expect(screen.getByRole("link", { name: "새 SQL 쿼리" })).toHaveAttribute("href", "/sql");
+    expect(screen.getByRole("link", { name: "새 SQL 질의" })).toHaveAttribute("href", "/sql");
   });
 
   it("lists only Stale, Degraded, Partial, Failed and Access problems, each one click from its table", async () => {

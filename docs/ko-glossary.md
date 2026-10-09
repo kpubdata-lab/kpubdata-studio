@@ -20,7 +20,7 @@
 | timeline | 타임라인 |
 | snapshot | 스냅샷 |
 | schema | 스키마 |
-| query | 쿼리 |
+| query | 질의 |
 | catalog | 카탈로그 |
 | manifest | 매니페스트 |
 | destination | 게시 위치 |

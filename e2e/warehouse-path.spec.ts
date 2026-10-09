@@ -27,7 +27,7 @@ test("카탈로그에서 테이블을 거쳐 SQL 로 질의한다", async ({ pag
   await expect(page).toHaveURL(/\/tables\/air-quality/);
 
   // Table → SQL, bound to that table in the demo warehouse (#530).
-  await page.getByRole("link", { name: "쿼리", exact: true }).click();
+  await page.getByRole("link", { name: "질의", exact: true }).click();
   await expect(page).toHaveURL(/\/sql\?.*table=air-quality/);
   await expect(page.getByRole("heading", { name: "SQL 작업 공간" })).toBeVisible();
   await expect(page.getByRole("treeitem", { name: "air-quality.datago__air" })).toHaveAttribute("aria-selected", "true");
