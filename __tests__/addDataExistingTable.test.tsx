@@ -272,4 +272,64 @@ describe("Add Data — a table of this id is already there (#837)", () => {
     expect(await screen.findByRole("radio", { name: /새 테이블로 만들기/ })).toBeChecked();
     expect(builder.listed()).toBeGreaterThan(asked);
   });
+
+  it("does not overwrite a table another tab made after the review step asked (#861)", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    // Another tab builds datago-air-quality-2 while this one is on the review step.
+    let tables = [existingTable("datago-air-quality", 22)];
+    const builder = builderWith(() => HttpResponse.json({ tables }));
+
+    await reachReview();
+    await waitFor(() => expect(shownSpec().dataset_id).toBe("datago-air-quality-2"));
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    tables = [...tables, existingTable("datago-air-quality-2", 7)];
+
+    fireEvent.click(buildButton());
+
+    // Nothing was submitted; the step says what changed and now points at -3.
+    await waitFor(() => expect(document.querySelector('[data-existing-table-changed="true"]')).not.toBeNull());
+    expect(builder.submitted).toEqual([]);
+    expect(shownSpec().dataset_id).toBe("datago-air-quality-3");
+    expect(screen.getByRole("radio", { name: /새 테이블로 만들기/ })).toBeChecked();
+
+    // Looked at again, the build goes under the id that is free now.
+    fireEvent.click(buildButton());
+    await screen.findByText("run=run-of-datago-air-quality-3");
+    expect(builder.submitted).toEqual(["datago-air-quality-3"]);
+  });
+
+  it("asks once more at the build button and builds when nothing changed (#861)", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const builder = builderWith(() => HttpResponse.json({ tables: [existingTable("datago-air-quality", 22)] }));
+
+    await reachReview();
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    const asked = builder.listed();
+
+    fireEvent.click(buildButton());
+
+    await screen.findByText("run=run-of-datago-air-quality-2");
+    expect(builder.listed()).toBe(asked + 1);
+    expect(document.querySelector('[data-existing-table-changed="true"]')).toBeNull();
+  });
+
+  it("holds the build when the tables cannot be read at the button (#861)", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    let reachable = true;
+    const builder = builderWith(() =>
+      reachable
+        ? HttpResponse.json({ tables: [] })
+        : HttpResponse.json({ error: "unavailable" }, { status: 503 }),
+    );
+
+    await reachReview();
+    await waitFor(() => expect(buildButton()).toBeEnabled());
+    reachable = false;
+
+    fireEvent.click(buildButton());
+
+    await waitFor(() => expect(document.querySelector('[data-existing-table="unknown"]')).not.toBeNull());
+    expect(builder.submitted).toEqual([]);
+    expect(buildButton()).toBeDisabled();
+  });
 });
