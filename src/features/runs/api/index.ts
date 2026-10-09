@@ -9,7 +9,7 @@ import { i18n } from "@/shared/i18n";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import { serializeSpec } from "@/features/build-spec/specMapping";
 import { builderApi, isRealBuilderEnabled, type BuildJob, type BuildSummary } from "@/shared/lib/builderApi";
-import { buildJobResponseSchema } from "@/shared/lib/builderApi.schema";
+import { buildJobResponseSchema, type BuildJobResponse } from "@/shared/lib/builderApi.schema";
 import { DEMO_DATASETS, type DemoDataset } from "@/shared/lib/demoDatasets";
 import { keysWereLost } from "@/shared/lib/missingProviderKey";
 import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
@@ -88,6 +88,12 @@ export interface BuildExecutionOptions {
    * new run; the earlier run is left as it ended.
    */
   retryOf?: string;
+  /**
+   * The build must make new tables (builder#1223): Builder refuses to commit over a table
+   * that already has a snapshot, in the commit's own transaction. Sent for Add Data's
+   * "new table" choice; a refresh leaves it out.
+   */
+  ifAbsent?: boolean;
 }
 
 /**
@@ -131,7 +137,16 @@ export async function executeBuild(
   // handle is exposed only after POST /builds succeeds and returns the authoritative
   // run_id (F03), so a Cancel pressed while the submit is in flight never reaches a
   // run_id the server does not have.
-  const result = await runAsyncBuild(spec, runId, startedAt, signal, onJobStatus, onHandle, options.retryOf);
+  const result = await runAsyncBuild(
+    spec,
+    runId,
+    startedAt,
+    signal,
+    onJobStatus,
+    onHandle,
+    options.retryOf,
+    options.ifAbsent,
+  );
 
   // Builder does not persist spec (#120), so Studio saves the spec bound to
   // run_id for edit screen restoration. Save failures are ignored and do not
@@ -197,8 +212,9 @@ async function runAsyncBuild(
   onJobStatus: ((status: BuilderJobStatus) => void) | undefined,
   onHandle: ((handle: BuildExecutionHandle) => void) | undefined,
   retryOf?: string,
+  ifAbsent?: boolean,
 ): Promise<BuildRun> {
-  const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal, retryOf);
+  const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal, retryOf, ifAbsent);
   // Server-returned run_id is authoritative. Only from here can cooperative cancel
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
@@ -218,6 +234,43 @@ async function runAsyncBuild(
   );
 
   return buildRunFromJob(job, spec, startedAt);
+}
+
+/**
+ * What a job whose table was not committed should say (#881), or null when none was refused.
+ *
+ * Read from `warehouse_failures` by reason; the source key names the table. A reason this
+ * Studio does not know is shown as a refused commit, never dropped.
+ */
+export function warehouseFailureMessage(body: BuildJobResponse | null): string | null {
+  const failures = body?.warehouse_failures;
+  if (!failures) return null;
+  const first = Object.entries(failures)[0];
+  if (!first) return null;
+  const [table, failure] = first;
+  switch (failure.reason) {
+    case "table_exists":
+      return i18n.t("runs.build.tableExists", { table });
+    case "empty_result":
+      return i18n.t("runs.build.emptyResult", { table });
+    case "conflict":
+      return i18n.t("runs.build.commitConflict", { table });
+    default:
+      return i18n.t("runs.build.commitFailed", { table });
+  }
+}
+
+/**
+ * The same sentence for a job read by its run id (`GET /builds/{run_id}`), or null (#881).
+ *
+ * Add Data opens the run's page as soon as Builder accepts the job (#842), so that page,
+ * not the wizard, is where a refused `if_absent` commit is read. Only a failed job is
+ * asked: a refused commit always ends the job as `failed`.
+ */
+export function jobWarehouseFailureMessage(job: BuildJob): string | null {
+  if (job.status !== "failed" || !job.response) return null;
+  const parsed = buildJobResponseSchema.safeParse(job.response);
+  return parsed.success ? warehouseFailureMessage(parsed.data) : null;
 }
 
 /**
@@ -247,7 +300,9 @@ export function buildRunFromJob(job: BuildJob, spec: BuildSpec, startedAt: strin
       status: "failed",
       startedAt,
       finishedAt,
-      error: job.error || body?.error || i18n.t("runs.build.jobFailed"),
+      // A table Builder refused to commit says why in Builder's own words (#881); the
+      // job's error is then only "build failed".
+      error: warehouseFailureMessage(body) ?? (job.error || body?.error || i18n.t("runs.build.jobFailed")),
       ...(keysWereLost(job) ? { keysLost: true } : {}),
     };
   }
