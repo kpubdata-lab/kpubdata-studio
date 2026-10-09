@@ -8,7 +8,7 @@
  * lost-keys card, the only way on, never appeared. Found by the real-Builder e2e
  * (`e2e/real-multi-user.spec.ts`); a queued run opened by its link was hidden the same way.
  */
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -90,6 +90,25 @@ describe("a run with no stages that the job registry knows (#846)", () => {
 
     expect(await screen.findByRole("button", { name: "실행 취소" })).toBeEnabled();
     expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+  });
+
+  it("does not say 'not found' before the job registry has answered", async () => {
+    // Never settles: the stages have answered 404, the registry has not answered at all.
+    vi.spyOn(builderApi, "getBuildJob").mockReturnValue(new Promise<BuildJob>(() => {}));
+    const seen: string[] = [];
+    const observer = new MutationObserver(() => seen.push(document.body.textContent ?? ""));
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+    renderDetail();
+    await waitFor(() => expect(builderApi.getBuildJob).toHaveBeenCalled());
+    await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    observer.disconnect();
+
+    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+    expect(seen.some((text) => text.includes("Run을 찾을 수 없습니다"))).toBe(false);
   });
 
   it("still says 'not found' when the job registry does not know the run either", async () => {

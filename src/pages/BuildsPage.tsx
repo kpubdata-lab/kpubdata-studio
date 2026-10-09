@@ -208,7 +208,10 @@ export function BuildsPage() {
     stagesState.status === "error" &&
     stagesState.notFound &&
     live.kind !== "job" &&
-    live.kind !== "loading";
+    live.kind !== "loading" &&
+    // The registry is asked from an effect, so for one render it is still `idle` although
+    // the question is about to be put: that is not yet an answer either.
+    !(shouldPollLiveStatus && live.kind === "idle");
 
   // When out of list scope so we lack listItem to judge existence, if the stage query we relied on
   // returns 403, distinguish "no permission to view" from "doesn't exist" (#255 P0).
