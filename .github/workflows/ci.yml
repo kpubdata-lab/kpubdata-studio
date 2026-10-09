@@ -244,8 +244,26 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - name: Build and verify the image's Content-Security-Policy
+      # The image is built here with the GitHub Actions layer cache, so the `npm ci` layer
+      # is reused until package-lock.json changes (#836). The script is told not to build
+      # again; run on its own, it still builds the image itself.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+
+      - name: Build the image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: kpubdata-studio-csp-smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify the image's Content-Security-Policy
         run: bash scripts/docker-csp-smoke.sh
+        env:
+          CSP_SMOKE_IMAGE_BUILT: "1"
 
   # The strict docs build of deploy.yml, as a job the CI gate waits for (Refs #835):
   # deploy.yml's own run on pull requests is to be removed, and a broken docs site
