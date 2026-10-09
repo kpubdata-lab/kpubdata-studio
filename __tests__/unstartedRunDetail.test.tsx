@@ -8,7 +8,7 @@
  * lost-keys card, the only way on, never appeared. Found by the real-Builder e2e
  * (`e2e/real-multi-user.spec.ts`); a queued run opened by its link was hidden the same way.
  */
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -117,5 +117,60 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     renderDetail();
 
     expect(await screen.findByText(/Run을 찾을 수 없습니다/)).toBeInTheDocument();
+  });
+
+  it("never flashes 'not found' while the history is still loading behind a 404 on the stages", async () => {
+    let releaseList: (items: []) => void = () => undefined;
+    vi.spyOn(runsApi, "listBuilds").mockReturnValue(
+      new Promise((resolve) => {
+        releaseList = resolve;
+      }),
+    );
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
+
+    // A transient render is gone before any later assertion can see it, so record every
+    // time the alert is put in the document.
+    let alertsSeen = 0;
+    const observer = new MutationObserver(() => {
+      if (document.querySelector('[role="alert"]')) alertsSeen += 1;
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    renderDetail();
+    // The stages have answered 404 by now; the history has not answered yet.
+    await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
+    releaseList([]);
+
+    expect(await screen.findByRole("button", { name: "실행 취소" })).toBeEnabled();
+    observer.disconnect();
+    expect(alertsSeen).toBe(0);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("does not say 'not found' when the job lookup itself fails, and checks again on request", async () => {
+    const lookup = vi
+      .spyOn(builderApi, "getBuildJob")
+      .mockRejectedValueOnce(new ApiError(500, "internal error"))
+      .mockResolvedValue(job("queued"));
+
+    renderDetail();
+
+    expect(await screen.findByText(/존재 여부를 확인하지 못했습니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다시 확인" }));
+
+    expect(await screen.findByRole("button", { name: "실행 취소" })).toBeEnabled();
+    expect(lookup).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText(/존재 여부를 확인하지 못했습니다/)).not.toBeInTheDocument();
+  });
+
+  it("does not say 'not found' when the job lookup fails on the network", async () => {
+    vi.spyOn(builderApi, "getBuildJob").mockRejectedValue(new TypeError("Failed to fetch"));
+
+    renderDetail();
+
+    expect(await screen.findByText(/존재 여부를 확인하지 못했습니다/)).toBeInTheDocument();
+    expect(screen.queryByText(/Run을 찾을 수 없습니다/)).not.toBeInTheDocument();
   });
 });

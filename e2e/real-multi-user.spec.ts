@@ -286,6 +286,13 @@ function slowCsv(): Buffer {
   return Buffer.from(lines.join("\n"), "utf8");
 }
 
+// What a test registers to undo, run whether it passed or failed: the Builder here has one build
+// slot, so a build left running by a failed test would hold every later test up.
+const cleanups: Array<() => Promise<void>> = [];
+test.afterEach(async () => {
+  for (const cleanup of cleanups.splice(0).reverse()) await cleanup().catch(() => undefined);
+});
+
 test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리는 편집 화면으로 간다 (#846) @multi-user", async ({
   browser,
   request,
@@ -296,6 +303,7 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
 
   // 1) Bob, in a browser of his own, is the other user whose build takes the only slot.
   const bob = await browser.newContext();
+  cleanups.push(() => bob.close());
   const bobPage = await bob.newPage();
   const bobsToken = nextBuilderToken(bobPage);
   await signIn(bobPage, BOB);
@@ -303,17 +311,19 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
 
   // 2) Alice has her key for this session and a public-API table ready to build.
   const alice = await browser.newContext();
+  cleanups.push(() => alice.close());
   const alicePage = await alice.newPage();
   const errors: string[] = [];
   let aliceRunId = "";
   // A run that never started has nothing on Builder but its job: its detail and edit pages
-  // ask for its stages, quality, events, spec and manifest, and the edit page for the spec
-  // revisions of a table that was never made. The browser logs each of those 404s.
+  // ask for its stages, quality, spec and manifest, and the edit page for the spec
+  // revisions of a table that was never made. The browser logs each of those 404s. Its
+  // events answer 200 to its owner, so they are not listed: a 404 there would be a real error.
   const expected404s = () =>
     aliceRunId === ""
       ? []
       : [
-          ...["stages", "quality", "events", "spec", "manifest"].map(
+          ...["stages", "quality", "spec", "manifest"].map(
             (what) => `${BUILDER_URL}/builds/${encodeURIComponent(aliceRunId)}/${what}`,
           ),
           `${BUILDER_URL}/revisions/spec/${DATASET_ID}`,
@@ -364,6 +374,10 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
   const submitted = await request.post(`${BUILDER_URL}/builds`, { headers: bobAuth, data: { spec: bobsSpec } });
   expect(submitted.status(), await submitted.text()).toBe(202);
   const bobsRun = ((await submitted.json()) as Job).run_id;
+  // Frees the slot however this test ends: Bob's build is not the business of the tests after it.
+  cleanups.push(async () => {
+    await request.post(`${BUILDER_URL}/builds/${encodeURIComponent(bobsRun)}/cancel`, { headers: bobAuth });
+  });
   const bobsJob = async (): Promise<Job> =>
     (await (await request.get(`${BUILDER_URL}/builds/${encodeURIComponent(bobsRun)}`, { headers: bobAuth })).json()) as Job;
   await expect.poll(async () => (await bobsJob()).status, { timeout: 30_000 }).toBe("running");
@@ -422,9 +436,4 @@ test("대기 중 키가 만료된 실행의 재시도 링크는 스펙이 열리
   await expect(runPage.locator("#datasetId")).toHaveValue(DATASET_ID);
 
   await expectNoPageErrors(errors);
-
-  // Bob's build is not this test's business any more.
-  await request.post(`${BUILDER_URL}/builds/${encodeURIComponent(bobsRun)}/cancel`, { headers: bobAuth });
-  await alice.close();
-  await bob.close();
 });
