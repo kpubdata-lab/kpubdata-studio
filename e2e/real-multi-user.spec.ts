@@ -523,6 +523,80 @@ async function openInNewTab(
   return page;
 }
 
+test("새로고침하면 입력한 키는 사라지고, 다시 넣으면 미리보기가 된다 (#773) @multi-user", async ({ browser }) => {
+  test.skip(!process.env.REAL_BUILDER_REPLAY, "Builder replay 모드 필요");
+  const alice = await browser.newContext();
+  cleanups.push(() => alice.close());
+  const page = await alice.newPage();
+  const errors: string[] = [];
+  collectSignedInPageErrors(page, errors);
+  await signIn(page, ALICE);
+  await enterSessionKey(page);
+
+  // 1) She reloads the page. The tokens and the key lived in the memory of the page load
+  //    before: the identity provider's session in this browser signs her in again, and
+  //    nothing gives the key back.
+  const studio = new URL(page.url()).origin;
+  await page.reload();
+  const back = (url: URL) => url.origin === studio && url.pathname === "/connections";
+  const signedInOnItsOwn = await page.waitForURL(back, { timeout: 10_000 }).then(
+    () => true,
+    () => false,
+  );
+  if (!signedInOnItsOwn) {
+    await page.getByRole("button", { name: t("auth.page.emailLogin") }).click();
+    await page.waitForURL((url) => back(url) || url.origin !== studio, { timeout: 30_000 });
+    if (!back(new URL(page.url()))) await page.locator(`[data-fake-user="${ALICE}"]`).click();
+    await page.waitForURL(back, { timeout: 30_000 });
+  }
+  await expect(page.getByRole("navigation", { name: "주 메뉴" })).toBeVisible({ timeout: 30_000 });
+  const providerLists = watchProviderLists(page);
+
+  //    Connections does not claim a key it no longer has…
+  await page.getByRole("button", { name: `${t("provider.table.manage")} — datago` }).click();
+  await expect(page.getByText(t("provider.detail.perRequestTitle"))).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(t("provider.detail.sessionKeyHeld"))).toHaveCount(0);
+  await expect(page.getByRole("button", { name: t("provider.detail.enterSessionKey") })).toBeVisible();
+
+  //    …and Add Data asks for it again instead of sending a request that would be refused.
+  const previewsSent: Array<string | undefined> = [];
+  page.on("request", (sent) => {
+    if (sent.url() === `${BUILDER_URL}/preview`) previewsSent.push(sent.headers()["x-provider-key"]);
+  });
+  await openCreateTable(page);
+  await page.getByRole("button", { name: /공공 API/ }).first().click();
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.locator('#add-data-provider option[value="datago"]')).toBeAttached({ timeout: 30_000 });
+  await page.locator("#add-data-provider").selectOption("datago");
+  await page.locator("#add-data-dataset").selectOption("air_station");
+  await expect(page.getByText(t("addData.credential.title"))).toBeVisible({ timeout: 30_000 });
+  expect(providerLists.some((list) => list.carriedKey), "no provider list carried a key after the reload").toBe(false);
+  expect(previewsSent).toEqual([]);
+
+  // 2) She gives the key again, and the same steps go through.
+  await enterSessionKey(page);
+  await openCreateTable(page);
+  await page.getByRole("button", { name: /공공 API/ }).first().click();
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.locator('#add-data-provider option[value="datago"]')).toBeAttached({ timeout: 30_000 });
+  await page.locator("#add-data-provider").selectOption("datago");
+  await page.locator("#add-data-dataset").selectOption("air_station");
+  await page
+    .locator("#add-data-params")
+    .fill(JSON.stringify({ station: "강남구", term: "daily", page: 1, page_size: 100 }));
+  await expect(page.getByText(t("addData.credential.title"))).toHaveCount(0);
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await page.getByRole("button", { name: "Preview 새로고침" }).first().click();
+  await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
+  expect(previewsSent).toEqual([`datago=${SESSION_KEY}`]);
+
+  //    Still nowhere the browser keeps things.
+  const kept = await page.evaluate(() => JSON.stringify([{ ...localStorage }, { ...sessionStorage }, document.cookie]));
+  expect(kept).not.toContain(SESSION_KEY);
+
+  await expectNoPageErrors(errors);
+});
+
 /**
  * A CSV big enough that building it takes Builder several seconds — far longer than this
  * Builder keeps a waiting job's keys. About 17 MB, under Builder's 20 MiB upload limit.
