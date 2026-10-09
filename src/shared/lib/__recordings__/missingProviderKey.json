@@ -1,0 +1,67 @@
+{
+  "recorded": {
+    "builder": "kpubdata-builder main @ 515793f, API contract 1.114.0",
+    "date": "2026-10-09",
+    "how": "The 400 answers and the failed job are what Builder sent the browser in the multi-user real-Builder e2e (scripts/run-real-e2e.mjs: OIDC, keys with each request, replay fixtures), and e2e/real-multi-user.spec.ts compares each run's answers with them. The 403 answers are the bodies BuilderService gave a signed-in user without a stored key under KPUBDATA_BUILDER_REQUIRE_OWN_PROVIDER_CREDENTIAL=true, called in process: no e2e starts that deployment.",
+    "normalised": "In the failed job only: run_id, created_at, updated_at and created_by are placeholders."
+  },
+  "refusals": [
+    {
+      "name": "POST /preview without a key, keys travel with each request",
+      "call": "preview",
+      "status": 400,
+      "body": {
+        "error": "this preview calls datago, and the request carries no key for it; send it in the X-Provider-Key header",
+        "code": "provider_credential_required",
+        "providers": ["datago"]
+      },
+      "keptIn": "request"
+    },
+    {
+      "name": "POST /builds without a key, keys travel with each request",
+      "call": "submitBuild",
+      "status": 400,
+      "body": {
+        "error": "this build calls datago, and the request carries no key for it; send it in the X-Provider-Key header",
+        "code": "provider_credential_required",
+        "providers": ["datago"]
+      },
+      "keptIn": "request"
+    },
+    {
+      "name": "POST /preview without a stored key, Builder stores keys",
+      "call": "preview",
+      "status": 403,
+      "body": {
+        "error": "your own credential is required for: datago",
+        "code": "provider_credential_required",
+        "providers": ["datago"]
+      },
+      "keptIn": "stored"
+    },
+    {
+      "name": "POST /build without a stored key, Builder stores keys",
+      "call": "build",
+      "status": 403,
+      "body": {
+        "error": "your own credential is required for: datago",
+        "code": "provider_credential_required",
+        "providers": ["datago"]
+      },
+      "keptIn": "stored"
+    }
+  ],
+  "keysLostJob": {
+    "run_id": "recorded-run",
+    "status": "failed",
+    "created_at": "2026-10-09T13:20:06.898357+00:00",
+    "updated_at": "2026-10-09T13:20:28.323494+00:00",
+    "created_by": "recorded-user",
+    "response": {
+      "error": "credentials_required: the provider key for datago is no longer held — the job waited longer than its keys are kept; submit it again under a new run_id",
+      "code": "credentials_required"
+    },
+    "error": "credentials_required: the provider key for datago is no longer held — the job waited longer than its keys are kept; submit it again under a new run_id",
+    "code": "credentials_required"
+  }
+}
