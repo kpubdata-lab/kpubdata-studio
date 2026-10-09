@@ -1304,6 +1304,11 @@
         "url": "URL / REST API"
       }
     },
+    "fromCatalog": {
+      "notListed": "{{provider}} / {{dataset}}, chosen in the Catalog, is not in the list of source datasets this page read, so it was not filled in. Pick the provider and the source dataset below.",
+      "catalogFailed": "{{provider}} / {{dataset}}, chosen in the Catalog, could not be filled in: the list of source datasets failed to load.",
+      "retry": "Load the list again"
+    },
     "credential": {
       "title": "An API connection is required",
       "body": "This source dataset uses a provider that needs an API key.\nRegister the credential under Provider / API connections first, then continue.",
