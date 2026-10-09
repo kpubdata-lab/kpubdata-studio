@@ -139,6 +139,9 @@
       "notFoundTitle": "Run not found: {{id}}",
       "notFoundDesc": "Not within the list scope (max {{limit}}) and stage lookup returned 404. It may have been deleted or never existed.",
       "clearSelection": "Clear selection",
+      "checkFailedTitle": "Could not check whether the run exists: {{id}}",
+      "checkFailedDesc": "Looking this run up in Builder failed. That does not mean the run is missing. Try again shortly.",
+      "checkRetry": "Check again",
       "forbiddenTitle": "No permission to view this run: {{id}}",
       "forbiddenDesc": "Not within the list scope (max {{limit}}) and stage lookup returned 403. Studio does not guess whether the run does not exist or access is denied."
     },
