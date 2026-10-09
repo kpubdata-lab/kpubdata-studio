@@ -12,7 +12,7 @@
  * This file handles **screen assembly only** (#379). Components live under `features/runs`.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 
 import { getBuildQuality, listBuildStages } from "@/features/datasets/api";
@@ -59,11 +59,18 @@ export function leftDetail(browserPath: string, runId: string): boolean {
   return !browserPath.endsWith(`/refresh-jobs/${encodeURIComponent(runId)}`);
 }
 
+/** The run id Add Data passed when it opened this page for a job just accepted (#842). */
+function submittedRunIdOf(state: unknown): string | null {
+  if (typeof state !== "object" || state === null || !("submittedRunId" in state)) return null;
+  return typeof state.submittedRunId === "string" ? state.submittedRunId : null;
+}
+
 export function BuildsPage() {
   const { t } = useTranslation();
   const { buildId: pathRunId } = useParams<{ buildId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [listState, setListState] = useState<AsyncState<BuildListItem[]>>({ status: "loading" });
   // `/builds` request scope. Builder has no cursor and no total count, so "show more" asks
@@ -164,20 +171,33 @@ export function BuildsPage() {
   // Read once per run id, a run opened while it waited kept the 404s of that moment —
   // stages, quality, spec — after it had started and ended, until the page was reloaded.
   const liveStatus = live.kind === "job" ? live.job.status : null;
+  // Builder has a run's stages, quality and spec once the run has ended, and answers 404
+  // for each until then — a run that is waiting or running has made none of them yet
+  // (#842). So they are not asked for while the job is known to be on its way; a 404 that
+  // was bound to come is still a failed load in the browser's console. A run just
+  // submitted from Add Data is known to be on its way before the registry has said so.
+  const submittedHere = submittedRunIdOf(location.state) === selectedRunId && selectedRunId !== null;
+  const recordsNotYet =
+    live.kind === "job"
+      ? !isTerminalBuilderStatus(live.job.status)
+      : submittedHere && (live.kind === "idle" || live.kind === "loading");
   const stagesState = useAsync<RunStagesResponse>(
     (signal) => (selectedRunId ? listBuildStages(selectedRunId, signal) : Promise.reject(new Error("no run"))),
     [selectedRunId, liveStatus],
     t("builds.errors.loadStage"),
+    !recordsNotYet,
   );
   const qualityState = useAsync<BuildQualityResponse>(
     (signal) => (selectedRunId ? getBuildQuality(selectedRunId, signal) : Promise.reject(new Error("no run"))),
     [selectedRunId, liveStatus],
     t("builds.errors.loadQuality"),
+    !recordsNotYet,
   );
   const specState = useAsync<BuildSpecSnapshotResponse>(
     (signal) => (selectedRunId ? getBuildSpecSnapshot(selectedRunId, signal) : Promise.reject(new Error("no run"))),
     [selectedRunId, liveStatus],
     t("builds.errors.loadSpec"),
+    !recordsNotYet,
   );
 
 
