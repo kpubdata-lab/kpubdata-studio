@@ -26,7 +26,26 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # `build` is still a required check (branch protection), so it must still be produced
+  # on a pull request. The pull request is held to the same app and docs builds by the
+  # `static` and `docs` jobs the CI gate waits for (#835), so here `build` only reports.
+  # Once an administrator takes `build` out of the required checks, delete this job and
+  # the `pull_request` trigger above, and `deploy` needs `site`.
   build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: site
+    if: always()
+    steps:
+      - name: Report the result of the site build
+        run: |
+          echo "site build: ${{ needs.site.result }}"
+          [ "${{ needs.site.result }}" = "success" ] || [ "${{ github.event_name }}" = "pull_request" ]
+
+  site:
+    # Not on a pull request: ci.yml's `static` (the app build) and `docs` (mkdocs --strict)
+    # cover it there.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -70,7 +89,7 @@ jobs:
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
+    needs: site
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
