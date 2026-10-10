@@ -9,7 +9,7 @@
 import { useTranslation } from "react-i18next";
 
 import { clearSignupBlock, type SignupBlock } from "@/shared/lib/signupStatus";
-import { Button } from "@/shared/ui";
+import { Button, SupportLine } from "@/shared/ui";
 import { cn } from "@/shared/ui/cn";
 
 const TONE: Record<SignupBlock, string> = {
@@ -30,6 +30,7 @@ export function SignupStatusNotice({ block }: { block: SignupBlock }) {
         <h1 className={cn("text-xl font-semibold tracking-tight", TITLE_TONE[block])}>{t(`signupStatus.${block}.title`)}</h1>
         <p className="mt-3 text-sm leading-6 text-foreground">{t(`signupStatus.${block}.desc`)}</p>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{t(`signupStatus.${block}.next`)}</p>
+        <SupportLine className="mt-2" />
         <div className="mt-5">
           <Button onClick={clearSignupBlock} variant="secondary">
             {t("signupStatus.checkAgain")}

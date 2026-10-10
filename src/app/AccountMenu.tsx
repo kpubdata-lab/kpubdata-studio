@@ -13,6 +13,7 @@ import { Link } from "react-router-dom";
 
 import { signOutOfOidc } from "@/features/auth/signOut";
 import { useAuthStore } from "@/features/auth/store";
+import { getPolicyLinks } from "@/shared/config/policyLinks";
 import { useUIStore, type ThemeMode } from "@/shared/hooks/useUIStore";
 import {
   LANGUAGE_LABELS,
@@ -21,6 +22,7 @@ import {
   normalizeLanguage,
   type AppLanguage,
 } from "@/shared/i18n";
+import { getSupportContact } from "@/shared/lib/clientErrors";
 
 /** Studio's user documentation (mkdocs `site_url`). */
 export const HELP_URL = "https://kpubdata-lab.github.io/kpubdata-studio/docs/";
@@ -61,6 +63,14 @@ export function AccountMenu() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelId = useId();
   const language = normalizeLanguage(i18n.language);
+  // What the deployment publishes for its users (#838); an unset one has no item.
+  const policyLinks = getPolicyLinks();
+  const supportContact = getSupportContact();
+  const external = [
+    policyLinks.privacy ? { key: "privacy", href: policyLinks.privacy, label: t("policy.privacy") } : null,
+    policyLinks.terms ? { key: "terms", href: policyLinks.terms, label: t("policy.terms") } : null,
+    supportContact ? { key: "support", href: supportContact.href, label: t("policy.support") } : null,
+  ].filter((item) => item !== null);
 
   useEffect(() => {
     if (!open) return;
@@ -167,6 +177,18 @@ export function AccountMenu() {
             <a className={itemClassName} href={HELP_URL} onClick={() => setOpen(false)} rel="noopener noreferrer" target="_blank">
               {t("layout.account.help")}
             </a>
+            {external.map((item) => (
+              <a
+                className={itemClassName}
+                href={item.href}
+                key={item.key}
+                onClick={() => setOpen(false)}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                {item.label}
+              </a>
+            ))}
             {email ? (
               <button className={itemClassName} onClick={signOut} type="button">
                 {t("layout.account.signOut")}

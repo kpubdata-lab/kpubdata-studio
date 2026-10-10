@@ -23,7 +23,17 @@ import { useAuthStore } from "@/features/auth/store";
 import { AuthError } from "@/features/auth/types";
 import { getOidcConfig } from "@/shared/config/env";
 import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
-import { BrandLogo, Button, Card, DemoBadge, ErrorMessage, FormField, TextInput } from "@/shared/ui";
+import {
+  BrandLogo,
+  Button,
+  Card,
+  DemoBadge,
+  ErrorMessage,
+  FormField,
+  PolicyLinks,
+  SupportLine,
+  TextInput,
+} from "@/shared/ui";
 
 /**
  * Brief product introduction shown on auth screen. Brand v2 (#628 §19): a light neutral
@@ -163,7 +173,10 @@ export function LoginPage() {
           ) : oidcStatus === "initializing" ? (
             <p className="mt-4 text-sm text-muted-foreground">{t("auth.page.checking")}</p>
           ) : oidcStatus === "error" ? (
-            <ErrorMessage>{t("auth.page.initFail")}</ErrorMessage>
+            <>
+              <ErrorMessage>{t("auth.page.initFail")}</ErrorMessage>
+              <SupportLine className="mt-2" />
+            </>
           ) : oidc.status === "ok" ? (
             <div className="mt-4 flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">
@@ -204,6 +217,7 @@ export function LoginPage() {
             </div>
           )}
           </Card>
+          <PolicyLinks className="mt-6" />
         </div>
       </section>
     </main>

@@ -21,6 +21,11 @@ interface ImportMetaEnv {
   readonly VITE_APP_VERSION?: string;
   /** Where users report errors (#839): a mail address or an https page. Public value. */
   readonly VITE_SUPPORT_CONTACT?: string;
+  /** The deployment's privacy policy and terms of use (#838): https pages. Public values. */
+  readonly VITE_PRIVACY_URL?: string;
+  readonly VITE_TERMS_URL?: string;
+  /** The identity provider's account page (#838). Defaults to `<issuer>/account`. */
+  readonly VITE_ACCOUNT_URL?: string;
 }
 
 interface ImportMeta {

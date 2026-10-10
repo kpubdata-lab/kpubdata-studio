@@ -65,12 +65,59 @@ describe("docker/40-kpubdata-config.sh (#411)", () => {
       useRealBuilder: "true",
       oidcIssuer: "https://sso.example.org/realms/kpubdata",
       oidcClientId: "kpubdata-studio",
+      privacyUrl: "",
+      termsUrl: "",
+      supportContact: "",
+      accountUrl: "",
     });
+  });
+
+  it("writes the policy links and the support contact (#838)", () => {
+    const result = run({
+      PRIVACY_URL: "https://example.org/privacy",
+      TERMS_URL: "https://example.org/terms",
+      SUPPORT_CONTACT: "help@example.org",
+      ACCOUNT_URL: "https://sso.example.org/realms/kpubdata/account",
+    });
+    expect(result.code).toBe(0);
+    expect(loadWritten()).toMatchObject({
+      privacyUrl: "https://example.org/privacy",
+      termsUrl: "https://example.org/terms",
+      supportContact: "help@example.org",
+      accountUrl: "https://sso.example.org/realms/kpubdata/account",
+    });
+  });
+
+  it.each([
+    ["PRIVACY_URL", "ftp://example.org/privacy"],
+    ["TERMS_URL", "example.org/terms"],
+    ["ACCOUNT_URL", "javascript:void"],
+    ["SUPPORT_CONTACT", "javascript:void"],
+    ["SUPPORT_CONTACT", "http://example.org/support"],
+  ])("refuses %s=%s and writes nothing (#838)", (name, value) => {
+    const result = run({ [name]: value });
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain(name);
+    expect(() => readFileSync(out)).toThrow();
+  });
+
+  it.each(["https://example.org/support", "mailto:help@example.org"])("keeps the contact %s (#838)", (value) => {
+    expect(run({ SUPPORT_CONTACT: value }).code).toBe(0);
+    expect(loadWritten()?.supportContact).toBe(value);
   });
 
   it("leaves every value to the build when nothing is set", () => {
     expect(run({}).code).toBe(0);
-    expect(loadWritten()).toEqual({ builderApiUrl: "", useRealBuilder: "", oidcIssuer: "", oidcClientId: "" });
+    expect(loadWritten()).toEqual({
+      builderApiUrl: "",
+      useRealBuilder: "",
+      oidcIssuer: "",
+      oidcClientId: "",
+      privacyUrl: "",
+      termsUrl: "",
+      supportContact: "",
+      accountUrl: "",
+    });
   });
 
   it("keeps an explicit USE_REAL_BUILDER over the default", () => {

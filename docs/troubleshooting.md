@@ -174,17 +174,43 @@ Run this to confirm the real authentication path end to end. It requires a runni
 - [ ] No raw tokens in `localStorage` or `sessionStorage`.
 - [ ] Logout triggers Keycloak logout; protected routes re-prompt for login.
 
-## 오류 ID와 문의처 (`VITE_SUPPORT_CONTACT`, #839)
+## 오류 ID와 문의처 (`SUPPORT_CONTACT`, #839, #838)
 
 화면이 오류로 대체되면 Studio 는 `E-20261008-3F9A2C` 같은 오류 ID 를 보여 주고, 같은 ID 로
 시작하는 줄을 브라우저 콘솔에 남깁니다. 사용자가 알려 준 ID 로 콘솔 기록을 찾을 수 있습니다.
 
 ```bash
-# 메일 주소 또는 https 페이지. 빌드 시점에 번들에 들어가는 공개 값입니다.
+# 메일 주소 또는 https 페이지. 공개 값입니다.
+# 컨테이너 이미지: 시작할 때 읽는 환경변수
+SUPPORT_CONTACT=help@example.org
+# 직접 빌드할 때: 번들에 들어가는 값. 컨테이너의 값이 있으면 그쪽을 씁니다.
 VITE_SUPPORT_CONTACT=help@example.org
 ```
+
+같은 문의처가 가입 승인 대기·가입 거부 화면, Builder 가 로그인을 받아들이지 않는 화면, 로그인
+초기화 실패 안내, 로그인·가입 화면 아래, 계정 메뉴에도 나옵니다(#838).
 
 - 메일 주소면 오류 화면에 문의 링크가 생기고, 메일 제목에 오류 ID 가 들어갑니다.
 - `https:` 페이지면 그 페이지로 연결합니다.
 - 그 밖의 값(`http:`, `javascript:`, 상대 경로, 일반 텍스트)은 링크를 만들지 않습니다.
-  설정하지 않은 것과 같게, 관리자에게 ID 를 알려 달라는 안내만 나옵니다.
+  설정하지 않은 것과 같게, 관리자에게 ID 를 알려 달라는 안내만 나옵니다. 컨테이너는
+  그런 `SUPPORT_CONTACT` 로는 이유를 남기고 시작하지 않습니다.
+
+## 개인정보 처리방침·이용약관·계정 관리 링크 (#838)
+
+Studio 는 로그인 토큰에서 이메일과 이름을 받아 화면에 씁니다. 처리방침과 약관은 배포를
+운영하는 쪽의 문서이므로 Studio 에 들어 있지 않고, 배포가 그 주소를 알려 줍니다.
+
+| 컨테이너 환경변수 | 빌드 시 변수 | 어디에 나오나 |
+|---|---|---|
+| `PRIVACY_URL` | `VITE_PRIVACY_URL` | 로그인·가입 화면 아래, 계정 메뉴 |
+| `TERMS_URL` | `VITE_TERMS_URL` | 로그인·가입 화면 아래, 계정 메뉴 |
+| `ACCOUNT_URL` | `VITE_ACCOUNT_URL` | 설정 화면의 계정 카드("계정 관리 화면 열기") |
+
+- 값은 `https:` 페이지여야 합니다. `http:` 는 `localhost` 일 때만 받습니다(로컬 Keycloak).
+  그 밖의 값은 링크를 만들지 않고, 컨테이너는 http(s) 가 아닌 값으로는 시작하지 않습니다.
+- `ACCOUNT_URL` 을 비워 두면 Keycloak 의 계정 콘솔인 `<OIDC_ISSUER>/account` 로 연결합니다.
+  비밀번호 변경과 계정 삭제(탈퇴)는 그 화면에서 합니다. 계정 삭제 메뉴는 Keycloak realm
+  에서 "Delete account" 를 켜야 보입니다.
+- 설정하지 않은 항목은 화면에 나타나지 않습니다. **외부 사용자를 받는 배포는
+  `PRIVACY_URL` 을 반드시 설정하세요** — 설정하지 않아도 Studio 는 시작합니다.
