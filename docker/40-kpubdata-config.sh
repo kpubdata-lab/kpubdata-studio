@@ -11,6 +11,10 @@
 #                     Defaults to "true" when BUILDER_API_URL is set.
 #   OIDC_ISSUER       e.g. https://sso.example.org/realms/kpubdata
 #   OIDC_CLIENT_ID    public SPA client id — never a secret
+#   PRIVACY_URL       the deployment's privacy policy, an http(s) page (#838)
+#   TERMS_URL         the deployment's terms of use, an http(s) page (#838)
+#   SUPPORT_CONTACT   where users write: a mail address, mailto: or an https page (#838)
+#   ACCOUNT_URL       the identity provider's account page; <OIDC_ISSUER>/account when unset
 #
 # It also writes the Content-Security-Policy header nginx sends with the page (#663),
 # with this deployment's Builder and OIDC origins added to connect-src (and the issuer
@@ -53,6 +57,25 @@ check USE_REAL_BUILDER "$real"
 check OIDC_ISSUER "$issuer"
 check OIDC_CLIENT_ID "$client"
 
+privacy="${PRIVACY_URL:-}"
+terms="${TERMS_URL:-}"
+support="${SUPPORT_CONTACT:-}"
+account="${ACCOUNT_URL:-}"
+check PRIVACY_URL "$privacy"
+check TERMS_URL "$terms"
+check SUPPORT_CONTACT "$support"
+check ACCOUNT_URL "$account"
+# A contact is a bare mail address, a mailto: link or an https page. The page refuses
+# any other scheme too (resolveSupportContact); refusing here says so at start instead
+# of leaving the screens without a contact.
+case "$support" in
+  "" | https://* | mailto:*) ;;
+  *:*)
+    echo "kpubdata-studio: SUPPORT_CONTACT is not a mail address, mailto: or an https URL: ${support}" >&2
+    exit 1
+    ;;
+esac
+
 # scheme://host[:port] of a URL, user info dropped. A URL whose origin is not plainly
 # http(s) and a host is refused: it would go into a response header.
 origin() {
@@ -69,6 +92,11 @@ origin() {
 
 builder_origin=$(origin BUILDER_API_URL "$builder")
 issuer_origin=$(origin OIDC_ISSUER "$issuer")
+# These three are only followed as links, so they add nothing to the policy; origin
+# is called for its refusal of anything that is not an http(s) URL.
+origin PRIVACY_URL "$privacy" > /dev/null
+origin TERMS_URL "$terms" > /dev/null
+origin ACCOUNT_URL "$account" > /dev/null
 local_http="http://localhost:* http://127.0.0.1:*"
 policy="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'"
 policy="${policy}; connect-src 'self' https: ${local_http}${builder_origin}${issuer_origin}"
@@ -82,7 +110,11 @@ window.__KPUBDATA_CONFIG__ = {
   "builderApiUrl": "${builder}",
   "useRealBuilder": "${real}",
   "oidcIssuer": "${issuer}",
-  "oidcClientId": "${client}"
+  "oidcClientId": "${client}",
+  "privacyUrl": "${privacy}",
+  "termsUrl": "${terms}",
+  "supportContact": "${support}",
+  "accountUrl": "${account}"
 };
 JS
 

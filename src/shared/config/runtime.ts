@@ -17,6 +17,13 @@ export interface RuntimeConfig {
   useRealBuilder?: string;
   oidcIssuer?: string;
   oidcClientId?: string;
+  /** Where the deployment publishes its privacy policy and terms of use (#838). */
+  privacyUrl?: string;
+  termsUrl?: string;
+  /** A mail address or an https page users write to (#839, #838). */
+  supportContact?: string;
+  /** The identity provider's account page; `<issuer>/account` when unset (#838). */
+  accountUrl?: string;
 }
 
 declare global {

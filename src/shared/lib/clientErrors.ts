@@ -6,6 +6,7 @@
  * now gets an id that the fallback shows and the console line carries, and the fallback
  * offers the deployment's support contact, so a user can say which error it was.
  */
+import { runtimeOr } from "@/shared/config/runtime";
 
 /** Where a user reports an error: a mail address or an https page. */
 export interface SupportContact {
@@ -41,9 +42,12 @@ export function resolveSupportContact(raw: string | undefined): SupportContact |
   return null;
 }
 
-/** The deployment's support contact (`VITE_SUPPORT_CONTACT`), or null when unset or unusable. */
+/**
+ * The deployment's support contact, or null when unset or unusable: `SUPPORT_CONTACT`
+ * in the container (#838), else the build's `VITE_SUPPORT_CONTACT`.
+ */
 export function getSupportContact(): SupportContact | null {
-  return resolveSupportContact(import.meta.env.VITE_SUPPORT_CONTACT);
+  return resolveSupportContact(runtimeOr("supportContact", import.meta.env.VITE_SUPPORT_CONTACT));
 }
 
 /**

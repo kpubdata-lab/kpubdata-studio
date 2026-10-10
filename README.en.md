@@ -81,6 +81,12 @@ docker run -p 8080:8080 \
 | `BUILDER_API_URL` | The Builder URL the browser calls. Setting it turns real Builder mode on |
 | `USE_REAL_BUILDER` | `false` keeps the demo data even when a URL is set |
 | `OIDC_ISSUER` · `OIDC_CLIENT_ID` | Public SPA client settings — not secrets |
+| `PRIVACY_URL` · `TERMS_URL` | This deployment's privacy policy and terms of use pages. Linked from the login and sign-up screens and the account menu |
+| `SUPPORT_CONTACT` | Where users write: a mail address or an `https:` page. Shown on the pending-approval and error screens and in the account menu |
+| `ACCOUNT_URL` | The sign-in service's account page (change password, delete account). `<OIDC_ISSUER>/account` when empty |
+
+Studio does not ship the policy or the terms. Whoever operates a deployment writes and
+publishes them and sets their addresses. A value that is not set is not shown.
 
 The browser calls Builder directly, so add this Studio's origin to Builder's
 `KPUBDATA_BUILDER_ALLOWED_ORIGINS`. A value containing a quote, a space, `<` or similar

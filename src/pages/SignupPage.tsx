@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { keycloakLogin } from "@/features/auth/keycloak";
 import { getSafeReturnTo } from "@/features/auth/returnTo";
 import { getOidcConfig } from "@/shared/config/env";
-import { BrandLogo, Button, Card } from "@/shared/ui";
+import { BrandLogo, Button, Card, PolicyLinks } from "@/shared/ui";
 
 export function SignupPage() {
   const { t } = useTranslation();
@@ -35,6 +35,7 @@ export function SignupPage() {
           {t("auth.signup.backToLogin")}
         </Link>
         </Card>
+        <PolicyLinks className="mt-6" />
       </div>
     </main>
   );

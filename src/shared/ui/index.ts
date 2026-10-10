@@ -25,4 +25,5 @@ export { HelpTooltip, type HelpTooltipProps } from "./HelpTooltip";
 export { TermHelp } from "./TermHelp";
 export { StageLegend, QualityLegend } from "./StatusLegend";
 export { BrandLogo, type BrandLogoProps } from "./BrandLogo";
+export { PolicyLinks, SupportLine, type PolicyLinksProps, type SupportLineProps } from "./PolicyLinks";
 export { cn, type ClassValue } from "./cn";

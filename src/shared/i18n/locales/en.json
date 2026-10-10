@@ -1541,7 +1541,9 @@
       "logout": "Sign out",
       "notLoggedIn": "Not signed in. Real integration mode requires sign-in for KPubData Builder calls.",
       "login": "Sign in",
-      "mockNote": "In mock mode, login state is for UI demonstration only. Account/permission backend is"
+      "mockNote": "In mock mode, login state is for UI demonstration only. Account/permission backend is",
+      "manage": "Open the account page",
+      "manageDesc": "Changing your password and deleting your account are done on the sign-in service's account page."
     },
     "providers": {
       "title": "Data provider credentials",
@@ -3421,5 +3423,12 @@
       "not_run": "Not run",
       "unavailable": "Unavailable"
     }
+  },
+  "policy": {
+    "label": "Policies and contact",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use",
+    "support": "Contact",
+    "supportLine": "Contact:"
   }
 }

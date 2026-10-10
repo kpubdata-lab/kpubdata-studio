@@ -9,7 +9,7 @@
 import { useTranslation } from "react-i18next";
 
 import { clearSessionRefusal, type SessionRefusal } from "@/shared/lib/sessionRefusal";
-import { Button } from "@/shared/ui";
+import { Button, SupportLine } from "@/shared/ui";
 
 export function SessionRefusedNotice({ refusal, onSignOut }: { refusal: SessionRefusal; onSignOut: () => void }) {
   const { t } = useTranslation();
@@ -28,6 +28,7 @@ export function SessionRefusedNotice({ refusal, onSignOut }: { refusal: SessionR
               an older Builder, or any other cause, gets the general advice. */}
           {refusal.code === "email_not_verified" ? t("sessionRefused.nextEmail") : t("sessionRefused.next")}
         </p>
+        <SupportLine className="mt-2" />
         <div className="mt-5 flex flex-wrap gap-2">
           <Button onClick={clearSessionRefusal} variant="secondary">
             {t("sessionRefused.tryAgain")}

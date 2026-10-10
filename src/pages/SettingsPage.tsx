@@ -23,6 +23,7 @@ import {
 } from "@/shared/lib/builderApi";
 import type { ProviderSummary } from "@/shared/lib/builderApi.schema";
 import { signOutOfOidc } from "@/features/auth/signOut";
+import { getPolicyLinks } from "@/shared/config/policyLinks";
 import { useAuthStore } from "@/features/auth/store";
 import { useAssistConfig } from "@/features/assistant/config";
 import { Card, PageHeader, StatusBadge, Button } from "@/shared/ui";
@@ -179,6 +180,9 @@ function AccountSection({
   onLogout: () => void;
 }) {
   const { t } = useTranslation();
+  // The identity provider holds the account (#838): Studio links to its page, where a
+  // password is changed and the account deleted. A demo session has no such account.
+  const accountUrl = realEnabled ? getPolicyLinks().account : null;
   return (
     <Card data-testid="settings-account">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -186,12 +190,27 @@ function AccountSection({
       </p>
       <div className="mt-4 text-sm">
         {email ? (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-foreground">{email}</span>
-            <Button variant="secondary" size="sm" onClick={() => onLogout()}>
-              {t("settings.account.logout")}
-            </Button>
-          </div>
+          <>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-foreground">{email}</span>
+              <Button variant="secondary" size="sm" onClick={() => onLogout()}>
+                {t("settings.account.logout")}
+              </Button>
+            </div>
+            {accountUrl ? (
+              <p className="mt-3 text-muted-foreground">
+                {t("settings.account.manageDesc")}{" "}
+                <a
+                  className="font-medium text-brand-text underline underline-offset-2"
+                  href={accountUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  {t("settings.account.manage")}
+                </a>
+              </p>
+            ) : null}
+          </>
         ) : realEnabled ? (
           <div className="flex items-center justify-between gap-2">
             <p className="text-muted-foreground">
