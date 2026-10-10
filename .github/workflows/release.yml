@@ -143,8 +143,10 @@ jobs:
   release:
     name: Gate, tag and release
     runs-on: ubuntu-latest
+    # A dispatch releases only from main (#481). The checkout below takes the dispatched
+    # ref, so another branch would be gated, tagged and released as if it were main.
     if: |
-      (github.event_name == 'workflow_dispatch' && inputs.mode == 'release') ||
+      (github.event_name == 'workflow_dispatch' && inputs.mode == 'release' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'pull_request' &&
        github.event.pull_request.merged == true &&
        startsWith(github.event.pull_request.head.ref, 'release/'))
@@ -250,16 +252,32 @@ jobs:
       # The version this build talks to, stated rather than assumed. #411 asks the
       # release to say which Builder API it supports, and the contract version is the
       # thing that answers it — not the package version, which says what is installed.
+      #
+      # Read at Builder's tag of the same version, not at its main (#481). The notes say
+      # "pairs with kpubdata-builder <tag>", and main moves on: at v0.4.0 the tag held
+      # 1.29.0 while main held 1.76.0. Builder is released first (kpubdata
+      # docs/compatibility.md 5.1), so the tag exists; when it does not, or the version
+      # cannot be read, the release stops here, before any tag is written.
       - name: Read the Builder API contract version
         id: contract
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          api=$(gh api repos/kpubdata-lab/kpubdata-builder/contents/contract/builder-api.yaml \
-                  --jq '.content' | base64 -d \
+          set -euo pipefail
+          if ! content=$(gh api "repos/kpubdata-lab/kpubdata-builder/contents/contract/builder-api.yaml?ref=${TAG}" \
+                  --jq '.content'); then
+            echo "::error::could not read contract/builder-api.yaml at kpubdata-builder ${TAG}. Release Builder ${TAG} first."
+            exit 1
+          fi
+          api=$(printf '%s' "${content}" | base64 -d \
                 | sed -n 's/^  version: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' | head -1)
-          echo "api=${api:-unknown}" >> "$GITHUB_OUTPUT"
-          echo "builder API contract ${api:-unknown}"
+          if [ -z "${api}" ]; then
+            echo "::error::kpubdata-builder ${TAG} has no contract version in contract/builder-api.yaml"
+            exit 1
+          fi
+          echo "api=${api}" >> "$GITHUB_OUTPUT"
+          echo "builder API contract ${api} at kpubdata-builder ${TAG}"
 
       - name: Install dependencies
         run: npm ci
