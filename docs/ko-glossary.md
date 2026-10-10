@@ -24,6 +24,9 @@
 | catalog | 카탈로그 |
 | manifest | 매니페스트 |
 | destination | 게시 위치 |
+| workspace | 작업대 |
+
+"작업대"는 저장한 BuildSpec 과 최근 작업을 모아 둔 화면(Workspace)의 이름입니다. SQL 을 실행하는 화면(SQL Workspace)은 "SQL 작업 공간"이라고 씁니다. 두 화면은 다른 화면이므로 낱말도 다릅니다. 제품 전체를 가리킬 때는 둘 중 어느 것도 쓰지 않고 "화면"이라고 씁니다(#892).
 
 ## 영어 그대로 쓰는 낱말
 
