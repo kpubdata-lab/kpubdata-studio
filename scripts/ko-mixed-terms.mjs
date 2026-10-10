@@ -50,6 +50,7 @@ export const KO_GLOSSARY = new Map([
   ["catalog", "카탈로그"],
   ["manifest", "매니페스트"],
   ["destination", "게시 위치"],
+  ["workspace", "작업대"],
 ]);
 
 const HANGUL = /[가-힣]/;

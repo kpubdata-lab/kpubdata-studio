@@ -2505,7 +2505,7 @@
         "copy": "Ask KPubData 는 현재 화면의 테이블·실행·단계와 Builder 근거를 바탕으로 분석을 돕습니다."
       },
       "sidebar": {
-        "title": "작업 공간 둘러보기",
+        "title": "화면 둘러보기",
         "copy": "왼쪽 메뉴에서 데이터 탐색, 실행·품질 확인, Ask KPubData 와 제공자 설정으로 이동할 수 있습니다."
       },
       "start-actions": {
