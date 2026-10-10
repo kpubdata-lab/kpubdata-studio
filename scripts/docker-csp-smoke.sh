@@ -5,7 +5,7 @@
 # double-apply with the <meta> CSP. A bad origin must refuse to start.
 # Also: the security headers every response carries, and the page's lang (#841).
 #
-# Runs outside CI (manually) and in CI (ci.yml's docker-csm job). Requires a
+# Runs outside CI (manually) and in CI (ci.yml's docker-csp job). Requires a
 # Docker daemon. Exits nonzero on the first failure.
 set -eu
 
@@ -23,8 +23,11 @@ check(){ if [ "$2" = "$3" ]; then ok "$1"; else bad "$1 (expected [$3], got [$2]
 cleanup() { docker rm -f csp-a csp-b csp-c 2>/dev/null || true; }
 trap cleanup EXIT
 
-say "Building image..."
-docker build -t "$IMAGE" . >/dev/null
+# CI builds the image beforehand with a layer cache (ci.yml) and sets CSP_SMOKE_IMAGE_BUILT.
+if [ -z "${CSP_SMOKE_IMAGE_BUILT:-}" ]; then
+  say "Building image..."
+  docker build -t "$IMAGE" . >/dev/null
+fi
 
 # --- Case 1: a valid BUILDER_API_URL puts the origin in connect-src ---
 say "Case 1: valid origin"
