@@ -273,6 +273,12 @@
     "schemaDefault": "응답 구조",
     "schemaIssueDefault": "형식 불일치",
     "uploadMismatch": "Builder 업로드 응답이 예상된 형식과 일치하지 않습니다.",
+    "rateLimit": {
+      "queryRateLimited": "방금 질의를 너무 많이 실행했습니다. {{seconds}}초 뒤에 다시 시도하세요.",
+      "queryRateLimitedUnstated": "방금 질의를 너무 많이 실행했습니다. 잠시 후 다시 시도하세요.",
+      "providerEgressLimited": "서버가 허용하는 만큼 데이터 제공자를 호출해 지금은 미리보기를 실행하지 않았습니다. {{seconds}}초 뒤에 다시 시도하세요.",
+      "providerEgressLimitedUnstated": "서버가 허용하는 만큼 데이터 제공자를 호출해 지금은 미리보기를 실행하지 않았습니다. 잠시 후 다시 시도하세요."
+    },
     "http": {
       "400": "요청 형식이 올바르지 않습니다.",
       "401": "로그인이 필요하거나 세션이 만료되었습니다. 다시 로그인해주세요.",
@@ -611,6 +617,7 @@
       "invalid_context": "테이블/실행/단계 문맥이 올바르지 않습니다.",
       "invalid_request": "요청 형식이 올바르지 않습니다.",
       "query_busy": "질의 처리 용량이 가득 찼습니다. 잠시 후 다시 시도하세요.",
+      "query_rate_limited": "방금 질의를 너무 많이 실행했습니다. 잠시 후 다시 시도하세요.",
       "query_timeout": "질의 실행이 시간 초과되었습니다.",
       "query_execution_failed": "질의 실행 중 오류가 발생했습니다.",
       "query_resource_limit": "이 Builder가 허용하는 메모리·임시 디스크보다 많이 필요한 질의입니다. 행을 거르거나 열을 줄여 다시 시도하세요.",
@@ -960,7 +967,7 @@
       "running": "확인하는 중…",
       "failed": "확인하지 못했습니다. 잠시 후 다시 시도하세요.",
       "none": "이 제공자에는 확인할 수 있는 소스 데이터셋이 없습니다.",
-      "notProbed": "시간 안에 확인하지 못한 소스 데이터셋: {{datasets}}. 이 소스 데이터셋들은 상태를 알 수 없습니다.",
+      "notProbed": "확인하지 못한 소스 데이터셋: {{datasets}}. 시간이 다 되었거나 서버가 허용하는 제공자 호출 수에 닿아, 이 소스 데이터셋들은 상태를 알 수 없습니다.",
       "notKept": "이 결과는 저장되지 않으며, 이 화면을 벗어나면 사라집니다.",
       "unknownStatus": "이 Studio가 모르는 상태입니다. KPubData Builder가 보낸 그대로 표시합니다.",
       "columns": {

@@ -273,6 +273,12 @@
     "schemaDefault": "response shape",
     "schemaIssueDefault": "shape mismatch",
     "uploadMismatch": "Builder upload response does not match the expected shape.",
+    "rateLimit": {
+      "queryRateLimited": "Too many queries were run just now. Try again in {{seconds}} seconds.",
+      "queryRateLimitedUnstated": "Too many queries were run just now. Try again shortly.",
+      "providerEgressLimited": "The data provider has been called as often as the server allows for now, so this preview was not run. Try again in {{seconds}} seconds.",
+      "providerEgressLimitedUnstated": "The data provider has been called as often as the server allows for now, so this preview was not run. Try again shortly."
+    },
     "http": {
       "400": "The request format is invalid.",
       "401": "Login required or the session has expired. Please sign in again.",
@@ -611,6 +617,7 @@
       "invalid_context": "Invalid table/run/stage context.",
       "invalid_request": "Invalid request format.",
       "query_busy": "Query capacity is full. Please try again shortly.",
+      "query_rate_limited": "Too many queries were run just now. Try again shortly.",
       "query_timeout": "Query execution timed out.",
       "query_execution_failed": "Query execution failed.",
       "query_resource_limit": "The query needs more memory or temporary disk than this Builder allows. Filter the rows or select fewer columns, then try again.",
@@ -960,7 +967,7 @@
       "running": "Checking…",
       "failed": "Could not check. Try again in a moment.",
       "none": "This provider has no source dataset that can be checked.",
-      "notProbed": "Not checked in time: {{datasets}}. Nothing is known about these.",
+      "notProbed": "Not checked: {{datasets}}. Time ran out, or the server's limit on calls to this provider was reached, so nothing is known about these.",
       "notKept": "This result is not stored and is gone when you leave this screen.",
       "unknownStatus": "A status this Studio does not know. Shown as KPubData Builder sent it.",
       "columns": {

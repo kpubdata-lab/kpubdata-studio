@@ -207,6 +207,7 @@ export type AssistantQueryState =
         | "query_timeout"
         | "query_execution_failed"
         | "query_resource_limit"
+        | "query_rate_limited"
         | "redistribution_forbidden"
         | "declared_pii_withheld"
         | "pii_declaration_unavailable"

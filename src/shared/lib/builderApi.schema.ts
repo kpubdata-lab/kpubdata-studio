@@ -1146,6 +1146,8 @@ export const queryErrorCodeSchema = z.enum([
   // builder#961 (1.107.0, 400): the query needed more memory or temporary disk than the
   // deployment allows. Before, it answered `query_execution_failed`.
   "query_resource_limit",
+  // builder#1245 (1.119.0, 429): this user started as many queries as the server allows a minute.
+  "query_rate_limited",
 ]);
 
 export const queryErrorResponseSchema = z.object({

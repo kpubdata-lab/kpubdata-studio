@@ -7,7 +7,7 @@
  */
 
 /** The contract version this snapshot was generated from. */
-export const BUILDER_ENUMS_CONTRACT_VERSION = "1.118.0";
+export const BUILDER_ENUMS_CONTRACT_VERSION = "1.119.0";
 
 export const BUILDER_ENUMS = {
   "AdminUser.status": ["pending","approved","rejected"],

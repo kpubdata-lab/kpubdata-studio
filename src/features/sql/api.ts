@@ -32,6 +32,8 @@ const DEMO_RESULT: QueryResponse = {
 export function classifyQueryError(cause: unknown): { status: "error"; code: string; message: string } {
   if (cause instanceof ApiError) {
     const details = cause.details as { code?: unknown; error?: unknown } | undefined;
+    // Said in the user's language with how long to wait (#949): the message the request layer made.
+    if (details?.code === "query_rate_limited") return { status: "error", code: details.code, message: cause.message };
     const parsed = queryErrorResponseSchema.safeParse(details);
     if (parsed.success) return { status: "error", code: parsed.data.code ?? "unknown", message: parsed.data.error };
     if (details && typeof details.code === "string") {
