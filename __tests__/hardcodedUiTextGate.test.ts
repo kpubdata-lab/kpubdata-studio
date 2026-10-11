@@ -59,6 +59,7 @@ describe("hard-coded English UI text gate (#531)", () => {
       const source = [
         'import { z } from "zod";',
         'const alias = z.string().min(1, "Alias cannot be empty.");',
+        'const title = z.string().check(z.minLength(1, "Title cannot be empty."));',
         'ctx.addIssue({ code: "custom", path: ["provider"], message: "Provider is required." });',
         "refs.push({ kind: \"run\", id, label: `Run ${id}` });",
         'refs.push({ kind: "output", id, label: ok ? "Output" : t("x") });',
@@ -68,6 +69,7 @@ describe("hard-coded English UI text gate (#531)", () => {
       ].join("\n");
       expect(hardCodedEnglish("f.ts", source).map((hit) => hit.text)).toEqual([
         "Alias cannot be empty.",
+        "Title cannot be empty.",
         "Provider is required.",
         "Run",
         "Output",

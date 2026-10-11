@@ -18,7 +18,7 @@
  */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { z } from "zod";
+import type * as z from "zod/mini";
 
 import { ResultTable } from "@/features/sql/ResultTable";
 import * as schemas from "@/shared/lib/builderApi.schema";
@@ -35,27 +35,27 @@ const STRICT_ON_PURPOSE: Record<string, string> = {
 
 type Def = {
   type: string;
-  shape?: Record<string, z.ZodType>;
-  catchall?: z.ZodType;
-  element?: z.ZodType;
-  innerType?: z.ZodType;
-  options?: z.ZodType[];
-  valueType?: z.ZodType;
-  in?: z.ZodType;
-  out?: z.ZodType;
-  left?: z.ZodType;
-  right?: z.ZodType;
+  shape?: Record<string, z.ZodMiniType>;
+  catchall?: z.ZodMiniType;
+  element?: z.ZodMiniType;
+  innerType?: z.ZodMiniType;
+  options?: z.ZodMiniType[];
+  valueType?: z.ZodMiniType;
+  in?: z.ZodMiniType;
+  out?: z.ZodMiniType;
+  left?: z.ZodMiniType;
+  right?: z.ZodMiniType;
 };
 
-const defOf = (schema: z.ZodType) => (schema as unknown as { def: Def }).def;
+const defOf = (schema: z.ZodMiniType) => (schema as unknown as { def: Def }).def;
 
 /** Paths of every object under `schema` that rejects unknown keys. */
-function strictObjects(schema: z.ZodType, path: string, seen = new Set<z.ZodType>()): string[] {
+function strictObjects(schema: z.ZodMiniType, path: string, seen = new Set<z.ZodMiniType>()): string[] {
   if (seen.has(schema)) return [];
   seen.add(schema);
   const def = defOf(schema);
   const found: string[] = [];
-  const visit = (child: z.ZodType | undefined, childPath: string) => {
+  const visit = (child: z.ZodMiniType | undefined, childPath: string) => {
     if (child) found.push(...strictObjects(child, childPath, seen));
   };
   if (def.type === "object") {
@@ -75,7 +75,7 @@ function strictObjects(schema: z.ZodType, path: string, seen = new Set<z.ZodType
 
 const responseSchemas = Object.entries(schemas as unknown as Record<string, unknown>)
   .filter(([name, value]) => name.endsWith("ResponseSchema") && typeof value === "object" && value !== null)
-  .map(([name, value]) => [name, value as z.ZodType] as const);
+  .map(([name, value]) => [name, value as z.ZodMiniType] as const);
 
 describe("response schemas tolerate additive fields — structural gate (#497)", () => {
   it("finds the response schemas (a rename must not make this pass on nothing)", () => {
@@ -133,7 +133,7 @@ function hasKeyDeep(value: unknown, key: string): boolean {
 }
 
 type Fixture = {
-  schema: z.ZodType;
+  schema: z.ZodMiniType;
   payload: Record<string, unknown>;
   /** Keys whose value is a data map (sample rows, counts) — extras there would be data. */
   freeForm?: string[];

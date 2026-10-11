@@ -10,7 +10,7 @@
  * each table belongs to a demo dataset and each snapshot to one of its runs.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { z } from "zod";
+import type * as z from "zod/mini";
 
 import { fetchCatalog } from "@/features/add-data/api";
 import * as mockDataModule from "@/features/datasets/api/mockData";
@@ -35,7 +35,7 @@ beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "false"));
 afterEach(() => vi.unstubAllEnvs());
 
 /** Parses and demands nothing was stripped or coerced. */
-function expectContract<T>(schema: z.ZodType<T>, value: unknown, label: string) {
+function expectContract<T>(schema: z.ZodMiniType<T>, value: unknown, label: string) {
   const parsed = schema.safeParse(value);
   expect(parsed.success, `${label}: ${parsed.success ? "" : parsed.error.message}`).toBe(true);
   expect(parsed.data, `${label}: carries a field the contract does not model`).toEqual(value);

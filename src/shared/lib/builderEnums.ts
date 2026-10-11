@@ -19,7 +19,7 @@
  * not accept. `builderEnums.test.ts` holds the snapshot to the contract exactly when
  * their versions are the same.
  */
-import { z } from "zod";
+import * as z from "zod/mini";
 import { BUILDER_ENUMS } from "./generated/builderEnums";
 
 export { BUILDER_ENUMS, BUILDER_ENUMS_CONTRACT_VERSION } from "./generated/builderEnums";

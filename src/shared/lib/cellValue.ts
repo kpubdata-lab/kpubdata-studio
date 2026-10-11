@@ -10,7 +10,7 @@
  * The encoding is read from each response, not remembered per column: the Builder may
  * decide it per result set, so the same column can arrive differently.
  */
-import type { z } from "zod";
+import type * as z from "zod/mini";
 
 import { i18n } from "@/shared/i18n";
 

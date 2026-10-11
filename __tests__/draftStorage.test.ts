@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { z } from "zod";
+import * as z from "zod/mini";
 import {
   clearDraft,
   DRAFT_VERSION,

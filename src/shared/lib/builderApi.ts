@@ -24,7 +24,7 @@ import * as schemas from "./builderApi.schema";
 import { AmbiguousSpecError, noteKeyProviders, providerKeyHeaders, specProviders } from "./providerKeys";
 import { clearSessionRefusal, isSessionRefused, noteSessionRefused } from "./sessionRefusal";
 import { noteSignupBlock } from "./signupStatus";
-import { z } from "zod";
+import * as z from "zod/mini";
 
 /**
  * **Minimum** Builder API contract version Studio's client needs (#725, #790). Not an
@@ -477,7 +477,7 @@ function settleSession(response: Response, refusedWithFreshToken: boolean, error
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {},
-  schema?: z.ZodSchema<T>,
+  schema?: z.ZodMiniType<T>,
 ): Promise<T> {
   const { response, refusedWithFreshToken } = await sendWithSession(
     () => fetchWithRetries(path, options),
