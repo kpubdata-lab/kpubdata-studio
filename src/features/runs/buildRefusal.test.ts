@@ -22,6 +22,13 @@ const OWNER_LIMIT = {
   limit: 2,
 };
 const QUEUE_FULL = { error: "async build queue is full", code: "build_queue_full" };
+const DISK_LOW = { error: "the server is low on disk space and is not accepting builds; submit the build again later", code: "disk_space_low" };
+const STORAGE_QUOTA = {
+  error: "your runs use the storage one user may keep; submit this build when older runs have expired",
+  code: "run_storage_quota_exceeded",
+  limit_bytes: 10737418240,
+  used_bytes: 10737418240,
+};
 
 describe("buildRefusal", () => {
   it("reads the per-user limit and how many it is", () => {
@@ -37,6 +44,44 @@ describe("buildRefusal", () => {
   it("reads a full queue", () => {
     expect(buildRefusal(new ApiError(429, "x", QUEUE_FULL))).toStrictEqual({ code: "build_queue_full" });
     expect(buildRefusal(new ApiError(429, "x", { ...QUEUE_FULL, future_optional_field: "later" }))).toStrictEqual({ code: "build_queue_full" });
+  });
+
+  it("reads a disk-space refusal on 503 and a storage-quota refusal on 409 (contract 1.118.0)", () => {
+    expect(buildRefusal(new ApiError(503, "x", DISK_LOW))).toStrictEqual({ code: "disk_space_low" });
+    expect(buildRefusal(new ApiError(409, "x", STORAGE_QUOTA))).toStrictEqual({
+      code: "run_storage_quota_exceeded",
+      limitBytes: 10737418240,
+      usedBytes: 10737418240,
+    });
+  });
+
+  it.each([undefined, null, "5", -1, 1.5])("reads the size %j as not said", (size) => {
+    expect(buildRefusal(new ApiError(409, "x", { ...STORAGE_QUOTA, limit_bytes: size, used_bytes: size }))).toStrictEqual({
+      code: "run_storage_quota_exceeded",
+      limitBytes: null,
+      usedBytes: null,
+    });
+  });
+
+  it.each([
+    ["the disk code on 429", new ApiError(429, "x", DISK_LOW)],
+    ["the quota code on 503", new ApiError(503, "x", STORAGE_QUOTA)],
+    ["a 503 with another code", new ApiError(503, "x", { error: "down", code: "shutting_down" })],
+    ["a 409 with another code", new ApiError(409, "x", { error: "busy", code: "retry_of_in_progress" })],
+    ["a 409 with no body", new ApiError(409, "x")],
+  ])("does not take %s for one", (_what, cause) => {
+    expect(buildRefusal(cause)).toBeNull();
+  });
+
+  it("says them in the user's language, with sizes in readable units", () => {
+    expect(buildRefusalMessage({ code: "disk_space_low" })).toBe("서버의 디스크 여유 공간이 부족해 실행을 받지 않고 있습니다. 잠시 후 다시 시도하세요.");
+    expect(EN.runs.build.diskSpaceLow).toBe("The server is low on disk space and is not accepting runs. Try again later.");
+    expect(buildRefusalMessage({ code: "run_storage_quota_exceeded", limitBytes: 10737418240, usedBytes: 9663676416 })).toBe(
+      "내 실행이 한 사용자가 보관할 수 있는 10 GiB 중 9 GiB를 사용하고 있습니다. 오래된 실행은 보관 기간이 지나면 지워집니다. 그 뒤에 다시 시도하세요.",
+    );
+    expect(buildRefusalMessage({ code: "run_storage_quota_exceeded", limitBytes: 1536, usedBytes: 700 })).toContain("1.5 KiB 중 700 B");
+    expect(buildRefusalMessage({ code: "run_storage_quota_exceeded", limitBytes: null, usedBytes: null })).toContain("저장 공간을 모두 사용");
+    expect(EN.runs.build.storageQuota).toContain("Older runs are removed when they expire");
   });
 
   it.each([
@@ -114,6 +159,17 @@ describe("useBuildJob", () => {
 
   it("tells a user the server's queue is full", async () => {
     expect(await refusedWith(429, QUEUE_FULL)).toBe("서버의 실행 대기열이 가득 찼습니다. 잠시 후 다시 시도하세요.");
+  });
+
+  it("tells a user the server is low on disk space", async () => {
+    expect(await refusedWith(503, DISK_LOW)).toContain("디스크 여유 공간이 부족");
+  });
+
+  it("tells a user their runs fill the storage they may keep, with the sizes", async () => {
+    const error = await refusedWith(409, STORAGE_QUOTA);
+
+    expect(error).toContain("10 GiB 중 10 GiB");
+    expect(error).not.toContain("your runs use");
   });
 
   it("still shows any other refusal as Builder wrote it", async () => {
