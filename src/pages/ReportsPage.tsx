@@ -158,6 +158,15 @@ export function ReportsPage() {
         description={t("reports.page.desc")}
       />
 
+      {/* Reports are kept by `reports/repository.ts` in this browser, like saved BuildSpecs
+          on the Workspace page; server storage is deferred (#412). */}
+      <Card data-testid="reports-local-only" variant="dashed">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t("reports.page.localOnlyBadge")}
+        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{t("reports.page.localOnlyDesc")}</p>
+      </Card>
+
       <Card>
         <p className="text-sm font-semibold">{t("reports.page.newTitle")}</p>
         <p className="mt-1 text-xs text-muted-foreground">

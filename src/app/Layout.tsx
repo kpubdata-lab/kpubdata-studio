@@ -25,7 +25,7 @@ import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import { clearSessionRefusal, useSessionRefusalStore } from "@/shared/lib/sessionRefusal";
 import { useSignupStatusStore } from "@/shared/lib/signupStatus";
 import { focusRouteTarget } from "./routeFocus";
-import { BrandLogo, DemoBadge } from "@/shared/ui";
+import { BetaBadge, BrandLogo, DemoBadge } from "@/shared/ui";
 
 
 interface NavItem {
@@ -546,7 +546,10 @@ export function Layout() {
                     <DemoBadge />
                     <span className="sr-only">{t("layout.demoModeDesc")}</span>
                   </span>
-                ) : null}
+                ) : (
+                  // A real deployment is a beta (#412). The demo keeps its own badge.
+                  <BetaBadge />
+                )}
 
                 <CommandSearch destinations={searchDestinations} />
 

@@ -55,6 +55,8 @@
       "signOut": "Sign out",
       "signIn": "Sign in"
     },
+    "beta": "Beta",
+    "betaDesc": "This is a beta service. Screens and features may change.",
     "demoModeDesc": "Demo mode: every screen shows sample data, not a real KPubData Builder."
   },
   "reportEditor": {
@@ -595,7 +597,7 @@
       "needsDatasetRun": "Both a table and a run must be selected to run it.",
       "cancelled": "The request was cancelled.",
       "unknownError": "An unknown error occurred while running the query.",
-      "mockUnsupported": "Query execution is not supported in mock mode. Set VITE_USE_REAL_BUILDER=true to connect to a real KPubData Builder.",
+      "mockUnsupported": "Queries cannot be run in demo mode. Use a Studio that is connected to a real KPubData Builder.",
       "stageMismatch": "The current screen stage ({{current}}) differs from the Generated SQL stage ({{proposed}}).",
       "stageNone": "none",
       "generatedSql": "Generated SQL",
@@ -1525,15 +1527,14 @@
       "mismatch": "Contract version mismatch: KPubData Builder {{api}} is not compatible with the minimum version ({{min}}, same major) required by Studio. Some response shapes may be incompatible.",
       "majorMismatch": "Contract version mismatch: KPubData Builder {{api}} is another major than the contract this Studio reads ({{min}}). Some screens cannot read Builder's answers.",
       "unreadable": "Contract version mismatch: the contract version KPubData Builder reported ({{api}}) cannot be read. This Studio needs {{min}} or later.",
-      "mockNote": "Mock mode. To connect to a real KPubData Builder,",
-      "mockEnv": ".",
+      "mockNote": "This is demo mode. Every screen shows example data and nothing is connected to KPubData Builder. To work with real data, ask the administrator who runs this Studio to connect it to Builder.",
       "connFail": "Connection check failed.",
       "fetchFail": "Fetch failed."
     },
     "privacy": {
       "title": "Privacy Notice",
       "llm": "Using Ask KPubData sends conversation content to the external LLM provider (OpenAI, etc.) configured by you. API keys and costs are your responsibility.",
-      "noPublic": "Do not inject public API keys via VITE_* environment variables — they are bundled in plaintext.",
+      "noPublic": "If you deploy Studio, do not put an API key that several people share into the deployment settings. It is delivered as it is to the browser of everyone who opens the screen.",
       "scrub": "Secret scrubbing automatically masks service keys in sourceParams, but sensitive information typed directly into conversations is not masked."
     },
     "account": {
@@ -1541,14 +1542,14 @@
       "logout": "Sign out",
       "notLoggedIn": "Not signed in. Real integration mode requires sign-in for KPubData Builder calls.",
       "login": "Sign in",
-      "mockNote": "In mock mode, login state is for UI demonstration only. Account/permission backend is",
+      "mockNote": "In demo mode you can look around without signing in. Accounts and permissions work only in a Studio that is connected to a real KPubData Builder.",
       "manage": "Open the account page",
       "manageDesc": "Changing your password and deleting your account are done on the sign-in service's account page."
     },
     "providers": {
       "title": "Data provider credentials",
       "manage": "Manage in provider settings",
-      "mockNote": "In mock mode the provider page demonstrates the flow. Real credentials are held safely on the server by KPubData Builder in real-integration mode.",
+      "mockNote": "In demo mode the provider page demonstrates the flow. Real credentials are handled only in a Studio that is connected to KPubData Builder.",
       "loading": "Checking provider configuration…",
       "summary": "{{configured}} of {{total}} providers that need credentials are configured.",
       "listLabel": "provider configuration status",
@@ -1594,7 +1595,7 @@
     },
     "oidc": {
       "errorTitle": "The OIDC configuration has a problem.",
-      "errorDesc": "This environment is connected to a real KPubData Builder, but the OIDC settings (<code>VITE_OIDC_ISSUER</code> / <code>VITE_OIDC_CLIENT_ID</code>) are not valid. Contact your administrator.",
+      "errorDesc": "This Studio is connected to a real KPubData Builder, but its sign-in service is not set up correctly, so you cannot sign in. Contact your administrator. Administrators: check the container's <code>OIDC_ISSUER</code> and <code>OIDC_CLIENT_ID</code> values.",
       "missingTitle": "OIDC authentication is not configured yet.",
       "missingDesc": "This environment is connected to a real KPubData Builder, but the OIDC IdP (Keycloak) used for human sign-in is not wired up yet. Contact your administrator or try again once it is in place.",
       "disabled": "OIDC is not enabled."
@@ -1668,6 +1669,8 @@
       "newDesc": "The selected table/run is fixed as this report's baseline. New runs do not automatically update it.",
       "createCta": "Create Report",
       "noRuns": "No accessible runs for this table.",
+      "localOnlyBadge": "Stored in this browser only",
+      "localOnlyDesc": "Reports live in this browser, not on the Builder server. They do not appear on other devices or browsers, clearing browser data can remove them, and they are neither shared with teammates nor backed up automatically. To keep one, open it and export it.",
       "savedTitle": "Saved Reports",
       "savedEmpty": "No saved reports",
       "savedEmptyDesc": "Select a table/run above to create your first report.",
@@ -2483,38 +2486,34 @@
     "loading": "Loading the page…"
   },
   "onboarding": {
-    "skip": "Skip",
-    "back": "Back",
-    "next": "Next",
-    "done": "Done",
-    "steps": {
-      "dashboard-builds": {
-        "title": "Check recent runs",
-        "copy": "Review recent runs and their progress, and open run details when you need more."
-      },
-      "dashboard-overview": {
-        "title": "Check your status",
-        "copy": "This dashboard shows your current tables and run activity."
-      },
-      "dashboard-quality": {
-        "title": "Check quality results",
-        "copy": "Review recent quality warnings and follow up where needed."
-      },
-      "assistant-helper": {
-        "title": "Stuck? Ask KPubData",
-        "copy": "Ask KPubData helps you analyze using the table, run and stage on the current screen along with Builder evidence."
-      },
-      "sidebar": {
-        "title": "Tour your workspace",
-        "copy": "The left menu takes you to data discovery, runs and quality, Ask KPubData, and provider settings."
-      },
-      "start-actions": {
-        "title": "Start here",
-        "copy": "Use Discover to find data in the catalog, or Add Data to bring in an API, file or URL yourself."
-      },
-      "workflow": {
-        "title": "How data gets made",
-        "copy": "Find data, set up the import, check and validate the real rows in preview, then create the table. After that you can review quality results and use the data."
+    "checklist": {
+      "title": "New here? Start in this order",
+      "desc": "Most public data can be fetched only with a key you receive after applying for it. Tick each step as you finish it. The ticks are kept in this browser only.",
+      "dismiss": "Close this guide",
+      "reopen": "Show the getting-started guide again",
+      "beta": "KPubData Studio is a beta. Screens and features may change.",
+      "guide": "Open the user guide",
+      "steps": {
+        "apply": {
+          "title": "Apply for the data",
+          "copy": "Apply to the institution that provides the data you want. The application guide on the Connections page links to each service's application page.",
+          "cta": "See where to apply"
+        },
+        "key": {
+          "title": "Enter your key",
+          "copy": "Once the application is approved, enter the key you received on the Connections page, for each provider.",
+          "cta": "Go and enter a key"
+        },
+        "probe": {
+          "title": "Check what your key reaches",
+          "copy": "On the Connections page, check which data the key you entered can fetch.",
+          "cta": "Go and check"
+        },
+        "table": {
+          "title": "Make your first table",
+          "copy": "Pick data in the Catalog, check it in the preview, then make the table.",
+          "cta": "Open the Catalog"
+        }
       }
     }
   },
@@ -2728,7 +2727,7 @@
   },
   "config": {
     "oidc": {
-      "issuerInvalid": "VITE_OIDC_ISSUER is not a valid format: {{issuer}}"
+      "issuerInvalid": "The sign-in service address (OIDC issuer) is not in a valid format: {{issuer}}"
     }
   },
   "versionCheck": {

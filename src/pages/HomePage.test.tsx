@@ -7,7 +7,7 @@
  * requested any more.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { mswServer } from "../../vitest.setup";
@@ -313,5 +313,35 @@ describe("Home for someone with nothing yet (#527)", () => {
     expect(screen.getByRole("link", { name: "데이터 추가하기" })).toHaveAttribute("href", "/add");
     expect(screen.queryByText(/STEP 1/)).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows the first-run checklist, and keeps it closed once closed (#412)", async () => {
+    localStorage.clear();
+    handlers({ datasets: [], builds: [] });
+    const first = renderHome();
+    const card = await screen.findByTestId("first-run-checklist");
+    expect(within(card).getAllByRole("checkbox")).toHaveLength(4);
+    expect(within(card).getByRole("link", { name: "활용신청 안내 보기" })).toHaveAttribute("href", "/connections");
+    expect(within(card).getByRole("link", { name: "카탈로그 열기" })).toHaveAttribute("href", "/discover");
+
+    fireEvent.click(within(card).getByRole("button", { name: "안내 닫기" }));
+    expect(screen.queryByTestId("first-run-checklist")).not.toBeInTheDocument();
+    first.unmount();
+
+    renderHome();
+    expect(await screen.findByRole("link", { name: "탐색하기" })).toBeInTheDocument();
+    expect(screen.queryByTestId("first-run-checklist")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "시작 안내 다시 보기" })).toBeInTheDocument();
+    localStorage.clear();
+  });
+
+  it("does not show the checklist to an account that already has tables (#412)", async () => {
+    localStorage.clear();
+    handlers();
+    renderHome();
+    expect(await screen.findByRole("heading", { level: 1, name: "홈" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("heading", { level: 2, name: "조치가 필요한 테이블" })).toBeInTheDocument());
+    expect(screen.queryByTestId("first-run-checklist")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "시작 안내 다시 보기" })).not.toBeInTheDocument();
   });
 });

@@ -130,6 +130,15 @@ describe("ReportsPage states", () => {
     expect(screen.getByText("위에서 테이블/실행을 선택해 첫 Report를 만들어보세요.")).toBeInTheDocument();
   });
 
+  it("says reports are kept in this browser only (#412)", async () => {
+    useBuilder();
+    renderPage();
+
+    const notice = await screen.findByTestId("reports-local-only");
+    expect(notice).toHaveTextContent("이 브라우저에만 저장됩니다");
+    expect(notice).toHaveTextContent("서버에 백업되지 않습니다");
+  });
+
   it("shows an error instead of the pickers when the table list fails", async () => {
     useBuilder({ datasetsStatus: 500 });
     renderPage();

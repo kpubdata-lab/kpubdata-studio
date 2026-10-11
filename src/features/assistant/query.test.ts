@@ -49,7 +49,7 @@ describe("runAssistantQuery (#256, Builder #504 contract 1.7.0)", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     const result = await runAssistantQuery(SILVER_CONTEXT, SILVER_SQL);
-    expect(result).toEqual({ status: "error", code: "mock_mode", message: expect.stringContaining("mock 모드") });
+    expect(result).toEqual({ status: "error", code: "mock_mode", message: expect.stringContaining("데모 모드에서는 질의를 실행할 수 없습니다") });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

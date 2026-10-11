@@ -7,14 +7,16 @@
  * or analysis. There are no KPI cards, no workflow strip and no tour over the screen.
  *
  * A deployment without a warehouse has no snapshots or saved analyses; it keeps the recent
- * runs list and says why in one line. Someone with no tables and no runs yet gets the two
- * ways to start: find a source in the Catalog, or make a table from a file.
+ * runs list and says why in one line. Someone with no tables and no runs yet gets the
+ * first-run checklist (#412) and the two ways to start: find a source in the Catalog, or
+ * make a table from a file.
  */
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { runStatusLabel } from "@/shared/i18n/codeLabels";
 import { Link } from "react-router-dom";
 
+import { useAuthStore } from "@/features/auth/store";
 import { listDatasets } from "@/features/datasets/api";
 import { AxisValue } from "@/features/datasets/components/StatusAxes";
 import { formatDateTime } from "@/features/datasets/model";
@@ -24,6 +26,7 @@ import {
   loadRecentSnapshots,
   type RecentSnapshot,
 } from "@/features/home/homeData";
+import { FirstRunTour } from "@/features/onboarding/FirstRunTour";
 import { listBuilds } from "@/features/runs/api";
 import { detectWarehouse } from "@/features/sql/warehouse";
 import { type DatasetSummary, type SavedAnalysis } from "@/shared/lib/builderApi";
@@ -104,12 +107,20 @@ export function HomePage() {
   );
 }
 
-/** First visit: the two direct ways to a first table. */
+/**
+ * First visit: the first-run checklist, then the two direct ways to a first table.
+ *
+ * The checklist is here and not on the dashboard, so it is seen only by an account with
+ * no table and no run. The demo always has both, so it never shows there.
+ */
 function StartHome() {
   const { t } = useTranslation();
+  // The checklist's state is kept per account; a session without one shares a bucket.
+  const userId = useAuthStore((state) => state.userId) ?? "anonymous";
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-5 px-5 py-7 sm:px-8 lg:px-10 lg:py-8">
       <PageHeader title={t("home.hero.title")} description={t("home.hero.desc")} />
+      <FirstRunTour key={userId} userId={userId} />
       <section className="grid gap-4 lg:grid-cols-2">
         <Card className="flex flex-col items-start gap-2">
           <h2 className="text-sm font-semibold">{t("home.explore.title")}</h2>
