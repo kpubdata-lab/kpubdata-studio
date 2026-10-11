@@ -1356,6 +1356,14 @@ export const adminRunSchema = z.object({
   finished_at: z.string().nullable().optional(),
   /** Irreversible owner hash — not an identity. */
   owner_id: z.string().nullable().optional(),
+  /**
+   * The stable code and stage of the run's failure (kpubdata-builder#1120, contract
+   * 1.116.0). Null when the run did not fail or the cause is not one of Builder's codes;
+   * absent from an older Builder. Plain strings, not contract enums: Studio words the
+   * codes it knows (`features/admin/runFailure.ts`) and treats any other as unknown.
+   */
+  error_code: z.string().nullable().optional(),
+  error_stage: z.string().nullable().optional(),
 });
 
 export const adminRunsResponseSchema = z.object({

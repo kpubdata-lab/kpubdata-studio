@@ -171,6 +171,38 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
   await expectNoPageErrors(errors);
 });
 
+test("관리자가 아닌 사용자에게는 관리 메뉴가 없고, Builder 도 관리 API 를 거절한다 (#906) @multi-user", async ({ browser, request }) => {
+  // This Builder names no administrator (no KPUBDATA_BUILDER_ADMIN_SUBJECTS), so Bob is not one.
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  const errors: string[] = [];
+  collectSignedInPageErrors(page, errors);
+  const adminProbe = page.waitForResponse(
+    (answer) => answer.url() === `${BUILDER_URL}/admin/config` && answer.request().method() === "GET",
+  );
+  const token = page
+    .waitForRequest((sent) => sent.url().startsWith(BUILDER_URL) && Boolean(sent.headers()["authorization"]))
+    .then((sent) => sent.headers()["authorization"]);
+  await signIn(page, BOB);
+
+  // Studio asked Builder, Builder said no, and the menu has no administration entry.
+  expect((await adminProbe).status()).toBe(403);
+  const menu = page.getByRole("navigation", { name: "주 메뉴" });
+  await expect(menu.getByRole("link", { name: /^(Refresh History|갱신 이력)$/ }).first()).toBeVisible();
+  await expect(menu.getByRole("link", { name: /^(Administration|관리)$/ })).toHaveCount(0);
+  await expect(page.locator('a[href$="/admin"]')).toHaveCount(0);
+
+  // Hiding the menu is a convenience; Builder's refusal is the block.
+  const authorization = await token;
+  for (const path of ["/admin/config", "/admin/runs", "/admin/users"]) {
+    const answer = await request.get(`${BUILDER_URL}${path}`, { headers: { Authorization: authorization } });
+    expect(answer.status(), `${path} as a non-administrator`).toBe(403);
+  }
+
+  await expectNoPageErrors(errors);
+  await context.close();
+});
+
 test("두 사용자는 서로의 실행도 키도 볼 수 없다 @multi-user", async ({ browser, request }) => {
   // 1) Alice enters her provider key, and Builder is sent it with her next provider list.
   const alice = await browser.newContext();
