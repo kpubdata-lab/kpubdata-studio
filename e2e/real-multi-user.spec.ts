@@ -372,10 +372,12 @@ test("두 계정의 테이블·업로드·저장된 분석·내보내기와 브�
     const answer = await request.fetch(`${BUILDER_URL}${path}`, { method, headers: bobAuth, data });
     expect(answer.status(), `${method} ${path} as Bob: ${await answer.text()}`).toBe(404);
   }
-  //    A build of his that names her upload does not read it either.
+  //    A build of his that names her upload does not read it either. It is his own run,
+  //    which Builder lists for him as failed, so it carries a title of his: with hers,
+  //    the check on his Tables page below would find his row, not hers.
   const borrowed = await request.post(`${BUILDER_URL}/build`, {
     headers: bobAuth,
-    data: { spec: spec.replace(datasetId, `e2e.bob-borrows-${stamp}`) },
+    data: { spec: spec.replace(datasetId, `e2e.bob-borrows-${stamp}`).replace(tableTitle, `Bob borrows ${stamp}`) },
     timeout: 60_000,
   });
   expect(borrowed.ok(), `Bob's build on Alice's upload: ${borrowed.status()}`).toBe(false);
@@ -747,8 +749,9 @@ test("대기 중 키가 만료된 실행은 편집 화면에서 키를 다시 �
   });
   expect(builderSpec.status(), "Builder keeps no spec of a run that never started").toBe(404);
 
-  // 6) She opens the run again in a new tab — by its address: Refresh History lists only
-  //    runs that started — and the lost-keys card offers the retry on the edit page…
+  // 6) She opens the run again in a new tab — by its address; Refresh History lists it
+  //    with no start time (kpubdata-builder#1252) — and the lost-keys card offers the
+  //    retry on the edit page…
   const runPath = `/refresh-jobs/${encodeURIComponent(aliceRunId)}`;
   //    This tab asks Builder twice without her key, further down, and is refused twice.
   const refusedForWantOfAKey = () => [`${BUILDER_URL}/preview`, `${BUILDER_URL}/builds`];
