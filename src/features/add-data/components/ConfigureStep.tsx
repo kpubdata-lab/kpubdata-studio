@@ -15,6 +15,7 @@ import { checkCredentialPrerequisite, credentialPrerequisiteMessage } from "@/fe
 import { findDataset, findProvider } from "@/features/add-data/identity";
 import { uploadExpiry, type AddDataDraft } from "@/features/add-data/model";
 import { useUploadStatus } from "@/features/add-data/useUploadStatus";
+import { QueryParamsFields } from "@/features/build-spec/components/QueryParamsFields";
 import { formatDateTime } from "@/features/datasets/model";
 import type { SourceFormat } from "@/shared/lib/types";
 import { Button, Card, FormField, Select, Textarea, TextInput } from "@/shared/ui";
@@ -73,6 +74,9 @@ export function ConfigureStep({
 
   const selectedDataset = findDataset(catalog.providers, draft.publicApi.provider, draft.publicApi.dataset);
   const requestParameters = selectedDataset?.request_parameters ?? [];
+  // null or absent: the dataset has no query definition, and the JSON editor below is the
+  // only input, with the request_parameters guidance as before (#899).
+  const queryParameters = selectedDataset?.query_parameters ?? null;
   const credentialPrerequisite = checkCredentialPrerequisite(
     selectedDataset,
     providerConfigured,
@@ -189,7 +193,14 @@ export function ConfigureStep({
                 ) : null}
               </Card>
             ) : null}
-            {requestParameters.length > 0 ? (
+            {queryParameters && queryParameters.length > 0 ? (
+              <QueryParamsFields
+                idPrefix="add-data-param"
+                parameters={queryParameters}
+                text={draft.publicApi.sourceParams}
+                onChange={(sourceParams) => updateDraft({ publicApi: { ...draft.publicApi, sourceParams } })}
+              />
+            ) : requestParameters.length > 0 ? (
               <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs">
                 <p className="font-semibold text-foreground">{t("addData.configure.paramsTitle")}</p>
                 <ul className="mt-1.5 space-y-1">
@@ -224,12 +235,16 @@ export function ConfigureStep({
             ) : null}
             <FormField
               id="add-data-params"
-              label={t("addData.configure.requestParamsLabel")}
-              help={t("addData.configure.example", { value: exampleParamsText(requestParameters) })}
+              label={t(queryParameters ? "buildSpec.params.allLabel" : "addData.configure.requestParamsLabel")}
+              help={
+                queryParameters
+                  ? t("buildSpec.params.allHelp")
+                  : t("addData.configure.example", { value: exampleParamsText(requestParameters) })
+              }
             >
               {(field) => (
                 <div className="space-y-2">
-                  {hasExampleParams(requestParameters) ? (
+                  {!queryParameters && hasExampleParams(requestParameters) ? (
                     <Button
                       type="button"
                       variant="secondary"

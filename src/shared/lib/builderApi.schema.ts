@@ -11,7 +11,7 @@
  */
 
 import * as z from "zod/mini";
-import { builderEnum } from "./builderEnums";
+import { BUILDER_ENUMS, builderEnum } from "./builderEnums";
 
 /**
  * GET /version response schema
@@ -402,6 +402,27 @@ export const catalogRequestParameterSchema = z.object({
 });
 
 /**
+ * One parameter of a dataset's query definition (#899, contract 1.120.0): `name` is the
+ * provider's own, `alias` the library's (null when not aliased). `type` is null when
+ * Builder does not know it — a catalogue entry declares none — and a type this Studio
+ * does not know reads as null too, so the field is a plain text input rather than a
+ * failed catalog. Never guessed.
+ */
+const queryParameterTypes = BUILDER_ENUMS["CatalogQueryParameter.type"].filter(
+  (value): value is Exclude<typeof value, null> => value !== null,
+);
+
+export const catalogQueryParameterSchema = z.object({
+  name: z.string(),
+  alias: z.nullable(z.string()),
+  type: z.catch(z.nullable(z.enum(queryParameterTypes)), null),
+  required: z.boolean(),
+  enum: z.nullable(z.array(z.string())),
+  description: z.nullable(z.string()),
+  example: z.nullable(z.string()),
+});
+
+/**
  * For cases where API Key issuance and per-dataset access requests are separate (like Public Data Portal)
  * guidance (#S-add-data). Passed through by Builder from
  * raw_metadata.application — null if missing (meaning unknown, NOT "no
@@ -426,6 +447,9 @@ export const catalogDatasetSchema = z.object({
   // Backward compat: parsing does not break on old Builder versions that don't send this field yet
   // (consumer uses `?? []`). Latest Builder always sends an array.
   request_parameters: z.optional(z.array(catalogRequestParameterSchema)),
+  // The query definition for the parameter form (#899). null: no definition — unknown, not
+  // "no parameters". Absent on a Builder older than 1.120.0, read the same way.
+  query_parameters: z.optional(z.nullable(z.array(catalogQueryParameterSchema))),
   // Backward compat: this field is undefined on old Builder versions that don't send it yet
   // (consumer uses `?? null`). Latest Builder always sends a value (object or null).
   application: z.optional(z.nullable(catalogApplicationSchema)),
@@ -445,6 +469,7 @@ export const catalogResponseSchema = z.object({
 
 export type CatalogQuerySupport = z.infer<typeof catalogQuerySupportSchema>;
 export type CatalogRequestParameter = z.infer<typeof catalogRequestParameterSchema>;
+export type CatalogQueryParameter = z.infer<typeof catalogQueryParameterSchema>;
 export type CatalogApplication = z.infer<typeof catalogApplicationSchema>;
 export type CatalogDataset = z.infer<typeof catalogDatasetSchema>;
 export type CatalogProvider = z.infer<typeof catalogProviderSchema>;

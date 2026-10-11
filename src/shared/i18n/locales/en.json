@@ -2736,7 +2736,26 @@
     "params": {
       "finiteOnly": "Parameter JSON may only contain finite numbers and JSON values.",
       "invalidJson": "The parameters are not valid JSON. Check the format.",
-      "mustBeObject": "Parameters must be a JSON object, for example {\"region\": \"seoul\"}"
+      "mustBeObject": "Parameters must be a JSON object, for example {\"region\": \"seoul\"}",
+      "fieldsTitle": "Query conditions",
+      "fieldsNeedJson": "Fix the JSON below to use these fields.",
+      "allLabel": "All request parameters (JSON)",
+      "allHelp": "The fields above write here. Add any parameter they do not list here.",
+      "choose": "Select…",
+      "providerName": "Provider's name: {{name}}",
+      "type": {
+        "string": "Text",
+        "integer": "Whole number",
+        "number": "Number",
+        "date_yyyymmdd": "Date, YYYYMMDD",
+        "date_yyyymm": "Month, YYYYMM"
+      },
+      "missing": "Enter {{name}}; it is required.",
+      "notInEnum": "{{name}} must be one of: {{values}}.",
+      "badInteger": "{{name}} must be a whole number.",
+      "badNumber": "{{name}} must be a number.",
+      "badDate": "{{name}} must be a date written as YYYYMMDD.",
+      "badMonth": "{{name}} must be a month written as YYYYMM."
     },
     "yaml": {
       "parseFailed": "The YAML syntax could not be parsed.",

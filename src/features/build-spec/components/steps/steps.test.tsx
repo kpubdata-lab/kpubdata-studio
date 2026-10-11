@@ -6,7 +6,7 @@
  * each of three conditions blocks button separately.
  */
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useForm } from "react-hook-form";
 
 import { IdentityStep } from "./IdentityStep";
@@ -105,6 +105,41 @@ describe("ParamsStep", () => {
   it("파라미터 입력을 그린다", () => {
     render(<FormHarness render={({ register, formState }) => <ParamsStep register={register} errors={formState.errors} />} />);
     expect(screen.getByRole("textbox")).toBeInTheDocument();
+  });
+
+  it("holds the step until the query definition's required parameters have values (#899)", async () => {
+    const term = {
+      name: "dataTerm",
+      alias: "term",
+      type: "string" as const,
+      required: true,
+      enum: ["daily", "month"],
+      description: null,
+      example: null,
+    };
+    let check: (() => Promise<boolean>) | undefined;
+    render(
+      <FormHarness
+        render={({ register, formState, trigger, watch, setValue }) => {
+          check = () => trigger("sourceParams");
+          return (
+            <ParamsStep
+              register={register}
+              errors={formState.errors}
+              queryParameters={[term]}
+              sourceParams={watch("sourceParams")}
+              onSourceParamsChange={(text) => setValue("sourceParams", text)}
+            />
+          );
+        }}
+      />,
+    );
+    await act(async () => expect(await check!()).toBe(false));
+    expect(await screen.findByText(/term은\(는\) 필수/)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^term/), { target: { value: "daily" } });
+    await act(async () => expect(await check!()).toBe(true));
+    expect(JSON.parse((screen.getByLabelText("전체 요청 파라미터 (JSON)") as HTMLTextAreaElement).value)).toEqual({ term: "daily" });
   });
 });
 

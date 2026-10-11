@@ -33,6 +33,7 @@ import { Button, Card, PageHeader, StatusBadge, Stepper } from "@/shared/ui";
 
 import {
   buildSteps,
+  catalogDataset,
   catalogProvider,
   editBlockReason,
   initialValues,
@@ -331,7 +332,17 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
                 />
               ) : null}
 
-              {step === 2 ? <ParamsStep register={register} errors={errors} /> : null}
+              {step === 2 ? (
+                <ParamsStep
+                  register={register}
+                  errors={errors}
+                  queryParameters={catalogDataset(catalog.providers, selectedProvider, values.sourceDataset)?.query_parameters}
+                  sourceParams={values.sourceParams}
+                  onSourceParamsChange={(text) =>
+                    setValue("sourceParams", text, { shouldDirty: true, shouldValidate: true })
+                  }
+                />
+              ) : null}
 
               {step === 3 ? <PreviewStep preview={preview} onRefresh={() => void runPreview()} /> : null}
 

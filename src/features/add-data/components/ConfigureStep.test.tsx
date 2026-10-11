@@ -33,6 +33,53 @@ const PROVIDERS: CatalogProvider[] = [
         application: { required: true, url: "https://www.data.go.kr/data/15073861/openapi.do" },
       },
       {
+        name: "air_station",
+        title: "측정소별 대기측정",
+        description: null,
+        tags: [],
+        source_url: null,
+        representation: "api_json",
+        operations: ["list"],
+        query_support: null,
+        requires_service_key: true,
+        request_parameters: [{ name: "stationName", required: true, description: null, example: "백령도" }],
+        query_parameters: [
+          {
+            name: "stationName",
+            alias: "station",
+            type: "string",
+            required: true,
+            enum: null,
+            description: "측정소명",
+            example: "백령도",
+          },
+          {
+            name: "dataTerm",
+            alias: "term",
+            type: "string",
+            required: true,
+            enum: ["daily", "month", "3month"],
+            description: "측정 기간",
+            example: "daily",
+          },
+          { name: "base_date", alias: null, type: "date_yyyymmdd", required: false, enum: null, description: null, example: "20261012" },
+          { name: "keyword", alias: null, type: null, required: false, enum: null, description: null, example: null },
+        ],
+      },
+      {
+        name: "no_definition",
+        title: "정의 없음",
+        description: null,
+        tags: [],
+        source_url: null,
+        representation: "api_json",
+        operations: ["list"],
+        query_support: null,
+        requires_service_key: true,
+        request_parameters: [{ name: "sidoName", required: true, description: "조회할 시·도", example: "서울" }],
+        query_parameters: null,
+      },
+      {
         name: "free_form",
         title: "자유입력",
         description: null,
@@ -176,5 +223,68 @@ describe("ConfigureStep — dataset usage application guide", () => {
       draft: { publicApi: { provider: "datago", dataset: "free_form", sourceParams: "{}" } },
     });
     expect(screen.queryByText("데이터 활용신청을 확인해주세요")).not.toBeInTheDocument();
+  });
+});
+
+describe("ConfigureStep — parameter form from the query definition (#899)", () => {
+  const station = (sourceParams: string, updateDraft = vi.fn()) => {
+    renderStep({ draft: { publicApi: { provider: "datago", dataset: "air_station", sourceParams } }, updateDraft });
+    return updateDraft;
+  };
+  const lastParams = (updateDraft: ReturnType<typeof vi.fn>) =>
+    JSON.parse((updateDraft.mock.lastCall?.[0] as { publicApi: { sourceParams: string } }).publicApi.sourceParams) as Record<string, unknown>;
+
+  it("draws an enum as a select of its values and writes the chosen one under the alias", () => {
+    const updateDraft = station("{}");
+    const select = screen.getByLabelText(/^term/);
+    expect(select.tagName).toBe("SELECT");
+    expect([...(select as HTMLSelectElement).options].map((o) => o.value)).toEqual(["", "daily", "month", "3month"]);
+    fireEvent.change(select, { target: { value: "month" } });
+    expect(lastParams(updateDraft)).toEqual({ term: "month" });
+  });
+
+  it("marks required fields, shows the description as help and the example as placeholder", () => {
+    station("{}");
+    const input = screen.getByLabelText(/^station/);
+    expect(input).toHaveAttribute("placeholder", "백령도");
+    expect(screen.getByText(/측정소명/)).toBeInTheDocument();
+    expect(screen.getByText(/제공기관 이름: stationName/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^station/).closest("div")?.querySelector("label")).toHaveTextContent("(필수)");
+    expect(screen.getByLabelText(/^keyword/).closest("div")?.querySelector("label")).not.toHaveTextContent("(필수)");
+  });
+
+  it("gives a typed parameter a matching input and flags a value in the wrong format", () => {
+    station('{"base_date":"2026-10-12"}');
+    const input = screen.getByLabelText(/^base_date/);
+    expect(input).toHaveAttribute("inputmode", "numeric");
+    expect(screen.getByText(/YYYYMMDD 형식의 날짜/)).toBeInTheDocument();
+  });
+
+  it("does not invent a type for a parameter whose type is unknown", () => {
+    station('{"keyword":"1-2 abc"}');
+    const input = screen.getByLabelText(/^keyword/);
+    expect(input).not.toHaveAttribute("inputmode");
+    expect(input).toHaveValue("1-2 abc");
+  });
+
+  it("reads a saved spec's provider spelling and keeps the parameters the form does not list", () => {
+    const updateDraft = station('{"stationName":"백령도","numOfRows":100}');
+    const input = screen.getByLabelText(/^station/);
+    expect(input).toHaveValue("백령도");
+    fireEvent.change(input, { target: { value: "수내동" } });
+    expect(lastParams(updateDraft)).toEqual({ station: "수내동", numOfRows: 100 });
+  });
+
+  it("keeps the JSON editor beside the fields, for parameters they do not list", () => {
+    station("{}");
+    expect(screen.getByLabelText("전체 요청 파라미터 (JSON)")).toBeInTheDocument();
+    expect(screen.queryByText("이 소스 데이터셋의 요청 파라미터")).not.toBeInTheDocument();
+  });
+
+  it("falls back to the JSON editor and the old guidance when the definition is null", () => {
+    renderStep({ draft: { publicApi: { provider: "datago", dataset: "no_definition", sourceParams: "{}" } } });
+    expect(screen.queryByTestId("query-params-fields")).not.toBeInTheDocument();
+    expect(screen.getByText("이 소스 데이터셋의 요청 파라미터")).toBeInTheDocument();
+    expect(screen.getByLabelText("요청 파라미터 (JSON)")).toBeInTheDocument();
   });
 });

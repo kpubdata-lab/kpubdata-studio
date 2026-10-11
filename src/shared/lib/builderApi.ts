@@ -653,6 +653,7 @@ export type PreviewSource = schemas.PreviewSource;
 export type PreviewResponse = schemas.PreviewResponse;
 export type CatalogQuerySupport = schemas.CatalogQuerySupport;
 export type CatalogRequestParameter = schemas.CatalogRequestParameter;
+export type CatalogQueryParameter = schemas.CatalogQueryParameter;
 export type CatalogApplication = schemas.CatalogApplication;
 export type CatalogDataset = schemas.CatalogDataset;
 export type CatalogProvider = schemas.CatalogProvider;
