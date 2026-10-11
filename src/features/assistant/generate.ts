@@ -5,7 +5,7 @@
  * Repair loop: if parse/validation fails, feed error back to LLM up to MAX_REPAIR_ATTEMPTS, then give up.
  */
 import type { AssistProvider, AssistMessage } from "./provider";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { assistantClient } from "./query";
 import type { CatalogResponse, ValidateResponse } from "@/shared/lib/builderApi";
 import { parse } from "yaml";
 import { z } from "zod";
@@ -96,7 +96,7 @@ export async function generateBuildSpec(
   userPrompt: string,
   options: GenerationOptions,
 ): Promise<GenerationResult> {
-  if (!isRealBuilderEnabled()) {
+  if (assistantClient().demo) {
     return {
       spec: null,
       status: "error",

@@ -13,12 +13,12 @@
  * BYOK → real LLM (`features/assistant/provider`) → Builder `/query` (`features/assistant/query.ts`).
  * continues the same flow.
  */
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { QueryResponse } from "@/shared/lib/builderApi";
 import type { AssistantAction } from "./schema";
 import { summarizeAssistantQuality } from "./types";
 import type { AssistantEvidence, AssistantQueryState, AssistantStructuredResponse } from "./types";
 import { i18n } from "@/shared/i18n";
+import { assistantClient } from "./query";
 
 /** The phrases used in this file also exist under all `assistant.demo.*` keys (#350). */
 const t = (key: string, params?: Record<string, unknown>): string =>
@@ -26,7 +26,7 @@ const t = (key: string, params?: Record<string, unknown>): string =>
 
 /** Whether a demo can be provided: only in mock Builder mode (default). Real mode always requires BYOK. */
 export function isAssistantDemoAvailable(): boolean {
-  return !isRealBuilderEnabled();
+  return assistantClient().demo;
 }
 
 const demoDisclaimer = (): string => t("disclaimer");
