@@ -84,6 +84,8 @@ docker run -p 8080:8080 \
 | `PRIVACY_URL` · `TERMS_URL` | This deployment's privacy policy and terms of use pages. Linked from the login and sign-up screens and the account menu |
 | `SUPPORT_CONTACT` | Where users write: a mail address or an `https:` page. Shown on the pending-approval and error screens and in the account menu |
 | `ACCOUNT_URL` | The sign-in service's account page (change password, delete account). `<OIDC_ISSUER>/account` when empty |
+| `ASSISTANT_ENABLED` | `true` lets Ask KPubData call an external AI provider. Off by default ([what it sends](docs/assistant-egress.md)) |
+| `ASSISTANT_ALLOWED_ORIGINS` | The https origins Ask KPubData may call, space-separated. Required when it is turned on |
 
 Studio does not ship the policy or the terms. Whoever operates a deployment writes and
 publishes them and sets their addresses. A value that is not set is not shown.

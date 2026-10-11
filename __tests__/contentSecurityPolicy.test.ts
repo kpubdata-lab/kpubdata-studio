@@ -6,8 +6,9 @@
  *   `<base>` elsewhere.
  * - `vite build` puts it in `index.html` as a meta element; the container build turns
  *   that off because nginx sends it as a header.
- * - `docker/40-kpubdata-config.sh` writes that header with the deployment's Builder and
- *   OIDC origins added, and is otherwise the same policy as the meta (the shell cannot
+ * - `docker/40-kpubdata-config.sh` writes that header with the deployment's Builder,
+ *   OIDC and allowed AI origins in connect-src in place of `https:` (#798), and is
+ *   otherwise the same policy as the meta (the shell cannot
  *   import the TypeScript, so this test is what keeps the copies equal).
  * - `silent-check-sso.html`'s inline script is allowed by a hash in nginx.conf that has
  *   to match the file.
@@ -59,6 +60,12 @@ describe("the policy", () => {
   it("lets the page reach a runtime Builder, an OIDC issuer and a BYOK LLM over HTTPS, and a local Builder over HTTP", () => {
     expect(policy.get("connect-src")).toEqual(["'self'", "https:", "http://localhost:*", "http://127.0.0.1:*"]);
     expect(policy.get("frame-src")).toEqual(["'self'", "https:", "http://localhost:*", "http://127.0.0.1:*"]);
+  });
+
+  it("leaves https: out of the container header's connect-src, which names its origins instead (#798)", () => {
+    const header = directives(contentSecurityPolicy({ header: true }));
+    expect(header.get("connect-src")).toEqual(["'self'", "http://localhost:*", "http://127.0.0.1:*"]);
+    expect(header.get("frame-src")).toEqual(policy.get("frame-src"));
   });
 
   it("adds frame-ancestors only to the header, since a meta element cannot carry it", () => {
@@ -137,6 +144,26 @@ describe("container header", () => {
     for (const [name, sources] of base) {
       if (name !== "connect-src" && name !== "frame-src") expect(header.get(name), name).toEqual(sources);
     }
+  });
+
+  it("connects to no https host but the deployment's when the assistant is off, the default (#798)", () => {
+    const result = run({ BUILDER_API_URL: "https://api.example.org", OIDC_ISSUER: "https://sso.example.org/realms/k" });
+    expect(result.code).toBe(0);
+    const connect = directives(result.header!).get("connect-src")!;
+    expect(connect).not.toContain("https:");
+    expect(connect.filter((source) => source.startsWith("https://"))).toEqual(["https://api.example.org", "https://sso.example.org"]);
+  });
+
+  it("adds the allowed AI origins, and no others, when the operator turns the assistant on (#798)", () => {
+    const result = run({
+      BUILDER_API_URL: "https://api.example.org",
+      ASSISTANT_ENABLED: "true",
+      ASSISTANT_ALLOWED_ORIGINS: "https://api.openai.com https://llm.example.org:8443",
+    });
+    expect(result.code).toBe(0);
+    const connect = directives(result.header!).get("connect-src")!;
+    expect(connect).not.toContain("https:");
+    expect(connect.slice(-3)).toEqual(["https://api.example.org", "https://api.openai.com", "https://llm.example.org:8443"]);
   });
 
   it.each([

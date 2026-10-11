@@ -24,6 +24,13 @@ export interface RuntimeConfig {
   supportContact?: string;
   /** The identity provider's account page; `<issuer>/account` when unset (#838). */
   accountUrl?: string;
+  /**
+   * "false" turns Ask KPubData's calls to an external AI provider off (#798). The container
+   * writes "false" unless the operator opts in; a page with no value keeps it on.
+   */
+  assistantEnabled?: string;
+  /** Space-separated https origins the assistant may call, when the deployment names them (#798). */
+  assistantAllowedOrigins?: string;
 }
 
 declare global {

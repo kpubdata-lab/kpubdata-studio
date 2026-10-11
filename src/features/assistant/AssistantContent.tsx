@@ -15,6 +15,7 @@ import { MaskedCell, MaskedColumnBadge, maskedSet } from "@/features/data-table/
 import { useAssistConfig } from "@/features/assistant/config";
 import { Button, Card, Disclosure, TermHelp, Textarea } from "@/shared/ui";
 import { describeAction } from "./actions";
+import { isAssistantEnabled } from "./baseUrl";
 import { relatedCatalogDatasets } from "./relatedDatasets";
 import type { AssistantAction } from "./schema";
 import { getSuggestedQuestions } from "./suggestedQuestions";
@@ -78,12 +79,24 @@ export function ApiKeySetup() {
   const [draftModel, setDraftModel] = useState(model);
   const [draftBaseUrl, setDraftBaseUrl] = useState(baseUrl);
 
+  // Off in this deployment (#798): no key is asked for, so none can be sent.
+  if (!isAssistantEnabled()) {
+    return (
+      <Card variant="dashed" className="p-4 text-sm text-muted-foreground" role="status">
+        {t("assistant.egress.off")}
+      </Card>
+    );
+  }
+
   return (
     <Card variant="dashed" className="space-y-3 p-4">
       <div>
         <p className="text-sm font-semibold">{t("assistant.byok.title")}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           {t("assistant.byok.desc")}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground" data-testid="assistant-egress-disclosure">
+          {t("assistant.egress.disclosurePendingReview")}
         </p>
       </div>
       <label className="block text-xs font-medium text-muted-foreground">

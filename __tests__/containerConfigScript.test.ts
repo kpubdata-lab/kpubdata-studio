@@ -69,6 +69,8 @@ describe("docker/40-kpubdata-config.sh (#411)", () => {
       termsUrl: "",
       supportContact: "",
       accountUrl: "",
+      assistantEnabled: "false",
+      assistantAllowedOrigins: "",
     });
   });
 
@@ -106,7 +108,7 @@ describe("docker/40-kpubdata-config.sh (#411)", () => {
     expect(loadWritten()?.supportContact).toBe(value);
   });
 
-  it("leaves every value to the build when nothing is set", () => {
+  it("leaves every value to the build when nothing is set, but keeps the assistant off (#798)", () => {
     expect(run({}).code).toBe(0);
     expect(loadWritten()).toEqual({
       builderApiUrl: "",
@@ -117,7 +119,31 @@ describe("docker/40-kpubdata-config.sh (#411)", () => {
       termsUrl: "",
       supportContact: "",
       accountUrl: "",
+      assistantEnabled: "false",
+      assistantAllowedOrigins: "",
     });
+  });
+
+  it("writes the assistant's switch and allowed origins when the operator opts in (#798)", () => {
+    const result = run({ ASSISTANT_ENABLED: "true", ASSISTANT_ALLOWED_ORIGINS: "https://api.openai.com  https://llm.example.org:8443" });
+    expect(result.code).toBe(0);
+    expect(loadWritten()).toMatchObject({
+      assistantEnabled: "true",
+      assistantAllowedOrigins: "https://api.openai.com https://llm.example.org:8443",
+    });
+  });
+
+  it.each([
+    ["no allowed origin", { ASSISTANT_ENABLED: "true" }, "ASSISTANT_ALLOWED_ORIGINS"],
+    ["an http origin", { ASSISTANT_ENABLED: "true", ASSISTANT_ALLOWED_ORIGINS: "http://llm.example.org" }, "ASSISTANT_ALLOWED_ORIGINS"],
+    ["a path in an origin", { ASSISTANT_ENABLED: "true", ASSISTANT_ALLOWED_ORIGINS: "https://llm.example.org/v1" }, "ASSISTANT_ALLOWED_ORIGINS"],
+    ["a quote in an origin", { ASSISTANT_ENABLED: "true", ASSISTANT_ALLOWED_ORIGINS: 'https://a";x' }, "ASSISTANT_ALLOWED_ORIGINS"],
+    ["a switch that is not true or false", { ASSISTANT_ENABLED: "yes" }, "ASSISTANT_ENABLED"],
+  ])("refuses %s and writes nothing (#798)", (_label, env, name) => {
+    const result = run(env);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain(name);
+    expect(() => readFileSync(out)).toThrow();
   });
 
   it("keeps an explicit USE_REAL_BUILDER over the default", () => {

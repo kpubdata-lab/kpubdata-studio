@@ -84,6 +84,8 @@ docker run -p 8080:8080 \
 | `PRIVACY_URL` · `TERMS_URL` | 이 배포의 개인정보 처리방침과 이용약관 페이지. 로그인·가입 화면과 계정 메뉴에 링크됩니다 |
 | `SUPPORT_CONTACT` | 사용자가 문의할 곳. 메일 주소 또는 `https:` 페이지. 승인 대기·오류 화면과 계정 메뉴에 표시됩니다 |
 | `ACCOUNT_URL` | 로그인 서비스의 계정 관리 화면(비밀번호 변경·탈퇴). 비워 두면 `<OIDC_ISSUER>/account` |
+| `ASSISTANT_ENABLED` | `true` 로 두면 Ask KPubData 가 외부 AI 제공자를 부릅니다. 기본은 꺼짐입니다 ([보내는 것](docs/assistant-egress.md)) |
+| `ASSISTANT_ALLOWED_ORIGINS` | Ask KPubData 가 부를 수 있는 https origin, 공백으로 구분. 켤 때 반드시 적습니다 |
 
 처리방침과 약관의 문서는 Studio 에 들어 있지 않습니다. 배포를 운영하는 쪽이 작성해 공개하고
 그 주소를 적습니다. 적지 않은 항목은 화면에 나타나지 않습니다.

@@ -26,6 +26,7 @@ import { signOutOfOidc } from "@/features/auth/signOut";
 import { getPolicyLinks } from "@/shared/config/policyLinks";
 import { useAuthStore } from "@/features/auth/store";
 import { useAssistConfig } from "@/features/assistant/config";
+import { isAssistantEnabled } from "@/features/assistant/baseUrl";
 import { Card, PageHeader, StatusBadge, Button } from "@/shared/ui";
 
 interface ConnectionState {
@@ -324,6 +325,7 @@ function AssistantByokSection() {
       </div>
       <div className="mt-4 space-y-2 text-sm">
         <p className="text-muted-foreground">{t("settings.byok.desc")}</p>
+        {isAssistantEnabled() ? null : <p className="text-status-warning">{t("assistant.egress.off")}</p>}
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${

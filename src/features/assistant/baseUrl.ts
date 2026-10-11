@@ -9,6 +9,7 @@
 
 /** BYOK default LLM base URL. Must match `provider.ts` DEFAULT_BASE_URL exactly. */
 import { i18n } from "@/shared/i18n";
+import { runtimeOr } from "@/shared/config/runtime";
 
 export const DEFAULT_LLM_BASE_URL = "https://api.openai.com/v1";
 
@@ -30,10 +31,7 @@ export interface BaseUrlCheck {
  * @returns safety status, reason, normalized URL.
  */
 export function checkLlmBaseUrl(rawUrl: string): BaseUrlCheck {
-  const trimmed = rawUrl.trim();
-  if (!trimmed) {
-    return { safe: true, resolvedUrl: DEFAULT_LLM_BASE_URL, isDefault: true };
-  }
+  const trimmed = rawUrl.trim() || DEFAULT_LLM_BASE_URL;
 
   let parsed: URL;
   try {
@@ -57,11 +55,25 @@ export function checkLlmBaseUrl(rawUrl: string): BaseUrlCheck {
   }
 
   const normalized = trimmed.replace(/\/+$/, "");
+  const allowed = runtimeOr("assistantAllowedOrigins", undefined)?.split(/\s+/);
   return {
-    safe: true,
+    safe: !allowed || allowed.includes(parsed.origin),
+    reason: allowed && !allowed.includes(parsed.origin) ? i18n.t("assistant.baseUrl.notAllowed") : undefined,
     resolvedUrl: normalized,
-    isDefault: normalized === DEFAULT_LLM_BASE_URL.replace(/\/+$/, ""),
+    isDefault: normalized === DEFAULT_LLM_BASE_URL,
   };
+}
+
+/**
+ * Whether this deployment lets Ask KPubData call an external AI provider at all (#798).
+ *
+ * The container image writes `assistantEnabled` into `config.js` and leaves it "false"
+ * unless the operator sets `ASSISTANT_ENABLED=true` (with `ASSISTANT_ALLOWED_ORIGINS`),
+ * so a hosted deployment starts with it off. A page with no runtime value — `npm run dev`,
+ * the Pages demo — keeps it on, the user's own key and address as before.
+ */
+export function isAssistantEnabled(): boolean {
+  return runtimeOr("assistantEnabled", undefined) !== "false";
 }
 
 /** Substitute known key values in error messages/logs so API key does not leak. */
