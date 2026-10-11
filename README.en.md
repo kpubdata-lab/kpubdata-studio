@@ -94,6 +94,30 @@ The browser calls Builder directly, so add this Studio's origin to Builder's
 `KPUBDATA_BUILDER_ALLOWED_ORIGINS`. A value containing a quote, a space, `<` or similar
 stops the container with the reason instead of starting it.
 
+**Real Builder mode needs the sign-in settings too.** Studio sends Builder only a sign-in
+token (Bearer). With `BUILDER_API_URL` set and `OIDC_ISSUER` or `OIDC_CLIENT_ID` empty, the
+page loads but the login screen stops at "Authentication initialization failed". Without an
+identity provider, leave `BUILDER_API_URL` empty too and run the demo.
+
+#### Running it on one VM with Builder
+
+Builder's `docker-compose.prod.app.yml` has a `studio` profile that starts Studio with Builder
+and Caddy. Getting the repository, logging in to GHCR and the `.env` follow Builder's
+[deployment guide, section 12](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/docs/deploy.md).
+
+```bash
+docker compose -f docker-compose.prod.app.yml --profile caddy --profile studio up -d
+```
+
+- The variables above go in Builder's `.env` with a `STUDIO_` prefix: `STUDIO_BUILDER_API_URL`,
+  `STUDIO_OIDC_CLIENT_ID`, `STUDIO_PRIVACY_URL`, `STUDIO_TERMS_URL`, `STUDIO_SUPPORT_CONTACT`.
+  `OIDC_ISSUER` alone keeps its name, since Builder uses the same value.
+- That compose does not pass `ACCOUNT_URL`, `ASSISTANT_ENABLED` or `ASSISTANT_ALLOWED_ORIGINS`
+  (kpubdata-builder#1274).
+- The Studio image is built from the `STUDIO_REF` commit, not pulled. Its default can be older
+  than Studio's `main`.
+- A rehearsal of these steps: [docs/deploy-rehearsal.md](docs/deploy-rehearsal.md).
+
 ## Key Features
 
 - **Build Planning**: Configure dataset build rules using UI buttons and inputs.
