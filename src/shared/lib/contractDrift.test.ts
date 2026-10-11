@@ -476,6 +476,7 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
     schema: "providerCredentialResponseSchema",
     rejectsAdditive: "strict on purpose (#497): an unknown field may be a leaked secret",
   },
+  readyz: { skip: "builderApi does not call it; it is an operator probe" },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   // Declared with the recovery routes (builder#1009, contract 1.81.0). Studio settles an
@@ -641,6 +642,7 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     check: (_status, body) =>
       (asInvalidDetails(body)?.problems.length ?? 0) > 0 ? [] : ["asInvalidDetails: no problems read from the body"],
   },
+  "readyz 503 DiskLow": { notHandled: "builderApi does not call it; it is an operator probe" },
   "validateSpec 400 MalformedYaml": { notHandled: MESSAGE_ONLY },
   "previewBuild 400 InvalidLimit": { notHandled: `${MESSAGE_ONLY}; Studio always sends a valid limit` },
   "createBuild 400 UnsafeRunId": { notHandled: `${MESSAGE_ONLY}; Studio submits through submitBuild` },
