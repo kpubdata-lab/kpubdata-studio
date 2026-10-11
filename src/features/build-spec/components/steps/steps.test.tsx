@@ -72,6 +72,7 @@ describe("SourceStep", () => {
             providerOptions={[{ value: "datago", label: "데이터고" }]}
             datasetOptions={[dataset("air_quality", "대기오염")]}
             selectedProvider=""
+            selectedDataset=""
           />
         )}
       />,
@@ -91,6 +92,7 @@ describe("SourceStep", () => {
             providerOptions={[{ value: "datago", label: "데이터고" }]}
             datasetOptions={[dataset("air_quality", "대기오염")]}
             selectedProvider="datago"
+            selectedDataset=""
           />
         )}
       />,
