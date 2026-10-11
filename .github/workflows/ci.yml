@@ -60,6 +60,15 @@ jobs:
       - name: Action pin gate (#729)
         run: node scripts/check-action-pins.mjs
 
+      # The product-family stabilization freeze restricts new product surfaces.
+      # A scope exception requires independent review (kpubdata POLICY 1.3).
+      - name: Stabilization scope tests
+        run: python3 -m unittest discover -s scripts -p test_stabilization_scope.py -v
+
+      - name: Stabilization scope gate
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/check_stabilization_scope.py
+
       # A key that no locale file has renders as the key itself, so the user reads
       # "layout.homeLink" where a label should be — nothing else in the build fails
       # on it (#448).
