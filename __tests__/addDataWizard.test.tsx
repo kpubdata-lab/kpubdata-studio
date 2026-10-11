@@ -748,6 +748,10 @@ describe("Create Table Workbench — Review == submission, 실제 run_id 사용 
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
+    // The title renders before the catalog arrives, so it does not mean the provider can be
+    // chosen: a change made before the option exists is ignored and the dataset select stays
+    // disabled. Wait for the option itself.
+    await screen.findByRole("option", { name: "datago" });
     fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });

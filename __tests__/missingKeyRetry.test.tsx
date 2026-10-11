@@ -130,6 +130,8 @@ async function addDataAtReview() {
   fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
   next();
   await screen.findByText("API 사용 준비");
+  // The title renders before the catalog arrives; a provider chosen before its option exists is ignored.
+  await screen.findByRole("option", { name: "datago" });
   fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
   await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
   fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
