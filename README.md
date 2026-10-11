@@ -94,6 +94,30 @@ docker run -p 8080:8080 \
 Studio 의 origin 을 넣어야 합니다. 값에 따옴표·공백·`<` 같은 문자가 있으면 컨테이너가
 그 이유를 남기고 시작하지 않습니다.
 
+**실 Builder 모드에는 로그인 설정이 함께 필요합니다.** Studio 는 Builder 에 로그인 토큰(Bearer)만
+보냅니다. `BUILDER_API_URL` 을 주면서 `OIDC_ISSUER` 나 `OIDC_CLIENT_ID` 를 비우면 페이지는 뜨지만
+로그인 화면이 "인증 초기화에 실패했습니다" 에서 멈춥니다. 인증 서버가 없으면 `BUILDER_API_URL` 도
+비워 데모로 띄웁니다.
+
+#### Builder 와 한 VM 에 함께 올리기
+
+Builder 의 `docker-compose.prod.app.yml` 에 `studio` 프로필이 있어 Builder·Caddy 와 함께 올라옵니다.
+저장소를 받는 것, GHCR 로그인, `.env` 는 Builder 의
+[배포 가이드 §12](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/docs/deploy.md) 를 따릅니다.
+
+```bash
+docker compose -f docker-compose.prod.app.yml --profile caddy --profile studio up -d
+```
+
+- 위 변수는 Builder 의 `.env` 에 `STUDIO_` 를 붙여 적습니다: `STUDIO_BUILDER_API_URL`,
+  `STUDIO_OIDC_CLIENT_ID`, `STUDIO_PRIVACY_URL`, `STUDIO_TERMS_URL`, `STUDIO_SUPPORT_CONTACT`.
+  `OIDC_ISSUER` 만은 Builder 와 같은 값을 같은 이름으로 씁니다.
+- `ACCOUNT_URL`, `ASSISTANT_ENABLED`, `ASSISTANT_ALLOWED_ORIGINS` 는 그 compose 가 넘기지 않습니다
+  (kpubdata-builder#1274).
+- Studio 이미지는 pull 하지 않고 `STUDIO_REF` 의 커밋에서 빌드합니다. 그 기본값은 Studio `main` 보다
+  오래됐을 수 있습니다.
+- 이 절차로 올려 본 기록: [docs/deploy-rehearsal.md](docs/deploy-rehearsal.md).
+
 ## 주요 기능
 
 - **빌드 기획서 작성**: 버튼과 입력만으로 데이터셋 빌드 규칙을 설정합니다.

@@ -33,6 +33,7 @@ nav:
       - 사용자 흐름: USER_FLOWS.md
       - 화면 스크린샷: screenshots.md
       - 외부 AI 전송 목록: assistant-egress.md
+      - 배포 리허설 기록: deploy-rehearsal.md
   - 화면 설계서:
       - 개요: screens/index.md
       - 애플리케이션 셸: screens/layout-shell.md
