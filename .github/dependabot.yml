@@ -44,3 +44,13 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
+  # The Dockerfile's base images (kpubdata-builder#1107): node for the build stage, nginx
+  # for the image that is run. A bump is a pull request like any other and is merged by
+  # a person; nothing here merges on its own.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
