@@ -600,6 +600,86 @@ test("새로고침하면 입력한 키는 사라지고, 다시 넣으면 미리�
 });
 
 /**
+ * The key probe, from entry to classification (#905, #410), against Builder's real
+ * `POST /providers/{provider}/probe`.
+ *
+ * Builder probes the provider's live service with the key, so what a valid key earns
+ * (`available`, `application_required`) cannot be asserted in CI: it needs a real key,
+ * and the run has only a canary. What a canary can show is the part that does not depend
+ * on a key being good: the panel is offered only while a key is held, the probe carries
+ * that key and leaves it nowhere, every dataset comes back with a classification Studio
+ * knows, none of them saying the canary works, and the result is gone with the key.
+ */
+test("키를 넣어야 확인 패널이 나오고, 확인하면 데이터셋마다 분류가 나오며, 결과는 키와 함께 사라진다 (#905) @multi-user", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  collectSignedInPageErrors(page, errors);
+  const probes: Array<{ key: string | undefined; body: string }> = [];
+  page.on("request", (sent) => {
+    if (sent.method() === "POST" && sent.url() === `${BUILDER_URL}/providers/datago/probe`) {
+      probes.push({ key: sent.headers()["x-provider-key"], body: sent.postData() ?? "" });
+    }
+  });
+  const panel = page.getByRole("region", { name: t("provider.keyProbe.title") });
+
+  await signIn(page, ALICE);
+  await openFromMenu(page, /^(Connections|연결)$/);
+  await page.getByRole("button", { name: `${t("provider.table.manage")} — datago` }).click();
+  await expect(page.getByText(t("provider.detail.perRequestTitle"))).toBeVisible({ timeout: 30_000 });
+
+  // 1) No key held: there is nothing to probe with, so the panel is not offered.
+  await expect(panel).toHaveCount(0);
+
+  // 2) Key entered: the panel is there and nothing has been sent yet.
+  await page.getByRole("button", { name: t("provider.detail.enterSessionKey") }).click();
+  await page.getByPlaceholder(t("provider.detail.keyPlaceholder")).fill(SESSION_KEY);
+  await page.getByRole("button", { name: t("provider.detail.useForSession") }).click();
+  await expect(panel).toBeVisible();
+  expect(probes).toEqual([]);
+
+  // 3) The probe: the held key in the header, no body, one row per dataset.
+  await panel.getByRole("button", { name: t("provider.keyProbe.run") }).click();
+  const rows = panel.locator("tbody tr");
+  await expect(rows.first()).toBeVisible({ timeout: 90_000 });
+  expect(probes).toEqual([{ key: `datago=${SESSION_KEY}`, body: "" }]);
+  //    Each row carries a classification Studio knows. The provider's answer to a canary
+  //    key is the provider's to give, so which one is not pinned — but a canary is not a
+  //    key that works, and Studio does not show a status it cannot name.
+  const shown = await rows.evaluateAll((trs) =>
+    trs.map((tr) => tr.querySelectorAll("td")[0]?.textContent?.trim() ?? ""),
+  );
+  const classifications = [
+    "auth_unknown",
+    "application_required",
+    "params_invalid",
+    "rate_limited",
+    "temporarily_unavailable",
+    "network_error",
+  ].map((status) => t(`provider.keyProbe.status.${status}.label`));
+  expect(shown.length).toBeGreaterThan(0);
+  for (const label of shown) expect(classifications, `a dataset was classified "${label}"`).toContain(label);
+  await expect(panel.getByText(t("provider.keyProbe.unknownStatus"))).toHaveCount(0);
+  await expect(panel.getByText(t("provider.keyProbe.notKept"))).toBeVisible();
+  expect(await panel.textContent()).not.toContain(SESSION_KEY);
+
+  // 4) Builder lets a user probe a provider only so often: asking again at once is
+  //    answered with how long to wait, not with a failure.
+  await panel.getByRole("button", { name: t("provider.keyProbe.runAgain") }).click();
+  await expect(panel.getByRole("status")).toContainText("확인이 아직 진행 중입니다");
+  await expect(panel.getByRole("alert")).toHaveCount(0);
+
+  // 5) Forgetting the key takes the panel and its result away.
+  await page.getByRole("button", { name: t("provider.detail.forgetSessionKey") }).click();
+  await expect(panel).toHaveCount(0);
+
+  //    The browser logs the refused probe (429) itself; that is the one error expected.
+  await expectNoPageErrors(
+    errors.filter((line) => !(line.includes("429") && line.includes(`${BUILDER_URL}/providers/datago/probe`))),
+  );
+});
+
+/**
  * A CSV big enough that building it takes Builder several seconds — far longer than this
  * Builder keeps a waiting job's keys. About 17 MB, under Builder's 20 MiB upload limit.
  */
