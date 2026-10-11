@@ -1,139 +1,183 @@
-import { useEffect, useRef, useState } from "react";
+/**
+ * The first-run checklist (#412): the four things a new user does before the first
+ * table exists — apply for the data, enter the key, check what the key reaches, make
+ * the table.
+ *
+ * It is a card in the page, not a tour over the screen: Home shows no overlay (#527),
+ * and each step is done on another page, so the user has to be able to leave and come
+ * back. A step is ticked by the user. Studio cannot tick the first three itself: the
+ * application is made on the provider's site, and a key is held for the session only,
+ * so after a reload nothing says one was ever entered.
+ *
+ * Closing the card and the ticks are remembered in this browser, per account. Once
+ * closed, the card is one small button that opens it again.
+ */
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
+
+import { HELP_URL } from "@/shared/config/policyLinks";
+import { BetaBadge } from "@/shared/ui/BetaBadge";
 import { Button } from "@/shared/ui/Button";
+import { Card } from "@/shared/ui/Card";
+import { SupportLine } from "@/shared/ui/PolicyLinks";
 
 export const ONBOARDING_STORAGE_KEY_PREFIX = "kpubdata:onboarding:v2";
-const ONBOARDING_STORAGE_KEY = "kpubdata:onboarding:v1";
+const REPLAY_EVENT = "kpubdata:onboarding:replay";
 
+/** Holds "complete" once the account has closed the checklist. */
 export function onboardingStorageKey(userId: string): string {
   return `${ONBOARDING_STORAGE_KEY_PREFIX}:${userId}`;
 }
 
-const emptyWorkspaceSteps = [
-  { target: "sidebar" },
-  { target: "workflow" },
-  { target: "start-actions" },
-  { target: "assistant-helper" },
-] as const;
-
-const dashboardSteps = [
-  { target: "sidebar" },
-  { target: "dashboard-overview" },
-  { target: "dashboard-builds" },
-  { target: "dashboard-quality" },
-] as const;
-
-function hasCompletedTour(userId: string) {
-  try { return localStorage.getItem(onboardingStorageKey(userId)) === "complete"; } catch { return false; }
+/** Holds the ids of the steps the account has ticked, as a JSON array. */
+export function onboardingStepsStorageKey(userId: string): string {
+  return `${onboardingStorageKey(userId)}:steps`;
 }
 
-export function resetFirstRunTour(userId?: unknown) {
-  try { localStorage.removeItem(ONBOARDING_STORAGE_KEY); } catch { /* Manual replay still works even when storage is unavailable. */ }
-  window.dispatchEvent(new CustomEvent("kpubdata:onboarding:replay", { detail: userId }));
+/** In order. Each step links to the page where it is done. */
+const STEPS = [
+  { id: "apply", to: "/connections" },
+  { id: "key", to: "/connections" },
+  { id: "probe", to: "/connections" },
+  { id: "table", to: "/discover" },
+] as const;
+
+type StepId = (typeof STEPS)[number]["id"];
+
+function isDismissed(userId: string): boolean {
+  try {
+    return localStorage.getItem(onboardingStorageKey(userId)) === "complete";
+  } catch {
+    return false;
+  }
 }
 
-export function FirstRunTour({
-  userId,
-  autoStart = true,
-  variant = "empty-workspace",
-}: {
-  userId: string;
-  autoStart?: boolean;
-  variant?: "empty-workspace" | "dashboard";
-}) {
+function readDoneSteps(userId: string): StepId[] {
+  try {
+    const stored: unknown = JSON.parse(localStorage.getItem(onboardingStepsStorageKey(userId)) ?? "[]");
+    if (!Array.isArray(stored)) return [];
+    return STEPS.map((step) => step.id).filter((id) => stored.includes(id));
+  } catch {
+    return [];
+  }
+}
+
+/** Opens the checklist again for `userId` (for every account when omitted). */
+export function resetFirstRunTour(userId?: string) {
+  if (userId !== undefined) {
+    try {
+      localStorage.removeItem(onboardingStorageKey(userId));
+    } catch {
+      // The card still opens for this visit when storage is unavailable.
+    }
+  }
+  window.dispatchEvent(new CustomEvent(REPLAY_EVENT, { detail: userId }));
+}
+
+export function FirstRunTour({ userId }: { userId: string }) {
   const { t } = useTranslation();
-  const steps = variant === "dashboard" ? dashboardSteps : emptyWorkspaceSteps;
-  const [open, setOpen] = useState(() => autoStart && !hasCompletedTour(userId));
-  const [step, setStep] = useState(0);
-  const [rect, setRect] = useState<DOMRect | null>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const [open, setOpen] = useState(() => !isDismissed(userId));
+  const [done, setDone] = useState<StepId[]>(() => readDoneSteps(userId));
 
   useEffect(() => {
     const replay = (event: Event) => {
-      const requestedUserId = (event as CustomEvent<string | Event>).detail;
-      if (typeof requestedUserId === "string" && requestedUserId !== userId) return;
-      setStep(0); setOpen(true);
+      const requested = (event as CustomEvent<unknown>).detail;
+      if (typeof requested === "string" && requested !== userId) return;
+      setOpen(true);
     };
-    window.addEventListener("kpubdata:onboarding:replay", replay);
-    return () => window.removeEventListener("kpubdata:onboarding:replay", replay);
+    window.addEventListener(REPLAY_EVENT, replay);
+    return () => window.removeEventListener(REPLAY_EVENT, replay);
   }, [userId]);
 
-  useEffect(() => {
-    if (!open) return;
-    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    return () => previousFocusRef.current?.focus();
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const update = () => setRect(document.querySelector<HTMLElement>(`[data-tour="${steps[step].target}"]`)?.getBoundingClientRect() ?? null);
-    update();
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-      if (event.key !== "Tab") return;
-      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex='-1'])");
-      if (!focusable?.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    dialogRef.current?.focus();
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, step, steps]);
-
-  function close() {
-    try { localStorage.setItem(ONBOARDING_STORAGE_KEY, "complete"); } catch { /* Optional storage */ }
-    try { localStorage.setItem(onboardingStorageKey(userId), "complete"); } catch { /* storage unavailable */ }
+  function dismiss() {
+    try {
+      localStorage.setItem(onboardingStorageKey(userId), "complete");
+    } catch {
+      // Without storage the card is closed for this visit only.
+    }
     setOpen(false);
   }
 
-  if (!open || typeof document === "undefined") return null;
-  const width = Math.min(336, window.innerWidth - 24);
-  const left = rect ? Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)) : 12;
-  const below = rect ? rect.bottom + 12 : 80;
-  const top = Math.max(12, Math.min(below, window.innerHeight - 230));
+  function toggle(id: StepId, checked: boolean) {
+    const next = STEPS.map((step) => step.id).filter((step) => (step === id ? checked : done.includes(step)));
+    try {
+      localStorage.setItem(onboardingStepsStorageKey(userId), JSON.stringify(next));
+    } catch {
+      // Without storage the ticks last for this visit only.
+    }
+    setDone(next);
+  }
 
-  return createPortal(
-    <>
-      <div className="fixed inset-0 z-[80] bg-black/20" aria-hidden="true" />
-      {rect ? <div aria-hidden="true" className="pointer-events-none fixed z-[81] rounded-xl ring-4 ring-brand-primary ring-offset-4 ring-offset-background" style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }} /> : null}
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="onboarding-title"
-        tabIndex={-1}
-        className="fixed z-[82] rounded-xl border border-border bg-card p-5 text-foreground shadow-xl outline-none"
-        style={{ left, top, width }}
-      >
-        <p className="text-xs font-semibold text-brand-text">{step + 1} / {steps.length}</p>
-        <h2 id="onboarding-title" className="mt-1 text-base font-semibold">
-          {t(`onboarding.steps.${steps[step].target}.title`)}
-        </h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          {t(`onboarding.steps.${steps[step].target}.copy`)}
-        </p>
-        <div className="mt-5 flex items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" onClick={close}>{t("onboarding.skip")}</Button>
-          <div className="flex gap-2">
-            {step > 0 ? <Button variant="secondary" size="sm" onClick={() => setStep((value) => value - 1)}>{t("onboarding.back")}</Button> : null}
-            {step < steps.length - 1
-              ? <Button size="sm" onClick={() => setStep((value) => value + 1)}>{t("onboarding.next")}</Button>
-              : <Button size="sm" onClick={close}>{t("onboarding.done")}</Button>}
-          </div>
-        </div>
+  if (!open) {
+    return (
+      <div>
+        <Button variant="ghost" size="sm" onClick={() => resetFirstRunTour(userId)}>
+          {t("onboarding.checklist.reopen")}
+        </Button>
       </div>
-    </>,
-    document.body,
+    );
+  }
+
+  return (
+    <Card aria-labelledby="first-run-title" data-testid="first-run-checklist" role="region">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-sm font-semibold" id="first-run-title">
+              {t("onboarding.checklist.title")}
+            </h2>
+            <BetaBadge />
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{t("onboarding.checklist.desc")}</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={dismiss}>
+          {t("onboarding.checklist.dismiss")}
+        </Button>
+      </div>
+
+      <ol className="mt-4 space-y-3">
+        {STEPS.map((step, index) => {
+          const inputId = `first-run-step-${step.id}`;
+          return (
+            <li className="flex min-w-0 items-start gap-3" key={step.id}>
+              <input
+                checked={done.includes(step.id)}
+                className="mt-1 h-4 w-4 shrink-0 accent-brand-primary"
+                id={inputId}
+                onChange={(event) => toggle(step.id, event.target.checked)}
+                type="checkbox"
+              />
+              <div className="min-w-0 text-sm">
+                <label className="font-medium" htmlFor={inputId}>
+                  {index + 1}. {t(`onboarding.checklist.steps.${step.id}.title`)}
+                </label>
+                <p className="mt-0.5 text-muted-foreground">
+                  {t(`onboarding.checklist.steps.${step.id}.copy`)}{" "}
+                  <Link className="font-medium text-brand-text underline underline-offset-2" to={step.to}>
+                    {t(`onboarding.checklist.steps.${step.id}.cta`)}
+                  </Link>
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground">
+        <p>
+          {t("onboarding.checklist.beta")}{" "}
+          <a
+            className="font-medium text-brand-text underline underline-offset-2"
+            href={HELP_URL}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {t("onboarding.checklist.guide")}
+          </a>
+        </p>
+        <SupportLine className="mt-1" />
+      </div>
+    </Card>
   );
 }

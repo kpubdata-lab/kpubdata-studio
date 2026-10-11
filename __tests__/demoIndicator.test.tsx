@@ -59,3 +59,20 @@ describe("demo-mode indicator (#672)", () => {
     expect(within(screen.getByRole("banner")).queryByText("DEMO")).not.toBeInTheDocument();
   });
 });
+
+describe("beta badge (#412)", () => {
+  it("is in the top bar with the real Builder, with what a beta means", () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    renderShell();
+    const badge = within(screen.getByRole("banner")).getByTestId("beta-badge");
+    expect(badge).toHaveTextContent(i18n.t("layout.beta"));
+    expect(badge).toHaveTextContent(i18n.t("layout.betaDesc"));
+  });
+
+  it("is absent in mock mode, where the demo badge takes its place", () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+    renderShell();
+    expect(screen.queryByTestId("beta-badge")).not.toBeInTheDocument();
+    expect(screen.getByTestId("demo-indicator")).toBeInTheDocument();
+  });
+});

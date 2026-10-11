@@ -81,6 +81,14 @@ describe("SettingsPage 통합 (#301)", () => {
     );
   });
 
+  it("mock 모드의 연결 안내는 빌드 변수 이름 없이 데모 모드임을 말한다 (#412)", async () => {
+    const { container } = renderSettings();
+
+    expect(screen.getByText(/지금은 데모 모드입니다/)).toHaveTextContent("관리자에게 Builder 연결을 요청하세요");
+    expect(container.textContent).not.toMatch(/VITE_/);
+    expect(container.textContent).not.toMatch(/mock 모드/);
+  });
+
   it("실연동에서는 GET /providers 요약(부울)으로 구성 상태를 표시한다", async () => {
     vi.mocked(isRealBuilderEnabled).mockReturnValue(true);
     vi.mocked(builderApi.version).mockResolvedValue({
