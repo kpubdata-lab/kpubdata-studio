@@ -162,8 +162,14 @@ export function BuildsPage() {
   // don't enable queries until list loading finishes and confirms this (waiting for listState.status === "loaded"
   // avoids even one wasted call). If list loading finishes but run is out of scope (deep-link run),
   // it may actually be running/queued/cancelling, so we check with getBuildJob as before.
+  // A listed run with no start time ended before it started — its keys were gone, a restart
+  // interrupted it — and Builder lists those too since kpubdata-builder#1252. It left no manifest,
+  // so only the job says why it ended, and the lost-keys card (#846) is drawn from that.
   const shouldPollLiveStatus =
-    Boolean(selectedRunId) && isRealBuilderEnabled() && listState.status === "loaded" && !selectedListItem;
+    Boolean(selectedRunId) &&
+    isRealBuilderEnabled() &&
+    listState.status === "loaded" &&
+    (!selectedListItem || selectedListItem.startedAt === null);
   const [liveAttempt, setLiveAttempt] = useState(0);
   const live = useSelectedRunPolling(shouldPollLiveStatus ? selectedRunId : null, liveAttempt);
 
