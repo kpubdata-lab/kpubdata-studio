@@ -73,10 +73,14 @@ enum 의 이름은 계약에서의 위치다: 스키마 자체가 enum 이면 `S
 - `z.string()` — **그대로 통과**. Studio 가 값을 해석하지 않고 보여 주기만 하는 경우. `BuildJob.code` 가
   그렇다: 나중에 추가된 사유가 job 전체를 못 읽게 만들면 안 된다(#787).
 
-지금은 `builderApi.schema.ts` 의 한 줄짜리 enum 56개 가운데 32개가 스냅샷에서 온다 — 스키마 이름과
-속성 이름이 계약과 그대로 대응하고 값 목록이 같은 것들이다. 나머지 24개는 Studio 쪽 이름이 계약과
-다르거나(`KnownWireEncoding`, `StageStatus` 등) 요청 스키마라서 하나씩 대응을 확인해 옮겨야 하고, 아직
-손으로 쓴 목록이다. 그것들은 종전처럼 drift 테스트가 계약과 대조한다.
+`builderApi.schema.ts` 에서 계약에 있는 enum 은 모두 스냅샷에서 온다. 손으로 값을 적은 `z.enum([…])` 는
+위의 오류 `code` 둘뿐이다(`grep -c 'z\.enum(\[' src/shared/lib/builderApi.schema.ts` → 2). Studio 쪽
+이름이 계약과 다른 것(`KnownWireEncoding`, `StageStatus` 등)과 요청 스키마의 enum 도 옮겨졌다(#820, #821).
+
+**생성하는 것은 enum 의 값까지다.** 응답의 모양(어떤 필드가 있고 무엇이 선택인지)은 계속 손으로 쓴다.
+모양을 계약에서 생성하면 모르는 값과 빠진 필드를 필드마다 다르게 다루는 위의 규칙을 생성기가 정하게
+되는데, 그 판단은 화면이 그 값으로 무엇을 하는지에 달려 있어 사람이 쓴다. 손으로 쓴 모양이 계약과
+어긋나는 것은 drift 테스트(`contractDrift.test.ts`)가 잡는다.
 
 **다시 생성하기**: `BUILDER_CONTRACT=../kpubdata-builder/contract/builder-api.yaml npm run contract:enums`.
 Builder 가 enum 값을 더하려면 Studio 가 먼저 그 값을 받아야 한다(Builder 의 CI 가 Studio 의 drift
