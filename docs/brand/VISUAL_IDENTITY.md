@@ -285,7 +285,7 @@ theme 질문은 #628 §25 에 있다.
 |---|---|---|
 | 로고를 가려도 DW 제품처럼 보이는가 | 사이드바가 DATA · ANALYZE · OPERATE, 첫 화면이 테이블 상태 | ☐ |
 | build console 처럼 보이지 않는가 | Build · Artifact 어휘 없음, run 은 테이블의 갱신 이력으로만 | ☐ |
-| Table 과 SQL 이 핵심으로 보이는가 | Home 의 주 동작이 "새 SQL 쿼리", 테이블 상세의 주 동작이 "쿼리" | ☐ |
+| Table 과 SQL 이 핵심으로 보이는가 | Home 의 주 동작이 "새 SQL 질의", 테이블 상세의 주 동작이 "질의" | ☐ |
 | AI 가 주인공처럼 보이지 않는가 | Ask KPubData 는 topbar 버튼과 "Ask about this table" 뿐, SQL 은 사용자가 실행 | ☐ |
 | 한국 공공데이터 특화성이 보이는가 | 기관명(국토교통부 · 기상청 · 한국환경공단 · 통계청), 공공누리, 법정동 코드, 활용신청(Application required) | ☐ |
 | 상용 SaaS 가 아니라 전문 data tool 처럼 보이는가 | 20px 가 최대 글자, 36px 행, monospace 식별자, 마케팅 헤딩 없음 | ☐ |
