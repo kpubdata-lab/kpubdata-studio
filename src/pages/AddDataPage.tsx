@@ -42,6 +42,7 @@ import { getSavedSpec } from "@/features/workspace/savedSpecs";
 import { clearAddDataDraft, hasAddDataDraft, loadAddDataDraft, saveAddDataDraft } from "@/features/add-data/draftStorage";
 import { discardFormDraft, hasFormDraft, subscribeFormDraft, takeFormDraftSpec, type FormDraftResult } from "@/features/add-data/formDraft";
 import { checkRequiredParams } from "@/features/add-data/requiredParams";
+import { checkQueryParams } from "@/features/build-spec/queryParams";
 import { findDataset, identityFromCatalog, identityFromFilename, identityFromUrl } from "@/features/add-data/identity";
 import {
   INITIAL_DRAFT,
@@ -494,7 +495,10 @@ export function AddDataPage() {
         return;
       }
 
-      const requiredCheck = checkRequiredParams(draft.publicApi.sourceParams, selected?.request_parameters);
+      // The query definition, when Builder gives one, also checks each value's format (#899).
+      const requiredCheck = selected?.query_parameters
+        ? { error: checkQueryParams(draft.publicApi.sourceParams, selected.query_parameters) }
+        : checkRequiredParams(draft.publicApi.sourceParams, selected?.request_parameters);
       if (requiredCheck.error) {
         setLastPreviewSignature(signatureAtRequest);
         setPreview({ status: "error", error: requiredCheck.error });

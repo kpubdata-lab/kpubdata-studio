@@ -2736,7 +2736,26 @@
     "params": {
       "finiteOnly": "파라미터 JSON에는 유한한 number와 JSON 값만 사용할 수 있습니다.",
       "invalidJson": "파라미터가 올바른 JSON이 아닙니다. 형식을 확인하세요.",
-      "mustBeObject": "파라미터는 JSON 객체여야 합니다. 예: {\"region\": \"seoul\"}"
+      "mustBeObject": "파라미터는 JSON 객체여야 합니다. 예: {\"region\": \"seoul\"}",
+      "fieldsTitle": "조회 조건",
+      "fieldsNeedJson": "아래 JSON을 고쳐야 이 입력란을 쓸 수 있습니다.",
+      "allLabel": "전체 요청 파라미터 (JSON)",
+      "allHelp": "위 입력란의 값이 여기에 들어갑니다. 위에 없는 파라미터는 여기에 추가하세요.",
+      "choose": "선택하세요…",
+      "providerName": "제공기관 이름: {{name}}",
+      "type": {
+        "string": "문자",
+        "integer": "정수",
+        "number": "숫자",
+        "date_yyyymmdd": "날짜, YYYYMMDD",
+        "date_yyyymm": "연월, YYYYMM"
+      },
+      "missing": "{{name}}은(는) 필수입니다. 값을 입력하세요.",
+      "notInEnum": "{{name}}은(는) 다음 중 하나여야 합니다: {{values}}.",
+      "badInteger": "{{name}}은(는) 정수여야 합니다.",
+      "badNumber": "{{name}}은(는) 숫자여야 합니다.",
+      "badDate": "{{name}}은(는) YYYYMMDD 형식의 날짜여야 합니다.",
+      "badMonth": "{{name}}은(는) YYYYMM 형식의 연월이어야 합니다."
     },
     "yaml": {
       "parseFailed": "YAML 구문을 파싱하지 못했습니다.",

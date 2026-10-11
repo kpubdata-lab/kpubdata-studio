@@ -218,6 +218,70 @@ test("같은 데이터셋을 다시 추가해도 이미 있는 테이블은 그�
 });
 
 /**
+ * The parameter form comes from Builder's query definition (#899, contract 1.120.0):
+ * `datago.air_station` defines `stationName` (alias `station`) and `dataTerm` (alias
+ * `term`, an enum). Filled through the generated fields, the params are the replay
+ * fixture's (`gangnam_full_page`), so the preview answers with its rows.
+ */
+test("Create Table draws air_station's parameter form from Builder's definition (#899) @real-builder", async ({
+  page,
+  request,
+}) => {
+  test.skip(
+    !process.env.REAL_BUILDER_REPLAY,
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
+  );
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  const catalog = (await (await request.get(`${BUILDER_URL}/catalog`)).json()) as {
+    providers: Array<{ name: string; datasets: Array<{ name: string; query_parameters?: unknown }> }>;
+  };
+  const definition = catalog.providers
+    .find((provider) => provider.name === "datago")
+    ?.datasets.find((dataset) => dataset.name === "air_station")?.query_parameters;
+  test.skip(definition === undefined, "Builder older than contract 1.120.0 sends no query_parameters");
+  expect(definition).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: "stationName", alias: "station", required: true }),
+      expect.objectContaining({ name: "dataTerm", alias: "term", enum: ["daily", "month", "3month"] }),
+    ]),
+  );
+
+  await openCreateTable(page);
+  await page.getByRole("button", { name: /공공 API/ }).first().click();
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.locator('#add-data-provider option[value="datago"]')).toBeAttached({ timeout: 30_000 });
+  await page.locator("#add-data-provider").selectOption("datago");
+  await page.locator("#add-data-dataset").selectOption("air_station");
+
+  const term = page.locator("#add-data-param-term");
+  await expect(term).toBeVisible();
+  await expect(term.locator("option")).toHaveText(["선택하세요…", "daily", "month", "3month"]);
+  // Paging is not in the definition: it goes in the JSON editor beside the fields.
+  await page.locator("#add-data-params").fill(JSON.stringify({ page: 1, page_size: 100 }));
+  await term.selectOption("daily");
+  await page.locator("#add-data-param-station").fill("강남구");
+  expect(JSON.parse(await page.locator("#add-data-params").inputValue())).toEqual({
+    page: 1,
+    page_size: 100,
+    term: "daily",
+    station: "강남구",
+  });
+
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "미리보기 · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
+  await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
+  // The build is offered only after a successful preview (#842).
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "검토 · 테이블 만들기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "테이블 만들기" })).toBeEnabled({ timeout: 30_000 });
+
+  await expectNoPageErrors(errors);
+});
+
+/**
  * Public API source BuildSpec. Must match the replay fixture's dataset and params exactly
  * (fixture is `datago.air_station` example `gangnam_full_page`).
  * totalCount 22 ≤ page_size 100, so finishes in one page — Builder Bronze walks pages
