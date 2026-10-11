@@ -4,6 +4,7 @@
  * Studio is stateless; provider owns LLM session state, handles streaming, retry, error recovery.
  */
 import { i18n } from "@/shared/i18n";
+import { SYSTEM_PROMPT } from "./prompt";
 import { createSecretScrubber, type SecretScrubber } from "./scrub";
 
 import { checkLlmBaseUrl, isAssistantEnabled, redactApiKey, DEFAULT_LLM_BASE_URL } from "./baseUrl";
@@ -150,6 +151,12 @@ class ByokTransport implements AssistTransport {
 
 function prepareMessages(messages: AssistMessage[], scrubber: SecretScrubber): AssistMessage[] {
   return messages.map(({ role, content, structuredContent }) => {
+    // The fixed system prompt is a constant with no user or Builder data. Scrubbing it
+    // rewrites its response contract (kind and action lists) into placeholders. Only a
+    // message identical to the constant is exempt; any other system text is still scrubbed.
+    if (role === "system" && structuredContent === undefined && content === SYSTEM_PROMPT) {
+      return { role, content };
+    }
     const safeText = scrubber.scrubText(content);
     if (structuredContent === undefined) return { role, content: safeText };
     const safeStructured = scrubber.scrub(structuredContent);

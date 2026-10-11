@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { SYSTEM_PROMPT } from "./prompt";
 import { createProvider, describeLlmHttpError } from "./provider";
 
 const SENSITIVE_BODY = JSON.stringify({
@@ -203,5 +204,62 @@ describe("assistant safe egress (#273)", () => {
 
     expect(output).toBe("[REDACTED]");
     expect(output).not.toContain(secret);
+  });
+});
+
+describe("assistant fixed system prompt egress (#934)", () => {
+  function captureBody(): { body: () => string } {
+    let requestBody = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        requestBody = String(init?.body);
+        return new Response('data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n\n', { status: 200 });
+      }),
+    );
+    return { body: () => requestBody };
+  }
+
+  it("sends the fixed system prompt intact, with its allowed kind and action lists readable", async () => {
+    const captured = captureBody();
+    const provider = createProvider({ apiKey: "byok-key", model: "m", baseUrl: "" });
+    await drain(provider.stream([{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: "question?" }]));
+    const sent = JSON.parse(captured.body()) as { messages: { role: string; content: string }[] };
+    expect(sent.messages[0].content).toBe(SYSTEM_PROMPT);
+    expect(sent.messages[0].content).not.toContain("__SCRUBBED_");
+    expect(sent.messages[0].content).toContain("dataset|run|stage|quality|schema_drift|catalog");
+  });
+
+  it("still scrubs a secret-like value in the question and in evidence next to the intact prompt", async () => {
+    const questionSecret = "xJ7kL9mN2pQ4rT6vW8yB3cD5eF7gH9j";
+    const evidenceSecret = "aB3dE5gH7jK9mN1pQ3sT5vX7zC9fL2n";
+    const captured = captureBody();
+    const provider = createProvider({ apiKey: "byok-key", model: "m", baseUrl: "" });
+    await drain(
+      provider.stream([
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: "evidence", structuredContent: { note: evidenceSecret } },
+        { role: "user", content: `check ${questionSecret}` },
+      ]),
+    );
+    const body = captured.body();
+    expect(body).not.toContain(questionSecret);
+    expect(body).not.toContain(evidenceSecret);
+    expect(body).toContain("dataset|run|stage|quality|schema_drift|catalog");
+  });
+
+  it("does not exempt other system text: only the constant itself is exempt", async () => {
+    const secret = "xJ7kL9mN2pQ4rT6vW8yB3cD5eF7gH9j";
+    const captured = captureBody();
+    const provider = createProvider({ apiKey: "byok-key", model: "m", baseUrl: "" });
+    await drain(provider.stream([{ role: "system", content: `${SYSTEM_PROMPT}\n${secret}` }]));
+    expect(captured.body()).not.toContain(secret);
+  });
+
+  it("regression: scrubbing the prompt as ordinary text mangles the contract lists", async () => {
+    const { createSecretScrubber } = await import("./scrub");
+    const mangled = createSecretScrubber().scrubText(SYSTEM_PROMPT);
+    expect(mangled).toContain("__SCRUBBED_");
+    expect(mangled).not.toContain("dataset|run|stage|quality|schema_drift|catalog");
   });
 });
