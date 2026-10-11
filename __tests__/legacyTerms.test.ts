@@ -1,6 +1,6 @@
 /**
  * The old build-console screen names stay out of user strings (#423).
- *
+ * stale-ui-ignore: the next line names the retired words.
  * The maintainer's decision of 2026-10-06 retired Discover, Add Data, Datasets, Builds,
  * Provider and their Korean forms: the names are removed, not kept beside the new ones.
  * These tests show the gate (`scripts/legacy-terms.mjs`) failing when one comes back,
@@ -28,12 +28,16 @@ const names = (tree: object, lang = "en") =>
 
 describe("the retired-name detector", () => {
   it.each([
+    // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
     ["Discover", "Use Discover to find data."],
+    // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
     ["Add Data", "Go to Add Data"],
+    // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
     ["Add data", "Add data"],
     ["Datasets", "Datasets"],
     ["dataset", "Open this dataset."],
     ["Build", "New Build"],
+    // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
     ["Add Data", "Make it again in Add Data."],
     ["Builds", "Builds"],
     ["build", "The build failed."],
@@ -45,8 +49,10 @@ describe("the retired-name detector", () => {
   });
 
   it.each([
+    // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
     ["빌드", "빌드 스펙이 올바르지 않습니다."],
     ["데이터 추가", "데이터 추가에서 다시 만들어 주세요."],
+    // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
     ["Add Data", "Add Data로 이동"],
     ["데이터셋", "이 데이터셋을 엽니다."],
     ["작업대", "작업대에 저장했습니다."],
@@ -129,7 +135,9 @@ describe("Studio's locales", () => {
   it("fail the gate when any retired name is put back into a value", () => {
     // One sample per rule, written into a key no exception covers.
     const samples: Record<string, string> = {
+      // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
       Discover: "Discover",
+      // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
       "Add Data": "Add Data",
       "데이터 추가": "데이터 추가",
       Datasets: "Datasets",
@@ -178,6 +186,7 @@ describe("the CLI", () => {
     try {
       const real = join(HERE, "..", "src", "shared", "i18n", "locales");
       const back = JSON.parse(readFileSync(join(real, "en.json"), "utf8")) as typeof en;
+      // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
       back.nav.discover = "Discover";
       writeFileSync(join(dir, "en.json"), JSON.stringify(back));
       writeFileSync(join(dir, "ko.json"), readFileSync(join(real, "ko.json")));
@@ -193,6 +202,7 @@ describe("the CLI", () => {
       }
 
       expect(status).toBe(1);
+      // stale-ui-ignore: a retired name this gate's test has to spell out (#423).
       expect(out).toContain('::error title=Retired screen name in a user string (#423)::en nav.discover: "Discover"');
       expect(out).toContain("Retired screen names in user strings: 1 (baseline 0).");
     } finally {
