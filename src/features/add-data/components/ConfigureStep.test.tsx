@@ -3,7 +3,7 @@
  * #S-provider-probe) and required request parameter UX regression tests.
  *
  * The generic provider probe ("check provider connection" button) was removed as unreliable —
- * Add Data uses only authoritative prerequisite (requires credential AND
+ * Create Table uses only authoritative prerequisite (requires credential AND
  * configured=false), and actual data availability is verified by Preview.
  */
 import { describe, expect, it, vi } from "vitest";

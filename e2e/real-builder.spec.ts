@@ -399,7 +399,7 @@ test("BuildSpec 선언 PII가 Studio 편집→제출 왕복 뒤 Gold에서 가�
   );
 
   // 1) Studio's own mapping: Builder YAML → Studio BuildSpec → a form edit → the payload
-  //    Studio submits (the same serializeSpec the Add Data and New Build flows use).
+  //    Studio submits (the same serializeSpec the Create Table and New Build flows use).
   const loaded = fromBuilderSpec(parseYaml(PII_ROUND_TRIP_YAML) as BuilderSpec);
   const edited = { ...loaded, title: "Cross-repo PII round trip (edited)" };
   const payload = serializeSpec(edited);

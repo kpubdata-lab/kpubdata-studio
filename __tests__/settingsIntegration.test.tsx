@@ -72,13 +72,21 @@ describe("SettingsPage 통합 (#301)", () => {
     renderSettings();
 
     expect(
-      screen.getByText(/제공자 페이지에서 동작을 시연할 수 있습니다/),
+      screen.getByText(/연결 화면에서 동작을 시연할 수 있습니다/),
     ).toBeInTheDocument();
     expect(builderApi.listProviders).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "제공자 설정에서 관리" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "연결 화면에서 관리" })).toHaveAttribute(
       "href",
       "/connections",
     );
+  });
+
+  it("mock 모드의 연결 안내는 빌드 변수 이름 없이 데모 모드임을 말한다 (#412)", async () => {
+    const { container } = renderSettings();
+
+    expect(screen.getByText(/지금은 데모 모드입니다/)).toHaveTextContent("관리자에게 Builder 연결을 요청하세요");
+    expect(container.textContent).not.toMatch(/VITE_/);
+    expect(container.textContent).not.toMatch(/mock 모드/);
   });
 
   it("실연동에서는 GET /providers 요약(부울)으로 구성 상태를 표시한다", async () => {
@@ -127,7 +135,7 @@ describe("SettingsPage 통합 (#301)", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("link", { name: "제공자 설정에서 관리" }));
+    fireEvent.click(screen.getByRole("link", { name: "연결 화면에서 관리" }));
 
     await waitFor(() => expect(locationRef.current).not.toBeNull());
     expect(locationRef.current?.pathname).toBe("/connections");

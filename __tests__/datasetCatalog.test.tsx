@@ -195,7 +195,7 @@ describe("Tables with a warehouse (#525)", () => {
 });
 
 describe("an empty Tables list is not a search with no match (#666)", () => {
-  it("says no table exists yet and links to Add Data from inside the empty card", async () => {
+  it("says no table exists yet and links to Create Table from inside the empty card", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     mswServer.use(
       http.get(`${API_BASE}/datasets`, () => HttpResponse.json({ datasets: [], total: 0 })),
@@ -205,7 +205,7 @@ describe("an empty Tables list is not a search with no match (#666)", () => {
 
     const title = await screen.findByText("아직 만든 테이블이 없습니다");
     const card = title.parentElement as HTMLElement;
-    expect(within(card).getByRole("link", { name: "데이터 추가" })).toHaveAttribute("href", "/add");
+    expect(within(card).getByRole("link", { name: "테이블 만들기" })).toHaveAttribute("href", "/add");
     expect(screen.queryByText("조건에 맞는 테이블이 없습니다")).not.toBeInTheDocument();
     expect(screen.queryByText("검색어나 필터를 변경해 보세요.")).not.toBeInTheDocument();
   });

@@ -1,5 +1,5 @@
 /**
- * Add Data Workbench — Preview latest-request race 전용 테스트 (#283 후속 리뷰 §4).
+ * Create Table Workbench — Preview latest-request race 전용 테스트 (#283 후속 리뷰 §4).
  *
  * 실제 `PreviewValidationStep`의 "미리보기 새로고침" 버튼은 `preview.status === "loading"`
  * 동안 정상적으로 disabled 처리된다(정당한 UI 안전장치, `Button`의 `loading` prop) —
@@ -55,7 +55,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Add Data Workbench — Preview latest-request race (#283 후속 리뷰 §4)", () => {
+describe("Create Table Workbench — Preview latest-request race (#283 후속 리뷰 §4)", () => {
   it("A(valid) pending 중 B(invalid)로 바뀌면 B의 local error 상태가 나중에 도착하는 A 응답에 덮이지 않는다", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     // "불러오기"로 draft를 통째로 invalid 상태(INITIAL_DRAFT)로 바꿔치기하기 위해

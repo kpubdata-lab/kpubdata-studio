@@ -1,5 +1,5 @@
 /**
- * Add Data shows the run as soon as Builder has accepted it (#842).
+ * Create Table shows the run as soon as Builder has accepted it (#842).
  *
  * The wizard waited on its last step until the run ended. A run that sat in the queue kept
  * it on "running", and a user who left stopped the polling without being told the run
@@ -85,7 +85,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Add Data, once Builder has accepted the job (#842)", () => {
+describe("Create Table, once Builder has accepted the job (#842)", () => {
   it("opens the run's page while the run is still queued", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     const state = builder("accepts");

@@ -1,7 +1,7 @@
 /**
  * A spec submitted without an output path is run again without one (#883).
  *
- * Add Data leaves the output path out and Builder accepts that spec. The edit form
+ * Create Table leaves the output path out and Builder accepts that spec. The edit form
  * required the path, so running the same definition again — the retry of a run that lost
  * its keys (#787) goes this way — meant inventing a value the definition never had.
  */
@@ -21,7 +21,7 @@ const SUBMITTED: BuildSpec = {
   description: "설명",
   sources: [{ provider: "datago", dataset: "air_station", params: {} }],
   exports: [{ format: "jsonl" }],
-  // As Add Data submits it: no outputPath.
+  // As Create Table submits it: no outputPath.
   metadata: {},
 };
 

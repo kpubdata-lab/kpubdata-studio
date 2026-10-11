@@ -27,6 +27,7 @@ import {
   BrandLogo,
   Button,
   Card,
+  BetaBadge,
   DemoBadge,
   ErrorMessage,
   FormField,
@@ -120,7 +121,7 @@ export function LoginPage() {
           <Card>
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-xl font-semibold tracking-tight">{t("auth.page.loginTitle")}</h2>
-            {demoMode ? <DemoBadge /> : null}
+            {demoMode ? <DemoBadge /> : <BetaBadge />}
           </div>
 
           {demoMode ? (

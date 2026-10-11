@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./helpers";
 
 /**
- * Add Data scenario (#268 scenarios 1/2/3, mock deterministic).
+ * Create Table scenario (#268 scenarios 1/2/3, mock deterministic).
  *
  * Public API happy path: Source selection → Configure → (Preview) → Review with
  * canonical BuildSpec confirmation. File source entry also verified.
@@ -67,7 +67,7 @@ test("키보드만으로 단계를 오갈 때 포커스가 새 단계 제목으�
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
-  // Discover's start action preselects the source, so Configure is ready for Next.
+  // Catalog's start action preselects the source, so Configure is ready for Next.
   await page.goto("/add?provider=datago&dataset=apt_trade");
   const sourceHeading = page.getByRole("heading", { name: t("addData.source.title") });
   await expect(sourceHeading).toBeVisible();

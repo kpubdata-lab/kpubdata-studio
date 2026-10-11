@@ -118,11 +118,7 @@ export function SettingsPage() {
         </div>
         <div className="mt-4 text-sm">
           {!realEnabled ? (
-            <p className="text-muted-foreground">
-              {t("settings.conn.mockNote")}{" "}
-              <code className="text-brand-text">VITE_USE_REAL_BUILDER=true</code>
-              {t("settings.conn.mockEnv")}
-            </p>
+            <p className="text-muted-foreground">{t("settings.conn.mockNote")}</p>
           ) : connection.status === "checking" ? (
             <p className="text-muted-foreground">{t("settings.conn.checking")}</p>
           ) : connection.status === "ok" ? (
