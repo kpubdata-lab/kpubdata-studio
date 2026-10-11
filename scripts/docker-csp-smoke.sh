@@ -3,7 +3,9 @@
 # BUILDER_API_URLs, and verify the Content-Security-Policy header — its
 # existence, the deployment origin in connect-src, and that it does not
 # double-apply with the <meta> CSP. A bad origin must refuse to start.
-# Also: the security headers every response carries, and the page's lang (#841).
+# Also: the security headers every response carries, and the page's lang (#841), and
+# that a browser refuses to show the page in a frame of another origin
+# (kpubdata-builder#1107) when CSP_SMOKE_BROWSER names a Chrome or Chromium.
 #
 # Runs outside CI (manually) and in CI (ci.yml's docker-csp job). Requires a
 # Docker daemon. Exits nonzero on the first failure.
@@ -71,6 +73,39 @@ for i in $(seq 1 30); do docker exec csp-b nginx -t 2>/dev/null && break; sleep 
 header_b=$(curl -sI http://localhost:18082/ | grep -i '^Content-Security-Policy:' || true)
 echo "$header_b" | grep -q 'https://builder.other.net' && ok "second origin in header" || bad "second origin not in header"
 echo "$header_b" | grep -q 'https://api.example.org' && bad "first origin leaked into second deployment" || ok "first origin absent"
+
+# --- Case 4: a page of another origin cannot frame Studio (kpubdata-builder#1107) ---
+# The page's policy says frame-ancestors 'self'; this asks a real browser whether it
+# holds. A local file is another origin to every frame in it. Chrome writes one console
+# line per frame it refuses, naming the frame's origin and the directive, so the two
+# guarded frames are on the first container and the one that must load is on the second:
+# /config.js carries no policy, and without it a browser that refused every frame — or a
+# log read wrongly — would pass.
+if [ -n "${CSP_SMOKE_BROWSER:-}" ]; then
+  say "Case 4: framing from another origin"
+  work=$(mktemp -d)
+  cat > "$work/framing.html" <<HTML
+<!doctype html>
+<title>frame check</title>
+<iframe src="http://localhost:18081/"></iframe>
+<iframe src="http://localhost:18081/silent-check-sso.html"></iframe>
+<iframe src="http://localhost:18082/config.js"></iframe>
+HTML
+  control=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:18082/config.js || true)
+  check "the unguarded address answers" "$control" "200"
+  "$CSP_SMOKE_BROWSER" --headless=new --no-sandbox --disable-gpu --no-first-run \
+    "--user-data-dir=$work/profile" --enable-logging=stderr --v=0 \
+    --virtual-time-budget=10000 --dump-dom "file://$work/framing.html" \
+    > /dev/null 2> "$work/browser.log" || true
+  refused_a=$(grep 'frame-ancestors' "$work/browser.log" | grep -c 'http://localhost:18081' || true)
+  refused_b=$(grep 'frame-ancestors' "$work/browser.log" | grep -c 'http://localhost:18082' || true)
+  check "the browser refuses to frame the page and silent-check-sso.html" "$refused_a" "2"
+  check "the browser frames a response without the policy" "$refused_b" "0"
+  if [ "$refused_a" != "2" ] || [ "$refused_b" != "0" ]; then tail -n 40 "$work/browser.log" >&2; fi
+  rm -rf "$work" 2>/dev/null || true
+else
+  say "Case 4: not run (CSP_SMOKE_BROWSER is not set), so no browser was asked to frame the page"
+fi
 
 # --- Case 3: an invalid origin (injection) refuses to start ---
 say "Case 3: invalid origin"

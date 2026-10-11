@@ -270,6 +270,9 @@ jobs:
         run: bash scripts/docker-csp-smoke.sh
         env:
           CSP_SMOKE_IMAGE_BUILT: "1"
+          # The runner's Chrome is asked to frame the page from another origin
+          # (kpubdata-builder#1107).
+          CSP_SMOKE_BROWSER: google-chrome
 
   # The strict docs build of deploy.yml, as a job the CI gate waits for (Refs #835):
   # deploy.yml's own run on pull requests is to be removed, and a broken docs site
