@@ -21,7 +21,6 @@ import { DataCardPreview } from "@/features/publish/DataCardPreview";
 import { PublishRecoveryPanel } from "@/features/publish/PublishRecoveryPanel";
 import { usePublishJob } from "@/features/publish/usePublishJob";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { PublishCredentialSource } from "@/shared/lib/builderApi.schema";
 import { formatDateTime } from "@/features/datasets/model";
 import type { BuildRunStatus } from "@/shared/lib/types";
@@ -98,11 +97,6 @@ function issueLinkPath(link: PublishIssueLink, runId: string): string {
   if (link === "editSpec") return `${base}/edit`;
   if (link === "openArtifacts") return `${base}/artifacts`;
   return base;
-}
-
-/** Wait for Builder's `/version` once per page load; nothing to wait for in demo mode. */
-function credentialSourceKnown(): Promise<void> {
-  return isRealBuilderEnabled() ? ensureVersionChecked() : Promise.resolve();
 }
 
 export function BuildPublishPage() {
@@ -184,7 +178,8 @@ export function BuildPublishPage() {
     // Readiness waits for the credential source, so a token is never sent to a Builder
     // that only takes a stored credential (#637).
     let credential: ReturnType<typeof publishCredentialFor>;
-    credentialSourceKnown()
+    // Builder's `/version` is read once per page load; the demo has none to wait for.
+    ensureVersionChecked()
       .then(() => {
         if (!active) return null;
         credential = acceptsRequestCredential(useVersionCheckStore.getState().publishCredential)

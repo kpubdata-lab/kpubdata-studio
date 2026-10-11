@@ -159,7 +159,10 @@ Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다
 만족하게 한다.
 
 지금 이 구조인 기능은 **datasets**, **artifacts**, **discover**, **preview**, **add-data**, **publish** 다
-(`src/features/<기능>/api/client.ts`; discover 와 add-data 는 `src/features/<기능>/client.ts`). 아래 표는
+(`src/features/<기능>/api/client.ts`; discover 와 add-data 는 `src/features/<기능>/client.ts`). #902 에서
+**monitoring**(`api/client.ts`), **sql** 의 쿼리 실행(`sql/api.ts` 의 `sqlClient()`), **spec 검증**
+(`validation/api` 의 `validationClient()`)이 같은 모양이 됐고, 버전 확인은 `ensureVersionChecked()` 가 데모에서
+아무것도 묻지 않고 끝나도록 그 안에서 고른다. 아래 표는
 datasets 의 이름이고 나머지도 같은 모양이다(`ArtifactsClient`, `DiscoverClient`, `PreviewClient`,
 `AddDataClient`, `PublishClient`).
 
@@ -185,6 +188,10 @@ fixture 다.
 
 publish 에서는 거부도 계약의 일부다: 두 구현이 같은 상태 코드와 `code` 로 거부하는지 본다. 데모는 게시를
 어디에도 하지 않고, 영수증이 없으므로 reconcile·reset 에 Builder 와 같은 404 `receipt_not_found` 로 답한다.
+
+화면이 `isRealBuilderEnabled()` 를 직접 부르는 곳은 줄어들기만 한다: `scripts/real-builder-switch.mjs` 가
+파일별 수를 baseline 과 맞추고, 새 곳·늘어난 수·줄었는데 낮추지 않은 baseline 을 CI 에서 실패시킨다. 기능마다
+고르는 함수 하나는 그 스크립트의 `SELECTORS` 에 적는다.
 
 **runs 는 아직 이 구조가 아니다.** build 실행은 job 을 제출하고 상태를 폴링하는 흐름이고 데모는 그 흐름 없이
 결과만 돌려주므로, 인터페이스를 어느 높이에 둘지부터 정해야 한다. 일부 페이지에도 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을

@@ -46,11 +46,33 @@ export function classifyQueryError(cause: unknown): { status: "error"; code: str
   };
 }
 
+/**
+ * What the SQL workspace asks for (#902). Builder runs the query and its refusal is
+ * classified; the demo answers every query with its fixed rows, marked `demo`.
+ */
+export interface SqlClient {
+  runTableQuery(request: QueryRequest, signal?: AbortSignal): Promise<QueryOutcome>;
+}
+
+export const realSqlClient: SqlClient = {
+  async runTableQuery(request, signal) {
+    try {
+      return { status: "success", result: await builderApi.query(request, signal), demo: false };
+    } catch (cause) {
+      return classifyQueryError(cause);
+    }
+  },
+};
+
+export const demoSqlClient: SqlClient = {
+  runTableQuery: async () => ({ status: "success", result: DEMO_RESULT, demo: true }),
+};
+
+/** The client in force: Builder's when one is configured, the demo's otherwise. */
+export function sqlClient(): SqlClient {
+  return isRealBuilderEnabled() ? realSqlClient : demoSqlClient;
+}
+
 export async function runTableQuery(request: QueryRequest, signal?: AbortSignal): Promise<QueryOutcome> {
-  if (!isRealBuilderEnabled()) return { status: "success", result: DEMO_RESULT, demo: true };
-  try {
-    return { status: "success", result: await builderApi.query(request, signal), demo: false };
-  } catch (cause) {
-    return classifyQueryError(cause);
-  }
+  return sqlClient().runTableQuery(request, signal);
 }

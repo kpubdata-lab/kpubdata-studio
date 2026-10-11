@@ -3,7 +3,7 @@
  *
  * With real Builder integration on (`VITE_USE_REAL_BUILDER=true`) it calls
  * Builder `/validate`; otherwise it returns a mock (always valid) so Studio
- * works standalone (#29/#37).
+ * works standalone (#29/#37). `validationClient()` is the one place that is chosen (#902).
  */
 import { serializeSpec } from "@/features/build-spec/specMapping";
 import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
@@ -26,13 +26,32 @@ export function asInvalidDetails(details: unknown): { problems: string[] } | nul
  * @param spec - Build spec to validate.
  * @returns Validity and a list of error strings.
  */
-export async function validateSpec(
-  spec: BuildSpec,
-): Promise<{ valid: boolean; errors: string[] }> {
-  if (!isRealBuilderEnabled()) {
-    return { valid: true, errors: [] };
-  }
+export async function validateSpec(spec: BuildSpec): Promise<SpecValidation> {
+  return validationClient().validate(spec);
+}
 
+export interface SpecValidation {
+  valid: boolean;
+  errors: string[];
+}
+
+/** What spec validation asks for: Builder's verdict, or the demo's, which passes every spec. */
+export interface ValidationClient {
+  validate(spec: BuildSpec): Promise<SpecValidation>;
+}
+
+export const demoValidationClient: ValidationClient = {
+  validate: async () => ({ valid: true, errors: [] }),
+};
+
+export const realValidationClient: ValidationClient = { validate: validateWithBuilder };
+
+/** The client in force: Builder's when one is configured, the demo's otherwise. */
+export function validationClient(): ValidationClient {
+  return isRealBuilderEnabled() ? realValidationClient : demoValidationClient;
+}
+
+async function validateWithBuilder(spec: BuildSpec): Promise<SpecValidation> {
   try {
     const result = await builderApi.validate(serializeSpec(spec));
     // invalid/error can arrive as 2xx too, so reasons are mapped per status.

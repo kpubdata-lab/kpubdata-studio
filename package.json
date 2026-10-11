@@ -36,6 +36,7 @@
     "i18n:terms": "node scripts/ko-mixed-terms.mjs",
     "i18n:legacy": "node scripts/legacy-terms.mjs",
     "contract:floor": "node scripts/contract-floor.mjs",
+    "check:real-builder": "node scripts/real-builder-switch.mjs",
     "contract:enums": "node scripts/generate-builder-enums.mjs"
   },
   "dependencies": {
