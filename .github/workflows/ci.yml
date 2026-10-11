@@ -179,7 +179,8 @@ jobs:
     # 손으로 돌릴 때만 실행돼, 회귀를 잡아줄 수 있는 스펙이 사실상 놀고 있었다.
     #
     # 실 Builder 기동이 필요한 @real-builder 스펙은 playwright.config.ts 의 grep 이
-    # 이미 걷어낸다 — 이 잡은 mock 모드 vite dev 서버만 띄운다(webServer 설정).
+    # 이미 걷어낸다 — 이 잡은 mock 모드 앱을 띄운다(webServer 설정): 대부분은 빌드한
+    # `vite preview` 로 워커 4개가 나눠 쓰고, dev 우회 인증이 필요한 4개 스펙만 dev 서버에서 워커 1개로 돈다(#901).
     #
     # The job runs in the Playwright image for the installed @playwright/test (#585), so
     # Chromium, its system libraries and fonts come from the image rather than from
