@@ -1,10 +1,12 @@
 name: Security
 
-# Supply-chain and secret checks (kpubdata-builder#691). Three questions, one job each:
+# Supply-chain and secret checks (kpubdata-builder#691). Four questions, one job each:
 #
 #   dependency audit  does anything package-lock.json installs have a known vulnerability?
 #   secret scan       does any commit in history carry a credential?
 #   CodeQL            does the TypeScript source have a known-dangerous pattern?
+#   image scan        does the container image hold a HIGH or CRITICAL vulnerability
+#                     (kpubdata-builder#1107)?
 #
 # They run on every pull request and push to main, and weekly, because a dependency
 # gains an advisory without anyone touching this repository. None is a required check:
@@ -125,3 +127,43 @@ jobs:
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2  # v4.38.2
         with:
           category: /language:javascript-typescript
+
+  # The image is built from this commit on today's base images and scanned. No workflow
+  # publishes a Studio image, so there is no published digest to scan again: the weekly
+  # run is what notices an advisory that appeared after the last change to the
+  # Dockerfile. Everything HIGH or CRITICAL is printed, fixed or not; the job fails only
+  # for one that has a fix, which is the rule Builder's image build uses.
+  image-scan:
+    name: Image scan (Trivy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+
+      # pull: the base tags move, and a layer cache must not answer with last month's.
+      - name: Build the image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          pull: true
+          tags: kpubdata-studio:scan
+          cache-from: type=gha
+
+      - name: List every HIGH and CRITICAL vulnerability, fixed or not
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: kpubdata-studio:scan
+          severity: CRITICAL,HIGH
+          exit-code: "0"
+          ignore-unfixed: false
+
+      - name: Fail on one that has a fix
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: kpubdata-studio:scan
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true

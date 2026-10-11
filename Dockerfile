@@ -33,6 +33,10 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # The only files the container writes, and the only ones its user may: the runtime
 # config and the Content-Security-Policy header with this deployment's origins (#663).
 USER root
+# The base tag's Alpine packages are as old as its last rebuild; take the fixes published
+# since. security.yml's image scan fails on a HIGH or CRITICAL vulnerability that has a
+# fix (kpubdata-builder#1107) — 43 of them, in curl, OpenSSL and c-ares, without this line.
+RUN apk upgrade --no-cache
 RUN chown 101:101 /usr/share/nginx/html/config.js \
  && touch /etc/nginx/kpubdata-csp.conf \
  && chown 101:101 /etc/nginx/kpubdata-csp.conf
