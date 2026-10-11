@@ -51,9 +51,9 @@ describe("build-time variable names stay off the screen", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("the pattern catches what Settings used to show", () => {
-    expect(BUILD_VARIABLE.test("VITE_USE_REAL_BUILDER=true로 설정하세요.")).toBe(true);
-    expect(BUILD_VARIABLE.test("공용 API 키를 VITE_* 환경변수로 주입하지 마세요")).toBe(true);
+  it("the pattern catches a variable name and the VITE_* wildcard, and not a container variable", () => {
+    expect(BUILD_VARIABLE.test("Set VITE_USE_REAL_BUILDER=true first")).toBe(true);
+    expect(BUILD_VARIABLE.test("through VITE_* variables")).toBe(true);
     expect(BUILD_VARIABLE.test("OIDC_ISSUER 와 OIDC_CLIENT_ID")).toBe(false);
   });
 });
