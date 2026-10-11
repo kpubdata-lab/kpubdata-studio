@@ -17,7 +17,7 @@
  */
 import { i18n } from "@/shared/i18n";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { z } from "zod";
+import * as z from "zod/mini";
 import { fromBuilderSpec, toBuilderSpec, type BuilderSpec } from "@/features/build-spec/specMapping";
 import type { BuildSpec } from "@/shared/lib/types";
 
@@ -43,19 +43,17 @@ export class BuildSpecShapeError extends Error {
 // avoid accidentally stripping values that exist. sources[]/exports[] only enforce
 // required keys per item and pass the rest — detailed kind-specific conditions
 // are the Builder `/validate` (semantic) responsibility.
-const looseSourceRefSchema = z.object({ params: z.record(z.string(), z.unknown()).optional() }).passthrough();
-const looseExportTargetSchema = z.object({ kind: z.string(), output_path: z.string() }).passthrough();
+const looseSourceRefSchema = z.looseObject({ params: z.optional(z.record(z.string(), z.unknown())) });
+const looseExportTargetSchema = z.looseObject({ kind: z.string(), output_path: z.string() });
 
-const canonicalSpecShapeSchema = z
-  .object({
-    dataset_id: z.string().min(1),
-    title: z.string().min(1),
-    description: z.string().min(1),
-    sources: z.array(looseSourceRefSchema).min(1),
-    exports: z.array(looseExportTargetSchema).min(1),
-    metadata: z.record(z.string(), z.unknown()).optional(),
-  })
-  .passthrough();
+const canonicalSpecShapeSchema = z.looseObject({
+    dataset_id: z.string().check(z.minLength(1)),
+    title: z.string().check(z.minLength(1)),
+    description: z.string().check(z.minLength(1)),
+    sources: z.array(looseSourceRefSchema).check(z.minLength(1)),
+    exports: z.array(looseExportTargetSchema).check(z.minLength(1)),
+    metadata: z.optional(z.record(z.string(), z.unknown())),
+  });
 
 /**
  * Serialize a Studio BuildSpec into a human-friendly canonical YAML text.

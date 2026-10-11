@@ -48,8 +48,14 @@ export const SHOWN_PROPS = new Set([
  */
 const TS_SHOWN_PROPS = new Set(["message"]);
 
-/** zod checks whose second argument is the error a person reads (`.min(1, "…")`). */
-const ZOD_CHECKS = new Set(["min", "max", "length", "regex", "refine", "email", "url", "startsWith", "endsWith", "includes", "nonempty"]);
+/**
+ * zod checks whose second argument is the error a person reads: the classic method
+ * `.min(1, "…")` and its `zod/mini` function `z.minLength(1, "…")`, which Studio uses (#951).
+ */
+const ZOD_CHECKS = new Set([
+  "min", "max", "length", "regex", "refine", "email", "url", "startsWith", "endsWith", "includes", "nonempty",
+  "minLength", "maxLength", "gte", "lte", "gt", "lt",
+]);
 
 /** Elements whose text is code, not prose. */
 const CODE_ELEMENTS = new Set(["code", "kbd", "pre", "samp", "style"]);
@@ -167,7 +173,7 @@ export function uiTexts(file, source) {
     ) {
       leaves(node.initializer);
     } else if (
-      // `z.string().min(1, "Alias cannot be empty.")` — a zod check's message.
+      // `z.string().min(1, "Alias cannot be empty.")`, or `z.minLength(1, "…")` in zod/mini.
       plainTs &&
       ts.isCallExpression(node) &&
       ts.isPropertyAccessExpression(node.expression) &&

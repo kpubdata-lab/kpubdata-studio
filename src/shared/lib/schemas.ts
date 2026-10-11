@@ -4,7 +4,7 @@
  * runtime validation rules ensuring form inputs and API payloads don't violate shared type contracts.
  */
 import { i18n } from "@/shared/i18n";
-import { z } from "zod";
+import * as z from "zod/mini";
 
 /** enum schema limiting list of supported export formats */
 export const exportFormatSchema = z.enum([
@@ -16,10 +16,10 @@ export const exportFormatSchema = z.enum([
 
 export type JsonValueInput = string | number | boolean | null | JsonValueInput[] | { [key: string]: JsonValueInput };
 
-export const jsonValueSchema: z.ZodType<JsonValueInput> = z.lazy(() =>
+export const jsonValueSchema: z.ZodMiniType<JsonValueInput> = z.lazy(() =>
   z.union([
     z.string(),
-    z.number().finite(),
+    z.number(),
     z.boolean(),
     z.null(),
     z.array(jsonValueSchema),
@@ -51,7 +51,7 @@ export const schemaContractSchema = z.looseObject({
 export const sourceGoldFilterSchema = z.object({
   column: z.string(),
   op: z.enum(["eq", "ne", "gt", "ge", "lt", "le", "in", "not_null"]),
-  value: jsonValueSchema.optional(),
+  value: z.optional(jsonValueSchema),
 });
 
 /**
@@ -59,10 +59,10 @@ export const sourceGoldFilterSchema = z.object({
  * re-validated spec keeps its Gold limits and declared PII columns (#601).
  */
 export const sourceGoldSchema = z.object({
-  select: z.array(z.string()).optional(),
-  filters: z.array(sourceGoldFilterSchema).optional(),
-  piiColumns: z.array(z.string()).optional(),
-  publishUnmasked: z.array(z.string()).optional(),
+  select: z.optional(z.array(z.string())),
+  filters: z.optional(z.array(sourceGoldFilterSchema)),
+  piiColumns: z.optional(z.array(z.string())),
+  publishUnmasked: z.optional(z.array(z.string())),
 });
 
 /** kind="public_api" (default) / file / url distinction(#498). */
@@ -72,7 +72,7 @@ export const sourceKindSchema = z.enum(["public_api", "file", "url"]);
 export const sourceFormatSchema = z.enum(["csv", "json", "jsonl", "parquet"]);
 
 /** upload_id format issued by `POST /uploads` (Builder #498: `upl_` + 32 hex chars). */
-export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, { error: () => i18n.t("schemas.uploadIdFormat") });
+export const uploadIdSchema = z.string().check(z.regex(/^upl_[a-f0-9]{32}$/, { error: () => i18n.t("schemas.uploadIdFormat") }));
 
 /**
  * schema validating fields that single source data reference must have (#250, #498).
@@ -85,24 +85,23 @@ export const uploadIdSchema = z.string().regex(/^upl_[a-f0-9]{32}$/, { error: ()
  */
 export const sourceRefSchema = z
   .object({
-    kind: sourceKindSchema.optional(),
-    provider: z.string().optional(),
-    dataset: z.string().optional(),
+    kind: z.optional(sourceKindSchema),
+    provider: z.optional(z.string()),
+    dataset: z.optional(z.string()),
     params: jsonRecordSchema,
-    alias: z.string().min(1, { error: () => i18n.t("schemas.aliasEmpty") }).optional(),
-    schema: schemaContractSchema.optional(),
-    uploadId: uploadIdSchema.optional(),
-    format: sourceFormatSchema.optional(),
-    encoding: z.string().optional(),
-    endpoint: z.string().optional(),
-    method: z.literal("GET").optional(),
+    alias: z.optional(z.string().check(z.minLength(1, { error: () => i18n.t("schemas.aliasEmpty") }))),
+    schema: z.optional(schemaContractSchema),
+    uploadId: z.optional(uploadIdSchema),
+    format: z.optional(sourceFormatSchema),
+    encoding: z.optional(z.string()),
+    endpoint: z.optional(z.string()),
+    method: z.optional(z.literal("GET")),
     // Builder `param_grid` (#613) — carried through, never edited (#601).
-    paramGrid: z.record(z.string(), z.array(jsonValueSchema)).optional(),
-    gold: sourceGoldSchema.optional(),
+    paramGrid: z.optional(z.record(z.string(), z.array(jsonValueSchema))),
+    gold: z.optional(sourceGoldSchema),
     // Source-level contract fields Studio does not model (#601). See specMapping.ts.
-    extra: jsonRecordSchema.optional(),
-  })
-  .superRefine((source, ctx) => {
+    extra: z.optional(jsonRecordSchema),
+  }).check(z.superRefine((source, ctx) => {
     const kind = source.kind ?? "public_api";
     if (kind === "public_api") {
       if (!source.provider) {
@@ -128,25 +127,25 @@ export const sourceRefSchema = z
         ctx.addIssue({ code: "custom", path: ["format"], message: i18n.t("schemas.urlFormats") });
       }
     }
-  });
+  }));
 
 /** schema validating export target definition */
 export const exportTargetSchema = z.object({
-  format: z.string().min(1, { error: () => i18n.t("schemas.exportFormatRequired") }),
-  options: exportOptionsSchema.optional(),
+  format: z.string().check(z.minLength(1, { error: () => i18n.t("schemas.exportFormatRequired") })),
+  options: z.optional(exportOptionsSchema),
 });
 
 /** schema validating entire spec structure generated from new build screen */
 export const buildSpecSchema = z.object({
-  datasetId: z.string().min(1, { error: () => i18n.t("schemas.datasetIdRequired") }),
-  title: z.string().min(1, { error: () => i18n.t("schemas.titleRequired") }),
-  description: z.string().min(1, { error: () => i18n.t("schemas.descriptionRequired") }),
-  sources: z.array(sourceRefSchema).min(1, { error: () => i18n.t("schemas.sourcesRequired") }),
-  exports: z.array(exportTargetSchema).min(1, { error: () => i18n.t("schemas.exportsRequired") }),
+  datasetId: z.string().check(z.minLength(1, { error: () => i18n.t("schemas.datasetIdRequired") })),
+  title: z.string().check(z.minLength(1, { error: () => i18n.t("schemas.titleRequired") })),
+  description: z.string().check(z.minLength(1, { error: () => i18n.t("schemas.descriptionRequired") })),
+  sources: z.array(sourceRefSchema).check(z.minLength(1, { error: () => i18n.t("schemas.sourcesRequired") })),
+  exports: z.array(exportTargetSchema).check(z.minLength(1, { error: () => i18n.t("schemas.exportsRequired") })),
   metadata: jsonRecordSchema,
   // canonical top-level fields not provided UI editing in Studio (publish/splits/pii/...)
   // bucket preserving through round-trip without loss (#250). see specMapping.ts.
-  extra: jsonRecordSchema.optional(),
+  extra: z.optional(jsonRecordSchema),
 });
 
 /**
