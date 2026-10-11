@@ -252,7 +252,7 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
   it("real mode: GET /builds 목록에 이미 있는(terminal) run은 live registry 조회를 생략한다", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     vi.spyOn(runsApi, "listBuilds").mockResolvedValue([
-      { id: "real-run-1", title: null, status: "succeeded", startedAt: null, finishedAt: null },
+      { id: "real-run-1", title: null, status: "succeeded", startedAt: "2026-10-01T00:00:00Z", finishedAt: "2026-10-01T00:05:00Z" },
     ]);
     vi.spyOn(datasetsApi, "listBuildStages").mockResolvedValue({ run_id: "real-run-1", sources: [] });
     vi.spyOn(datasetsApi, "getBuildQuality").mockResolvedValue({
