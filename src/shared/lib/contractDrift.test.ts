@@ -578,7 +578,10 @@ const publishReader = (kind: string): ErrorReader => ({
 });
 
 /** A build refused for want of room, as the build page reads it (#859). */
-const buildRefusalReader = (code: "build_queue_full" | "build_owner_limit", since: string): ErrorReader => ({
+const buildRefusalReader = (
+  code: "build_queue_full" | "build_owner_limit" | "disk_space_low" | "run_storage_quota_exceeded",
+  since: string,
+): ErrorReader => ({
   reader: "buildRefusal (features/runs/buildRefusal, #859)",
   since,
   check: (status, body) => {
@@ -587,6 +590,9 @@ const buildRefusalReader = (code: "build_queue_full" | "build_owner_limit", sinc
       ...differs("refusal code", refusal?.code, code),
       // The limit is what the sentence tells the user; an example without one is a drift.
       ...(refusal?.code === "build_owner_limit" && refusal.limit === null ? ["limit: not read from the body"] : []),
+      ...(refusal?.code === "run_storage_quota_exceeded" && (refusal.limitBytes === null || refusal.usedBytes === null)
+        ? ["limit_bytes, used_bytes: not read from the body"]
+        : []),
     ];
   },
 });
@@ -719,6 +725,8 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // Were it called, the same reader would read its refusal — which is what is checked.
   "createBuild 429 BuildQueueFull": buildRefusalReader("build_queue_full", "1.82.0"),
   "submitBuild 429 BuildOwnerLimit": buildRefusalReader("build_owner_limit", "1.111.0"),
+  "submitBuild 503 DiskSpaceLow": buildRefusalReader("disk_space_low", "1.118.0"),
+  "submitBuild 409 RunStorageQuotaExceeded": buildRefusalReader("run_storage_quota_exceeded", "1.118.0"),
   "probeProviderKey 429 ProbeRateLimited": {
     reader: "probeRateLimited (features/provider/probeRefusal, #410)",
     since: "1.88.0",
