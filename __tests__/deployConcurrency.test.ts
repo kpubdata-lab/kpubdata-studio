@@ -1,9 +1,11 @@
 /**
- * The Pages workflow keeps pull request runs out of the deploy concurrency group (#586).
+ * The Pages workflow keeps other runs out of the deploy concurrency group (#586), and
+ * does not run on a pull request at all (#835).
  *
  * GitHub keeps one pending run per concurrency group. When pull requests and main
  * deploys shared `pages`, a pull request run waiting in it was replaced by the next run
- * and cancelled without a job, so the required `build` check never reported.
+ * and cancelled without a job, so the then-required `build` check never reported. A
+ * pull request is now held to the app and docs builds by ci.yml, behind the `CI gate`.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -14,6 +16,7 @@ import { parse } from "yaml";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const workflow = parse(readFileSync(join(ROOT, ".github/workflows/deploy.yml"), "utf8")) as {
+  on: Record<string, unknown>;
   concurrency: { group: string; "cancel-in-progress": string | boolean };
   jobs: Record<string, { name?: string; if?: string }>;
 };
@@ -43,7 +46,6 @@ const group = (ctx: Context) => evaluate(workflow.concurrency.group, ctx);
 const cancels = (ctx: Context) => evaluate(workflow.concurrency["cancel-in-progress"], ctx);
 
 const mainPush = { event_name: "push", ref: "refs/heads/main" };
-const pr = (n: number) => ({ event_name: "pull_request", ref: `refs/pull/${n}/merge` });
 
 describe("Pages deploy concurrency (#586)", () => {
   it("serialises main deploys in one group and never cancels one in progress", () => {
@@ -51,9 +53,8 @@ describe("Pages deploy concurrency (#586)", () => {
     expect(cancels(mainPush)).toBe(false);
   });
 
-  it("gives each pull request a group of its own", () => {
-    expect(group(pr(574))).not.toBe(group(mainPush));
-    expect(group(pr(574))).not.toBe(group(pr(575)));
+  it("does not run on a pull request", () => {
+    expect(Object.keys(workflow.on).sort()).toEqual(["push", "workflow_dispatch"]);
   });
 
   it("keeps a manual dispatch out of the deploy group", () => {
@@ -64,8 +65,8 @@ describe("Pages deploy concurrency (#586)", () => {
     expect(workflow.jobs.deploy.if).toBe("github.event_name == 'push' && github.ref == 'refs/heads/main'");
   });
 
-  it("keeps the required check's job name `build`", () => {
-    expect(Object.keys(workflow.jobs)).toContain("build");
-    expect(workflow.jobs.build.name).toBeUndefined();
+  it("has no job left that only reported a required check", () => {
+    // `build` existed only because branch protection required a check by that name.
+    expect(Object.keys(workflow.jobs).sort()).toEqual(["deploy", "site"]);
   });
 });

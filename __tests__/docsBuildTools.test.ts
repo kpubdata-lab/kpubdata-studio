@@ -46,13 +46,11 @@ describe("the docs build", () => {
     expect(ci.jobs.gate?.needs).toContain("docs");
   });
 
-  it("builds the site only off a pull request, and still reports `build` on one", () => {
-    // `build` is a required check until an administrator removes it (#835): it must exist
-    // on a pull request, and what it reports there is the CI gate's job, not its own.
-    expect(deploy.jobs.site?.if).toBe("github.event_name != 'pull_request'");
-    expect(deploy.jobs.build?.needs).toBe("site");
-    expect(deploy.jobs.build?.if).toBe("always()");
-    expect(runs(deploy, "build").join("\n")).not.toMatch(/npm|mkdocs|pip/);
+  it("publishes what the site job built", () => {
+    // On a pull request the app and docs builds are ci.yml's (#835); deploy.yml does not
+    // run there, so nothing here stands in for them.
+    expect(deploy.jobs.site?.if).toBeUndefined();
+    expect(deploy.jobs.build).toBeUndefined();
     expect(deploy.jobs.deploy?.needs).toBe("site");
   });
 });
