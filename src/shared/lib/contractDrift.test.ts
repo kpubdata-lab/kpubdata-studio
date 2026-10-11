@@ -696,6 +696,15 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     since: "1.107.0",
     check: (status, body) => queryCode(status, body, "query_resource_limit"),
   },
+  // The same message is shown by every screen that shows an error: the request layer says it (#949).
+  "queryBuiltDataset 429 QueryRateLimited": {
+    reader: "formatApiErrorMessage (shared/lib/builderApi, #949)",
+    since: "1.119.0",
+    check: (status, body) => [
+      ...queryCode(status, body, "query_rate_limited"),
+      ...differs("message says the wait", /12/.test(httpError(status, body).message), true),
+    ],
+  },
   "saveRevision 409 RevisionConflict": {
     reader: "revisionErrorOutcome (features/build-spec/specRevisions, #682)",
     check: (status, body) => revisionConflictProblems(status, body),

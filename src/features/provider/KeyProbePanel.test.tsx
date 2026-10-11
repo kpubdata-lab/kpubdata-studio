@@ -132,7 +132,7 @@ describe("KeyProbePanel", () => {
     render(<KeyProbePanel provider="datago" />);
     await check();
 
-    expect(await screen.findByText(/시간 안에 확인하지 못한 소스 데이터셋: apt_rent, village_fcst/)).toBeInTheDocument();
+    expect(await screen.findByText(/확인하지 못한 소스 데이터셋: apt_rent, village_fcst/)).toBeInTheDocument();
     expect(screen.getAllByRole("row")).toHaveLength(2); // the header and apt_trade
     expect(screen.queryByRole("row", { name: /apt_rent/ })).toBeNull();
   });

@@ -190,6 +190,7 @@ const QUERY_ERROR_LABEL: Record<string, string> = {
   query_timeout: "assistant.queryError.query_timeout",
   query_execution_failed: "assistant.queryError.query_execution_failed",
   query_resource_limit: "assistant.queryError.query_resource_limit",
+  query_rate_limited: "assistant.queryError.query_rate_limited",
   // Policy blocks, not failures (#640): the same words as the SQL workspace.
   redistribution_forbidden: "sql.blocked.redistribution_forbidden.title",
   declared_pii_withheld: "sql.blocked.declared_pii_withheld.title",
