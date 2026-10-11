@@ -42,6 +42,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
 import { renderBuilderEnums } from "../../../scripts/generate-builder-enums.mjs";
+import { RUN_FAILURE_CODES, RUN_FAILURE_STAGES } from "@/features/admin/runFailure";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
 import { probeRateLimited } from "@/features/provider/probeRefusal";
 import { buildRefusal } from "@/features/runs/buildRefusal";
@@ -1205,6 +1206,28 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
 
   it("has a ko and an en message and next step for every PublishIssue x-code", () => {
     expect(missingIssueEntries(contractIssueCodesOf(contract), { ko, en })).toEqual([]);
+  });
+
+  // The admin runs card words each failure code and stage itself (#906). The contract
+  // lists them in prose, not as an enum (contract 1.116.0), so the backticked names in
+  // those descriptions are the list; a code Builder adds fails here.
+  describe("admin run failure codes and stages (#906)", () => {
+    const run = (components.AdminRunsResponse?.properties?.runs?.items?.properties ?? {}) as Record<
+      string,
+      JsonSchema & { description?: string }
+    >;
+    const named = (field: string) =>
+      [...(run[field]?.description ?? "").matchAll(/`([a-z_]+)`/g)]
+        .map((match) => match[1])
+        .filter((name) => !["error", "error_code"].includes(name));
+
+    it.skipIf(!run.error_code)("lists every error_code the contract names, and no other", () => {
+      expect([...new Set(named("error_code"))].sort()).toEqual([...RUN_FAILURE_CODES].sort());
+    });
+
+    it.skipIf(!run.error_stage)("lists every error_stage the contract names, and no other", () => {
+      expect([...new Set(named("error_stage"))].sort()).toEqual([...RUN_FAILURE_STAGES].sort());
+    });
   });
 
   it("lists no KNOWN_DRIFT entry for a schema this check does not cover", () => {

@@ -510,3 +510,59 @@ test("관리자는 관리 메뉴에서 정책·실행·가입 원장을 본다 (
   await expectNoPageErrors(errors);
 });
 
+
+/**
+ * A run that fails, as an administrator sees it (#906, contract 1.116.0). Kept last in this
+ * file so the failed run it leaves in Builder's history comes after every scenario that
+ * reads that history. The source asks replay for a station it has no recording of, so the
+ * provider step fails the same way on every run.
+ */
+const FAILING_SPEC = [
+  "dataset_id: dataset.e2e_admin_failure",
+  "title: Admin failure e2e",
+  "description: a replay source with no recording fails, and the admin screen says why",
+  "sources:",
+  "  - provider: datago",
+  "    dataset: air_station",
+  "    params:",
+  "      station: 녹음이없는구",
+  "      term: daily",
+  "      page: 1",
+  "      page_size: 100",
+  "exports:",
+  "  - kind: jsonl",
+  "    output_path: out/data.jsonl",
+].join("\n");
+
+test("관리자는 실패한 실행의 원인·단계·복구 안내를 본다 (#906) @real-builder", async ({ page, request }) => {
+  test.skip(!process.env.REAL_BUILDER_REPLAY, "Builder replay 모드 필요 — the failure comes from a replay miss");
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  const runId = `e2e-admin-failure-${Date.now()}`;
+  const built = await request.post(`${BUILDER_URL}/build`, { data: { spec: FAILING_SPEC, run_id: runId }, timeout: 60_000 });
+  expect(((await built.json()) as { status?: string }).status).toBe("failed");
+
+  // What Builder records for it: one of its codes and a stage, not only a sentence.
+  const listed = (await (await request.get(`${BUILDER_URL}/admin/runs?limit=200`)).json()) as {
+    runs: Array<{ run_id: string; error_code?: string | null; error_stage?: string | null }>;
+  };
+  const run = listed.runs.find((entry) => entry.run_id === runId);
+  expect(run?.error_code, "Builder gives the failed run a code (contract 1.116.0)").toBeTruthy();
+  expect(run?.error_stage, "Builder gives the failed run a stage").toBeTruthy();
+
+  await navigateViaShell(page, /^(Administration|관리)$/);
+  await expect(page).toHaveURL(/\/admin$/);
+  const row = page.getByRole("row").filter({ hasText: runId });
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  const cell = row.locator("[data-failure-code]");
+  // A code Studio words is shown with its hint; the drift test keeps the two lists equal.
+  await expect(cell).toHaveAttribute("data-failure-code", run?.error_code ?? "");
+  await expect(cell).toContainText(t(`admin.failure.code.${run?.error_code}`));
+  await expect(cell).toContainText(t(`admin.failure.stage.${run?.error_stage}`));
+  await expect(cell).toContainText(t(`admin.failure.hint.${run?.error_code}`));
+  // Builder's raw code is an attribute for tests, never the words on the screen.
+  await expect(cell).not.toContainText(run?.error_code ?? "");
+
+  await expectNoPageErrors(errors);
+});

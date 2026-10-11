@@ -391,3 +391,69 @@ describe("AdminPage refresh (#661)", () => {
     }
   });
 });
+
+describe("AdminPage run failures (#906, contract 1.116.0)", () => {
+  const FAILED: AdminRunsResponse = {
+    runs: [
+      { run_id: "run-ok", status: "succeeded", error_code: null, error_stage: null },
+      { run_id: "run-key", status: "failed", error_code: "application_required", error_stage: "bronze" },
+      { run_id: "run-restart", status: "failed", error_code: "interrupted", error_stage: "started" },
+      { run_id: "run-new", status: "failed", error_code: "brand_new_code", error_stage: "brand_new_stage" },
+      { run_id: "run-old", status: "failed" },
+    ],
+    count: 5,
+  };
+
+  const row = (runId: string) => screen.getByText(runId).closest("tr") as HTMLElement;
+  const failureCell = (runId: string) => row(runId).querySelector("[data-failure-code]");
+
+  it("shows each failed run's cause, stage and recovery hint, and a dash for a run that did not fail", async () => {
+    renderAdmin({ runs: FAILED });
+    await settled();
+    expect(within(card("admin.runsTitle")).getByRole("columnheader", { name: t("admin.colFailure") })).toBeInTheDocument();
+
+    expect(failureCell("run-ok")).toBeNull();
+    expect(within(row("run-ok")).getAllByText("—").length).toBeGreaterThan(0);
+
+    const key = within(row("run-key"));
+    expect(failureCell("run-key")?.getAttribute("data-failure-code")).toBe("application_required");
+    expect(key.getByText(t("admin.failure.code.application_required"))).toBeInTheDocument();
+    expect(key.getByText(t("admin.failure.atStage", { stage: t("admin.failure.stage.bronze") }))).toBeInTheDocument();
+    expect(key.getByText(t("admin.failure.hint.application_required"))).toBeInTheDocument();
+
+    const restart = within(row("run-restart"));
+    expect(restart.getByText(t("admin.failure.code.interrupted"))).toBeInTheDocument();
+    expect(restart.getByText(t("admin.failure.hint.interrupted"))).toBeInTheDocument();
+  });
+
+  it("calls a code it does not know, or a failed run without one, unknown and offers no hint", async () => {
+    renderAdmin({ runs: FAILED });
+    await settled();
+    for (const runId of ["run-new", "run-old"]) {
+      expect(failureCell(runId)?.getAttribute("data-failure-code")).toBe("unknown");
+      const cell = within(row(runId));
+      expect(cell.getByText(t("admin.failure.unknownCode"))).toBeInTheDocument();
+      expect(cell.getByText(t("admin.failure.atStage", { stage: t("admin.failure.unknownStage") }))).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/brand_new/)).not.toBeInTheDocument();
+  });
+
+  it("words the failure in English too", async () => {
+    await i18n.changeLanguage("en");
+    try {
+      renderAdmin({ runs: FAILED });
+      await settled();
+      expect(within(row("run-key")).getByText("Application required")).toBeInTheDocument();
+      expect(within(row("run-key")).getByText("at Bronze")).toBeInTheDocument();
+      expect(within(row("run-restart")).getByText("Interrupted by a restart")).toBeInTheDocument();
+    } finally {
+      await i18n.changeLanguage("ko");
+    }
+  });
+
+  it("keeps error_code and error_stage through parsing, and accepts a Builder that sends neither", () => {
+    const parsed = adminRunsResponseSchema.parse(FAILED);
+    expect(parsed.runs[1]).toMatchObject({ error_code: "application_required", error_stage: "bronze" });
+    expect(parsed.runs[4].error_code).toBeUndefined();
+  });
+});
