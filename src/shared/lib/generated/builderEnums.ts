@@ -7,7 +7,7 @@
  */
 
 /** The contract version this snapshot was generated from. */
-export const BUILDER_ENUMS_CONTRACT_VERSION = "1.116.0";
+export const BUILDER_ENUMS_CONTRACT_VERSION = "1.118.0";
 
 export const BUILDER_ENUMS = {
   "AdminUser.status": ["pending","approved","rejected"],
@@ -91,6 +91,11 @@ export const BUILDER_ENUMS = {
   "QualitySummaryResponse.availability": ["available","unavailable"],
   "QualitySummaryResponse.window": ["24h"],
   "QueryRequest.stage": ["silver","gold"],
+  "ReadinessResponse.checks.disk": ["ok","low","failed","timeout"],
+  "ReadinessResponse.checks.output_dir": ["ok","failed","timeout"],
+  "ReadinessResponse.checks.state_store": ["ok","failed","timeout"],
+  "ReadinessResponse.checks.workers": ["ok","draining","stopped"],
+  "ReadinessResponse.status": ["ready","not_ready"],
   "RedistributionForbiddenError.code": ["redistribution_forbidden"],
   "RedistributionSourceVerdict.verdict": ["allowed","non_commercial","unknown","forbidden"],
   "RedistributionVerdict.verdict": ["allowed","non_commercial","unknown","forbidden"],
