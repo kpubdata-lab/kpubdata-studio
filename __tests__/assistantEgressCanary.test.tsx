@@ -18,7 +18,7 @@ import { useAssistantSession, useAssistantStore } from "@/features/assistant/use
 import type { RuntimeConfig } from "@/shared/config/runtime";
 
 const AI_ORIGIN = "https://api.openai.com";
-const KEY_CANARY = "sk-canary-key-3b9d0c";
+const KEY_CANARY = "sk-canary-canary";
 // Short words, so the scrubber leaves the question as it is and the control can find it.
 const QUESTION_CANARY = "canary 7731 hong@example.org pm10";
 
