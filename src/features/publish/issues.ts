@@ -14,7 +14,7 @@
 import { i18n } from "@/shared/i18n";
 import type { PublishIssue, RedistributionValue } from "@/shared/lib/builderApi";
 
-/** Every `PublishIssue.code` in the contract's `x-codes` (builder contract 1.71.0). */
+/** Every `PublishIssue.code` in the contract's `x-codes` (builder contract 1.121.0; the last four are the hosted personal-data gate, #954). */
 export const PUBLISH_ISSUE_CODES = [
   "run_not_terminal",
   "run_failed",
@@ -40,6 +40,10 @@ export const PUBLISH_ISSUE_CODES = [
   "destination_visibility_unknown",
   "card_missing",
   "card_incomplete",
+  "pii_scan_missing",
+  "pii_scan_pending",
+  "pii_scan_failed",
+  "pii_scan_unverified",
 ] as const;
 
 export type PublishIssueCode = (typeof PUBLISH_ISSUE_CODES)[number];
@@ -68,6 +72,10 @@ const ISSUE_LINKS: Partial<Record<PublishIssueCode, PublishIssueLink>> = {
   non_commercial_marker_missing: "editSpec",
   card_missing: "openRun",
   card_incomplete: "editSpec",
+  pii_scan_missing: "editSpec",
+  pii_scan_pending: "openRun",
+  pii_scan_failed: "openRun",
+  pii_scan_unverified: "editSpec",
 };
 
 export interface PublishIssueDescription {

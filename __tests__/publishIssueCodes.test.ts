@@ -69,6 +69,22 @@ describe("publish issue codes (#644)", () => {
     expect(describePublishIssue({ code: "artifact_missing" }).link).toBe("openArtifacts");
   });
 
+  it("sends the hosted personal-data gate codes to the spec editor or the run (#954)", () => {
+    expect(describePublishIssue({ code: "pii_scan_missing" })).toMatchObject({ known: true, link: "editSpec" });
+    expect(describePublishIssue({ code: "pii_scan_unverified" })).toMatchObject({ known: true, link: "editSpec" });
+    expect(describePublishIssue({ code: "pii_scan_pending" })).toMatchObject({ known: true, link: "openRun" });
+    expect(describePublishIssue({ code: "pii_scan_failed" })).toMatchObject({ known: true, link: "openRun" });
+  });
+
+  it("does not tell the user the data holds no personal information (#954)", () => {
+    for (const code of ["pii_scan_missing", "pii_scan_unverified"] as const) {
+      expect(en.publish.issues[code].action).toContain("does not mean there is no personal data");
+      expect(ko.publish.issues[code].action).toContain("개인정보가 없다는 뜻은 아닙니다");
+    }
+    expect(en.publish.issues.pii_scan_missing.action).toContain("block");
+    expect(en.publish.issues.pii_scan_pending.action).toContain("Wait");
+  });
+
   it("localizes in both languages", async () => {
     const before = i18n.language;
     try {
