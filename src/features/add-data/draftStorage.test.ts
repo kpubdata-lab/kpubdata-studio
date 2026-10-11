@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * Add Data local draft — secret redaction on save (PR #283 review response, Epic #246).
+ * Create Table local draft — secret redaction on save (PR #283 review response, Epic #246).
  *
  * Verify url source secret query parameters don't save to localStorage as plaintext,
  * and restored redacted draft cannot Preview/Build without re-entering.

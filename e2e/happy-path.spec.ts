@@ -4,26 +4,26 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
 /**
  * New user Public API happy path (#268 scenario 1, mock deterministic).
  *
- * Home (new user) → Discover → dataset catalog exploration → Add Data entry.
+ * Home (new user) → Catalog → dataset catalog exploration → Create Table entry.
  * Verified with deterministic fixture in mock mode.
  */
 test.beforeEach(async ({ page }) => {
   await prepareCleanPage(page);
 });
 
-test("신규 사용자가 Home에서 Discover·Add Data로 이동한다", async ({ page }) => {
+test("신규 사용자가 Home에서 Catalog·테이블 만들기로 이동한다", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   await page.goto("/");
   await expect(page.getByRole("heading").first()).toBeVisible();
 
-  // Discover: mock catalog renders 2+ providers.
+  // Catalog: mock catalog renders 2+ providers.
   await page.goto("/discover");
   await expect(page.getByRole("heading", { name: "데이터 탐색", exact: true })).toBeVisible();
   await expect(page.getByText("air_quality").first()).toBeVisible();
 
-  // Add Data entry: Source selection step renders.
+  // Create Table entry: Source selection step renders.
   await page.goto("/add");
   await expect(page.getByRole("heading", { name: t("addData.source.title") })).toBeVisible();
 

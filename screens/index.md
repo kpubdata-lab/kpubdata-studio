@@ -20,9 +20,9 @@ KPubData Studio의 **페이지(라우트) 단위 화면 설계서** 모음입니
 | [빌드 실행 추적](build-run.md) | `/builds/:buildId/run` | `BuildRunPage` | 실행 단계 스텝퍼·로그 |
 | [빌드 결과물](build-artifacts.md) | `/builds/:buildId/artifacts` | `BuildArtifactsPage` | 매니페스트·파일 목록 |
 | [빌드 게시](build-publish.md) | `/builds/:buildId/publish` | `BuildPublishPage` | 배포 대상 선택·게시 |
-| [검증(레거시)](validate.md) | `/validate` | `ValidatePage` | 마법사로 안내하는 딥링크 스텁 |
-| [미리보기(레거시)](preview.md) | `/preview` | `PreviewPage` | 마법사로 안내하는 딥링크 스텁 |
-| [결과물 랜딩](artifacts.md) | `/artifacts` | `ArtifactsPage` | 빌드 선택 안내 랜딩 |
+| [검증(레거시)](validate.md) | `/validate` | `ValidatePage` | `/add` 로 redirect 되는 예전 화면 |
+| [미리보기(레거시)](preview.md) | `/preview` | `PreviewPage` | `/add` 로 redirect 되는 예전 화면 |
+| [결과물 랜딩](artifacts.md) | `/artifacts` | `ArtifactsPage` | `/refresh-jobs` 로 redirect 되는 예전 화면 |
 | [설정](settings.md) | `/settings` | `SettingsPage` | 워크스페이스·Builder API 설정 |
 
 ## 공통 셸(Shell)

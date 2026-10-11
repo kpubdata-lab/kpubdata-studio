@@ -114,7 +114,7 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
 
   await signIn(page, ALICE);
 
-  // 1) No key yet: a multi-user Builder holds none for this user, and Add Data says so.
+  // 1) No key yet: a multi-user Builder holds none for this user, and Create Table says so.
   await openCreateTable(page);
   await page.getByRole("button", { name: /공공 API/ }).first().click();
   await page.getByRole("button", { name: "다음" }).first().click();
@@ -142,7 +142,7 @@ test("로그인한 사용자가 키를 넣으면 테이블 만들기가 막히�
   // 2) The key is entered for this session only: this Builder stores none.
   await enterSessionKey(page);
 
-  // 3) Add Data is not blocked any more — the defect of #767: the provider list was
+  // 3) Create Table is not blocked any more — the defect of #767: the provider list was
   //    asked for without the key the user holds, so Builder answered "not configured".
   const listsBefore = providerLists.length;
   await openCreateTable(page);
@@ -480,7 +480,7 @@ const JOB_KEY_TTL_MS = Number(process.env.MULTI_USER_JOB_KEY_TTL_SECONDS ?? "1")
 
 type Job = { run_id: string; status: string; code?: string | null };
 
-/** The table id Add Data gives `datago` / `air_station`. */
+/** The table id Create Table gives `datago` / `air_station`. */
 const DATASET_ID = "datago-air-station";
 
 /** The bearer token a signed-in page sends to Builder, taken from its next request there. */
@@ -558,7 +558,7 @@ test("새로고침하면 입력한 키는 사라지고, 다시 넣으면 미리�
   await expect(page.getByText(t("provider.detail.sessionKeyHeld"))).toHaveCount(0);
   await expect(page.getByRole("button", { name: t("provider.detail.enterSessionKey") })).toBeVisible();
 
-  //    …and Add Data asks for it again instead of sending a request that would be refused.
+  //    …and Create Table asks for it again instead of sending a request that would be refused.
   const previewsSent: Array<string | undefined> = [];
   page.on("request", (sent) => {
     if (sent.url() === `${BUILDER_URL}/preview`) previewsSent.push(sent.headers()["x-provider-key"]);
@@ -787,7 +787,7 @@ test("대기 중 키가 만료된 실행은 편집 화면에서 키를 다시 �
 
   // 8) She goes on to the review step without giving it. The build is refused the same
   //    way, before any run exists, and the notice there takes the key.
-  //    Nothing is added to what she submitted: the output path Add Data left out stays
+  //    Nothing is added to what she submitted: the output path Create Table left out stays
   //    out (#883).
   await next.click();
   await expect(runPage.locator("#outputPath")).toHaveValue("");

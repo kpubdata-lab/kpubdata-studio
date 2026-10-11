@@ -310,7 +310,7 @@ describe("Home for someone with nothing yet (#527)", () => {
     handlers({ datasets: [], builds: [] });
     renderHome();
     expect(await screen.findByRole("link", { name: "탐색하기" })).toHaveAttribute("href", "/discover");
-    expect(screen.getByRole("link", { name: "데이터 추가하기" })).toHaveAttribute("href", "/add");
+    expect(screen.getByRole("link", { name: "테이블 만들기" })).toHaveAttribute("href", "/add");
     expect(screen.queryByText(/STEP 1/)).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

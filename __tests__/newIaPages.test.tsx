@@ -31,7 +31,7 @@ describe("새 IA placeholder 화면 (#247)", () => {
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 
-  it("Discover is replaced with the real catalog search/filter screen (#249)", () => {
+  it("Catalog is replaced with the real catalog search/filter screen (#249)", () => {
     renderPage(<DiscoverPage />);
     expect(screen.getByRole("heading", { name: "데이터 탐색" })).toBeInTheDocument();
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
@@ -68,9 +68,9 @@ describe("새 IA placeholder 화면 (#247)", () => {
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
   });
 
-  it("Add Data is replaced with the real Add Data Workbench (#250)", () => {
+  it("Create Table is replaced with the real Create Table Workbench (#250)", () => {
     renderPage(<AddDataPage />);
-    expect(screen.getByRole("heading", { name: "데이터 추가" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "테이블 만들기" })).toBeInTheDocument();
     expect(screen.queryByText("아직 준비 중인 화면입니다")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "데이터 선택" })).toBeInTheDocument();
   });

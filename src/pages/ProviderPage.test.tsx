@@ -156,7 +156,7 @@ describe("ProviderPage 연결 상태 표현 (credential readiness)", () => {
     expect(screen.getByRole("heading", { name: /자격 증명 상태 — datago/ })).toBeInTheDocument();
     // With a user-saved credential: "API Key registered" + Preview guidance.
     expect(screen.getAllByText("API Key 등록됨").length).toBeGreaterThan(0);
-    expect(screen.getByText(/실제 소스 데이터셋 API 사용 가능 여부는 Add Data의 미리보기/)).toBeInTheDocument();
+    expect(screen.getByText(/실제 소스 데이터셋 API 사용 가능 여부는 테이블 만들기의 미리보기/)).toBeInTheDocument();
     // There is no generic probe UI.
     expect(screen.queryByRole("button", { name: "연결 테스트" })).not.toBeInTheDocument();
     expect(screen.queryByText("연결 / 실제 API 확인")).not.toBeInTheDocument();
@@ -311,7 +311,7 @@ describe("ProviderPage provider 전환 race", () => {
   });
 });
 
-describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
+describe("ProviderPage Create Table 왕복 (#S-add-data §4)", () => {
   it("?provider=로 넘어오면 목록 로딩 후 해당 provider를 자동 선택한다", async () => {
     mswServer.use(
       http.get(`${API_BASE}/providers/datago/credential`, () =>
@@ -323,10 +323,10 @@ describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
   });
 
-  it("returnTo가 있으면 Add Data 복귀 안내 배너를 보여준다", async () => {
+  it("returnTo가 있으면 Create Table 복귀 안내 배너를 보여준다", async () => {
     renderProviders("/connections?provider=datago&returnTo=%2Fadd");
     expect(
-      await screen.findByText("데이터 추가를 계속하려면 API 연결을 완료하세요."),
+      await screen.findByText("테이블 만들기를 계속하려면 API 연결을 완료하세요."),
     ).toBeInTheDocument();
   });
 
@@ -334,7 +334,7 @@ describe("ProviderPage Add Data 왕복 (#S-add-data §4)", () => {
     renderProviders();
     await selectProvider("datago");
     expect(
-      screen.queryByText("데이터 추가를 계속하려면 API 연결을 완료하세요."),
+      screen.queryByText("테이블 만들기를 계속하려면 API 연결을 완료하세요."),
     ).not.toBeInTheDocument();
   });
 

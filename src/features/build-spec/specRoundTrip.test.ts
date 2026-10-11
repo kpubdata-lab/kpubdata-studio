@@ -168,7 +168,7 @@ describe("Zod parsing and persistence keep source contract fields (#601)", () =>
   });
 });
 
-describe("Add Data: YAML apply → form edit → submitted payload (#601)", () => {
+describe("Create Table: YAML apply → form edit → submitted payload (#601)", () => {
   const applied = () => applyBuildSpecToDraft(INITIAL_DRAFT, fromYamlText(YAML));
 
   it("an untouched draft submits every source field unchanged", () => {
@@ -208,7 +208,7 @@ describe("Add Data: YAML apply → form edit → submitted payload (#601)", () =
   });
 });
 
-describe("Add Data: credentials inside source extra never leave memory (#601)", () => {
+describe("Create Table: credentials inside source extra never leave memory (#601)", () => {
   const MARKER = "marker-value-601-draft";
   /** Every source kind with a credential in its unmodelled keys, beside a plain one. */
   function specWithMarkedExtra(): BuildSpec {
@@ -246,7 +246,7 @@ describe("Add Data: credentials inside source extra never leave memory (#601)", 
   });
 });
 
-describe("Add Data: credentials inside the spec-level extra never leave memory (#616)", () => {
+describe("Create Table: credentials inside the spec-level extra never leave memory (#616)", () => {
   const MARKER = "marker-value-616-draft";
   /** A spec whose own unmodelled keys carry a credential beside a plain value. */
   function specWithMarkedTopLevelExtra(): BuildSpec {
@@ -276,7 +276,7 @@ describe("Add Data: credentials inside the spec-level extra never leave memory (
   });
 });
 
-describe("Add Data: credentials inside metadata and export options never leave memory (#623)", () => {
+describe("Create Table: credentials inside metadata and export options never leave memory (#623)", () => {
   const META_MARKER = "marker-value-623-metadata";
   const OPTION_MARKER = "marker-value-623-options";
   /** A spec carrying a credential in `metadata` and in every export's `options`, beside plain values. */

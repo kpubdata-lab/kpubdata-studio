@@ -115,7 +115,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Add Data — a table of this id is already there (#837)", () => {
+describe("Create Table — a table of this id is already there (#837)", () => {
   it("builds a new table under a free id unless told otherwise, and leaves the old one", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     const builder = builderWith(() => HttpResponse.json({ tables: [existingTable("datago-air-quality", 22)] }));

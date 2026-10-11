@@ -66,7 +66,7 @@ describe("HomePage (mock deployment, no warehouse)", () => {
     expect(screen.queryByRole("heading", { name: "최근 분석" })).not.toBeInTheDocument();
   });
 
-  it("points the new-user '데이터 추가하기' CTA at the canonical /add route, not /add-data (#regression)", async () => {
+  it("points the new-user '테이블 만들기' CTA at the canonical /add route, not /add-data (#regression)", async () => {
     useEmptyBuildsRealMode();
 
     render(
@@ -75,7 +75,7 @@ describe("HomePage (mock deployment, no warehouse)", () => {
       </MemoryRouter>,
     );
 
-    const cta = await screen.findByRole("link", { name: "데이터 추가하기" });
+    const cta = await screen.findByRole("link", { name: "테이블 만들기" });
     expect(cta).toHaveAttribute("href", "/add");
   });
 });
@@ -100,7 +100,7 @@ describe("Home without an Ask KPubData hero (#421)", () => {
         <HomePage />
       </MemoryRouter>,
     );
-    await screen.findByRole("link", { name: "데이터 추가하기" });
+    await screen.findByRole("link", { name: "테이블 만들기" });
     // The hero was a question box; Home alone (no topbar) now has none.
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });

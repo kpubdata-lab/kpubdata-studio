@@ -275,7 +275,7 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     expect(asked).toBeLessThanOrEqual(1);
   });
 
-  it("asks for nothing a run has only at its end, of a run Add Data has just submitted", async () => {
+  it("asks for nothing a run has only at its end, of a run Create Table has just submitted", async () => {
     vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
     const reads = [
       vi.spyOn(datasetsApi, "listBuildStages"),

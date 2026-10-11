@@ -2,7 +2,7 @@
  * A "new table" build asks Builder to refuse an existing table, and a refused table says
  * why (#881, builder#1223).
  *
- * Add Data checks the table list again right before submitting (#861), but another tab
+ * Create Table checks the table list again right before submitting (#861), but another tab
  * can still make the table between that check and Builder's commit. Builder 1.114.0
  * closes the gap when the build says `if_absent`; Studio sends it for a new table, and
  * shows the `warehouse_failures` reason a refused commit comes back with.

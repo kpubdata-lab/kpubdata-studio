@@ -3,6 +3,7 @@ import { RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { router } from "@/app/router";
 import { useUIStore } from "@/shared/hooks/useUIStore";
+import ko from "@/shared/i18n/locales/ko.json";
 
 /**
  * App Shell 재구성(#247) 이후에도 실제 `router.tsx` 설정을 통해 레거시 딥링크와 새 IA 라우트가
@@ -31,17 +32,24 @@ describe("router 딥링크 회귀 (#247)", () => {
     );
   });
 
-  it("legacy /validate, /preview, /artifacts 단독 라우트는 계속 동작한다", async () => {
+  // The three stand-alone pages were stubs with one button to another screen; the URL now
+  // goes to that screen directly (#423, INFORMATION_ARCHITECTURE.md section 3.1).
+  it("legacy /validate, /preview, /artifacts still work: each opens the screen that took its function over", async () => {
     render(<RouterProvider router={router} />);
 
-    await navigateTo("/validate");
-    expect(await screen.findByRole("heading", { name: "검증 결과" })).toBeInTheDocument();
+    await navigateTo("/validate?savedSpecId=none#top");
+    expect(await screen.findByRole("heading", { level: 1, name: ko.addData.page.title })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/add");
+    expect(router.state.location.search).toBe("?savedSpecId=none");
+    expect(router.state.location.hash).toBe("#top");
 
     await navigateTo("/preview");
-    expect(await screen.findByRole("heading", { name: "데이터 미리보기" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: ko.addData.page.title })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/add");
 
     await navigateTo("/artifacts");
-    expect(await screen.findByRole("heading", { name: "생성된 스냅샷 파일" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: ko.builds.page.title })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/refresh-jobs");
   });
 
   it("기존 build 단위 딥링크(:buildId/*)는 그대로 유지된다", async () => {

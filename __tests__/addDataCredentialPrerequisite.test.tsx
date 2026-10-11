@@ -1,5 +1,5 @@
 /**
- * Add Data → Provider 왕복 통합 테스트 (#S-add-data §3, §4).
+ * Create Table → Provider 왕복 통합 테스트 (#S-add-data §3, §4).
  *
  * credential이 필요한 Public API Dataset을 선택했는데 provider가 미설정이면
  * Preview까지 가지 않고 Configure 단계에서 미리 막는다. "API 연결하기"는 기존
@@ -85,7 +85,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Add Data credential prerequisite (real 모드)", () => {
+describe("Create Table credential prerequisite (real 모드)", () => {
   it("provider가 미설정이면 Configure에서 막고, API 연결하기로 draft를 보존한 채 Provider로 이동한다", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     useAirQualityCatalog();
@@ -106,7 +106,7 @@ describe("Add Data credential prerequisite (real 모드)", () => {
     fireEvent.click(screen.getByRole("button", { name: "API 연결하기" }));
 
     // Provider 화면으로 이동하고, provider가 자동 선택되며 복귀 안내가 보인다.
-    expect(await screen.findByText("데이터 추가를 계속하려면 API 연결을 완료하세요.")).toBeInTheDocument();
+    expect(await screen.findByText("테이블 만들기를 계속하려면 API 연결을 완료하세요.")).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "등록하기" })).toBeInTheDocument();
 
     // draft가 저장돼 있다 — provider/dataset/사용자가 입력한 요청 파라미터까지 보존된다.

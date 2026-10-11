@@ -152,7 +152,7 @@ const SCREENS: Array<[string, () => Promise<HTMLElement>]> = [
       return screen.getByRole("button", { name: "갱신" });
     },
   ],
-  ["Add Data", addDataAtReview],
+  ["Create Table", addDataAtReview],
 ];
 
 describe.each(SCREENS)("%s after a build that wanted a key (#787)", (name, reachRunButton) => {
@@ -175,10 +175,10 @@ describe.each(SCREENS)("%s after a build that wanted a key (#787)", (name, reach
     // The spec the user had is the spec that goes again.
     expect(second![0]).toEqual(first![0]);
     // The new run says which attempt it retries; the first named no such attempt.
-    // Add Data builds a new table, so it also asks Builder to refuse one made meanwhile
+    // Create Table builds a new table, so it also asks Builder to refuse one made meanwhile
     // (#881); the edit page refreshes the run's own table and does not.
     expect(second![4]).toEqual(
-      name === "Add Data" ? { retryOf: "attempt-1", ifAbsent: true } : { retryOf: "attempt-1" },
+      name === "Create Table" ? { retryOf: "attempt-1", ifAbsent: true } : { retryOf: "attempt-1" },
     );
     expect(first![4]?.retryOf).not.toBe("attempt-1");
     expectKeyOnlyInMemory();

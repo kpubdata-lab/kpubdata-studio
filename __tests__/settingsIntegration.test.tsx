@@ -72,10 +72,10 @@ describe("SettingsPage 통합 (#301)", () => {
     renderSettings();
 
     expect(
-      screen.getByText(/제공자 페이지에서 동작을 시연할 수 있습니다/),
+      screen.getByText(/연결 화면에서 동작을 시연할 수 있습니다/),
     ).toBeInTheDocument();
     expect(builderApi.listProviders).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "제공자 설정에서 관리" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "연결 화면에서 관리" })).toHaveAttribute(
       "href",
       "/connections",
     );
@@ -127,7 +127,7 @@ describe("SettingsPage 통합 (#301)", () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("link", { name: "제공자 설정에서 관리" }));
+    fireEvent.click(screen.getByRole("link", { name: "연결 화면에서 관리" }));
 
     await waitFor(() => expect(locationRef.current).not.toBeNull());
     expect(locationRef.current?.pathname).toBe("/connections");

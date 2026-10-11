@@ -1,7 +1,7 @@
 /**
  * The run's page says why a table was not committed (#881).
  *
- * Add Data opens the run's page as soon as Builder accepts the job (#842), so a build
+ * Create Table opens the run's page as soon as Builder accepts the job (#842), so a build
  * sent with `if_absent` that Builder refuses (`table_exists`) is read there, not in the
  * wizard. Every stage of such a run completed, so the page had no failure evidence to
  * show, and the job's own error is only "build failed".

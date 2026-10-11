@@ -71,21 +71,8 @@ const SCREENS = [
     route: `/refresh-jobs/${DEMO_SUCCEEDED}/publish`,
     label: "빌드 게시 (Build Publish)",
   },
-  {
-    id: "validate",
-    route: "/validate",
-    label: "검증 (Validate)",
-  },
-  {
-    id: "preview",
-    route: "/preview",
-    label: "미리보기 (Preview)",
-  },
-  {
-    id: "artifacts",
-    route: "/artifacts",
-    label: "결과물 (Artifacts)",
-  },
+  // /validate, /preview and /artifacts redirect to /add and /refresh-jobs (#423), so a
+  // capture of them would overwrite the old pages' images with another screen's.
   {
     id: "settings",
     route: "/settings",

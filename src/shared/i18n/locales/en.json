@@ -104,7 +104,7 @@
     "home": "Recent activity summary and quick start",
     "discover": "Browse public source datasets by provider",
     "workspace": "Recent work and saved BuildSpecs",
-    "datasets": "Tables built from source datasets",
+    "datasets": "Tables made from source datasets",
     "builds": "Runs that create and refresh tables",
     "quality": "Run and table quality results",
     "reports": "Create and view analysis reports",
@@ -301,8 +301,8 @@
     "errors": {
       "draftSecretRemoved": "Secret-bearing parameter values were removed from the saved draft. Please re-enter the parameters.",
       "specSecretRemoved": "Secret values were removed from the saved spec. Please re-enter the credential.",
-      "specInvalid": "The build spec is invalid.",
-      "unsupportedSourceKind": "This spec's first source is a {{kind}} source, which the wizard cannot edit. Editing it here would drop its file/URL settings, so the wizard does not open it — edit it in Add Data (including its YAML editor) instead.",
+      "specInvalid": "The BuildSpec is invalid.",
+      "unsupportedSourceKind": "This spec's first source is a {{kind}} source, which the wizard cannot edit. Editing it here would drop its file/URL settings, so the wizard does not open it — edit it in Create Table (including its YAML editor) instead.",
       "catalogFail": "Failed to load the Builder catalog.",
       "unknownSource": "This source is not in the current Builder catalog.",
       "previewFail": "Preview failed.",
@@ -364,7 +364,7 @@
       "title": "Output",
       "formatsLabel": "Snapshot file formats (at least 1)",
       "pathLabel": "Output path",
-      "pathWhenEmpty": "Left empty, the build writes under {{path}} inside this run's result folder, as when it was first submitted."
+      "pathWhenEmpty": "Left empty, the run writes under {{path}} inside this run's result folder, as when it was first submitted."
     },
     "review": {
       "title": "Validate & Run",
@@ -404,16 +404,16 @@
     "actions": {
       "missingParent": "The parent field for path \"{{path}}\" does not exist.",
       "specNotFound": "The original BuildSpec for run \"{{runId}}\" is not in this browser. KPubData Builder does not persist specs, so a patch can only be applied to a run you have executed or edited in Studio.",
-      "secretsRedacted": "The stored BuildSpec has its secrets stripped (local storage policy), so it cannot be patched. Re-enter serviceKey/apiKey/token values in the provider settings screen.",
+      "secretsRedacted": "The stored BuildSpec has its secrets stripped (local storage policy), so it cannot be patched. Re-enter serviceKey/apiKey/token values in the Connections screen.",
       "pathNotAllowed": "Path \"{{path}}\" is not allowed. Only title, description, metadata, sources[].params, sources[].alias and exports[].options can be patched.",
-      "credentialPath": "Path \"{{path}}\" looks like a credential field and cannot be patched. Change serviceKey/apiKey/token values in the provider settings screen.",
+      "credentialPath": "Path \"{{path}}\" looks like a credential field and cannot be patched. Change serviceKey/apiKey/token values in the Connections screen.",
       "redactionMarker": "The patch result still contains a redaction marker and cannot be applied. Re-enter that credential with its real value.",
       "patchFailed": "The patch could not be applied.",
       "unresolvedPlaceholder": "It still contains an unresolved secret placeholder.",
       "paramsCredential": "Generated sourceParams must not contain credential values.",
       "paramsNotObject": "Generated sourceParams must be a JSON object.",
       "describe": {
-        "openProvider": "Open the \"{{provider}}\" provider screen",
+        "openProvider": "Open Connections for \"{{provider}}\"",
         "openBuild": "Open run \"{{runId}}\" details",
         "openQuality": "View \"{{datasetId}}\" in Quality Center",
         "patchSpec": "Propose {{count}} change(s) to the BuildSpec of run \"{{runId}}\"",
@@ -454,9 +454,9 @@
       "hintSqlReady": "Ask questions and generate SQL on the {{stage}} schema",
       "page": {
         "home": "Home",
-        "discover": "Discover",
+        "discover": "Catalog",
         "workspace": "Workspace",
-        "add-data": "Add Data",
+        "add-data": "Create Table",
         "dataset-detail": "Table details",
         "dataset-catalog": "Table Catalog",
         "build-new": "Create table",
@@ -472,7 +472,7 @@
         "quality": "Quality",
         "assistant": "Ask KPubData",
         "reports": "Reports",
-        "provider": "Provider",
+        "provider": "Connections",
         "monitoring": "Monitoring",
         "settings": "Settings",
         "sql": "SQL Workspace",
@@ -489,7 +489,7 @@
       "openQualityUnknownRun": "OPEN_QUALITY: run \"{{runId}}\" is not in the evidence",
       "openQualityMismatch": "OPEN_QUALITY: Builder evidence does not confirm that run \"{{runId}}\" belongs to table \"{{datasetId}}\"",
       "patchUnknownRun": "PATCH_BUILDSPEC: run \"{{runId}}\" is not in the evidence",
-      "patchSpecMissing": "PATCH_BUILDSPEC: the original BuildSpec for run \"{{runId}}\" is not in this browser, so a safe diff cannot be built",
+      "patchSpecMissing": "PATCH_BUILDSPEC: the original BuildSpec for run \"{{runId}}\" is not in this browser, so a safe diff cannot be made",
       "draftUnknownProvider": "CREATE_BUILD_DRAFT: provider \"{{provider}}\" is not in the catalog",
       "draftUnknownDataset": "CREATE_BUILD_DRAFT: source dataset \"{{dataset}}\" is not in the \"{{provider}}\" catalog",
       "stageNone": "none",
@@ -644,7 +644,7 @@
       "q26": "What quality issue should I fix first?",
       "q27": "How does this quality issue affect the next stage?",
       "q28": "Which recommended source dataset should I look at first?",
-      "q29": "How do I import this data via Add Data.",
+      "q29": "How do I import this data with Create Table.",
       "q30": "What data is suitable for regional comparison?",
       "q31": "분석을 시작하려면 다음 단계가 뭐야?",
       "q32": "What analyses can I do with this table?",
@@ -720,7 +720,7 @@
     "empty": {
       "title": "No tables",
       "desc": "Create a table first to see quality results.",
-      "action": "Go to Add Data"
+      "action": "Go to Create Table"
     },
     "wrongDataset": {
       "desc": "Table `{{id}}` in the URL is not in the accessible table list.",
@@ -827,7 +827,7 @@
       },
       "scopeNote": "This is a provider-level connection check. Whether the source dataset you picked actually works is confirmed in the preview step.",
       "readiness": {
-        "previewNote": "Whether the source dataset API actually works is confirmed in the Add Data preview.",
+        "previewNote": "Whether the source dataset API actually works is confirmed in the Create Table preview.",
         "noAuthLabel": "No credentials needed",
         "noAuthDetail": "This provider can be used without credentials.",
         "userKeyLabel": "API key registered",
@@ -841,7 +841,7 @@
         "connected": "Connected",
         "notConfigured": "Not configured",
         "notConfiguredTitle": "Credentials required",
-        "notConfiguredDetail": "This provider requires credentials. Connect it in provider settings.",
+        "notConfiguredDetail": "This provider requires credentials. Connect it on the Connections screen.",
         "notTestable": "Not testable",
         "notTestableTitle": "No Source Dataset to test this provider with",
         "notTestableDetail": "No Source Dataset could be called without guessing a required parameter, so the key was not tested. This does not mean the key is wrong — check it with a Source Dataset preview.",
@@ -872,7 +872,7 @@
       "headerTitle": "Provider connections"
     },
     "detail": {
-      "scopeNote": "Whether the API key is actually valid for the selected source dataset and whether required parameters are correct is verified in the Add Data Preview step. This screen only manages provider credential registration status.",
+      "scopeNote": "Whether the API key is actually valid for the selected source dataset and whether required parameters are correct is verified in the Create Table preview step. This screen only manages provider credential registration status.",
       "credTitle": "Credential Status",
       "delete": "Delete",
       "register": "Register",
@@ -882,7 +882,7 @@
       "noStoreTitle": "Credential store not configured",
       "noStoreBody": "KPubData Builder does not have an encrypted credential store (master key) configured, so user credentials cannot be registered or viewed. This is different from \"not yet registered\". Ask the operator to set KPUBDATA_BUILDER_CREDENTIAL_MASTER_KEY in KPubData Builder and try again.",
       "perRequestTitle": "This Builder does not store provider keys",
-      "perRequestBody": "In this multi-user deployment a key you enter is kept only in this browser tab's memory — never saved on the server or in the browser — and sent with each preview, build and connection test that needs it. It is forgotten when you reload the page or sign out.",
+      "perRequestBody": "In this multi-user deployment a key you enter is kept only in this browser tab's memory — never saved on the server or in the browser — and sent with each preview, run and connection test that needs it. It is forgotten when you reload the page or sign out.",
       "useForSession": "Use for this session",
       "enterSessionKey": "Enter a key for this session",
       "sessionKeyHeld": "A key for this provider is held for this session (not shown).",
@@ -938,7 +938,7 @@
       "configured": "Configured",
       "lastTest": "Last test",
       "lastTestMissing": "Last test: not recorded by KPubData Builder",
-      "lastTestNote": "Last test is the result KPubData Builder recorded for this account. A test checks the key with a source dataset that can be called without guessing a required parameter; when there is none it reads ‘Not testable’ — not a key error. Whether the source dataset you pick actually works is confirmed in Add Data's preview.",
+      "lastTestNote": "Last test is the result KPubData Builder recorded for this account. A test checks the key with a source dataset that can be called without guessing a required parameter; when there is none it reads ‘Not testable’ — not a key error. Whether the source dataset you pick actually works is confirmed in Create Table's preview.",
       "action": "Action",
       "manage": "Manage credentials",
       "neverTested": "Never tested",
@@ -1008,8 +1008,8 @@
       "refused": "This request was not sent on. Calling {{providers}} needs a key, and the request carried none for it.",
       "lost": "This run ended because its key was gone. The server restarted, or the job waited longer than its keys are kept. Keys are not stored on the server, so it has to be entered again.",
       "lostNext": "Once the key is in, running again submits a new run recorded as a retry of this one. This run stays as it ended.",
-      "lostNoSpec": "This run never started, so the server kept no spec of it, and this browser holds none either — it was submitted from another browser, or the stored copy was cleared. Make the build again from Add Data.",
-      "addAgain": "Make it again in Add Data",
+      "lostNoSpec": "This run never started, so the server kept no spec of it, and this browser holds none either — it was submitted from another browser, or the stored copy was cleared. Make the table again in Create Table.",
+      "addAgain": "Make it again in Create Table",
       "sharedKey": "{{provider}} is called with {{keyProvider}}'s key.",
       "keyLabel": "{{provider}} key",
       "use": "Use this key",
@@ -1034,7 +1034,7 @@
     "addData": {
       "title": "Bring Your Own Data",
       "desc": "Add via Public API, file, or URL — preview, validate, and create a table.",
-      "cta": "Add Data"
+      "cta": "Create Table"
     },
     "dashboard": {
       "title": "Home",
@@ -1108,7 +1108,7 @@
       "ofSample": "of the sample",
       "perSourceTitle": "Preview/validation per source",
       "specTitle": "The canonical BuildSpec that will be submitted",
-      "specUnavailable": "The spec cannot be built yet.",
+      "specUnavailable": "The spec cannot be made yet.",
       "specNote": "After table creation starts, the same settings and validation results carry into the run detail. Secret query parameters on a URL source and secret parameter values on a Public API source are masked in this display only — the submitted values are unchanged.",
       "startBuild": "Create Table",
       "cancel": "Cancel",
@@ -1120,7 +1120,7 @@
       "logicalNameNote": "Table ID and the source key from KPubData Builder’s Preview.",
       "existingChecking": "Checking whether a table with this ID already exists.",
       "existingUnknown": "Could not check whether a table with this ID already exists. So that an existing table is not replaced unknowingly, the table is not created until this is known.",
-      "existingChanged": "Checked again just before building: a table appeared elsewhere in the meantime. Look at the choice below again before building — nothing has been built yet.",
+      "existingChanged": "Checked again just before creating the table: a table appeared elsewhere in the meantime. Look at the choice below again before creating it — nothing has been created yet.",
       "existingRecheck": "Check again",
       "existingTitle": "A table with this ID already exists",
       "existingBody": "A table was already created under the table ID {{id}}. Creating it again under the same ID replaces that table’s contents with the data fetched this time. If you are adding it again with different conditions, the rows shown now leave that table’s current contents.",
@@ -1208,7 +1208,7 @@
       "formatFirst": "Choose a format first.",
       "uploading": "Uploading…",
       "uploadDone": "Uploaded: {{name}} ({{bytes}} bytes)",
-      "uploadExpires": "This file is kept until {{at}}. After that it is deleted, and building this spec again needs the file uploaded again.",
+      "uploadExpires": "This file is kept until {{at}}. After that it is deleted, and running this spec again needs the file uploaded again.",
       "uploadExpired": "This file passed its retention date on {{at}} and was deleted. Upload it again.",
       "uploadGone": "Builder no longer has this file — it was deleted or passed its retention date. Upload it again.",
       "urlTitle": "URL / REST API",
@@ -1241,12 +1241,12 @@
       "upload": "File upload failed.",
       "yamlSyntax": "YAML syntax error: {{message}}",
       "yamlApply": "Could not apply the YAML.",
-      "spec": "Build spec error",
+      "spec": "BuildSpec error",
       "preview": "The preview request failed.",
       "validate": "The validation request failed."
     },
     "page": {
-      "title": "Add data",
+      "title": "Create Table",
       "desc": "Set up what to import, check and validate the real data in preview, then create the table."
     },
     "draft": {
@@ -1280,9 +1280,9 @@
       "endpointRequired": "Enter an endpoint.",
       "urlRedacted": "A URL containing a secret was stripped from the saved draft. Enter the endpoint again.",
       "urlUserInfo": "The URL must not contain user info (for example user:pass@host). Do not put credentials in the endpoint.",
-      "specBuildFailed": "The build spec could not be generated.",
+      "specBuildFailed": "The BuildSpec could not be generated.",
       "unresolvedPlaceholder": "The saved draft has a secret placeholder that cannot be restored. Enter the original credential again.",
-      "specInvalid": "The build spec is not valid.",
+      "specInvalid": "The BuildSpec is not valid.",
       "httpsOnly": "Only URLs starting with https:// are supported."
     },
     "identity": {
@@ -1311,7 +1311,7 @@
     },
     "credential": {
       "title": "An API connection is required",
-      "body": "This source dataset uses a provider that needs an API key.\nRegister the credential under Provider / API connections first, then continue.",
+      "body": "This source dataset uses a provider that needs an API key.\nRegister the credential in Connections first, then continue.",
       "cta": "Connect the API"
     },
     "requiredParams": "Enter the required request parameter(s): {{params}}.",
@@ -1335,7 +1335,7 @@
       "deleting": "Deleting…",
       "deleteNamed": "Delete {{name}}",
       "deleteFailed": "Could not delete it. Try again in a moment.",
-      "confirm": "Delete \"{{name}}\" from KPubData Builder? A saved BuildSpec that uses this file can no longer be built. Continue?",
+      "confirm": "Delete \"{{name}}\" from KPubData Builder? A saved BuildSpec that uses this file can no longer be run. Continue?",
       "confirmCurrent": "\"{{name}}\" is the file this draft uses. If you delete it, the draft needs the file uploaded again. Continue?"
     }
   },
@@ -1547,8 +1547,8 @@
     },
     "providers": {
       "title": "Data provider credentials",
-      "manage": "Manage in provider settings",
-      "mockNote": "In mock mode the provider page demonstrates the flow. Real credentials are held safely on the server by KPubData Builder in real-integration mode.",
+      "manage": "Manage in Connections",
+      "mockNote": "In mock mode the Connections screen demonstrates the flow. Real credentials are held safely on the server by KPubData Builder in real-integration mode.",
       "loading": "Checking provider configuration…",
       "summary": "{{configured}} of {{total}} providers that need credentials are configured.",
       "listLabel": "provider configuration status",
@@ -2022,7 +2022,7 @@
       "piiUnavailableNext": "Try again later, or download a Gold file, which is not affected.",
       "redistribution": "The source terms forbid redistribution, so this file cannot leave Builder.",
       "redistributionSources": "The source terms forbid redistribution, so this file cannot leave Builder (sources that forbid it: {{sources}}).",
-      "redistributionNext": "Every file of this run, Gold included, is held back the same way. To redistribute, build from sources whose terms allow it."
+      "redistributionNext": "Every file of this run, Gold included, is held back the same way. To redistribute, create the table from sources whose terms allow it."
     }
   },
   "glossary": {
@@ -2059,7 +2059,7 @@
   },
   "discover": {
     "page": {
-      "title": "Discover data",
+      "title": "Explore data",
       "desc": "Search providers and source datasets in the Builder catalog, then create a table straight from what you pick."
     },
     "errors": {
@@ -2160,8 +2160,8 @@
     "noWarehouse": "This deployment has no warehouse, so snapshots and row counts are not shown. Refresh times come from the latest run.",
     "empty": {
       "title": "No tables yet",
-      "desc": "Nothing has been built yet. Add data turns a source into your first table.",
-      "action": "Add data"
+      "desc": "Nothing has been created yet. Create Table turns a source into your first table.",
+      "action": "Create Table"
     }
   },
   "monitoring": {
@@ -2264,11 +2264,11 @@
       },
       "artifact_missing": {
         "message": "A Gold file the run's manifest lists is missing on KPubData Builder.",
-        "action": "Check the run's snapshot files, then run the table again to rebuild them."
+        "action": "Check the run's snapshot files, then run the table again to make them again."
       },
       "artifact_invalid": {
         "message": "A Gold file the run's manifest lists could not be resolved safely, so KPubData Builder refuses to publish it.",
-        "action": "Check the run's snapshot files, then run the table again to rebuild them."
+        "action": "Check the run's snapshot files, then run the table again to make them again."
       },
       "license_missing": {
         "message": "The table's spec declares no licence, and a table cannot be published without one.",
@@ -2335,7 +2335,7 @@
         "action": "Check that the destination exists and your token can read it, or choose a new destination, then try again."
       },
       "card_missing": {
-        "message": "The run's Gold output has no data card (`card.json`): it was built before KPubData Builder wrote cards.",
+        "message": "The run's Gold output has no data card (`card.json`): it was made before KPubData Builder wrote cards.",
         "action": "Run the table again; the new run's Gold output carries its card. Then publish that run."
       },
       "card_incomplete": {
@@ -2386,7 +2386,7 @@
       "listError": "Could not load the data card. KPubData Builder still checks it in publish readiness.",
       "none": {
         "title": "This run has no data card",
-        "desc": "It was built before KPubData Builder wrote cards. Run the table again; the new run's Gold output carries its card."
+        "desc": "It was made before KPubData Builder wrote cards. Run the table again; the new run's Gold output carries its card."
       },
       "outputTitle": "Gold output {{key}}",
       "outputError": "Could not read this card.",
@@ -2456,7 +2456,7 @@
     "features": {
       "AddData": "Create Table",
       "DatasetCatalog": "Table Catalog",
-      "Discover": "Discover",
+      "Discover": "Catalog",
       "Assistant": "Ask KPubData",
       "Monitoring": "Monitoring",
       "Provider": "Connections",
@@ -2506,11 +2506,11 @@
       },
       "sidebar": {
         "title": "Tour your workspace",
-        "copy": "The left menu takes you to data discovery, runs and quality, Ask KPubData, and provider settings."
+        "copy": "The left menu takes you to data discovery, runs and quality, Ask KPubData, and Connections."
       },
       "start-actions": {
         "title": "Start here",
-        "copy": "Use Discover to find data in the catalog, or Add Data to bring in an API, file or URL yourself."
+        "copy": "Use Catalog to find data, or Create Table to bring in an API, file or URL yourself."
       },
       "workflow": {
         "title": "How data gets made",
@@ -2664,9 +2664,9 @@
       "ownerLimitOne": "You already have 1 run queued or running. Try again when it has finished.",
       "ownerLimitUnstated": "You have reached the number of runs one user may have at a time. Try again when one of your queued or running runs has finished.",
       "queueFull": "The server's run queue is full. Try again shortly.",
-      "tableExists": "The \"{{table}}\" table already exists (it was there, or another build made it first), so it was not overwritten. Build under another name, or refresh that table.",
-      "emptyResult": "This build found no rows for the \"{{table}}\" table, so its data was kept as it was.",
-      "commitConflict": "Another build refreshed the \"{{table}}\" table while this one ran; the newer one was kept.",
+      "tableExists": "The \"{{table}}\" table already exists (it was there, or another run made it first), so it was not overwritten. Create it under another name, or refresh that table.",
+      "emptyResult": "This run found no rows for the \"{{table}}\" table, so its data was kept as it was.",
+      "commitConflict": "Another run refreshed the \"{{table}}\" table while this one ran; the newer one was kept.",
       "commitFailed": "The result could not be committed to the \"{{table}}\" table."
     },
     "mock": {
@@ -2869,7 +2869,7 @@
       "reject": "Reject",
       "approveLabel": "Approve {{name}}",
       "rejectLabel": "Reject {{name}}",
-      "confirmApprove": "Approve {{name}}? They can build and query from their next request.",
+      "confirmApprove": "Approve {{name}}? They can create tables and query from their next request.",
       "confirmReject": "Reject {{name}}? KPubData Builder refuses their requests from then on, even if an allowlist admits them.",
       "decisionForbidden": "KPubData Builder refused this decision (403). Only an administrator can approve or reject a sign-up.",
       "decisionNotFound": "KPubData Builder has no user {{name}} (404). The list may be out of date.",
@@ -3016,7 +3016,7 @@
   },
   "export": {
     "title": "Export the result",
-    "note": "KPubData Builder writes the file — it pins the snapshot, checks the source's terms and PII policy, and refuses a result over the row or size limit instead of cutting it. Studio never builds a result file itself.",
+    "note": "KPubData Builder writes the file — it pins the snapshot, checks the source's terms and PII policy, and refuses a result over the row or size limit instead of cutting it. Studio never makes a result file itself.",
     "format": "Format",
     "profile": "For",
     "machine": "Machines (values as sent, no BOM)",
@@ -3325,7 +3325,7 @@
     "notice": {
       "saved": "Saved as revision {{revision}}.",
       "reverted": "Reverted to the content of revision {{from}} as revision {{revision}}, and loaded it into the form.",
-      "loaded": "Loaded revision {{revision}} into the form. The next save builds on it.",
+      "loaded": "Loaded revision {{revision}} into the form. The next save starts from it.",
       "unreadable": "Could not read the spec in revision {{revision}}, so the form was not changed.",
       "conflictBadge": "Save conflict",
       "conflict": "Someone else saved first; the latest revision is now {{revision}}. Nothing was saved, so their change is not overwritten. Use 'Load latest revision', then make your change again and save.",

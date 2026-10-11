@@ -1,6 +1,6 @@
 /**
  * DiscoverPage (#249) — 정확 검색, provider 카드/필터(런타임 계산), requires_service_key
- * 배지/필터, Add Data Workbench로의 provider/dataset 전달, 빈/에러 상태를 확인한다.
+ * 배지/필터, Create Table Workbench로의 provider/dataset 전달, 빈/에러 상태를 확인한다.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";

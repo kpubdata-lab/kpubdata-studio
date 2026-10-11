@@ -72,6 +72,13 @@ jobs:
       - name: Korean screen terms (#843)
         run: node scripts/ko-mixed-terms.mjs --github
 
+      # A name of the old build-console screens — Discover, Add Data, Datasets, Builds,
+      # Provider — back in a user string (#423). The names were retired, not kept beside
+      # the new ones, so this fails: the baseline is zero, and each exception is one key
+      # with its reason in the script.
+      - name: Retired screen names (#423)
+        run: node scripts/legacy-terms.mjs --github
+
       # ADR 0003 (kpubdata) puts comments in English. The debt is at ZERO
       # (#427): any Korean comment now fails the build outright.
       - name: Korean comment gate (#427)

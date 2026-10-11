@@ -1,5 +1,5 @@
 /**
- * Discover (#249) model-helper tests.
+ * Catalog (#249) model-helper tests.
  */
 import { describe, expect, it } from "vitest";
 import type { CatalogResponse } from "@/shared/lib/builderApi";

@@ -1,5 +1,5 @@
 /**
- * Add Data Workbench 통합 테스트 (#250).
+ * Create Table Workbench 통합 테스트 (#250).
  *
  * Source → Configure → Preview & Validate → Review & Build 전체 흐름을 mock 모드
  * (네트워크 없이 각 feature module의 결정적 mock 분기)로, 그리고 amendment
@@ -75,7 +75,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Add Data Workbench — 소스 선택 (#250)", () => {
+describe("Create Table Workbench — 소스 선택 (#250)", () => {
   it("Source를 선택하지 않으면 다음 단계로 넘어가지 않는다", () => {
     renderWizard();
     expect(screen.getByRole("heading", { name: "데이터 선택" })).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe("Add Data Workbench — 소스 선택 (#250)", () => {
   });
 });
 
-describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendment 2)", () => {
+describe("Create Table Workbench — Public API happy path (mock 모드, #250 amendment 2)", () => {
   it("테이블 ID/제목/설명을 직접 입력하지 않아도 Provider→소스 데이터셋 선택만으로 Build까지 진행된다", async () => {
     renderWizard();
 
@@ -160,7 +160,7 @@ describe("Add Data Workbench — Public API happy path (mock 모드, #250 amendm
   });
 });
 
-describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1)", () => {
+describe("Create Table Workbench — touched metadata 정책 (#250 최종 검증 §1)", () => {
   it("metadata 수동 수정 후 query params만 바꾸면 수정값이 유지된다(같은 dataset의 세부 설정 변경)", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
@@ -274,7 +274,7 @@ describe("Add Data Workbench — touched metadata 정책 (#250 최종 검증 §1
   });
 });
 
-describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기화", () => {
+describe("Create Table Workbench — Dataset 변경 시 요청 파라미터 초기화", () => {
   const paramsField = () => screen.getByLabelText(/요청 파라미터/) as HTMLTextAreaElement;
 
   async function gotoConfigurePublicApi(renderFn: typeof renderWizard = renderWizard) {
@@ -406,7 +406,7 @@ describe("Add Data Workbench — Dataset 변경 시 요청 파라미터 초기�
   });
 });
 
-describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리뷰 §6)", () => {
+describe("Create Table Workbench — YAML Apply explicit metadata (#283 후속 리뷰 §6)", () => {
   it("YAML Apply로 넣은 custom dataset_id/title/description이 identity effect에 덮이지 않고, 그 뒤 실제 GUI dataset 선택에서는 touched가 reset된다", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
@@ -456,7 +456,7 @@ describe("Add Data Workbench — YAML Apply explicit metadata (#283 후속 리�
   });
 });
 
-describe("Add Data Workbench — stale preview (#250 §2/§6)", () => {
+describe("Create Table Workbench — stale preview (#250 §2/§6)", () => {
   it("Preview 이후 source 설정이 바뀌면 Review에서 Build가 막힌다", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
@@ -486,7 +486,7 @@ describe("Add Data Workbench — stale preview (#250 §2/§6)", () => {
   });
 });
 
-describe("Add Data Workbench — File source (#250, #498, amendment 2)", () => {
+describe("Create Table Workbench — File source (#250, #498, amendment 2)", () => {
   it("파일 업로드 성공만으로 dataset identity가 자동 생성되고 별도 입력 없이 Build까지 진행된다", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /파일 업로드/ }));
@@ -560,7 +560,7 @@ describe("Add Data Workbench — File source (#250, #498, amendment 2)", () => {
   });
 });
 
-describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)", () => {
+describe("Create Table Workbench — URL source (#250, #498, Auth=None, amendment 2)", () => {
   it("https endpoint 입력만으로 dataset identity가 자동 생성되고 query string은 identity에 포함되지 않는다", async () => {
     renderWizard();
     fireEvent.click(screen.getByRole("button", { name: /URL \/ REST API/ }));
@@ -614,7 +614,7 @@ describe("Add Data Workbench — URL source (#250, #498, Auth=None, amendment 2)
   });
 });
 
-describe("Add Data Workbench — mixed/partial preview (#250 §3)", () => {
+describe("Create Table Workbench — mixed/partial preview (#250 §3)", () => {
   it("previews.length > 1일 때 첫 source만 표시하고 나머지를 버리지 않으며, mixed 상태를 명확히 표시한다", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     mswServer.use(
@@ -713,7 +713,7 @@ describe("Add Data Workbench — mixed/partial preview (#250 §3)", () => {
   });
 });
 
-describe("Add Data Workbench — Review == submission, 실제 run_id 사용 (real 모드, amendment 1·3)", () => {
+describe("Create Table Workbench — Review == submission, 실제 run_id 사용 (real 모드, amendment 1·3)", () => {
   it("Review에 표시된 BuildSpec과 실제 Builder에 제출되는 spec이 동일하고, 성공 시 서버가 반환한 run_id로 이동한다(client가 만든 후보 id가 아님)", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
 
@@ -771,7 +771,7 @@ describe("Add Data Workbench — Review == submission, 실제 run_id 사용 (rea
   });
 });
 
-describe("Add Data — focus follows the step (#669)", () => {
+describe("Create Table — focus follows the step (#669)", () => {
   it("moves focus to the new step's heading on Next, Back and the Stepper, but not on first load", async () => {
     renderWizardStrict();
     const sourceHeading = screen.getByRole("heading", { name: "데이터 선택" });

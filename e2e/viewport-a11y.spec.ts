@@ -130,13 +130,13 @@ test("390x844에서 계정 메뉴의 언어·테마가 동작하고 가로 스�
   await expectNoPageErrors(errors);
 });
 
-test("390x844에서 Add Data sticky bottom actions가 마지막 content를 덮지 않는다 (UI audit #6-B)", async ({ page }) => {
+test("390x844에서 Create Table sticky bottom actions가 마지막 content를 덮지 않는다 (UI audit #6-B)", async ({ page }) => {
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/add");
-  await expect(page.getByRole("heading", { name: "데이터 추가" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: "테이블 만들기" })).toBeVisible({ timeout: 10_000 });
 
   await page.getByText("공공 API").click();
   await page.getByRole("button", { name: "다음" }).click();
