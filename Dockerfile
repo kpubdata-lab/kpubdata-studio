@@ -25,7 +25,7 @@ COPY . .
 # deployment's origins (40-kpubdata-config.sh), and a meta copy would narrow it (#663).
 RUN KPUBDATA_CSP_META=off npx vite build --base /
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/security-headers.conf /etc/nginx/kpubdata-security-headers.conf
 COPY --chmod=755 docker/40-kpubdata-config.sh /docker-entrypoint.d/40-kpubdata-config.sh
