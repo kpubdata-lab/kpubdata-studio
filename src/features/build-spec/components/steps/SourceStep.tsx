@@ -14,6 +14,7 @@ export interface SourceStepProps {
   providerOptions: { value: string; label: string }[];
   datasetOptions: CatalogDataset[];
   selectedProvider: string;
+  selectedDataset: string;
 }
 
 export function SourceStep({
@@ -23,14 +24,21 @@ export function SourceStep({
   providerOptions,
   datasetOptions,
   selectedProvider,
+  selectedDataset,
 }: SourceStepProps) {
   const { t } = useTranslation();
+  // The selects are controlled: their options arrive with the catalog, after they mount,
+  // and an uncontrolled select would keep showing an empty value instead of the form's.
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-semibold tracking-tight">{t("newBuild.source.title")}</h3>
       <FormField id="provider" label={t("newBuild.source.providerLabel")} required error={errors.provider?.message}>
         {(field) => (
-          <Select {...field} {...register("provider", { required: i18n.t("newBuild.errors.providerRequired") })}>
+          <Select
+            {...field}
+            {...register("provider", { required: i18n.t("newBuild.errors.providerRequired") })}
+            value={selectedProvider}
+          >
             <option value="">{t("newBuild.source.providerSelect")}</option>
             {providerOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -52,6 +60,7 @@ export function SourceStep({
             {...field}
             disabled={!selectedProvider || datasetOptions.length === 0}
             {...register("sourceDataset", { required: i18n.t("newBuild.errors.datasetRequired") })}
+            value={selectedDataset}
           >
             <option value="">{t("newBuild.source.datasetSelect")}</option>
             {datasetOptions.map((dataset) => (

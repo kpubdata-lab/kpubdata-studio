@@ -327,6 +327,7 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
                   providerOptions={providerOptions}
                   datasetOptions={datasetOptions}
                   selectedProvider={selectedProvider}
+                  selectedDataset={values.sourceDataset}
                 />
               ) : null}
 
