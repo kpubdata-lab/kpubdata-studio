@@ -609,6 +609,8 @@ type ErrorReader = {
   reader: string;
   /** The contract version that introduced the example; before it the entry is not stale. */
   since?: string;
+  /** Studio says the message itself, in the user's language, so it is not Builder's `error`; `check` reads it. */
+  localizedMessage?: true;
   /** What Studio misreads in this body; empty when it reads it as the contract means. */
   check: (status: number, body: unknown) => string[];
 };
@@ -700,6 +702,7 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   "queryBuiltDataset 429 QueryRateLimited": {
     reader: "formatApiErrorMessage (shared/lib/builderApi, #949)",
     since: "1.119.0",
+    localizedMessage: true,
     check: (status, body) => [
       ...queryCode(status, body, "query_rate_limited"),
       ...differs("message says the wait", /12/.test(httpError(status, body).message), true),
@@ -831,7 +834,7 @@ function errorFixtureProblems(fixture: ErrorFixture): string[] {
   const problems: string[] = [];
   for (const [form, body] of [["current", fixture.current], ["with_additive_fields", fixture.with_additive_fields]] as const) {
     const error = (body as { error?: unknown } | null)?.error;
-    if (typeof error === "string") problems.push(...differs(`${form}: message`, httpError(fixture.status, body).message, error));
+    if (typeof error === "string" && !("localizedMessage" in entry)) problems.push(...differs(`${form}: message`, httpError(fixture.status, body).message, error));
     if ("notHandled" in entry) {
       const code = (body as { code?: unknown } | null)?.code;
       // Before the version that gave the example its code, it carries none.
