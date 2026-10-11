@@ -55,7 +55,8 @@ export default defineConfig({
   ],
   // @real-builder specs (they need a running Builder) are left out of the default suite.
   // @multi-user specs need a Builder with OIDC and an identity provider as well (#773).
-  grep: /^(?!.*@(real-builder|multi-user)).*$/,
+  // @keycloak specs need Docker for Keycloak and a mail catcher (#903).
+  grep: /^(?!.*@(real-builder|multi-user|keycloak)).*$/,
   projects: [
     {
       name: "desktop-chromium",

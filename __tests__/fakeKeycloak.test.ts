@@ -259,7 +259,7 @@ describe("the real-e2e runner", () => {
   });
 
   it("keeps the multi-user specs out of the suites that have no such Builder", () => {
-    expect(readFileSync(join(ROOT, "playwright.config.ts"), "utf8")).toContain("@(real-builder|multi-user)");
+    expect(readFileSync(join(ROOT, "playwright.config.ts"), "utf8")).toContain("@(real-builder|multi-user|keycloak)");
     expect(readFileSync(join(ROOT, "playwright.real.config.ts"), "utf8")).toContain("grep: /@real-builder/");
     const multiUserConfig = readFileSync(join(ROOT, "playwright.multiuser.config.ts"), "utf8");
     expect(multiUserConfig).toContain("grep: /@multi-user/");
@@ -267,5 +267,10 @@ describe("the real-e2e runner", () => {
     // evidence of a failure is in `test-results/`.
     expect(multiUserConfig).toContain('outputDir: "test-results/multi-user"');
     expect(multiUserConfig).toContain('trace: "off"');
+    // The real-Keycloak suite (#903) likewise: its own specs, directory and no trace.
+    const keycloakConfig = readFileSync(join(ROOT, "playwright.keycloak.config.ts"), "utf8");
+    expect(keycloakConfig).toContain("grep: /@keycloak/");
+    expect(keycloakConfig).toContain('outputDir: "test-results/keycloak"');
+    expect(keycloakConfig).toContain('trace: "off"');
   });
 });

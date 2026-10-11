@@ -43,6 +43,10 @@ on:
       - "scripts/fake-keycloak.mjs"
       - "playwright.multiuser.config.ts"
       - "scripts/check-e2e-evidence.mjs"
+      # The Keycloak job's runner, realm script and config (#903).
+      - "scripts/run-keycloak-e2e.mjs"
+      - "scripts/keycloak-realm.mjs"
+      - "playwright.keycloak.config.ts"
       - ".github/workflows/real-e2e.yml"
       # Recordings the specs hold Builder's real answers to (#885): a pull request that
       # changes only a recording must run the suite that compares it with Builder.
@@ -134,3 +138,74 @@ jobs:
         env:
           E2E_CANARY_SECRETS: ${{ env.CANARY_KEY }}
         run: node scripts/check-e2e-evidence.mjs real-e2e.log
+
+  # Sign-up, e-mail verification, the administrator's approval and a Builder restart
+  # under a signed-in session, against a real Keycloak (#903). A job of its own, beside
+  # the one above: it pulls two images and starts Keycloak, and needs no replay.
+  # `scripts/run-keycloak-e2e.mjs` starts Keycloak and Mailpit by pinned digests, makes
+  # the realm through the admin API, and starts a Builder with OIDC pointed at it.
+  keycloak-e2e:
+    name: Real-Keycloak E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      UV_NO_SOURCES: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Checkout Builder
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: kpubdata-lab/kpubdata-builder
+          ref: ${{ inputs.builder_ref || 'main' }}
+          path: .builder
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # The test realm's passwords are built around it, so the evidence check finds them.
+      - name: Canary provider key
+        run: echo "CANARY_KEY=e2e-canary-${{ github.run_id }}-${{ github.run_attempt }}-key" >> "${GITHUB_ENV}"
+
+      - name: Run the Keycloak suite
+        run: |
+          set -o pipefail
+          node scripts/run-keycloak-e2e.mjs --builder-root .builder 2>&1 | tee keycloak-e2e.log
+
+      - name: Check the evidence for credentials
+        id: evidence
+        if: failure()
+        env:
+          E2E_CANARY_SECRETS: ${{ env.CANARY_KEY }}
+        run: node scripts/check-e2e-evidence.mjs keycloak-e2e.log test-results
+
+      - name: Upload the evidence
+        if: failure() && steps.evidence.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: keycloak-e2e-evidence
+          path: |
+            keycloak-e2e.log
+            test-results/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Check the log of a passing run for credentials
+        if: success()
+        env:
+          E2E_CANARY_SECRETS: ${{ env.CANARY_KEY }}
+        run: node scripts/check-e2e-evidence.mjs keycloak-e2e.log
