@@ -14,9 +14,9 @@
  */
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { PageHeader, Button, Skeleton } from "@/shared/ui";
-import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { ApiError } from "@/shared/lib/builderApi";
 import type { MonitoringData, MonitoringLoadingState } from "@/features/monitoring/model";
-import { getMockMonitoringData } from "@/features/monitoring/api/mockData";
+import { monitoringClient } from "@/features/monitoring/api/client";
 import {
   BuilderHealthPanel,
   RecentRefreshesTable,
@@ -43,19 +43,10 @@ export function MonitoringPage() {
 
     setLoading("loading");
 
-    if (!isRealBuilderEnabled()) {
-      setData(getMockMonitoringData());
-      setLoading("success");
-      setLastRefreshTime(new Date());
-      return;
-    }
-
     try {
-      const [summary, builds] = await Promise.all([
-        builderApi.getMonitoringSummary(),
-        builderApi.getMonitoringBuilds(),
-      ]);
-      setData({ summary, builds });
+      const next = await monitoringClient().load();
+      const { summary } = next;
+      setData(next);
       setLoading("success");
       setLastRefreshTime(new Date());
 

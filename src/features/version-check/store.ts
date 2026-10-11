@@ -6,7 +6,7 @@
  */
 import { create } from "zustand";
 
-import { builderApi } from "@/shared/lib/builderApi";
+import { builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { PublishCredentialSource } from "@/shared/lib/builderApi.schema";
 
 import { compareAppVersion, type AppVersionComparison } from "./compareAppVersion";
@@ -46,8 +46,12 @@ let inFlight: Promise<void> | null = null;
  * failing call is made, and a mismatch banner on top of them would be a guess. It also
  * does not stick — the next call asks again (#480), so an Builder that was down when
  * the page loaded is compared once it answers. A success is kept for the page load.
+ *
+ * The demo has no Builder and so no version: it resolves at once and records nothing.
+ * This is the one place that is decided (#902) — callers ask in either mode.
  */
 export function ensureVersionChecked(): Promise<void> {
+  if (!isRealBuilderEnabled()) return Promise.resolve();
   if (inFlight) return inFlight;
   inFlight = builderApi
     .version()

@@ -16,7 +16,7 @@
  */
 import { useEffect, useState } from "react";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
-import { ApiError, isBuilderApiCompatible, isRealBuilderEnabled, type DatasetRunSummary } from "@/shared/lib/builderApi";
+import { ApiError, isBuilderApiCompatible, type DatasetRunSummary } from "@/shared/lib/builderApi";
 import { getDatasetRun } from "./api";
 
 /** `GET /datasets/{id}/runs/{run_id}` arrived in Builder API 1.31.0 (#418). */
@@ -28,7 +28,6 @@ export const RUN_LOOKUP_API_VERSION = "1.31.0";
  * Builder that can answer is still read correctly.
  */
 async function engineCanLookUpRuns(): Promise<boolean> {
-  if (!isRealBuilderEnabled()) return true;
   await ensureVersionChecked();
   const apiVersion = useVersionCheckStore.getState().apiVersion;
   return apiVersion === null || isBuilderApiCompatible(apiVersion, RUN_LOOKUP_API_VERSION);

@@ -29,9 +29,10 @@ export function VersionMismatchBanner() {
 
   // Asked on every navigation: a success is cached for the page load, and a failure is
   // not, so an Builder that was unreachable at first is checked when it comes back (#480).
+  // The demo has no version to read; `ensureVersionChecked` decides that (#902).
   useEffect(() => {
-    if (realEnabled) void ensureVersionChecked();
-  }, [realEnabled, pathname]);
+    void ensureVersionChecked();
+  }, [pathname]);
 
   if (!realEnabled) return null;
 

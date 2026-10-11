@@ -203,7 +203,7 @@ export function ProviderPage() {
   const selectedKeyHeld = useProviderKeyHeld(selectedProvider?.id);
 
   useEffect(() => {
-    if (isRealBuilderEnabled()) void ensureVersionChecked();
+    void ensureVersionChecked();
   }, []);
 
   const loadProviders = useCallback(async (): Promise<boolean> => {
