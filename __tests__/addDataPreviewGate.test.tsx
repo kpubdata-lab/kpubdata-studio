@@ -1,5 +1,5 @@
 /**
- * Add Data does not build on a failed preview, and comes from the Catalog with the kind
+ * Create Table does not build on a failed preview, and comes from the Catalog with the kind
  * of source already chosen (#842). Driven through the page.
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -114,7 +114,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-describe("Add Data — a preview that failed (#842)", () => {
+describe("Create Table — a preview that failed (#842)", () => {
   it("does not build, says why, and builds once the preview has succeeded", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     let previewIs: "ok" | "failed" = "failed";
@@ -148,7 +148,7 @@ describe("Add Data — a preview that failed (#842)", () => {
   });
 });
 
-describe("Add Data — a preview that failed after the settings changed (#842)", () => {
+describe("Create Table — a preview that failed after the settings changed (#842)", () => {
   /** Back to Configure, another request parameter, and forward to the Preview step. */
   async function changeTheSettings() {
     fireEvent.click(screen.getByRole("button", { name: "이전" }));
@@ -206,7 +206,7 @@ describe("Add Data — a preview that failed after the settings changed (#842)",
   });
 });
 
-describe("Add Data — coming from the Catalog (#842)", () => {
+describe("Create Table — coming from the Catalog (#842)", () => {
   it("has the public API chosen and the dataset filled in", async () => {
     renderAt("/add?provider=datago&dataset=apt_trade");
 

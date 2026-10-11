@@ -201,7 +201,7 @@ describe("applyBuildSpecToDraft", () => {
   });
 });
 
-describe("canonical Add Data preservation", () => {
+describe("canonical Create Table preservation", () => {
   it("preserves trailing sources, source metadata, extras, and nested metadata after YAML apply", () => {
     const draft = {
       ...INITIAL_DRAFT,

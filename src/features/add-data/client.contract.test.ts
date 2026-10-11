@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /**
- * One contract, two clients — Add Data (#794).
+ * One contract, two clients — Create Table (#794).
  *
  * As `features/datasets/api/client.contract.test.ts`: the real client is pointed at a
  * Builder that answers with the demo's own data, sent as JSON and read back through

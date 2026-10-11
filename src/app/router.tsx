@@ -26,9 +26,6 @@ import { Skeleton } from "@/shared/ui";
 const AddDataPage = lazy(() =>
   import("@/pages/AddDataPage").then((m) => ({ default: m.AddDataPage })),
 );
-const ArtifactsPage = lazy(() =>
-  import("@/pages/ArtifactsPage").then((m) => ({ default: m.ArtifactsPage })),
-);
 const BuildArtifactsPage = lazy(() =>
   import("@/pages/BuildArtifactsPage").then((m) => ({ default: m.BuildArtifactsPage })),
 );
@@ -74,9 +71,6 @@ const MonitoringPage = lazy(() =>
 const NewBuildPage = lazy(() =>
   import("@/pages/NewBuildPage").then((m) => ({ default: m.NewBuildPage })),
 );
-const PreviewPage = lazy(() =>
-  import("@/pages/PreviewPage").then((m) => ({ default: m.PreviewPage })),
-);
 const ProviderPage = lazy(() =>
   import("@/pages/ProviderPage").then((m) => ({ default: m.ProviderPage })),
 );
@@ -94,9 +88,6 @@ const SettingsPage = lazy(() =>
 );
 const SignupPage = lazy(() =>
   import("@/pages/SignupPage").then((m) => ({ default: m.SignupPage })),
-);
-const ValidatePage = lazy(() =>
-  import("@/pages/ValidatePage").then((m) => ({ default: m.ValidatePage })),
 );
 const WorkspacePage = lazy(() =>
   import("@/pages/WorkspacePage").then((m) => ({ default: m.WorkspacePage })),
@@ -266,21 +257,14 @@ export const appRoutes: RouteObject[] = [
         path: "monitoring",
         element: withFeatureBoundary("router.features.Monitoring", <MonitoringPage />),
       },
-       // Legacy standalone route: removed from nav but kept for deep link compatibility (#247 decision:
-       // Don't redirect to new IA; keep as-is — Validate/Preview/Artifacts planned for integration as
-       // New Build Wizard panels; until then, existing screens act as fallback).
-      {
-        path: "validate",
-        element: withFeatureBoundary("router.features.validate", <ValidatePage />),
-      },
-      {
-        path: "preview",
-        element: withFeatureBoundary("router.features.preview", <PreviewPage />),
-      },
-      {
-        path: "artifacts",
-        element: withFeatureBoundary("router.features.artifacts", <ArtifactsPage />),
-      },
+      // The old flow's stand-alone pages (#423): validation and preview are steps of the
+      // creation flow at /add, and files belong to a run, so each URL redirects to where
+      // its function lives, query and hash intact. INFORMATION_ARCHITECTURE.md section 3.1
+      // records the decision; the page components stay in src/pages until their removal
+      // is decided.
+      { path: "validate", element: <LegacyRedirect /> },
+      { path: "preview", element: <LegacyRedirect /> },
+      { path: "artifacts", element: <LegacyRedirect /> },
       {
         path: "settings",
         element: withFeatureBoundary("router.features.settings", <SettingsPage />),

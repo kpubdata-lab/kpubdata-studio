@@ -88,7 +88,7 @@ describe("KeysLostCard", () => {
     expect(link.getAttribute("data-keys-lost-next")).toBe("edit");
   });
 
-  it("links to Add Data, and says why, when the spec is nowhere", async () => {
+  it("links to Create Table, and says why, when the spec is nowhere", async () => {
     saveBuildSpec("another-run", SPEC);
     const asked = builderWithSnapshot("has none");
 

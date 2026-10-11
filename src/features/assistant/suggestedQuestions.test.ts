@@ -99,7 +99,7 @@ describe("getSuggestedQuestions — 최근 대화 기반 follow-up", () => {
       turns: [turn({ evidence: evidence({ catalog: { providers: ["datago"], datasetsByProvider: {} } }) })],
     });
     expect(after).not.toEqual(before);
-    expect(after.some((q) => q.includes("Add Data로 가져오는"))).toBe(true);
+    expect(after.some((q) => q.includes("테이블 만들기로 가져오는"))).toBe(true);
   });
 
   it("generatedSql이 있으면 SQL 해석 follow-up을 준다", () => {

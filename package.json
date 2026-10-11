@@ -34,6 +34,7 @@
     "check:stale-ui": "node scripts/check-stale-ui-literals.mjs --base origin/main",
     "i18n:keys": "node scripts/check-i18n-keys.mjs",
     "i18n:terms": "node scripts/ko-mixed-terms.mjs",
+    "i18n:legacy": "node scripts/legacy-terms.mjs",
     "contract:floor": "node scripts/contract-floor.mjs",
     "contract:enums": "node scripts/generate-builder-enums.mjs"
   },

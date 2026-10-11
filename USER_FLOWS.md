@@ -21,7 +21,7 @@
 | 출판 | 출판 `/refresh-jobs/:buildId/publish` | [build-publish](screens/build-publish.md) |
 | 환경설정 | 설정 `/settings` | [settings](screens/settings.md) |
 
-> 현재 배포본(GitHub Pages)은 **MOCK 모드**로 동작하며, 화면 데이터는 데모 시드 데이터(`src/shared/lib/demoDatasets.ts`)에서 제공됩니다. `/validate`·`/preview`·`/artifacts`는 `/add` 나 run 선택으로 안내하는 레거시 진입점입니다. `/builds…`·`/datasets…`·`/provider…` 는 새 경로로 이동합니다(`/builds/new` 는 `/refresh-jobs/new` 를 거쳐 `/add`).
+> 현재 배포본(GitHub Pages)은 **MOCK 모드**로 동작하며, 화면 데이터는 데모 시드 데이터(`src/shared/lib/demoDatasets.ts`)에서 제공됩니다. `/validate`·`/preview`는 `/add` 로, `/artifacts`는 `/refresh-jobs` 로 이동합니다. `/builds…`·`/datasets…`·`/provider…` 는 새 경로로 이동합니다(`/builds/new` 는 `/refresh-jobs/new` 를 거쳐 `/add`).
 
 ---
 
