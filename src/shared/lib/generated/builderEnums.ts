@@ -7,7 +7,7 @@
  */
 
 /** The contract version this snapshot was generated from. */
-export const BUILDER_ENUMS_CONTRACT_VERSION = "1.119.0";
+export const BUILDER_ENUMS_CONTRACT_VERSION = "1.121.0";
 
 export const BUILDER_ENUMS = {
   "AdminUser.status": ["pending","approved","rejected"],
@@ -33,6 +33,7 @@ export const BUILDER_ENUMS = {
   "CallTotal.status": ["reported","unknown","inconsistent"],
   "CatalogDataset.operations": ["list","get","schema","raw","download"],
   "CatalogDataset.representation": ["api_json","api_xml","file_csv","file_excel","sheet","other"],
+  "CatalogQueryParameter.type": ["string","integer","number","date_yyyymmdd","date_yyyymm",null],
   "CatalogQuerySupport.pagination": ["offset","index","cursor","none"],
   "ColumnMetaOrigin": ["user_annotation","core_spec","catalog","engine_inferred"],
   "ColumnNullTokens.on_absent": ["error","ignore"],

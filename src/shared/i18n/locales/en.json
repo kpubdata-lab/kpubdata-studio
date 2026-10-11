@@ -2293,6 +2293,22 @@
         "message": "The spec's PII policy is \"allow\", and a spec that lets personal data through cannot be published.",
         "action": "Edit the spec, choose a PII policy that masks or drops personal data, and run the table again."
       },
+      "pii_scan_missing": {
+        "message": "The spec has no personal-data check (pii), so this run did not check for personal data. A deployment shared by several users publishes only runs that were checked.",
+        "action": "Set the personal-data check to block in the spec and run the table again. The check looks only for the forms it is designed to find, so passing it does not mean there is no personal data."
+      },
+      "pii_scan_pending": {
+        "message": "The run has not finished, so its personal-data check has not finished either.",
+        "action": "Wait for the run to finish, then check this page again."
+      },
+      "pii_scan_failed": {
+        "message": "The run failed or was cancelled, or its personal-data check result could not be read, so it cannot count as checked.",
+        "action": "Open the run to see the cause (a personal-data finding included), fix the data or the spec, and run the table again."
+      },
+      "pii_scan_unverified": {
+        "message": "The spec's personal-data check is not set to block, or it excludes columns (allow_columns), so a deployment shared by several users cannot publish this run.",
+        "action": "Set the personal-data check to block in the spec, empty allow_columns, and run the table again. The check looks only for the forms it is designed to find, so passing it does not mean there is no personal data."
+      },
       "credential_unavailable": {
         "message": "No publish credential is available for this target.",
         "action": "Ask a KPubData Builder operator to configure one, or store your own publish credential."
