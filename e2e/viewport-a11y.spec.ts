@@ -30,6 +30,8 @@ test("키보드로 내비게이션 링크에 focus가 도달하고 focus가 보�
   collectPageErrors(page, errors);
 
   await page.goto("/");
+  // The first paint waits for the locale chunk (#796); a Tab pressed before it lands on nothing.
+  await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 10_000 });
 
   // First Tab reaches focusable element (reaching itself is the goal, not exact element).
   await page.keyboard.press("Tab");
