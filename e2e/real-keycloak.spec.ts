@@ -137,7 +137,6 @@ test("가입하고 이메일을 인증한 계정은 관리자 승인 뒤에 들�
     await adminPage.waitForURL((url) => url.origin === keycloakOrigin(), { timeout: 30_000 });
     await adminPage.locator("#username").fill(ADMIN_EMAIL);
     await adminPage.locator("#password").fill(ADMIN_PASSWORD);
-    const adminToken = nextBuilderToken(adminPage);
     await adminPage.locator('[type="submit"]').click();
     await backInStudio(adminPage);
     await mainMenu(adminPage).getByRole("link", { name: /^(Administration|관리)$/ }).click();
@@ -150,25 +149,8 @@ test("가입하고 이메일을 인증한 계정은 관리자 승인 뒤에 들�
     );
     await approve.click();
     const answer = await decided;
-    if (answer.status() === 404 && answer.url().includes("%3A")) {
-      // kpubdata-builder#1277: Builder looks the id up without decoding the path, so the
-      // `oidc:` id Studio sends percent-encoded is not found. Only that defect is let
-      // through, and the same decision is made with the id as Builder lists it, so the
-      // scenario goes on to what follows an approval.
-      expect(((await answer.json()) as { code?: string }).code).toBe("user_not_found");
-      test.info().annotations.push({ type: "known defect", description: "kpubdata-builder#1277" });
-      const headers = { Authorization: await adminToken };
-      const ledger = (await (await request.get(`${BUILDER_URL}/admin/users`, { headers })).json()) as {
-        users: Array<{ user_id: string; display_name: string | null }>;
-      };
-      const userId = ledger.users.find((user) => user.display_name === email)?.user_id ?? "";
-      expect(userId).toMatch(/^oidc:/);
-      const approved = await request.post(`${BUILDER_URL}/admin/users/${userId}/approve`, { headers });
-      expect(approved.status(), await approved.text()).toBe(200);
-    } else {
-      expect(answer.status()).toBe(200);
-      await expect(approve).toHaveCount(0, { timeout: 30_000 });
-    }
+    expect(answer.status()).toBe(200);
+    await expect(approve).toHaveCount(0, { timeout: 30_000 });
     await admin.close();
   });
 
