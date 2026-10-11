@@ -84,6 +84,11 @@ jobs:
       - name: Korean comment gate (#427)
         run: python3 scripts/check_korean_ts_comments.py src e2e
 
+      # kpubdata POLICY 0.1: a review or verification level is written meaning first,
+      # code in parentheses -- "unit tests (V1)", never a bare V2 (kpubdata#878, #894).
+      - name: Plain review and verification codes
+        run: python3 scripts/check_plain_codes.py
+
       # Renaming a UI string without moving the assertions that name it (#429). The
       # values this branch removed from the locales are computed exactly, so there is
       # no guess about which literals are labels and no false positives.
