@@ -32,6 +32,7 @@ nav:
       - 상태 모델: STATE_MODEL.md
       - 사용자 흐름: USER_FLOWS.md
       - 화면 스크린샷: screenshots.md
+      - 외부 AI 전송 목록: assistant-egress.md
   - 화면 설계서:
       - 개요: screens/index.md
       - 애플리케이션 셸: screens/layout-shell.md

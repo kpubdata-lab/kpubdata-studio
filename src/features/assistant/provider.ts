@@ -6,7 +6,7 @@
 import { i18n } from "@/shared/i18n";
 import { createSecretScrubber, type SecretScrubber } from "./scrub";
 
-import { checkLlmBaseUrl, redactApiKey, DEFAULT_LLM_BASE_URL } from "./baseUrl";
+import { checkLlmBaseUrl, isAssistantEnabled, redactApiKey, DEFAULT_LLM_BASE_URL } from "./baseUrl";
 
 export interface AssistExchangeOptions {
   /**
@@ -82,7 +82,10 @@ class ByokTransport implements AssistTransport {
     /**
      * key exfiltration minimal defense (#256 review §2): even when this provider actually calls,
      * re-validate base URL — unsafe value can bypass config screen, but blocked here.
+     * This is the one place a request leaves for the AI provider, so the deployment's
+     * switch and allowlist (#798) are checked here too, whoever called.
      */
+    if (!isAssistantEnabled()) throw new Error(i18n.t("assistant.egress.off"));
     const check = checkLlmBaseUrl(this.config.baseUrl);
     if (!check.safe) {
       throw new Error(i18n.t("assistant.provider.unsafeBaseUrl", { reason: check.reason }));

@@ -425,7 +425,8 @@
     },
     "baseUrl": {
       "invalid": "올바른 URL 형식이 아닙니다.",
-      "httpsOnly": "API Key 노출을 막기 위해 HTTPS 주소만 허용됩니다."
+      "httpsOnly": "API Key 노출을 막기 위해 HTTPS 주소만 허용됩니다.",
+      "notAllowed": "이 배포가 허용한 AI 제공자 주소가 아닙니다."
     },
     "byok": {
       "title": "Ask KPubData 를 사용하려면 LLM API 키가 필요합니다 (BYOK)",
@@ -705,6 +706,10 @@
       "cancelled": "요청이 취소되었습니다.",
       "staleContext": "이 답변은 이전 화면 기준입니다.",
       "retry": "다시 시도"
+    },
+    "egress": {
+      "off": "이 배포에서는 Ask KPubData 가 외부 AI 제공자에게 아무것도 보내지 않도록 꺼져 있습니다. 테이블 만들기와 SQL 은 그대로 쓸 수 있습니다.",
+      "disclosurePendingReview": "[검토 대기] 외부 AI 제공자 전송 안내 문구 자리입니다."
     }
   },
   "quality": {

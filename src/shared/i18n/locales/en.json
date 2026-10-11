@@ -425,7 +425,8 @@
     },
     "baseUrl": {
       "invalid": "That is not a valid URL.",
-      "httpsOnly": "Only HTTPS addresses are allowed, to keep the API key from leaking."
+      "httpsOnly": "Only HTTPS addresses are allowed, to keep the API key from leaking.",
+      "notAllowed": "This deployment does not allow this AI provider address."
     },
     "byok": {
       "title": "An LLM API key is required to use Ask KPubData (BYOK)",
@@ -705,6 +706,10 @@
       "cancelled": "The request was cancelled.",
       "staleContext": "This answer is based on a previous screen.",
       "retry": "Retry"
+    },
+    "egress": {
+      "off": "Ask KPubData is turned off in this deployment, so nothing is sent to an external AI provider. Creating tables and SQL work as usual.",
+      "disclosurePendingReview": "[Pending review] Placeholder for the notice about sending data to an external AI provider."
     }
   },
   "quality": {

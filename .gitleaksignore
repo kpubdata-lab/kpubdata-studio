@@ -61,3 +61,7 @@ d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts
 d98161a2611073fe1fbd1d615128814042f2f329:src/features/assistant/provider.test.ts:generic-api-key:87
 eff3e573ed9b8990a3a1585e0db2bcd0a590592c:src/features/assistant/provider.test.ts:generic-api-key:11
 f5249d9071a8692fbe9aaa33be2d06c9b00fb0ce:src/features/assistant/provider.test.ts:generic-api-key:125
+
+# #798 — the first commit of the egress canary test named a made-up key "sk-canary-key-3b9d0c"
+# for a canary; the next commit made it "sk-canary-canary". Synthetic, never a real key.
+4de8c729699f7fd8f85ff69c8c77e4c5b108c178:__tests__/assistantEgressCanary.test.tsx:generic-api-key:21
