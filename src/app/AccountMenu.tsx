@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 
 import { signOutOfOidc } from "@/features/auth/signOut";
 import { useAuthStore } from "@/features/auth/store";
-import { getPolicyLinks } from "@/shared/config/policyLinks";
+import { getPolicyLinks, HELP_URL } from "@/shared/config/policyLinks";
 import { useUIStore, type ThemeMode } from "@/shared/hooks/useUIStore";
 import {
   LANGUAGE_LABELS,
@@ -24,8 +24,6 @@ import {
 } from "@/shared/i18n";
 import { getSupportContact } from "@/shared/lib/clientErrors";
 
-/** Studio's user documentation (mkdocs `site_url`). */
-export const HELP_URL = "https://kpubdata-lab.github.io/kpubdata-studio/docs/";
 
 const THEMES: ThemeMode[] = ["system", "light", "dark"];
 

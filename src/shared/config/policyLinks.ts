@@ -11,6 +11,9 @@
 import { getOidcConfig } from "@/shared/config/env";
 import { runtimeOr } from "@/shared/config/runtime";
 
+/** Studio's user documentation (mkdocs `site_url`). */
+export const HELP_URL = "https://kpubdata-lab.github.io/kpubdata-studio/docs/";
+
 export interface PolicyLinks {
   privacy: string | null;
   terms: string | null;
