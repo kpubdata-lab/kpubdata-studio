@@ -6,10 +6,16 @@
  * - Spec validation: the demo passes every spec without a request.
  * - Monitoring: the demo's fixture, with no request; Builder's two reads together.
  * - The version check: the demo resolves without a request and records nothing.
+ * - Connections: the demo's key store keeps nothing, its test and probe ask nothing.
+ * - The assistant: the demo answers turns itself and refuses to run SQL (`mock_mode`).
+ * - Report evidence: the demo vouches for no output, and does not read a manifest.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { assistantClient, demoAssistantClient, realAssistantClient } from "@/features/assistant/query";
 import { demoMonitoringClient, monitoringClient, realMonitoringClient } from "@/features/monitoring/api/client";
+import { DEMO_PROVIDERS, demoProviderClient, providerClient, realProviderClient } from "@/features/provider/client";
+import { demoOutputEvidence, outputEvidence, realOutputEvidence } from "@/features/reports/evidence";
 import { demoSqlClient, realSqlClient, runTableQuery, sqlClient } from "@/features/sql/api";
 import { demoValidationClient, realValidationClient, validationClient } from "@/features/validation/api";
 import { ensureVersionChecked, resetVersionCheck, useVersionCheckStore } from "@/features/version-check/store";
@@ -29,6 +35,9 @@ describe("choosing the client", () => {
     ["sql", sqlClient, realSqlClient, demoSqlClient],
     ["validation", validationClient, realValidationClient, demoValidationClient],
     ["monitoring", monitoringClient, realMonitoringClient, demoMonitoringClient],
+    ["connections", providerClient, realProviderClient, demoProviderClient],
+    ["assistant", assistantClient, realAssistantClient, demoAssistantClient],
+    ["report output evidence", outputEvidence, realOutputEvidence, demoOutputEvidence],
   ] as const)("%s: Builder's with one configured, the demo's otherwise", (_name, select, real, demo) => {
     expect(select()).toBe(demo);
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
@@ -90,5 +99,54 @@ describe("the version check", () => {
     await ensureVersionChecked();
     expect(version).toHaveBeenCalledTimes(1);
     expect(useVersionCheckStore.getState().apiVersion).toBe("1.69.0");
+  });
+});
+
+describe("connections", () => {
+  it("the demo answers from its own providers and asks nothing", async () => {
+    const calls = [
+      vi.spyOn(builderApi, "getProviderCredential"),
+      vi.spyOn(builderApi, "putProviderCredential"),
+      vi.spyOn(builderApi, "deleteProviderCredential"),
+      vi.spyOn(builderApi, "testProviderConnection"),
+      vi.spyOn(builderApi, "probeProviderKey"),
+    ];
+    const client = providerClient();
+    expect(DEMO_PROVIDERS.map((summary) => [summary.provider, summary.configured])).toEqual([
+      ["datago", false],
+      ["kosis", true],
+      ["g2b", false],
+    ]);
+    await expect(client.credential("kosis")).resolves.toMatchObject({ configured: true, masked: "ab••••yz" });
+    await expect(client.credential("datago")).resolves.toMatchObject({ configured: false, masked: null, updated_at: null });
+    await expect(client.saveCredential("datago", "secret")).resolves.toBeUndefined();
+    await expect(client.deleteCredential("kosis")).resolves.toBeUndefined();
+    // A key saved in the demo is not kept: the provider still reads as having none.
+    await expect(client.credential("datago")).resolves.toMatchObject({ configured: false });
+    await expect(client.test("kosis")).resolves.toMatchObject({ status: "connected" });
+    await expect(client.test("datago")).resolves.toMatchObject({ status: "not_configured" });
+    await expect(client.test("unknown")).resolves.toMatchObject({ status: "connected" });
+    const probe = await client.probe("datago");
+    expect(probe.datasets.map((row) => row.status)).toEqual(["available", "application_required"]);
+    for (const call of calls) expect(call).not.toHaveBeenCalled();
+  });
+});
+
+describe("the assistant", () => {
+  it("the demo answers turns itself and refuses to run SQL", async () => {
+    const query = vi.spyOn(builderApi, "query");
+    expect(assistantClient().demo).toBe(true);
+    await expect(assistantClient().runQuery(request)).resolves.toMatchObject({ status: "error", code: "mock_mode" });
+    expect(query).not.toHaveBeenCalled();
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    expect(assistantClient().demo).toBe(false);
+  });
+});
+
+describe("report output evidence", () => {
+  it("the demo vouches for no output and reads no manifest", async () => {
+    const manifest = vi.spyOn(builderApi, "getBuildManifest");
+    await expect(outputEvidence().output("run-1")).resolves.toMatchObject({ ok: false });
+    expect(manifest).not.toHaveBeenCalled();
   });
 });

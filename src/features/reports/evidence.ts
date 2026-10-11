@@ -124,9 +124,7 @@ export async function fetchReportEvidence(
   );
   const schemas: Record<string, ReportSourceSchema> = Object.fromEntries(schemaEntries);
 
-  const output: Settled<ReportOutputEvidence> = isRealBuilderEnabled()
-    ? await settle(getBuildManifest(runId, signal).then((manifest) => ({ files: manifest.outputs ?? [] })))
-    : { ok: false, reason: i18n.t("reports.evidence.mockNoOutput") };
+  const output = await outputEvidence().output(runId, signal);
 
   return {
     fetchedAt: new Date().toISOString(),
@@ -139,6 +137,28 @@ export async function fetchReportEvidence(
     schemas,
     output,
   };
+}
+
+/**
+ * Where a report's output evidence comes from (#902): the run's manifest when a Builder
+ * answers; never in the demo, whose manifest is not the run's (see the module comment).
+ */
+export interface OutputEvidenceClient {
+  output(runId: string, signal?: AbortSignal): Promise<Settled<ReportOutputEvidence>>;
+}
+
+export const realOutputEvidence: OutputEvidenceClient = {
+  output: (runId, signal) =>
+    settle(getBuildManifest(runId, signal).then((manifest) => ({ files: manifest.outputs ?? [] }))),
+};
+
+export const demoOutputEvidence: OutputEvidenceClient = {
+  output: async () => ({ ok: false, reason: i18n.t("reports.evidence.mockNoOutput") }),
+};
+
+/** The client in force: Builder's when one is configured, the demo's otherwise. */
+export function outputEvidence(): OutputEvidenceClient {
+  return isRealBuilderEnabled() ? realOutputEvidence : demoOutputEvidence;
 }
 
 /** From evidence bundle, build stable reference list from actually verified pieces (omit unverified). */

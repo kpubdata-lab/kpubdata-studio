@@ -43,6 +43,9 @@ export const SELECTORS = {
   "src/features/sql/api.ts": "sqlClient()",
   "src/features/validation/api/index.ts": "validationClient()",
   "src/features/monitoring/api/client.ts": "monitoringClient()",
+  "src/features/provider/client.ts": "providerClient()",
+  "src/features/assistant/query.ts": "assistantClient()",
+  "src/features/reports/evidence.ts": "outputEvidence()",
   "src/features/admin/store.ts": "ensureAdminChecked() — the demo has no admin to ask",
   "src/features/version-check/store.ts": "ensureVersionChecked() — the demo has no version to read",
 };
@@ -52,13 +55,8 @@ export const BASELINE = {
   "src/app/Layout.tsx": 1,
   "src/features/add-data/components/ConfigureStep.tsx": 1,
   "src/features/add-data/useUploadStatus.ts": 1,
-  "src/features/assistant/demo.ts": 1,
-  "src/features/assistant/generate.ts": 1,
-  "src/features/assistant/query.ts": 1,
   "src/features/auth/LoginGate.tsx": 1,
-  "src/features/provider/KeyProbePanel.tsx": 1,
   "src/features/publish/DataCardPreview.tsx": 1,
-  "src/features/reports/evidence.ts": 1,
   "src/features/runs/api/getBuild.ts": 1,
   "src/features/runs/api/index.ts": 2,
   "src/features/runs/api/runDetail.ts": 2,
@@ -67,7 +65,7 @@ export const BASELINE = {
   "src/pages/BuildRunPage.tsx": 1,
   "src/pages/BuildsPage.tsx": 4,
   "src/pages/LoginPage.tsx": 1,
-  "src/pages/ProviderPage.tsx": 5,
+  "src/pages/ProviderPage.tsx": 1,
   "src/pages/SettingsPage.tsx": 1,
 };
 
