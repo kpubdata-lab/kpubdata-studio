@@ -44,6 +44,7 @@ import { runsClient } from "@/features/runs/api/client";
 import type { RunEventsState } from "@/features/runs/useRunEvents";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { useAssistConfig } from "@/features/assistant/config";
 import type {
@@ -82,6 +83,7 @@ export function RunDetailPanel({
   live: ReturnType<typeof useSelectedRunPolling>;
 }) {
   const { t } = useTranslation();
+  const owner = useStorageOwnerKey();
   const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
   const seedAssistantQuestion = useAssistantStore((state) => state.seedQuestion);
   const { isConfigured } = useAssistConfig();
@@ -149,9 +151,9 @@ export function RunDetailPanel({
   // contract 1.124.0; an answer without one, or no answer, adds nothing to the page.
   const endedJob = useAsync(
     (signal) => runsClient().getJob(runId, signal),
-    [runId],
+    [runId, owner],
     "",
-    listItem?.status === "failed" && live.kind === "idle",
+    listItem?.status === "failed" && listItem.startedAt !== null && live.kind === "idle",
   );
   const job = live.kind === "job" ? live.job : endedJob.status === "loaded" ? endedJob.data : null;
   // A run that lost its keys has its own card, which says what to do next (#846).
@@ -481,8 +483,8 @@ export function RunDetailPanel({
               ))}
             </ul>
           ) : null}
-          {listItem?.status === "failed" && job?.error ? (
-            <p className="mt-2 text-sm" data-failure-reason={runId}>{t("builds.detail.builderError", { error: job.error })}</p>
+          {builderReason ? (
+            <p className="mt-2 text-sm" data-failure-reason={runId}>{t("builds.detail.builderError", { error: builderReason })}</p>
           ) : null}
           {qualityFails.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-1 text-sm">
