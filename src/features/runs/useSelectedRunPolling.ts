@@ -16,13 +16,18 @@
  * use the shared useVisibilityAwarePolling for interval polling only when watching non-terminal jobs —
  * do not create a new scheduler. If tab is hidden, interval ticks do not start new requests;
  * on return to visible, refresh immediately.
+ *
+ * The runs client in force answers (#902), so the demo's jobs are polled the same way. Another
+ * account signing in drops the job watched so far and aborts the request still out.
  */
 import { i18n } from "@/shared/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isTerminalBuilderStatus, POLL_INTERVAL_MS } from "@/features/runs/api";
 import { classifyRunApiError } from "@/features/runs/model";
+import { runsClient } from "@/features/runs/api/client";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { useVisibilityAwarePolling } from "./useVisibilityAwarePolling";
-import { builderApi, type BuildJob } from "@/shared/lib/builderApi";
+import type { BuildJob } from "@/shared/lib/builderApi";
 
 export type SelectedRunLiveState =
   | { kind: "idle" }
@@ -39,6 +44,7 @@ export type SelectedRunLiveState =
  * @returns Latest async job state when present; a signal to use historical data when absent from the registry.
  */
 export function useSelectedRunPolling(runId: string | null, attempt = 0): SelectedRunLiveState {
+  const owner = useStorageOwnerKey();
   const [state, setState] = useState<SelectedRunLiveState>({ kind: "idle" });
   const controllerRef = useRef<AbortController | null>(null);
   // Last confirmed job. Keep separately so transient errors don't overwrite it as "failed".
@@ -52,7 +58,7 @@ export function useSelectedRunPolling(runId: string | null, attempt = 0): Select
     const controller = new AbortController();
     controllerRef.current = controller;
     try {
-      const job = await builderApi.getBuildJob(runId, controller.signal);
+      const job = await runsClient().getJob(runId, controller.signal);
       if (controller.signal.aborted) return;
       lastJobRef.current = job;
       // Successfully fetched; clear any previous transient error warning.
@@ -97,7 +103,7 @@ export function useSelectedRunPolling(runId: string | null, attempt = 0): Select
       controllerRef.current?.abort();
     };
     // fetchNow is derived only from runId (useCallback deps: [runId]), so runId alone is sufficient.
-  }, [runId, attempt]);
+  }, [runId, attempt, owner]);
 
   // Interval polling starts only after confirming the first fetch found a non-terminal job
   // (#245 original behavior) — do not poll while still "loading". First fetch is immediate via effect above,

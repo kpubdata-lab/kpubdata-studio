@@ -5,7 +5,11 @@
  * cancellation (AbortController). In real mode it uses the Builder async job
  * surface (POST /builds + GET /builds/{run_id} polling, builder #480/#482)
  * and exposes the polled job's wire status (queued/running/...) as
- * builderStatus (#245).
+ * builderStatus (#245). The runs client in force answers (#902): the demo's jobs are submitted,
+ * polled and cancelled the same way.
+ *
+ * Another account signing in aborts the polling (the job is not cancelled — it is the other
+ * account's) and returns the hook to idle, so one account's build is never shown under another's.
  */
 import { i18n } from "@/shared/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -15,7 +19,9 @@ import {
   type BuildExecutionOptions,
   type BuilderJobStatus,
 } from "@/features/runs/api";
-import { ApiError, builderApi, extractErrorMessage } from "@/shared/lib/builderApi";
+import { runsClient } from "@/features/runs/api/client";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
+import { ApiError, extractErrorMessage } from "@/shared/lib/builderApi";
 import { buildRefusal, buildRefusalMessage } from "./buildRefusal";
 import { missingProviderKeys, type MissingProviderKeys } from "@/shared/lib/missingProviderKey";
 import type { BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
@@ -91,7 +97,7 @@ export function useBuildJob(): BuildJob {
   const issueAsyncCancel = useCallback((runId: string) => {
     if (cancelIssuedRef.current) return;
     cancelIssuedRef.current = true;
-    void builderApi.cancelBuildJob(runId).catch(() => {});
+    void runsClient().cancel(runId).catch(() => {});
   }, []);
 
   const start = useCallback(async (spec: BuildSpec, options: BuildExecutionOptions = {}) => {
@@ -188,6 +194,24 @@ export function useBuildJob(): BuildJob {
   // On unmount, abort the in-flight run to prevent setState after unmount
   // (#73).
   useEffect(() => () => controllerRef.current?.abort(), []);
+
+  // Another account signed in: stop watching the previous one's run and forget it (#902).
+  const owner = useStorageOwnerKey();
+  const ownerRef = useRef(owner);
+  useEffect(() => {
+    if (ownerRef.current === owner) return;
+    ownerRef.current = owner;
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+    handleRef.current = null;
+    pendingCancelRef.current = false;
+    setStatus("idle");
+    setBuilderStatus(undefined);
+    setRun(undefined);
+    setSubmittedRunId(undefined);
+    setError(undefined);
+    setMissingKeys(undefined);
+  }, [owner]);
 
   return { status, builderStatus, run, submittedRunId, error, missingKeys, start, cancel };
 }

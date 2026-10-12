@@ -99,6 +99,14 @@ describe("useVisibilityAwarePolling", () => {
 });
 
 describe("useSelectedRunPolling", () => {
+  // The real runs client: these cases spy on what it asks Builder (#902).
+  beforeEach(() => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("fetches immediately on selection and keeps polling a non-terminal job while visible", async () => {
     const spy = vi
       .spyOn(builderApi, "getBuildJob")

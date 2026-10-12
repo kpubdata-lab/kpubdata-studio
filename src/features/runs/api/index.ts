@@ -1,20 +1,21 @@
 /**
  * Build run API entry point.
  *
- * In real integration mode (`VITE_USE_REAL_BUILDER=true`), calls Builder `/build`;
- * otherwise returns deterministic mock results. Builder's /build is currently
- * synchronous; async job polling will expand when Builder provides job endpoints (#39).
+ * Every build is a job (#786): submitted with `POST /builds` and polled with
+ * `GET /builds/{run_id}` until it ends. The runs client in force answers (#902) — a
+ * Builder, or the demo's job model — so submitting, polling and cancelling take one path
+ * in both modes.
  */
 import { i18n } from "@/shared/i18n";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import { serializeSpec } from "@/features/build-spec/specMapping";
-import { builderApi, isRealBuilderEnabled, type BuildJob, type BuildSummary } from "@/shared/lib/builderApi";
+import type { BuildJob } from "@/shared/lib/builderApi";
 import { buildJobResponseSchema, type BuildJobResponse } from "@/shared/lib/builderApi.schema";
-import { DEMO_DATASETS, type DemoDataset } from "@/shared/lib/demoDatasets";
 import { keysWereLost } from "@/shared/lib/missingProviderKey";
 import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
+import { runsClient } from "./client";
 
-const MOCK_TIME = "1970-01-01T00:00:00.000Z";
+export { mapBuildSummary, mockBuilds } from "./history";
 
 /** How many run ids this page load has made. Part of each id, so no two are the same. */
 let issuedRunIds = 0;
@@ -115,21 +116,8 @@ export async function executeBuild(
   onHandle?: (handle: BuildExecutionHandle) => void,
   options: BuildExecutionOptions = {},
 ): Promise<BuildRun> {
-  if (!isRealBuilderEnabled()) {
-    const mockRun: BuildRun = {
-      id: "mock-run",
-      spec,
-      status: "succeeded",
-      startedAt: MOCK_TIME,
-      finishedAt: MOCK_TIME,
-    };
-    // In mock mode, save spec so edit flow can be validated with same path as real mode.
-    saveBuildSpec(mockRun.id, spec);
-    return mockRun;
-  }
-
-  // In real integration mode, record actual execution time (avoid incorrect 1970 values
-  // in history/detail screens).
+  // Record the actual execution time (avoid incorrect 1970 values in history/detail
+  // screens).
   const runId = generateRunId(spec.datasetId);
   const startedAt = new Date().toISOString();
 
@@ -191,14 +179,15 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
  */
 export async function pollBuildJobUntilTerminal(
   runId: string,
-  initialJob: Awaited<ReturnType<typeof builderApi.getBuildJob>>,
+  initialJob: BuildJob,
   signal: AbortSignal | undefined,
-  onJobStatus?: (job: Awaited<ReturnType<typeof builderApi.getBuildJob>>) => void,
-): Promise<Awaited<ReturnType<typeof builderApi.getBuildJob>>> {
+  onJobStatus?: (job: BuildJob) => void,
+): Promise<BuildJob> {
+  const client = runsClient();
   let job = initialJob;
   while (!isTerminalBuilderStatus(job.status)) {
     await sleep(POLL_INTERVAL_MS, signal);
-    job = await builderApi.getBuildJob(runId, signal);
+    job = await client.getJob(runId, signal);
     onJobStatus?.(job);
   }
   return job;
@@ -214,7 +203,7 @@ async function runAsyncBuild(
   retryOf?: string,
   ifAbsent?: boolean,
 ): Promise<BuildRun> {
-  const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal, retryOf, ifAbsent);
+  const submitted = await runsClient().submit(serializeSpec(spec), runId, signal, retryOf, ifAbsent);
   // Server-returned run_id is authoritative. Only from here can cooperative cancel
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
@@ -315,108 +304,16 @@ export function buildRunFromJob(job: BuildJob, spec: BuildSpec, startedAt: strin
 }
 
 /**
- * Map Builder `GET /builds` BuildSummary.status (canonical vocab: ok/failed/cancelled)
- * to Studio BuildRunStatus.
- *
- * Cancelled runs come as `cancelled` and never collapse to failed (#S04). Values
- * outside Builder vocab fail-closed (failed), not silently as success.
- */
-function mapBuildSummaryStatus(status: BuildSummary["status"]): BuildRunStatus {
-  switch (status) {
-    case "ok":
-      return "succeeded";
-    case "cancelled":
-      return "cancelled";
-    case "failed":
-      return "failed";
-    default:
-      return "failed";
-  }
-}
-
-/** Convert demo catalog entry to BuildSpec for list/history UI. */
-function mockSpec(dataset: DemoDataset): BuildSpec {
-  return {
-    datasetId: dataset.slug,
-    title: dataset.title,
-    description: dataset.description,
-    sources: [
-      {
-        provider: "datago",
-        dataset: dataset.providerDataset,
-        params: dataset.params,
-      },
-    ],
-    exports: dataset.exports,
-    metadata: {
-      source_url: dataset.sourceUrl,
-      hf_repo: dataset.hfRepo,
-    },
-  };
-}
-
-/** Deterministic build history for mock mode (based on real builder dataset specs). */
-export function mockBuilds(): BuildRun[] {
-  return DEMO_DATASETS.map((dataset) => ({
-    id: dataset.buildId,
-    spec: mockSpec(dataset),
-    status: dataset.status,
-    startedAt: dataset.startedAt,
-    finishedAt: dataset.finishedAt,
-  }));
-}
-
-/**
  * List build execution history (#12, #95, #153).
  *
- * In mock mode (`VITE_USE_REAL_BUILDER` unset), returns deterministic mock list
- * for developing/verifying list/search/sort UI.
- *
- * In real integration mode, calls Builder `GET /builds` and maps response to
- * BuildListItem[] (#153, builder #250). Since kpubdata-builder#844 each run names its
- * table (`dataset_id`, `dataset_title`) and snapshot; an older Builder omits them.
+ * The runs client in force answers (#902): a Builder's `GET /builds` mapped to list items
+ * (#153, builder #250) — since kpubdata-builder#844 each run names its table
+ * (`dataset_id`, `dataset_title`) and snapshot, and an older Builder omits them — or the
+ * demo's deterministic history.
  *
  * @param limit - Optional limit parameter. Omit to use Builder default (50).
- * @returns Build execution list (mock mode: deterministic mock, real integration
- *          mode: Builder response mapped).
+ * @param signal - Aborts the request, for a screen that no longer wants the answer.
  */
-export async function listBuilds(limit?: number): Promise<BuildListItem[]> {
-  if (!isRealBuilderEnabled()) {
-    // The demo runs name their table; they committed no warehouse snapshot, so the
-    // snapshot fields stay unsent.
-    return mockBuilds().map((run) => ({
-      id: run.id,
-      title: run.spec.title,
-      status: run.status,
-      startedAt: run.startedAt,
-      finishedAt: run.finishedAt ?? null,
-      datasetId: run.spec.datasetId,
-    }));
-  }
-
-  const response = await builderApi.listBuilds(limit);
-  return response.builds.map(mapBuildSummary);
+export async function listBuilds(limit?: number, signal?: AbortSignal): Promise<BuildListItem[]> {
+  return runsClient().list(limit, signal);
 }
-
-/**
- * One `GET /builds` row as a list item. The table and snapshot fields
- * (kpubdata-builder#844) keep `undefined` when an older Builder omits them, so the table
- * can tell "not sent" from "sent as null".
- */
-export function mapBuildSummary(summary: BuildSummary): BuildListItem {
-  return {
-    id: summary.run_id,
-    title: summary.dataset_title ?? null,
-    status: mapBuildSummaryStatus(summary.status),
-    // Normalize missing or null to explicit null.
-    startedAt: summary.started_at ?? null,
-    finishedAt: summary.finished_at ?? null,
-    datasetId: summary.dataset_id,
-    snapshotId: summary.snapshot_id,
-    snapshots: summary.snapshots?.map((entry) => ({
-      logicalName: entry.logical_name,
-      snapshotId: entry.snapshot_id,
-    })),
-  };
-}
-

@@ -1,10 +1,12 @@
 /**
  * Build data loading hook.
  *
- * Fetch build info by buildId and manage loading/error state.
+ * Fetch build info by buildId and manage loading/error state. A new run id, or another
+ * account signing in, drops what was loaded and aborts the request still out (#902).
  */
 import { i18n } from "@/shared/i18n";
 import { useEffect, useState } from "react";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { getBuild } from "./api/getBuild";
 import type { BuildRun } from "@/shared/lib/types";
 
@@ -21,6 +23,7 @@ export interface UseBuildResult {
  * @returns build data and loading state.
  */
 export function useBuild(buildId: string): UseBuildResult {
+  const owner = useStorageOwnerKey();
   const [state, setState] = useState<{
     build: BuildRun | null;
     isLoading: boolean;
@@ -32,7 +35,7 @@ export function useBuild(buildId: string): UseBuildResult {
   });
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function loadBuild() {
       if (!buildId) {
@@ -43,12 +46,12 @@ export function useBuild(buildId: string): UseBuildResult {
       setState({ build: null, isLoading: true, error: null });
 
       try {
-        const build = await getBuild(buildId);
-        if (!cancelled) {
+        const build = await getBuild(buildId, controller.signal);
+        if (!controller.signal.aborted) {
           setState({ build, isLoading: false, error: null });
         }
       } catch (cause) {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setState({
             build: null,
             isLoading: false,
@@ -60,10 +63,8 @@ export function useBuild(buildId: string): UseBuildResult {
 
     loadBuild();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [buildId]);
+    return () => controller.abort();
+  }, [buildId, owner]);
 
   return state;
 }

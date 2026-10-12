@@ -92,7 +92,10 @@ describe("useBuildJob (#39)", () => {
     });
 
     expect(result.current.status).toBe("succeeded");
-    expect(result.current.run?.id).toBe("mock-run");
+    // The demo takes a job through the same submit and polling as a Builder (#902), under a
+    // run id made the same way.
+    expect(result.current.run?.id).toMatch(/^x-\d+-/);
+    expect(result.current.submittedRunId).toBe(result.current.run?.id);
   });
 
   it("surfaces the derived failure summary on a partial build (#75, #245)", async () => {
