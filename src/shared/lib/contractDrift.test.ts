@@ -741,6 +741,11 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   "submitBuild 409 RunStorageQuotaExceeded": buildRefusalReader("run_storage_quota_exceeded", "1.118.0"),
   "createBuild 503 DiskSpaceLow": buildRefusalReader("disk_space_low", "1.123.0"),
   "createBuild 409 RunStorageQuotaExceeded": buildRefusalReader("run_storage_quota_exceeded", "1.123.0"),
+  "createBuild 409 BuildCancelledByTimeLimit": {
+    notHandled: NOT_CALLED,
+    code: "time_limit_exceeded",
+    since: "1.123.0",
+  },
   "probeProviderKey 429 ProbeRateLimited": {
     reader: "probeRateLimited (features/provider/probeRefusal, #410)",
     since: "1.88.0",

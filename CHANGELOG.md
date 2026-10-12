@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Studio classifies Builder's synchronous build cancellation response in the contract drift gate (#970, Builder #1309). The UI submits builds through `POST /builds`, so it does not handle the `POST /build` 409 `time_limit_exceeded` body; new, unlisted error examples still fail the gate.
+
 - **A page description wraps to two lines on a phone instead of being cut to one** (#907). The one-line ellipsis in `PageHeader` hid the end of the table list's description at 390px. Up to `sm` it now wraps and is clamped at two lines (`line-clamp: 2`); from `sm` up it is still one line. Three 390px baselines (Tables, SQL, Catalog) were refreshed with `npm run test:e2e:update-visual`.
 
 - Studio now records npm lockfile license declarations, visual asset provenance and container references in `docs/compliance/license_inventory.json` (#847). The static site serves `THIRD_PARTY_NOTICES.md`; CI checks inventory and notice drift. Pretendard-derived wordmark paths, template icons, exact browser bundle contents and patched Alpine packages remain for maintainer review.
