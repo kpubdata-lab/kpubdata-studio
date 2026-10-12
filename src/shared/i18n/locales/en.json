@@ -2958,7 +2958,8 @@
         "server_shutdown": "Server shut down",
         "interrupted": "Interrupted by a restart",
         "credentials_required": "Keys were not available",
-        "enqueue_failed": "Could not be queued"
+        "enqueue_failed": "Could not be queued",
+        "failed_without_manifest": "Failed before recording results"
       },
       "stage": {
         "bronze": "Bronze",
@@ -2995,7 +2996,8 @@
         "server_shutdown": "The server stopped during the run. Run it again.",
         "interrupted": "A server restart interrupted the run. Run it again.",
         "credentials_required": "The run's keys were gone. The owner re-enters the keys and runs it again.",
-        "enqueue_failed": "The run could not be queued. Run it again; if it repeats, check the server."
+        "enqueue_failed": "The run could not be queued. Run it again; if it repeats, check the server.",
+        "failed_without_manifest": "The run failed before its results were recorded. Check the build settings and try again; contact an administrator if it repeats."
       }
     }
   },
