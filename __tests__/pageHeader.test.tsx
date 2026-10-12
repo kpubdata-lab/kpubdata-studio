@@ -40,6 +40,14 @@ describe("PageHeader (#522)", () => {
     expect(screen.getByText(long)).toHaveAttribute("title", long);
   });
 
+  it("wraps the description to two lines on a phone instead of cutting it to one (#907)", () => {
+    render(<PageHeader title="Create" description="A description long enough to need a second line on a phone." />);
+    const description = screen.getByText(/long enough/);
+    // jsdom computes no layout; the classes are the only place the clamp can be seen.
+    expect(description).toHaveClass("line-clamp-2", "sm:line-clamp-1");
+    expect(description).not.toHaveClass("truncate");
+  });
+
   it("renders a section header as h2", () => {
     render(<PageHeader title="Recent runs" level={2} />);
     expect(screen.getByRole("heading", { level: 2, name: "Recent runs" })).toBeInTheDocument();

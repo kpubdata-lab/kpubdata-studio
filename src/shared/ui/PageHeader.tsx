@@ -15,7 +15,7 @@ export interface PageHeaderProps {
   title: string;
   /** short metadata under the title — identifiers, run ids, counts (12px) */
   meta?: ReactNode;
-  /** optional one-line description; longer text is truncated */
+  /** optional description: up to two lines on a phone, one line from `sm` up; longer text is cut with an ellipsis */
   description?: ReactNode;
   /** right-aligned action area (buttons etc) */
   actions?: ReactNode;
@@ -67,7 +67,7 @@ export function PageHeader({
         {description ? (
           <p
             data-slot="page-description"
-            className="mt-0.5 truncate text-sm text-muted-foreground"
+            className="mt-0.5 line-clamp-2 break-words text-sm text-muted-foreground sm:line-clamp-1"
             title={typeof description === "string" ? description : undefined}
           >
             {description}
