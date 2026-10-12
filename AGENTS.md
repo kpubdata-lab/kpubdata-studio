@@ -15,6 +15,22 @@ tables and SQL. It is the visual workspace for KPubData Builder (`kpubdata-build
 kpubdata's [BRAND.md](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/brand/BRAND.md),
 and `__tests__/productDefinition.test.ts` checks the copies.
 
+
+## Stabilization-only scope
+
+Follow [product-family POLICY section 1.3](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md#13-안정화-전용-개발-모드--2026-10-12).
+Existing Catalog, Create Table, Tables, SQL, admin, consent and run-recovery
+journeys are the frozen product boundary. Prioritize real-Builder and Keycloak
+E2E, account isolation, safe error handling, responsiveness, accessibility,
+API-contract compatibility and release readiness. Do not add new pages, product
+flows, external AI integrations, new data destinations or persistent client
+state as routine work.
+
+`scripts/check_stabilization_scope.py` blocks `feat` PRs, new pages, new
+routes and workflows unless a necessary repair of an existing flow is explicitly
+justified and independently approved under POLICY section 1.3. Mock mode must
+not claim an operation succeeds where the real Builder policy refuses it.
+
 ## Ground rules
 
 - Studio does not reimplement builder logic.
