@@ -16,6 +16,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAssistConfig } from "@/features/assistant/config";
 import { createProvider } from "@/features/assistant/provider";
+import { isAssistantEnabled } from "./baseUrl";
 import { moveLegacyKey } from "@/shared/lib/storageMigration";
 import { contextsMatch, resolveAssistantContext } from "./context";
 import { buildAssistantDemoResponse, isAssistantDemoAvailable, runAssistantDemoQuery } from "./demo";
@@ -159,6 +160,11 @@ export function useAssistantSession(): UseAssistantSessionResult {
       };
       addTurn(turn);
 
+      // Off in this deployment (#798): nothing is collected or sent, Builder included.
+      if (!isAssistantEnabled()) {
+        updateTurn(turnId, (t) => ({ ...t, status: "error", error: { kind: "llm_error", message: i18n.t("assistant.egress.off") } }));
+        return;
+      }
       if (!isConfigured) {
         updateTurn(turnId, (t) => ({ ...t, status: "error", error: { kind: "no_key" } }));
         return;

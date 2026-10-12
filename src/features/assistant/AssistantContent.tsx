@@ -15,6 +15,7 @@ import { MaskedCell, MaskedColumnBadge, maskedSet } from "@/features/data-table/
 import { useAssistConfig } from "@/features/assistant/config";
 import { Button, Card, Disclosure, TermHelp, Textarea } from "@/shared/ui";
 import { describeAction } from "./actions";
+import { isAssistantEnabled } from "./baseUrl";
 import { relatedCatalogDatasets } from "./relatedDatasets";
 import type { AssistantAction } from "./schema";
 import { getSuggestedQuestions } from "./suggestedQuestions";
@@ -78,12 +79,24 @@ export function ApiKeySetup() {
   const [draftModel, setDraftModel] = useState(model);
   const [draftBaseUrl, setDraftBaseUrl] = useState(baseUrl);
 
+  // Off in this deployment (#798): no key is asked for, so none can be sent.
+  if (!isAssistantEnabled()) {
+    return (
+      <Card variant="dashed" className="p-4 text-sm text-muted-foreground" role="status">
+        {t("assistant.egress.off")}
+      </Card>
+    );
+  }
+
   return (
     <Card variant="dashed" className="space-y-3 p-4">
       <div>
         <p className="text-sm font-semibold">{t("assistant.byok.title")}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           {t("assistant.byok.desc")}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground" data-testid="assistant-egress-disclosure">
+          {t("assistant.egress.disclosurePendingReview")}
         </p>
       </div>
       <label className="block text-xs font-medium text-muted-foreground">
@@ -177,6 +190,7 @@ const QUERY_ERROR_LABEL: Record<string, string> = {
   query_timeout: "assistant.queryError.query_timeout",
   query_execution_failed: "assistant.queryError.query_execution_failed",
   query_resource_limit: "assistant.queryError.query_resource_limit",
+  query_rate_limited: "assistant.queryError.query_rate_limited",
   // Policy blocks, not failures (#640): the same words as the SQL workspace.
   redistribution_forbidden: "sql.blocked.redistribution_forbidden.title",
   declared_pii_withheld: "sql.blocked.declared_pii_withheld.title",

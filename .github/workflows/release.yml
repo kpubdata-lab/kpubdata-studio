@@ -153,6 +153,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       # On the pull request path, the merge commit itself — not `main`, which by then
       # may be whatever merged next. On a dispatch it is main's head, pinned right away
@@ -320,3 +322,40 @@ jobs:
             --notes-file /tmp/notes.md \
             --target "${{ steps.commit.outputs.sha }}" \
             "kpubdata-studio-${TAG}.tar.gz"
+
+  image:
+    name: Image
+    needs: [release]
+    # A tag pushed with GITHUB_TOKEN fires nothing, so the image is called, not waited
+    # for (#904). Without this the tag exists and no image does. image.yml builds the
+    # tag, publishes ghcr.io/kpubdata-lab/kpubdata-studio:<tag>, then pulls it by digest
+    # and starts it against Builder at the same tag.
+    uses: ./.github/workflows/image.yml
+    with:
+      ref: ${{ needs.release.outputs.tag }}
+      # Always: a release pull request calls this as a `pull_request` event, which
+      # image.yml otherwise treats as a dry run.
+      publish: true
+    # The one job allowed to write packages; image.yml's publish job gets no more.
+    permissions:
+      contents: read
+      packages: write
+
+  image-published:
+    name: Image published
+    needs: [release, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # A skipped publish job leaves the called workflow green. The release is not done
+    # until the image it declares exists.
+    steps:
+      - name: The release's image has a digest
+        env:
+          TAG: ${{ needs.release.outputs.tag }}
+          DIGEST: ${{ needs.image.outputs.digest }}
+        run: |
+          if [ -z "${DIGEST}" ]; then
+            echo "::error::no image was published for ${TAG}; the release is incomplete"
+            exit 1
+          fi
+          echo "ghcr.io/kpubdata-lab/kpubdata-studio:${TAG} is ${DIGEST}"

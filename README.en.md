@@ -84,6 +84,8 @@ docker run -p 8080:8080 \
 | `PRIVACY_URL` · `TERMS_URL` | This deployment's privacy policy and terms of use pages. Linked from the login and sign-up screens and the account menu |
 | `SUPPORT_CONTACT` | Where users write: a mail address or an `https:` page. Shown on the pending-approval and error screens and in the account menu |
 | `ACCOUNT_URL` | The sign-in service's account page (change password, delete account). `<OIDC_ISSUER>/account` when empty |
+| `ASSISTANT_ENABLED` | `true` lets Ask KPubData call an external AI provider. Off by default ([what it sends](docs/assistant-egress.md)) |
+| `ASSISTANT_ALLOWED_ORIGINS` | The https origins Ask KPubData may call, space-separated. Required when it is turned on |
 
 Studio does not ship the policy or the terms. Whoever operates a deployment writes and
 publishes them and sets their addresses. A value that is not set is not shown.
@@ -91,6 +93,30 @@ publishes them and sets their addresses. A value that is not set is not shown.
 The browser calls Builder directly, so add this Studio's origin to Builder's
 `KPUBDATA_BUILDER_ALLOWED_ORIGINS`. A value containing a quote, a space, `<` or similar
 stops the container with the reason instead of starting it.
+
+**Real Builder mode needs the sign-in settings too.** Studio sends Builder only a sign-in
+token (Bearer). With `BUILDER_API_URL` set and `OIDC_ISSUER` or `OIDC_CLIENT_ID` empty, the
+page loads but the login screen stops at "Authentication initialization failed". Without an
+identity provider, leave `BUILDER_API_URL` empty too and run the demo.
+
+#### Running it on one VM with Builder
+
+Builder's `docker-compose.prod.app.yml` has a `studio` profile that starts Studio with Builder
+and Caddy. Getting the repository, logging in to GHCR and the `.env` follow Builder's
+[deployment guide, section 12](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/docs/deploy.md).
+
+```bash
+docker compose -f docker-compose.prod.app.yml --profile caddy --profile studio up -d
+```
+
+- The variables above go in Builder's `.env` with a `STUDIO_` prefix: `STUDIO_BUILDER_API_URL`,
+  `STUDIO_OIDC_CLIENT_ID`, `STUDIO_PRIVACY_URL`, `STUDIO_TERMS_URL`, `STUDIO_SUPPORT_CONTACT`.
+  `OIDC_ISSUER` alone keeps its name, since Builder uses the same value.
+- That compose does not pass `ACCOUNT_URL`, `ASSISTANT_ENABLED` or `ASSISTANT_ALLOWED_ORIGINS`
+  (kpubdata-builder#1274).
+- The Studio image is built from the `STUDIO_REF` commit, not pulled. Its default can be older
+  than Studio's `main`.
+- A rehearsal of these steps: [docs/deploy-rehearsal.md](docs/deploy-rehearsal.md).
 
 ## Key Features
 

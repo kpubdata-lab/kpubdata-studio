@@ -11,7 +11,7 @@
  * ADD_REPORT_BLOCK) as a discriminated union. Any action outside this list is rejected at the
  * Zod stage (prevent execution of unknown actions).
  */
-import { z } from "zod";
+import * as z from "zod/mini";
 import { jsonValueSchema } from "@/shared/lib/schemas";
 
 export const ASSISTANT_STAGES = ["bronze", "silver", "gold"] as const;
@@ -20,58 +20,58 @@ export const ASSISTANT_QUERY_STAGES = ["silver", "gold"] as const;
 /** A BuildSpec patch op. Allow only a subset of RFC6902 JSON Patch (add/replace/remove). */
 export const buildSpecPatchOpSchema = z.object({
   op: z.enum(["add", "replace", "remove"]),
-  path: z.string().min(1),
-  value: jsonValueSchema.optional(),
+  path: z.string().check(z.minLength(1)),
+  value: z.optional(jsonValueSchema),
 });
 export type BuildSpecPatchOp = z.infer<typeof buildSpecPatchOpSchema>;
 
 const openProviderActionSchema = z.object({
   type: z.literal("OPEN_PROVIDER"),
-  provider: z.string().min(1),
-  reason: z.string().min(1),
+  provider: z.string().check(z.minLength(1)),
+  reason: z.string().check(z.minLength(1)),
 });
 
 const openBuildActionSchema = z.object({
   type: z.literal("OPEN_BUILD"),
-  runId: z.string().min(1),
-  reason: z.string().min(1),
+  runId: z.string().check(z.minLength(1)),
+  reason: z.string().check(z.minLength(1)),
 });
 
 const openQualityActionSchema = z.object({
   type: z.literal("OPEN_QUALITY"),
-  datasetId: z.string().min(1),
-  runId: z.string().min(1).optional(),
-  source: z.string().min(1).optional(),
-  stage: z.enum(ASSISTANT_STAGES).optional(),
-  reason: z.string().min(1),
+  datasetId: z.string().check(z.minLength(1)),
+  runId: z.optional(z.string().check(z.minLength(1))),
+  source: z.optional(z.string().check(z.minLength(1))),
+  stage: z.optional(z.enum(ASSISTANT_STAGES)),
+  reason: z.string().check(z.minLength(1)),
 });
 
 const patchBuildSpecActionSchema = z.object({
   type: z.literal("PATCH_BUILDSPEC"),
-  runId: z.string().min(1),
-  patch: z.array(buildSpecPatchOpSchema).min(1),
-  reason: z.string().min(1),
+  runId: z.string().check(z.minLength(1)),
+  patch: z.array(buildSpecPatchOpSchema).check(z.minLength(1)),
+  reason: z.string().check(z.minLength(1)),
 });
 
 const createBuildDraftActionSchema = z.object({
   type: z.literal("CREATE_BUILD_DRAFT"),
   values: z.object({
-    datasetId: z.string().min(1),
-    title: z.string().min(1),
-    description: z.string().min(1),
-    provider: z.string().min(1),
-    sourceDataset: z.string().min(1),
-    sourceParams: z.string().optional(),
-    outputPath: z.string().optional(),
-    exportFormats: z.array(z.string()).optional(),
+    datasetId: z.string().check(z.minLength(1)),
+    title: z.string().check(z.minLength(1)),
+    description: z.string().check(z.minLength(1)),
+    provider: z.string().check(z.minLength(1)),
+    sourceDataset: z.string().check(z.minLength(1)),
+    sourceParams: z.optional(z.string()),
+    outputPath: z.optional(z.string()),
+    exportFormats: z.optional(z.array(z.string())),
   }),
-  reason: z.string().min(1),
+  reason: z.string().check(z.minLength(1)),
 });
 
 const addReportBlockActionSchema = z.object({
   type: z.literal("ADD_REPORT_BLOCK"),
-  note: z.string().min(1),
-  reason: z.string().min(1),
+  note: z.string().check(z.minLength(1)),
+  reason: z.string().check(z.minLength(1)),
 });
 
 /** Allowlist enforced by issue #256. Any action outside this list is rejected by the discriminated union. */
@@ -87,21 +87,21 @@ export type AssistantAction = z.infer<typeof assistantActionSchema>;
 
 export const assistantEvidenceRefSchema = z.object({
   kind: z.enum(["dataset", "run", "stage", "quality", "schema_drift", "catalog"]),
-  id: z.string().min(1),
-  label: z.string().min(1),
+  id: z.string().check(z.minLength(1)),
+  label: z.string().check(z.minLength(1)),
 });
 
 export const assistantGeneratedSqlSchema = z.object({
-  sql: z.string().min(1),
+  sql: z.string().check(z.minLength(1)),
   stage: z.enum(ASSISTANT_QUERY_STAGES),
-  source: z.string().min(1).optional(),
+  source: z.optional(z.string().check(z.minLength(1))),
 });
 
 /** The top-level JSON response shape requested from the LLM. */
 export const assistantStructuredResponseSchema = z.object({
-  answer: z.string().min(1),
-  evidenceRefs: z.array(assistantEvidenceRefSchema).default([]),
-  generatedSql: assistantGeneratedSqlSchema.nullable().default(null),
-  suggestedActions: z.array(assistantActionSchema).default([]),
+  answer: z.string().check(z.minLength(1)),
+  evidenceRefs: z._default(z.array(assistantEvidenceRefSchema), []),
+  generatedSql: z._default(z.nullable(assistantGeneratedSqlSchema), null),
+  suggestedActions: z._default(z.array(assistantActionSchema), []),
 });
 export type AssistantStructuredResponseInput = z.infer<typeof assistantStructuredResponseSchema>;

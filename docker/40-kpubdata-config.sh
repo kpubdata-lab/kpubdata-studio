@@ -15,10 +15,15 @@
 #   TERMS_URL         the deployment's terms of use, an http(s) page (#838)
 #   SUPPORT_CONTACT   where users write: a mail address, mailto: or an https page (#838)
 #   ACCOUNT_URL       the identity provider's account page; <OIDC_ISSUER>/account when unset
+#   ASSISTANT_ENABLED "true" lets Ask KPubData call an external AI provider (#798). Off
+#                     unless set: a hosted deployment sends nothing to one by default.
+#   ASSISTANT_ALLOWED_ORIGINS  the https origins it may call, space-separated, e.g.
+#                     "https://api.openai.com". Required when ASSISTANT_ENABLED=true.
 #
 # It also writes the Content-Security-Policy header nginx sends with the page (#663),
-# with this deployment's Builder and OIDC origins added to connect-src (and the issuer
-# to frame-src, for the silent SSO iframe). The policy is the one the Vite build puts
+# with this deployment's Builder, OIDC and allowed AI origins in connect-src (and the
+# issuer in frame-src, for the silent SSO iframe). connect-src holds no `https:`: the
+# page connects to the origins named here and nowhere else (#798). The policy is the one the Vite build puts
 # in a meta element (src/shared/config/contentSecurityPolicy.ts) plus frame-ancestors;
 # __tests__/contentSecurityPolicy.test.ts keeps the two the same.
 #
@@ -97,9 +102,34 @@ issuer_origin=$(origin OIDC_ISSUER "$issuer")
 origin PRIVACY_URL "$privacy" > /dev/null
 origin TERMS_URL "$terms" > /dev/null
 origin ACCOUNT_URL "$account" > /dev/null
+# Ask KPubData (#798). Off unless the operator says "true", and then only to origins
+# the operator names: the user's base URL must be one of them (features/assistant/baseUrl.ts).
+assistant="${ASSISTANT_ENABLED:-false}"
+case "$assistant" in
+  true | false) ;;
+  *)
+    echo "kpubdata-studio: ASSISTANT_ENABLED is \"true\" or \"false\": ${assistant}" >&2
+    exit 1
+    ;;
+esac
+ai_origins=""
+if [ "$assistant" = "true" ]; then
+  for o in ${ASSISTANT_ALLOWED_ORIGINS:-}; do
+    if ! printf '%s' "$o" | grep -Eq '^https://[a-z0-9.-]+(:[0-9]+)?$'; then
+      echo "kpubdata-studio: ASSISTANT_ALLOWED_ORIGINS holds something that is not an https origin: ${o}" >&2
+      exit 1
+    fi
+    ai_origins="${ai_origins} ${o}"
+  done
+  if [ -z "$ai_origins" ]; then
+    echo "kpubdata-studio: ASSISTANT_ENABLED=true needs ASSISTANT_ALLOWED_ORIGINS, the AI origins it may call" >&2
+    exit 1
+  fi
+fi
+
 local_http="http://localhost:* http://127.0.0.1:*"
 policy="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'"
-policy="${policy}; connect-src 'self' https: ${local_http}${builder_origin}${issuer_origin}"
+policy="${policy}; connect-src 'self' ${local_http}${builder_origin}${issuer_origin}${ai_origins}"
 policy="${policy}; frame-src 'self' https: ${local_http}${issuer_origin}"
 policy="${policy}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 policy="${policy}; frame-ancestors 'self'"
@@ -114,7 +144,9 @@ window.__KPUBDATA_CONFIG__ = {
   "privacyUrl": "${privacy}",
   "termsUrl": "${terms}",
   "supportContact": "${support}",
-  "accountUrl": "${account}"
+  "accountUrl": "${account}",
+  "assistantEnabled": "${assistant}",
+  "assistantAllowedOrigins": "${ai_origins# }"
 };
 JS
 
@@ -123,4 +155,4 @@ cat > "$csp_out" <<NGINX
 add_header Content-Security-Policy "${policy}" always;
 NGINX
 
-echo "kpubdata-studio: builder=${builder:-<built-in>} real=${real:-<built-in>} oidc=${issuer:-<built-in>}"
+echo "kpubdata-studio: builder=${builder:-<built-in>} real=${real:-<built-in>} oidc=${issuer:-<built-in>} assistant=${assistant}${ai_origins}"

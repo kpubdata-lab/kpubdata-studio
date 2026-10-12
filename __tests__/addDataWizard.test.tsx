@@ -19,6 +19,7 @@ import * as addDataApi from "@/features/add-data/api";
 import { AddDataPage } from "@/pages/AddDataPage";
 import { API_BASE } from "@/shared/config/env";
 import { mswServer } from "../vitest.setup";
+import { chooseProvider } from "./support/chooseProvider";
 
 function BuildDetailStub() {
   const { buildId } = useParams();
@@ -93,7 +94,7 @@ describe("Create Table Workbench — Public API happy path (mock 모드, #250 am
     await screen.findByText("API 사용 준비");
 
     // mock catalog는 provider "datago" / dataset "apt_trade"를 제공한다(features/add-data/api.ts).
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
 
@@ -125,7 +126,7 @@ describe("Create Table Workbench — Public API happy path (mock 모드, #250 am
     next();
     await screen.findByText("API 사용 준비");
 
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
@@ -142,7 +143,7 @@ describe("Create Table Workbench — Public API happy path (mock 모드, #250 am
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
@@ -166,7 +167,7 @@ describe("Create Table Workbench — touched metadata 정책 (#250 최종 검증
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
@@ -188,8 +189,7 @@ describe("Create Table Workbench — touched metadata 정책 (#250 최종 검증
     // (Node 20 CI에서 catalog fetch가 아직 준비되지 않아 dataset select가 disabled로
     // 남아 timeout하던 문제 수정, #283 CI #342 §8) — 같은 파일의 mixed preview
     // 테스트에 이미 쓰인 패턴을 그대로 재사용한다.
-    await screen.findByRole("option", { name: "datago" });
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
@@ -257,7 +257,7 @@ describe("Create Table Workbench — touched metadata 정책 (#250 최종 검증
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);
@@ -282,8 +282,7 @@ describe("Create Table Workbench — Dataset 변경 시 요청 파라미터 초�
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    await screen.findByRole("option", { name: "datago" });
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     return result;
   }
@@ -412,8 +411,7 @@ describe("Create Table Workbench — YAML Apply explicit metadata (#283 후속 �
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    await screen.findByRole("option", { name: "datago" });
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     // lastIdentitySourceRef가 "public_api:datago:apt_trade"로 세팅된 상태를 만든다.
@@ -462,7 +460,7 @@ describe("Create Table Workbench — stale preview (#250 §2/§6)", () => {
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     next();
@@ -678,8 +676,7 @@ describe("Create Table Workbench — mixed/partial preview (#250 §3)", () => {
     await screen.findByText("API 사용 준비");
     // "제공자 연결" 텍스트 렌더는 catalog loaded를 보장하지 않는다 — catalog option이
     // 실제 DOM에 나타날 때까지 기다린 뒤에 provider를 선택한다(test race 수정).
-    await screen.findByRole("option", { name: "datago" });
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
 
@@ -748,7 +745,10 @@ describe("Create Table Workbench — Review == submission, 실제 run_id 사용 
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
     next();
     await screen.findByText("API 사용 준비");
-    fireEvent.change(screen.getByLabelText(/^제공자/), { target: { value: "datago" } });
+    // The title renders before the catalog arrives, so it does not mean the provider can be
+    // chosen: a change made before the option exists is ignored and the dataset select stays
+    // disabled. Wait for the option itself.
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
     await screen.findByText(/ID: datago-air-quality/);
@@ -778,7 +778,7 @@ describe("Create Table — focus follows the step (#669)", () => {
     expect(sourceHeading).not.toHaveFocus();
 
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
-    fireEvent.change(await screen.findByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText(/ID: datago-apt-trade/);

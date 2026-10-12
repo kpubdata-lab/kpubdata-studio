@@ -3,6 +3,8 @@
 # BUILDER_API_URLs, and verify the Content-Security-Policy header — its
 # existence, the deployment origin in connect-src, and that it does not
 # double-apply with the <meta> CSP. A bad origin must refuse to start.
+# Ask KPubData is off unless the operator opts in, and connect-src names origins instead
+# of allowing every https host (#798).
 # Also: the security headers every response carries, and the page's lang (#841), and
 # that a browser refuses to show the page in a frame of another origin
 # (kpubdata-builder#1107) when CSP_SMOKE_BROWSER names a Chrome or Chromium.
@@ -22,7 +24,7 @@ ok()   { PASS=$((PASS + 1)); say "  ok: $*"; }
 bad()  { FAIL=$((FAIL + 1)); say "  FAIL: $*" >&2; }
 check(){ if [ "$2" = "$3" ]; then ok "$1"; else bad "$1 (expected [$3], got [$2])"; fi; }
 
-cleanup() { docker rm -f csp-a csp-b csp-c 2>/dev/null || true; }
+cleanup() { docker rm -f csp-a csp-b csp-c csp-d csp-e 2>/dev/null || true; }
 trap cleanup EXIT
 
 # CI builds the image beforehand with a layer cache (ci.yml) and sets CSP_SMOKE_IMAGE_BUILT.
@@ -41,6 +43,8 @@ header=$(curl -sI http://localhost:18081/ | grep -i '^Content-Security-Policy:' 
 
 echo "$header" | grep -q 'connect-src' && ok "connect-src present" || bad "connect-src missing"
 echo "$header" | grep -q 'https://api.example.org' && ok "deployment origin in connect-src" || bad "deployment origin not in connect-src"
+echo "$header" | grep -Eq "connect-src [^;]*https:( |;)" && bad "connect-src allows every https host" || ok "connect-src does not allow every https host"
+curl -s http://localhost:18081/config.js | grep -q '"assistantEnabled": "false"' && ok "Ask KPubData is off by default" || bad "Ask KPubData is not off by default"
 
 # The meta CSP is turned off in the Docker build (KPUBDATA_CSP_META=off);
 # a second policy in the page would double-apply.
@@ -106,6 +110,25 @@ HTML
 else
   say "Case 4: not run (CSP_SMOKE_BROWSER is not set), so no browser was asked to frame the page"
 fi
+
+# --- Case 5: an operator who turns Ask KPubData on names the AI origins it may reach (#798) ---
+say "Case 5: Ask KPubData on, with an allowed origin"
+docker run -d --name csp-d -e BUILDER_API_URL=https://api.example.org -e ASSISTANT_ENABLED=true \
+  -e ASSISTANT_ALLOWED_ORIGINS=https://llm.example.org -p 18084:8080 "$IMAGE" >/dev/null
+for i in $(seq 1 30); do docker exec csp-d nginx -t 2>/dev/null && break; sleep 0.5; done
+header_d=$(curl -sI http://localhost:18084/ | grep -i '^Content-Security-Policy:' || true)
+echo "$header_d" | grep -Eq "connect-src [^;]*https://llm.example.org( |;)" && ok "allowed AI origin in connect-src" || bad "allowed AI origin not in connect-src: ${header_d}"
+echo "$header_d" | grep -Eq "connect-src [^;]*https:( |;)" && bad "connect-src allows every https host" || ok "connect-src still names its origins"
+curl -s http://localhost:18084/config.js | grep -q '"assistantAllowedOrigins": "https://llm.example.org"' && ok "allowed origins reach the page" || bad "allowed origins missing from config.js"
+
+say "Case 6: Ask KPubData on without an allowed origin"
+set +e
+docker run -d --name csp-e -e ASSISTANT_ENABLED=true -p 18085:8080 "$IMAGE" >/dev/null 2>&1
+sleep 3
+docker inspect csp-e --format='{{.State.Running}}' 2>/dev/null | grep -q 'true'
+running_e=$?
+set -e
+if [ $running_e -ne 0 ]; then ok "no allowed origin refused to start"; else bad "started with Ask KPubData on and no allowed origin"; fi
 
 # --- Case 3: an invalid origin (injection) refuses to start ---
 say "Case 3: invalid origin"

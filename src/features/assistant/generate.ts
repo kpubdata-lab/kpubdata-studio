@@ -5,10 +5,10 @@
  * Repair loop: if parse/validation fails, feed error back to LLM up to MAX_REPAIR_ATTEMPTS, then give up.
  */
 import type { AssistProvider, AssistMessage } from "./provider";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { assistantClient } from "./query";
 import type { CatalogResponse, ValidateResponse } from "@/shared/lib/builderApi";
 import { parse } from "yaml";
-import { z } from "zod";
+import * as z from "zod/mini";
 import { i18n } from "@/shared/i18n";
 
 /**
@@ -27,17 +27,17 @@ export interface GenerationResult {
 
 const MAX_REPAIR_ATTEMPTS = 2;
 
-const generatedBuildSpecSchema = z.object({
-  dataset_id: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().min(1),
+const generatedBuildSpecSchema = z.looseObject({
+  dataset_id: z.string().check(z.minLength(1)),
+  title: z.string().check(z.minLength(1)),
+  description: z.string().check(z.minLength(1)),
   sources: z.array(
-    z.object({
-      provider: z.string().min(1),
-      dataset: z.string().min(1),
-    }).passthrough(),
-  ).min(1),
-}).passthrough();
+    z.looseObject({
+      provider: z.string().check(z.minLength(1)),
+      dataset: z.string().check(z.minLength(1)),
+    }),
+  ).check(z.minLength(1)),
+});
 
 export interface GenerationOptions {
   catalog: CatalogResponse;
@@ -75,7 +75,7 @@ function parseGeneratedSpec(spec: string) {
   } catch (error) {
     return {
       success: false as const,
-      error: new z.ZodError([
+      error: new z.core.$ZodError([
         {
           code: "custom",
           path: [],
@@ -96,7 +96,7 @@ export async function generateBuildSpec(
   userPrompt: string,
   options: GenerationOptions,
 ): Promise<GenerationResult> {
-  if (!isRealBuilderEnabled()) {
+  if (assistantClient().demo) {
     return {
       spec: null,
       status: "error",

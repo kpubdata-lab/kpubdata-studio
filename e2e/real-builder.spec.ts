@@ -218,6 +218,70 @@ test("같은 데이터셋을 다시 추가해도 이미 있는 테이블은 그�
 });
 
 /**
+ * The parameter form comes from Builder's query definition (#899, contract 1.120.0):
+ * `datago.air_station` defines `stationName` (alias `station`) and `dataTerm` (alias
+ * `term`, an enum). Filled through the generated fields, the params are the replay
+ * fixture's (`gangnam_full_page`), so the preview answers with its rows.
+ */
+test("Create Table draws air_station's parameter form from Builder's definition (#899) @real-builder", async ({
+  page,
+  request,
+}) => {
+  test.skip(
+    !process.env.REAL_BUILDER_REPLAY,
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
+  );
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  const catalog = (await (await request.get(`${BUILDER_URL}/catalog`)).json()) as {
+    providers: Array<{ name: string; datasets: Array<{ name: string; query_parameters?: unknown }> }>;
+  };
+  const definition = catalog.providers
+    .find((provider) => provider.name === "datago")
+    ?.datasets.find((dataset) => dataset.name === "air_station")?.query_parameters;
+  test.skip(definition === undefined, "Builder older than contract 1.120.0 sends no query_parameters");
+  expect(definition).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: "stationName", alias: "station", required: true }),
+      expect.objectContaining({ name: "dataTerm", alias: "term", enum: ["daily", "month", "3month"] }),
+    ]),
+  );
+
+  await openCreateTable(page);
+  await page.getByRole("button", { name: /공공 API/ }).first().click();
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.locator('#add-data-provider option[value="datago"]')).toBeAttached({ timeout: 30_000 });
+  await page.locator("#add-data-provider").selectOption("datago");
+  await page.locator("#add-data-dataset").selectOption("air_station");
+
+  const term = page.locator("#add-data-param-term");
+  await expect(term).toBeVisible();
+  await expect(term.locator("option")).toHaveText(["선택하세요…", "daily", "month", "3month"]);
+  // Paging is not in the definition: it goes in the JSON editor beside the fields.
+  await page.locator("#add-data-params").fill(JSON.stringify({ page: 1, page_size: 100 }));
+  await term.selectOption("daily");
+  await page.locator("#add-data-param-station").fill("강남구");
+  expect(JSON.parse(await page.locator("#add-data-params").inputValue())).toEqual({
+    page: 1,
+    page_size: 100,
+    term: "daily",
+    station: "강남구",
+  });
+
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "미리보기 · 검증" })).toBeVisible();
+  await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
+  await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
+  // The build is offered only after a successful preview (#842).
+  await page.getByRole("button", { name: "다음" }).first().click();
+  await expect(page.getByRole("heading", { name: "검토 · 테이블 만들기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "테이블 만들기" })).toBeEnabled({ timeout: 30_000 });
+
+  await expectNoPageErrors(errors);
+});
+
+/**
  * Public API source BuildSpec. Must match the replay fixture's dataset and params exactly
  * (fixture is `datago.air_station` example `gangnam_full_page`).
  * totalCount 22 ≤ page_size 100, so finishes in one page — Builder Bronze walks pages
@@ -510,3 +574,59 @@ test("관리자는 관리 메뉴에서 정책·실행·가입 원장을 본다 (
   await expectNoPageErrors(errors);
 });
 
+
+/**
+ * A run that fails, as an administrator sees it (#906, contract 1.116.0). Kept last in this
+ * file so the failed run it leaves in Builder's history comes after every scenario that
+ * reads that history. The source asks replay for a station it has no recording of, so the
+ * provider step fails the same way on every run.
+ */
+const FAILING_SPEC = [
+  "dataset_id: dataset.e2e_admin_failure",
+  "title: Admin failure e2e",
+  "description: a replay source with no recording fails, and the admin screen says why",
+  "sources:",
+  "  - provider: datago",
+  "    dataset: air_station",
+  "    params:",
+  "      station: 녹음이없는구",
+  "      term: daily",
+  "      page: 1",
+  "      page_size: 100",
+  "exports:",
+  "  - kind: jsonl",
+  "    output_path: out/data.jsonl",
+].join("\n");
+
+test("관리자는 실패한 실행의 원인·단계·복구 안내를 본다 (#906) @real-builder", async ({ page, request }) => {
+  test.skip(!process.env.REAL_BUILDER_REPLAY, "Builder replay 모드 필요 — the failure comes from a replay miss");
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  const runId = `e2e-admin-failure-${Date.now()}`;
+  const built = await request.post(`${BUILDER_URL}/build`, { data: { spec: FAILING_SPEC, run_id: runId }, timeout: 60_000 });
+  expect(((await built.json()) as { status?: string }).status).toBe("failed");
+
+  // What Builder records for it: one of its codes and a stage, not only a sentence.
+  const listed = (await (await request.get(`${BUILDER_URL}/admin/runs?limit=200`)).json()) as {
+    runs: Array<{ run_id: string; error_code?: string | null; error_stage?: string | null }>;
+  };
+  const run = listed.runs.find((entry) => entry.run_id === runId);
+  expect(run?.error_code, "Builder gives the failed run a code (contract 1.116.0)").toBeTruthy();
+  expect(run?.error_stage, "Builder gives the failed run a stage").toBeTruthy();
+
+  await navigateViaShell(page, /^(Administration|관리)$/);
+  await expect(page).toHaveURL(/\/admin$/);
+  const row = page.getByRole("row").filter({ hasText: runId });
+  await expect(row).toBeVisible({ timeout: 30_000 });
+  const cell = row.locator("[data-failure-code]");
+  // A code Studio words is shown with its hint; the drift test keeps the two lists equal.
+  await expect(cell).toHaveAttribute("data-failure-code", run?.error_code ?? "");
+  await expect(cell).toContainText(t(`admin.failure.code.${run?.error_code}`));
+  await expect(cell).toContainText(t(`admin.failure.stage.${run?.error_stage}`));
+  await expect(cell).toContainText(t(`admin.failure.hint.${run?.error_code}`));
+  // Builder's raw code is an attribute for tests, never the words on the screen.
+  await expect(cell).not.toContainText(run?.error_code ?? "");
+
+  await expectNoPageErrors(errors);
+});

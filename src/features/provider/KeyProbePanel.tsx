@@ -19,9 +19,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { builderApi, isRealBuilderEnabled, type ProviderProbeResponse } from "@/shared/lib/builderApi";
+import type { ProviderProbeResponse } from "@/shared/lib/builderApi";
 import { Button } from "@/shared/ui";
 
+import { providerClient } from "./client";
 import { probeRateLimited } from "./probeRefusal";
 import { ActionableStatus, NormalStatus, type ActionTone } from "@/shared/ui/StatusState";
 
@@ -45,20 +46,6 @@ type ProbeState =
   | { status: "wait"; seconds: number | null }
   | { status: "error" };
 
-/** Demo answer for mock mode: one of each outcome a user most often meets. */
-function mockProbe(provider: string): ProviderProbeResponse {
-  return {
-    provider,
-    probed_at: "2026-10-06T09:30:00+00:00",
-    complete: true,
-    datasets: [
-      { dataset: "apt_trade", service_id: "RTMSDataSvcAptTradeDev", status: "available", detail: "", http_status: 200 },
-      { dataset: "apt_rent", service_id: "RTMSDataSvcAptRent", status: "application_required", detail: "", http_status: 200 },
-    ],
-    not_probed: [],
-  };
-}
-
 export function KeyProbePanel({ provider }: { provider: string }) {
   const { t } = useTranslation();
   const [state, setState] = useState<ProbeState>({ status: "idle" });
@@ -66,7 +53,7 @@ export function KeyProbePanel({ provider }: { provider: string }) {
   const run = async () => {
     setState({ status: "loading" });
     try {
-      const result = isRealBuilderEnabled() ? await builderApi.probeProviderKey(provider) : mockProbe(provider);
+      const result = await providerClient().probe(provider);
       setState({ status: "loaded", result });
     } catch (cause) {
       const limited = probeRateLimited(cause);

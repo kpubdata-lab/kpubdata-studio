@@ -79,10 +79,22 @@ jobs:
       - name: Retired screen names (#423)
         run: node scripts/legacy-terms.mjs --github
 
+      # A screen that asks isRealBuilderEnabled() itself splits real and demo where
+      # nothing holds the two to one interface (#794). The count of such places only
+      # goes down: a new one, a larger count, or a smaller count with the baseline not
+      # lowered fails (#902). Each feature's one selector is listed in the script.
+      - name: Direct real/demo switches (#902)
+        run: node scripts/real-builder-switch.mjs --github
+
       # ADR 0003 (kpubdata) puts comments in English. The debt is at ZERO
       # (#427): any Korean comment now fails the build outright.
       - name: Korean comment gate (#427)
         run: python3 scripts/check_korean_ts_comments.py src e2e
+
+      # kpubdata POLICY 0.1: a review or verification level is written meaning first,
+      # code in parentheses -- "unit tests (V1)", never a bare V2 (kpubdata#878, #894).
+      - name: Plain review and verification codes
+        run: python3 scripts/check_plain_codes.py
 
       # Renaming a UI string without moving the assertions that name it (#429). The
       # values this branch removed from the locales are computed exactly, so there is
@@ -179,7 +191,8 @@ jobs:
     # 손으로 돌릴 때만 실행돼, 회귀를 잡아줄 수 있는 스펙이 사실상 놀고 있었다.
     #
     # 실 Builder 기동이 필요한 @real-builder 스펙은 playwright.config.ts 의 grep 이
-    # 이미 걷어낸다 — 이 잡은 mock 모드 vite dev 서버만 띄운다(webServer 설정).
+    # 이미 걷어낸다 — 이 잡은 mock 모드 앱을 띄운다(webServer 설정): 대부분은 빌드한
+    # `vite preview` 로 워커 4개가 나눠 쓰고, dev 우회 인증이 필요한 4개 스펙만 dev 서버에서 워커 1개로 돈다(#901).
     #
     # The job runs in the Playwright image for the installed @playwright/test (#585), so
     # Chromium, its system libraries and fonts come from the image rather than from
@@ -189,7 +202,7 @@ jobs:
     name: E2E (Playwright)
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
       options: --ipc=host
     timeout-minutes: 20
     steps:

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { checkLlmBaseUrl, DEFAULT_LLM_BASE_URL, redactApiKey } from "./baseUrl";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { checkLlmBaseUrl, DEFAULT_LLM_BASE_URL, isAssistantEnabled, redactApiKey } from "./baseUrl";
 
 describe("checkLlmBaseUrl (#256 리뷰 §2)", () => {
   it("treats an empty input as the safe default", () => {
@@ -35,6 +35,32 @@ describe("checkLlmBaseUrl (#256 리뷰 §2)", () => {
   it("rejects a non-http(s) scheme", () => {
     const result = checkLlmBaseUrl("javascript:alert(1)");
     expect(result.safe).toBe(false);
+  });
+});
+
+describe("the deployment's switch and allowlist (#798)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const deploy = (config: Record<string, string>) => vi.stubGlobal("window", { __KPUBDATA_CONFIG__: config });
+
+  it("keeps the assistant on where no runtime value says otherwise, and off where it says false", () => {
+    expect(isAssistantEnabled()).toBe(true);
+    deploy({});
+    expect(isAssistantEnabled()).toBe(true);
+    deploy({ assistantEnabled: "false" });
+    expect(isAssistantEnabled()).toBe(false);
+    deploy({ assistantEnabled: "true" });
+    expect(isAssistantEnabled()).toBe(true);
+  });
+
+  it("accepts only an origin the deployment lists, the default address included", () => {
+    deploy({ assistantAllowedOrigins: "https://llm.example.org https://proxy.example.org:8443" });
+    expect(checkLlmBaseUrl("https://llm.example.org/v1").safe).toBe(true);
+    expect(checkLlmBaseUrl("https://proxy.example.org:8443/v1").safe).toBe(true);
+    for (const url of ["", DEFAULT_LLM_BASE_URL, "https://llm.example.org.evil.net/v1", "https://proxy.example.org/v1"]) {
+      const result = checkLlmBaseUrl(url);
+      expect(result.safe, url).toBe(false);
+      expect(result.reason, url).toBeTruthy();
+    }
   });
 });
 

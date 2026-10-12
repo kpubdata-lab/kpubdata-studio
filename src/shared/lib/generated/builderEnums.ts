@@ -7,7 +7,7 @@
  */
 
 /** The contract version this snapshot was generated from. */
-export const BUILDER_ENUMS_CONTRACT_VERSION = "1.114.0";
+export const BUILDER_ENUMS_CONTRACT_VERSION = "1.121.0";
 
 export const BUILDER_ENUMS = {
   "AdminUser.status": ["pending","approved","rejected"],
@@ -33,6 +33,7 @@ export const BUILDER_ENUMS = {
   "CallTotal.status": ["reported","unknown","inconsistent"],
   "CatalogDataset.operations": ["list","get","schema","raw","download"],
   "CatalogDataset.representation": ["api_json","api_xml","file_csv","file_excel","sheet","other"],
+  "CatalogQueryParameter.type": ["string","integer","number","date_yyyymmdd","date_yyyymm",null],
   "CatalogQuerySupport.pagination": ["offset","index","cursor","none"],
   "ColumnMetaOrigin": ["user_annotation","core_spec","catalog","engine_inferred"],
   "ColumnNullTokens.on_absent": ["error","ignore"],
@@ -91,6 +92,11 @@ export const BUILDER_ENUMS = {
   "QualitySummaryResponse.availability": ["available","unavailable"],
   "QualitySummaryResponse.window": ["24h"],
   "QueryRequest.stage": ["silver","gold"],
+  "ReadinessResponse.checks.disk": ["ok","low","failed","timeout"],
+  "ReadinessResponse.checks.output_dir": ["ok","failed","timeout"],
+  "ReadinessResponse.checks.state_store": ["ok","failed","timeout"],
+  "ReadinessResponse.checks.workers": ["ok","draining","stopped"],
+  "ReadinessResponse.status": ["ready","not_ready"],
   "RedistributionForbiddenError.code": ["redistribution_forbidden"],
   "RedistributionSourceVerdict.verdict": ["allowed","non_commercial","unknown","forbidden"],
   "RedistributionVerdict.verdict": ["allowed","non_commercial","unknown","forbidden"],

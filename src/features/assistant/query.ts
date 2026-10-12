@@ -9,7 +9,7 @@
  * handled by Builder — Studio does not parse or re-validate SQL here.
  */
 import { i18n } from "@/shared/i18n";
-import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { ApiError, builderApi, isRealBuilderEnabled, type QueryRequest } from "@/shared/lib/builderApi";
 import { queryErrorResponseSchema } from "@/shared/lib/builderApi.schema";
 import type { AssistantContext, AssistantGeneratedSql, AssistantQueryState } from "./types";
 
@@ -71,27 +71,47 @@ export async function runAssistantQuery(
   const blocked = blockedReason(context, sql);
   if (blocked) return { status: "blocked", reason: blocked };
 
-  if (!isRealBuilderEnabled()) {
-    return {
-      status: "error",
-      code: "mock_mode",
-      message: i18n.t("assistant.query.mockUnsupported"),
-    };
-  }
+  return assistantClient().runQuery(
+    {
+      dataset_id: context.datasetId!,
+      run_id: context.runId!,
+      stage: sql.stage,
+      sql: sql.sql,
+      ...(sql.source ? { source: sql.source } : {}),
+    },
+    signal,
+  );
+}
 
-  try {
-    const result = await builderApi.query(
-      {
-        dataset_id: context.datasetId!,
-        run_id: context.runId!,
-        stage: sql.stage,
-        sql: sql.sql,
-        ...(sql.source ? { source: sql.source } : {}),
-      },
-      signal,
-    );
-    return { status: "success", result };
-  } catch (cause) {
-    return classifyError(cause);
-  }
+/**
+ * What the assistant asks of Builder (#902). With a Builder, generated SQL runs on
+ * `/query` and turns go to the user's own LLM. The demo has no Builder: its turns are the
+ * canned demo's (`./demo.ts`, #256), it generates no spec, and it refuses to run SQL with
+ * `mock_mode` — a demo turn shows its own fixed result instead.
+ */
+export interface AssistantClient {
+  /** Whether turns are answered by the canned demo. */
+  readonly demo: boolean;
+  runQuery(request: QueryRequest, signal?: AbortSignal): Promise<AssistantQueryState>;
+}
+
+export const realAssistantClient: AssistantClient = {
+  demo: false,
+  async runQuery(request, signal) {
+    try {
+      return { status: "success", result: await builderApi.query(request, signal) };
+    } catch (cause) {
+      return classifyError(cause);
+    }
+  },
+};
+
+export const demoAssistantClient: AssistantClient = {
+  demo: true,
+  runQuery: async () => ({ status: "error", code: "mock_mode", message: i18n.t("assistant.query.mockUnsupported") }),
+};
+
+/** The client in force: Builder's when one is configured, the demo's otherwise. */
+export function assistantClient(): AssistantClient {
+  return isRealBuilderEnabled() ? realAssistantClient : demoAssistantClient;
 }

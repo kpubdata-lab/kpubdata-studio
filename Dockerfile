@@ -15,7 +15,10 @@
 # Builder must list this origin in KPUBDATA_BUILDER_ALLOWED_ORIGINS — the browser
 # calls it directly.
 
-FROM node:22-alpine AS build
+# The site is the same files on every platform, so it is built once, natively, and only
+# the nginx stage is per platform: an arm64 `npm ci` and Vite build under emulation
+# would take many times as long for the same output (#904).
+FROM --platform=$BUILDPLATFORM node:25-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --no-audit --no-fund

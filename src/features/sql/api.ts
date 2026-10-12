@@ -32,6 +32,8 @@ const DEMO_RESULT: QueryResponse = {
 export function classifyQueryError(cause: unknown): { status: "error"; code: string; message: string } {
   if (cause instanceof ApiError) {
     const details = cause.details as { code?: unknown; error?: unknown } | undefined;
+    // Said in the user's language with how long to wait (#949): the message the request layer made.
+    if (details?.code === "query_rate_limited") return { status: "error", code: details.code, message: cause.message };
     const parsed = queryErrorResponseSchema.safeParse(details);
     if (parsed.success) return { status: "error", code: parsed.data.code ?? "unknown", message: parsed.data.error };
     if (details && typeof details.code === "string") {
@@ -46,11 +48,33 @@ export function classifyQueryError(cause: unknown): { status: "error"; code: str
   };
 }
 
+/**
+ * What the SQL workspace asks for (#902). Builder runs the query and its refusal is
+ * classified; the demo answers every query with its fixed rows, marked `demo`.
+ */
+export interface SqlClient {
+  runTableQuery(request: QueryRequest, signal?: AbortSignal): Promise<QueryOutcome>;
+}
+
+export const realSqlClient: SqlClient = {
+  async runTableQuery(request, signal) {
+    try {
+      return { status: "success", result: await builderApi.query(request, signal), demo: false };
+    } catch (cause) {
+      return classifyQueryError(cause);
+    }
+  },
+};
+
+export const demoSqlClient: SqlClient = {
+  runTableQuery: async () => ({ status: "success", result: DEMO_RESULT, demo: true }),
+};
+
+/** The client in force: Builder's when one is configured, the demo's otherwise. */
+export function sqlClient(): SqlClient {
+  return isRealBuilderEnabled() ? realSqlClient : demoSqlClient;
+}
+
 export async function runTableQuery(request: QueryRequest, signal?: AbortSignal): Promise<QueryOutcome> {
-  if (!isRealBuilderEnabled()) return { status: "success", result: DEMO_RESULT, demo: true };
-  try {
-    return { status: "success", result: await builderApi.query(request, signal), demo: false };
-  } catch (cause) {
-    return classifyQueryError(cause);
-  }
+  return sqlClient().runTableQuery(request, signal);
 }

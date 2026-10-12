@@ -6,27 +6,25 @@
  * storage later) is checked before use: its version, its size, its nesting depth, and that
  * the table it names is one the caller can read.
  */
-import { z } from "zod";
+import * as z from "zod/mini";
 
 export const CHART_SPEC_VERSION = 1;
 /** A spec is a handful of names; anything bigger than this is not one. */
 export const CHART_SPEC_MAX_BYTES = 4096;
 const MAX_DEPTH = 4;
 
-export const chartSpecSchema = z
-  .object({
+export const chartSpecSchema = z.strictObject({
     version: z.literal(CHART_SPEC_VERSION),
-    table: z.string().min(1).max(200),
+    table: z.string().check(z.minLength(1), z.maxLength(200)),
     kind: z.enum(["bar", "line"]),
-    groupBy: z.string().min(1).max(200),
+    groupBy: z.string().check(z.minLength(1), z.maxLength(200)),
     measure: z.object({
       fn: z.enum(["count_rows", "sum", "avg", "min", "max"]),
-      column: z.string().min(1).max(200).optional(),
-      additive: z.boolean().optional(),
+      column: z.optional(z.string().check(z.minLength(1), z.maxLength(200))),
+      additive: z.optional(z.boolean()),
     }),
-    limit: z.number().int().min(1).max(1000),
-  })
-  .strict();
+    limit: z.number().check(z.int(), z.gte(1), z.lte(1000)),
+  });
 
 export type ChartSpec = z.infer<typeof chartSpecSchema>;
 

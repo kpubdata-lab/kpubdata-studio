@@ -16,9 +16,11 @@
  * - The dev server sends none: React Fast Refresh injects an inline script.
  *
  * Why each source is there:
- * - `connect-src https:` — the Builder URL and OIDC issuer are runtime settings
- *   (`config.js`), and Ask KPubData's BYOK base URL can be any HTTPS address the user
- *   enters (`features/assistant/baseUrl.ts`). No fixed origin list can know them.
+ * - `connect-src https:` (meta only) — a build without the container has no list of
+ *   origins: Ask KPubData's BYOK base URL can be any HTTPS address the user enters
+ *   (`features/assistant/baseUrl.ts`). The container's header leaves `https:` out (#798):
+ *   its start script names the deployment's Builder, issuer and allowed AI origins, so
+ *   the page connects to those and nowhere else.
  *   `http://localhost:*` / `http://127.0.0.1:*` keep a local Builder or Keycloak working.
  * - `frame-src` — the silent SSO check loads the issuer's authorization endpoint in a
  *   hidden iframe, which then lands on Studio's own `silent-check-sso.html`.
@@ -49,9 +51,18 @@ export const CSP_DIRECTIVES: ReadonlyArray<readonly [string, readonly string[]]>
 /**
  * The policy as one header or meta value.
  *
- * @param options.header - Add the directives only a response header can carry.
+ * @param options.header - The container's header: add the directives only a header can
+ *   carry, and leave `https:` out of connect-src, which the start script fills with the
+ *   deployment's origins (#798).
  */
 export function contentSecurityPolicy({ header = false }: { header?: boolean } = {}): string {
-  const directives = header ? [...CSP_DIRECTIVES, ["frame-ancestors", ["'self'"]] as const] : CSP_DIRECTIVES;
+  const directives = header
+    ? [
+        ...CSP_DIRECTIVES.map(([name, sources]) =>
+          name === "connect-src" ? ([name, sources.filter((source) => source !== "https:")] as const) : ([name, sources] as const),
+        ),
+        ["frame-ancestors", ["'self'"]] as const,
+      ]
+    : CSP_DIRECTIVES;
   return directives.map(([name, sources]) => `${name} ${sources.join(" ")}`).join("; ");
 }

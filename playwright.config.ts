@@ -3,15 +3,22 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * kpubdata-studio E2E (#268).
  *
- * 결정성 전략: vite dev 서버를 VITE_USE_REAL_BUILDER 미설정(mock)으로 띄운다 —
- * 화면은 deterministic mock fixture로 동작하므로 네트워크·Builder 상태와
- * 무관하게 안정적으로 검증한다. 실 HTTP cross-repo 범위는 kpubdata#282.
+ * Determinism: the app is built without VITE_USE_REAL_BUILDER, so it runs on the mock
+ * fixtures and does not depend on the network or on a Builder. The real-HTTP cross-repo
+ * scope is kpubdata#282.
  */
-/** Where the csp project's production build is written and served (#663). */
-const CSP_PREVIEW_DIR = ".csp-preview";
-const CSP_PREVIEW_PORT = 4174;
+/** Where the production build most projects run against is written and served (#663, #901). */
+const PREVIEW_DIR = ".csp-preview";
+const PREVIEW_PORT = 4174;
+const DEV_PORT = 5173;
 /** Specs that need the production build: the policy (#663) and the locale chunks (#796). */
 const BUILT_APP_SPECS = /(csp|locale-loading)\.spec\.ts/;
+/**
+ * Specs that turn the real-Builder path on through the runtime config and stub the Builder
+ * themselves. They skip the sign-in through VITE_DEV_BYPASS_AUTH, which only a dev build
+ * honours (#528), so they run on the dev server, one worker at a time (#901).
+ */
+const DEV_SERVER_SPECS = /(home|sql-explorer|table-detail|tables)\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -19,44 +26,58 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: `http://localhost:${PREVIEW_PORT}`,
     trace: "retain-on-failure",
   },
-  // 파일 병렬 실행은 하지 않는다 — 여러 worker가 단일 vite dev 서버의
-  // 온디맨드 트랜스파일을 경합해 뒤쪽 route의 첫 로드가 expect 타임아웃을
-  // 넘긴다(#268 리뷰에서 확인 — 직렬로만 전 스펙이 100% 통과).
+  // The built app behind `vite preview` has nothing to transpile, so several workers can
+  // share it (#901). The dev server transpiles on demand: several workers contended on it
+  // and the first load of a later route outran the expect timeout (#268). `npm run
+  // test:e2e` therefore runs the dev-server projects in a second pass with one worker.
   fullyParallel: false,
-  workers: 1,
+  workers: process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : 4,
   webServer: [
     {
-      command: "npm run dev -- --port 5173 --strictPort",
-      url: "http://localhost:5173",
-      reuseExistingServer: !process.env.CI,
-      timeout: 60_000,
-      // Mock mode ignores this. It lets a spec that turns the real-Builder path on through
-      // the runtime config (and stubs the Builder itself, e.g. sql-explorer) skip the OIDC
-      // login it cannot reach — dev builds only (#528).
-      env: { VITE_DEV_BYPASS_AUTH: "true" },
-    },
-    // A production build with the Content-Security-Policy meta, for the csp project (#663).
-    // The dev server above sends no policy: React Fast Refresh needs an inline script.
-    {
-      command: `npx vite build --base / --outDir ${CSP_PREVIEW_DIR} --emptyOutDir --logLevel warn && npx vite preview --base / --outDir ${CSP_PREVIEW_DIR} --port ${CSP_PREVIEW_PORT} --strictPort`,
-      url: `http://localhost:${CSP_PREVIEW_PORT}`,
+      command: `npx vite build --base / --outDir ${PREVIEW_DIR} --emptyOutDir --logLevel warn && npx vite preview --base / --outDir ${PREVIEW_DIR} --port ${PREVIEW_PORT} --strictPort`,
+      url: `http://localhost:${PREVIEW_PORT}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
-  ],
-  // @real-builder 스펙(실 Builder 기동 필요)은 기본 슈트에서 제외한다.
-  // @multi-user specs need a Builder with OIDC and an identity provider as well (#773).
-  grep: /^(?!.*@(real-builder|multi-user)).*$/,
-  projects: [
-    { name: "desktop-chromium", testIgnore: BUILT_APP_SPECS, use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile-chromium", testIgnore: BUILT_APP_SPECS, use: { ...devices["Pixel 7"] } },
     {
-      name: "csp-chromium",
-      testMatch: BUILT_APP_SPECS,
-      use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${CSP_PREVIEW_PORT}` },
+      command: `npm run dev -- --port ${DEV_PORT} --strictPort`,
+      url: `http://localhost:${DEV_PORT}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      // Mock mode ignores this. It lets a spec that turns the real-Builder path on through
+      // the runtime config (and stubs the Builder itself) skip the OIDC login it cannot
+      // reach — dev builds only (#528).
+      env: { VITE_DEV_BYPASS_AUTH: "true" },
+    },
+  ],
+  // @real-builder specs (they need a running Builder) are left out of the default suite.
+  // @multi-user specs need a Builder with OIDC and an identity provider as well (#773).
+  // @keycloak specs need Docker for Keycloak and a mail catcher (#903).
+  grep: /^(?!.*@(real-builder|multi-user|keycloak)).*$/,
+  projects: [
+    {
+      name: "desktop-chromium",
+      testIgnore: [BUILT_APP_SPECS, DEV_SERVER_SPECS],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "mobile-chromium",
+      testIgnore: [BUILT_APP_SPECS, DEV_SERVER_SPECS],
+      use: { ...devices["Pixel 7"] },
+    },
+    { name: "csp-chromium", testMatch: BUILT_APP_SPECS, use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "desktop-dev",
+      testMatch: DEV_SERVER_SPECS,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://localhost:${DEV_PORT}` },
+    },
+    {
+      name: "mobile-dev",
+      testMatch: DEV_SERVER_SPECS,
+      use: { ...devices["Pixel 7"], baseURL: `http://localhost:${DEV_PORT}` },
     },
   ],
 });

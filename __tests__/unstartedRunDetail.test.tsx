@@ -85,6 +85,41 @@ describe("a run with no stages that the job registry knows (#846)", () => {
     expect(screen.queryByText(/실행을 찾을 수 없습니다/)).not.toBeInTheDocument();
   });
 
+  it("shows the lost-keys card when the history lists the run without a start (kpubdata-builder#1252)", async () => {
+    // Builder lists a run that ended before it started, with no start time; only the job
+    // says why it ended.
+    vi.spyOn(runsApi, "listBuilds").mockResolvedValue([
+      { id: RUN, title: null, status: "failed", startedAt: null, finishedAt: "2026-10-09T00:00:02Z", datasetId: null },
+    ]);
+    vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("failed", "credentials_required"));
+    saveBuildSpec(RUN, SPEC);
+
+    const { container } = renderDetail();
+
+    const retry = await screen.findByRole("link", { name: "키를 다시 넣고 재시도" });
+    expect(retry.getAttribute("href")).toBe(`/refresh-jobs/${RUN}/edit`);
+    expect(container.querySelector(`[data-keys-lost="${RUN}"]`)).not.toBeNull();
+  });
+
+  it("does not look the job up for a listed run that started", async () => {
+    vi.spyOn(runsApi, "listBuilds").mockResolvedValue([
+      {
+        id: RUN,
+        title: null,
+        status: "failed",
+        startedAt: "2026-10-09T00:00:00Z",
+        finishedAt: "2026-10-09T00:00:02Z",
+        datasetId: "datago-air-station",
+      },
+    ]);
+    const lookup = vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("failed"));
+
+    renderDetail();
+
+    await waitFor(() => expect(datasetsApi.listBuildStages).toHaveBeenCalled());
+    expect(lookup).not.toHaveBeenCalled();
+  });
+
   it("shows a queued run opened by its link, with its cancel button", async () => {
     vi.spyOn(builderApi, "getBuildJob").mockResolvedValue(job("queued"));
 

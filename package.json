@@ -26,9 +26,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "screenshots": "node scripts/capture-screenshots.mjs",
-    "test:e2e": "playwright test",
-    "test:e2e:update-visual": "docker run --rm --ipc=host -v \"$PWD\":/work -v /work/node_modules -w /work -e CI=1 mcr.microsoft.com/playwright:v1.63.0-noble sh -c 'npm ci --no-audit --no-fund && npx playwright test e2e/visual.spec.ts --project=desktop-chromium --update-snapshots; status=$?; chown -R \"$(stat -c %u:%g package.json)\" e2e/visual.spec.ts-snapshots; exit $status'",
+    "test:e2e": "playwright test --project=desktop-chromium --project=mobile-chromium --project=csp-chromium && playwright test --project=desktop-dev --project=mobile-dev --workers=1",
+    "test:e2e:update-visual": "docker run --rm --ipc=host -v \"$PWD\":/work -v /work/node_modules -w /work -e CI=1 mcr.microsoft.com/playwright:v1.64.0-noble sh -c 'npm ci --no-audit --no-fund && npx playwright test e2e/visual.spec.ts --project=desktop-chromium --update-snapshots; status=$?; chown -R \"$(stat -c %u:%g package.json)\" e2e/visual.spec.ts-snapshots; exit $status'",
     "test:e2e:real": "node scripts/run-real-e2e.mjs",
+    "test:e2e:keycloak": "node scripts/run-keycloak-e2e.mjs",
     "i18n:coverage": "node scripts/i18n-coverage.mjs",
     "i18n:check": "node scripts/i18n-coverage.mjs --check",
     "check:stale-ui": "node scripts/check-stale-ui-literals.mjs --base origin/main",
@@ -36,6 +37,7 @@
     "i18n:terms": "node scripts/ko-mixed-terms.mjs",
     "i18n:legacy": "node scripts/legacy-terms.mjs",
     "contract:floor": "node scripts/contract-floor.mjs",
+    "check:real-builder": "node scripts/real-builder-switch.mjs",
     "contract:enums": "node scripts/generate-builder-enums.mjs"
   },
   "dependencies": {
@@ -45,7 +47,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "^7.89.0",
-    "react-i18next": "^17.0.15",
+    "react-i18next": "^17.0.16",
     "react-router-dom": "^7.18.4",
     "yaml": "^2.9.1",
     "zod": "^4.6.5",
@@ -54,7 +56,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.63.0",
+    "@playwright/test": "1.64.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "7.0.1",
@@ -72,7 +74,7 @@
     "tailwindcss": "^4",
     "typescript": "^6",
     "typescript-eslint": "^8.71.1",
-    "vite": "^8.3.2",
+    "vite": "^8.3.4",
     "vitest": "^5.0.1"
   },
   "overrides": {

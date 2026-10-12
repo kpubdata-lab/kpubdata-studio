@@ -62,6 +62,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // The same wrapper the build uses (vite.config.ts, #951): jitless, and English messages.
+      "zod/mini": fileURLToPath(new URL("./src/shared/lib/zodJitless.ts", import.meta.url)),
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },

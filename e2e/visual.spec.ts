@@ -36,7 +36,7 @@ import { collectPageErrors, expectNoPageErrors, prepareCleanPage, t } from "./he
  *
  *   npm run test:e2e:update-visual
  *
- * It runs this spec with `--update-snapshots` in `mcr.microsoft.com/playwright:v1.63.0-noble`,
+ * It runs this spec with `--update-snapshots` in `mcr.microsoft.com/playwright:v1.64.0-noble`,
  * the image for the installed `@playwright/test`, so the fonts and Chromium are the same
  * wherever it runs. Review the new images in the PR. A pull request that bumps
  * `@playwright/test` changes Chromium: bump the image tag in `package.json` to match and

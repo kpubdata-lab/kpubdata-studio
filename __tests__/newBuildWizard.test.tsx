@@ -6,6 +6,7 @@ import { clearBuildSpecs, saveBuildSpec } from "@/features/build-spec/specStore"
 import { NewBuildPage } from "@/pages/NewBuildPage";
 import { API_BASE } from "@/shared/config/env";
 import { mswServer } from "../vitest.setup";
+import { chooseProvider } from "./support/chooseProvider";
 
 const { previewBuildMock } = vi.hoisted(() => ({
   previewBuildMock: vi.fn(),
@@ -84,7 +85,7 @@ async function goToPreviewStep() {
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
   await screen.findByRole("heading", { name: "데이터 소스" });
-  fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
+  await chooseProvider("datago");
   fireEvent.change(screen.getByLabelText(/데이터셋/), { target: { value: "air-quality" } });
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
@@ -113,11 +114,39 @@ describe("Spec edit wizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "데이터 소스" });
-    fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
 
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("air_quality"));
     expect(screen.getByRole("option", { name: /대기오염/ })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: /population/ })).not.toBeInTheDocument();
+  });
+
+  it("shows the saved provider and dataset when the catalog arrives after the selects mount", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    mswServer.use(
+      http.get(`${API_BASE}/catalog`, async () => {
+        await gate;
+        return HttpResponse.json({
+          providers: [
+            { name: "datago", datasets: [catalogDataset("air_quality", "대기오염", true)] },
+            { name: "bok", datasets: [catalogDataset("base_rate", "기준금리", false)] },
+          ],
+        });
+      }),
+    );
+    await renderWizard();
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+    await screen.findByRole("heading", { name: "데이터 소스" });
+    expect(screen.queryByRole("option", { name: /대기오염/ })).not.toBeInTheDocument();
+
+    release();
+
+    await screen.findByRole("option", { name: /대기오염/ });
+    await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).toHaveValue("air_quality"));
+    expect(screen.getByLabelText(/제공자/)).toHaveValue("datago");
   });
 
   it("blocks advancing while required fields are empty", async () => {
@@ -142,7 +171,7 @@ describe("Spec edit wizard", () => {
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
     await screen.findByRole("heading", { name: "데이터 소스" });
-    fireEvent.change(screen.getByLabelText(/제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "air_quality" } });
     fireEvent.click(screen.getByRole("button", { name: "다음" }));
 

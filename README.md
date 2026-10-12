@@ -84,6 +84,8 @@ docker run -p 8080:8080 \
 | `PRIVACY_URL` · `TERMS_URL` | 이 배포의 개인정보 처리방침과 이용약관 페이지. 로그인·가입 화면과 계정 메뉴에 링크됩니다 |
 | `SUPPORT_CONTACT` | 사용자가 문의할 곳. 메일 주소 또는 `https:` 페이지. 승인 대기·오류 화면과 계정 메뉴에 표시됩니다 |
 | `ACCOUNT_URL` | 로그인 서비스의 계정 관리 화면(비밀번호 변경·탈퇴). 비워 두면 `<OIDC_ISSUER>/account` |
+| `ASSISTANT_ENABLED` | `true` 로 두면 Ask KPubData 가 외부 AI 제공자를 부릅니다. 기본은 꺼짐입니다 ([보내는 것](docs/assistant-egress.md)) |
+| `ASSISTANT_ALLOWED_ORIGINS` | Ask KPubData 가 부를 수 있는 https origin, 공백으로 구분. 켤 때 반드시 적습니다 |
 
 처리방침과 약관의 문서는 Studio 에 들어 있지 않습니다. 배포를 운영하는 쪽이 작성해 공개하고
 그 주소를 적습니다. 적지 않은 항목은 화면에 나타나지 않습니다.
@@ -91,6 +93,30 @@ docker run -p 8080:8080 \
 브라우저가 Builder 를 직접 부르므로, Builder 의 `KPUBDATA_BUILDER_ALLOWED_ORIGINS` 에 이
 Studio 의 origin 을 넣어야 합니다. 값에 따옴표·공백·`<` 같은 문자가 있으면 컨테이너가
 그 이유를 남기고 시작하지 않습니다.
+
+**실 Builder 모드에는 로그인 설정이 함께 필요합니다.** Studio 는 Builder 에 로그인 토큰(Bearer)만
+보냅니다. `BUILDER_API_URL` 을 주면서 `OIDC_ISSUER` 나 `OIDC_CLIENT_ID` 를 비우면 페이지는 뜨지만
+로그인 화면이 "인증 초기화에 실패했습니다" 에서 멈춥니다. 인증 서버가 없으면 `BUILDER_API_URL` 도
+비워 데모로 띄웁니다.
+
+#### Builder 와 한 VM 에 함께 올리기
+
+Builder 의 `docker-compose.prod.app.yml` 에 `studio` 프로필이 있어 Builder·Caddy 와 함께 올라옵니다.
+저장소를 받는 것, GHCR 로그인, `.env` 는 Builder 의
+[배포 가이드 §12](https://github.com/kpubdata-lab/kpubdata-builder/blob/main/docs/deploy.md) 를 따릅니다.
+
+```bash
+docker compose -f docker-compose.prod.app.yml --profile caddy --profile studio up -d
+```
+
+- 위 변수는 Builder 의 `.env` 에 `STUDIO_` 를 붙여 적습니다: `STUDIO_BUILDER_API_URL`,
+  `STUDIO_OIDC_CLIENT_ID`, `STUDIO_PRIVACY_URL`, `STUDIO_TERMS_URL`, `STUDIO_SUPPORT_CONTACT`.
+  `OIDC_ISSUER` 만은 Builder 와 같은 값을 같은 이름으로 씁니다.
+- `ACCOUNT_URL`, `ASSISTANT_ENABLED`, `ASSISTANT_ALLOWED_ORIGINS` 는 그 compose 가 넘기지 않습니다
+  (kpubdata-builder#1274).
+- Studio 이미지는 pull 하지 않고 `STUDIO_REF` 의 커밋에서 빌드합니다. 그 기본값은 Studio `main` 보다
+  오래됐을 수 있습니다.
+- 이 절차로 올려 본 기록: [docs/deploy-rehearsal.md](docs/deploy-rehearsal.md).
 
 ## 주요 기능
 

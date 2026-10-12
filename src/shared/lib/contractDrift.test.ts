@@ -40,8 +40,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parse } from "yaml";
-import { z } from "zod";
+import * as z from "zod/mini";
 import { renderBuilderEnums } from "../../../scripts/generate-builder-enums.mjs";
+import { RUN_FAILURE_CODES, RUN_FAILURE_STAGES } from "@/features/admin/runFailure";
 import { artifactDownloadRefusal } from "@/features/artifacts/downloadRefusal";
 import { probeRateLimited } from "@/features/provider/probeRefusal";
 import { buildRefusal } from "@/features/runs/buildRefusal";
@@ -100,10 +101,10 @@ const studioName = (contractName: string) =>
   `${contractName[0].toLowerCase()}${contractName.slice(1)}Schema`;
 
 /** Peel wrappers Studio adds (nullable, optional, default) down to the core schema. */
-function unwrap(schema: z.ZodType): z.ZodType {
-  let current: z.ZodType = schema;
+function unwrap(schema: z.ZodMiniType): z.ZodMiniType {
+  let current: z.ZodMiniType = schema;
   for (;;) {
-    const def = (current as unknown as { def: { type: string; innerType?: z.ZodType } }).def;
+    const def = (current as unknown as { def: { type: string; innerType?: z.ZodMiniType } }).def;
     if (def.innerType && ["nullable", "optional", "default", "catch", "readonly"].includes(def.type)) {
       current = def.innerType;
       continue;
@@ -112,9 +113,9 @@ function unwrap(schema: z.ZodType): z.ZodType {
   }
 }
 
-function enumOptions(schema: z.ZodType): unknown[] | null {
+function enumOptions(schema: z.ZodMiniType): unknown[] | null {
   const core = unwrap(schema) as unknown as {
-    def: { type: string; entries?: Record<string, unknown>; options?: z.ZodType[] };
+    def: { type: string; entries?: Record<string, unknown>; options?: z.ZodMiniType[] };
   };
   // An extensible enum (`wireEncodingSchema`, #497) is a union whose first branch is the
   // known values: parsing never fails on a new one, but a value Studio shows as
@@ -124,8 +125,8 @@ function enumOptions(schema: z.ZodType): unknown[] | null {
   return Object.values(core.def.entries);
 }
 
-function requiredKeys(schema: z.ZodType): string[] | null {
-  const core = unwrap(schema) as unknown as { def: { type: string; shape?: Record<string, z.ZodType> } };
+function requiredKeys(schema: z.ZodMiniType): string[] | null {
+  const core = unwrap(schema) as unknown as { def: { type: string; shape?: Record<string, z.ZodMiniType> } };
   if (core.def.type !== "object" || !core.def.shape) return null;
   return Object.entries(core.def.shape)
     .filter(([, field]) => !field.safeParse(undefined).success)
@@ -401,7 +402,7 @@ function merge(left: JsonSchema, right: JsonSchema): JsonSchema {
  */
 function responseDrift(
   contractSchema: JsonSchema,
-  studioSchema: z.ZodType,
+  studioSchema: z.ZodMiniType,
   components: Record<string, JsonSchema>,
 ): { rejected: string[]; unsupported: string[] } {
   const sampler = new ContractSampler(components);
@@ -475,6 +476,7 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
     schema: "providerCredentialResponseSchema",
     rejectsAdditive: "strict on purpose (#497): an unknown field may be a leaked secret",
   },
+  readyz: { skip: "builderApi does not call it; it is an operator probe" },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   // Declared with the recovery routes (builder#1009, contract 1.81.0). Studio settles an
@@ -576,7 +578,10 @@ const publishReader = (kind: string): ErrorReader => ({
 });
 
 /** A build refused for want of room, as the build page reads it (#859). */
-const buildRefusalReader = (code: "build_queue_full" | "build_owner_limit", since: string): ErrorReader => ({
+const buildRefusalReader = (
+  code: "build_queue_full" | "build_owner_limit" | "disk_space_low" | "run_storage_quota_exceeded",
+  since: string,
+): ErrorReader => ({
   reader: "buildRefusal (features/runs/buildRefusal, #859)",
   since,
   check: (status, body) => {
@@ -585,6 +590,9 @@ const buildRefusalReader = (code: "build_queue_full" | "build_owner_limit", sinc
       ...differs("refusal code", refusal?.code, code),
       // The limit is what the sentence tells the user; an example without one is a drift.
       ...(refusal?.code === "build_owner_limit" && refusal.limit === null ? ["limit: not read from the body"] : []),
+      ...(refusal?.code === "run_storage_quota_exceeded" && (refusal.limitBytes === null || refusal.usedBytes === null)
+        ? ["limit_bytes, used_bytes: not read from the body"]
+        : []),
     ];
   },
 });
@@ -601,6 +609,8 @@ type ErrorReader = {
   reader: string;
   /** The contract version that introduced the example; before it the entry is not stale. */
   since?: string;
+  /** Studio says the message itself, in the user's language, so it is not Builder's `error`; `check` reads it. */
+  localizedMessage?: true;
   /** What Studio misreads in this body; empty when it reads it as the contract means. */
   check: (status: number, body: unknown) => string[];
 };
@@ -640,6 +650,7 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     check: (_status, body) =>
       (asInvalidDetails(body)?.problems.length ?? 0) > 0 ? [] : ["asInvalidDetails: no problems read from the body"],
   },
+  "readyz 503 DiskLow": { notHandled: "builderApi does not call it; it is an operator probe" },
   "validateSpec 400 MalformedYaml": { notHandled: MESSAGE_ONLY },
   "previewBuild 400 InvalidLimit": { notHandled: `${MESSAGE_ONLY}; Studio always sends a valid limit` },
   "createBuild 400 UnsafeRunId": { notHandled: `${MESSAGE_ONLY}; Studio submits through submitBuild` },
@@ -687,6 +698,16 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     since: "1.107.0",
     check: (status, body) => queryCode(status, body, "query_resource_limit"),
   },
+  // The same message is shown by every screen that shows an error: the request layer says it (#949).
+  "queryBuiltDataset 429 QueryRateLimited": {
+    reader: "formatApiErrorMessage (shared/lib/builderApi, #949)",
+    since: "1.119.0",
+    localizedMessage: true,
+    check: (status, body) => [
+      ...queryCode(status, body, "query_rate_limited"),
+      ...differs("message says the wait", /12/.test(httpError(status, body).message), true),
+    ],
+  },
   "saveRevision 409 RevisionConflict": {
     reader: "revisionErrorOutcome (features/build-spec/specRevisions, #682)",
     check: (status, body) => revisionConflictProblems(status, body),
@@ -716,6 +737,8 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // Were it called, the same reader would read its refusal — which is what is checked.
   "createBuild 429 BuildQueueFull": buildRefusalReader("build_queue_full", "1.82.0"),
   "submitBuild 429 BuildOwnerLimit": buildRefusalReader("build_owner_limit", "1.111.0"),
+  "submitBuild 503 DiskSpaceLow": buildRefusalReader("disk_space_low", "1.118.0"),
+  "submitBuild 409 RunStorageQuotaExceeded": buildRefusalReader("run_storage_quota_exceeded", "1.118.0"),
   "probeProviderKey 429 ProbeRateLimited": {
     reader: "probeRateLimited (features/provider/probeRefusal, #410)",
     since: "1.88.0",
@@ -811,7 +834,7 @@ function errorFixtureProblems(fixture: ErrorFixture): string[] {
   const problems: string[] = [];
   for (const [form, body] of [["current", fixture.current], ["with_additive_fields", fixture.with_additive_fields]] as const) {
     const error = (body as { error?: unknown } | null)?.error;
-    if (typeof error === "string") problems.push(...differs(`${form}: message`, httpError(fixture.status, body).message, error));
+    if (typeof error === "string" && !("localizedMessage" in entry)) problems.push(...differs(`${form}: message`, httpError(fixture.status, body).message, error));
     if ("notHandled" in entry) {
       const code = (body as { code?: unknown } | null)?.code;
       // Before the version that gave the example its code, it carries none.
@@ -982,15 +1005,15 @@ describe("contract response sampler", () => {
       },
     },
   };
-  const item = z.object({ a: z.string(), b: z.string().nullable().optional() });
+  const item = z.object({ a: z.string(), b: z.optional(z.nullable(z.string())) });
   const lenient = z.object({
     id: z.string(),
     state: z.enum(["queued", "failed"]),
-    response: z.record(z.string(), z.unknown()).nullable().optional(),
-    items: z.array(item).optional(),
-    kind: z.union([z.number().int(), z.literal("auto")]).optional(),
+    response: z.optional(z.nullable(z.record(z.string(), z.unknown()))),
+    items: z.optional(z.array(item)),
+    kind: z.optional(z.union([z.number().check(z.int()), z.literal("auto")])),
   });
-  const drift = (schema: z.ZodType) => responseDrift(components.Job, schema, components);
+  const drift = (schema: z.ZodMiniType) => responseDrift(components.Job, schema, components);
 
   it("passes a Studio schema that accepts every contract-valid body", () => {
     expect(drift(lenient)).toEqual({ rejected: [], unsupported: [] });
@@ -1003,8 +1026,8 @@ describe("contract response sampler", () => {
   });
 
   it("fails when a nested object is typed narrower than the contract (#603)", () => {
-    const stricter = lenient.extend({
-      response: z.object({ status: z.literal("ok"), outcomes: z.array(z.unknown()) }).nullable().optional(),
+    const stricter = z.extend(lenient, {
+      response: z.optional(z.nullable(z.object({ status: z.literal("ok"), outcomes: z.array(z.unknown()) }))),
     });
     expect(drift(stricter).rejected).toEqual([
       '$.response = minimal → response.status: Invalid input: expected "ok"',
@@ -1012,24 +1035,24 @@ describe("contract response sampler", () => {
   });
 
   it("fails when Studio requires a field the contract leaves optional, at any depth", () => {
-    expect(drift(lenient.extend({ response: z.record(z.string(), z.unknown()).nullable() })).rejected).toContain(
+    expect(drift(z.extend(lenient, { response: z.nullable(z.record(z.string(), z.unknown())) })).rejected).toContain(
       "$ = minimal → response: Invalid input: expected record, received undefined",
     );
-    const nested = lenient.extend({ items: z.array(item.extend({ b: z.string().nullable() })).optional() });
+    const nested = z.extend(lenient, { items: z.optional(z.array(z.extend(item, { b: z.nullable(z.string()) }))) });
     expect(drift(nested).rejected).toEqual([
       "$.items[] = minimal → items.0.b: Invalid input: expected string, received undefined",
     ]);
   });
 
   it("fails on a missing null, enum value or union branch", () => {
-    const notNullable = lenient.extend({ items: z.array(item.extend({ b: z.string().optional() })).optional() });
+    const notNullable = z.extend(lenient, { items: z.optional(z.array(z.extend(item, { b: z.optional(z.string()) }))) });
     expect(drift(notNullable).rejected).toEqual([
       "$.items[].b = null → items.0.b: Invalid input: expected string, received null",
     ]);
-    expect(drift(lenient.extend({ state: z.enum(["queued"]) })).rejected).toEqual([
+    expect(drift(z.extend(lenient, { state: z.enum(["queued"]) })).rejected).toEqual([
       '$.state = "failed" → state: Invalid input: expected "queued"',
     ]);
-    expect(drift(lenient.extend({ kind: z.number().int().optional() })).rejected).toEqual([
+    expect(drift(z.extend(lenient, { kind: z.optional(z.number().check(z.int())) })).rejected).toEqual([
       '$.kind = "auto" → kind: Invalid input: expected number, received string',
     ]);
   });
@@ -1062,7 +1085,7 @@ describe("BuildJob against the contract's BuildJob (#603)", () => {
       error: { type: ["string", "null"] },
     },
   };
-  const preFix = schemas.buildJobSchema.extend({ response: schemas.buildResponseSchema.nullable().optional() });
+  const preFix = z.extend(schemas.buildJobSchema, { response: z.optional(z.nullable(schemas.buildResponseSchema)) });
 
   it("the schema before #603 is caught", () => {
     expect(responseDrift(contractBuildJob, preFix, {}).rejected).not.toEqual([]);
@@ -1079,7 +1102,7 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
     : { components: { schemas: {} } };
   const components = contract.components.schemas;
   const mirrored = Object.entries(components).filter(([name]) => studioName(name) in schemas);
-  const studio = schemas as unknown as Record<string, z.ZodType>;
+  const studio = schemas as unknown as Record<string, z.ZodMiniType>;
   const responseNames = responseSchemaNames(contract);
 
   /** Whether the contract declares an operation with this id. */
@@ -1103,7 +1126,7 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
   };
 
   /** Response schemas checked with samples: mirrored by name, plus OPERATION_SCHEMAS. */
-  const responsePairs: [string, JsonSchema, z.ZodType][] = mirrored
+  const responsePairs: [string, JsonSchema, z.ZodMiniType][] = mirrored
     .filter(([name]) => responseNames.has(name))
     .map(([name, schema]) => [name, schema, studio[studioName(name)]]);
   for (const [operationId, mapped] of Object.entries(OPERATION_SCHEMAS)) {
@@ -1147,7 +1170,7 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
 
   it.each(mirrored)("%s: property enums accept every contract value", (name, schema) => {
     const core = unwrap(studio[studioName(name)]) as unknown as {
-      def: { type: string; shape?: Record<string, z.ZodType> };
+      def: { type: string; shape?: Record<string, z.ZodMiniType> };
     };
     if (core.def.type !== "object" || !core.def.shape || !schema.properties) return;
     const drift: Record<string, unknown[]> = {};
@@ -1207,6 +1230,28 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
     expect(missingIssueEntries(contractIssueCodesOf(contract), { ko, en })).toEqual([]);
   });
 
+  // The admin runs card words each failure code and stage itself (#906). The contract
+  // lists them in prose, not as an enum (contract 1.116.0), so the backticked names in
+  // those descriptions are the list; a code Builder adds fails here.
+  describe("admin run failure codes and stages (#906)", () => {
+    const run = (components.AdminRunsResponse?.properties?.runs?.items?.properties ?? {}) as Record<
+      string,
+      JsonSchema & { description?: string }
+    >;
+    const named = (field: string) =>
+      [...(run[field]?.description ?? "").matchAll(/`([a-z_]+)`/g)]
+        .map((match) => match[1])
+        .filter((name) => !["error", "error_code"].includes(name));
+
+    it.skipIf(!run.error_code)("lists every error_code the contract names, and no other", () => {
+      expect([...new Set(named("error_code"))].sort()).toEqual([...RUN_FAILURE_CODES].sort());
+    });
+
+    it.skipIf(!run.error_stage)("lists every error_stage the contract names, and no other", () => {
+      expect([...new Set(named("error_stage"))].sort()).toEqual([...RUN_FAILURE_STAGES].sort());
+    });
+  });
+
   it("lists no KNOWN_DRIFT entry for a schema this check does not cover", () => {
     const covered = new Set(responsePairs.map(([name]) => name));
     expect(Object.keys(KNOWN_DRIFT).filter((key) => !covered.has(key.split(": ")[0]))).toEqual([]);
@@ -1249,7 +1294,7 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
 
     const studioSchemaOf = (
       fixture: Fixture,
-    ): { schema: z.ZodType; rejectsAdditive?: string } | { skip: string } | null => {
+    ): { schema: z.ZodMiniType; rejectsAdditive?: string } | { skip: string } | null => {
       const mapped = OPERATION_SCHEMAS[fixture.operation_id];
       if (typeof mapped === "string") return { schema: studio[mapped] };
       if (mapped && "skip" in mapped) return mapped;

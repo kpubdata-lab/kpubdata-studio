@@ -63,6 +63,7 @@ import {
 } from "@/shared/lib/providerKeys";
 import { ConnectionsTable } from "@/features/provider/ConnectionsTable";
 import { KeyProbePanel } from "@/features/provider/KeyProbePanel";
+import { DEMO_PROVIDERS, providerClient } from "@/features/provider/client";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 
 /**
@@ -203,7 +204,7 @@ export function ProviderPage() {
   const selectedKeyHeld = useProviderKeyHeld(selectedProvider?.id);
 
   useEffect(() => {
-    if (isRealBuilderEnabled()) void ensureVersionChecked();
+    void ensureVersionChecked();
   }, []);
 
   const loadProviders = useCallback(async (): Promise<boolean> => {
@@ -233,8 +234,9 @@ export function ProviderPage() {
           setSelectedProvider(next);
         }
       } else {
-        // Use the mock list only in explicit mock/demo mode.
-        setProviders(getMockProviders());
+        // Use the mock list only in explicit mock/demo mode. Unlike Builder's answer above,
+        // it does not re-decide the selection: the demo's list never changes under it.
+        setProviders(DEMO_PROVIDERS.map(mapProviderSummary));
       }
       return true;
     } catch {
@@ -273,19 +275,14 @@ export function ProviderPage() {
       // read takes, that the Builder's default credential is in use.
       if (stillCurrent() && !options.afterMutation) setCredentialMeta({ status: "loading" });
       try {
-        if (isRealBuilderEnabled()) {
-          const meta = await builderApi.getProviderCredential(provider.id);
-          if (!stillCurrent()) return;
-          setCredentialMeta({
-            status: "loaded",
-            configured: meta.configured,
-            masked: meta.masked,
-            updatedAt: meta.updated_at,
-          });
-        } else {
-          if (!stillCurrent()) return;
-          setCredentialMeta(mockCredentialMeta(provider));
-        }
+        const meta = await providerClient().credential(provider.id);
+        if (!stillCurrent()) return;
+        setCredentialMeta({
+          status: "loaded",
+          configured: meta.configured,
+          masked: meta.masked,
+          updatedAt: meta.updated_at,
+        });
       } catch (cause) {
         if (!stillCurrent()) return;
         // The save or delete itself succeeded; a confirming read that fails does not
@@ -309,10 +306,7 @@ export function ProviderPage() {
     setTestingId(id);
     setError(null);
     try {
-      const provider = providers.find((candidate) => candidate.id === id);
-      const lastTest = isRealBuilderEnabled()
-        ? lastTestFromResponse(await builderApi.testProviderConnection(id))
-        : mockLastTest(provider);
+      const lastTest = lastTestFromResponse(await providerClient().test(id));
       const apply = (candidate: ProviderConfig) =>
         candidate.id === id ? { ...candidate, lastTest } : candidate;
       setProviders((current) => current.map(apply));
@@ -379,12 +373,10 @@ export function ProviderPage() {
     const provider = selectedProvider;
     setError(null);
     try {
-      if (isRealBuilderEnabled()) {
-        // PUT /providers/{provider}/credential; body is only
-        // { credential }. The plaintext is not expected back in the response,
-        // and the URL uses the selected provider's canonical id (#S02).
-        await builderApi.putProviderCredential(provider.id, credentialForm.credential);
-      }
+      // PUT /providers/{provider}/credential; body is only
+      // { credential }. The plaintext is not expected back in the response,
+      // and the URL uses the selected provider's canonical id (#S02).
+      await providerClient().saveCredential(provider.id, credentialForm.credential);
       // If the user moved to another provider while the save was in flight,
       // this mutation's follow-up form reset/error must not pollute the
       // current screen (B) — same axis as #322/#324.
@@ -429,9 +421,7 @@ export function ProviderPage() {
     const provider = selectedProvider;
     setError(null);
     try {
-      if (isRealBuilderEnabled()) {
-        await builderApi.deleteProviderCredential(provider.id);
-      }
+      await providerClient().deleteCredential(provider.id);
       if (selectedProviderIdRef.current === provider.id) {
         // Deleted, so this user has no key of their own here any more (#845). Whether a
         // default key is left is the list's to say, once it has been read again.
@@ -754,57 +744,4 @@ export function ProviderPage() {
       <ApplicationGuideCard />
     </div>
   );
-}
-
-/** Simulates the selected provider's user-credential state in mock/demo mode. */
-function mockCredentialMeta(provider: ProviderConfig): CredentialMetaState {
-  if (!provider.requiresCredential) return { status: "not_applicable" };
-  const configured = provider.summaryConfigured;
-  return {
-    status: "loaded",
-    configured,
-    masked: configured ? "ab••••yz" : null,
-    updatedAt: configured ? new Date(Date.now() - 3600000).toISOString() : null,
-  };
-}
-
-/** Mock/demo mode has no Builder to call: a configured provider connects, others need a key. */
-function mockLastTest(provider: ProviderConfig | undefined): ProviderLastTest {
-  const ready = !provider || !provider.requiresCredential || provider.summaryConfigured;
-  return {
-    status: ready ? "connected" : "not_configured",
-    checked_at: new Date().toISOString(),
-    error_category: null,
-    response_code: null,
-    dataset: null,
-  };
-}
-
-function getMockProviders(): ProviderConfig[] {
-  return [
-    {
-      id: "datago",
-      requiresCredential: true,
-      summaryConfigured: false,
-      lastTest: null,
-    },
-    {
-      id: "kosis",
-      requiresCredential: true,
-      summaryConfigured: true,
-      lastTest: {
-        status: "connected",
-        checked_at: "2026-09-01T09:30:00+09:00",
-        error_category: null,
-        response_code: null,
-        dataset: null,
-      },
-    },
-    {
-      id: "g2b",
-      requiresCredential: true,
-      summaryConfigured: false,
-      lastTest: null,
-    },
-  ];
 }

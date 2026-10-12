@@ -139,7 +139,17 @@ Before a browser starts, the runner checks that this Builder answers `GET /provi
 
 The provider key a test user types is a value of that run only, built around the workflow's canary key when there is one. The second test checks that the other user's provider list does not read as if he held it and that it is in nothing he is sent; the runner fails the run if Builder writes it to its output, and the evidence check finds it by value in anything a failed run leaves behind.
 
-Ports: Builder 8903, identity provider 8904, Studio 5175. What it does **not** cover is Keycloak itself — sign-up, e-mail verification, the Google broker; those remain the manual smoke above. The suite records no Playwright trace, because a trace holds every request's headers and the workflow refuses to upload evidence that carries a token. Its screenshots go to `test-results/multi-user/`, so that the single-user suite's evidence of a failure in `test-results/` is not emptied when this one starts.
+Ports: Builder 8903, identity provider 8904, Studio 5175. What it does **not** cover is Keycloak itself — sign-up and e-mail verification are the Keycloak suite below; the Google broker remains the manual smoke above. The suite records no Playwright trace, because a trace holds every request's headers and the workflow refuses to upload evidence that carries a token. Its screenshots go to `test-results/multi-user/`, so that the single-user suite's evidence of a failure in `test-results/` is not emptied when this one starts.
+
+### Local Keycloak E2E (Docker)
+
+`npm run test:e2e:keycloak -- --builder-root <path>` (`scripts/run-keycloak-e2e.mjs`, #903) runs the specs tagged `@keycloak` (`e2e/real-keycloak.spec.ts`) against a real Keycloak. It needs Docker and uv.
+
+- **Keycloak and Mailpit run in Docker**, by version and digest, on a network of their own. The realm is made through Keycloak's admin API (`scripts/keycloak-realm.mjs`), not imported from a file: registration and Verify email on, mail sent to Mailpit, a public `kpubdata-studio` client with PKCE, the audience mapper for `kpubdata-builder`, and one administrator with a verified address.
+- **Builder has no allowlist** and names that administrator in `KPUBDATA_BUILDER_ADMIN_SUBJECTS`, so a new account waits as `pending` in its sign-up ledger until approved.
+- **The spec signs a new account up, verifies its address from the mail, has the administrator approve it, and restarts Builder** under the signed-in session. The runner restarts Builder on the same data directory when the spec asks at `POST http://127.0.0.1:8906/builder/restart`.
+
+Ports: Keycloak 8180, Mailpit 8025, Builder 8905, the restart address 8906, Studio 5176. Like the multi-user suite it records no Playwright trace; screenshots of a failure go to `test-results/keycloak/`. Suspending and deleting an account are not covered: they wait on kpubdata-builder#1124 and kpubdata-builder#1102.
 
 ### Keycloak → Builder OIDC Smoke Test (Manual)
 

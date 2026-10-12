@@ -228,6 +228,47 @@ describe("real-e2e.yml", () => {
   });
 });
 
+describe("real-e2e.yml, the Keycloak job (#903)", () => {
+  type Step = { name?: string; id?: string; if?: string; run?: string; uses?: string; env?: Record<string, string> };
+  const workflow = parse(readFileSync(join(ROOT, ".github", "workflows", "real-e2e.yml"), "utf8")) as {
+    on: { pull_request?: { paths: string[] } };
+    jobs: Record<string, { steps: Step[] }>;
+  };
+  const steps = workflow.jobs["keycloak-e2e"]?.steps ?? [];
+  const step = (name: string) => {
+    const found = steps.filter((s) => s.name === name);
+    expect(found, name).toHaveLength(1);
+    return found[0];
+  };
+
+  it("runs on a pull request that changes any file its runner loads", () => {
+    const paths = workflow.on.pull_request?.paths ?? [];
+    const loaded = filesTheRunnerLoads("scripts/run-keycloak-e2e.mjs");
+    expect(loaded).toEqual(
+      expect.arrayContaining(["scripts/keycloak-realm.mjs", "playwright.keycloak.config.ts", "scripts/real-e2e-probe.mjs"]),
+    );
+    expect(loaded.filter((file) => !paths.includes(file))).toEqual([]);
+  });
+
+  it("checks the evidence for credentials before uploading it, and a passing run's log", () => {
+    expect(step("Run the Keycloak suite").run).toContain("node scripts/run-keycloak-e2e.mjs --builder-root .builder");
+    const check = step("Check the evidence for credentials");
+    const upload = step("Upload the evidence");
+    expect(steps.indexOf(check)).toBeLessThan(steps.indexOf(upload));
+    expect(check.env?.E2E_CANARY_SECRETS).toBe("${{ env.CANARY_KEY }}");
+    expect(upload.if).toBe(`failure() && steps.${check.id}.outcome == 'success'`);
+    expect(step("Check the log of a passing run for credentials").if).toBe("success()");
+  });
+
+  // A tag can be moved to another image; a digest cannot.
+  it("starts Keycloak and the mail catcher by pinned version and digest", () => {
+    const source = readFileSync(join(ROOT, "scripts", "run-keycloak-e2e.mjs"), "utf8");
+    const images = [...source.matchAll(/"((?:quay\.io\/keycloak\/keycloak|axllent\/mailpit):[^"]+)"/g)].map((m) => m[1]);
+    expect(images).toHaveLength(2);
+    for (const image of images) expect(image).toMatch(/:v?\d+\.\d+\.\d+@sha256:[0-9a-f]{64}$/);
+  });
+});
+
 describe("run-real-e2e.mjs", () => {
   // Builder's output reaches the log through pipes the runner's event loop reads. A
   // spawnSync once Builder is running blocks that loop: Builder's stderr fills (a Unix

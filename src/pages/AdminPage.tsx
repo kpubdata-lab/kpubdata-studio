@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { runStatusLabel } from "@/shared/i18n/codeLabels";
 
 import { formatDateTime } from "@/features/datasets/model";
+import { runFailureWords } from "@/features/admin/runFailure";
 import { UsersSection } from "@/features/admin/UsersSection";
 import {
   ApiError,
@@ -202,6 +203,7 @@ export function AdminPage() {
                       <th className="px-4 py-2 font-semibold">{t("admin.colOwner")}</th>
                       <th className="px-4 py-2 font-semibold">{t("admin.colStarted")}</th>
                       <th className="px-4 py-2 font-semibold">{t("admin.colFinished")}</th>
+                      <th className="px-4 py-2 font-semibold">{t("admin.colFailure")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -212,6 +214,9 @@ export function AdminPage() {
                         <td className="px-4 py-2 font-mono text-xs text-muted-foreground">{run.owner_id ? run.owner_id.slice(0, 12) : "—"}</td>
                         <td className="px-4 py-2 text-xs">{run.started_at ? formatDateTime(run.started_at) : "—"}</td>
                         <td className="px-4 py-2 text-xs">{run.finished_at ? formatDateTime(run.finished_at) : "—"}</td>
+                        <td className="px-4 py-2 text-xs">
+                          <RunFailure run={run} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -279,6 +284,24 @@ function RunsShown({
     <div className="flex flex-wrap items-center gap-3 px-5 pt-3 text-xs text-muted-foreground" data-runs-shown="capped">
       <span>{t("admin.runsShownCapped", { n: shown })}</span>
       {limit < ADMIN_RUNS_MAX ? more : <span>{t("admin.runsAtMax", { max: ADMIN_RUNS_MAX })}</span>}
+    </div>
+  );
+}
+
+/**
+ * Why a run failed, from Builder's `error_code` and `error_stage` (#906, contract 1.116.0):
+ * the cause, where it stopped, and what the owner can do next. A run with nothing to say
+ * shows a dash; a code Studio does not know, or none on a failed run, is "unknown".
+ */
+function RunFailure({ run }: { run: AdminRunsResponse["runs"][number] }) {
+  const { t } = useTranslation();
+  const words = runFailureWords(t, run);
+  if (!words) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="min-w-48" data-failure-code={words.known ? run.error_code : "unknown"}>
+      <p className="font-semibold">{words.code}</p>
+      <p className="text-muted-foreground">{t("admin.failure.atStage", { stage: words.stage })}</p>
+      {words.hint ? <p className="mt-1 text-muted-foreground">{words.hint}</p> : null}
     </div>
   );
 }

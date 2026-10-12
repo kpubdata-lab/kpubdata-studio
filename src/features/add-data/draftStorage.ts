@@ -19,7 +19,7 @@
  * version alone let a value of the wrong shape reach the form, which crashed while
  * rendering and stayed stored, so every visit offered it again.
  */
-import { z } from "zod";
+import * as z from "zod/mini";
 import { clearDraft, hasDraft, loadDraft, saveDraft } from "@/features/build-spec/draftStorage";
 import { ownedStorageKey } from "@/features/auth/storageOwner";
 import { sanitizeUrlEndpointForStorage } from "@/features/add-data/urlRedaction";
@@ -44,18 +44,18 @@ const canonicalBaseSchema = z.looseObject({
   description: z.string(),
   sources: z.array(
     z.looseObject({
-      kind: sourceKindSchema.optional(),
-      provider: z.string().optional(),
-      dataset: z.string().optional(),
-      uploadId: z.string().optional(),
-      endpoint: z.string().optional(),
-      format: sourceFormatSchema.optional(),
+      kind: z.optional(sourceKindSchema),
+      provider: z.optional(z.string()),
+      dataset: z.optional(z.string()),
+      uploadId: z.optional(z.string()),
+      endpoint: z.optional(z.string()),
+      format: z.optional(sourceFormatSchema),
       params: jsonRecordSchema,
     }),
   ),
-  exports: z.array(z.looseObject({ format: z.string(), options: jsonRecordSchema.optional() })),
+  exports: z.array(z.looseObject({ format: z.string(), options: z.optional(jsonRecordSchema) })),
   metadata: jsonRecordSchema,
-  extra: jsonRecordSchema.optional(),
+  extra: z.optional(jsonRecordSchema),
 });
 
 /**
@@ -65,19 +65,19 @@ const canonicalBaseSchema = z.looseObject({
  * `loadDraft` removes it and the page says the draft could not be opened.
  */
 export const addDataDraftSchema = z.object({
-  canonicalBase: canonicalBaseSchema.optional(),
-  sourceKind: sourceKindSchema.nullable(),
+  canonicalBase: z.optional(canonicalBaseSchema),
+  sourceKind: z.nullable(sourceKindSchema),
   publicApi: z.object({ provider: z.string(), dataset: z.string(), sourceParams: z.string() }),
   file: z.object({
-    uploadId: z.string().nullable(),
-    format: sourceFormatSchema.nullable(),
+    uploadId: z.nullable(z.string()),
+    format: z.nullable(sourceFormatSchema),
     encoding: z.string(),
-    filename: z.string().nullable(),
-    sizeBytes: z.number().nullable(),
+    filename: z.nullable(z.string()),
+    sizeBytes: z.nullable(z.number()),
     // Absent from a draft saved before #758.
-    expiresAt: z.string().nullable().optional(),
+    expiresAt: z.optional(z.nullable(z.string())),
   }),
-  url: z.object({ endpoint: z.string(), format: z.enum(["csv", "json", "jsonl"]).nullable() }),
+  url: z.object({ endpoint: z.string(), format: z.nullable(z.enum(["csv", "json", "jsonl"])) }),
   datasetId: z.string(),
   title: z.string(),
   description: z.string(),

@@ -23,9 +23,10 @@ export default defineConfig(({ mode }) => ({
   },
   resolve: {
     alias: [
-      // Bare `zod` resolves to a wrapper that sets `jitless` first (#663); the wrapper
-      // itself imports `zod/v4`, which this exact match does not catch.
-      { find: /^zod$/, replacement: fileURLToPath(new URL("./src/shared/lib/zodJitless.ts", import.meta.url)) },
+      // `zod/mini` resolves to a wrapper that sets `jitless` and the English locale first
+      // (#663, #951); the wrapper itself imports `zod/v4/mini`, which this exact match does
+      // not catch.
+      { find: /^zod\/mini$/, replacement: fileURLToPath(new URL("./src/shared/lib/zodJitless.ts", import.meta.url)) },
       { find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
     ],
   },

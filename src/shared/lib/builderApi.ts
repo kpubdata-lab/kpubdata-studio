@@ -24,7 +24,7 @@ import * as schemas from "./builderApi.schema";
 import { AmbiguousSpecError, noteKeyProviders, providerKeyHeaders, specProviders } from "./providerKeys";
 import { clearSessionRefusal, isSessionRefused, noteSessionRefused } from "./sessionRefusal";
 import { noteSignupBlock } from "./signupStatus";
-import { z } from "zod";
+import * as z from "zod/mini";
 
 /**
  * **Minimum** Builder API contract version Studio's client needs (#725, #790). Not an
@@ -477,7 +477,7 @@ function settleSession(response: Response, refusedWithFreshToken: boolean, error
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {},
-  schema?: z.ZodSchema<T>,
+  schema?: z.ZodMiniType<T>,
 ): Promise<T> {
   const { response, refusedWithFreshToken } = await sendWithSession(
     () => fetchWithRetries(path, options),
@@ -567,6 +567,21 @@ export function extractErrorMessage(parsed: unknown): string | undefined {
 }
 
 /**
+ * The 429 refusals of Builder 1.119.0 (kpubdata-builder#1245), said in the user's language
+ * with how long to wait: `query_rate_limited` (`/query` and the `/warehouse` reads and
+ * exports) and `provider_egress_limited` (`/preview`). Every screen that shows an error
+ * shows this message, so reading it here covers them all (#949).
+ */
+function rateLimitMessage(status: number, parsed: unknown): string | null {
+  if (status !== 429 || !parsed || typeof parsed !== "object") return null;
+  const { code, retry_after_seconds: wait } = parsed as { code?: unknown; retry_after_seconds?: unknown };
+  const key = code === "query_rate_limited" ? "queryRateLimited" : code === "provider_egress_limited" ? "providerEgressLimited" : null;
+  if (!key) return null;
+  if (typeof wait === "number" && Number.isFinite(wait) && wait > 0) return i18n.t(`api.rateLimit.${key}`, { seconds: Math.ceil(wait) });
+  return i18n.t(`api.rateLimit.${key}Unstated`);
+}
+
+/**
  * Converts HTTP status code and response body to user-displayable error message (#159).
  *
  * @param status - HTTP status code
@@ -574,6 +589,9 @@ export function extractErrorMessage(parsed: unknown): string | undefined {
  * @returns Displayable error message for end user
  */
 export function formatApiErrorMessage(status: number, parsed: unknown): string {
+  const limited = rateLimitMessage(status, parsed);
+  if (limited) return limited;
+
   // try extracting structured error message first
   const extracted = extractErrorMessage(parsed);
   if (extracted) return extracted;
@@ -635,6 +653,7 @@ export type PreviewSource = schemas.PreviewSource;
 export type PreviewResponse = schemas.PreviewResponse;
 export type CatalogQuerySupport = schemas.CatalogQuerySupport;
 export type CatalogRequestParameter = schemas.CatalogRequestParameter;
+export type CatalogQueryParameter = schemas.CatalogQueryParameter;
 export type CatalogApplication = schemas.CatalogApplication;
 export type CatalogDataset = schemas.CatalogDataset;
 export type CatalogProvider = schemas.CatalogProvider;

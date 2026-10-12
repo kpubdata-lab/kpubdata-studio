@@ -17,6 +17,7 @@ import { hasDraft, saveDraft } from "@/features/build-spec/draftStorage";
 import { createSavedSpec } from "@/features/workspace/savedSpecs";
 import { AddDataPage } from "@/pages/AddDataPage";
 import { NewBuildPage } from "@/pages/NewBuildPage";
+import { chooseProvider } from "./support/chooseProvider";
 
 function LocationProbe() {
   const location = useLocation();
@@ -66,7 +67,7 @@ describe("one table creation flow (#534)", () => {
   it("previews the logical table name from Builder's source key before creating", async () => {
     renderAt("/add");
     fireEvent.click(screen.getByRole("button", { name: /공공 API/ }));
-    fireEvent.change(await screen.findByLabelText(/^제공자/), { target: { value: "datago" } });
+    await chooseProvider("datago");
     await waitFor(() => expect(screen.getByLabelText(/^소스 데이터셋/)).not.toBeDisabled());
     fireEvent.change(screen.getByLabelText(/^소스 데이터셋/), { target: { value: "apt_trade" } });
     await screen.findByText("아파트 실거래가");
