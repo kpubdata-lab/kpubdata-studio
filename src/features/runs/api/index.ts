@@ -8,13 +8,12 @@
 import { i18n } from "@/shared/i18n";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import { serializeSpec } from "@/features/build-spec/specMapping";
-import { builderApi, isRealBuilderEnabled, type BuildJob, type BuildSummary } from "@/shared/lib/builderApi";
+import type { BuildJob, BuildSummary } from "@/shared/lib/builderApi";
 import { buildJobResponseSchema, type BuildJobResponse } from "@/shared/lib/builderApi.schema";
 import { DEMO_DATASETS, type DemoDataset } from "@/shared/lib/demoDatasets";
 import { keysWereLost } from "@/shared/lib/missingProviderKey";
 import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
-
-const MOCK_TIME = "1970-01-01T00:00:00.000Z";
+import { runsClient } from "./client";
 
 /** How many run ids this page load has made. Part of each id, so no two are the same. */
 let issuedRunIds = 0;
@@ -115,21 +114,7 @@ export async function executeBuild(
   onHandle?: (handle: BuildExecutionHandle) => void,
   options: BuildExecutionOptions = {},
 ): Promise<BuildRun> {
-  if (!isRealBuilderEnabled()) {
-    const mockRun: BuildRun = {
-      id: "mock-run",
-      spec,
-      status: "succeeded",
-      startedAt: MOCK_TIME,
-      finishedAt: MOCK_TIME,
-    };
-    // In mock mode, save spec so edit flow can be validated with same path as real mode.
-    saveBuildSpec(mockRun.id, spec);
-    return mockRun;
-  }
-
-  // In real integration mode, record actual execution time (avoid incorrect 1970 values
-  // in history/detail screens).
+  // The demo takes the same path (#902): its client answers a job that has already ended.
   const runId = generateRunId(spec.datasetId);
   const startedAt = new Date().toISOString();
 
@@ -191,14 +176,14 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
  */
 export async function pollBuildJobUntilTerminal(
   runId: string,
-  initialJob: Awaited<ReturnType<typeof builderApi.getBuildJob>>,
+  initialJob: BuildJob,
   signal: AbortSignal | undefined,
-  onJobStatus?: (job: Awaited<ReturnType<typeof builderApi.getBuildJob>>) => void,
-): Promise<Awaited<ReturnType<typeof builderApi.getBuildJob>>> {
+  onJobStatus?: (job: BuildJob) => void,
+): Promise<BuildJob> {
   let job = initialJob;
   while (!isTerminalBuilderStatus(job.status)) {
     await sleep(POLL_INTERVAL_MS, signal);
-    job = await builderApi.getBuildJob(runId, signal);
+    job = await runsClient().getBuildJob(runId, signal);
     onJobStatus?.(job);
   }
   return job;
@@ -214,7 +199,7 @@ async function runAsyncBuild(
   retryOf?: string,
   ifAbsent?: boolean,
 ): Promise<BuildRun> {
-  const submitted = await builderApi.submitBuild(serializeSpec(spec), runId, signal, retryOf, ifAbsent);
+  const submitted = await runsClient().submitBuild(serializeSpec(spec), runId, signal, retryOf, ifAbsent);
   // Server-returned run_id is authoritative. Only from here can cooperative cancel
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
@@ -381,21 +366,22 @@ export function mockBuilds(): BuildRun[] {
  *          mode: Builder response mapped).
  */
 export async function listBuilds(limit?: number): Promise<BuildListItem[]> {
-  if (!isRealBuilderEnabled()) {
-    // The demo runs name their table; they committed no warehouse snapshot, so the
-    // snapshot fields stay unsent.
-    return mockBuilds().map((run) => ({
-      id: run.id,
-      title: run.spec.title,
-      status: run.status,
-      startedAt: run.startedAt,
-      finishedAt: run.finishedAt ?? null,
-      datasetId: run.spec.datasetId,
-    }));
-  }
+  return runsClient().listBuilds(limit);
+}
 
-  const response = await builderApi.listBuilds(limit);
-  return response.builds.map(mapBuildSummary);
+/**
+ * The demo's run history as the list reads it. The demo runs name their table; they
+ * committed no warehouse snapshot, so the snapshot fields stay unsent.
+ */
+export function demoHistory(): BuildListItem[] {
+  return mockBuilds().map((run) => ({
+    id: run.id,
+    title: run.spec.title,
+    status: run.status,
+    startedAt: run.startedAt,
+    finishedAt: run.finishedAt ?? null,
+    datasetId: run.spec.datasetId,
+  }));
 }
 
 /**

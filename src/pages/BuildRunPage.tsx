@@ -13,7 +13,6 @@
 import { useParams } from "react-router-dom";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
 import { useBuild } from "@/features/runs/useBuild";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { BuildRunStatus } from "@/shared/lib/types";
 import { Card, EmptyState, LinkButton, PageHeader, Skeleton, StatusBadge } from "@/shared/ui";
 import { useTranslation } from "react-i18next";
@@ -33,9 +32,9 @@ export function BuildRunPage() {
 
    // live: if an active job exists in the registry (#245/#255), its state is most recent — reuse
    // the same hook as Builds detail (BuildsPage) to ensure both screens use the same canonical run state.
-   // In mock mode, getBuildJob is a stub that always fails (#255 §3 comment reference), so live polling
-   // is not enabled and the historical (deterministic mock) state above is trusted as-is.
-  const live = useSelectedRunPolling(isRealBuilderEnabled() ? buildId || null : null);
+   // The demo's registry holds only what was submitted in this page load (#902): for a run of
+   // its history the lookup answers "not in the registry", and the historical state above stands.
+  const live = useSelectedRunPolling(buildId || null);
 
   const runStatus: BuildRunStatus | undefined =
     live.kind === "job" ? live.job.status : build?.status;

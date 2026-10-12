@@ -37,12 +37,15 @@ function setVisibility(state: "visible" | "hidden") {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  // The hooks ask the runs client (#902); these tests answer for a Builder.
+  vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
   Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
 });
 
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 describe("useVisibilityAwarePolling", () => {
@@ -260,6 +263,8 @@ describe("useSelectedRunPolling", () => {
 
 describe("useRunEvents", () => {
   it("mock 모드에서는 MockUnsupportedError를 network 오류와 구분되는 mockUnsupported로 노출한다", async () => {
+    // No Builder here: the demo's client answers.
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "");
     // The default test environment is mock mode (VITE_USE_REAL_BUILDER unset).
     const { result } = renderHook(() => useRunEvents("run-1", true));
     await vi.waitFor(() => expect(result.current.status).toBe("error"));

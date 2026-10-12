@@ -15,7 +15,8 @@ import {
   type BuildExecutionOptions,
   type BuilderJobStatus,
 } from "@/features/runs/api";
-import { ApiError, builderApi, extractErrorMessage } from "@/shared/lib/builderApi";
+import { ApiError, extractErrorMessage } from "@/shared/lib/builderApi";
+import { runsClient } from "@/features/runs/api/client";
 import { buildRefusal, buildRefusalMessage } from "./buildRefusal";
 import { missingProviderKeys, type MissingProviderKeys } from "@/shared/lib/missingProviderKey";
 import type { BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
@@ -91,7 +92,7 @@ export function useBuildJob(): BuildJob {
   const issueAsyncCancel = useCallback((runId: string) => {
     if (cancelIssuedRef.current) return;
     cancelIssuedRef.current = true;
-    void builderApi.cancelBuildJob(runId).catch(() => {});
+    void runsClient().cancelBuildJob(runId).catch(() => {});
   }, []);
 
   const start = useCallback(async (spec: BuildSpec, options: BuildExecutionOptions = {}) => {

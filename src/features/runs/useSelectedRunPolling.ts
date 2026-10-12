@@ -22,7 +22,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isTerminalBuilderStatus, POLL_INTERVAL_MS } from "@/features/runs/api";
 import { classifyRunApiError } from "@/features/runs/model";
 import { useVisibilityAwarePolling } from "./useVisibilityAwarePolling";
-import { builderApi, type BuildJob } from "@/shared/lib/builderApi";
+import type { BuildJob } from "@/shared/lib/builderApi";
+import { runsClient } from "@/features/runs/api/client";
 
 export type SelectedRunLiveState =
   | { kind: "idle" }
@@ -52,7 +53,7 @@ export function useSelectedRunPolling(runId: string | null, attempt = 0): Select
     const controller = new AbortController();
     controllerRef.current = controller;
     try {
-      const job = await builderApi.getBuildJob(runId, controller.signal);
+      const job = await runsClient().getBuildJob(runId, controller.signal);
       if (controller.signal.aborted) return;
       lastJobRef.current = job;
       // Successfully fetched; clear any previous transient error warning.

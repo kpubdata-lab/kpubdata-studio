@@ -154,10 +154,7 @@ export function BuildsPage() {
   const outOfListScope = Boolean(selectedRunId) && listState.status === "loaded" && !selectedListItem;
 
   // Selected Run live (job registry) polling is enabled only when state is genuinely uncertain (#286
-  // follow-up §1). In mock mode, builderApi.getBuildJob is a stub that always attempts real fetch,
-  // causing repeated failures even for succeeded/failed historical runs, producing unnecessary
-  // "live state update failure" warnings — in mock mode, we trust the list's deterministic mock
-  // status as-is and skip live polling entirely. In real mode, runs already in the `GET /builds` list
+  // follow-up §1). Runs already in the `GET /builds` list
   // are contractually completed (ok/failed) history only, so terminal status is already confirmed — we
   // don't enable queries until list loading finishes and confirms this (waiting for listState.status === "loaded"
   // avoids even one wasted call). If list loading finishes but run is out of scope (deep-link run),
@@ -167,7 +164,6 @@ export function BuildsPage() {
   // so only the job says why it ended, and the lost-keys card (#846) is drawn from that.
   const shouldPollLiveStatus =
     Boolean(selectedRunId) &&
-    isRealBuilderEnabled() &&
     listState.status === "loaded" &&
     (!selectedListItem || selectedListItem.startedAt === null);
   const [liveAttempt, setLiveAttempt] = useState(0);
@@ -234,9 +230,9 @@ export function BuildsPage() {
   // stages: a queued one, or one that ended before it started because its keys were gone (#846). The
   // registry has it, and its detail — the lost-keys card, the cancel button — is what to show.
   // "Not found" is decided positively: while the lookup is idle or loading, or when it failed, we do
-  // not know — only an answer of "unknown run" counts. Mock mode has no live lookup to wait for.
-  const liveSaysUnknown =
-    !isRealBuilderEnabled() || live.kind === "not_in_registry" || live.kind === "permission_denied";
+  // not know — only an answer of "unknown run" counts. The demo's lookup answers too (#902): it
+  // knows only the runs submitted in this page load.
+  const liveSaysUnknown = live.kind === "not_in_registry" || live.kind === "permission_denied";
   const listedNowhere =
     Boolean(selectedRunId) &&
     listState.status === "loaded" &&
@@ -245,7 +241,7 @@ export function BuildsPage() {
     stagesState.notFound;
   const runNotFound = listedNowhere && liveSaysUnknown;
   // The lookup itself failed (network, 5xx): Studio cannot tell a missing run from a failed check.
-  const runCheckFailed = listedNowhere && isRealBuilderEnabled() && live.kind === "error";
+  const runCheckFailed = listedNowhere && live.kind === "error";
 
   // When out of list scope so we lack listItem to judge existence, if the stage query we relied on
   // returns 403, distinguish "no permission to view" from "doesn't exist" (#255 P0).
