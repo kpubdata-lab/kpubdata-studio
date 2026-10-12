@@ -27,7 +27,7 @@ import {
   failQualityResults,
   failedRunEvents,
 } from "@/features/runs/model";
-import type { AsyncState } from "@/features/runs/asyncState";
+import { useAsync, type AsyncState } from "@/features/runs/asyncState";
 import { extractDatasetId, mapLiveStatus, normalizeBuildContextSearch } from "@/features/runs/buildContext";
 import { useStageDetails } from "@/features/runs/stageDetails";
 import { CancelRunButton } from "@/features/runs/components/CancelRunButton";
@@ -40,9 +40,11 @@ import {
   SourcePipelineRow,
 } from "@/features/runs/components/SourcePipeline";
 import { isTerminalBuilderStatus, jobWarehouseFailureMessage } from "@/features/runs/api";
+import { runsClient } from "@/features/runs/api/client";
 import type { RunEventsState } from "@/features/runs/useRunEvents";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { useAssistConfig } from "@/features/assistant/config";
 import type {
@@ -81,6 +83,7 @@ export function RunDetailPanel({
   live: ReturnType<typeof useSelectedRunPolling>;
 }) {
   const { t } = useTranslation();
+  const owner = useStorageOwnerKey();
   const openAssistantDrawer = useUIStore((state) => state.openAssistantDrawer);
   const seedAssistantQuestion = useAssistantStore((state) => state.seedQuestion);
   const { isConfigured } = useAssistConfig();
@@ -142,6 +145,19 @@ export function RunDetailPanel({
   // stage failed, so there is no failure evidence, and the job's error is only "build
   // failed". The reason is in the job's `warehouse_failures`.
   const commitRefusal = live.kind === "job" ? jobWarehouseFailureMessage(live.job) : null;
+  // A run in the history is not polled: its status is known (BuildsPage). Why it failed is
+  // not in the list, though — only the job says — so a failed one is asked for once
+  // (kpubdata-builder#1120). Builder keeps the reason after it has let the job go since
+  // contract 1.124.0; an answer without one, or no answer, adds nothing to the page.
+  const endedJob = useAsync(
+    (signal) => runsClient().getJob(runId, signal),
+    [runId, owner],
+    "",
+    listItem?.status === "failed" && listItem.startedAt !== null && live.kind === "idle",
+  );
+  const job = live.kind === "job" ? live.job : endedJob.status === "loaded" ? endedJob.data : null;
+  // A run that lost its keys has its own card, which says what to do next (#846).
+  const builderReason = listItem?.status === "failed" && job?.error && !keysWereLost(job) ? job.error : null;
   // A job the registry knows, with no stages on Builder (#875): the run is waiting, is
   // running — Builder has its stages only once it has ended — or ended before it started,
   // its keys lost while it waited or cancelled in the queue. Its stages are then not
@@ -452,7 +468,7 @@ export function RunDetailPanel({
         <KeysLostCard runId={live.job.run_id} />
       ) : null}
 
-      {failureEvidence.length > 0 || qualityFails.length > 0 || commitRefusal ? (
+      {failureEvidence.length > 0 || qualityFails.length > 0 || commitRefusal || builderReason ? (
         <Card variant="error">
           <h3 className="text-sm font-semibold">{t("builds.detail.failureEvidence")}</h3>
           {commitRefusal ? (
@@ -467,8 +483,8 @@ export function RunDetailPanel({
               ))}
             </ul>
           ) : null}
-          {listItem?.status === "failed" && live.kind === "job" && live.job.error ? (
-            <p className="mt-2 text-sm">{t("builds.detail.builderError", { error: live.job.error })}</p>
+          {builderReason ? (
+            <p className="mt-2 text-sm" data-failure-reason={runId}>{t("builds.detail.builderError", { error: builderReason })}</p>
           ) : null}
           {qualityFails.length > 0 ? (
             <ul className="mt-3 flex flex-col gap-1 text-sm">
