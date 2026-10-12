@@ -7,11 +7,11 @@ import { serializeSpec, toBuilderSpec } from "./specMapping";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const SPEC: BuildSpec = {
-  datasetId: "seoul-air-quality",
+  datasetId: "seoul-apt-trade",
   title: "서울 대기질 관측",
   description: "서울 지역 측정소별 대기오염 관측 데이터",
   sources: [{ provider: "datago", dataset: "air_quality", alias: "air", params: { sidoName: "서울" } }],
-  exports: [{ format: "jsonl", options: { outputPath: "artifacts/air-quality.jsonl" } }],
+  exports: [{ format: "jsonl", options: { outputPath: "artifacts/apt-trade.jsonl" } }],
   metadata: {},
 };
 
@@ -29,7 +29,7 @@ describe("toYamlText/fromYamlText round-trip", () => {
       alias: "air",
       params: { sidoName: "서울" },
     });
-    expect(restored.exports[0]?.options?.outputPath).toBe("artifacts/air-quality.jsonl");
+    expect(restored.exports[0]?.options?.outputPath).toBe("artifacts/apt-trade.jsonl");
   });
 
   it("toYamlText는 실제 제출 payload(toBuilderSpec)와 동일한 값을 표현한다", () => {

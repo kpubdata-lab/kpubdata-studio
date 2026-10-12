@@ -4,17 +4,17 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { clearBuildSpecs, saveBuildSpec } from "@/features/build-spec/specStore";
 import { NewBuildPage } from "@/pages/NewBuildPage";
 
-const RUN_ID = "air-quality-edit-run";
+const RUN_ID = "apt-trade-edit-run";
 
 beforeEach(() => {
   clearBuildSpecs();
   saveBuildSpec(RUN_ID, {
-    datasetId: "air-quality",
+    datasetId: "apt-trade",
     title: "대기오염",
     description: "설명",
     sources: [{ provider: "datago", dataset: "air", params: {} }],
     exports: [{ format: "jsonl" }],
-    metadata: { outputPath: "artifacts/builds/air-quality" },
+    metadata: { outputPath: "artifacts/builds/apt-trade" },
   });
 });
 

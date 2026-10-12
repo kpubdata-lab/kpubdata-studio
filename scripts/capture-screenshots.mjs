@@ -26,7 +26,7 @@ const ROOT = path.resolve(__dirname, "..");
 const OUTPUT_DIR = path.join(ROOT, "docs", "assets", "screenshots");
 
 // build 하위 라우트는 데모 시드 데이터(src/shared/lib/demoDatasets.ts)의 실제 buildId를 사용한다.
-const DEMO_SUCCEEDED = "air-quality-20260621"; // 대기오염 정보 (succeeded)
+const DEMO_SUCCEEDED = "apt-trade-20260621"; // 대기오염 정보 (succeeded)
 const DEMO_RUNNING = "dur-pregnancy-taboo-20260621"; // 임부금기 의약품 (running)
 
 // 캡처할 주요 화면 목록

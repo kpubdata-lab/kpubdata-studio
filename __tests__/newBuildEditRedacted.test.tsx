@@ -39,10 +39,10 @@ function expectNoBuilderCalls() {
   expect(executeBuildMock).toHaveBeenCalledTimes(0);
 }
 
-const RUN_ID = "air-quality-redacted-run";
+const RUN_ID = "apt-trade-redacted-run";
 
 const SPEC_WITH_SECRET: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기오염",
   description: "설명",
   sources: [

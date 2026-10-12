@@ -35,7 +35,7 @@ describe("ArtifactRow explains policy refusals of a download (#643)", () => {
         columns: ["siteTel", "ownerName"],
       }),
     );
-    renderRow("silver/datago__air/part-0.parquet");
+    renderRow("silver/datago__trade/part-0.parquet");
 
     const notice = await screen.findByRole("status");
     expect(notice).toHaveAttribute("data-refusal", "declared_pii_withheld");
@@ -87,7 +87,7 @@ describe("ArtifactRow explains policy refusals of a download (#643)", () => {
 
   it("keeps any other 403 a plain error", async () => {
     api.downloadArtifact.mockRejectedValue(new ApiError(403, "접근 권한이 없습니다.", { error: "forbidden" }));
-    renderRow("silver/datago__air/part-0.parquet");
+    renderRow("silver/datago__trade/part-0.parquet");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("접근 권한이 없습니다.");
     expect(screen.queryByRole("status")).toBeNull();

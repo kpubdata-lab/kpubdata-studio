@@ -62,7 +62,7 @@ describe("Table Detail run view: show more (#653)", () => {
       dataset_id: datasetId,
       runs: runs(limit === 50 ? 50 : 120),
     }));
-    renderAt("/tables/air-quality?tab=builds", <DatasetDetailPage />, "/tables/:datasetId");
+    renderAt("/tables/apt-trade?tab=builds", <DatasetDetailPage />, "/tables/:datasetId");
 
     const panel = await screen.findByRole("tabpanel", { name: "실행 기록" });
     await within(panel).findByText("run-049");
@@ -74,7 +74,7 @@ describe("Table Detail run view: show more (#653)", () => {
 
     await within(panel).findByText("run-119");
     expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy.mock.calls[1].slice(0, 2)).toEqual(["air-quality", 150]);
+    expect(spy.mock.calls[1].slice(0, 2)).toEqual(["apt-trade", 150]);
     // 120 < 150: Builder has no more, so no more is offered.
     expect(within(panel).getByText("접근 가능한 실행 120건을 모두 표시했습니다.")).toBeInTheDocument();
     expect(within(panel).queryByRole("button", { name: /더 보기/ })).not.toBeInTheDocument();
@@ -85,7 +85,7 @@ describe("Table Detail run view: show more (#653)", () => {
       if (limit > 50) throw new Error("limit too large");
       return { dataset_id: datasetId, runs: runs(50) };
     });
-    renderAt("/tables/air-quality?tab=builds", <DatasetDetailPage />, "/tables/:datasetId");
+    renderAt("/tables/apt-trade?tab=builds", <DatasetDetailPage />, "/tables/:datasetId");
 
     const panel = await screen.findByRole("tabpanel", { name: "실행 기록" });
     await within(panel).findByText("run-049");

@@ -79,13 +79,13 @@ describe("Catalog comparison table (#529)", () => {
 
   it("lists the tables made from a source, and says unknown when the list may be incomplete", async () => {
     vi.spyOn(discoverApi, "loadCreatedTables").mockResolvedValue({
-      tables: [table("air-quality", [{ provider: "datago", dataset: "air_quality", alias: "air" }])],
+      tables: [table("apt-trade", [{ provider: "datago", dataset: "air_quality", alias: "air" }])],
       complete: false,
     });
     renderDiscover();
 
     const air = await rowOf("대기오염 정보");
-    expect(await within(air).findByText("air-quality")).toBeInTheDocument();
+    expect(await within(air).findByText("apt-trade")).toBeInTheDocument();
     // Not found in a list that may be cut: unknown, not "none".
     const dur = await rowOf("DUR 품목정보");
     expect(within(dur).getByTitle("테이블 목록이 전부가 아니라 확인할 수 없습니다")).toHaveTextContent("—");

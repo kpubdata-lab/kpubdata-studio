@@ -22,7 +22,7 @@ import type { BuildSpec } from "@/shared/lib/types";
 import { mswServer } from "../vitest.setup";
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "Hourly readings",
   sources: [{ provider: "datago", dataset: "air", params: { sidoName: "Seoul" } }],
@@ -38,7 +38,7 @@ const FIXTURE_VALUE = "fixture-value-649";
 function revision(number: number, overrides: Partial<DocumentRevision> = {}): DocumentRevision {
   return {
     kind: "spec",
-    doc_id: "air-quality",
+    doc_id: "apt-trade",
     revision: number,
     note: null,
     author: `owner-${number}`,
@@ -55,7 +55,7 @@ interface Server {
   putResponse?: () => Response;
 }
 
-/** A Builder whose spec `air-quality` is at `latest`, recording what Studio sends. */
+/** A Builder whose spec `apt-trade` is at `latest`, recording what Studio sends. */
 function builder(latest: number, history: DocumentRevision[]): Server {
   const server: Server = { latest, puts: [], reverts: [] };
   mswServer.use(
@@ -106,7 +106,7 @@ function builder(latest: number, history: DocumentRevision[]): Server {
 function renderPanel(spec: BuildSpec | null = SPEC) {
   const onLoad = vi.fn();
   render(
-    <SpecRevisionPanel docId="air-quality" spec={spec ?? undefined} onLoad={onLoad} />,
+    <SpecRevisionPanel docId="apt-trade" spec={spec ?? undefined} onLoad={onLoad} />,
   );
   return { onLoad };
 }
@@ -264,7 +264,7 @@ describe("SpecRevisionPanel", () => {
 });
 
 describe("spec edit screen", () => {
-  const RUN_ID = "air-quality-revisions-run";
+  const RUN_ID = "apt-trade-revisions-run";
 
   beforeEach(() => {
     vi.unstubAllEnvs();

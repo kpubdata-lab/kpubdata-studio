@@ -79,14 +79,14 @@ describe("새 IA placeholder 화면 (#247)", () => {
     // The run-based view: a deployment without a warehouse (#530).
     hideDemoWarehouse();
     render(
-      <MemoryRouter initialEntries={["/tables/air-quality"]}>
+      <MemoryRouter initialEntries={["/tables/apt-trade"]}>
         <Routes>
           <Route path="/tables/:datasetId" element={<DatasetDetailPage />} />
         </Routes>
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("heading", { name: "대기질 통합 데이터" })).toBeInTheDocument();
-    expect(screen.getByLabelText("실행 선택")).toHaveValue("air-2026-08-14");
+    expect(await screen.findByRole("heading", { name: "아파트 매매·전월세 통합 데이터" })).toBeInTheDocument();
+    expect(screen.getByLabelText("실행 선택")).toHaveValue("apt-2026-08-14");
   });
 });

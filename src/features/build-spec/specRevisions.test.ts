@@ -34,7 +34,7 @@ import {
 const FIXTURE_VALUE = "fixture-value-649";
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "Hourly readings",
   sources: [{ provider: "datago", dataset: "air", params: { sidoName: "Seoul" } }],
@@ -50,7 +50,7 @@ const WITH_KEY: BuildSpec = {
 function revision(overrides: Partial<DocumentRevision> = {}): DocumentRevision {
   return {
     kind: "spec",
-    doc_id: "air-quality",
+    doc_id: "apt-trade",
     revision: 4,
     note: null,
     author: "owner-1",
@@ -91,7 +91,7 @@ describe("specRevisionContent", () => {
     expect(prepared.ok).toBe(true);
     if (!prepared.ok) return;
     const parsed = parse(prepared.content.yaml) as Record<string, unknown>;
-    expect(parsed.dataset_id).toBe("air-quality");
+    expect(parsed.dataset_id).toBe("apt-trade");
     expect(Object.keys(prepared.content)).toEqual(["yaml"]);
   });
 
@@ -105,7 +105,7 @@ describe("specRevisionContent", () => {
 
 describe("specRevisionDocId", () => {
   it("is the table id, and null when Builder would refuse it", () => {
-    expect(specRevisionDocId(SPEC)).toBe("air-quality");
+    expect(specRevisionDocId(SPEC)).toBe("apt-trade");
     expect(specRevisionDocId({ datasetId: "a/b" })).toBeNull();
     expect(specRevisionDocId({ datasetId: "x".repeat(201) })).toBeNull();
     expect(specRevisionDocId({ datasetId: " " })).toBeNull();
@@ -116,7 +116,7 @@ describe("saveSpecRevision", () => {
   it("PUTs the content on top of the expected revision, with a key and no author or time", async () => {
     const { bodies, raw } = recordRevisionRequests(() => HttpResponse.json(revision({ revision: 5, note: "fix" })));
     const outcome = await saveSpecRevision({
-      docId: "air-quality",
+      docId: "apt-trade",
       spec: SPEC,
       expectedRevision: 4,
       note: " fix ",
@@ -124,7 +124,7 @@ describe("saveSpecRevision", () => {
     });
 
     expect(outcome.status).toBe("saved");
-    expect(raw[0]).toMatch(/^PUT .*\/revisions\/spec\/air-quality /);
+    expect(raw[0]).toMatch(/^PUT .*\/revisions\/spec\/apt-trade /);
     const body = bodies[0];
     expect(Object.keys(body).sort()).toEqual(["content", "expected_revision", "idempotency_key", "note"]);
     expect(body.expected_revision).toBe(4);
@@ -139,7 +139,7 @@ describe("saveSpecRevision", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
 
     const outcome = await saveSpecRevision({
-      docId: "air-quality",
+      docId: "apt-trade",
       spec: WITH_KEY,
       expectedRevision: 0,
       keys: createIdempotencyKeys(),
@@ -165,7 +165,7 @@ describe("saveSpecRevision", () => {
       },
     ];
     for (const spec of specs) {
-      const outcome = await saveSpecRevision({ docId: "air-quality", spec, expectedRevision: 0, keys: createIdempotencyKeys() });
+      const outcome = await saveSpecRevision({ docId: "apt-trade", spec, expectedRevision: 0, keys: createIdempotencyKeys() });
       expect(outcome.status).toBe("credential");
     }
     expect(raw).toEqual([]);
@@ -179,7 +179,7 @@ describe("saveSpecRevision", () => {
       ),
     );
     const outcome = await saveSpecRevision({
-      docId: "air-quality",
+      docId: "apt-trade",
       spec: SPEC,
       expectedRevision: 4,
       keys: createIdempotencyKeys(),
@@ -198,7 +198,7 @@ describe("saveSpecRevision", () => {
       ),
     );
     const outcome = await saveSpecRevision({
-      docId: "air-quality",
+      docId: "apt-trade",
       spec: SPEC,
       expectedRevision: 0,
       keys: createIdempotencyKeys(),
@@ -214,7 +214,7 @@ describe("saveSpecRevision", () => {
       attempt === 1 ? HttpResponse.json({ error: "busy" }, { status: 503 }) : HttpResponse.json(revision({ revision: 5 })),
     );
     const outcome = await saveSpecRevision({
-      docId: "air-quality",
+      docId: "apt-trade",
       spec: SPEC,
       expectedRevision: 4,
       keys: createIdempotencyKeys(),
@@ -230,7 +230,7 @@ describe("saveSpecRevision", () => {
       fail ? HttpResponse.error() : HttpResponse.json(revision({ revision: 5 })),
     );
     const keys = createIdempotencyKeys();
-    const input = { docId: "air-quality", spec: SPEC, expectedRevision: 4, keys };
+    const input = { docId: "apt-trade", spec: SPEC, expectedRevision: 4, keys };
 
     // Network failure on every automatic attempt: the outcome is unknown.
     expect((await saveSpecRevision(input)).status).toBe("error");
@@ -250,7 +250,7 @@ describe("saveSpecRevision", () => {
       unreadable ? HttpResponse.json({ revision: "not-a-revision" }, { status: 201 }) : HttpResponse.json(revision({ revision: 5 })),
     );
     const keys = createIdempotencyKeys();
-    const input = { docId: "air-quality", spec: SPEC, expectedRevision: 4, keys };
+    const input = { docId: "apt-trade", spec: SPEC, expectedRevision: 4, keys };
 
     // Builder answered 2xx, but not in the contract's form: not retried automatically,
     // and not treated as a definite answer either.
@@ -264,8 +264,8 @@ describe("saveSpecRevision", () => {
   it("uses a new key for a different save", async () => {
     const { bodies } = recordRevisionRequests(() => HttpResponse.json({ error: "x", code: "invalid_request" }, { status: 400 }));
     const keys = createIdempotencyKeys();
-    await saveSpecRevision({ docId: "air-quality", spec: SPEC, expectedRevision: 4, keys });
-    await saveSpecRevision({ docId: "air-quality", spec: { ...SPEC, title: "Changed" }, expectedRevision: 4, keys });
+    await saveSpecRevision({ docId: "apt-trade", spec: SPEC, expectedRevision: 4, keys });
+    await saveSpecRevision({ docId: "apt-trade", spec: { ...SPEC, title: "Changed" }, expectedRevision: 4, keys });
     expect(bodies[1].idempotency_key).not.toBe(bodies[0].idempotency_key);
   });
 });
@@ -273,9 +273,9 @@ describe("saveSpecRevision", () => {
 describe("revertSpecRevision", () => {
   it("POSTs exactly to_revision and expected_revision", async () => {
     const { bodies, raw } = recordRevisionRequests(() => HttpResponse.json(revision({ revision: 6, reverted_from: 2 })));
-    const outcome = await revertSpecRevision("air-quality", 2, 5);
+    const outcome = await revertSpecRevision("apt-trade", 2, 5);
     expect(outcome.status).toBe("saved");
-    expect(raw[0]).toMatch(/^POST .*\/revisions\/spec\/air-quality\/revert /);
+    expect(raw[0]).toMatch(/^POST .*\/revisions\/spec\/apt-trade\/revert /);
     expect(bodies[0]).toEqual({ to_revision: 2, expected_revision: 5 });
   });
 
@@ -283,20 +283,20 @@ describe("revertSpecRevision", () => {
     recordRevisionRequests(() =>
       HttpResponse.json({ error: "moved", code: "revision_conflict", current_revision: 9 }, { status: 409 }),
     );
-    expect(await revertSpecRevision("air-quality", 2, 5)).toEqual({ status: "conflict", currentRevision: 9 });
+    expect(await revertSpecRevision("apt-trade", 2, 5)).toEqual({ status: "conflict", currentRevision: 9 });
   });
 });
 
 describe("reading revisions", () => {
   it("treats a document with no revision (404) as revision 0 and an empty history", async () => {
     recordRevisionRequests(() => HttpResponse.json({ error: "no such spec", code: "revision_not_found" }, { status: 404 }));
-    expect(await latestSpecRevision("air-quality")).toBeNull();
-    expect(await specRevisionHistory("air-quality")).toEqual({ revisions: [], audit: [] });
+    expect(await latestSpecRevision("apt-trade")).toBeNull();
+    expect(await specRevisionHistory("apt-trade")).toEqual({ revisions: [], audit: [] });
   });
 
   it("restores a revision through the redaction rule, so a credential in it fails closed", () => {
     const yaml = [
-      "dataset_id: air-quality",
+      "dataset_id: apt-trade",
       "title: Air quality",
       "description: Hourly readings",
       "sources:",
@@ -322,7 +322,7 @@ describe("reading revisions", () => {
 
   it("restores a revision that holds a `[REDACTED]` marker as a spec that fails closed", () => {
     const yaml = [
-      "dataset_id: air-quality",
+      "dataset_id: apt-trade",
       "title: Air quality",
       "description: Hourly readings",
       "sources:",

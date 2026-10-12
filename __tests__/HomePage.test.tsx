@@ -57,12 +57,12 @@ describe("HomePage (mock deployment, no warehouse)", () => {
 
     const attention = await screen.findByRole("heading", { level: 2, name: "조치가 필요한 테이블" });
     const section = attention.closest("section")!;
-    const air = within(section).getByRole("link", { name: /대기질 통합 데이터/ });
-    expect(air).toHaveAttribute("href", "/tables/air-quality");
+    const air = within(section).getByRole("link", { name: /아파트 매매·전월세 통합 데이터/ });
+    expect(air).toHaveAttribute("href", "/tables/apt-trade");
     expect(within(section).queryByText("행정구역별 인구")).not.toBeInTheDocument();
 
     expect(screen.getByText(/이 배포에는 warehouse 가 없어/)).toBeInTheDocument();
-    expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
+    expect(await screen.findByText("아파트 매매 실거래가")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "최근 분석" })).not.toBeInTheDocument();
   });
 

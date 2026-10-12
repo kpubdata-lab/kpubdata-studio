@@ -15,9 +15,9 @@ import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
 import type { BuildSpec } from "@/shared/lib/types";
 import { getBuild } from "./getBuild";
 
-const RUN = "air-quality-1";
+const RUN = "apt-trade-1";
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "Hourly air quality by region",
   sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
@@ -82,7 +82,7 @@ describe("getBuild, for a run that has only a job", () => {
     const build = await getBuild(RUN);
 
     expect(build).toMatchObject({ id: RUN, status: "failed", startedAt: "2026-10-08T01:00:00Z" });
-    expect(build.spec.datasetId).toBe("air-quality");
+    expect(build.spec.datasetId).toBe("apt-trade");
   });
 
   it.each(["cancelled", "succeeded"])("reads a %s job's status as it is", async (status) => {

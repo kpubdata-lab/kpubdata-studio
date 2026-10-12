@@ -20,7 +20,7 @@ beforeEach(() => vi.stubEnv("VITE_USE_REAL_BUILDER", "true"));
 afterEach(() => vi.unstubAllEnvs());
 
 const TABLES = [
-  { table_id: "t1", logical_name: "air_quality.datago__air", current_snapshot_id: "snap_3", revision: 3 },
+  { table_id: "t1", logical_name: "air_quality.datago__trade", current_snapshot_id: "snap_3", revision: 3 },
   { table_id: "t2", logical_name: "air_quality.airkorea", current_snapshot_id: "snap_9", revision: 1 },
   { table_id: "t3", logical_name: "weather.kma", current_snapshot_id: null, revision: 0 },
 ];
@@ -91,14 +91,14 @@ describe("table explorer (#528)", () => {
     expect(binding).toHaveTextContent("dataset → —");
     expect(screen.getByRole("button", { name: /실행 ⌘/ })).toBeDisabled();
 
-    fireEvent.click(within(tree).getByRole("treeitem", { name: "air_quality.datago__air" }));
-    expect(binding).toHaveTextContent("dataset → air_quality.datago__air @ current");
-    await waitFor(() => expect(binding).toHaveTextContent("dataset → air_quality.datago__air @ current (snap_3)"));
-    expect(within(tree).getByRole("treeitem", { name: "air_quality.datago__air" })).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(within(tree).getByRole("treeitem", { name: "air_quality.datago__trade" }));
+    expect(binding).toHaveTextContent("dataset → air_quality.datago__trade @ current");
+    await waitFor(() => expect(binding).toHaveTextContent("dataset → air_quality.datago__trade @ current (snap_3)"));
+    expect(within(tree).getByRole("treeitem", { name: "air_quality.datago__trade" })).toHaveAttribute("aria-selected", "true");
 
     fireEvent.click(screen.getByRole("button", { name: /실행 ⌘/ }));
     const footer = await screen.findByTestId("result-footer");
-    expect(queryRequests).toEqual([{ table: "air_quality.datago__air", snapshot: "current", sql: "SELECT *\nFROM dataset\nLIMIT 100", limit: 100 }]);
+    expect(queryRequests).toEqual([{ table: "air_quality.datago__trade", snapshot: "current", sql: "SELECT *\nFROM dataset\nLIMIT 100", limit: 100 }]);
     expect(footer).toHaveTextContent("2행 · 12 ms · snapshot snap_3 · rev 3 · LIMIT 100");
   });
 
@@ -110,14 +110,14 @@ describe("table explorer (#528)", () => {
     group.focus();
 
     fireEvent.keyDown(group, { key: "ArrowDown" });
-    const table = within(tree).getByRole("treeitem", { name: "air_quality.datago__air" });
+    const table = within(tree).getByRole("treeitem", { name: "air_quality.datago__trade" });
     expect(table).toHaveFocus();
     expect(rowsRequests).toHaveLength(0);
 
     fireEvent.keyDown(table, { key: "ArrowRight" });
     expect(table).toHaveAttribute("aria-expanded", "true");
     const columnItem = await within(tree).findByRole("treeitem", { name: /station name/ });
-    expect(rowsRequests).toEqual([{ table: "air_quality.datago__air", snapshot: "current", page_size: 1, count: "none" }]);
+    expect(rowsRequests).toEqual([{ table: "air_quality.datago__trade", snapshot: "current", page_size: 1, count: "none" }]);
 
     fireEvent.keyDown(table, { key: "ArrowDown" });
     expect(columnItem).toHaveFocus();
@@ -127,7 +127,7 @@ describe("table explorer (#528)", () => {
     fireEvent.keyDown(columnItem, { key: "Enter" });
     expect(editor().value).toBe('SELECT "station name"\nFROM dataset\nLIMIT 100');
     // Inserting a column binds `dataset` to that column's table, and runs nothing.
-    expect(screen.getByTestId("dataset-binding")).toHaveTextContent("dataset → air_quality.datago__air");
+    expect(screen.getByTestId("dataset-binding")).toHaveTextContent("dataset → air_quality.datago__trade");
     expect(queryRequests).toHaveLength(0);
 
     fireEvent.keyDown(columnItem, { key: "ArrowLeft" });
@@ -150,9 +150,9 @@ describe("table explorer (#528)", () => {
   });
 
   it("says, before running, that a table name in FROM should be `dataset`", async () => {
-    renderAt("/sql?table=air_quality.datago__air");
-    fireEvent.change(editor(), { target: { value: "SELECT * FROM air_quality.datago__air" } });
-    expect(screen.getByRole("note")).toHaveTextContent("air_quality.datago__air 대신 `FROM dataset`");
+    renderAt("/sql?table=air_quality.datago__trade");
+    fireEvent.change(editor(), { target: { value: "SELECT * FROM air_quality.datago__trade" } });
+    expect(screen.getByRole("note")).toHaveTextContent("air_quality.datago__trade 대신 `FROM dataset`");
     fireEvent.change(editor(), { target: { value: "SELECT * FROM dataset" } });
     expect(screen.queryByRole("note")).not.toBeInTheDocument();
   });
@@ -162,7 +162,7 @@ describe("referencedTableNames (#528)", () => {
   const names = TABLES.map((item) => item.logical_name);
 
   it("finds a table name used as a relation, quoted or not, in any case", () => {
-    expect(referencedTableNames("select * from AIR_QUALITY.datago__air", names)).toEqual(["air_quality.datago__air"]);
+    expect(referencedTableNames("select * from AIR_QUALITY.datago__trade", names)).toEqual(["air_quality.datago__trade"]);
     expect(referencedTableNames('SELECT 1 FROM dataset JOIN "weather.kma" k ON true', names)).toEqual(["weather.kma"]);
   });
 

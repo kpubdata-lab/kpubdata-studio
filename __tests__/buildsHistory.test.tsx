@@ -27,15 +27,15 @@ afterEach(() => {
 describe("Builds run history (#12, #255 master-detail)", () => {
   it("renders rows with status badges and lets the user select a run", async () => {
     renderBuilds();
-    expect(await screen.findByRole("link", { name: "대기오염 정보" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "아파트 매매 실거래가" })).toBeInTheDocument();
     expect(screen.getAllByText("성공").length).toBeGreaterThan(0); // succeeded badges
     // "실패"는 상태 필터 <option>에도 나타나므로 배지(span)로만 좁혀서 확인한다.
     expect(screen.getAllByText("실패", { selector: "span" }).length).toBeGreaterThan(0);
 
     // Clicking a row opens that run's detail at /refresh-jobs/:id (#535).
-    fireEvent.click(screen.getByRole("row", { name: /air-quality-20260621/ }));
+    fireEvent.click(screen.getByRole("row", { name: /apt-trade-20260621/ }));
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "아파트 매매 실거래가" })).toBeInTheDocument();
     });
     expect(screen.getByRole("heading", { level: 1, name: "갱신 상세" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "← 갱신 이력" })).toHaveAttribute("href", "/refresh-jobs");
@@ -43,12 +43,12 @@ describe("Builds run history (#12, #255 master-detail)", () => {
 
   it("filters the history by title/id search", async () => {
     renderBuilds();
-    await screen.findByRole("link", { name: "대기오염 정보" });
+    await screen.findByRole("link", { name: "아파트 매매 실거래가" });
 
     fireEvent.change(screen.getByLabelText("실행 검색"), { target: { value: "병용" } });
 
     await waitFor(() => {
-      expect(screen.queryByRole("link", { name: "대기오염 정보" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: "아파트 매매 실거래가" })).not.toBeInTheDocument();
     });
     expect(screen.getByRole("link", { name: "병용금기 품목정보" })).toBeInTheDocument();
   });
@@ -66,7 +66,7 @@ describe("Builds run history (#12, #255 master-detail)", () => {
     // 재시도하면 실제 목록을 다시 불러온다.
     spy.mockResolvedValueOnce(realBuilds);
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
-    expect(await screen.findByRole("link", { name: "대기오염 정보" })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: "아파트 매매 실거래가" })).toBeInTheDocument();
   });
 });
 
@@ -104,11 +104,11 @@ describe("selected Run permission state (#255 P0)", () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
     vi.spyOn(datasetsApi, "listBuildStages").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
 
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
 
     // core 정보(제목)는 계속 보인다 — supplementary 403이 상세 전체를 죽이지 않는다.
     await waitFor(() => {
-      expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "아파트 매매 실거래가" })).toBeInTheDocument();
     });
     expect(screen.getByText(/이 실행의 품질 결과를 조회할 권한이 없습니다/)).toBeInTheDocument();
     expect(screen.getByText(/이 실행의 단계 진행을 조회할 권한이 없습니다/)).toBeInTheDocument();
@@ -121,9 +121,9 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   });
 
   it("evaluated checks 기준 PASS/WARN/FAIL count, multi-source 현황, WARN/FAIL 근거, schema drift를 표시한다", async () => {
-    // air-2026-08-14: partial availability, 2개 source(datago__air pass / kma__weather fail),
+    // apt-2026-08-14: partial availability, 2개 source(datago__trade pass / datago__rent fail),
     // schema_drift 1건이 있는 기존 mock fixture를 그대로 재사용한다(새 mock 의미를 만들지 않음).
-    renderBuilds("/refresh-jobs?run=air-2026-08-14");
+    renderBuilds("/refresh-jobs?run=apt-2026-08-14");
 
     await waitFor(() => expect(screen.getByText("평가 가능 여부: partial")).toBeInTheDocument());
 
@@ -136,11 +136,11 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
     // multi-source면 source별 평가 현황을 compact하게 보여준다(Pipeline 카드에도 같은
     // source_key가 나오므로 getAllByText로 확인한다).
     expect(screen.getByText("소스별 평가 현황")).toBeInTheDocument();
-    expect(screen.getAllByText("datago__air").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("kma__weather").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("datago__trade").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("datago__rent").length).toBeGreaterThan(0);
 
     // WARN/FAIL 결과는 source/category/rule/column/actual/threshold를 함께 보여준다.
-    expect(screen.getByText(/kma__weather · schema\/required_column · temperature/)).toBeInTheDocument();
+    expect(screen.getByText(/datago__rent · schema\/required_column · deposit/)).toBeInTheDocument();
     expect(screen.getByText(/실제값 false \/ 기준값 true/)).toBeInTheDocument();
 
     // schema drift는 별도 compact summary로 나온다.
@@ -148,7 +148,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
 
     // 현재 dataset/run context를 유지한 Quality Center 링크가 있다.
     const link = screen.getByRole("link", { name: "품질 센터에서 상세 보기" });
-    expect(link).toHaveAttribute("href", expect.stringContaining("run=air-2026-08-14"));
+    expect(link).toHaveAttribute("href", expect.stringContaining("run=apt-2026-08-14"));
   });
 
   it("정상 응답 + availability=unavailable은 '결과 없음(unavailable)'로 표시하고 조회 실패로 취급하지 않는다(#255 후속 보완 §5-A)", async () => {
@@ -161,7 +161,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   it("Quality 404 요청 실패는 UNAVAILABLE로 표시하지 않고 조회 실패로 구분한다(#255 후속 보완 §5-B)", async () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(404, "찾을 수 없습니다"));
 
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
 
     expect(await screen.findByText("품질 조회 실패")).toBeInTheDocument();
     expect(screen.getByText(/찾을 수 없습니다\(404\)/)).toBeInTheDocument();
@@ -171,7 +171,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
 
   it("Quality 403/network 오류도 UNAVAILABLE로 표시하지 않는다(#255 후속 보완 §5-B)", async () => {
     vi.spyOn(datasetsApi, "getBuildQuality").mockRejectedValue(new ApiError(403, "권한이 없습니다"));
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
     expect(await screen.findByText("품질 조회 실패")).toBeInTheDocument();
     expect(screen.getByText(/조회할 권한이 없습니다\(403\)/)).toBeInTheDocument();
     expect(screen.queryByText("결과 없음")).not.toBeInTheDocument();
@@ -239,8 +239,8 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
   it("mock mode: succeeded historical run에서는 live job registry를 조회하지 않고 경고도 뜨지 않는다", async () => {
     const spy = vi.spyOn(builderApi, "getBuildJob");
 
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    await screen.findByRole("heading", { name: "대기오염 정보" });
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
+    await screen.findByRole("heading", { name: "아파트 매매 실거래가" });
     // 목록의 deterministic mock status(성공)를 신뢰하고 별도 live 조회를 하지 않는다.
     await waitFor(() => expect(screen.getAllByText("성공", { selector: "span" }).length).toBeGreaterThan(0));
 
@@ -301,9 +301,9 @@ describe("완료된 Run의 불필요한 live polling 제거 (#286 후속 보완 
 });
 
 describe("DEMO_DATASETS ↔ Stage detail 정합성 (#286 후속 보완 §2)", () => {
-  it("air-quality-20260621: record/row count·날짜·export가 demo source와 일치한다(generic 1,200/2026-08-14 재사용 금지)", async () => {
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    await screen.findByRole("heading", { name: "대기오염 정보" });
+  it("apt-trade-20260621: record/row count·날짜·export가 demo source와 일치한다(generic 1,200/2026-08-14 재사용 금지)", async () => {
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
+    await screen.findByRole("heading", { name: "아파트 매매 실거래가" });
 
     // Bronze/Silver/Gold 모두 demo recordCount(12,304)를 그대로 보여준다.
     await waitFor(() => expect(screen.getAllByText(/12,304행/).length).toBe(3));
@@ -343,8 +343,8 @@ describe("DEMO_DATASETS ↔ Stage detail 정합성 (#286 후속 보완 §2)", ()
 
 describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
   it("succeeded run: Source → Bronze → Silver → Gold → Output 흐름이 모두 completed로 표시된다", async () => {
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    await screen.findByRole("heading", { name: "대기오염 정보" });
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
+    await screen.findByRole("heading", { name: "아파트 매매 실거래가" });
 
     expect(screen.getByText("Bronze")).toBeInTheDocument();
     expect(screen.getByText("Silver")).toBeInTheDocument();
@@ -363,11 +363,11 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
   });
 
   it("partial multi-source: source별로 서로 다른 진행 위치를 각자의 row로 보여준다", async () => {
-    renderBuilds("/refresh-jobs?run=air-2026-08-14");
-    await waitFor(() => expect(screen.getAllByText("datago__air").length).toBeGreaterThan(0));
+    renderBuilds("/refresh-jobs?run=apt-2026-08-14");
+    await waitFor(() => expect(screen.getAllByText("datago__trade").length).toBeGreaterThan(0));
 
-    expect(screen.getAllByText("kma__weather").length).toBeGreaterThan(0);
-    // kma__weather는 silver failed → gold not_run(미도달), datago__air는 전부 completed다.
+    expect(screen.getAllByText("datago__rent").length).toBeGreaterThan(0);
+    // datago__rent는 silver failed → gold not_run(미도달), datago__trade는 전부 completed다.
     expect(screen.getAllByText("미도달")).toHaveLength(1);
   });
 });
@@ -379,8 +379,8 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   });
 
   it("API Key 미설정: '이 실행 분석' 클릭 시 seed하지 않고 inline card에 설정 안내만 연다", async () => {
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    await screen.findByRole("heading", { name: "대기오염 정보" });
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
+    await screen.findByRole("heading", { name: "아파트 매매 실거래가" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 실행 분석" }));
 
@@ -396,8 +396,8 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   });
 
   it("API Key 미설정: 'Ask KPubData 설정 열기'를 누르면 기존 Ask KPubData Drawer를 연다", async () => {
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    await screen.findByRole("heading", { name: "대기오염 정보" });
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
+    await screen.findByRole("heading", { name: "아파트 매매 실거래가" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 실행 분석" }));
     fireEvent.click(await screen.findByRole("button", { name: "Ask KPubData 설정 열기" }));
@@ -410,8 +410,8 @@ describe("Run 분석 no-key UX (#286 후속 보완)", () => {
   it("API Key 설정됨: '이 실행 분석' 클릭 시 기존처럼 seed하고 분석을 시작한다(no-key 안내가 뜨지 않음)", async () => {
     useAssistConfig.getState().setConfig({ apiKey: "sk-test" });
 
-    renderBuilds("/refresh-jobs?run=air-quality-20260621");
-    await screen.findByRole("heading", { name: "대기오염 정보" });
+    renderBuilds("/refresh-jobs?run=apt-trade-20260621");
+    await screen.findByRole("heading", { name: "아파트 매매 실거래가" });
 
     fireEvent.click(screen.getByRole("button", { name: "이 실행 분석" }));
 

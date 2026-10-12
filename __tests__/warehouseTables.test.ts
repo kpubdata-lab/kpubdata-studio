@@ -20,24 +20,24 @@ const table = (logical_name: string, dataset_id?: string | null): WarehouseTable
 
 describe("sourceKeyUnder (Builder's table_key)", () => {
   it("keeps the whole rest of the name after the dataset prefix", () => {
-    expect(sourceKeyUnder("seoul-air-quality.datago.air_quality", "seoul-air-quality")).toBe("datago.air_quality");
+    expect(sourceKeyUnder("seoul-apt-trade.datago.air_quality", "seoul-apt-trade")).toBe("datago.air_quality");
     expect(sourceKeyUnder("seoul.air.datago.air_quality", "seoul.air")).toBe("datago.air_quality");
   });
 
   it("is null for another dataset, a bare prefix or an empty key", () => {
-    expect(sourceKeyUnder("seoul-air-quality.datago.air_quality", "seoul-air")).toBeNull();
-    expect(sourceKeyUnder("seoul-air-qualityX.datago", "seoul-air-quality")).toBeNull();
-    expect(sourceKeyUnder("seoul-air-quality.", "seoul-air-quality")).toBeNull();
-    expect(sourceKeyUnder("seoul-air-quality", "seoul-air-quality")).toBeNull();
+    expect(sourceKeyUnder("seoul-apt-trade.datago.air_quality", "seoul-air")).toBeNull();
+    expect(sourceKeyUnder("seoul-apt-tradeX.datago", "seoul-apt-trade")).toBeNull();
+    expect(sourceKeyUnder("seoul-apt-trade.", "seoul-apt-trade")).toBeNull();
+    expect(sourceKeyUnder("seoul-apt-trade", "seoul-apt-trade")).toBeNull();
     expect(sourceKeyUnder(".datago", "")).toBeNull();
   });
 });
 
 describe("sourceKeyOf / datasetTablesOf — the table detail (#602)", () => {
   it("keeps a provider.dataset source key of a source without an alias", () => {
-    const air = table("seoul-air-quality.datago.air_quality", "seoul-air-quality");
-    expect(sourceKeyOf(air, "seoul-air-quality")).toBe("datago.air_quality");
-    expect(datasetTablesOf([air], "seoul-air-quality")).toEqual([air]);
+    const air = table("seoul-apt-trade.datago.air_quality", "seoul-apt-trade");
+    expect(sourceKeyOf(air, "seoul-apt-trade")).toBe("datago.air_quality");
+    expect(datasetTablesOf([air], "seoul-apt-trade")).toEqual([air]);
   });
 
   it("keeps an alias that contains a dot", () => {

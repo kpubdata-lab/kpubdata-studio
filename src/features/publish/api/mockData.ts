@@ -15,8 +15,8 @@
 import type { PublishReadinessResponse, PublishResponse, RedistributionVerdict } from "@/shared/lib/builderApi";
 
 export const MOCK_PUBLISH_READINESS: Record<string, PublishReadinessResponse> = {
-  "air-quality-20260621": {
-    run_id: "air-quality-20260621",
+  "apt-trade-20260621": {
+    run_id: "apt-trade-20260621",
     target: "huggingface",
     ready: true,
     blockers: [],
@@ -57,15 +57,15 @@ export const MOCK_PUBLISH_READINESS: Record<string, PublishReadinessResponse> = 
     blockers: [{ code: "run_not_started", message: "이 run은 아직 실행되지 않았습니다(queued)." }],
     warnings: [],
   },
-  "air-2026-08-14": {
-    run_id: "air-2026-08-14",
+  "apt-2026-08-14": {
+    run_id: "apt-2026-08-14",
     target: "huggingface",
     ready: false,
-    blockers: [{ code: "partial_failure", message: "source kma__weather의 silver stage가 실패했습니다." }],
+    blockers: [{ code: "partial_failure", message: "source datago__rent의 silver stage가 실패했습니다." }],
     warnings: [],
   },
-  "air-2026-08-13": {
-    run_id: "air-2026-08-13",
+  "apt-2026-08-13": {
+    run_id: "apt-2026-08-13",
     target: "huggingface",
     ready: true,
     blockers: [],

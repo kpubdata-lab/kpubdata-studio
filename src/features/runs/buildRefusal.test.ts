@@ -112,7 +112,7 @@ describe("buildRefusal", () => {
 });
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "Hourly air quality by region",
   sources: [{ provider: "datago", dataset: "air_quality", params: {} }],

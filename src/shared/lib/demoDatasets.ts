@@ -63,35 +63,35 @@ function f64(name: string): ManifestFieldSummary {
 /**
  * demo dataset catalog.
  *
- * modeled after actual builder specs (air quality, DUR items/interactions/pregnancy/elderly/dosage)
+ * modeled after actual builder specs (apartment trades, DUR items/interactions/pregnancy/elderly/dosage)
  * includes various states (succeeded/running/failed/queued).
  */
 export const DEMO_DATASETS: DemoDataset[] = [
   {
-    slug: "air-quality",
-    buildId: "air-quality-20260621",
-    title: "대기오염 정보",
-    description: "대기오염정보(SO2/CO/O3/NO2/PM10/PM2.5, 통합대기환경지수) 데이터셋 빌드",
-    providerDataset: "air_quality",
-    sourceUrl: "https://www.data.go.kr/data/15073861/openapi.do",
-    params: { stationName: "종로구", dataTerm: "MONTH" },
+    slug: "apt-trade",
+    buildId: "apt-trade-20260621",
+    title: "아파트 매매 실거래가",
+    description: "아파트 매매 실거래가(단지명/거래금액/전용면적/층/건축년도/법정동) 데이터셋 빌드",
+    providerDataset: "apt_trade",
+    sourceUrl: "https://www.data.go.kr/data/15126469/openapi.do",
+    params: { LAWD_CD: "11110", DEAL_YMD: "202606" },
     exports: [{ format: "parquet" }, { format: "huggingface" }],
-    hfRepo: "kpubdata/air-quality",
+    hfRepo: "kpubdata/apt-trade",
     status: "succeeded",
     startedAt: "2026-06-21T09:00:00.000Z",
     finishedAt: "2026-06-21T09:00:12.000Z",
     recordCount: 12304,
     fields: [
-      str("station_name", false),
-      str("data_time", false),
-      f64("pm10"),
-      f64("pm25"),
-      f64("o3"),
-      f64("no2"),
-      f64("co"),
-      f64("so2"),
-      f64("khai_index"),
-      str("khai_grade"),
+      str("apt_name", false),
+      str("deal_date", false),
+      f64("deal_amount"),
+      f64("exclusive_area"),
+      f64("floor"),
+      f64("build_year"),
+      str("legal_dong"),
+      str("jibun"),
+      str("lawd_cd"),
+      str("deal_type"),
     ],
   },
   {

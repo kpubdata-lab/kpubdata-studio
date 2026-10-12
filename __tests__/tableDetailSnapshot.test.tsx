@@ -303,7 +303,7 @@ describe("Table Detail without a snapshot to open on (#526)", () => {
   it("keeps the run view and says in one line that there is no warehouse", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
     hideDemoWarehouse();
-    renderDetail("/tables/air-quality");
+    renderDetail("/tables/apt-trade");
     expect(await screen.findByText("이 배포에는 warehouse 가 없어 실행 기준으로 보여 줍니다.")).toBeInTheDocument();
     expect(screen.getByLabelText("실행 선택")).toBeInTheDocument();
   });

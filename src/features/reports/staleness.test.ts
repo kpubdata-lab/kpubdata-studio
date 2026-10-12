@@ -8,18 +8,18 @@ afterEach(() => {
 
 describe("checkReportEvidenceStatus (#258 §8)", () => {
   it("기준 run이 dataset의 최신 run이면 CURRENT", async () => {
-    const result = await checkReportEvidenceStatus("air-quality", "air-2026-08-14");
+    const result = await checkReportEvidenceStatus("apt-trade", "apt-2026-08-14");
     expect(result.status).toBe("current");
   });
 
   it("기준 run은 유효하지만 더 최신 run이 있으면 STALE(자동 교체하지 않고 알리기만)", async () => {
-    const result = await checkReportEvidenceStatus("air-quality", "air-2026-08-13");
+    const result = await checkReportEvidenceStatus("apt-trade", "apt-2026-08-13");
     expect(result.status).toBe("stale");
-    expect(result.latestRunId).toBe("air-2026-08-14");
+    expect(result.latestRunId).toBe("apt-2026-08-14");
   });
 
   it("기준 run이 run 목록에서 사라졌으면 ORPHAN", async () => {
-    const result = await checkReportEvidenceStatus("air-quality", "air-run-that-was-deleted");
+    const result = await checkReportEvidenceStatus("apt-trade", "air-run-that-was-deleted");
     expect(result.status).toBe("orphan");
   });
 

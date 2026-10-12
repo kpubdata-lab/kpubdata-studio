@@ -48,7 +48,7 @@ async function openAndType(query: string, shortcut: { ctrlKey?: boolean; metaKey
   const input = within(dialog).getByRole("combobox");
   fireEvent.change(input, { target: { value: query } });
   // Tables and sources arrive asynchronously; wait for the table hit.
-  await within(dialog).findByRole("option", { name: /대기질 통합 데이터/ });
+  await within(dialog).findByRole("option", { name: /아파트 매매·전월세 통합 데이터/ });
   return { dialog, input };
 }
 
@@ -60,37 +60,37 @@ describe("command palette (#533)", () => {
   });
 
   it("lists matching tables before sources, and picks the first table by default", async () => {
-    const { dialog, input } = await openAndType("대기");
+    const { dialog, input } = await openAndType("아파트");
 
     const options = within(dialog).getAllByRole("option");
-    expect(options[0]).toHaveTextContent("대기질 통합 데이터");
+    expect(options[0]).toHaveTextContent("아파트 매매·전월세 통합 데이터");
     expect(options[0]).toHaveAttribute("aria-selected", "true");
     expect(within(dialog).getByRole("group", { name: "테이블" })).toBeInTheDocument();
-    expect(within(within(dialog).getByRole("group", { name: "소스" })).getByRole("option", { name: /대기오염 정보/ })).toBeInTheDocument();
+    expect(within(within(dialog).getByRole("group", { name: "소스" })).getByRole("option", { name: /아파트 실거래가/ })).toBeInTheDocument();
 
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(screen.getByTestId("location")).toHaveTextContent("/tables/air-quality");
+    expect(screen.getByTestId("location")).toHaveTextContent("/tables/apt-trade");
     expect(useUIStore.getState().isAssistantDrawerOpen).toBe(false);
   });
 
   it("opens a source in the Catalog with the keyboard alone", async () => {
-    const { dialog, input } = await openAndType("대기");
+    const { dialog, input } = await openAndType("아파트");
 
     const sourceIndex = within(dialog)
       .getAllByRole("option")
-      .findIndex((option) => option.textContent?.includes("대기오염 정보"));
+      .findIndex((option) => option.textContent?.includes("아파트 실거래가"));
     for (let step = 0; step < sourceIndex; step += 1) fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
 
-    expect(screen.getByTestId("location")).toHaveTextContent("/discover?provider=datago&q=air_quality");
+    expect(screen.getByTestId("location")).toHaveTextContent("/discover?provider=datago&q=apt_trade");
   });
 
   it("offers Ask KPubData only as the last option, never selected by default", async () => {
-    const { dialog, input } = await openAndType("대기");
+    const { dialog, input } = await openAndType("아파트");
 
     const options = within(dialog).getAllByRole("option");
     const ask = options[options.length - 1];
-    expect(ask).toHaveTextContent("Ask KPubData: “대기”");
+    expect(ask).toHaveTextContent("Ask KPubData: “아파트”");
     expect(ask).toHaveAttribute("aria-selected", "false");
 
     for (let step = 1; step < options.length; step += 1) fireEvent.keyDown(input, { key: "ArrowDown" });

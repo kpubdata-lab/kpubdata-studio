@@ -166,7 +166,7 @@ describe("OutputStep", () => {
   it("출력 형식 체크박스와 경로 입력을 그린다", () => {
     render(<FormHarness render={({ register, formState }) => <OutputStep register={register} errors={formState.errors} />} />);
     expect(screen.getAllByRole("checkbox").length).toBeGreaterThan(0);
-    expect(screen.getByPlaceholderText("artifacts/builds/air-quality")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("artifacts/builds/apt-trade")).toBeInTheDocument();
     expect(screen.getByText("(필수)")).toBeInTheDocument();
   });
 

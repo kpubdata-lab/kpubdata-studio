@@ -26,7 +26,7 @@ describe("listBuilds (#95, #153)", () => {
       const builds = await listBuilds();
       expect(builds.length).toBe(6);
       // mock 데이터는 실제 title을 가짐
-      expect(builds.map((b) => b.title)).toContain("대기오염 정보");
+      expect(builds.map((b) => b.title)).toContain("아파트 매매 실거래가");
       // 모든 항목이 필수 필드를 가짐
       builds.forEach((item) => {
         expect(item).toHaveProperty("id");
@@ -128,10 +128,10 @@ describe("listBuilds (#95, #153)", () => {
               status: "ok",
               started_at: null,
               finished_at: null,
-              dataset_id: "air-quality",
+              dataset_id: "apt-trade",
               dataset_title: "Air quality",
               snapshot_id: "snap_012",
-              snapshots: [{ logical_name: "air-quality.datago__air", snapshot_id: "snap_012" }],
+              snapshots: [{ logical_name: "apt-trade.datago__trade", snapshot_id: "snap_012" }],
             },
             { run_id: "run_old_builder", status: "ok" },
           ],
@@ -143,9 +143,9 @@ describe("listBuilds (#95, #153)", () => {
 
       expect(named).toMatchObject({
         title: "Air quality",
-        datasetId: "air-quality",
+        datasetId: "apt-trade",
         snapshotId: "snap_012",
-        snapshots: [{ logicalName: "air-quality.datago__air", snapshotId: "snap_012" }],
+        snapshots: [{ logicalName: "apt-trade.datago__trade", snapshotId: "snap_012" }],
       });
       expect(old.title).toBeNull();
       expect(old.datasetId).toBeUndefined();

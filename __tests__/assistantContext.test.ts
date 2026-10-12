@@ -19,10 +19,10 @@ describe("resolveAssistantContext (#247, #256)", () => {
   });
 
   it("extracts datasetId from a dataset detail route", () => {
-    const { context, pageLabel } = resolveAssistantContext("/tables/air-quality");
+    const { context, pageLabel } = resolveAssistantContext("/tables/apt-trade");
     expect(pageLabel).toBe("테이블 상세");
     expect(context.page).toBe("dataset-detail");
-    expect(context.datasetId).toBe("air-quality");
+    expect(context.datasetId).toBe("apt-trade");
   });
 
   it("does not treat the dataset catalog itself as a dataset id", () => {
@@ -39,16 +39,16 @@ describe("resolveAssistantContext (#247, #256)", () => {
   });
 
   it("reads dataset/run/stage from Dataset Detail's ?run=&stage= query convention (#253)", () => {
-    const { context } = resolveAssistantContext("/tables/air-quality", "?run=run-9&stage=silver");
-    expect(context.datasetId).toBe("air-quality");
+    const { context } = resolveAssistantContext("/tables/apt-trade", "?run=run-9&stage=silver");
+    expect(context.datasetId).toBe("apt-trade");
     expect(context.runId).toBe("run-9");
     expect(context.stage).toBe("silver");
   });
 
   it("reads dataset/run/stage from Quality's ?dataset=&run=&stage= query convention (#254)", () => {
-    const { context } = resolveAssistantContext("/quality", "?dataset=air-quality&run=run-9&stage=gold");
+    const { context } = resolveAssistantContext("/quality", "?dataset=apt-trade&run=run-9&stage=gold");
     expect(context.page).toBe("quality");
-    expect(context.datasetId).toBe("air-quality");
+    expect(context.datasetId).toBe("apt-trade");
     expect(context.runId).toBe("run-9");
     expect(context.stage).toBe("gold");
   });
@@ -59,7 +59,7 @@ describe("resolveAssistantContext (#247, #256)", () => {
   });
 
   it("does not populate qualityResultIds/provider from route alone (only evidence can)", () => {
-    const { context } = resolveAssistantContext("/quality", "?dataset=air-quality");
+    const { context } = resolveAssistantContext("/quality", "?dataset=apt-trade");
     expect(context.qualityResultIds).toBeUndefined();
     expect(context.provider).toBeUndefined();
   });

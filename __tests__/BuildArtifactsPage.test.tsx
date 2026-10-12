@@ -109,7 +109,7 @@ describe("BuildArtifactsPage - Issue #119: undefined vs empty array", () => {
       provenance: [
         {
           provider: "datago",
-          dataset: "air-quality",
+          dataset: "apt-trade",
           fetched_at: "2026-06-21T00:00:00+00:00",
           record_count: 100,
           data_checksum: "sha256:abc",
@@ -117,13 +117,13 @@ describe("BuildArtifactsPage - Issue #119: undefined vs empty array", () => {
           params: {},
         },
       ],
-      row_counts: { "datago.air-quality": 100 },
+      row_counts: { "datago.apt-trade": 100 },
     };
 
     renderWithManifest(withValues);
     await waitFor(() => expect(screen.queryByText("jsonl, parquet")).toBeInTheDocument());
     expect(screen.getByText("jsonl, parquet")).toBeInTheDocument();
-    expect(screen.getByText("datago.air-quality")).toBeInTheDocument();
+    expect(screen.getByText("datago.apt-trade")).toBeInTheDocument();
     expect(screen.getByText("100")).toBeInTheDocument();
   });
 });
@@ -154,14 +154,14 @@ describe("BuildArtifactsPage - artifact 실제 다운로드", () => {
     const blob = new Blob(["parquet-bytes"], { type: "application/octet-stream" });
     mockDownloadArtifact.mockResolvedValue({ blob, filename: "table.parquet" });
 
-    renderArtifacts(["silver/datago.air_quality/table.parquet"], "air-quality-20260621");
+    renderArtifacts(["silver/datago.air_quality/table.parquet"], "apt-trade-20260621");
     await waitFor(() => expect(screen.getByText("table.parquet")).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole("button", { name: "다운로드" }));
 
     await waitFor(() => expect(mockDownloadArtifact).toHaveBeenCalledTimes(1));
     expect(mockDownloadArtifact).toHaveBeenCalledWith(
-      "air-quality-20260621",
+      "apt-trade-20260621",
       "silver/datago.air_quality/table.parquet",
     );
     await waitFor(() => expect(mockSaveBlobAsFile).toHaveBeenCalledWith(blob, "table.parquet"));
@@ -252,11 +252,11 @@ describe("BuildArtifactsPage - manifest truthfulness (F05A)", () => {
       build_environment: null,
       inputs_fingerprint: null,
       outputs: ["artifacts/builds/run-full/data.jsonl"],
-      row_counts: { "datago.air-quality": 100 },
+      row_counts: { "datago.apt-trade": 100 },
       provenance: [
         {
           provider: "datago",
-          dataset: "air-quality",
+          dataset: "apt-trade",
           fetched_at: "2026-06-21T00:00:00+00:00",
           record_count: 100,
           data_checksum: "sha256:abc",

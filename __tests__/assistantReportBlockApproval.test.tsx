@@ -53,13 +53,13 @@ async function askForReportBlock() {
   mockStream(() =>
     jsonText({
       answer: "가격 결측 패턴을 확인했습니다.",
-      evidenceRefs: [{ kind: "dataset", id: "air-quality", label: "대기질 통합 데이터" }],
+      evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·전월세 통합 데이터" }],
       generatedSql: null,
       suggestedActions: [{ type: "ADD_REPORT_BLOCK", note: NOTE, reason: "품질 이슈 참고용" }],
     }),
   );
   render(
-    <MemoryRouter initialEntries={["/tables/air-quality?run=air-2026-08-14"]}>
+    <MemoryRouter initialEntries={["/tables/apt-trade?run=apt-2026-08-14"]}>
       <AssistantPage />
     </MemoryRouter>,
   );
@@ -74,9 +74,9 @@ describe("ADD_REPORT_BLOCK approval preview (#256 리뷰 §3)", () => {
     await askForReportBlock();
 
     expect(screen.getByText(NOTE)).toBeInTheDocument();
-    // "대기질 통합 데이터"는 turn 전체 Evidence 목록과 ADD_REPORT_BLOCK 미리보기 양쪽에 나타날 수 있다 —
+    // "아파트 매매·전월세 통합 데이터"는 turn 전체 Evidence 목록과 ADD_REPORT_BLOCK 미리보기 양쪽에 나타날 수 있다 —
     // 적어도 action card 미리보기 안에는 반드시 있어야 한다.
-    expect(screen.getAllByText("대기질 통합 데이터").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("아파트 매매·전월세 통합 데이터").length).toBeGreaterThan(0);
     expect(listAssistantReportNotes()).toHaveLength(0);
   });
 

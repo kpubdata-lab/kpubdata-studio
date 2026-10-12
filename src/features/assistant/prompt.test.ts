@@ -9,7 +9,7 @@ import type { AssistantEvidence } from "./types";
 function baseEvidence(overrides: Partial<AssistantEvidence> = {}): AssistantEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00Z",
-    context: { page: "dataset-detail", datasetId: "air-quality" },
+    context: { page: "dataset-detail", datasetId: "apt-trade" },
     deepLinks: {},
     partial: false,
     unavailable: [],
@@ -49,11 +49,11 @@ describe("buildAssistantMessages (#256 프롬프트)", () => {
 
   it("passes stage schema evidence through as untrusted structured content, not baked into the prompt text", () => {
     const evidence = baseEvidence({
-      context: { page: "quality", datasetId: "air-quality", runId: "r1", stage: "gold", source: "datago__air_quality" },
+      context: { page: "quality", datasetId: "apt-trade", runId: "r1", stage: "gold", source: "datago__apt_trade" },
       stage: {
-        refId: "r1::datago__air_quality::gold",
+        refId: "r1::datago__apt_trade::gold",
         stage: "gold",
-        source: "datago__air_quality",
+        source: "datago__apt_trade",
         status: "completed",
         available: true,
         rowCount: 40,
@@ -70,13 +70,13 @@ describe("buildAssistantMessages (#256 프롬프트)", () => {
 
   it("keeps evidence and user question isolated as separate untrusted-data messages", () => {
     const evidence = baseEvidence({
-      stage: { refId: "r1::datago__air::silver", stage: "silver", source: "datago__air", status: "completed", available: true, rowCount: 10 },
+      stage: { refId: "r1::datago__trade::silver", stage: "silver", source: "datago__trade", status: "completed", available: true, rowCount: 10 },
     });
     const messages = buildAssistantMessages("서울 데이터 보여줘", evidence);
     expect(messages).toHaveLength(3);
     expect(messages[1].content).toContain("structured content");
     expect(messages[1].structuredContent).toEqual(evidence);
-    expect(messages[1].content).not.toContain("datago__air");
+    expect(messages[1].content).not.toContain("datago__trade");
     expect(messages[2].content).toContain("USER QUESTION START");
     expect(messages[2].content).toContain("서울 데이터 보여줘");
   });

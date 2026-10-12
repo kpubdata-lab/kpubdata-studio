@@ -3,7 +3,7 @@
  *
  * The topbar used to repeat the product name and a tagline that the sidebar logo
  * already said. That space now names what is being looked at —
- * `Tables / air-quality`, `Refresh Jobs / run-1 / Snapshot Files`. The first crumb is
+ * `Tables / apt-trade`, `Refresh Jobs / run-1 / Snapshot Files`. The first crumb is
  * the sidebar section the page belongs to, so the two always agree; the rest come
  * from the path. Old URLs redirect before they get here (legacyRedirect.tsx).
  */
@@ -88,7 +88,7 @@ export function crumbsFor(pathname: string, t: Translate): Crumb[] {
 
 /**
  * The document title for `pathname` (#662): the crumbs from the current page outwards,
- * then the product name — `air-quality · Tables · KPubData Studio`. It is built from the
+ * then the product name — `apt-trade · Tables · KPubData Studio`. It is built from the
  * same crumbs as the topbar, so the tab title and the breadcrumb never disagree, and every
  * route gets its title from the locale files rather than from whichever page rendered.
  */

@@ -28,7 +28,7 @@ function renderAt(url: string) {
 describe("legacy URLs (#423)", () => {
   it.each([
     ["/datasets", "/tables"],
-    ["/datasets/air-quality?run=r1&stage=gold", "/tables/air-quality?run=r1&stage=gold"],
+    ["/datasets/apt-trade?run=r1&stage=gold", "/tables/apt-trade?run=r1&stage=gold"],
     ["/builds?run=abc", "/refresh-jobs?run=abc"],
     ["/builds/run-1/artifacts#files", "/refresh-jobs/run-1/artifacts#files"],
     ["/builds/new?savedSpecId=s1", "/refresh-jobs/new?savedSpecId=s1"],
@@ -42,7 +42,7 @@ describe("legacy URLs (#423)", () => {
     expect(legacyTarget("/datasets-archive")).toBeNull();
     expect(legacyTarget("/buildspec")).toBeNull();
     expect(legacyTarget("/providers")).toBeNull();
-    expect(legacyTarget("/tables/air-quality")).toBeNull();
+    expect(legacyTarget("/tables/apt-trade")).toBeNull();
   });
 
   it.each([

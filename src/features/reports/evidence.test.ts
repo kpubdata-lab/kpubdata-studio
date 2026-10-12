@@ -10,33 +10,33 @@ afterEach(() => {
 
 describe("fetchReportEvidence (#258)", () => {
   it("모든 evidence를 한 번에 모은다(정상 dataset/run)", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
 
     expect(evidence.dataset.ok).toBe(true);
     expect(evidence.run.ok).toBe(true);
-    if (evidence.run.ok) expect(evidence.run.value.spec_digest).toBe("sha256:air14");
+    if (evidence.run.ok) expect(evidence.run.value.spec_digest).toBe("sha256:apt14");
     expect(evidence.stages.ok).toBe(true);
     expect(evidence.quality.ok).toBe(true);
     if (evidence.quality.ok) expect(evidence.quality.value.availability).toBe("partial");
   });
 
   it("silver schema를 온전히 가진 source는 origin=silver, 실패한 source는 origin=unavailable로 구분한다", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
 
-    expect(evidence.schemas["datago__air"]?.origin).toBe("silver");
-    expect(evidence.schemas["datago__air"]?.columns.length).toBeGreaterThan(0);
-    // kma__weather: in mock, silver failed/gold not_run so schema unavailable.
-    expect(evidence.schemas["kma__weather"]?.origin).toBe("unavailable");
-    expect(evidence.schemas["kma__weather"]?.reason).toBeTruthy();
+    expect(evidence.schemas["datago__trade"]?.origin).toBe("silver");
+    expect(evidence.schemas["datago__trade"]?.columns.length).toBeGreaterThan(0);
+    // datago__rent: in mock, silver failed/gold not_run so schema unavailable.
+    expect(evidence.schemas["datago__rent"]?.origin).toBe("unavailable");
+    expect(evidence.schemas["datago__rent"]?.reason).toBeTruthy();
   });
 
   it("Silver schema를 사용하고 Silver stage detail을 limit=1로 조회한다", async () => {
     const spy = vi.spyOn(datasetsApi, "getBuildStageDetail");
 
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
 
-    expect(evidence.schemas["datago__air"]?.origin).toBe("silver");
-    expect(spy).toHaveBeenCalledWith("air-2026-08-14", "silver", "datago__air", 1, undefined);
+    expect(evidence.schemas["datago__trade"]?.origin).toBe("silver");
+    expect(spy).toHaveBeenCalledWith("apt-2026-08-14", "silver", "datago__trade", 1, undefined);
   });
 
   it("Silver 실패 시 Gold column names로 fallback하고 Gold stage detail을 limit=1로 조회한다", async () => {
@@ -57,27 +57,27 @@ describe("fetchReportEvidence (#258)", () => {
       };
     });
 
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
 
-    expect(evidence.schemas["datago__air"]).toMatchObject({
+    expect(evidence.schemas["datago__trade"]).toMatchObject({
       origin: "gold_names_only",
       columns: [],
       columnNamesOnly: ["fallback_column"],
     });
-    expect(spy).toHaveBeenCalledWith("air-2026-08-14", "gold", "datago__air", 1, undefined);
+    expect(spy).toHaveBeenCalledWith("apt-2026-08-14", "gold", "datago__trade", 1, undefined);
   });
 
   it("Silver와 Gold 모두 실패하면 기존 unavailable semantics를 유지한다", async () => {
     vi.spyOn(datasetsApi, "getBuildStageDetail").mockRejectedValue(new Error("stage unavailable"));
 
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
 
-    expect(evidence.schemas["datago__air"]?.origin).toBe("unavailable");
-    expect(evidence.schemas["datago__air"]?.reason).toBeTruthy();
+    expect(evidence.schemas["datago__trade"]?.origin).toBe("unavailable");
+    expect(evidence.schemas["datago__trade"]?.reason).toBeTruthy();
   });
 
   it("run이 dataset의 run 목록에 없으면 run을 실패로 표시하되 dataset/stages/quality는 그대로 시도한다(부분 실패 허용)", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "does-not-exist-run");
+    const evidence = await fetchReportEvidence("apt-trade", "does-not-exist-run");
 
     expect(evidence.dataset.ok).toBe(true);
     expect(evidence.run.ok).toBe(false);
@@ -93,16 +93,16 @@ describe("fetchReportEvidence (#258)", () => {
   });
 
   it("mock/demo 모드에서는 output evidence를 신뢰할 수 있는 형태로 제공하지 않는다(임의 데이터를 만들지 않음)", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     expect(evidence.output.ok).toBe(false);
   });
 
   it("evidenceRefs는 실제로 확인된 조각만 포함한다", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const refs = buildEvidenceRefs(evidence);
 
-    expect(refs.some((r) => r.kind === "dataset" && r.id === "air-quality")).toBe(true);
-    expect(refs.some((r) => r.kind === "run" && r.id === "air-2026-08-14")).toBe(true);
+    expect(refs.some((r) => r.kind === "dataset" && r.id === "apt-trade")).toBe(true);
+    expect(refs.some((r) => r.kind === "run" && r.id === "apt-2026-08-14")).toBe(true);
     expect(refs.some((r) => r.kind === "output")).toBe(false);
   });
 });

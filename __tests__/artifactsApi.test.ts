@@ -61,10 +61,10 @@ describe("getBuildManifest (#75)", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    const manifest = await getBuildManifest("air-quality-20260621");
+    const manifest = await getBuildManifest("apt-trade-20260621");
 
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(manifest.build_id).toBe("air-quality-20260621");
+    expect(manifest.build_id).toBe("apt-trade-20260621");
     // 성공한 빌드는 row_counts가 제공됨
     expect(manifest.row_counts).toBeDefined();
     const total = Object.values(manifest.row_counts ?? {}).reduce((sum, n) => sum + n, 0);

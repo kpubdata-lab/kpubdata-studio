@@ -267,7 +267,7 @@ describe("findExistingTables", () => {
     delete window.__KPUBDATA_CONFIG__;
     const asked = builder(() => json(500, {}));
 
-    const existing = await findExistingTables("air-quality");
+    const existing = await findExistingTables("apt-trade");
 
     expect(existing.status).toBe("found");
     expect(asked).toEqual([]);

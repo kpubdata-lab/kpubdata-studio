@@ -16,7 +16,7 @@ import type { BuildSpec } from "@/shared/lib/types";
 import { executeBuild } from "./index";
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "Hourly air quality by region",
   sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
@@ -79,7 +79,7 @@ describe("executeBuild", () => {
     await expect(run).rejects.toMatchObject({ name: "AbortError" });
 
     expect(keptWhenSubmitted).toBe(true);
-    expect(loadBuildSpec(submitted ?? "")?.datasetId).toBe("air-quality");
+    expect(loadBuildSpec(submitted ?? "")?.datasetId).toBe("apt-trade");
   });
 
   it("keeps it when polling fails before the run has ended", async () => {

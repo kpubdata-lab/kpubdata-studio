@@ -16,9 +16,9 @@ import type { ReportDraft } from "./types";
 function makeInput(overrides: Partial<Parameters<typeof createReport>[0]> = {}) {
   return {
     title: "테스트 Report",
-    datasetId: "air-quality",
-    baseRunId: "air-2026-08-14",
-    buildSpecDigest: "sha256:air14",
+    datasetId: "apt-trade",
+    baseRunId: "apt-2026-08-14",
+    buildSpecDigest: "sha256:apt14",
     evidenceFetchedAt: "2026-08-14T08:00:00Z",
     blocks: [],
     evidenceRefs: [],
@@ -48,14 +48,14 @@ describe("reports repository (#258 §11)", () => {
   });
 
   it("생성 시점의 datasetId/baseRunId를 저장한 뒤 다시 읽어도 그대로 유지한다(run pin)", () => {
-    const { report } = createReport(makeInput({ datasetId: "air-quality", baseRunId: "air-2026-08-13" }));
+    const { report } = createReport(makeInput({ datasetId: "apt-trade", baseRunId: "apt-2026-08-13" }));
     const reloaded = getReport(report.id);
-    expect(reloaded?.datasetId).toBe("air-quality");
-    expect(reloaded?.baseRunId).toBe("air-2026-08-13");
+    expect(reloaded?.datasetId).toBe("apt-trade");
+    expect(reloaded?.baseRunId).toBe("apt-2026-08-13");
 
     // Even if evidence refilled and saved (e.g., refresh), baseRunId itself persists unless caller changes it.
     saveReport({ ...reloaded!, evidenceFetchedAt: "2026-08-15T00:00:00Z" });
-    expect(getReport(report.id)?.baseRunId).toBe("air-2026-08-13");
+    expect(getReport(report.id)?.baseRunId).toBe("apt-2026-08-13");
   });
 
   it("제목을 바꾼다(rename)", () => {

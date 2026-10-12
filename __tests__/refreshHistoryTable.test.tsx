@@ -106,9 +106,9 @@ describe("Refresh history table and snapshot (kpubdata-builder#844)", () => {
       status: "succeeded",
       startedAt: null,
       finishedAt: null,
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       snapshotId: "snap_012",
-      snapshots: [{ logicalName: "air-quality.datago__air", snapshotId: "snap_012" }],
+      snapshots: [{ logicalName: "apt-trade.datago__trade", snapshotId: "snap_012" }],
     },
     {
       id: "run-multi",
@@ -141,8 +141,8 @@ describe("Refresh history table and snapshot (kpubdata-builder#844)", () => {
 
     const air = await screen.findByRole("row", { name: /run-air/ });
     const airCells = within(air).getAllByRole("cell");
-    expect(within(airCells[1]).getByRole("link", { name: "대기질" })).toHaveAttribute("href", "/tables/air-quality");
-    expect(airCells[1]).toHaveTextContent("air-quality");
+    expect(within(airCells[1]).getByRole("link", { name: "대기질" })).toHaveAttribute("href", "/tables/apt-trade");
+    expect(airCells[1]).toHaveTextContent("apt-trade");
     expect(airCells[5]).toHaveTextContent("snap_012");
     expect(airCells[5].querySelector('[data-status="missing"]')).toBeNull();
 

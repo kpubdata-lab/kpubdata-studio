@@ -20,7 +20,7 @@ const PATHS = [
   "/discover",
   "/add",
   "/tables",
-  "/tables/air-quality",
+  "/tables/apt-trade",
   "/sql",
   "/analyses",
   "/workspace",

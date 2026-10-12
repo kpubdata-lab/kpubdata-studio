@@ -146,7 +146,7 @@ describe("Table Detail Preview without a warehouse (#537)", () => {
     // The demo has a warehouse since #530; this is a deployment without one.
     const hidden = hideDemoWarehouse();
     onTestFinished(() => hidden.mockRestore());
-    renderDetail("/tables/air-quality?tab=preview&stage=silver");
+    renderDetail("/tables/apt-trade?tab=preview&stage=silver");
 
     const total = await screen.findByTestId("row-total");
     await waitFor(() => expect(total).toHaveTextContent(/^\d+행 · 샘플$/));

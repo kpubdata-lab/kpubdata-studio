@@ -13,14 +13,14 @@ afterEach(() => {
 
 describe("loadAssistantEvidence (#256)", () => {
   it("builds dataset/run/quality evidence with deep links and known refs for a valid dataset", async () => {
-    const context: AssistantContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "dataset-detail", datasetId: "apt-trade", runId: "apt-2026-08-14" };
     const { evidence, knownRefs } = await loadAssistantEvidence(context);
 
-    expect(evidence.dataset?.datasetId).toBe("air-quality");
-    expect(evidence.deepLinks.datasetDetail).toBe("/tables/air-quality");
+    expect(evidence.dataset?.datasetId).toBe("apt-trade");
+    expect(evidence.deepLinks.datasetDetail).toBe("/tables/apt-trade");
     expect(evidence.quality?.results.some((r) => r.rule === "required_column")).toBe(true);
-    expect(knownRefs.datasetIds.has("air-quality")).toBe(true);
-    expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);
+    expect(knownRefs.datasetIds.has("apt-trade")).toBe(true);
+    expect(knownRefs.runIds.has("apt-2026-08-14")).toBe(true);
     expect(knownRefs.qualityResultIds.size).toBeGreaterThan(0);
     // The catalog must succeed — the global MSW handler always answers.
     expect(evidence.catalog?.providers).toContain("datago");
@@ -44,24 +44,24 @@ describe("loadAssistantEvidence (#256)", () => {
   });
 
   it("does not fetch stage evidence when the context has no stage (no guessed source)", async () => {
-    const context: AssistantContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "dataset-detail", datasetId: "apt-trade", runId: "apt-2026-08-14" };
     const { evidence } = await loadAssistantEvidence(context);
     expect(evidence.stage).toBeUndefined();
   });
 
   it("includes stage evidence (status/rowCount only, no raw sample rows) for the context source_key", async () => {
-    // air-2026-08-14 is multi-source (datago__air + kma__weather), so the source must be explicit.
+    // apt-2026-08-14 is multi-source (datago__trade + datago__rent), so the source must be explicit.
     const context: AssistantContext = {
       page: "dataset-detail",
-      datasetId: "air-quality",
-      runId: "air-2026-08-14",
+      datasetId: "apt-trade",
+      runId: "apt-2026-08-14",
       stage: "silver",
-      source: "datago__air",
+      source: "datago__trade",
     };
     const { evidence, knownRefs, safeEvidenceIds } = await loadAssistantEvidence(context);
     expect(evidence.stage?.stage).toBe("silver");
-    expect(evidence.stage?.source).toBe("datago__air");
-    expect(evidence.stage?.refId).toBe("air-2026-08-14::datago__air::silver");
+    expect(evidence.stage?.source).toBe("datago__trade");
+    expect(evidence.stage?.refId).toBe("apt-2026-08-14::datago__trade::silver");
     expect(knownRefs.stageIds.has(evidence.stage!.refId)).toBe(true);
     expect(safeEvidenceIds.has(evidence.stage!.refId)).toBe(true);
     // Raw sample rows do not exist on the evidence type at all — minimal-data principle (#256 review §3).
@@ -71,8 +71,8 @@ describe("loadAssistantEvidence (#256)", () => {
   it("fails closed (stage unavailable) for a multi-source run when the context has no source_key", async () => {
     const context: AssistantContext = {
       page: "quality",
-      datasetId: "air-quality",
-      runId: "air-2026-08-14",
+      datasetId: "apt-trade",
+      runId: "apt-2026-08-14",
       stage: "silver",
     };
     const { evidence } = await loadAssistantEvidence(context);
@@ -180,16 +180,16 @@ describe("loadAssistantEvidence (#256)", () => {
   it("never includes source param values (only param key names) in the BuildSpec summary", async () => {
     const SECRET_VALUE = "super-secret-service-key-0123456789abcdef";
     const spec: BuildSpec = {
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       title: "대기질",
       description: "설명",
       sources: [{ provider: "datago", dataset: "air", params: { serviceKey: SECRET_VALUE, region: "서울" } }],
       exports: [{ format: "jsonl" }],
       metadata: {},
     };
-    saveBuildSpec("air-2026-08-14", spec);
+    saveBuildSpec("apt-2026-08-14", spec);
 
-    const context: AssistantContext = { page: "build-detail", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "build-detail", runId: "apt-2026-08-14" };
     const { evidence } = await loadAssistantEvidence(context);
 
     expect(evidence.buildSpecSummary?.sources[0].paramKeys).toEqual(["serviceKey", "region"]);
@@ -199,13 +199,13 @@ describe("loadAssistantEvidence (#256)", () => {
   });
 
   it("scrubs any residual secret-shaped values as a defense-in-depth pass", async () => {
-    const context: AssistantContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "dataset-detail", datasetId: "apt-trade", runId: "apt-2026-08-14" };
     const { evidence } = await loadAssistantEvidence(context);
     expect(JSON.stringify(evidence)).not.toContain("__SCRUBBED_");
   });
 
   it("keeps deterministic quality/schema-drift evidence ids out of entropy redaction (safeEvidenceIds provenance)", async () => {
-    const context: AssistantContext = { page: "quality", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "quality", datasetId: "apt-trade", runId: "apt-2026-08-14" };
     const { evidence, knownRefs, safeEvidenceIds } = await loadAssistantEvidence(context);
 
     const results = evidence.quality?.results ?? [];
@@ -226,7 +226,7 @@ describe("loadAssistantEvidence (#256)", () => {
       expect(safeEvidenceIds.has(driftId)).toBe(true);
     }
     // safeEvidenceIds holds only evidence identifiers, not run ids — run ids belong to safeRunIds.
-    expect(safeEvidenceIds.has("air-2026-08-14")).toBe(false);
+    expect(safeEvidenceIds.has("apt-2026-08-14")).toBe(false);
   });
 
   it("omits stage/buildSpecSummary/quality when the context has no runId at all", async () => {
@@ -249,12 +249,12 @@ describe("loadAssistantEvidence (#256)", () => {
  */
 describe("loadAssistantEvidence — run provenance (knownRefs.runIds / safeRunIds)", () => {
   it("Builder 응답(getDataset.latest_run_id / listDatasetRuns)이 확인한 run id 는 safeRunIds 에 들어간다", async () => {
-    const context: AssistantContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "dataset-detail", datasetId: "apt-trade", runId: "apt-2026-08-14" };
     const { knownRefs, safeRunIds } = await loadAssistantEvidence(context);
 
-    expect(safeRunIds.has("air-2026-08-14")).toBe(true);
+    expect(safeRunIds.has("apt-2026-08-14")).toBe(true);
     // Past runs confirmed via listDatasetRuns are included.
-    expect(safeRunIds.has("air-2026-08-13")).toBe(true);
+    expect(safeRunIds.has("apt-2026-08-13")).toBe(true);
     // safeRunIds ⊆ knownRefs.runIds (separate, but confirmed values are in both).
     for (const id of safeRunIds) expect(knownRefs.runIds.has(id)).toBe(true);
   });
@@ -294,16 +294,35 @@ describe("loadAssistantEvidence — run provenance (knownRefs.runIds / safeRunId
   });
 
   it("확인된(safe) 저엔트로피 run id 는 evidence 에 그대로 남는다", async () => {
-    const context: AssistantContext = { page: "dataset-detail", datasetId: "air-quality", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "dataset-detail", datasetId: "apt-trade", runId: "apt-2026-08-14" };
     const { evidence } = await loadAssistantEvidence(context);
-    expect(evidence.context.runId).toBe("air-2026-08-14");
-    expect(evidence.deepLinks.buildDetail).toContain("air-2026-08-14");
+    expect(evidence.context.runId).toBe("apt-2026-08-14");
+    expect(evidence.deepLinks.buildDetail).toContain("apt-2026-08-14");
+  });
+
+  it("확인된 run 으로 가는 링크는 경로의 글자 다양성 때문에 가려지지 않는다 (#762)", async () => {
+    // `/refresh-jobs/apt-trade-20260621` has a Shannon entropy over the threshold (4.03),
+    // as the link to most real runs does. The run is one the demo's Builder confirms.
+    const context: AssistantContext = { page: "build-detail", runId: "apt-trade-20260621" };
+    const { evidence, safeRunIds } = await loadAssistantEvidence(context);
+
+    expect(safeRunIds.has("apt-trade-20260621")).toBe(true);
+    expect(evidence.deepLinks.buildDetail).toBe("/refresh-jobs/apt-trade-20260621");
+  });
+
+  it("확인되지 않은 run 으로 가는 링크는 여전히 가려진다 (#762)", async () => {
+    const unconfirmed = "zq7Xk2LmP9vB4tYw8RnC5sHd";
+    const context: AssistantContext = { page: "build-detail", runId: unconfirmed };
+    const { evidence, safeRunIds } = await loadAssistantEvidence(context);
+
+    expect(safeRunIds.has(unconfirmed)).toBe(false);
+    expect(JSON.stringify(evidence)).not.toContain(unconfirmed);
   });
 
   it("getBuildQuality 가 이 run id 로 정상 응답하면 knownRefs/safeRunIds 양쪽에 추가한다(datasetId 없이도)", async () => {
-    const context: AssistantContext = { page: "build-detail", runId: "air-2026-08-14" };
+    const context: AssistantContext = { page: "build-detail", runId: "apt-2026-08-14" };
     const { knownRefs, safeRunIds } = await loadAssistantEvidence(context);
-    expect(safeRunIds.has("air-2026-08-14")).toBe(true);
-    expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);
+    expect(safeRunIds.has("apt-2026-08-14")).toBe(true);
+    expect(knownRefs.runIds.has("apt-2026-08-14")).toBe(true);
   });
 });

@@ -156,10 +156,10 @@ describe("the demo leads with tables and snapshots (#530)", () => {
   it("lists each table with its current snapshot and row count", async () => {
     const list = await loadTableList();
     expect(list.warehouse).toBe(true);
-    const air = list.rows.find((row) => row.dataset_id === "air-quality");
+    const air = list.rows.find((row) => row.dataset_id === "apt-trade");
     expect(air?.snapshots?.map((entry) => [entry.sourceKey, entry.current?.snapshot_id, entry.current?.row_count])).toEqual([
-      ["datago__air", "snap_012", 1000],
-      ["kma__weather", "snap_010", 200],
+      ["datago__trade", "snap_012", 1000],
+      ["datago__rent", "snap_010", 200],
     ]);
   });
 

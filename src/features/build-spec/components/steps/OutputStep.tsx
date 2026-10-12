@@ -62,7 +62,7 @@ export function OutputStep({ register, errors, pathWhenEmpty }: OutputStepProps)
       >
         {(field) => (
           <TextInput
-            placeholder={pathWhenEmpty ?? "artifacts/builds/air-quality"}
+            placeholder={pathWhenEmpty ?? "artifacts/builds/apt-trade"}
             {...field}
             {...register("outputPath", {
               required: pathWhenEmpty === undefined ? i18n.t("newBuild.errors.outputPathRequired") : false,

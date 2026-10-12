@@ -42,7 +42,7 @@ beforeEach(() => {
 describe("silver sample on Table Detail (#484)", () => {
   it("shows decimal_string values exactly as sent", async () => {
     render(
-      <MemoryRouter initialEntries={["/tables/air-quality?tab=preview&source=datago__air&stage=silver"]}>
+      <MemoryRouter initialEntries={["/tables/apt-trade?tab=preview&source=datago__trade&stage=silver"]}>
         <Routes>
           <Route element={<DatasetDetailPage />} path="/tables/:datasetId" />
         </Routes>

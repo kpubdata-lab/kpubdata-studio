@@ -33,11 +33,11 @@ function renderWorkspace() {
 function makeSpec(overrides: Partial<BuildSpec> = {}): BuildSpec {
   return {
     datasetId: "datago-air-quality",
-    title: "대기오염 정보",
+    title: "아파트 매매 실거래가",
     description: "설명",
     sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
     exports: [{ format: "jsonl" }],
-    metadata: { outputPath: "artifacts/builds/air-quality" },
+    metadata: { outputPath: "artifacts/builds/apt-trade" },
     ...overrides,
   };
 }
@@ -57,7 +57,7 @@ describe("Recent Work", () => {
     createSavedSpec({ name: "내 스펙", spec: makeSpec(), validation: { status: "not_validated", errors: [] } });
     renderWorkspace();
 
-    expect(await screen.findByText("대기오염 정보")).toBeInTheDocument();
+    expect(await screen.findByText("아파트 매매 실거래가")).toBeInTheDocument();
     expect((await screen.findAllByText("내 스펙")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("Table").length + screen.getAllByText("Run").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Saved BuildSpec").length).toBeGreaterThan(0);
@@ -123,7 +123,7 @@ describe("Saved BuildSpecs", () => {
 
     expect((await screen.findAllByText("요약 확인")).length).toBeGreaterThan(0);
     expect(screen.getByText("datago")).toBeInTheDocument();
-    expect(screen.getByText("artifacts/builds/air-quality", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("artifacts/builds/apt-trade", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("검증 실패")).toBeInTheDocument();
   });
 

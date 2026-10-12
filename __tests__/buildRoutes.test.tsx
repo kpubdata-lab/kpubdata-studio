@@ -22,17 +22,17 @@ function renderAt(path: string, element: React.ReactNode) {
 describe("build-centric routes", () => {
   it("renders the builds master-detail page with data for the buildId from the legacy route (#255)", async () => {
     // 라우트 파라미터가 실제 조회에 쓰이는지 확인하기 위해 mock 이력에 존재하는 id를 쓴다.
-    renderAt("/refresh-jobs/air-quality-20260621", <BuildsPage />);
+    renderAt("/refresh-jobs/apt-trade-20260621", <BuildsPage />);
     // BuildsPage는 비동기로 데이터를 로드하므로 로딩이 완료될 때까지 기다린다.
     await waitFor(() => {
       // 조회된 스펙의 제목이 표시되고,
-      expect(screen.getByRole("heading", { name: "대기오염 정보" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "아파트 매매 실거래가" })).toBeInTheDocument();
     });
     // 어떤 실행인지 식별할 수 있도록 run id도 함께 노출된다(목록과 상세 양쪽에 나타날 수 있다).
-    expect(screen.getAllByText(/air-quality-20260621/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/apt-trade-20260621/).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /편집/ })).toHaveAttribute(
       "href",
-      "/refresh-jobs/air-quality-20260621/edit",
+      "/refresh-jobs/apt-trade-20260621/edit",
     );
   });
 

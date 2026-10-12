@@ -73,7 +73,7 @@ describe("PreviewValidationStep — source tabs (#795)", () => {
   });
   const TWO: PreviewState = {
     status: "loaded",
-    response: { dataset_id: "d", previews: [source("datago__air", "Seoul"), source("seoul__air", "Busan")] },
+    response: { dataset_id: "d", previews: [source("datago__trade", "Seoul"), source("seoul__air", "Busan")] },
   };
 
   it("ties each source tab to the preview panel and moves between sources with the arrow keys", () => {
@@ -96,7 +96,7 @@ describe("PreviewValidationStep — source tabs (#795)", () => {
   });
 
   it("has no tab list and no tab panel role for a single source", () => {
-    renderStep({ preview: { status: "loaded", response: { dataset_id: "d", previews: [source("datago__air", "Seoul")] } } });
+    renderStep({ preview: { status: "loaded", response: { dataset_id: "d", previews: [source("datago__trade", "Seoul")] } } });
     expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
     expect(screen.queryByRole("tabpanel")).not.toBeInTheDocument();
   });
@@ -105,7 +105,7 @@ describe("PreviewValidationStep — source tabs (#795)", () => {
 describe("PreviewValidationStep — diff values (#844)", () => {
   it("shows a nested value as its JSON and a missing one as a dash, never [object Object]", () => {
     const changed: PreviewSource = {
-      source_key: "datago__air",
+      source_key: "datago__trade",
       status: "ok",
       error: null,
       schema: [{ name: "detail", dtype: "struct", nullable: true }] as PreviewSource["schema"],

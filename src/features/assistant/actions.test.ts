@@ -17,7 +17,7 @@ import { listAssistantReportNotes } from "./reportInbox";
 import type { AssistantAction } from "./schema";
 
 const BASE_SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기질",
   description: "설명",
   sources: [{ provider: "datago", dataset: "air_quality", params: { region: "서울" } }],
