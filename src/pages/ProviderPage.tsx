@@ -41,8 +41,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   ApiError,
-  builderApi,
-  isRealBuilderEnabled,
   type ProviderLastTest,
   type ProviderSummary,
   type ProviderTestResponse,
@@ -63,7 +61,7 @@ import {
 } from "@/shared/lib/providerKeys";
 import { ConnectionsTable } from "@/features/provider/ConnectionsTable";
 import { KeyProbePanel } from "@/features/provider/KeyProbePanel";
-import { DEMO_PROVIDERS, providerClient } from "@/features/provider/client";
+import { providerClient } from "@/features/provider/client";
 import { ensureVersionChecked, useVersionCheckStore } from "@/features/version-check/store";
 
 /**
@@ -211,32 +209,27 @@ export function ProviderPage() {
     setLoading(true);
     setError(null);
     try {
-      if (isRealBuilderEnabled()) {
-        // real mode: GET /providers is the canonical source. Never disguise
-        // failure as mock success — the catch falls through to an explicit
-        // error/empty list (#S01).
-        const response = await builderApi.listProviders();
-        const mapped = response.providers.map(mapProviderSummary);
-        setProviders(mapped);
-        // Every line of the list is as new as this answer.
-        setStaleSummary(null);
-        // The ref is the synchronous source of truth for user selection.
-        // State updaters/effects run late; flipping an already-B ref back to A
-        // could start a stale mutation refresh — so the list response never
-        // re-decides the selection. Only if it disappeared from the actual list
-        // is the selection explicitly cleared.
-        const selectedId = selectedProviderIdRef.current;
-        const next = selectedId ? mapped.find((provider) => provider.id === selectedId) : undefined;
-        if (!next) {
-          if (selectedId) selectedProviderIdRef.current = null;
-          setSelectedProvider(null);
-        } else {
-          setSelectedProvider(next);
-        }
+      // GET /providers is the canonical source, through the connections client (#902): the
+      // demo's list answers the same way and is handled the same way. Never disguise
+      // failure as mock success — the catch falls through to an explicit error/empty
+      // list (#S01).
+      const response = await providerClient().list();
+      const mapped = response.providers.map(mapProviderSummary);
+      setProviders(mapped);
+      // Every line of the list is as new as this answer.
+      setStaleSummary(null);
+      // The ref is the synchronous source of truth for user selection.
+      // State updaters/effects run late; flipping an already-B ref back to A
+      // could start a stale mutation refresh — so the list response never
+      // re-decides the selection. Only if it disappeared from the actual list
+      // is the selection explicitly cleared.
+      const selectedId = selectedProviderIdRef.current;
+      const next = selectedId ? mapped.find((provider) => provider.id === selectedId) : undefined;
+      if (!next) {
+        if (selectedId) selectedProviderIdRef.current = null;
+        setSelectedProvider(null);
       } else {
-        // Use the mock list only in explicit mock/demo mode. Unlike Builder's answer above,
-        // it does not re-decide the selection: the demo's list never changes under it.
-        setProviders(DEMO_PROVIDERS.map(mapProviderSummary));
+        setSelectedProvider(next);
       }
       return true;
     } catch {

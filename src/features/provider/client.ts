@@ -4,7 +4,8 @@
  * The connections screen and the key probe ask `providerClient()` and do not know which
  * answers. What is the demo's own, and written down:
  *
- * - it has three providers (`DEMO_PROVIDERS`) and no key store: saving or deleting a key
+ * - it has three providers (`DEMO_PROVIDERS`), whose list never changes, and no key
+ *   store: saving or deleting a key
  *   changes nothing, and a provider's key reads as set when its summary says configured;
  * - a connection test answers `connected` for a provider that needs no key or has one,
  *   and `not_configured` otherwise;
@@ -17,9 +18,12 @@ import {
   type ProviderProbeResponse,
   type ProviderSummary,
   type ProviderTestResponse,
+  type ProvidersResponse,
 } from "@/shared/lib/builderApi";
 
 export interface ProviderClient {
+  /** `GET /providers` — every provider, with whether this user's key is set and its last test. */
+  list(): Promise<ProvidersResponse>;
   /** `GET /providers/{provider}/credential` — whether this user saved a key. */
   credential(provider: string): Promise<ProviderCredentialResponse>;
   /** `PUT /providers/{provider}/credential`. */
@@ -33,6 +37,7 @@ export interface ProviderClient {
 }
 
 export const realProviderClient: ProviderClient = {
+  list: () => builderApi.listProviders(),
   credential: (provider) => builderApi.getProviderCredential(provider),
   saveCredential: (provider, credential) => builderApi.putProviderCredential(provider, credential),
   deleteCredential: (provider) => builderApi.deleteProviderCredential(provider),
@@ -61,6 +66,7 @@ export const DEMO_PROVIDERS: ProviderSummary[] = [
 const demoProvider = (id: string) => DEMO_PROVIDERS.find((summary) => summary.provider === id);
 
 export const demoProviderClient: ProviderClient = {
+  list: async () => ({ providers: DEMO_PROVIDERS.map((summary) => ({ ...summary })) }),
   async credential(provider) {
     const configured = demoProvider(provider)?.configured ?? false;
     return {

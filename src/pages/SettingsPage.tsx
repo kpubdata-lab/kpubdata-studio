@@ -18,9 +18,9 @@ import {
   ApiError,
   builderApi,
   builderApiCompatibility,
-  isRealBuilderEnabled,
   MIN_BUILDER_API_VERSION,
 } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 import type { ProviderSummary } from "@/shared/lib/builderApi.schema";
 import { signOutOfOidc } from "@/features/auth/signOut";
 import { getPolicyLinks } from "@/shared/config/policyLinks";
@@ -42,7 +42,7 @@ type ProvidersState =
 
 export function SettingsPage() {
   const { t } = useTranslation();
-  const realEnabled = isRealBuilderEnabled();
+  const realEnabled = !isDemo();
   const { email, clear } = useAuthStore();
   const oidcStatus = useAuthStore((state) => state.oidcStatus);
 

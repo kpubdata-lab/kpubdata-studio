@@ -21,7 +21,7 @@ import { signOutOfOidc } from "@/features/auth/signOut";
 import { useAuthStore } from "@/features/auth/store";
 import { SessionRefusedNotice } from "@/features/onboarding/SessionRefusedNotice";
 import { SignupStatusNotice } from "@/features/onboarding/SignupStatusNotice";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 import { clearSessionRefusal, useSessionRefusalStore } from "@/shared/lib/sessionRefusal";
 import { useSignupStatusStore } from "@/shared/lib/signupStatus";
 import { focusRouteTarget } from "./routeFocus";
@@ -297,7 +297,7 @@ export function Layout() {
     }
     useAuthStore.getState().clear();
   };
-  const demoMode = !isRealBuilderEnabled();
+  const demoMode = isDemo();
   const closeMobileSidebar = useUIStore((state) => state.closeMobileSidebar);
   const isMobileSidebarOpen = useUIStore((state) => state.isMobileSidebarOpen);
   const isDesktopSidebarCollapsed = useUIStore((state) => state.isDesktopSidebarCollapsed);

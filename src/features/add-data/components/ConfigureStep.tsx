@@ -19,7 +19,8 @@ import { QueryParamsFields } from "@/features/build-spec/components/QueryParamsF
 import { formatDateTime } from "@/features/datasets/model";
 import type { SourceFormat } from "@/shared/lib/types";
 import { Button, Card, FormField, Select, Textarea, TextInput } from "@/shared/ui";
-import { isRealBuilderEnabled, type CatalogProvider } from "@/shared/lib/builderApi";
+import { type CatalogProvider } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 
 import { MyUploads } from "./MyUploads";
 
@@ -333,7 +334,7 @@ export function ConfigureStep({
           {draft.file.uploadId ? <UploadExpiryNote uploadId={draft.file.uploadId} expiresAt={draft.file.expiresAt} /> : null}
           {/* What the user has uploaded, and a way to delete one (#779): the answer to
               "delete an upload you no longer need" when a limit is reached. */}
-          {isRealBuilderEnabled() ? (
+          {!isDemo() ? (
             <MyUploads
               currentUploadId={draft.file.uploadId}
               openNow={upload.status === "error" && upload.limitReached === true}

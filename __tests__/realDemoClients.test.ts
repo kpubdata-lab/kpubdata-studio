@@ -110,8 +110,11 @@ describe("connections", () => {
       vi.spyOn(builderApi, "deleteProviderCredential"),
       vi.spyOn(builderApi, "testProviderConnection"),
       vi.spyOn(builderApi, "probeProviderKey"),
+      vi.spyOn(builderApi, "listProviders"),
     ];
     const client = providerClient();
+    // The list is the demo's providers, as GET /providers would list them (#902).
+    await expect(client.list()).resolves.toEqual({ providers: DEMO_PROVIDERS });
     expect(DEMO_PROVIDERS.map((summary) => [summary.provider, summary.configured])).toEqual([
       ["datago", false],
       ["kosis", true],

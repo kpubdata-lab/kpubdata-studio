@@ -12,7 +12,15 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { BASELINE, SELECTORS, countUses, findings, scan } from "../scripts/real-builder-switch.mjs";
+import {
+  BASELINE,
+  DEMO_QUERIES,
+  SELECTORS,
+  countUses,
+  demoQueryFindings,
+  findings,
+  scan,
+} from "../scripts/real-builder-switch.mjs";
 
 const REPO = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -76,7 +84,44 @@ describe("the ratchet", () => {
   });
 });
 
+describe("the isDemo() list", () => {
+  it("counts the function, not a member of the same name", () => {
+    const source = [
+      'import { isDemo } from "@/shared/lib/demoMode";',
+      "if (isDemo()) skip();",
+      "const turn = { isDemo: true };",
+      "if (turn.isDemo) note();",
+      "interface Turn { isDemo?: boolean }",
+    ].join("\n");
+    expect(countUses("f.ts", source, "isDemo")).toBe(1);
+  });
+
+  const allowed = { "src/app/Shell.tsx": 1 };
+
+  it("passes when the files and counts match", () => {
+    expect(demoQueryFindings({ "src/app/Shell.tsx": 1 }, allowed)).toEqual([]);
+  });
+
+  it("fails when a screen not listed asks it, or a listed one asks it more", () => {
+    expect(demoQueryFindings({ "src/app/Shell.tsx": 1, "src/pages/Data.tsx": 1 }, allowed)).toEqual([
+      expect.stringContaining("src/pages/Data.tsx: 1 new isDemo() use(s)"),
+    ]);
+    expect(demoQueryFindings({ "src/app/Shell.tsx": 2 }, allowed)).toEqual([
+      expect.stringContaining("2 isDemo() uses, listed 1"),
+    ]);
+  });
+
+  it("fails when a listed file stops asking and the list was not lowered", () => {
+    expect(demoQueryFindings({}, allowed)).toEqual([expect.stringContaining("lower DEMO_QUERIES to 0")]);
+  });
+});
+
 describe("Studio's tree", () => {
+  it("matches the isDemo() list", () => {
+    expect(demoQueryFindings(scan(REPO, "isDemo"))).toEqual([]);
+    expect(Object.keys(DEMO_QUERIES).length).toBeGreaterThan(0);
+  });
+
   it("matches the selectors and the baseline", () => {
     expect(findings(scan(REPO))).toEqual([]);
   });
