@@ -55,6 +55,8 @@ interface AssistantStoreState {
   updateTurn: (id: string, updater: (turn: AssistantTurn) => AssistantTurn) => void;
   setOnboarded: () => void;
   clearTurns: () => void;
+  /** Drop the conversation and any question waiting to be asked: they were another account's (#902). */
+  forgetSession: () => void;
   pendingSeed: string | null;
   seedQuestion: (question: string) => void;
   consumeSeed: () => string | null;
@@ -78,6 +80,7 @@ export const useAssistantStore = create<AssistantStoreState>()(
         })),
       setOnboarded: () => set({ onboarded: true }),
       clearTurns: () => set({ turns: [] }),
+      forgetSession: () => set({ turns: [], pendingSeed: null }),
       seedQuestion: (question) => set({ pendingSeed: question }),
       consumeSeed: () => {
         const seed = get().pendingSeed;

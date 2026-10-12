@@ -20,6 +20,8 @@ interface AdminState {
 export const useAdminStore = create<AdminState>(() => ({ status: "unknown" }));
 
 let inFlight: Promise<void> | null = null;
+/** Counts resets, so a probe that started for the previous account cannot answer for this one (#902). */
+let generation = 0;
 
 /** Classify one `GET /admin/config` outcome. */
 export function classifyAdminProbe(outcome: { ok: true } | { ok: false; cause: unknown }): AdminStatus {
@@ -30,10 +32,14 @@ export function classifyAdminProbe(outcome: { ok: true } | { ok: false; cause: u
 export function ensureAdminChecked(): Promise<void> {
   if (!isRealBuilderEnabled()) return Promise.resolve();
   if (inFlight) return inFlight;
+  const asked = generation;
   inFlight = builderApi
     .adminConfig()
-    .then(() => useAdminStore.setState({ status: classifyAdminProbe({ ok: true }) }))
+    .then(() => {
+      if (asked === generation) useAdminStore.setState({ status: classifyAdminProbe({ ok: true }) });
+    })
     .catch((cause: unknown) => {
+      if (asked !== generation) return;
       const status = classifyAdminProbe({ ok: false, cause });
       useAdminStore.setState({ status });
       // A 403 is an answer; anything else is not, so the next call asks again (#480).
@@ -42,8 +48,9 @@ export function ensureAdminChecked(): Promise<void> {
   return inFlight;
 }
 
-/** Test-only: forget the previous check. */
+/** Forget the previous check: the answer was about the account that asked (#902). Also used by tests. */
 export function resetAdminCheck(): void {
+  generation++;
   inFlight = null;
   useAdminStore.setState({ status: "unknown" });
 }

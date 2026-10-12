@@ -55,13 +55,13 @@ graph TD
 2026-10-12 저장소 소유자가 정했습니다.
 
 - **공용 캐시를 두지 않습니다.** TanStack Query 같은 라이브러리도, 화면 사이에 나누는 저장소도 없습니다. 화면은 자기가 불러온 것만 들고, 다른 화면으로 가면 다시 묻습니다.
-- **계정이 바뀌면 화면의 상태를 버립니다.** 주인은 `features/auth/storageOwner.ts` 의 키 — OIDC 세션은 `iss#sub`, 그 밖에는 e-mail — 입니다. 불러오는 effect 는 `useStorageOwnerKey()` 를 의존성에 넣어서, 주인이 바뀌면 들고 있던 것을 지우고 다시 묻습니다. 실행 중인 build 를 지켜보던 훅(`useBuildJob`)은 폴링을 멈추고 idle 로 돌아가며, job 을 취소하지는 않습니다 — 그것은 앞 계정의 job 입니다.
+- **계정이 바뀌면 화면의 상태를 버립니다.** 주인은 `features/auth/storageOwner.ts` 의 키 — OIDC 세션은 `iss#sub`, 그 밖에는 e-mail — 입니다. `app/Layout.tsx` 가 페이지, 검색 팔레트, 어시스턴트 서랍을 `features/auth/OwnerScope` 로 감싸서, 주인이 바뀌면 그 안의 화면을 내렸다가 다시 올립니다. 그래서 화면은 계정을 몰라도 들고 있던 것(불러온 것과 입력하던 것)을 버리고 다시 묻습니다. runs 화면의 훅은 여기에 더해 `useStorageOwnerKey()` 를 effect 의 의존성에 넣고 있어, 경계 밖에서 쓰여도 같은 동작을 합니다. 화면 밖에 사는 저장소 — 관리자 여부, 가입 보류, 세션 거절, 어시스턴트 대화 — 는 `app/ownerSessionReset.ts` 가 같은 순간에 비웁니다. Builder 버전 확인은 계정이 아니라 Builder 에 대한 사실이라 남깁니다. 실행 중인 build 를 지켜보던 훅(`useBuildJob`)은 폴링을 멈추고 idle 로 돌아가며, job 을 취소하지는 않습니다 — 그것은 앞 계정의 job 입니다.
 - **필요 없어진 요청은 abort 합니다.** 다른 run 을 고르거나, 다른 계정이 들어오거나, 화면을 떠나면 effect 의 cleanup 이 `AbortController` 로 요청을 끊고, 끊긴 요청의 답은 상태에 쓰지 않습니다. 늦게 온 답이 새 선택이나 새 계정의 화면을 덮지 않습니다.
 - **같은 요청을 두 번 하지 않습니다.** 화면은 보여 줄 것을 한 번 묻습니다. 같은 build 를 두 번 시작해도 제출은 한 번이고(`useBuildJob`), 취소는 run 마다 한 번 보냅니다.
 - **runs 는 Builder 의 job API 높이에서 데모와 실제를 묶습니다(선택지 (a)).** 아래 §5 의 runs 문단을 봅니다. 그래서 취소와 경쟁 처리는 두 모드에서 같은 코드를 지납니다.
 - **"Builder 가 붙어 있는가" 는 `isDemo()` 한 곳에 묻습니다.** 데이터를 읽는 화면은 기능의 클라이언트에 묻습니다(§5).
 
-회귀 테스트: `__tests__/runsStatePolicy.test.tsx` 가 계정 전환 시 상태 초기화, 늦은 요청의 abort, 중복 요청이 없음, 두 모드의 취소를 runs 화면에서 확인합니다. 이 정책은 runs 화면부터 적용했고, 다른 화면도 옮길 때 같은 방식을 따릅니다.
+회귀 테스트: `__tests__/runsStatePolicy.test.tsx` 가 계정 전환 시 상태 초기화, 늦은 요청의 abort, 중복 요청이 없음, 두 모드의 취소를 runs 화면에서 확인합니다. `__tests__/ownerScopePolicy.test.tsx` 는 나머지 화면을 맡습니다: 계정을 모르는 화면이 경계 안에서 상태를 버리고 요청을 abort 하는지, 같은 계정의 토큰 갱신으로는 화면이 유지되는지, 화면 밖 저장소가 비워지는지 확인합니다.
 
 ---
 
