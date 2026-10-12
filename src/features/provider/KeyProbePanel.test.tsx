@@ -9,13 +9,19 @@
  * - a status this Studio does not know is shown as sent;
  * - datasets Builder did not reach are named and given no status;
  * - a failure shows a fixed message, never the cause's text;
- * - nothing is requested until the user asks.
+ * - nothing is requested until the user asks;
+ * - the result is kept in memory for the signed-in account (#905): it survives moving
+ *   between screens, is gone on sign-out, another account or a changed key, and is never
+ *   written to web storage.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { mswServer } from "../../../vitest.setup";
 import { API_BASE } from "@/shared/config/env";
+import "@/app/ownerSessionReset";
+import { useAuthStore } from "@/features/auth/store";
+import { forgetAllProbeResults } from "@/shared/lib/probeResults";
 import { forgetAllProviderKeys, holdProviderKey } from "@/shared/lib/providerKeys";
 import { KeyProbePanel } from "./KeyProbePanel";
 
@@ -63,6 +69,8 @@ beforeEach(() => {
 
 afterEach(() => {
   forgetAllProviderKeys();
+  forgetAllProbeResults();
+  useAuthStore.getState().clear();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
@@ -111,7 +119,7 @@ describe("KeyProbePanel", () => {
     const badge = within(rent).getByText("활용신청 필요");
     expect(badge.closest("[data-status]")).toHaveAttribute("data-status", "actionable");
     expect(within(rent).getByText(/활용신청을 하고/)).toBeInTheDocument();
-    expect(screen.getByText(/저장되지 않으며/)).toBeInTheDocument();
+    expect(screen.getByText(/메모리에만 있으며/)).toBeInTheDocument();
     expectKeyNowhere();
   });
 
@@ -222,5 +230,94 @@ describe("KeyProbePanel", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(seen.headers).toHaveLength(1);
+  });
+
+  describe("kept for the signed-in account (#905)", () => {
+    function signInAs(userId: string) {
+      act(() => {
+        useAuthStore.getState().setOidcIdentity({
+          email: `${userId}@example.test`,
+          name: userId,
+          userId,
+          issuer: "https://idp.example.test/realms/kpubdata",
+        });
+      });
+    }
+
+    async function probeOnce() {
+      mockProbe(probed([row("apt_trade", "available")]), seen);
+      const view = render(<KeyProbePanel provider="datago" />);
+      await check();
+      await screen.findByRole("row", { name: /apt_trade/ });
+      return view;
+    }
+
+    it("survives moving to another screen and back, without asking again", async () => {
+      signInAs("alice");
+      const first = await probeOnce();
+      first.unmount();
+
+      render(<KeyProbePanel provider="datago" />);
+
+      expect(screen.getByRole("row", { name: /apt_trade/ })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "다시 확인" })).toBeInTheDocument();
+      expect(seen.headers).toHaveLength(1);
+    });
+
+    it("is gone after sign-out", async () => {
+      signInAs("alice");
+      (await probeOnce()).unmount();
+
+      act(() => useAuthStore.getState().clear());
+      signInAs("alice");
+      expect(holdProviderKey("datago", KEY)).toBe(true);
+      render(<KeyProbePanel provider="datago" />);
+
+      expect(screen.queryByRole("table")).toBeNull();
+      expect(screen.getByRole("button", { name: "확인하기" })).toBeInTheDocument();
+    });
+
+    it("is gone when another account signs in", async () => {
+      signInAs("alice");
+      (await probeOnce()).unmount();
+
+      signInAs("bob");
+      expect(holdProviderKey("datago", KEY)).toBe(true);
+      render(<KeyProbePanel provider="datago" />);
+
+      expect(screen.queryByRole("table")).toBeNull();
+      expect(screen.getByRole("button", { name: "확인하기" })).toBeInTheDocument();
+    });
+
+    it("is not given to another account even if the reset had not run", async () => {
+      signInAs("alice");
+      (await probeOnce()).unmount();
+      const { heldProbeResult } = await import("@/shared/lib/probeResults");
+
+      expect(heldProbeResult("sub:https://idp.example.test/realms/kpubdata#bob", "datago")).toBeNull();
+    });
+
+    it("is gone when the key it was made with is replaced or forgotten", async () => {
+      signInAs("alice");
+      (await probeOnce()).unmount();
+
+      expect(holdProviderKey("datago", "another-key")).toBe(true);
+      render(<KeyProbePanel provider="datago" />);
+
+      expect(screen.queryByRole("table")).toBeNull();
+    });
+
+    it("is never written to web storage", async () => {
+      const setItem = vi.spyOn(Storage.prototype, "setItem");
+      signInAs("alice");
+      await probeOnce();
+
+      expect(setItem.mock.calls.filter(([, value]) => String(value).includes("apt_trade"))).toEqual([]);
+      for (const store of [localStorage, sessionStorage]) {
+        for (let i = 0; i < store.length; i++) {
+          expect(store.getItem(store.key(i) ?? "") ?? "").not.toContain("apt_trade");
+        }
+      }
+    });
   });
 });
