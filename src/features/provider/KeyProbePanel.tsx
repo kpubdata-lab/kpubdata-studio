@@ -3,8 +3,10 @@
  *
  * Builder probes with the key in `X-Provider-Key` — the one this tab holds in memory — and
  * answers each dataset with one of kpubdata's probe statuses. Builder stores neither the
- * key nor the result, and neither does this panel: the result lives in component state
- * and is gone when the panel unmounts (another provider, the key forgotten, a reload).
+ * key nor the result. This panel keeps the result in memory for the signed-in account
+ * (`shared/lib/probeResults.ts`, #905): it survives moving between screens, and is gone on
+ * a reload, a sign-out, another account, or when the key it was made with is forgotten or
+ * replaced. It is never written to web storage or sent to the server.
  *
  * - A status that needs the user to act (apply at the provider, check the key) is a badge;
  *   `available` is plain text (#524).
@@ -19,7 +21,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useStorageOwnerKey, resolveStorageOwnerKey } from "@/features/auth/storageOwner";
 import type { ProviderProbeResponse } from "@/shared/lib/builderApi";
+import { heldProbeResult, holdProbeResult } from "@/shared/lib/probeResults";
 import { Button } from "@/shared/ui";
 
 import { providerClient } from "./client";
@@ -48,12 +52,18 @@ type ProbeState =
 
 export function KeyProbePanel({ provider }: { provider: string }) {
   const { t } = useTranslation();
-  const [state, setState] = useState<ProbeState>({ status: "idle" });
+  const owner = useStorageOwnerKey();
+  const [state, setState] = useState<ProbeState>(() => {
+    const result = heldProbeResult(owner, provider);
+    return result ? { status: "loaded", result } : { status: "idle" };
+  });
 
   const run = async () => {
     setState({ status: "loading" });
     try {
       const result = await providerClient().probe(provider);
+      // An answer that lands after another account signed in is not theirs to keep.
+      if (resolveStorageOwnerKey() === owner) holdProbeResult(owner, provider, result);
       setState({ status: "loaded", result });
     } catch (cause) {
       const limited = probeRateLimited(cause);

@@ -968,7 +968,7 @@
       "failed": "Could not check. Try again in a moment.",
       "none": "This provider has no source dataset that can be checked.",
       "notProbed": "Not checked: {{datasets}}. Time ran out, or the server's limit on calls to this provider was reached, so nothing is known about these.",
-      "notKept": "This result is not stored and is gone when you leave this screen.",
+      "notKept": "This result is kept only in this tab's memory. It is gone when you sign out, switch accounts or reload.",
       "unknownStatus": "A status this Studio does not know. Shown as KPubData Builder sent it.",
       "columns": {
         "dataset": "Source dataset",

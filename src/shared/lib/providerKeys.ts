@@ -17,6 +17,8 @@
 import { isMap, isScalar, parseDocument, Scalar, visit, type Document } from "yaml";
 import { create } from "zustand";
 
+import { forgetAllProbeResults, forgetProbeResult } from "./probeResults";
+
 /** The request header that carries provider keys (builder `request_credentials.py`). */
 export const PROVIDER_KEY_HEADER = "X-Provider-Key";
 
@@ -56,6 +58,8 @@ function normalizeProvider(provider: string): string {
 export function holdProviderKey(provider: string, value: string): boolean {
   const id = normalizeProvider(provider);
   if (!id || providerKeyProblem(value)) return false;
+  // A result made with the key held before does not describe this one (#905).
+  forgetProbeResult(id);
   useHeldProviderKeysStore.setState((state) => ({ keys: { ...state.keys, [id]: value.trim() } }));
   return true;
 }
@@ -63,6 +67,7 @@ export function holdProviderKey(provider: string, value: string): boolean {
 /** Forget the held key for `provider`, if any. */
 export function forgetProviderKey(provider: string): void {
   const id = normalizeProvider(provider);
+  forgetProbeResult(id);
   useHeldProviderKeysStore.setState((state) => {
     if (!(id in state.keys)) return state;
     const next = { ...state.keys };
@@ -73,6 +78,7 @@ export function forgetProviderKey(provider: string): void {
 
 /** Forget every held key (sign-out). */
 export function forgetAllProviderKeys(): void {
+  forgetAllProbeResults();
   useHeldProviderKeysStore.setState({ keys: {} });
 }
 
