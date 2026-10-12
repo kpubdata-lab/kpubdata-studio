@@ -11,11 +11,13 @@
 import { resetAdminCheck } from "@/features/admin/store";
 import { useAssistantStore } from "@/features/assistant/useAssistantSession";
 import { onStorageOwnerChange } from "@/features/auth/storageOwner";
+import { forgetAllProviderKeys } from "@/shared/lib/providerKeys";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
 import { clearSignupBlock } from "@/shared/lib/signupStatus";
 
 export function forgetSessionFacts(): void {
   resetAdminCheck();
+  forgetAllProviderKeys();
   clearSignupBlock();
   clearSessionRefusal();
   useAssistantStore.getState().forgetSession();

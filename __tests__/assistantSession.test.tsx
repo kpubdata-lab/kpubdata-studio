@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAssistConfig } from "@/features/assistant/config";
+import { useAuthStore } from "@/features/auth/store";
 import { createProvider } from "@/features/assistant/provider";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import type { BuildSpec } from "@/shared/lib/types";
@@ -108,6 +109,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  useAuthStore.getState().clear();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   localStorage.clear();
@@ -162,6 +164,30 @@ describe("useAssistantSession — key/base URL/LLM error states (#256)", () => {
       await askPromise;
     });
     expect(result.current.turns[0].error).toEqual({ kind: "cancelled" });
+  });
+
+  it("aborts an active request when another account signs in", async () => {
+    useAuthStore.getState().setOidcIdentity({ email: "alice@example.test", name: "Alice", userId: "alice", issuer: "issuer" });
+    configureKey();
+    let signal: AbortSignal | undefined;
+    mockStream((_messages, activeSignal) => {
+      signal = activeSignal;
+      return abortableStream(activeSignal);
+    });
+
+    const { result } = renderHook(() => useAssistantSession(), { wrapper: makeWrapper("/") });
+    let askPromise!: Promise<void>;
+    act(() => {
+      askPromise = result.current.ask("질문");
+    });
+    await waitFor(() => expect(signal).toBeDefined());
+
+    act(() => {
+      useAuthStore.getState().setOidcIdentity({ email: "bob@example.test", name: "Bob", userId: "bob", issuer: "issuer" });
+    });
+
+    expect(signal?.aborted).toBe(true);
+    await askPromise;
   });
 
   it("marks a request cancelled before its stream is read as cancelled too (#735)", async () => {

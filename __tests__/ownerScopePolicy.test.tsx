@@ -22,6 +22,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { useAsync } from "@/features/runs/asyncState";
 import { useUIStore } from "@/shared/hooks/useUIStore";
 import { ApiError, builderApi, resetAuthRenewalForTests } from "@/shared/lib/builderApi";
+import { forgetAllProviderKeys, holdProviderKey, providerKeyHeaders } from "@/shared/lib/providerKeys";
 import { clearSessionRefusal } from "@/shared/lib/sessionRefusal";
 import { clearSignupBlock, noteSignupBlock, useSignupStatusStore } from "@/shared/lib/signupStatus";
 
@@ -105,6 +106,7 @@ beforeEach(() => {
   clearSignupBlock();
   resetAuthRenewalForTests();
   resetAdminCheck();
+  forgetAllProviderKeys();
   useAssistantStore.getState().forgetSession();
 });
 
@@ -224,6 +226,19 @@ describe("what Studio remembers outside a screen is forgotten with the account",
 
     expect(useAssistantStore.getState().turns).toEqual([]);
     expect(useAssistantStore.getState().pendingSeed).toBeNull();
+  });
+
+  it("does not send the previous account's held provider key", () => {
+    signInAs("alice");
+    expect(holdProviderKey("datago", "alice-secret")).toBe(true);
+    expect(providerKeyHeaders()).toEqual({ "X-Provider-Key": "datago=alice-secret" });
+
+    signInAs("alice");
+    expect(providerKeyHeaders()).toEqual({ "X-Provider-Key": "datago=alice-secret" });
+
+    signInAs("bob");
+
+    expect(providerKeyHeaders()).toEqual({});
   });
 
   it("a held-back sign-up was the earlier account's", () => {

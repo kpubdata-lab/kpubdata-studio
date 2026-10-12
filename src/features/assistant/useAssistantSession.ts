@@ -15,6 +15,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useAssistConfig } from "@/features/assistant/config";
+import { onStorageOwnerChange } from "@/features/auth/storageOwner";
 import { createProvider } from "@/features/assistant/provider";
 import { isAssistantEnabled } from "./baseUrl";
 import { moveLegacyKey } from "@/shared/lib/storageMigration";
@@ -140,6 +141,12 @@ export function useAssistantSession(): UseAssistantSessionResult {
 
   const { apiKey, model, baseUrl, baseUrlSafe, baseUrlError, isConfigured } = useAssistConfig();
   const controllersRef = useRef<Map<string, AbortController>>(new Map());
+  useEffect(
+    () => onStorageOwnerChange(() => {
+      for (const controller of controllersRef.current.values()) controller.abort();
+    }),
+    [],
+  );
 
   const isStale = useCallback((turn: AssistantTurn) => !contextsMatch(turn.context, liveContext), [liveContext]);
 
