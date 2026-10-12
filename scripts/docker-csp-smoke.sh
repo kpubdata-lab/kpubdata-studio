@@ -31,7 +31,8 @@ trap cleanup EXIT
 # `nginx -t` passes as soon as the files are in place — the image ships an empty CSP file,
 # so before the entrypoint has written the real one — and before nginx listens: the first
 # curl then met a closed port (exit 56) and every check of that case failed. A container
-# that never answers has its log printed, so the reason is in the job's output.
+# that never answers has its log printed and fails the script there (`set -e`): the checks
+# after it would only report the same thing again, less plainly.
 wait_until_serving() {
   name="$1"
   port="$2"
@@ -41,7 +42,7 @@ wait_until_serving() {
   done
   say "  ${name} did not answer on port ${port} within 30 s; its log:" >&2
   docker logs "$name" >&2 2>&1 || true
-  return 0
+  return 1
 }
 
 # CI builds the image beforehand with a layer cache (ci.yml) and sets CSP_SMOKE_IMAGE_BUILT.
