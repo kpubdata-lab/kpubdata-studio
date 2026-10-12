@@ -98,7 +98,7 @@ jobs:
           fi
 
       - name: Write the version
-        uses: kpubdata-lab/kpubdata/.github/actions/set-version@807c21f6a78f22b6ed64e19b38585225ec95e1f7  # kpubdata-lab/kpubdata main
+        uses: kpubdata-lab/kpubdata/.github/actions/set-version@9f5a84c653c74395e3a7af0c8e314f276fb2fa06  # kpubdata-lab/kpubdata main
         with:
           version: ${{ steps.upstream.outputs.version }}
 
