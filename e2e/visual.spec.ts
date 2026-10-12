@@ -83,9 +83,9 @@ const SCREENS: Screen[] = [
   },
   {
     name: "table-detail",
-    path: "/tables/air-quality",
+    path: "/tables/apt-trade",
     ready: async (page) => {
-      await expect(page.getByRole("heading", { level: 1, name: "대기질 통합 데이터" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "아파트 매매·주택가격지수 통합 데이터" })).toBeVisible();
       await expect(page.getByText("snap_012").first()).toBeVisible();
     },
   },
@@ -94,7 +94,7 @@ const SCREENS: Screen[] = [
     path: "/sql",
     ready: async (page) => {
       await expect(page.getByRole("heading", { level: 1, name: "SQL 작업 공간" })).toBeVisible();
-      await expect(page.getByRole("treeitem", { name: "air-quality.datago__air" })).toBeVisible();
+      await expect(page.getByRole("treeitem", { name: "apt-trade.datago__trade" })).toBeVisible();
     },
   },
   {
