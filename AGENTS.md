@@ -203,6 +203,9 @@ agent.
   release tag and writes exactly that version (ADR 0004); there is no bump input.
   Propose the bump on Builder, from its CHANGELOG, with the reason: in 0.x, a breaking
   change or a new feature is minor; fixes alone are patch.
+  `scripts/check-builder-version.mjs` holds it: in the CI gate it fails when
+  package.json is ahead of Builder's newest release or a release pull request names
+  another version, and `mode=release` stops unless Builder has the tag (kpubdata#895).
 - **Write what a release changes under `## [Unreleased]` in `CHANGELOG.md`, as you
   merge it.** The prepare job dates that section and the release job publishes it as
   the notes. An empty `[Unreleased]` stops the release — Studio included, when it only

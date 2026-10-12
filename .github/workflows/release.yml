@@ -217,6 +217,14 @@ jobs:
           echo "tag=v${version}" >> "$GITHUB_OUTPUT"
           echo "releasing v${version}"
 
+      # Studio releases only a version Builder has already released (ADR 0004,
+      # kpubdata#895). Before the tag, the gates and the notes, so a missing Builder tag
+      # leaves nothing to clean up.
+      - name: Builder must have this version's tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-builder-version.mjs --require-tag
+
       - name: The branch name and the file must agree
         if: github.event_name == 'pull_request'
         env:

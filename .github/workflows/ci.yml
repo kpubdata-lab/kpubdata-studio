@@ -60,6 +60,16 @@ jobs:
       - name: Action pin gate (#729)
         run: node scripts/check-action-pins.mjs
 
+      # Builder and Studio ship at one version (kpubdata ADR 0004, kpubdata#895). Fails
+      # when package.json is ahead of Builder's newest release, or a release pull request
+      # names any other version. Being one release behind is allowed outside a release
+      # pull request: Builder releases first and Studio follows.
+      - name: Studio follows Builder's version (kpubdata#895)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: node scripts/check-builder-version.mjs
+
       - name: License inventory gate and regression tests
         run: |
           node scripts/license-inventory.mjs --check
