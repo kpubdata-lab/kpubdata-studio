@@ -43,6 +43,7 @@ export const RUN_FAILURE_CODES = [
   "interrupted",
   "credentials_required",
   "enqueue_failed",
+  "failed_without_manifest",
 ] as const;
 
 export const RUN_FAILURE_STAGES = [

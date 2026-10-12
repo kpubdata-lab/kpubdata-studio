@@ -44,6 +44,22 @@ export function useStorageOwnerKey(): string {
   return useAuthStore((state) => ownerKeyOf(state.email, state.userId, state.issuer));
 }
 
+/**
+ * Call `listener` when the owner key changes — another account signs in, or the session
+ * ends (#902). For state held outside a screen (a store), which {@link useStorageOwnerKey}
+ * and the `OwnerScope` boundary do not reach. Returns the unsubscribe function.
+ */
+export function onStorageOwnerChange(listener: (next: string, previous: string) => void): () => void {
+  let owner = resolveStorageOwnerKey();
+  return useAuthStore.subscribe(() => {
+    const next = resolveStorageOwnerKey();
+    if (next === owner) return;
+    const previous = owner;
+    owner = next;
+    listener(next, previous);
+  });
+}
+
 /** Whether logged in. Unauthenticated storage uses existing unowned key (backward compatible). */
 export function isOwnedStorageSession(): boolean {
   return resolveStorageOwnerKey() !== ANONYMOUS_OWNER;

@@ -60,6 +60,21 @@ describe("runFailureWords", () => {
     expect(words?.hint).toBe(ko.admin.failure.hint.interrupted);
   });
 
+  it("explains a failure before Builder wrote a manifest", async () => {
+    await i18n.changeLanguage("ko");
+    const words = runFailureWords(t, {
+      status: "failed",
+      error_code: "failed_without_manifest",
+      error_stage: "started",
+    });
+    expect(words).toEqual({
+      code: ko.admin.failure.code.failed_without_manifest,
+      stage: ko.admin.failure.stage.started,
+      hint: ko.admin.failure.hint.failed_without_manifest,
+      known: true,
+    });
+  });
+
   it("calls a failed run without a code unknown, with no hint", async () => {
     await i18n.changeLanguage("en");
     expect(runFailureWords(t, { status: "failed", error_code: null, error_stage: null })).toEqual({

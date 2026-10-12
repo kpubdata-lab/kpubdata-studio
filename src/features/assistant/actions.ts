@@ -8,6 +8,7 @@
  * implemented in this file at all — actions not on allowlist have no executable function.
  */
 import { loadBuildSpec, saveBuildSpec } from "@/features/build-spec/specStore";
+import { resolveStorageOwnerKey } from "@/features/auth/storageOwner";
 import { saveDraft } from "@/features/build-spec/draftStorage";
 import { validateSpec } from "@/features/validation/api";
 import { hasSecretPlaceholder, isSecretKey, redactSecrets } from "@/features/assistant/scrub";
@@ -152,8 +153,9 @@ export async function applyBuildSpecPatch(
   if (jsonValueHasRedactedSecret(after)) {
     return { valid: false, errors: [t("unresolvedPlaceholder")] };
   }
+  const owner = resolveStorageOwnerKey();
   const result = await validate(after);
-  if (result.valid) saveBuildSpec(runId, after);
+  if (result.valid && resolveStorageOwnerKey() === owner) saveBuildSpec(runId, after);
   return result;
 }
 

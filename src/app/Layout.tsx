@@ -17,13 +17,16 @@ import { AccountMenu } from "./AccountMenu";
 import { crumbsFor, documentTitleFor } from "./breadcrumb";
 import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
+import { OwnerScope } from "@/features/auth/OwnerScope";
 import { signOutOfOidc } from "@/features/auth/signOut";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { useAuthStore } from "@/features/auth/store";
 import { SessionRefusedNotice } from "@/features/onboarding/SessionRefusedNotice";
 import { SignupStatusNotice } from "@/features/onboarding/SignupStatusNotice";
 import { isDemo } from "@/shared/lib/demoMode";
 import { clearSessionRefusal, useSessionRefusalStore } from "@/shared/lib/sessionRefusal";
 import { useSignupStatusStore } from "@/shared/lib/signupStatus";
+import "./ownerSessionReset";
 import { focusRouteTarget } from "./routeFocus";
 import { BetaBadge, BrandLogo, DemoBadge } from "@/shared/ui";
 
@@ -315,9 +318,11 @@ export function Layout() {
     { to: "/settings", label: t("nav.settings"), description: t("navDescription.settings") },
   ];
 
+  // Asked again for another account: the previous answer was forgotten with it (#902).
+  const owner = useStorageOwnerKey();
   useEffect(() => {
     void ensureAdminChecked();
-  }, [pathname]);
+  }, [pathname, owner]);
 
   // The tab title names the page, in the current language (#662). It is set on the first
   // load as well, so a refreshed tab and a navigated one read the same.
@@ -551,7 +556,10 @@ export function Layout() {
                   <BetaBadge />
                 )}
 
-                <CommandSearch destinations={searchDestinations} />
+                {/* The palette keeps the last list it loaded; another account must not see it (#902). */}
+                <OwnerScope>
+                  <CommandSearch destinations={searchDestinations} />
+                </OwnerScope>
 
                 <button
                   aria-haspopup="dialog"
@@ -588,13 +596,19 @@ export function Layout() {
             ) : signupBlock ? (
               <SignupStatusNotice block={signupBlock} />
             ) : (
-              <Outlet />
+              // Another account signing in remounts the page: what it loaded is dropped and
+              // what it still has in flight is aborted (#902).
+              <OwnerScope>
+                <Outlet />
+              </OwnerScope>
             )}
           </main>
         </div>
       </div>
 
-      <AssistantDrawer />
+      <OwnerScope>
+        <AssistantDrawer />
+      </OwnerScope>
     </div>
   );
 }

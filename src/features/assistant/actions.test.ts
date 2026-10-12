@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadBuildSpec, saveBuildSpec } from "@/features/build-spec/specStore";
+import { useAuthStore } from "@/features/auth/store";
 import { loadDraft } from "@/features/build-spec/draftStorage";
 import { buildFormValuesSchema } from "@/shared/lib/schemas";
 import type { BuildSpec } from "@/shared/lib/types";
@@ -26,6 +27,7 @@ const BASE_SPEC: BuildSpec = {
 };
 
 afterEach(() => {
+  useAuthStore.getState().clear();
   localStorage.clear();
 });
 
@@ -155,6 +157,19 @@ describe("previewBuildSpecPatch / applyBuildSpecPatch (#256 §10)", () => {
 
     expect(result.valid).toBe(false);
     expect(loadBuildSpec("run-1")).toEqual(BASE_SPEC);
+  });
+
+  it("does not save a previous account's patch when validation finishes after account switch", async () => {
+    useAuthStore.getState().setOidcIdentity({ email: "alice@example.test", name: "Alice", userId: "alice", issuer: "issuer" });
+    let finish!: (result: { valid: boolean; errors: string[] }) => void;
+    const validate = () => new Promise<{ valid: boolean; errors: string[] }>((resolve) => { finish = resolve; });
+    const pending = applyBuildSpecPatch("run-1", BASE_SPEC, validate);
+
+    useAuthStore.getState().setOidcIdentity({ email: "bob@example.test", name: "Bob", userId: "bob", issuer: "issuer" });
+    finish({ valid: true, errors: [] });
+    await pending;
+
+    expect(loadBuildSpec("run-1")).toBeNull();
   });
 
   describe("복원된 redaction marker는 fail-closed (S07 리뷰 §1)", () => {
