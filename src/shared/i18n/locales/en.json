@@ -2997,7 +2997,7 @@
         "interrupted": "A server restart interrupted the run. Run it again.",
         "credentials_required": "The run's keys were gone. The owner re-enters the keys and runs it again.",
         "enqueue_failed": "The run could not be queued. Run it again; if it repeats, check the server.",
-        "failed_without_manifest": "The run failed before its results were recorded. Check the build settings and try again; contact an administrator if it repeats."
+        "failed_without_manifest": "The run failed before its results were recorded. Check the run settings and try again; contact an administrator if it repeats."
       }
     }
   },
