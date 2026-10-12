@@ -606,9 +606,9 @@ test("실패한 실행의 주인은 실행 화면에서 원인을 본다 — 동
   const errors: string[] = [];
   collectPageErrors(page, errors);
 
-  // A synchronous build is never a job in Builder's registry, so its status is read from
-  // the manifest — the path a restarted Builder takes for every run. Before
-  // kpubdata-builder#1308 that path gave `failed` with no reason.
+  // The run has ended by the time the page opens, so the page reads it from the history
+  // and asks its job once for the reason. Before kpubdata-builder#1308 a Builder that had
+  // let the job go — after a restart — answered `failed` with no reason.
   const runId = `e2e-owner-failure-${Date.now()}`;
   const built = await request.post(`${BUILDER_URL}/build`, { data: { spec: FAILING_SPEC, run_id: runId }, timeout: 60_000 });
   const refused = (await built.json()) as { status?: string; error?: string };
