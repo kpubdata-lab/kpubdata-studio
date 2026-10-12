@@ -16,7 +16,7 @@ import type { BuildSpec } from "@/shared/lib/types";
 import { KeysLostCard } from "./KeysLostCard";
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "Hourly air quality by region",
   sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
@@ -43,7 +43,7 @@ function builderWithSnapshot(answer: "has it" | "has none" | "cannot be reached"
     if (answer === "has none") {
       return new Response(JSON.stringify({ error: "run not found" }), { status: 404, headers: { "Content-Type": "application/json" } });
     }
-    return new Response(JSON.stringify({ run_id: "air-quality-1", spec: "dataset_id: air-quality\n", spec_digest: `sha256:${"a".repeat(64)}` }), {
+    return new Response(JSON.stringify({ run_id: "apt-trade-1", spec: "dataset_id: apt-trade\n", spec_digest: `sha256:${"a".repeat(64)}` }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
@@ -66,12 +66,12 @@ afterEach(() => {
 describe("KeysLostCard", () => {
   it("links to the edit page when this browser kept the run's spec, without asking Builder", () => {
     const asked = builderWithSnapshot("has none");
-    saveBuildSpec("air-quality-1", SPEC);
+    saveBuildSpec("apt-trade-1", SPEC);
 
-    renderCard("air-quality-1");
+    renderCard("apt-trade-1");
 
     const link = screen.getByRole("link");
-    expect(link.getAttribute("href")).toBe("/refresh-jobs/air-quality-1/edit");
+    expect(link.getAttribute("href")).toBe("/refresh-jobs/apt-trade-1/edit");
     expect(link.getAttribute("data-keys-lost-next")).toBe("edit");
     expect(asked).toEqual([]);
   });
@@ -81,10 +81,10 @@ describe("KeysLostCard", () => {
     // page loads although this browser never submitted it.
     builderWithSnapshot("has it");
 
-    renderCard("air-quality-1");
+    renderCard("apt-trade-1");
 
     const link = await screen.findByRole("link");
-    expect(link.getAttribute("href")).toBe("/refresh-jobs/air-quality-1/edit");
+    expect(link.getAttribute("href")).toBe("/refresh-jobs/apt-trade-1/edit");
     expect(link.getAttribute("data-keys-lost-next")).toBe("edit");
   });
 
@@ -92,20 +92,20 @@ describe("KeysLostCard", () => {
     saveBuildSpec("another-run", SPEC);
     const asked = builderWithSnapshot("has none");
 
-    const { container } = renderCard("air-quality-1");
+    const { container } = renderCard("apt-trade-1");
 
     const link = await screen.findByRole("link");
     expect(link.getAttribute("href")).toBe("/add");
     expect(link.getAttribute("data-keys-lost-next")).toBe("add");
     // The retry wording, which promises a retry of this run, is not shown.
     expect(container.querySelector('[href$="/edit"]')).toBeNull();
-    expect(asked.some((path) => path.endsWith("/builds/air-quality-1/spec"))).toBe(true);
+    expect(asked.some((path) => path.endsWith("/builds/apt-trade-1/spec"))).toBe(true);
   });
 
   it("does not promise a retry when Builder could not be asked", async () => {
     builderWithSnapshot("cannot be reached");
 
-    renderCard("air-quality-1");
+    renderCard("apt-trade-1");
 
     await waitFor(() => expect(screen.getByRole("link").getAttribute("href")).toBe("/add"), { timeout: 5000 });
   });
@@ -113,7 +113,7 @@ describe("KeysLostCard", () => {
   it("offers no way on until it knows which one loads", () => {
     builderWithSnapshot("never answers");
 
-    const { container } = renderCard("air-quality-1");
+    const { container } = renderCard("apt-trade-1");
 
     expect(screen.queryByRole("link")).toBeNull();
     expect(container.querySelector("[data-keys-lost]")).not.toBeNull();

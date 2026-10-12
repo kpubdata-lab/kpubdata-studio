@@ -10,7 +10,7 @@ import { StageSampleEmpty, stageSampleEmptyReason } from "./StageSampleEmpty";
 const withheldDetail = {
   run_id: "r1",
   stage: "silver",
-  source_key: "datago__air",
+  source_key: "datago__trade",
   status: "completed",
   available: true,
   row_count: 120,

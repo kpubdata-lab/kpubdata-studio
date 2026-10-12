@@ -37,8 +37,8 @@ describe("SQL Workspace (#417)", () => {
     hideDemoWarehouse();
   });
   it("does not run anything until the person asks", async () => {
-    renderAt("/sql?table=air-quality");
-    await screen.findByRole("option", { name: /air-2026-08-14 \(최신\)/ });
+    renderAt("/sql?table=apt-trade");
+    await screen.findByRole("option", { name: /apt-2026-08-14 \(최신\)/ });
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
@@ -57,16 +57,16 @@ describe("SQL Workspace (#417)", () => {
   });
 
   it("asks which source when the run has several, and names the snapshot it read", async () => {
-    renderAt("/sql?table=air-quality");
+    renderAt("/sql?table=apt-trade");
     const source = await screen.findByRole("combobox", { name: "소스" });
     expect(screen.getByRole("button", { name: /실행/ })).toBeDisabled();
 
-    fireEvent.change(source, { target: { value: "datago__air" } });
-    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("source=datago__air"));
+    fireEvent.change(source, { target: { value: "datago__trade" } });
+    await waitFor(() => expect(screen.getByTestId("where")).toHaveTextContent("source=datago__trade"));
     fireEvent.click(screen.getByRole("button", { name: /실행/ }));
 
     expect(await screen.findByRole("table")).toBeInTheDocument();
-    expect(screen.getByText("air-quality@air-2026-08-14 · gold · datago__air")).toBeInTheDocument();
+    expect(screen.getByText("apt-trade@apt-2026-08-14 · gold · datago__trade")).toBeInTheDocument();
     expect(screen.getByText(/DEMO|데모/)).toBeInTheDocument();
   });
 });

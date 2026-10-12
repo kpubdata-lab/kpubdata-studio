@@ -12,20 +12,20 @@ import { DEMO_DATASETS } from "@/shared/lib/demoDatasets";
 export const MOCK_DATASETS: DatasetsResponse = {
   datasets: [
     {
-      dataset_id: "air-quality",
-      title: "대기질 통합 데이터",
+      dataset_id: "apt-trade",
+      title: "아파트 매매·주택가격지수 통합 데이터",
       sources: [
-        { provider: "datago", dataset: "air", alias: "air" },
-        { provider: "kma", dataset: "weather", alias: "weather" },
+        { provider: "datago", dataset: "apt_trade", alias: "trade" },
+        { provider: "bok", dataset: "housing_price_index", alias: "index" },
       ],
-      latest_run_id: "air-2026-08-14",
+      latest_run_id: "apt-2026-08-14",
       status: "failed",
       updated_at: "2026-08-14T07:30:00Z",
-      row_counts: { datago__air: 1000, kma__weather: 200 },
+      row_counts: { datago__trade: 1000, bok__index: 200 },
       total_row_count: 1200,
       stages: {
-        datago__air: { bronze: "completed", silver: "completed", gold: "completed" },
-        kma__weather: { bronze: "completed", silver: "failed", gold: "not_run" },
+        datago__trade: { bronze: "completed", silver: "completed", gold: "completed" },
+        bok__index: { bronze: "completed", silver: "failed", gold: "not_run" },
       },
       status_axes: { refresh: "failed", completeness: "partial", health: "unknown", access: "available", maturity: "beta" },
       quality: null,
@@ -64,11 +64,11 @@ export const MOCK_DATASETS: DatasetsResponse = {
 };
 
 export const MOCK_RUNS: Record<string, DatasetRunsResponse> = {
-  "air-quality": {
-    dataset_id: "air-quality",
+  "apt-trade": {
+    dataset_id: "apt-trade",
     runs: [
-      { run_id: "air-2026-08-14", status: "failed", started_at: "2026-08-14T07:00:00Z", finished_at: "2026-08-14T07:30:00Z", spec_digest: "sha256:air14", created_by: "user@example.com" },
-      { run_id: "air-2026-08-13", status: "ok", started_at: "2026-08-13T07:00:00Z", finished_at: "2026-08-13T07:20:00Z", spec_digest: "sha256:air13", created_by: "user@example.com" },
+      { run_id: "apt-2026-08-14", status: "failed", started_at: "2026-08-14T07:00:00Z", finished_at: "2026-08-14T07:30:00Z", spec_digest: "sha256:apt14", created_by: "user@example.com" },
+      { run_id: "apt-2026-08-13", status: "ok", started_at: "2026-08-13T07:00:00Z", finished_at: "2026-08-13T07:20:00Z", spec_digest: "sha256:apt13", created_by: "user@example.com" },
     ],
   },
   population: {
@@ -85,11 +85,11 @@ export const MOCK_STAGES: Record<string, RunStagesResponse> = {
   // Aligns so stage/quality fixtures are also reachable under the run ids
   // the Builds/Runs list actually uses (mockBuilds → DEMO_DATASETS.buildId)
   // (#255 closing fix). No new mock semantics — reuses the exact shape of
-  // the air-2026-08-* fixtures below.
-  "air-quality-20260621": {
-    run_id: "air-quality-20260621",
+  // the apt-2026-08-* fixtures below.
+  "apt-trade-20260621": {
+    run_id: "apt-trade-20260621",
     sources: [
-      { source_key: "datago__air_quality", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
+      { source_key: "datago__apt_trade", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
     ],
   },
   "dur-older-adult-caution-20260618": {
@@ -126,18 +126,18 @@ export const MOCK_STAGES: Record<string, RunStagesResponse> = {
       { source_key: "datago__dur_dosage_caution", bronze: { status: "not_run", available: false }, silver: { status: "not_run", available: false }, gold: { status: "not_run", available: false } },
     ],
   },
-  "air-2026-08-14": {
-    run_id: "air-2026-08-14",
+  "apt-2026-08-14": {
+    run_id: "apt-2026-08-14",
     sources: [
-      { source_key: "datago__air", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
-      { source_key: "kma__weather", bronze: { status: "completed", available: true }, silver: { status: "failed", available: false }, gold: { status: "not_run", available: false } },
+      { source_key: "datago__trade", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
+      { source_key: "bok__index", bronze: { status: "completed", available: true }, silver: { status: "failed", available: false }, gold: { status: "not_run", available: false } },
     ],
   },
-  "air-2026-08-13": {
-    run_id: "air-2026-08-13",
+  "apt-2026-08-13": {
+    run_id: "apt-2026-08-13",
     sources: [
-      { source_key: "datago__air", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
-      { source_key: "kma__weather", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
+      { source_key: "datago__trade", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
+      { source_key: "bok__index", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
     ],
   },
   "population-2026-08-13": {
@@ -154,16 +154,16 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
   // Same run-id alignment as MOCK_STAGES (#255) — attaches real Quality
   // results to the one succeeded and one failed run mockBuilds() actually
   // exposes.
-  "air-quality-20260621": {
-    run_id: "air-quality-20260621",
+  "apt-trade-20260621": {
+    run_id: "apt-trade-20260621",
     availability: "available",
     evaluated_checks: 1,
     quality_results: {
-      datago__air_quality: [
-        { source_key: "datago__air_quality", category: "row_count", rule: "min_rows", column: null, status: "pass", actual: 12304, threshold: 100, affected_rows: null, evaluated_rows: 12304, detail: null },
+      datago__apt_trade: [
+        { source_key: "datago__apt_trade", category: "row_count", rule: "min_rows", column: null, status: "pass", actual: 12304, threshold: 100, affected_rows: null, evaluated_rows: 12304, detail: null },
       ],
     },
-    schema_drift: { datago__air_quality: [] },
+    schema_drift: { datago__apt_trade: [] },
   },
   // A run that failed at bronze, so quality was never computed (N/A ≠
   // PASS) — consistent with MOCK_STAGES' bronze failed; nothing invented.
@@ -212,25 +212,25 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
     quality_results: {},
     schema_drift: {},
   },
-  "air-2026-08-14": {
-    run_id: "air-2026-08-14",
+  "apt-2026-08-14": {
+    run_id: "apt-2026-08-14",
     availability: "partial",
     evaluated_checks: 2,
     quality_results: {
-      datago__air: [{ source_key: "datago__air", category: "missing", rule: "max_null_ratio", column: "pm10", status: "pass", actual: 0.01, threshold: 0.05, affected_rows: 10, evaluated_rows: 1000, detail: null }],
-      kma__weather: [{ source_key: "kma__weather", category: "schema", rule: "required_column", column: "temperature", status: "fail", actual: false, threshold: true, affected_rows: null, evaluated_rows: null, detail: "필수 컬럼이 없습니다." }],
+      datago__trade: [{ source_key: "datago__trade", category: "missing", rule: "max_null_ratio", column: "deal_amount", status: "pass", actual: 0.01, threshold: 0.05, affected_rows: 10, evaluated_rows: 1000, detail: null }],
+      bok__index: [{ source_key: "bok__index", category: "schema", rule: "required_column", column: "price_index", status: "fail", actual: false, threshold: true, affected_rows: null, evaluated_rows: null, detail: "필수 컬럼이 없습니다." }],
     },
-    schema_drift: { datago__air: [], kma__weather: [{ kind: "column_removed", column: "temperature", detail: "temperature 컬럼이 제거되었습니다." }] },
+    schema_drift: { datago__trade: [], bok__index: [{ kind: "column_removed", column: "price_index", detail: "price_index 컬럼이 제거되었습니다." }] },
   },
-  "air-2026-08-13": {
-    run_id: "air-2026-08-13",
+  "apt-2026-08-13": {
+    run_id: "apt-2026-08-13",
     availability: "available",
     evaluated_checks: 2,
     quality_results: {
-      datago__air: [{ source_key: "datago__air", category: "row_count", rule: "min_rows", column: null, status: "pass", actual: 1000, threshold: 100, affected_rows: null, evaluated_rows: 1000, detail: null }],
-      kma__weather: [{ source_key: "kma__weather", category: "missing", rule: "max_null_ratio", column: "humidity", status: "warn", actual: 0.08, threshold: 0.05, affected_rows: 16, evaluated_rows: 200, detail: null }],
+      datago__trade: [{ source_key: "datago__trade", category: "row_count", rule: "min_rows", column: null, status: "pass", actual: 1000, threshold: 100, affected_rows: null, evaluated_rows: 1000, detail: null }],
+      bok__index: [{ source_key: "bok__index", category: "missing", rule: "max_null_ratio", column: "jeonse_index", status: "warn", actual: 0.08, threshold: 0.05, affected_rows: 16, evaluated_rows: 200, detail: null }],
     },
-    schema_drift: { datago__air: [], kma__weather: [] },
+    schema_drift: { datago__trade: [], bok__index: [] },
   },
   "population-2026-08-13": { run_id: "population-2026-08-13", availability: "unavailable", evaluated_checks: 0, quality_results: {}, schema_drift: {} },
   "transport-2026-08-12": {
@@ -243,9 +243,9 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
 };
 
 export const MOCK_QUALITY_HISTORY: Record<string, DatasetQualityHistoryResponse> = {
-  "air-quality": { dataset_id: "air-quality", runs: [
-    { run_id: "air-2026-08-14", timestamp: "2026-08-14T07:30:00Z", status: "failed", pass_count: 1, warn_count: 0, fail_count: 1, evaluated_checks: 2, rule_pass_rate: 0.5, validated_rows: 1200 },
-    { run_id: "air-2026-08-13", timestamp: "2026-08-13T07:20:00Z", status: "ok", pass_count: 1, warn_count: 1, fail_count: 0, evaluated_checks: 2, rule_pass_rate: 0.5, validated_rows: 1200 },
+  "apt-trade": { dataset_id: "apt-trade", runs: [
+    { run_id: "apt-2026-08-14", timestamp: "2026-08-14T07:30:00Z", status: "failed", pass_count: 1, warn_count: 0, fail_count: 1, evaluated_checks: 2, rule_pass_rate: 0.5, validated_rows: 1200 },
+    { run_id: "apt-2026-08-13", timestamp: "2026-08-13T07:20:00Z", status: "ok", pass_count: 1, warn_count: 1, fail_count: 0, evaluated_checks: 2, rule_pass_rate: 0.5, validated_rows: 1200 },
   ] },
   population: { dataset_id: "population", runs: [{ run_id: "population-2026-08-13", timestamp: "2026-08-13T09:00:00Z", status: "ok", pass_count: 0, warn_count: 0, fail_count: 0, evaluated_checks: 0, rule_pass_rate: null, validated_rows: 229 }] },
   transport: { dataset_id: "transport", runs: [{ run_id: "transport-2026-08-12", timestamp: "2026-08-12T04:10:00Z", status: "ok", pass_count: 1, warn_count: 0, fail_count: 0, evaluated_checks: 1, rule_pass_rate: 1, validated_rows: 540 }] },
@@ -269,7 +269,7 @@ function demoSourceKey(dataset: (typeof DEMO_DATASETS)[number]): string {
  * builds the Stage detail from that run's actual demo values
  * (recordCount/dates/fields/exports) instead of the generic weather-shaped
  * fixture (#286 follow-up §2). Existing dataset-catalog-only runs like
- * air-2026-08-14 (not in DEMO_DATASETS) get undefined from this function
+ * apt-2026-08-14 (not in DEMO_DATASETS) get undefined from this function
  * and fall straight through to the generic fixture below — existing screen
  * behavior unchanged.
  */
@@ -331,7 +331,7 @@ function demoStageDetail(
     columns: state.available ? dataset.fields.map((field) => field.name) : [],
     // DEMO_DATASETS has no split info, so none is invented.
     splits: null,
-    // Reflects the actual demo export formats (e.g. air-quality → parquet + huggingface).
+    // Reflects the actual demo export formats (e.g. apt-trade → parquet + huggingface).
     exports: state.available ? dataset.exports.map((target) => ({ kind: target.format })) : [],
     sample: null,
     sample_available: false,

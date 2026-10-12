@@ -15,14 +15,14 @@ export type QueryOutcome =
 
 /** Fixed rows for mock mode — labelled demo on screen, never presented as real. */
 const DEMO_RESULT: QueryResponse = {
-  columns: ["station_name", "avg_pm10"],
+  columns: ["district", "avg_deal_amount"],
   rows: [
     // i18n-ignore: demo row data (a place name), not UI text.
-    { station_name: "종로구", avg_pm10: 31.5 },
+    { district: "종로구", avg_deal_amount: 31.5 },
     // i18n-ignore: demo row data (a place name), not UI text.
-    { station_name: "중구", avg_pm10: 28 },
+    { district: "중구", avg_deal_amount: 28 },
     // i18n-ignore: demo row data (a place name), not UI text.
-    { station_name: "강남구", avg_pm10: 26.2 },
+    { district: "강남구", avg_deal_amount: 26.2 },
   ],
   truncated: false,
   execution_ms: 0,

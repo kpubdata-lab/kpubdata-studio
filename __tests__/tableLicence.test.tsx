@@ -208,7 +208,7 @@ describe("the run-based passport shows the terms too (#645)", () => {
 
   it("says unknown in the demo, which has no BuildSpec to read terms from", async () => {
     render(
-      <MemoryRouter initialEntries={["/tables/air-quality"]}>
+      <MemoryRouter initialEntries={["/tables/apt-trade"]}>
         <Routes>
           <Route path="/tables/:datasetId" element={<DatasetDetailPage />} />
         </Routes>

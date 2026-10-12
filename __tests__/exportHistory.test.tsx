@@ -168,7 +168,7 @@ describe("the export list (#648)", () => {
             code: "redistribution_forbidden",
             error: "redistribution_forbidden",
             message: "forbidden",
-            redistribution: { verdict: "forbidden", sources: [{ source: "datago__air", verdict: "forbidden" }] },
+            redistribution: { verdict: "forbidden", sources: [{ source: "datago__trade", verdict: "forbidden" }] },
           },
           { status: 403 },
         ),

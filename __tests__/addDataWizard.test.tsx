@@ -233,15 +233,15 @@ describe("Create Table Workbench — touched metadata 정책 (#250 최종 검증
     // Source and its settings share the Configure step (#534).
     await screen.findByLabelText(/엔드포인트/);
 
-    fireEvent.change(screen.getByLabelText(/엔드포인트/), { target: { value: "https://api.example.org/v1/air-quality" } });
-    await screen.findByText(/ID: api-example-org-v1-air-quality/);
+    fireEvent.change(screen.getByLabelText(/엔드포인트/), { target: { value: "https://api.example.org/v1/apt-trade" } });
+    await screen.findByText(/ID: api-example-org-v1-apt-trade/);
 
     await overrideIdentityInAdvancedSettings({ datasetId: "custom-id", title: "커스텀 제목" });
     expect(screen.getByText(/ID: custom-id/)).toBeInTheDocument();
 
     // 같은 endpoint의 query string만 바꾸면(같은 hostname/path) 수정값이 유지된다.
     fireEvent.change(screen.getByLabelText(/엔드포인트/), {
-      target: { value: "https://api.example.org/v1/air-quality?region=busan" },
+      target: { value: "https://api.example.org/v1/apt-trade?region=busan" },
     });
     expect(screen.getByText(/ID: custom-id/)).toBeInTheDocument();
 
@@ -569,10 +569,10 @@ describe("Create Table Workbench — URL source (#250, #498, Auth=None, amendmen
     expect(screen.getByLabelText(/인증 \(Auth\)/)).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText(/엔드포인트/), {
-      target: { value: "https://api.example.org/v1/air-quality?region=busan" },
+      target: { value: "https://api.example.org/v1/apt-trade?region=busan" },
     });
 
-    const summaryId = await screen.findByText(/ID: api-example-org-v1-air-quality/);
+    const summaryId = await screen.findByText(/ID: api-example-org-v1-apt-trade/);
     // dataset identity(ID/제목)에는 query string이 새어 들어가지 않는다 — endpoint 필드
     // 자체에는 물론 그대로 남는다(Builder SourceRef.endpoint는 원문을 그대로 받는다).
     expect(within(summaryId.closest("div")!).queryByText(/busan/i)).not.toBeInTheDocument();
@@ -583,8 +583,8 @@ describe("Create Table Workbench — URL source (#250, #498, Auth=None, amendmen
     await screen.findByRole("heading", { name: "검토 · 테이블 만들기" });
     expect(screen.getByText(/"kind": "url"/)).toBeInTheDocument();
     // 비민감 query parameter는 canonical BuildSpec preview에 그대로 보인다.
-    expect(screen.getByText(/"endpoint": "https:\/\/api\.example\.org\/v1\/air-quality\?region=busan"/)).toBeInTheDocument();
-    expect(screen.getByText(/"dataset_id": "api-example-org-v1-air-quality"/)).toBeInTheDocument();
+    expect(screen.getByText(/"endpoint": "https:\/\/api\.example\.org\/v1\/apt-trade\?region=busan"/)).toBeInTheDocument();
+    expect(screen.getByText(/"dataset_id": "api-example-org-v1-apt-trade"/)).toBeInTheDocument();
   });
 
   it("secret query parameter는 Review DOM(canonical BuildSpec preview 포함)에서 가려진다 (#283 리뷰 대응, Epic #246)", async () => {
@@ -594,10 +594,10 @@ describe("Create Table Workbench — URL source (#250, #498, Auth=None, amendmen
     await screen.findByLabelText(/엔드포인트/);
 
     fireEvent.change(screen.getByLabelText(/엔드포인트/), {
-      target: { value: "https://api.example.org/v1/air-quality?token=SECRETVALUE1234567890" },
+      target: { value: "https://api.example.org/v1/apt-trade?token=SECRETVALUE1234567890" },
     });
 
-    await screen.findByText(/ID: api-example-org-v1-air-quality/);
+    await screen.findByText(/ID: api-example-org-v1-apt-trade/);
 
     next();
     await screen.findByRole("heading", { name: "미리보기 · 검증" });
@@ -607,7 +607,7 @@ describe("Create Table Workbench — URL source (#250, #498, Auth=None, amendmen
     // 원문 secret은 화면 어디에도(Source summary/canonical BuildSpec preview) 나타나지 않는다.
     expect(document.body.textContent ?? "").not.toContain("SECRETVALUE1234567890");
     expect(
-      screen.getByText(/"endpoint": "https:\/\/api\.example\.org\/v1\/air-quality\?token=__KPD_URL_SECRET_REDACTED__"/),
+      screen.getByText(/"endpoint": "https:\/\/api\.example\.org\/v1\/apt-trade\?token=__KPD_URL_SECRET_REDACTED__"/),
     ).toBeInTheDocument();
   });
 });

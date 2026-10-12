@@ -76,7 +76,7 @@ function makeAssistantBlock(overrides: Partial<AssistantInterpretationBlock> = {
     provenance: "ASSISTANT_INTERPRETATION",
     note: "가격 결측이 특정 지역에 집중됩니다.",
     reason: "품질 이슈 참고용",
-    sourceContext: { datasetId: "air-quality", runId: "air-2026-08-14" },
+    sourceContext: { datasetId: "apt-trade", runId: "apt-2026-08-14" },
     isSameContext: true,
     generatedAt: now,
     createdAt: now,
@@ -99,7 +99,7 @@ afterEach(() => {
 
 describe("ReportEditorPage IA 개편 (#258)", () => {
   it("Builder evidence 요약 문장이 실제 PASS/FAIL 수치와 동일하게 표시된다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByText(/이 보고서는/);
@@ -117,7 +117,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
   });
 
   it("상세 evidence 표는 지워지지 않고 펼쳐서 볼 수 있다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     const schemaBlock = await screen.findByTestId("block-schema");
@@ -129,7 +129,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
   });
 
   it("Ask KPubData 블록과 Builder Evidence 블록이 provenance 배지로 시각적으로 구분된다", async () => {
-    let report = await makeReport("air-quality", "air-2026-08-14");
+    let report = await makeReport("apt-trade", "apt-2026-08-14");
     report = { ...report, blocks: [...report.blocks, makeAssistantBlock()] };
     saveReport(report, { force: true });
 
@@ -142,32 +142,32 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
   });
 
   it("Report Context sidebar가 실제 base dataset/run/근거 상태를 보여준다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     const contextHeading = await screen.findByText("리포트 기준 정보");
     const contextCard = contextHeading.parentElement as HTMLElement;
-    expect(within(contextCard).getByText("air-quality")).toBeInTheDocument();
-    expect(within(contextCard).getByText("air-2026-08-14")).toBeInTheDocument();
+    expect(within(contextCard).getByText("apt-trade")).toBeInTheDocument();
+    expect(within(contextCard).getByText("apt-2026-08-14")).toBeInTheDocument();
     await screen.findByText(/CURRENT/);
   });
 
   it("STALE이어도 baseRunId를 자동으로 바꾸지 않는다(최신 run 자동 전환 금지)", async () => {
-    // air-2026-08-13은 최신이 아니다(최신은 air-2026-08-14) → STALE 판정이 나와야 한다.
-    const report = await makeReport("air-quality", "air-2026-08-13");
+    // apt-2026-08-13은 최신이 아니다(최신은 apt-2026-08-14) → STALE 판정이 나와야 한다.
+    const report = await makeReport("apt-trade", "apt-2026-08-13");
     renderReport(report.id);
 
     await screen.findByText(/STALE/);
-    expect(getReport(report.id)?.baseRunId).toBe("air-2026-08-13");
+    expect(getReport(report.id)?.baseRunId).toBe("apt-2026-08-13");
 
     // "다시 확인"을 눌러도 마찬가지다.
     fireEvent.click(screen.getByRole("button", { name: "다시 확인" }));
     await waitFor(() => expect(screen.getByText(/STALE/)).toBeInTheDocument());
-    expect(getReport(report.id)?.baseRunId).toBe("air-2026-08-13");
+    expect(getReport(report.id)?.baseRunId).toBe("apt-2026-08-13");
   });
 
   it("좁은 viewport에서 sidebar가 아래로 collapse하는 반응형 grid를 그대로 유지한다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     const grid = await screen.findByTestId("report-layout-grid");
@@ -176,7 +176,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
   });
 
   it("PDF/DOCX 다운로드 CTA를 제공하지 않는다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByText(/이 보고서는/);
@@ -187,7 +187,7 @@ describe("ReportEditorPage IA 개편 (#258)", () => {
 
 describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정)", () => {
   it("summary 없는 legacy draft를 다시 열면 현재 evidence 기준 요약 문장이 화면에 보강되고, 저장된 draft/baseRunId/블록은 그대로 유지된다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     const legacyBlocks = [...report.blocks.map(stripSummary), makeAssistantBlock()];
     saveReport({ ...report, blocks: legacyBlocks }, { force: true });
 
@@ -203,7 +203,7 @@ describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정
     await screen.findByText(/이 보고서는/);
 
     // baseRunId는 그대로다.
-    expect(getReport(report.id)?.baseRunId).toBe("air-2026-08-14");
+    expect(getReport(report.id)?.baseRunId).toBe("apt-2026-08-14");
     // 저장된 draft 자체는 임의로 migration하지 않는다(저장을 강제하지 않음).
     const overviewAfter = getReport(report.id)?.blocks.find(
       (block): block is BuilderEvidenceBlock => block.provenance === "BUILDER_EVIDENCE" && block.section === "overview",
@@ -214,7 +214,7 @@ describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정
   });
 
   it("evidence 재조회에 실패하면 legacy draft를 그대로 유지한다(요약 문장을 지어내지 않음)", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     const legacyBlocks = report.blocks.map(stripSummary);
     saveReport({ ...report, blocks: legacyBlocks }, { force: true });
 
@@ -231,7 +231,7 @@ describe("ReportEditorPage — legacy summary 보강 (#258 legacy summary 수정
 
 describe("ReportEditorPage — Report Context sidebar sticky (#258 sticky sidebar 수정)", () => {
   it("desktop(lg 이상)에서 sidebar wrapper가 sticky로 고정된다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     const wrapper = await screen.findByTestId("report-context-sidebar-wrapper");
@@ -241,7 +241,7 @@ describe("ReportEditorPage — Report Context sidebar sticky (#258 sticky sideba
   });
 
   it("좁은 viewport 1단 grid 안에서도 같은 wrapper를 그대로 쓴다(sticky는 lg: prefix로만 걸려 좁은 화면에서는 해제된다)", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     const grid = await screen.findByTestId("report-layout-grid");
@@ -255,7 +255,7 @@ describe("ReportEditorPage — Report Context sidebar sticky (#258 sticky sideba
 
 describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report UX 수정)", () => {
   it("기본 상태에서는 전체 BYOK/채팅 form을 바로 노출하지 않는다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -265,7 +265,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
   });
 
   it("Primary CTA와 4개의 quick action이 존재한다(기본 mock 모드에서는 CTA가 데모 문구로 표시된다)", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -278,7 +278,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
 
   it("BYOK가 설정되면 Primary CTA 문구가 '보고서용 AI 분석 생성'으로 바뀐다", async () => {
     useAssistConfig.getState().setConfig({ apiKey: "sk-test", model: "gpt-4o-mini", baseUrl: "" });
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -287,7 +287,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
   });
 
   it("mock 모드에서는 '실제 AI 분석이 아닌 mock 응답입니다.' 문구가 표시된다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -295,7 +295,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
   });
 
   it("AI 설정을 누르면 BYOK 설정 form이 펼쳐진다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -306,7 +306,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
   });
 
   it("직접 질문하기를 누르면 기존 AssistantContent 채팅이 펼쳐지고, global Ask KPubData drawer는 열리지 않는다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -318,20 +318,20 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
   });
 
   it("이 문제 설명 보기 패널은 Report가 고정한 dataset/baseRunId를 context로 유지한다(최신 run 자동 전환 금지)", async () => {
-    // air-2026-08-13은 최신이 아니다(최신은 air-2026-08-14) — STALE 상태에서도 이 값을 써야 한다.
-    const report = await makeReport("air-quality", "air-2026-08-13");
+    // apt-2026-08-13은 최신이 아니다(최신은 apt-2026-08-14) — STALE 상태에서도 이 값을 써야 한다.
+    const report = await makeReport("apt-trade", "apt-2026-08-13");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
     await waitFor(() => {
-      expect(screen.getByTestId("location").textContent).toContain("dataset=air-quality");
+      expect(screen.getByTestId("location").textContent).toContain("dataset=apt-trade");
     });
-    expect(screen.getByTestId("location").textContent).toContain("run=air-2026-08-13");
-    expect(screen.getByTestId("location").textContent).not.toContain("air-2026-08-14");
+    expect(screen.getByTestId("location").textContent).toContain("run=apt-2026-08-13");
+    expect(screen.getByTestId("location").textContent).not.toContain("apt-2026-08-14");
   });
 
   it("생성 → 미리보기까지는 Report에 아무것도 저장하지 않고, '보고서에 추가'를 눌러야 ASSISTANT_INTERPRETATION 블록이 추가된다", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     renderReport(report.id);
 
     await screen.findByTestId("assistant-report-panel");
@@ -339,7 +339,7 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
     // (그렇지 않으면 turn의 context가 비어 있는 채로 생성되어 미리보기가 이 Report와 매칭되지
     // 않는다 — AssistantReportPanel의 useEffect가 그 값을 채운다).
     await waitFor(() => {
-      expect(screen.getByTestId("location").textContent).toContain("dataset=air-quality");
+      expect(screen.getByTestId("location").textContent).toContain("dataset=apt-trade");
     });
 
     fireEvent.click(screen.getByRole("button", { name: "데모 보고서 분석 생성" }));
@@ -358,11 +358,11 @@ describe("ReportEditorPage — 7. Ask KPubData 분석 (#258 Ask KPubData Report 
   });
 
   it("대기 중인 참고 노트를 승인하면 기존 동작대로 ASSISTANT_INTERPRETATION 블록이 추가된다(ADD_REPORT_BLOCK 승인 흐름 유지)", async () => {
-    const report = await makeReport("air-quality", "air-2026-08-14");
+    const report = await makeReport("apt-trade", "apt-2026-08-14");
     queueAssistantReportNote({
       note: "가격 결측이 특정 지역에 집중됩니다.",
       reason: "품질 이슈 참고용",
-      context: { datasetId: "air-quality", runId: "air-2026-08-14" },
+      context: { datasetId: "apt-trade", runId: "apt-2026-08-14" },
       savedAt: new Date().toISOString(),
     });
 

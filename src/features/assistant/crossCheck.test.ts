@@ -247,18 +247,18 @@ describe("crossCheckAssistantResponse (#256 hallucination gate)", () => {
 
   it("validates generatedSql.source even when stage evidence is unavailable (uses knownRefs.sourceKeys)", () => {
     const result = crossCheckAssistantResponse(
-      makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago__air" } }),
+      makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago__trade" } }),
       makeEvidence({ stage: undefined, dataset: undefined }),
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality", "kma.weather"]) }),
     );
     // multi-source + unverified source → fail-closed (SQL excluded entirely)
     expect(result.response.generatedSql).toBeNull();
-    expect(result.rejectedSqlReason).toContain("datago__air");
+    expect(result.rejectedSqlReason).toContain("datago__trade");
   });
 
   it("drops only the source (keeps SQL) for a single-source run with an unverifiable source", () => {
     const result = crossCheckAssistantResponse(
-      makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago__air" } }),
+      makeResponse({ generatedSql: { sql: "SELECT * FROM dataset", stage: "silver", source: "datago__trade" } }),
       makeEvidence({ stage: undefined }),
       makeKnownRefs({ sourceKeys: new Set(["datago.air_quality"]) }),
     );

@@ -73,34 +73,34 @@ function snapshot(
   };
 }
 
-const STATIONS = ["ST-01", "ST-02", "ST-03", "ST-04"];
+const COMPLEXES = ["APT-01", "APT-02", "APT-03", "APT-04"];
 
 const DEMO_TABLES: DemoTable[] = [
   {
-    table: { table_id: "tbl_001", logical_name: "air-quality.datago__air", current_snapshot_id: "snap_012", revision: 2 },
+    table: { table_id: "tbl_001", logical_name: "apt-trade.datago__trade", current_snapshot_id: "snap_012", revision: 2 },
     snapshots: [
-      snapshot("snap_012", "air-2026-08-14", 1000, "2026-08-14T07:20:00Z", "2026-08-14T07:21:00Z"),
-      snapshot("snap_011", "air-2026-08-13", 1000, "2026-08-13T07:15:00Z", "2026-08-13T07:16:00Z"),
+      snapshot("snap_012", "apt-2026-08-14", 1000, "2026-08-14T07:20:00Z", "2026-08-14T07:21:00Z"),
+      snapshot("snap_011", "apt-2026-08-13", 1000, "2026-08-13T07:15:00Z", "2026-08-13T07:16:00Z"),
     ],
     columns: [
-      column("station_id", "string", (index) => STATIONS[index % STATIONS.length]),
-      column("observed_at", "string", hourly("2026-08-04T00:00:00Z")),
-      column("pm10", "float64", (index) => 18 + ((index * 7) % 29)),
-      column("pm25", "float64", (index) => 9 + ((index * 5) % 17)),
+      column("complex_id", "string", (index) => COMPLEXES[index % COMPLEXES.length]),
+      column("contracted_at", "string", hourly("2026-08-04T00:00:00Z")),
+      column("deal_amount", "float64", (index) => 18 + ((index * 7) % 29)),
+      column("exclusive_area", "float64", (index) => 9 + ((index * 5) % 17)),
     ],
   },
   {
     // The 08-14 run failed at silver for this source: its snapshot was quarantined and the
     // table still reads the 08-13 one.
-    table: { table_id: "tbl_002", logical_name: "air-quality.kma__weather", current_snapshot_id: "snap_010", revision: 1 },
+    table: { table_id: "tbl_002", logical_name: "apt-trade.bok__index", current_snapshot_id: "snap_010", revision: 1 },
     snapshots: [
-      snapshot("snap_013", "air-2026-08-14", null, "2026-08-14T07:25:00Z", null),
-      snapshot("snap_010", "air-2026-08-13", 200, "2026-08-13T07:18:00Z", "2026-08-13T07:19:00Z"),
+      snapshot("snap_013", "apt-2026-08-14", null, "2026-08-14T07:25:00Z", null),
+      snapshot("snap_010", "apt-2026-08-13", 200, "2026-08-13T07:18:00Z", "2026-08-13T07:19:00Z"),
     ],
     columns: [
-      column("observed_at", "string", hourly("2026-08-05T00:00:00Z")),
-      column("temperature", "float64", (index) => 21 + ((index * 3) % 11)),
-      column("humidity", "float64", (index) => 48 + ((index * 11) % 40)),
+      column("period", "string", hourly("2026-08-05T00:00:00Z")),
+      column("price_index", "float64", (index) => 21 + ((index * 3) % 11)),
+      column("jeonse_index", "float64", (index) => 48 + ((index * 11) % 40)),
     ],
   },
   {

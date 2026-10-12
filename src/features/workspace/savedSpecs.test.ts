@@ -29,7 +29,7 @@ function makeSpec(overrides: Partial<BuildSpec> = {}): BuildSpec {
     description: "설명",
     sources: [{ provider: "datago", dataset: "air_quality", params: {} }],
     exports: [{ format: "jsonl" }],
-    metadata: { outputPath: "artifacts/builds/air-quality" },
+    metadata: { outputPath: "artifacts/builds/apt-trade" },
     ...overrides,
   };
 }
@@ -57,7 +57,7 @@ describe("createSavedSpec / listSavedSpecSummaries", () => {
       id: entry.id,
       name: "내 대기오염 스펙",
       provider: "datago",
-      outputPath: "artifacts/builds/air-quality",
+      outputPath: "artifacts/builds/apt-trade",
       validationStatus: "validated_pass",
     });
   });

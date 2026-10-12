@@ -18,13 +18,13 @@ afterEach(() => {
 describe("narrativeSummary (#258 IA 개편)", () => {
   describe("buildOverviewSummary", () => {
     it("실제 evidence 값(제목/run id/provider/run 상태)만으로 문장을 만든다", async () => {
-      const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+      const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildOverviewSummary(evidence);
 
-      expect(summary).toContain("대기질 통합 데이터");
-      expect(summary).toContain("air-2026-08-14");
+      expect(summary).toContain("아파트 매매·주택가격지수 통합 데이터");
+      expect(summary).toContain("apt-2026-08-14");
       expect(summary).toContain("datago");
-      expect(summary).toContain("kma");
+      expect(summary).toContain("bok");
       expect(summary).toContain("failed");
     });
 
@@ -38,11 +38,11 @@ describe("narrativeSummary (#258 IA 개편)", () => {
 
   describe("buildPipelineSummary", () => {
     it("실패한 source는 실패 사실과 다음 단계 미실행을 그대로 문장화한다", async () => {
-      const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+      const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildPipelineSummary(evidence);
 
-      expect(summary).toContain("datago__air");
-      expect(summary).toContain("kma__weather");
+      expect(summary).toContain("datago__trade");
+      expect(summary).toContain("bok__index");
       expect(summary).toContain("Silver 단계에서 실패하여 Gold 단계가 실행되지 않았습니다");
       expect(summary).toContain("Bronze → Silver → Gold까지 모두 정상 처리되었습니다");
     });
@@ -50,7 +50,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
 
   describe("buildQualitySummary / computeQualityCounts", () => {
     it("실제 PASS/FAIL 건수와 개별 결과를 문장으로 만든다(WARN 0건은 생략)", async () => {
-      const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+      const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildQualitySummary(evidence);
       const counts = computeQualityCounts(evidence);
 
@@ -59,10 +59,10 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       expect(summary).toContain("1건은 PASS");
       expect(summary).toContain("1건은 FAIL");
       expect(summary).not.toContain("0건은 WARN");
-      // Actual per-rule descriptions: pm10 missing-rate PASS, temperature required-column FAIL
-      expect(summary).toContain("pm10");
+      // Actual per-rule descriptions: deal_amount missing-rate PASS, price_index required-column FAIL
+      expect(summary).toContain("deal_amount");
       expect(summary).toContain("1.0%");
-      expect(summary).toContain("temperature");
+      expect(summary).toContain("price_index");
       expect(summary).toContain("확인되지 않아 FAIL했습니다");
     });
 
@@ -85,19 +85,19 @@ describe("narrativeSummary (#258 IA 개편)", () => {
 
   describe("buildSchemaSummary", () => {
     it("silver schema가 있는 source는 컬럼명을 나열하고, 없는 source는 확인 불가로 구분한다", async () => {
-      const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+      const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildSchemaSummary(evidence);
 
       expect(summary).toContain("observed_at");
       expect(summary).toContain("value");
-      expect(summary).toContain("kma__weather");
+      expect(summary).toContain("bok__index");
       expect(summary).toContain("해당 단계의 스키마를 확인할 수 없습니다");
     });
   });
 
   describe("buildDataSummarySummary", () => {
     it("실제 total_row_count/row_counts만 사용하고 0으로 대체하지 않는다", async () => {
-      const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+      const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildDataSummarySummary(evidence);
 
       expect(summary).toContain("1,200건");
@@ -115,7 +115,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
 
   describe("buildOutputSummary", () => {
     it("mock/demo 모드에서는 output을 확인할 수 없다고 말하고 같은 경고를 두 번 반복하지 않는다", async () => {
-      const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+      const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildOutputSummary(evidence);
 
       expect(summary).toContain("Output 확인 불가");

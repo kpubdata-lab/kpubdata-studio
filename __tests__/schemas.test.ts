@@ -4,13 +4,13 @@ import { buildSpecSchema } from "@/shared/lib/schemas";
 describe("buildSpecSchema", () => {
   it("accepts a valid build spec", () => {
     const result = buildSpecSchema.safeParse({
-      datasetId: "air-quality-seoul",
+      datasetId: "apt-trade-seoul",
       title: "Seoul Air Quality",
       description: "Collects city air quality observations.",
       sources: [
         {
           provider: "datago",
-          dataset: "air-quality",
+          dataset: "apt-trade",
           params: { city: "seoul" },
         },
       ],
@@ -23,7 +23,7 @@ describe("buildSpecSchema", () => {
 
   it("accepts Builder-compatible JSON params and open export kinds (#234)", () => {
     const result = buildSpecSchema.safeParse({
-      datasetId: "air-quality-seoul",
+      datasetId: "apt-trade-seoul",
       title: "Seoul Air Quality",
       description: "Collects city air quality observations.",
       sources: [

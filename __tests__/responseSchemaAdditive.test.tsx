@@ -148,7 +148,7 @@ const FIXTURES: Record<string, Fixture> = {
     schema: schemas.bronzeStageDetailResponseSchema,
     payload: {
       run_id: "r1",
-      source_key: "datago__air",
+      source_key: "datago__trade",
       status: "completed",
       available: true,
       stage: "bronze",
@@ -164,7 +164,7 @@ const FIXTURES: Record<string, Fixture> = {
     schema: schemas.silverStageDetailResponseSchema,
     payload: {
       run_id: "r1",
-      source_key: "datago__air",
+      source_key: "datago__trade",
       status: "completed",
       available: true,
       stage: "silver",
@@ -182,7 +182,7 @@ const FIXTURES: Record<string, Fixture> = {
     schema: schemas.goldStageDetailResponseSchema,
     payload: {
       run_id: "r1",
-      source_key: "datago__air",
+      source_key: "datago__trade",
       status: "completed",
       available: true,
       stage: "gold",
@@ -203,9 +203,9 @@ const FIXTURES: Record<string, Fixture> = {
       availability: "available",
       evaluated_checks: 1,
       quality_results: {
-        datago__air: [
+        datago__trade: [
           {
-            source_key: "datago__air",
+            source_key: "datago__trade",
             category: "completeness",
             rule: "not_null",
             column: "pm10",
@@ -218,7 +218,7 @@ const FIXTURES: Record<string, Fixture> = {
           },
         ],
       },
-      schema_drift: { datago__air: [{ kind: "column_added", column: "pm25", detail: "new" }] },
+      schema_drift: { datago__trade: [{ kind: "column_added", column: "pm25", detail: "new" }] },
     },
     records: ["quality_results", "schema_drift"],
     missing: "schema_drift",

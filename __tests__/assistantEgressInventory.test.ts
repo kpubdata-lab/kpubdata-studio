@@ -62,9 +62,9 @@ afterEach(() => {
 
 describe("the Ask KPubData request (#798)", () => {
   it("sends exactly the fields docs/assistant-egress.md lists, and no sample row", async () => {
-    const runId = "air-2026-08-14";
+    const runId = "apt-2026-08-14";
     saveBuildSpec(runId, {
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       title: "air",
       description: "air quality",
       sources: [{ provider: "datago", dataset: "air", alias: "a", params: { region: PARAM_CANARY } }],
@@ -76,9 +76,9 @@ describe("the Ask KPubData request (#798)", () => {
       availability: "available",
       evaluated_checks: 1,
       quality_results: {
-        datago__air: [
+        datago__trade: [
           {
-            source_key: "datago__air",
+            source_key: "datago__trade",
             category: "completeness",
             rule: "not_null",
             column: "pm10",
@@ -91,12 +91,12 @@ describe("the Ask KPubData request (#798)", () => {
           },
         ],
       },
-      schema_drift: { datago__air: [{ kind: "column_added", column: "pm25", detail: "new column" }] },
+      schema_drift: { datago__trade: [{ kind: "column_added", column: "pm25", detail: "new column" }] },
     });
     vi.spyOn(datasetsApi, "getBuildStageDetail").mockResolvedValue({
       run_id: runId,
       stage: "silver",
-      source_key: "datago__air",
+      source_key: "datago__trade",
       status: "completed",
       available: true,
       row_count: 40,
@@ -108,10 +108,10 @@ describe("the Ask KPubData request (#798)", () => {
 
     const context: AssistantContext = {
       page: "dataset-detail",
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       runId,
       stage: "silver",
-      source: "datago__air",
+      source: "datago__trade",
       provider: "datago",
       qualityResultIds: ["q"],
     };

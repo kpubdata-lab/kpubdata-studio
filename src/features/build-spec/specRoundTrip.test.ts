@@ -23,7 +23,7 @@ import type { BuildSpec } from "@/shared/lib/types";
 const UPLOAD_ID = `upl_${"0".repeat(32)}`;
 
 /** The issue's reproduction, extended to every source kind and to `schema`/unknown keys. */
-const YAML = `dataset_id: air-quality
+const YAML = `dataset_id: apt-trade
 title: Air quality
 description: Station measurements
 sources:

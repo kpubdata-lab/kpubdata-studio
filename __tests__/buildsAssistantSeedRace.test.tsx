@@ -95,7 +95,7 @@ const stagesResponse: RunStagesResponse = {
   run_id: RUN_ID,
   sources: [
     {
-      source_key: "datago__air",
+      source_key: "datago__trade",
       bronze: { status: "completed", available: true },
       silver: { status: "failed", available: false },
       gold: { status: "not_run", available: false },
@@ -105,7 +105,7 @@ const stagesResponse: RunStagesResponse = {
 
 const specSnapshot: BuildSpecSnapshotResponse = {
   run_id: RUN_ID,
-  spec: "dataset_id: air-quality\n",
+  spec: "dataset_id: apt-trade\n",
   spec_digest: "sha256:" + "0".repeat(64),
 };
 
@@ -199,9 +199,9 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     // turn.context는 정규화된 canonical 값(dataset/stage/source)을 담고 있어야 한다.
     const turn = useAssistantStore.getState().turns[0];
     expect(useAssistantStore.getState().turns).toHaveLength(1);
-    expect(turn.context.datasetId).toBe("air-quality");
+    expect(turn.context.datasetId).toBe("apt-trade");
     expect(turn.context.stage).toBe("silver");
-    expect(turn.context.source).toBe("datago__air");
+    expect(turn.context.source).toBe("datago__trade");
 
     // 회귀 가드: 뒤늦은 URL 정규화로 turn이 stale로 사라지지 않는다.
     await new Promise((r) => setTimeout(r, 50));
@@ -231,7 +231,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     expect(await screen.findByRole("heading", { name: "실행 분석" })).toBeInTheDocument();
     expect(useAssistantStore.getState().turns).toHaveLength(0);
 
-    // stages 도착 → normalizeBuildContextSearch가 ?stage=silver&source=datago__air 추가.
+    // stages 도착 → normalizeBuildContextSearch가 ?stage=silver&source=datago__trade 추가.
     await act(async () => {
       stages.resolve(stagesResponse);
     });
@@ -239,7 +239,7 @@ describe("C1 — Builds Ask KPubData seed vs. context back-fill race", () => {
     expect(await screen.findByText("테스트 분석 답변입니다.")).toBeInTheDocument();
     const turn = useAssistantStore.getState().turns[0];
     expect(turn.context.stage).toBe("silver");
-    expect(turn.context.source).toBe("datago__air");
+    expect(turn.context.source).toBe("datago__trade");
 
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.getByText("테스트 분석 답변입니다.")).toBeInTheDocument();

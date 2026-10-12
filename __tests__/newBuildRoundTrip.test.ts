@@ -16,7 +16,7 @@ import {
 import type { BuildSpec } from "@/shared/lib/types";
 
 const RICH_SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기오염",
   description: "설명",
   sources: [
@@ -54,7 +54,7 @@ const RICH_SPEC: BuildSpec = {
     { format: "parquet", options: { compression: "zstd" } },
     {
       format: "huggingface",
-      options: { outputPath: "hf/aq", repoId: "org/air-quality", private: true },
+      options: { outputPath: "hf/aq", repoId: "org/apt-trade", private: true },
     },
   ],
   metadata: { outputPath: "artifacts/builds/aq", owner: "team-a" },
@@ -92,7 +92,7 @@ describe("toBuildSpec round-trip on edit (#496)", () => {
     // huggingface keeps its other options; only outputPath follows the form.
     expect(spec?.exports[2]).toEqual({
       format: "huggingface",
-      options: { outputPath: "artifacts/builds/aq2", repoId: "org/air-quality", private: true },
+      options: { outputPath: "artifacts/builds/aq2", repoId: "org/apt-trade", private: true },
     });
     expect(spec?.exports[1]).toEqual({ format: "parquet", options: { compression: "zstd" } });
     expect(spec?.metadata).toEqual({ outputPath: "artifacts/builds/aq2", owner: "team-a" });
@@ -108,11 +108,11 @@ describe("toBuildSpec round-trip on edit (#496)", () => {
   it("fills huggingface outputPath from the form when the export had none", () => {
     const base: BuildSpec = {
       ...RICH_SPEC,
-      exports: [{ format: "huggingface", options: { repoId: "org/air-quality" } }],
+      exports: [{ format: "huggingface", options: { repoId: "org/apt-trade" } }],
     };
     const { spec } = toBuildSpec(toFormValues(base), base);
     expect(spec?.exports).toEqual([
-      { format: "huggingface", options: { repoId: "org/air-quality", outputPath: "artifacts/builds/aq" } },
+      { format: "huggingface", options: { repoId: "org/apt-trade", outputPath: "artifacts/builds/aq" } },
     ]);
   });
 

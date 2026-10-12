@@ -23,14 +23,14 @@ test("카탈로그에서 테이블을 거쳐 SQL 로 질의한다", async ({ pag
   await expect(page).toHaveURL(/\/tables$/);
 
   // Tables → one table.
-  await page.getByText("대기질 통합 데이터").first().click();
-  await expect(page).toHaveURL(/\/tables\/air-quality/);
+  await page.getByText("아파트 매매·주택가격지수 통합 데이터").first().click();
+  await expect(page).toHaveURL(/\/tables\/apt-trade/);
 
   // Table → SQL, bound to that table in the demo warehouse (#530).
   await page.getByRole("link", { name: "질의", exact: true }).click();
-  await expect(page).toHaveURL(/\/sql\?.*table=air-quality/);
+  await expect(page).toHaveURL(/\/sql\?.*table=apt-trade/);
   await expect(page.getByRole("heading", { name: "SQL 작업 공간" })).toBeVisible();
-  await expect(page.getByRole("treeitem", { name: "air-quality.datago__air" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("treeitem", { name: "apt-trade.datago__trade" })).toHaveAttribute("aria-selected", "true");
 
   // The demo has no Builder to run SQL: it says so instead of showing made-up rows.
   await page.getByRole("button", { name: /^실행 / }).click();

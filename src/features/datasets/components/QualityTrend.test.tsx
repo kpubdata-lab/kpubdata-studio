@@ -15,7 +15,7 @@ const getDatasetQualityHistory = api.getDatasetQualityHistory;
 // The contract's own example (builder-api.yaml `AirQualityHistory`) plus a run that was evaluated and
 // failed, so every branch the trend draws is fed from the shape Builder actually sends (#650).
 const history: DatasetQualityHistoryResponse = datasetQualityHistoryResponseSchema.parse({
-  dataset_id: "seoul-air-quality",
+  dataset_id: "seoul-apt-trade",
   runs: [
     { run_id: "air-0815", timestamp: "2026-08-15T09:30:07+00:00", status: "ok", pass_count: 2, warn_count: 1, fail_count: 0, evaluated_checks: 3, rule_pass_rate: 2 / 3, validated_rows: 25 },
     { run_id: "air-0814", timestamp: "2026-08-14T09:30:07+00:00", status: "failed", pass_count: 0, warn_count: 0, fail_count: 0, evaluated_checks: 0, rule_pass_rate: null, validated_rows: null },
@@ -109,9 +109,9 @@ describe("QualityTrend loading (#650)", () => {
 
   it("asks for a bounded history of this table", async () => {
     getDatasetQualityHistory.mockResolvedValue(history);
-    render(<QualityTrend datasetId="seoul-air-quality" />);
+    render(<QualityTrend datasetId="seoul-apt-trade" />);
     await waitFor(() => expect(document.querySelector('tr[data-run-id="air-0815"]')).not.toBeNull());
-    expect(getDatasetQualityHistory).toHaveBeenCalledWith("seoul-air-quality", QUALITY_TREND_LIMIT, expect.any(AbortSignal));
+    expect(getDatasetQualityHistory).toHaveBeenCalledWith("seoul-apt-trade", QUALITY_TREND_LIMIT, expect.any(AbortSignal));
   });
 
   it("turns a 404 into the empty state", async () => {
@@ -132,7 +132,7 @@ describe("QualityTrend loading (#650)", () => {
     getDatasetQualityHistory.mockResolvedValue(history);
     render(
       <MemoryRouter>
-        <QualityTab state={{ status: "loading" }} status="N/A" results={[]} drift={[]} datasetId="seoul-air-quality" runId="air-0815" source="" />
+        <QualityTab state={{ status: "loading" }} status="N/A" results={[]} drift={[]} datasetId="seoul-apt-trade" runId="air-0815" source="" />
       </MemoryRouter>,
     );
     await waitFor(() => expect(document.querySelector('tr[data-run-id="air-0815"]')).not.toBeNull());

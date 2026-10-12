@@ -10,7 +10,7 @@ function makeNote(overrides: Partial<AssistantReportNote> = {}): AssistantReport
   return {
     note: "note",
     reason: "reason",
-    context: { datasetId: "air-quality", runId: "air-2026-08-14" },
+    context: { datasetId: "apt-trade", runId: "apt-2026-08-14" },
     savedAt: "2026-08-14T09:00:00Z",
     ...overrides,
   };

@@ -31,10 +31,10 @@ function requiredPreviewFields(sample: Record<string, unknown>[] = []) {
 }
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기오염 정보",
   description: "테스트",
-  sources: [{ provider: "datago", dataset: "air-quality", params: {} }],
+  sources: [{ provider: "datago", dataset: "apt-trade", params: {} }],
   exports: [{ format: "jsonl" }],
   metadata: {},
 };
@@ -49,10 +49,10 @@ describe("previewBuild (#93)", () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
     const fetchMock = vi.fn().mockResolvedValue(
       mockResponse(200, {
-        dataset_id: "air-quality",
+        dataset_id: "apt-trade",
         previews: [
           {
-            source_key: "datago.air-quality",
+            source_key: "datago.apt-trade",
             status: "ok",
             error: null,
             schema: [

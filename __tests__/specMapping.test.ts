@@ -3,7 +3,7 @@ import { serializeSpec, toBuilderSpec } from "@/features/build-spec/specMapping"
 import type { BuildSpec } from "@/shared/lib/types";
 
 const spec: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기오염",
   description: "설명",
   sources: [{ provider: "datago", dataset: "air", params: { sidoName: "서울" }, alias: "aq" }],
@@ -14,7 +14,7 @@ const spec: BuildSpec = {
 describe("toBuilderSpec (#37)", () => {
   it("maps camelCase Studio fields to snake_case Builder fields", () => {
     const result = toBuilderSpec(spec);
-    expect(result.dataset_id).toBe("air-quality");
+    expect(result.dataset_id).toBe("apt-trade");
     expect(result.sources[0]).toEqual({
       provider: "datago",
       dataset: "air",
@@ -106,6 +106,6 @@ describe("toBuilderSpec (#37)", () => {
 
   it("serializeSpec returns parseable JSON (a YAML subset)", () => {
     const parsed = JSON.parse(serializeSpec(spec));
-    expect(parsed.dataset_id).toBe("air-quality");
+    expect(parsed.dataset_id).toBe("apt-trade");
   });
 });

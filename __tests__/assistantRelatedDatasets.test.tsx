@@ -42,7 +42,7 @@ function configureKeyAndAsk() {
   mockStream(() =>
     jsonText({
       answer: "현재 데이터셋 상태를 요약했습니다.",
-      evidenceRefs: [{ kind: "dataset", id: "air-quality", label: "대기질 통합 데이터" }],
+      evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·주택가격지수 통합 데이터" }],
       generatedSql: null,
       suggestedActions: [],
     }),
@@ -120,10 +120,10 @@ describe("Ask KPubData 관련 데이터셋 패널 (#256 이슈 체크리스트)"
     );
 
     configureKeyAndAsk();
-    await askAbout("air-quality");
+    await askAbout("apt-trade");
 
     expect(screen.getByText("관련 소스 데이터셋")).toBeInTheDocument();
-    // air-quality 자신의 source("air")는 후보에서 제외되고, 같은 provider의 다른 catalog
+    // apt-trade 자신의 source("air")는 후보에서 제외되고, 같은 provider의 다른 catalog
     // dataset("traffic_accident")만 실제 evidence 기반으로 나타난다.
     expect(screen.getByText("traffic_accident")).toBeInTheDocument();
     expect(screen.queryByText(/질문을 보내 근거를 불러오면/)).not.toBeInTheDocument();

@@ -307,7 +307,7 @@ describe("the SQL result and the Silver previews show the masked columns (#641)"
 
   it("the /preview sample marks the source's masked columns", () => {
     const source: PreviewSource = {
-      source_key: "datago__air",
+      source_key: "datago__trade",
       status: "ok",
       error: null,
       schema: [
@@ -351,7 +351,7 @@ describe("the SQL result and the Silver previews show the masked columns (#641)"
   it("the Table Detail Silver preview marks the stage detail's masked columns", async () => {
     hideDemoWarehouse();
     render(
-      <MemoryRouter initialEntries={["/tables/air-quality?stage=silver&tab=preview"]}>
+      <MemoryRouter initialEntries={["/tables/apt-trade?stage=silver&tab=preview"]}>
         <Routes>
           <Route element={<DatasetDetailPage />} path="/tables/:datasetId" />
         </Routes>

@@ -5,7 +5,7 @@ import type { AssistantEvidence } from "./types";
 function makeEvidence(overrides: Partial<AssistantEvidence> = {}): AssistantEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00.000Z",
-    context: { page: "dataset-detail", datasetId: "air-quality" },
+    context: { page: "dataset-detail", datasetId: "apt-trade" },
     deepLinks: {},
     partial: false,
     unavailable: [],
@@ -17,7 +17,7 @@ describe("relatedCatalogDatasets (#256 이슈 — 관련 데이터셋 후보는 
   it("returns nothing when catalog evidence failed to load", () => {
     const evidence = makeEvidence({
       dataset: {
-        datasetId: "air-quality",
+        datasetId: "apt-trade",
         title: "대기질",
         providers: ["datago"],
         sources: [{ provider: "datago", dataset: "air" }],
@@ -40,7 +40,7 @@ describe("relatedCatalogDatasets (#256 이슈 — 관련 데이터셋 후보는 
   it("lists sibling catalog datasets from the same provider, excluding the dataset itself", () => {
     const evidence = makeEvidence({
       dataset: {
-        datasetId: "air-quality",
+        datasetId: "apt-trade",
         title: "대기질",
         providers: ["datago"],
         sources: [{ provider: "datago", dataset: "air_quality" }],
@@ -63,7 +63,7 @@ describe("relatedCatalogDatasets (#256 이슈 — 관련 데이터셋 후보는 
   it("never suggests a provider the dataset itself has no source from (no guessing across unrelated providers)", () => {
     const evidence = makeEvidence({
       dataset: {
-        datasetId: "air-quality",
+        datasetId: "apt-trade",
         title: "대기질",
         providers: ["datago"],
         sources: [{ provider: "datago", dataset: "air_quality" }],
@@ -83,7 +83,7 @@ describe("relatedCatalogDatasets (#256 이슈 — 관련 데이터셋 후보는 
   it("caps candidates at the requested limit", () => {
     const evidence = makeEvidence({
       dataset: {
-        datasetId: "air-quality",
+        datasetId: "apt-trade",
         title: "대기질",
         providers: ["datago"],
         sources: [{ provider: "datago", dataset: "air_quality" }],
@@ -108,7 +108,7 @@ describe("relatedCatalogDatasets (#256 이슈 — 관련 데이터셋 후보는 
      // after query failure), missing provider in datasetsByProvider is treated as empty, not fabricated.
     const evidence = makeEvidence({
       dataset: {
-        datasetId: "air-quality",
+        datasetId: "apt-trade",
         title: "대기질",
         providers: ["unknown-provider"],
         sources: [],

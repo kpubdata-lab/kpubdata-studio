@@ -11,7 +11,7 @@ import type { BuildManifest } from "@/shared/lib/types";
 // Builder manifest/writer.py payload 그대로(snake_case, 정렬 키).
 const WIRE_MANIFEST: BuildManifest = {
   schema_version: "1.0.0",
-  build_id: "run-air-quality-1",
+  build_id: "run-apt-trade-1",
   started_at: "2026-06-21T00:00:00+00:00",
   finished_at: "2026-06-21T00:00:08+00:00",
   build_environment: {
@@ -19,14 +19,14 @@ const WIRE_MANIFEST: BuildManifest = {
     kpubdata_version: "0.4.0",
     builder_version: "0.4.0",
   },
-  inputs: ["datago.air-quality"],
+  inputs: ["datago.apt-trade"],
   inputs_fingerprint: "sha256:abc",
-  outputs: ["artifacts/builds/run-air-quality-1/data.jsonl"],
+  outputs: ["artifacts/builds/run-apt-trade-1/data.jsonl"],
   warnings: [],
   errors: [],
-  row_counts: { "datago.air-quality": 12304 },
+  row_counts: { "datago.apt-trade": 12304 },
   schema_summaries: {
-    "datago.air-quality": {
+    "datago.apt-trade": {
       fields: [{ name: "sidoName", type: "string", nullable: false }],
       total_fields: 1,
     },
@@ -34,7 +34,7 @@ const WIRE_MANIFEST: BuildManifest = {
   provenance: [
     {
       provider: "datago",
-      dataset: "air-quality",
+      dataset: "apt-trade",
       fetched_at: "2026-06-21T00:00:05+00:00",
       record_count: 12304,
       data_checksum: "sha256:def",
@@ -46,9 +46,9 @@ const WIRE_MANIFEST: BuildManifest = {
 
 describe("BuildManifest contract (#98)", () => {
   it("accepts the real Builder manifest wire shape with all fields populated", () => {
-    expect(WIRE_MANIFEST.build_id).toBe("run-air-quality-1");
-    expect(WIRE_MANIFEST.row_counts!["datago.air-quality"]).toBe(12304);
-    expect(WIRE_MANIFEST.schema_summaries!["datago.air-quality"].total_fields).toBe(1);
+    expect(WIRE_MANIFEST.build_id).toBe("run-apt-trade-1");
+    expect(WIRE_MANIFEST.row_counts!["datago.apt-trade"]).toBe(12304);
+    expect(WIRE_MANIFEST.schema_summaries!["datago.apt-trade"].total_fields).toBe(1);
     expect(WIRE_MANIFEST.provenance![0].data_checksum).toBe("sha256:def");
     expect(WIRE_MANIFEST.build_environment?.builder_version).toBe("0.4.0");
   });

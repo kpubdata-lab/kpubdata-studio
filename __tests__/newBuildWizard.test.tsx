@@ -86,7 +86,7 @@ async function goToPreviewStep() {
 
   await screen.findByRole("heading", { name: "데이터 소스" });
   await chooseProvider("datago");
-  fireEvent.change(screen.getByLabelText(/데이터셋/), { target: { value: "air-quality" } });
+  fireEvent.change(screen.getByLabelText(/데이터셋/), { target: { value: "apt-trade" } });
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
 
   await screen.findByRole("heading", { name: "파라미터" });

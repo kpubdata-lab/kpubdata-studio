@@ -15,7 +15,7 @@ import { ApiError, builderApi } from "@/shared/lib/builderApi";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const SNAPSHOT_YAML = [
-  "dataset_id: air-quality",
+  "dataset_id: apt-trade",
   "title: 대기오염",
   "description: 설명",
   "sources:",
@@ -69,7 +69,7 @@ describe("getBuild real mode — authoritative spec + status (F02)", () => {
     });
 
     const build = await getBuild("remote-run");
-    expect(build.spec.datasetId).toBe("air-quality");
+    expect(build.spec.datasetId).toBe("apt-trade");
     expect(build.status).toBe("succeeded");
   });
 

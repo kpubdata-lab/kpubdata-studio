@@ -23,7 +23,7 @@ function renderPublish(runId: string) {
 
 describe("BuildPublishPage readiness (audit #4)", () => {
   it("mock 모드에서 실제 네트워크 요청 없이 결정적 readiness를 보여준다 (이전에는 항상 빈 카드/error였다)", async () => {
-    renderPublish("air-quality-20260621");
+    renderPublish("apt-trade-20260621");
 
     expect(await screen.findByText("Builder 게시 준비 완료")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -39,10 +39,10 @@ describe("BuildPublishPage readiness (audit #4)", () => {
   it("?dataset= 없이 exact run_id만으로 들어와도 Table identity와 실행 완료를 표시한다", async () => {
     // 이전에는 URL에 ?dataset=이 없으면 Table/실행 완료가 "확인되지 않음"이었다
     // (Runs·Snapshot Files·딥링크 진입 경로 전부). 이제 canonical run 해석으로 채운다.
-    renderPublish("air-quality-20260621");
+    renderPublish("apt-trade-20260621");
 
     const runCard = (await screen.findByText("선택한 실행")).closest("div");
-    expect(runCard).toHaveTextContent("대기오염 정보");
+    expect(runCard).toHaveTextContent("아파트 매매 실거래가");
     expect(runCard).toHaveTextContent("완료");
     expect(runCard).not.toHaveTextContent("확인되지 않음");
   });
@@ -52,7 +52,7 @@ describe("BuildPublishPage readiness (audit #4)", () => {
 
     const runCard = (await screen.findByText("선택한 실행")).closest("div");
     expect(runCard).toHaveTextContent("노인주의 의약품");
-    expect(runCard).not.toHaveTextContent("대기오염 정보");
+    expect(runCard).not.toHaveTextContent("아파트 매매 실거래가");
     expect(runCard).toHaveTextContent("dur-older-adult-caution-20260618");
   });
 

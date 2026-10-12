@@ -319,7 +319,14 @@ export async function loadAssistantEvidence(
   // derived from Builder `/quality` response) — only. Route context.runId and arbitrary character strings
   // not yet confirmed are in neither set, so evidence won't leak. Secret-name field masking applies
   // before this exemption (scrub.ts).
-  const safeValues = new Set<string>([...safeRunIds, ...safeEvidenceIds]);
+  //
+  // The link to a confirmed run is derived from that run's id and nothing else, so it is
+  // exempt on the same terms (#762): the entropy of `/refresh-jobs/<run id>` is that of the
+  // path, not of a secret, and it crossed the threshold for an ordinary id —
+  // `/refresh-jobs/apt-2026-08-14` is 4.09 where `…/air-2026-08-14` was 3.995 — so the
+  // link to a run Builder had confirmed was replaced by the redaction marker.
+  const safeRunLinks = [...safeRunIds].map((id) => `/refresh-jobs/${encodeURIComponent(id)}`);
+  const safeValues = new Set<string>([...safeRunIds, ...safeEvidenceIds, ...safeRunLinks]);
   const redacted = redactSecrets(evidence, safeValues) as AssistantEvidence;
   return { evidence: redacted, knownRefs, safeRunIds, safeEvidenceIds };
 }

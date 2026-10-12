@@ -27,14 +27,14 @@ import { DatasetDetailPage } from "@/pages/DatasetDetailPage";
 import { hideDemoWarehouse } from "./support/noWarehouse";
 
 const LATEST: DatasetRunSummary = {
-  run_id: "air-2026-08-14",
+  run_id: "apt-2026-08-14",
   status: "failed",
   started_at: "2026-08-14T07:00:00Z",
   finished_at: "2026-08-14T07:30:00Z",
-  spec_digest: "sha256:air14",
+  spec_digest: "sha256:apt14",
   created_by: "user@example.com",
 };
-const OLDER: DatasetRunSummary = { ...LATEST, run_id: "air-2026-08-13", status: "ok", spec_digest: "sha256:air13" };
+const OLDER: DatasetRunSummary = { ...LATEST, run_id: "apt-2026-08-13", status: "ok", spec_digest: "sha256:apt13" };
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
@@ -44,29 +44,29 @@ beforeEach(() => {
   getDatasetRunMock.mockReset();
   listBuildStagesMock.mockClear();
   // The page holds only the newest run; the older one is outside it.
-  listDatasetRunsMock.mockReset().mockResolvedValue({ dataset_id: "air-quality", runs: [LATEST] });
+  listDatasetRunsMock.mockReset().mockResolvedValue({ dataset_id: "apt-trade", runs: [LATEST] });
 });
 afterEach(() => vi.unstubAllEnvs());
 
 describe("useRequestedRun (#418)", () => {
   it("does not ask Builder when the run is in the page", () => {
-    const { result } = renderHook(() => useRequestedRun("air-quality", LATEST.run_id, [LATEST]));
+    const { result } = renderHook(() => useRequestedRun("apt-trade", LATEST.run_id, [LATEST]));
     expect(result.current).toEqual({ status: "available", run: LATEST, inPage: true });
     expect(getDatasetRunMock).not.toHaveBeenCalled();
   });
 
   it("is loading until the page has loaded, and none without a requested run", () => {
-    expect(renderHook(() => useRequestedRun("air-quality", "x", undefined)).result.current).toEqual({ status: "loading" });
-    expect(renderHook(() => useRequestedRun("air-quality", null, [LATEST])).result.current).toEqual({ status: "none" });
+    expect(renderHook(() => useRequestedRun("apt-trade", "x", undefined)).result.current).toEqual({ status: "loading" });
+    expect(renderHook(() => useRequestedRun("apt-trade", null, [LATEST])).result.current).toEqual({ status: "none" });
   });
 
   it("finds a run older than the page directly", async () => {
-    getDatasetRunMock.mockResolvedValue({ dataset_id: "air-quality", run: OLDER });
-    const { result } = renderHook(() => useRequestedRun("air-quality", OLDER.run_id, [LATEST]));
+    getDatasetRunMock.mockResolvedValue({ dataset_id: "apt-trade", run: OLDER });
+    const { result } = renderHook(() => useRequestedRun("apt-trade", OLDER.run_id, [LATEST]));
 
     expect(result.current).toEqual({ status: "loading" });
     await waitFor(() => expect(result.current).toEqual({ status: "available", run: OLDER, inPage: false }));
-    expect(getDatasetRunMock).toHaveBeenCalledWith("air-quality", OLDER.run_id, expect.any(AbortSignal));
+    expect(getDatasetRunMock).toHaveBeenCalledWith("apt-trade", OLDER.run_id, expect.any(AbortSignal));
   });
 
   it.each([
@@ -75,7 +75,7 @@ describe("useRequestedRun (#418)", () => {
     [500, "error"],
   ])("maps Builder's %i to %s", async (status, expected) => {
     getDatasetRunMock.mockRejectedValue(new ApiError(status, "x"));
-    const { result } = renderHook(() => useRequestedRun("air-quality", "some-run", [LATEST]));
+    const { result } = renderHook(() => useRequestedRun("apt-trade", "some-run", [LATEST]));
     await waitFor(() => expect(result.current).toEqual({ status: expected }));
   });
 });
@@ -92,8 +92,8 @@ function renderDetail(path: string) {
 
 describe("Dataset Detail with a run outside the newest page (#418)", () => {
   it("opens a permalink to an older run instead of calling it invalid", async () => {
-    getDatasetRunMock.mockResolvedValue({ dataset_id: "air-quality", run: OLDER });
-    renderDetail(`/tables/air-quality?run=${OLDER.run_id}`);
+    getDatasetRunMock.mockResolvedValue({ dataset_id: "apt-trade", run: OLDER });
+    renderDetail(`/tables/apt-trade?run=${OLDER.run_id}`);
 
     await waitFor(() => expect(screen.getByLabelText("실행 선택")).toHaveValue(OLDER.run_id));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -102,7 +102,7 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
 
   it("says a forbidden run is forbidden, and loads nothing for it", async () => {
     getDatasetRunMock.mockRejectedValue(new ApiError(403, "forbidden: not run owner"));
-    renderDetail("/tables/air-quality?run=someone-elses-run");
+    renderDetail("/tables/apt-trade?run=someone-elses-run");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("이 실행에 접근할 권한이 없습니다");
     expect(listBuildStagesMock).not.toHaveBeenCalledWith("someone-elses-run", expect.anything());
@@ -110,7 +110,7 @@ describe("Dataset Detail with a run outside the newest page (#418)", () => {
 
   it("says a run that is not this dataset's was not found", async () => {
     getDatasetRunMock.mockRejectedValue(new ApiError(404, "run not found in dataset"));
-    renderDetail("/tables/air-quality?run=missing-run");
+    renderDetail("/tables/apt-trade?run=missing-run");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("선택한 실행을 찾을 수 없습니다");
   });

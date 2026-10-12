@@ -24,7 +24,7 @@ vi.mock("@/features/assistant/provider", () => ({
 const BADGE_TEXT = "BuildSpec 변경 제안";
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기질",
   description: "설명",
   sources: [{ provider: "data.go.kr", dataset: "air", params: { region: "서울" } }],
@@ -53,7 +53,7 @@ function configureKey() {
 
 function renderAssistantPage() {
   render(
-    <MemoryRouter initialEntries={["/tables/air-quality?run=air-2026-08-14"]}>
+    <MemoryRouter initialEntries={["/tables/apt-trade?run=apt-2026-08-14"]}>
       <AssistantPage />
     </MemoryRouter>,
   );
@@ -76,7 +76,7 @@ afterEach(() => {
 
 describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
   it("shows the 'BuildSpec 변경 제안' badge only on the PATCH_BUILDSPEC action card", async () => {
-    saveBuildSpec("air-2026-08-14", SPEC);
+    saveBuildSpec("apt-2026-08-14", SPEC);
     configureKey();
     mockStream(() =>
       jsonText({
@@ -86,11 +86,11 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
         suggestedActions: [
           {
             type: "PATCH_BUILDSPEC",
-            runId: "air-2026-08-14",
+            runId: "apt-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "assistant-updated" }],
             reason: "이 문제 설명 보기 참고",
           },
-          { type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "실패 원인을 확인하세요" },
+          { type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "실패 원인을 확인하세요" },
           { type: "ADD_REPORT_BLOCK", note: "참고 노트", reason: "품질 이슈 참고용" },
         ],
       }),
@@ -108,7 +108,7 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
     const patchCard = screen.getByText(/BuildSpec에 1건 변경 제안/).closest("div")!;
     expect(within(patchCard).getByText(BADGE_TEXT)).toBeInTheDocument();
 
-    const openBuildCard = screen.getByText(/실행 "air-2026-08-14" 상세 열기/).closest("div")!;
+    const openBuildCard = screen.getByText(/실행 "apt-2026-08-14" 상세 열기/).closest("div")!;
     expect(within(openBuildCard).queryByText(BADGE_TEXT)).not.toBeInTheDocument();
 
     const reportCard = screen.getByText("Report 참고 노트로 추가").closest("div")!;
@@ -116,7 +116,7 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
   });
 
   it("badge 표시가 pending_approval → approve → preview/SpecDiff → confirm 흐름을 바꾸지 않는다", async () => {
-    saveBuildSpec("air-2026-08-14", SPEC);
+    saveBuildSpec("apt-2026-08-14", SPEC);
     configureKey();
     mockStream(() =>
       jsonText({
@@ -126,7 +126,7 @@ describe("Ask KPubData PATCH_BUILDSPEC badge (#Phase2 UI polish)", () => {
         suggestedActions: [
           {
             type: "PATCH_BUILDSPEC",
-            runId: "air-2026-08-14",
+            runId: "apt-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "assistant-updated" }],
             reason: "이 문제 설명 보기 참고",
           },

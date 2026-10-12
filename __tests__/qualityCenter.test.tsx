@@ -2,7 +2,7 @@
  * Quality Center: actionable quality issues across tables in one table (#536), read with
  * one `GET /quality/issues` call (#568, kpubdata-builder#843).
  *
- * Mock fixture: air-quality's latest run has a FAIL and a schema drift finding and is
+ * Mock fixture: apt-trade's latest run has a FAIL and a schema drift finding and is
  * partial, population's latest run evaluated nothing, transport's latest run all passed.
  */
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -42,14 +42,14 @@ describe("Quality Center across tables (#536)", () => {
     expect(headers).toEqual(["테이블", "소스", "규칙", "컬럼", "상태", "실제값 / 기준", "영향 행 / 검사 행", "스냅샷(실행)"]);
 
     const fail = within(table).getByRole("row", { name: /required_column/ });
-    expect(fail).toHaveTextContent("대기질 통합 데이터");
-    expect(fail).toHaveTextContent("kma__weather");
-    expect(fail).toHaveTextContent("temperature");
+    expect(fail).toHaveTextContent("아파트 매매·주택가격지수 통합 데이터");
+    expect(fail).toHaveTextContent("bok__index");
+    expect(fail).toHaveTextContent("price_index");
     expect(within(fail).getByText("FAIL").closest("[data-status]")).toHaveAttribute("data-status", "actionable");
-    expect(within(fail).getByRole("link", { name: "air-2026-08-14" })).toHaveAttribute("href", "/refresh-jobs/air-2026-08-14");
-    expect(within(fail).getByRole("link", { name: "대기질 통합 데이터" })).toHaveAttribute(
+    expect(within(fail).getByRole("link", { name: "apt-2026-08-14" })).toHaveAttribute("href", "/refresh-jobs/apt-2026-08-14");
+    expect(within(fail).getByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터" })).toHaveAttribute(
       "href",
-      "/tables/air-quality?run=air-2026-08-14&source=kma__weather&tab=quality",
+      "/tables/apt-trade?run=apt-2026-08-14&source=bok__index&tab=quality",
     );
 
     const drift = within(table).getByRole("row", { name: /column_removed/ });
@@ -98,8 +98,8 @@ describe("Quality Center across tables (#536)", () => {
     expect(screen.queryByRole("row", { name: /column_removed/ })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("분류"), { target: { value: "" } });
-    fireEvent.change(screen.getByLabelText("테이블"), { target: { value: "air-quality" } });
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("dataset=air-quality"));
+    fireEvent.change(screen.getByLabelText("테이블"), { target: { value: "apt-trade" } });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("dataset=apt-trade"));
     expect(within(screen.getByRole("table", { name: CAPTION })).getAllByRole("row")).toHaveLength(3);
   });
 
@@ -111,11 +111,11 @@ describe("Quality Center across tables (#536)", () => {
   });
 
   it("points an older run from a link to Table Detail instead of silently showing the latest", async () => {
-    renderQuality("/quality?dataset=air-quality&run=air-2026-08-13&source=kma__weather");
+    renderQuality("/quality?dataset=apt-trade&run=apt-2026-08-13&source=bok__index");
     const note = await screen.findByRole("note");
-    expect(note).toHaveTextContent("air-2026-08-13");
-    expect(within(note).getByRole("link")).toHaveAttribute("href", "/tables/air-quality?run=air-2026-08-13&source=kma__weather&tab=quality");
-    expect(screen.getByLabelText("테이블")).toHaveValue("air-quality");
+    expect(note).toHaveTextContent("apt-2026-08-13");
+    expect(within(note).getByRole("link")).toHaveAttribute("href", "/tables/apt-trade?run=apt-2026-08-13&source=bok__index&tab=quality");
+    expect(screen.getByLabelText("테이블")).toHaveValue("apt-trade");
   });
 
   it("says so when the table in the URL is not one Builder listed", async () => {

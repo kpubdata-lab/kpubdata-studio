@@ -18,7 +18,7 @@ import { ApiError } from "@/shared/lib/builderApi";
 import { forgetAllProviderKeys, isProviderKeyHeld } from "@/shared/lib/providerKeys";
 import type { BuildRun, BuildSpec } from "@/shared/lib/types";
 
-const RUN_ID = "air-quality-edit-run";
+const RUN_ID = "apt-trade-edit-run";
 const TYPED = "stand-in-typed-value-787";
 
 const REFUSED = new ApiError(400, "this build calls datago, and the request carries no key for it", {
@@ -45,12 +45,12 @@ function lostRun(spec: BuildSpec): BuildRun {
 beforeEach(() => {
   clearBuildSpecs();
   saveBuildSpec(RUN_ID, {
-    datasetId: "air-quality",
+    datasetId: "apt-trade",
     title: "t",
     description: "d",
     sources: [{ provider: "datago", dataset: "air", params: {} }],
     exports: [{ format: "jsonl" }],
-    metadata: { outputPath: "artifacts/builds/air-quality" },
+    metadata: { outputPath: "artifacts/builds/apt-trade" },
   });
   executeBuild = vi.spyOn(runsApi, "executeBuild");
   consoles = (["log", "info", "warn", "error", "debug"] as const).map((level) =>

@@ -34,7 +34,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
   it("Case A — 확인되지 않은 route run 은 evidenceRef/OPEN_BUILD/OPEN_QUALITY(runId)/PATCH_BUILDSPEC 에서 모두 reject 된다", async () => {
     const unverified = "unverified-private-run-1788004513063";
     // The dataset exists but this runId is not in dataset/runs and quality/stage requests return 404.
-    const context: AssistantContext = { page: "build-detail", datasetId: "air-quality", runId: unverified };
+    const context: AssistantContext = { page: "build-detail", datasetId: "apt-trade", runId: unverified };
     const { evidence, knownRefs, safeRunIds } = await loadAssistantEvidence(context);
 
     expect(knownRefs.runIds.has(unverified)).toBe(false);
@@ -45,7 +45,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
         evidenceRefs: [{ kind: "run", id: unverified, label: "실행 상태" }],
         suggestedActions: [
           { type: "OPEN_BUILD", runId: unverified, reason: "확인해보세요" },
-          { type: "OPEN_QUALITY", datasetId: "air-quality", runId: unverified, reason: "품질을 보세요" },
+          { type: "OPEN_QUALITY", datasetId: "apt-trade", runId: unverified, reason: "품질을 보세요" },
           {
             type: "PATCH_BUILDSPEC",
             runId: unverified,
@@ -66,9 +66,9 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
   });
 
   it("Case B — Builder 가 확인한 context run 은 evidenceRef/OPEN_BUILD/OPEN_QUALITY/PATCH_BUILDSPEC 가 유지된다", async () => {
-    const actualRunId = "air-2026-08-14";
+    const actualRunId = "apt-2026-08-14";
     const spec: BuildSpec = {
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       title: "대기질",
       description: "설명",
       sources: [{ provider: "datago", dataset: "air", params: { region: "서울" } }],
@@ -77,7 +77,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
     };
     saveBuildSpec(actualRunId, spec);
 
-    const context: AssistantContext = { page: "build-detail", datasetId: "air-quality", runId: actualRunId };
+    const context: AssistantContext = { page: "build-detail", datasetId: "apt-trade", runId: actualRunId };
     const { evidence, knownRefs, safeRunIds } = await loadAssistantEvidence(context);
 
     expect(knownRefs.runIds.has(actualRunId)).toBe(true);
@@ -88,7 +88,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
         evidenceRefs: [{ kind: "run", id: actualRunId, label: "실행 상태" }],
         suggestedActions: [
           { type: "OPEN_BUILD", runId: actualRunId, reason: "확인" },
-          { type: "OPEN_QUALITY", datasetId: "air-quality", runId: actualRunId, reason: "품질" },
+          { type: "OPEN_QUALITY", datasetId: "apt-trade", runId: actualRunId, reason: "품질" },
           {
             type: "PATCH_BUILDSPEC",
             runId: actualRunId,
@@ -108,12 +108,12 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
 
   it("Case C — context.runId 와 Builder 가 확인한 run 이 다르면, context 쪽만 known/safe 에서 빠진다", async () => {
     const mismatch = "context-only-run-1788004513099";
-    const context: AssistantContext = { page: "build-detail", datasetId: "air-quality", runId: mismatch };
+    const context: AssistantContext = { page: "build-detail", datasetId: "apt-trade", runId: mismatch };
     const { evidence, knownRefs, safeRunIds } = await loadAssistantEvidence(context);
 
-    // The run confirmed by Builder (exists in air-quality dataset/runs).
-    expect(knownRefs.runIds.has("air-2026-08-14")).toBe(true);
-    expect(safeRunIds.has("air-2026-08-14")).toBe(true);
+    // The run confirmed by Builder (exists in apt-trade dataset/runs).
+    expect(knownRefs.runIds.has("apt-2026-08-14")).toBe(true);
+    expect(safeRunIds.has("apt-2026-08-14")).toBe(true);
     // Run coming only from the context (not Builder-confirmed).
     expect(knownRefs.runIds.has(mismatch)).toBe(false);
     expect(safeRunIds.has(mismatch)).toBe(false);
@@ -126,7 +126,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
     expect(rejected.response.suggestedActions).toHaveLength(0);
 
     const accepted = crossCheckAssistantResponse(
-      response({ suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "builder" }] }),
+      response({ suggestedActions: [{ type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "builder" }] }),
       evidence,
       knownRefs,
     );
@@ -136,14 +136,14 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
   it("Case D — 다른 dataset 소속으로 확인된 run의 OPEN_QUALITY를 거부한다", async () => {
     const context: AssistantContext = {
       page: "quality",
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       runId: "population-2026-08-13",
     };
     const { evidence, knownRefs } = await loadAssistantEvidence(context);
 
     // The dataset and run each exist and are confirmed by Builder responses. The 'population' run
   // belongs to a different dataset.
-    expect(knownRefs.datasetIds.has("air-quality")).toBe(true);
+    expect(knownRefs.datasetIds.has("apt-trade")).toBe(true);
     expect(knownRefs.runIds.has("population-2026-08-13")).toBe(true);
 
     const checked = crossCheckAssistantResponse(
@@ -151,7 +151,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
         suggestedActions: [
           {
             type: "OPEN_QUALITY",
-            datasetId: "air-quality",
+            datasetId: "apt-trade",
             runId: "population-2026-08-13",
             reason: "품질을 확인하세요",
           },
@@ -169,13 +169,13 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
     const oldRunId = "old-air-run-outside-recent-window";
     vi.spyOn(runDetailApi, "getBuildSpecSnapshot").mockResolvedValue({
       run_id: oldRunId,
-      spec: "dataset_id: air-quality\n",
+      spec: "dataset_id: apt-trade\n",
       spec_digest: `sha256:${"0".repeat(64)}`,
     });
 
     const { evidence, knownRefs } = await loadAssistantEvidence({
       page: "build-detail",
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       runId: oldRunId,
     });
     expect(evidence.recentRuns?.some((run) => run.runId === oldRunId)).toBe(false);
@@ -183,7 +183,7 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
 
     const checked = crossCheckAssistantResponse(
       response({
-        suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "air-quality", runId: oldRunId, reason: "품질" }],
+        suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "apt-trade", runId: oldRunId, reason: "품질" }],
       }),
       evidence,
       knownRefs,
@@ -202,12 +202,12 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
 
     const { evidence, knownRefs } = await loadAssistantEvidence({
       page: "build-detail",
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       runId: oldRunId,
     });
     const checked = crossCheckAssistantResponse(
       response({
-        suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "air-quality", runId: oldRunId, reason: "품질" }],
+        suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "apt-trade", runId: oldRunId, reason: "품질" }],
       }),
       evidence,
       knownRefs,
@@ -223,12 +223,12 @@ describe("run provenance — loadAssistantEvidence → crossCheckAssistantRespon
 
     const { evidence, knownRefs } = await loadAssistantEvidence({
       page: "build-detail",
-      datasetId: "air-quality",
+      datasetId: "apt-trade",
       runId: oldRunId,
     });
     const checked = crossCheckAssistantResponse(
       response({
-        suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "air-quality", runId: oldRunId, reason: "품질" }],
+        suggestedActions: [{ type: "OPEN_QUALITY", datasetId: "apt-trade", runId: oldRunId, reason: "품질" }],
       }),
       evidence,
       knownRefs,

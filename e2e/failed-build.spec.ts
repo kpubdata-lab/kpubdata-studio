@@ -15,7 +15,7 @@ test("실패 run이 Builds 목록에 실패 상태로 표시된다", async ({ pa
   collectPageErrors(page, errors);
 
   await page.goto("/refresh-jobs");
-  // Mock history contains failed run (air-2026-08-14).
+  // Mock history contains failed run (apt-2026-08-14).
   await expect(page.getByText("dur-older-adult-caution-20260618").first()).toBeVisible({ timeout: 10_000 });
 
   await expectNoPageErrors(errors);
@@ -52,7 +52,7 @@ test("Tables 화면이 실패 dataset의 stage 상태를 정상으로 위장하�
   await expect(page.getByRole("heading", { name: /^(테이블|Tables)$/ }).first()).toBeVisible({
     timeout: 10_000,
   });
-  await expect(page.getByText("대기질 통합 데이터").first()).toBeVisible();
+  await expect(page.getByText("아파트 매매·주택가격지수 통합 데이터").first()).toBeVisible();
 
   await expectNoPageErrors(errors);
 });

@@ -15,7 +15,7 @@ import { demoPreviewClient, realPreviewClient, type PreviewClient, type PreviewO
 import { previewBuild, previewBuildDetailed } from "./index";
 
 const SPEC: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "Air quality",
   description: "",
   sources: [{ provider: "datago", dataset: "air_quality", alias: "air", params: {} }],
@@ -177,7 +177,7 @@ describe.each([
     const response = await previewBuildDetailed(SPEC, { sample_mode: "random" });
 
     expect(globalThis.fetch).toHaveBeenCalledTimes(requests);
-    expect(response.dataset_id).toBe("air-quality");
+    expect(response.dataset_id).toBe("apt-trade");
     expect(response.previews).toHaveLength(1);
     expect(response.previews[0]).toMatchObject({ source_key: "air", status: "ok", sample_mode: "random" });
   });

@@ -22,7 +22,7 @@ afterEach(() => {
 describe("Tables list from the warehouse table summary (kpubdata-builder#841)", () => {
   it("uses current_snapshot and dataset_id and asks no table detail", async () => {
     const tables: WarehouseTable[] = [
-      { table_id: "t1", logical_name: "air-quality.datago__air", current_snapshot_id: "snap_1", revision: 1, current_snapshot: SNAPSHOT, dataset_id: "air-quality" },
+      { table_id: "t1", logical_name: "apt-trade.datago__trade", current_snapshot_id: "snap_1", revision: 1, current_snapshot: SNAPSHOT, dataset_id: "apt-trade" },
       { table_id: "t2", logical_name: "population.kosis__population", current_snapshot_id: null, revision: 0, current_snapshot: null, dataset_id: "population" },
       // Builder could not read the dataset: not attributed to any row, never guessed from the name.
       { table_id: "t3", logical_name: "transport.seoul__transport", current_snapshot_id: "snap_3", revision: 1, current_snapshot: { ...SNAPSHOT, snapshot_id: "snap_3" }, dataset_id: null },
@@ -34,14 +34,14 @@ describe("Tables list from the warehouse table summary (kpubdata-builder#841)", 
 
     expect(detail).not.toHaveBeenCalled();
     const byId = Object.fromEntries(list.rows.map((row) => [row.dataset_id, row.snapshots]));
-    expect(byId["air-quality"]).toEqual([{ logicalName: "air-quality.datago__air", sourceKey: "datago__air", current: SNAPSHOT }]);
+    expect(byId["apt-trade"]).toEqual([{ logicalName: "apt-trade.datago__trade", sourceKey: "datago__trade", current: SNAPSHOT }]);
     expect(byId.population).toEqual([{ logicalName: "population.kosis__population", sourceKey: "kosis__population", current: null }]);
     expect(byId.transport).toEqual([]);
   });
 
   it("falls back to one detail request per committed table on an older Builder", async () => {
     const tables: WarehouseTable[] = [
-      { table_id: "t1", logical_name: "air-quality.datago__air", current_snapshot_id: "snap_1", revision: 1 },
+      { table_id: "t1", logical_name: "apt-trade.datago__trade", current_snapshot_id: "snap_1", revision: 1 },
       { table_id: "t2", logical_name: "population.kosis__population", current_snapshot_id: null, revision: 0 },
     ];
     vi.spyOn(builderApi, "listWarehouseTables").mockResolvedValue({ tables });
@@ -53,15 +53,15 @@ describe("Tables list from the warehouse table summary (kpubdata-builder#841)", 
     const list = await loadTableList();
 
     expect(detail).toHaveBeenCalledTimes(1);
-    expect(detail.mock.calls[0][0]).toBe("air-quality.datago__air");
-    const air = list.rows.find((row) => row.dataset_id === "air-quality");
+    expect(detail.mock.calls[0][0]).toBe("apt-trade.datago__trade");
+    const air = list.rows.find((row) => row.dataset_id === "apt-trade");
     expect(air?.snapshots?.[0].current).toMatchObject({ snapshot_id: "snap_1", row_count: 10 });
   });
 
   it("keeps dotted source keys and matches an older Builder's tables by dataset prefix (#602)", async () => {
     const tables: WarehouseTable[] = [
       // Current Builder: a public-API source without an alias is keyed `<provider>.<dataset>`.
-      { table_id: "t1", logical_name: "air-quality.datago.air_quality", current_snapshot_id: "snap_1", revision: 1, current_snapshot: SNAPSHOT, dataset_id: "air-quality" },
+      { table_id: "t1", logical_name: "apt-trade.datago.air_quality", current_snapshot_id: "snap_1", revision: 1, current_snapshot: SNAPSHOT, dataset_id: "apt-trade" },
       // Older Builder: no dataset_id, no summary — the name's dataset prefix decides.
       { table_id: "t2", logical_name: "population.kosis.population", current_snapshot_id: null, revision: 0 },
       { table_id: "t3", logical_name: "elsewhere.kosis.population", current_snapshot_id: null, revision: 0 },
@@ -71,7 +71,7 @@ describe("Tables list from the warehouse table summary (kpubdata-builder#841)", 
     const list = await loadTableList();
 
     const byId = Object.fromEntries(list.rows.map((row) => [row.dataset_id, row.snapshots]));
-    expect(byId["air-quality"]).toEqual([{ logicalName: "air-quality.datago.air_quality", sourceKey: "datago.air_quality", current: SNAPSHOT }]);
+    expect(byId["apt-trade"]).toEqual([{ logicalName: "apt-trade.datago.air_quality", sourceKey: "datago.air_quality", current: SNAPSHOT }]);
     expect(byId.population).toEqual([{ logicalName: "population.kosis.population", sourceKey: "kosis.population", current: null }]);
     expect(byId.transport).toEqual([]);
   });

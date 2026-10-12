@@ -9,7 +9,7 @@ afterEach(() => {
 
 describe("buildDeterministicSections (#258 §4, §5)", () => {
   it("Overview/Pipeline/Quality/Schema/Data Summary/Output 6개 섹션을 만든다", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const blocks = buildDeterministicSections(evidence);
 
     expect(blocks.map((b) => b.section)).toEqual(["overview", "pipeline", "quality", "schema", "data_summary", "output"]);
@@ -17,19 +17,19 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
   });
 
   it("Overview에 BuildSpec digest와 run 시각을 포함한다", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const [overview] = buildDeterministicSections(evidence);
 
-    expect(overview.markdown).toContain("sha256:air14");
-    expect(overview.markdown).toContain("air-2026-08-14");
+    expect(overview.markdown).toContain("sha256:apt14");
+    expect(overview.markdown).toContain("apt-2026-08-14");
   });
 
   it("Pipeline 섹션은 source별 bronze/silver/gold 상태를 그대로 표시한다(실패도 감춤 없이)", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const [, pipeline] = buildDeterministicSections(evidence);
 
-    expect(pipeline.markdown).toContain("datago__air");
-    expect(pipeline.markdown).toContain("kma__weather");
+    expect(pipeline.markdown).toContain("datago__trade");
+    expect(pipeline.markdown).toContain("bok__index");
     expect(pipeline.markdown).toContain("failed");
     expect(pipeline.evidenceStatus).toBe("ok");
   });
@@ -46,7 +46,7 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
   });
 
   it("Quality 섹션은 실제 PASS/WARN/FAIL 결과와 schema drift를 표시한다", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const quality = buildDeterministicSections(evidence).find((b) => b.section === "quality")!;
 
     expect(quality.markdown).toContain("FAIL");
@@ -54,7 +54,7 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
   });
 
   it("Schema 섹션은 silver schema가 없는 source를 확인할 수 없음으로 구분한다(부분 실패)", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const schema = buildDeterministicSections(evidence).find((b) => b.section === "schema")!;
 
     expect(schema.markdown).toContain("observed_at");
@@ -63,7 +63,7 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
   });
 
   it("Data Summary는 실제 row_counts/total_row_count를 그대로 사용한다(임의 0 대체 없음)", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const dataSummary = buildDeterministicSections(evidence).find((b) => b.section === "data_summary")!;
 
     expect(dataSummary.markdown).toContain("1,200");
@@ -71,7 +71,7 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
   });
 
   it("Output evidence를 확인할 수 없으면 N/A가 아니라 사유를 포함해 unavailable로 표시한다", async () => {
-    const evidence = await fetchReportEvidence("air-quality", "air-2026-08-14");
+    const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
     const output = buildDeterministicSections(evidence).find((b) => b.section === "output")!;
 
     expect(output.evidenceStatus).toBe("unavailable");

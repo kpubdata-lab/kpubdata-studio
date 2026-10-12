@@ -37,18 +37,18 @@ describe("Tables without a warehouse (mock deployment)", () => {
 
   it("searches table/provider and preserves q in the URL", async () => {
     renderCatalog();
-    await screen.findByText("air-quality");
+    await screen.findByText("apt-trade");
     fireEvent.change(screen.getByLabelText("테이블 / 제공자 검색"), { target: { value: "population" } });
     expect(screen.getByText("population")).toBeInTheDocument();
-    expect(screen.queryByText("air-quality")).not.toBeInTheDocument();
+    expect(screen.queryByText("apt-trade")).not.toBeInTheDocument();
     expect(screen.getByTestId("location")).toHaveTextContent("?q=population");
   });
 
   it("filters by any provider in a multi-source table", async () => {
     renderCatalog();
-    await screen.findByText("air-quality");
-    fireEvent.change(screen.getByLabelText("제공자"), { target: { value: "kma" } });
-    expect(screen.getByText("air-quality")).toBeInTheDocument();
+    await screen.findByText("apt-trade");
+    fireEvent.change(screen.getByLabelText("제공자"), { target: { value: "bok" } });
+    expect(screen.getByText("apt-trade")).toBeInTheDocument();
     expect(screen.queryByText("population")).not.toBeInTheDocument();
   });
 
@@ -59,7 +59,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
 
   it("lists status axes instead of stage and validation, hides the snapshot columns and says why (#525)", async () => {
     renderCatalog();
-    await screen.findByText("air-quality");
+    await screen.findByText("apt-trade");
     expect(headers()).toEqual(["테이블", "상태", "완전성", "갱신", "마지막 갱신"]);
     expect(screen.getByText(/이 배포에는 warehouse 가 없어/)).toBeInTheDocument();
     expect(screen.getAllByRole("combobox").map((select) => select.getAttribute("aria-label"))).toEqual(["제공자"]);
@@ -68,7 +68,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
 
   it("badges only what needs action; a healthy value is plain text (#524, #525)", async () => {
     renderCatalog();
-    const air = await screen.findByRole("link", { name: "대기질 통합 데이터 상세 열기" });
+    const air = await screen.findByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터 상세 열기" });
     const isBadge = (_: string, element: Element | null) => element?.getAttribute("data-status") === "actionable";
     const [nameCell, ...axisCells] = within(air).getAllByRole("cell");
     const airBadges = axisCells.flatMap((cell) => within(cell).queryAllByText(isBadge));
@@ -85,19 +85,19 @@ describe("Tables without a warehouse (mock deployment)", () => {
 
   it("narrows to tables that need attention, and keeps that in the URL", async () => {
     renderCatalog();
-    await screen.findByText("air-quality");
+    await screen.findByText("apt-trade");
     fireEvent.click(screen.getByRole("checkbox", { name: "조치 필요만" }));
     expect(screen.getByTestId("location")).toHaveTextContent("?attention=1");
-    expect(screen.getByText("air-quality")).toBeInTheDocument();
+    expect(screen.getByText("apt-trade")).toBeInTheDocument();
     expect(screen.queryByText("population")).not.toBeInTheDocument();
   });
 
   it("opens Table Detail on click and from the keyboard", async () => {
     renderCatalog();
-    const row = await screen.findByRole("link", { name: "대기질 통합 데이터 상세 열기" });
+    const row = await screen.findByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터 상세 열기" });
     row.focus();
     fireEvent.keyDown(row, { key: "Enter" });
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/tables/air-quality"));
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/tables/apt-trade"));
     expect(screen.getByText("dataset detail destination")).toBeInTheDocument();
   });
 });

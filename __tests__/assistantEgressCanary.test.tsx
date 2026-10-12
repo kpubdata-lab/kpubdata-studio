@@ -25,7 +25,7 @@ const QUESTION_CANARY = "canary 7731 hong@example.org pm10";
 let calls: { url: string; body: string; headers: string }[] = [];
 
 function wrapper({ children }: { children: ReactNode }) {
-  return <MemoryRouter initialEntries={["/tables/air-quality"]}>{children}</MemoryRouter>;
+  return <MemoryRouter initialEntries={["/tables/apt-trade"]}>{children}</MemoryRouter>;
 }
 
 function deploy(config: RuntimeConfig) {

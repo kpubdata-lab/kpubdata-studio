@@ -11,7 +11,7 @@ import type { BuildSpec } from "@/shared/lib/types";
 
 function makeSpec(overrides: Partial<BuildSpec> = {}): BuildSpec {
   return {
-    datasetId: "air-quality",
+    datasetId: "apt-trade",
     title: "대기오염 정보",
     description: "시도별 실시간 대기오염 측정값",
     sources: [{ provider: "datago", dataset: "air", params: { sidoName: "서울" } }],
@@ -111,7 +111,7 @@ describe("specStore", () => {
     expect((params.list as unknown[])[0]).toEqual({ token: "[REDACTED]" });
     expect((params.list as unknown[])[1]).toBe("plain-value");
     // Normal BuildSpec values are not corrupted.
-    expect(loaded?.datasetId).toBe("air-quality");
+    expect(loaded?.datasetId).toBe("apt-trade");
     expect(loaded?.sources[0].provider).toBe("datago");
     expect(loaded?.metadata.source_url).toBe("https://example.test");
   });
@@ -163,7 +163,7 @@ describe("specStore", () => {
     // Loaded value has no raw secret (restored as redacted state only).
     expect((loaded?.sources[0].params as Record<string, unknown>).serviceKey).toBe("[REDACTED]");
     expect((loaded?.sources[0].params as Record<string, unknown>).sidoName).toBe("서울");
-    expect(loaded?.datasetId).toBe("air-quality");
+    expect(loaded?.datasetId).toBe("apt-trade");
 
     // localStorage immediately sanitized; no raw secret persists.
     const raw = localStorage.getItem("kpubdata-studio:build-specs") as string;

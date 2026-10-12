@@ -24,7 +24,7 @@ const OLD_ASSISTANT_BLOCK = {
   updatedAt: "2026-09-01T00:00:00Z",
   note: "옛 해석 블록의 본문",
   reason: "옛 근거",
-  sourceContext: { datasetId: "air-quality", runId: "air-2026-08-14" },
+  sourceContext: { datasetId: "apt-trade", runId: "apt-2026-08-14" },
   isSameContext: true,
   generatedAt: "2026-09-01T00:00:00Z",
 };
@@ -35,8 +35,8 @@ const STRANGE_BLOCK = { id: "blk-x", provenance: "SOMETHING_ELSE", title: "알 �
 function plantReport(): string {
   const { report, result } = createReport({
     title: "옛 리포트",
-    datasetId: "air-quality",
-    baseRunId: "air-2026-08-14",
+    datasetId: "apt-trade",
+    baseRunId: "apt-2026-08-14",
     buildSpecDigest: null,
     evidenceFetchedAt: "2026-09-01T00:00:00Z",
     blocks: [],

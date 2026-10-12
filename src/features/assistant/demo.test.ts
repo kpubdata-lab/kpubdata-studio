@@ -8,7 +8,7 @@ import type { AssistantEvidence } from "./types";
 function baseEvidence(overrides: Partial<AssistantEvidence> = {}): AssistantEvidence {
   return {
     fetchedAt: "2026-08-14T00:00:00Z",
-    context: { page: "dataset-detail", datasetId: "air-quality" },
+    context: { page: "dataset-detail", datasetId: "apt-trade" },
     deepLinks: {},
     partial: false,
     unavailable: [],
@@ -44,11 +44,11 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
   it("only cites the dataset/quality ids that are actually present in evidence", () => {
     const evidence = baseEvidence({
       dataset: {
-        datasetId: "air-quality",
-        title: "대기질 통합 데이터",
+        datasetId: "apt-trade",
+        title: "아파트 매매·주택가격지수 통합 데이터",
         providers: ["data.go.kr"],
         sources: [{ provider: "data.go.kr", dataset: "air" }],
-        latestRunId: "air-2026-08-14",
+        latestRunId: "apt-2026-08-14",
         status: "failed",
         updatedAt: null,
         totalRowCount: 1200,
@@ -58,8 +58,8 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
         evaluatedChecks: 2,
         results: [
           {
-            id: "datago__air::missing::max_null_ratio::pm10",
-            source: "datago__air",
+            id: "datago__trade::missing::max_null_ratio::pm10",
+            source: "datago__trade",
             category: "missing",
             rule: "max_null_ratio",
             column: "pm10",
@@ -75,10 +75,10 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
 
     const response = buildAssistantDemoResponse(evidence);
 
-    expect(response.evidenceRefs).toContainEqual({ kind: "dataset", id: "air-quality", label: "대기질 통합 데이터" });
+    expect(response.evidenceRefs).toContainEqual({ kind: "dataset", id: "apt-trade", label: "아파트 매매·주택가격지수 통합 데이터" });
     expect(response.evidenceRefs).toContainEqual({
       kind: "quality",
-      id: "datago__air::missing::max_null_ratio::pm10",
+      id: "datago__trade::missing::max_null_ratio::pm10",
       label: "missing/max_null_ratio",
     });
     // Only OPEN_QUALITY and ADD_REPORT_BLOCK are rendered — Build/execute/Publish etc. are never shown.
@@ -88,11 +88,11 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
   it("only proposes Generated SQL when the current context stage is silver/gold, matching the real LLM contract", () => {
     const datasetOnly = baseEvidence({
       dataset: {
-        datasetId: "air-quality",
-        title: "대기질 통합 데이터",
+        datasetId: "apt-trade",
+        title: "아파트 매매·주택가격지수 통합 데이터",
         providers: [],
         sources: [],
-        latestRunId: "air-2026-08-14",
+        latestRunId: "apt-2026-08-14",
         status: "ok",
         updatedAt: null,
         totalRowCount: 100,
@@ -102,27 +102,27 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
 
     const withStage = baseEvidence({
       ...datasetOnly,
-      context: { page: "dataset-detail", datasetId: "air-quality", stage: "silver" },
-      stage: { refId: "run-1::datago__air::silver", stage: "silver", source: "datago__air", status: "completed", available: true, rowCount: 1000 },
+      context: { page: "dataset-detail", datasetId: "apt-trade", stage: "silver" },
+      stage: { refId: "run-1::datago__trade::silver", stage: "silver", source: "datago__trade", status: "completed", available: true, rowCount: 1000 },
     });
     const response = buildAssistantDemoResponse(withStage);
     expect(response.generatedSql).toEqual({
       sql: "SELECT region, COUNT(*) AS count FROM dataset GROUP BY region",
       stage: "silver",
-      source: "datago__air",
+      source: "datago__trade",
     });
-    expect(response.evidenceRefs).toContainEqual({ kind: "stage", id: "run-1::datago__air::silver", label: "datago__air · silver" });
+    expect(response.evidenceRefs).toContainEqual({ kind: "stage", id: "run-1::datago__trade::silver", label: "datago__trade · silver" });
   });
 
   it("demo SQL never uses the source_key as a FROM table name — only the logical relation \"dataset\"", () => {
     const evidence = baseEvidence({
-      context: { page: "dataset-detail", datasetId: "air-quality", stage: "gold" },
-      stage: { refId: "run-1::datago__air::gold", stage: "gold", source: "datago__air", status: "completed", available: true, rowCount: 1000 },
+      context: { page: "dataset-detail", datasetId: "apt-trade", stage: "gold" },
+      stage: { refId: "run-1::datago__trade::gold", stage: "gold", source: "datago__trade", status: "completed", available: true, rowCount: 1000 },
     });
     const response = buildAssistantDemoResponse(evidence);
     expect(response.generatedSql?.sql).toMatch(/FROM dataset\b/);
     expect(response.generatedSql?.sql).not.toContain(evidence.stage!.source);
-    expect(response.generatedSql?.source).toBe("datago__air");
+    expect(response.generatedSql?.source).toBe("datago__trade");
   });
 });
 

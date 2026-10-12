@@ -50,7 +50,7 @@ describe("SQL", () => {
     const query = vi.spyOn(builderApi, "query");
     const outcome = await runTableQuery(request);
     expect(outcome).toMatchObject({ status: "success", demo: true });
-    expect(outcome.status === "success" && outcome.result.columns).toEqual(["station_name", "avg_pm10"]);
+    expect(outcome.status === "success" && outcome.result.columns).toEqual(["district", "avg_deal_amount"]);
     expect(query).not.toHaveBeenCalled();
   });
 

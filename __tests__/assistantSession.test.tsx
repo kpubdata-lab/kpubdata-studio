@@ -246,7 +246,7 @@ describe("useAssistantSession — evidence grounding & hallucination gate (#256)
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&stage=bronze"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14&stage=bronze"),
     });
     await act(async () => {
       await result.current.ask("이 원본 데이터를 SQL로 보여줘");
@@ -261,13 +261,13 @@ describe("useAssistantSession — evidence grounding & hallucination gate (#256)
     mockStream(() =>
       jsonText({
         answer: "현재 데이터셋 상태를 요약했습니다.",
-        evidenceRefs: [{ kind: "dataset", id: "air-quality", label: "대기질 통합 데이터" }],
+        evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·주택가격지수 통합 데이터" }],
         generatedSql: null,
-        suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "실패 원인을 확인하세요" }],
+        suggestedActions: [{ type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "실패 원인을 확인하세요" }],
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("이 데이터셋 상태 알려줘");
@@ -288,11 +288,11 @@ describe("useAssistantSession — stale context guard (#256 리뷰 §6)", () => 
         answer: "Silver 데이터를 조회하는 쿼리입니다.",
         evidenceRefs: [],
         generatedSql: { sql: "SELECT * FROM dataset", stage: "silver" },
-        suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "확인해보세요" }],
+        suggestedActions: [{ type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "확인해보세요" }],
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&stage=silver"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14&stage=silver"),
     });
     await act(async () => {
       await result.current.ask("SQL 만들어줘");
@@ -343,7 +343,7 @@ describe("useAssistantSession — Generated SQL execution via Builder /query (#2
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&stage=silver"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14&stage=silver"),
     });
     await act(async () => {
       await result.current.ask("SQL 만들어줘");
@@ -397,7 +397,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
   it("works without any API key configured and never calls the LLM provider", async () => {
     vi.mocked(createProvider).mockClear();
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14&source=datago__trade&stage=silver"),
     });
     expect(result.current.isConfigured).toBe(false);
     expect(result.current.isDemoAvailable).toBe(true);
@@ -410,12 +410,12 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
     expect(result.current.turns[0]).toMatchObject({ status: "ok", isDemo: true });
     expect(result.current.turns[0].response?.answer).toContain("[DEMO]");
     // 실제 mock evidence(features/datasets/api)를 그대로 근거로 쓴다 — 별도로 지어내지 않는다.
-    expect(result.current.turns[0].evidence?.dataset?.datasetId).toBe("air-quality");
+    expect(result.current.turns[0].evidence?.dataset?.datasetId).toBe("apt-trade");
   });
 
   it("is unavailable in real mode — askDemo becomes a no-op so real mode always requires BYOK", async () => {
     vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
-    const { result } = renderHook(() => useAssistantSession(), { wrapper: makeWrapper("/tables/air-quality") });
+    const { result } = renderHook(() => useAssistantSession(), { wrapper: makeWrapper("/tables/apt-trade") });
     expect(result.current.isDemoAvailable).toBe(false);
 
     await act(async () => {
@@ -430,7 +430,7 @@ describe("useAssistantSession — askDemo (#256 review, mock mode Ask KPubData �
     const fetchMock = vi.fn(async (_input: unknown) => new Response(null, { status: 500 }));
     vi.stubGlobal("fetch", fetchMock);
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14&source=datago__air&stage=silver"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14&source=datago__trade&stage=silver"),
     });
     await act(async () => {
       await result.current.askDemo("지역별 분포 보여줘");
@@ -456,11 +456,11 @@ describe("useAssistantSession — Suggested Actions require approval (#256)", ()
         answer: "Build 상세를 열어드릴게요.",
         evidenceRefs: [],
         generatedSql: null,
-        suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "확인" }],
+        suggestedActions: [{ type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "확인" }],
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("빌드 상세 열어줘");
@@ -481,11 +481,11 @@ describe("useAssistantSession — Suggested Actions require approval (#256)", ()
         answer: "요청하신 대로 준비했습니다.",
         evidenceRefs: [],
         generatedSql: null,
-        suggestedActions: [{ type: "OPEN_BUILD", runId: "air-2026-08-14", reason: "확인" }],
+        suggestedActions: [{ type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "확인" }],
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("빌드 상세 열어줘");
@@ -498,7 +498,7 @@ describe("useAssistantSession — Suggested Actions require approval (#256)", ()
 
 describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리뷰 §10)", () => {
   const SPEC: BuildSpec = {
-    datasetId: "air-quality",
+    datasetId: "apt-trade",
     title: "대기질",
     description: "설명",
     sources: [{ provider: "data.go.kr", dataset: "air", params: { region: "서울" } }],
@@ -507,7 +507,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
   };
 
   it("requires a two-step approve → confirm before writing/validating the patch", async () => {
-    saveBuildSpec("air-2026-08-14", SPEC);
+    saveBuildSpec("apt-2026-08-14", SPEC);
     configureKey();
     mockStream(() =>
       jsonText({
@@ -517,7 +517,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
         suggestedActions: [
           {
             type: "PATCH_BUILDSPEC",
-            runId: "air-2026-08-14",
+            runId: "apt-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "assistant-updated" }],
             reason: "이 문제 설명 보기 참고",
           },
@@ -525,7 +525,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("metadata에 노트 추가해줘");
@@ -564,7 +564,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
         suggestedActions: [
           {
             type: "PATCH_BUILDSPEC",
-            runId: "air-2026-08-14",
+            runId: "apt-2026-08-14",
             patch: [{ op: "replace", path: "/metadata/note", value: "x" }],
             reason: "테스트",
           },
@@ -572,7 +572,7 @@ describe("useAssistantSession — PATCH_BUILDSPEC diff + validate path (#256 리
       }),
     );
     const { result } = renderHook(() => useAssistantSession(), {
-      wrapper: makeWrapper("/tables/air-quality?run=air-2026-08-14"),
+      wrapper: makeWrapper("/tables/apt-trade?run=apt-2026-08-14"),
     });
     await act(async () => {
       await result.current.ask("patch 제안해줘");

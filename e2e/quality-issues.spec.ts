@@ -19,7 +19,7 @@ test("품질 문제 표는 390px 에서 표 안에서만 가로로 스크롤되�
   const region = page.getByRole("region", { name: t("quality.issues.caption") });
   await expect(region.getByRole("table")).toBeVisible({ timeout: 10_000 });
   const row = region.getByRole("row", { name: /required_column/ });
-  await expect(row).toContainText("kma__weather");
+  await expect(row).toContainText("bok__index");
 
   const pageOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(pageOverflow, "/quality horizontal overflow at 390px").toBeLessThanOrEqual(2);
@@ -28,10 +28,10 @@ test("품질 문제 표는 390px 에서 표 안에서만 가로로 스크롤되�
 
   await region.focus();
   await expect(region).toBeFocused();
-  const tableLink = row.getByRole("link", { name: "대기질 통합 데이터" });
+  const tableLink = row.getByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터" });
   await tableLink.focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/tables\/air-quality\?run=air-2026-08-14&source=kma__weather&tab=quality/);
+  await expect(page).toHaveURL(/\/tables\/apt-trade\?run=apt-2026-08-14&source=bok__index&tab=quality/);
 
   await expectNoPageErrors(errors);
 });

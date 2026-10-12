@@ -5,7 +5,7 @@ import { diffSpecs } from "@/features/build-spec/specDiff";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const base: BuildSpec = {
-  datasetId: "air-quality",
+  datasetId: "apt-trade",
   title: "대기오염",
   description: "설명",
   sources: [{ provider: "datago", dataset: "air", params: { sidoName: "서울" } }],

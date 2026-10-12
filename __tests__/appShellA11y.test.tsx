@@ -19,7 +19,7 @@ const PATHS = [
   "/discover",
   "/add",
   "/tables",
-  "/tables/air-quality",
+  "/tables/apt-trade",
   "/sql",
   "/analyses",
   "/workspace",
@@ -124,9 +124,9 @@ describe("route change focus and title (#662)", () => {
   });
 
   it("names a nested page from the inside out", async () => {
-    const { container, unmount } = mount("/tables/air-quality");
+    const { container, unmount } = mount("/tables/apt-trade");
     await settled(container);
-    expect(document.title).toBe(t("layout.documentTitle", { page: `air-quality · ${t("nav.datasets")}` }));
+    expect(document.title).toBe(t("layout.documentTitle", { page: `apt-trade · ${t("nav.datasets")}` }));
     unmount();
   });
 });

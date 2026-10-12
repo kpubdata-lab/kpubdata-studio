@@ -19,7 +19,7 @@ import { MOCK_PUBLISH_READINESS } from "./mockData";
 const RUNS = Object.keys(MOCK_PUBLISH_READINESS);
 const READY = RUNS.find((run) => MOCK_PUBLISH_READINESS[run].ready && MOCK_PUBLISH_READINESS[run].blockers.length === 0)!;
 const NOT_READY = RUNS.find((run) => !MOCK_PUBLISH_READINESS[run].ready || MOCK_PUBLISH_READINESS[run].blockers.length > 0)!;
-const DESTINATION = "kpubdata/air-quality";
+const DESTINATION = "kpubdata/apt-trade";
 const CREDENTIAL = { HF_TOKEN: "hf_not_a_real_token" };
 
 /** What the Builder below was last sent. */
