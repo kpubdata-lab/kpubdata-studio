@@ -8,11 +8,14 @@
  * In mock mode, getBuildEvents throws MockUnsupportedError — this is not "network error" but separate
  * signal "this surface unsupported in mock", so expose as mockUnsupported flag to distinguish
  * (don't fabricate data pretending it works).
+ *
+ * Another account signing in drops the events loaded so far and aborts the request still out (#902).
  */
 import { i18n } from "@/shared/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getBuildEvents, MockUnsupportedError } from "@/features/runs/api/runDetail";
 import { classifyRunApiError } from "@/features/runs/model";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { useVisibilityAwarePolling } from "./useVisibilityAwarePolling";
 import type { BuildEventsResponse } from "@/shared/lib/builderApi";
 
@@ -40,6 +43,7 @@ export type RunEventsState =
  * @param pollingEnabled - Pass true only for non-terminal runs — stop polling if terminal.
  */
 export function useRunEvents(runId: string | null, pollingEnabled: boolean): RunEventsState {
+  const owner = useStorageOwnerKey();
   const [state, setState] = useState<RunEventsState>({ status: "idle" });
   const controllerRef = useRef<AbortController | null>(null);
 
@@ -78,7 +82,7 @@ export function useRunEvents(runId: string | null, pollingEnabled: boolean): Run
       controllerRef.current?.abort();
     };
     // fetchNow derives only from runId (useCallback deps: [runId]), so runId alone is sufficient.
-  }, [runId]);
+  }, [runId, owner]);
 
   useVisibilityAwarePolling(
     () => void fetchNow(),

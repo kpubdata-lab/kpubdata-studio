@@ -21,11 +21,27 @@ function emailOwnerKey(email: string | null): string | null {
   return `user:${email.trim().toLowerCase()}`;
 }
 
+function ownerKeyOf(email: string | null, userId: string | null, issuer: string | null): string {
+  if (userId && issuer) return `sub:${issuer}#${userId}`;
+  return emailOwnerKey(email) ?? ANONYMOUS_OWNER;
+}
+
 /** Storage owner key for logged-in user. "anonymous" if not logged in. */
 export function resolveStorageOwnerKey(): string {
   const { email, userId, issuer } = useAuthStore.getState();
-  if (userId && issuer) return `sub:${issuer}#${userId}`;
-  return emailOwnerKey(email) ?? ANONYMOUS_OWNER;
+  return ownerKeyOf(email, userId, issuer);
+}
+
+/**
+ * The owner key, as a hook that re-renders when another account signs in (#902).
+ *
+ * Server state has no shared cache: each screen holds what it loaded. A screen puts this
+ * key in the dependencies of the effect that loads, so a change of owner drops what it
+ * holds and aborts what it still has in flight — one account's runs never show, and a
+ * late answer never lands, under another's name.
+ */
+export function useStorageOwnerKey(): string {
+  return useAuthStore((state) => ownerKeyOf(state.email, state.userId, state.issuer));
 }
 
 /** Whether logged in. Unauthenticated storage uses existing unowned key (backward compatible). */

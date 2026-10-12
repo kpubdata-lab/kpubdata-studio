@@ -31,19 +31,20 @@ import {
   type RunStatusFilter,
 } from "@/features/runs/model";
 import { isTerminalBuilderStatus, listBuilds } from "@/features/runs/api";
+import { runsClient } from "@/features/runs/api/client";
 import { getBuildSpecSnapshot } from "@/features/runs/api/runDetail";
 import { useAsync, type AsyncState } from "@/features/runs/asyncState";
 import { buildStatusFilters, normalizeBuildContextSearch } from "@/features/runs/buildContext";
 import { RefreshHistoryTable } from "@/features/runs/components/RefreshHistoryTable";
 import { RunDetailPanel } from "@/features/runs/components/RunDetailPanel";
 import { useSelectedRunPolling } from "@/features/runs/useSelectedRunPolling";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
 import { useRunEvents } from "@/features/runs/useRunEvents";
 import type {
   BuildQualityResponse,
   BuildSpecSnapshotResponse,
   RunStagesResponse,
 } from "@/shared/lib/builderApi";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
 import type { BuildListItem } from "@/shared/lib/types";
 import { Card, ErrorState, LinkButton, PageHeader, Select, SkeletonTable, TermHelp, TextInput } from "@/shared/ui";
 
@@ -71,6 +72,9 @@ export function BuildsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  // Server state is not cached across screens (#902): another account signing in reloads
+  // every surface below and aborts what is still in flight.
+  const owner = useStorageOwnerKey();
 
   const [listState, setListState] = useState<AsyncState<BuildListItem[]>>({ status: "loading" });
   // `/builds` request scope. Builder has no cursor and no total count, so "show more" asks
@@ -85,7 +89,7 @@ export function BuildsPage() {
     setListState({ status: "loading" });
     setListLimit(BUILD_HISTORY_LIMIT);
     setMore({ status: "idle" });
-    listBuilds(BUILD_HISTORY_LIMIT)
+    listBuilds(BUILD_HISTORY_LIMIT, controller.signal)
       .then((items) => {
         if (!controller.signal.aborted) setListState({ status: "loaded", data: items });
       })
@@ -97,7 +101,7 @@ export function BuildsPage() {
         });
       });
     return () => controller.abort();
-  }, []);
+  }, [owner]);
 
   useEffect(() => loadList(), [loadList]);
 
@@ -154,20 +158,17 @@ export function BuildsPage() {
   const outOfListScope = Boolean(selectedRunId) && listState.status === "loaded" && !selectedListItem;
 
   // Selected Run live (job registry) polling is enabled only when state is genuinely uncertain (#286
-  // follow-up §1). In mock mode, builderApi.getBuildJob is a stub that always attempts real fetch,
-  // causing repeated failures even for succeeded/failed historical runs, producing unnecessary
-  // "live state update failure" warnings — in mock mode, we trust the list's deterministic mock
-  // status as-is and skip live polling entirely. In real mode, runs already in the `GET /builds` list
-  // are contractually completed (ok/failed) history only, so terminal status is already confirmed — we
-  // don't enable queries until list loading finishes and confirms this (waiting for listState.status === "loaded"
-  // avoids even one wasted call). If list loading finishes but run is out of scope (deep-link run),
-  // it may actually be running/queued/cancelling, so we check with getBuildJob as before.
+  // follow-up §1). Runs in the `GET /builds` list are contractually completed (ok/failed) history
+  // only, so terminal status is already confirmed — we don't enable queries until list loading
+  // finishes and confirms this (waiting for listState.status === "loaded" avoids even one wasted
+  // call). If list loading finishes but run is out of scope (deep-link run), it may actually be
+  // running/queued/cancelling, so we check with the job lookup. The demo is asked the same way
+  // (#902): its history runs are not in its job registry, and a job submitted to it is.
   // A listed run with no start time ended before it started — its keys were gone, a restart
   // interrupted it — and Builder lists those too since kpubdata-builder#1252. It left no manifest,
   // so only the job says why it ended, and the lost-keys card (#846) is drawn from that.
   const shouldPollLiveStatus =
     Boolean(selectedRunId) &&
-    isRealBuilderEnabled() &&
     listState.status === "loaded" &&
     (!selectedListItem || selectedListItem.startedAt === null);
   const [liveAttempt, setLiveAttempt] = useState(0);
@@ -189,19 +190,19 @@ export function BuildsPage() {
       : submittedHere && (live.kind === "idle" || live.kind === "loading");
   const stagesState = useAsync<RunStagesResponse>(
     (signal) => (selectedRunId ? listBuildStages(selectedRunId, signal) : Promise.reject(new Error("no run"))),
-    [selectedRunId, liveStatus],
+    [selectedRunId, liveStatus, owner],
     t("builds.errors.loadStage"),
     !recordsNotYet,
   );
   const qualityState = useAsync<BuildQualityResponse>(
     (signal) => (selectedRunId ? getBuildQuality(selectedRunId, signal) : Promise.reject(new Error("no run"))),
-    [selectedRunId, liveStatus],
+    [selectedRunId, liveStatus, owner],
     t("builds.errors.loadQuality"),
     !recordsNotYet,
   );
   const specState = useAsync<BuildSpecSnapshotResponse>(
     (signal) => (selectedRunId ? getBuildSpecSnapshot(selectedRunId, signal) : Promise.reject(new Error("no run"))),
-    [selectedRunId, liveStatus],
+    [selectedRunId, liveStatus, owner],
     t("builds.errors.loadSpec"),
     !recordsNotYet,
   );
@@ -234,9 +235,8 @@ export function BuildsPage() {
   // stages: a queued one, or one that ended before it started because its keys were gone (#846). The
   // registry has it, and its detail — the lost-keys card, the cancel button — is what to show.
   // "Not found" is decided positively: while the lookup is idle or loading, or when it failed, we do
-  // not know — only an answer of "unknown run" counts. Mock mode has no live lookup to wait for.
-  const liveSaysUnknown =
-    !isRealBuilderEnabled() || live.kind === "not_in_registry" || live.kind === "permission_denied";
+  // not know — only an answer of "unknown run" counts.
+  const liveSaysUnknown = live.kind === "not_in_registry" || live.kind === "permission_denied";
   const listedNowhere =
     Boolean(selectedRunId) &&
     listState.status === "loaded" &&
@@ -245,7 +245,7 @@ export function BuildsPage() {
     stagesState.notFound;
   const runNotFound = listedNowhere && liveSaysUnknown;
   // The lookup itself failed (network, 5xx): Studio cannot tell a missing run from a failed check.
-  const runCheckFailed = listedNowhere && isRealBuilderEnabled() && live.kind === "error";
+  const runCheckFailed = listedNowhere && live.kind === "error";
 
   // When out of list scope so we lack listItem to judge existence, if the stage query we relied on
   // returns 403, distinguish "no permission to view" from "doesn't exist" (#255 P0).
@@ -387,7 +387,7 @@ export function BuildsPage() {
             canLoadMore={mayHaveMoreRuns(items.length, listLimit)}
             onLoadMore={loadMore}
           />
-          {isRealBuilderEnabled() ? <p className="text-xs text-muted-foreground">{t("builds.kpi.completedOnlyHint")}</p> : null}
+          {runsClient().listsOnlyEnded ? <p className="text-xs text-muted-foreground">{t("builds.kpi.completedOnlyHint")}</p> : null}
         </>
       ) : null}
     </div>

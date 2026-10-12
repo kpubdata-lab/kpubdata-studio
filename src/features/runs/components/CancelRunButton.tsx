@@ -9,12 +9,15 @@
  *
  * Cancelling is destructive: it asks for confirmation first, sends one request, and never
  * retries on its own. A refusal is said as Builder gave it (403 not the caller's run, 404
- * unknown to the job registry, 409 already finished).
+ * unknown to the job registry, 409 already finished). The runs client in force is asked (#902),
+ * so the demo's jobs cancel by the same rules.
  */
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { ApiError, builderApi, type BuildJob } from "@/shared/lib/builderApi";
+import { useStorageOwnerKey } from "@/features/auth/storageOwner";
+import { runsClient } from "@/features/runs/api/client";
+import { ApiError, type BuildJob } from "@/shared/lib/builderApi";
 import { Button } from "@/shared/ui";
 
 type CancelRequest =
@@ -39,9 +42,10 @@ function refusalOf(cause: unknown): Extract<CancelRequest, { status: "refused" }
 
 export function CancelRunButton({ runId, job }: { runId: string; job: BuildJob }) {
   const { t } = useTranslation();
+  const owner = useStorageOwnerKey();
   const [request, setRequest] = useState<CancelRequest>({ status: "idle" });
 
-  useEffect(() => setRequest({ status: "idle" }), [runId]);
+  useEffect(() => setRequest({ status: "idle" }), [runId, owner]);
 
   if (!CANCELLABLE.has(job.status) && !CANCEL_UNDER_WAY.has(job.status)) return null;
 
@@ -52,8 +56,8 @@ export function CancelRunButton({ runId, job }: { runId: string; job: BuildJob }
   function cancel() {
     if (!window.confirm(t("runs.cancel.confirm", { id: runId }))) return;
     setRequest({ status: "sending" });
-    builderApi
-      .cancelBuildJob(runId)
+    runsClient()
+      .cancel(runId)
       .then(() => setRequest({ status: "accepted" }))
       .catch((cause: unknown) => setRequest(refusalOf(cause)));
   }

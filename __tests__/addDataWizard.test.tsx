@@ -117,7 +117,8 @@ describe("Create Table Workbench — Public API happy path (mock 모드, #250 am
     await waitFor(() => expect(buildButton).toBeEnabled());
     fireEvent.click(buildButton);
 
-    await screen.findByText("Build 상세: run=mock-run");
+    // The demo submits a job like a Builder (#902); the run page opens under the id it accepted.
+    await screen.findByText(/^Build 상세: run=datago-apt-trade-\d+-/);
   });
 
   it("dataset 선택을 바꾸면 자동 생성된 metadata도 함께 갱신된다", async () => {

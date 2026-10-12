@@ -34,7 +34,7 @@ Studio는 **Vite + React + TypeScript + React Router** 기반의 단일 페이�
 - **Vite**: 빠른 개발 서버와 프로덕션 빌드를 담당합니다.
 - **React**: 화면을 컴포넌트 단위로 조립합니다.
 - **React Router**: 브라우저 URL과 페이지 컴포넌트를 연결합니다.
-- **서버 상태(Builder 응답)**: 공용 캐시 라이브러리를 쓰지 않습니다. 화면·기능마다 `useState` + `useEffect` + `AbortController` 로 만든 훅이 응답을 불러와 자기 상태로 둡니다(예: `features/runs/useBuild.ts`, `features/runs/useBuildJob.ts`, `features/publish/usePublishJob.ts`, `features/data-table/useWarehouseRows.ts`). TanStack Query 는 쓰지 않던 의존성이라 제거했습니다(#82). 공용 클라이언트 계약으로 정리하는 일은 #794 에서 다룹니다.
+- **서버 상태(Builder 응답)**: 공용 캐시 라이브러리를 쓰지 않습니다. 화면·기능마다 `useState` + `useEffect` + `AbortController` 로 만든 훅이 응답을 불러와 자기 상태로 둡니다(예: `features/runs/useBuild.ts`, `features/runs/useBuildJob.ts`, `features/publish/usePublishJob.ts`, `features/data-table/useWarehouseRows.ts`). TanStack Query 는 쓰지 않던 의존성이라 제거했습니다(#82). 화면이 묻는 곳은 기능의 클라이언트 인터페이스입니다(§5 "하나의 클라이언트 인터페이스", #794). 캐시·취소·경쟁 정책은 이 절 끝의 "서버 상태 정책" 에 있습니다(#902).
 - **Zustand**: 셸 UI 상태(`shared/hooks/useUIStore.ts`, 테마·사이드바), 메모리에만 두는 로그인 토큰(`features/auth/store.ts`)과 provider 키(`shared/lib/providerKeys.ts`), 어시스턴트 세션, 그리고 세션 단위로 기억하는 서버 사실(버전 확인·관리자 여부·가입 상태·세션 거절)을 담습니다.
 - **편집 초안**: Zustand 가 아니라 `localStorage` 에 둡니다(`features/build-spec/draftStorage.ts`, `features/add-data/draftStorage.ts`). 폼 입력은 react-hook-form 이 다룹니다.
 - **TypeScript**: Builder API 계약과 UI 상태를 정적으로 검증합니다.
@@ -48,6 +48,19 @@ graph TD
 ```
 
 라우트 전체 목록은 [INFORMATION_ARCHITECTURE.md](INFORMATION_ARCHITECTURE.md) 의 URL 표와 `src/app/router.tsx` 에 있습니다.
+
+
+### 서버 상태 정책: 캐시·취소·경쟁 (#902)
+
+2026-10-12 저장소 소유자가 정했습니다.
+
+- **공용 캐시를 두지 않습니다.** TanStack Query 같은 라이브러리도, 화면 사이에 나누는 저장소도 없습니다. 화면은 자기가 불러온 것만 들고, 다른 화면으로 가면 다시 묻습니다.
+- **계정이 바뀌면 화면의 상태를 버립니다.** 주인은 `features/auth/storageOwner.ts` 의 키 — OIDC 세션은 `iss#sub`, 그 밖에는 e-mail — 입니다. 불러오는 effect 는 `useStorageOwnerKey()` 를 의존성에 넣어서, 주인이 바뀌면 들고 있던 것을 지우고 다시 묻습니다. 실행 중인 build 를 지켜보던 훅(`useBuildJob`)은 폴링을 멈추고 idle 로 돌아가며, job 을 취소하지는 않습니다 — 그것은 앞 계정의 job 입니다.
+- **필요 없어진 요청은 abort 합니다.** 다른 run 을 고르거나, 다른 계정이 들어오거나, 화면을 떠나면 effect 의 cleanup 이 `AbortController` 로 요청을 끊고, 끊긴 요청의 답은 상태에 쓰지 않습니다. 늦게 온 답이 새 선택이나 새 계정의 화면을 덮지 않습니다.
+- **같은 요청을 두 번 하지 않습니다.** 화면은 보여 줄 것을 한 번 묻습니다. 같은 build 를 두 번 시작해도 제출은 한 번이고(`useBuildJob`), 취소는 run 마다 한 번 보냅니다.
+- **runs 는 Builder 의 job API 높이에서 데모와 실제를 묶습니다(선택지 (a)).** 아래 §5 의 runs 문단을 봅니다. 그래서 취소와 경쟁 처리는 두 모드에서 같은 코드를 지납니다.
+
+회귀 테스트: `__tests__/runsStatePolicy.test.tsx` 가 계정 전환 시 상태 초기화, 늦은 요청의 abort, 중복 요청이 없음, 두 모드의 취소를 runs 화면에서 확인합니다. 이 정책은 runs 화면부터 적용했고, 다른 화면도 옮길 때 같은 방식을 따릅니다.
 
 ---
 
@@ -198,9 +211,20 @@ publish 에서는 거부도 계약의 일부다: 두 구현이 같은 상태 코
 연결 화면의 목록(`GET /providers`)은 아직 직접 고른다: Builder 의 답은 선택을 다시 정하고 데모의 목록은 그러지
 않는데, 둘을 한 인터페이스로 묶으면 데모에서 그 차이가 화면에 드러난다.
 
-**runs 는 아직 이 구조가 아니다.** build 실행은 job 을 제출하고 상태를 폴링하는 흐름이고 데모는 그 흐름 없이
-결과만 돌려주므로, 인터페이스를 어느 높이에 둘지부터 정해야 한다. 일부 페이지에도 분기가 그대로 있다. 서버 상태의 caching·취소·경쟁 처리 정책은 아직 정하지 않았다 — 이 구조는 그 결정을
-전제하지 않는다.
+**runs**(`runs/api/client.ts` 의 `runsClient()`, #902)는 Builder 의 job API 를 그대로 닮은 인터페이스다: `submit`
+(`POST /builds`), `getJob`(`GET /builds/{run_id}`), `cancel`(`POST /builds/{run_id}/cancel`), `list`(`GET /builds`).
+데모는 메모리 안의 작은 job 모형으로 답한다 — 제출하면 `queued`, 폴링할 때마다 `running`, `succeeded` 로 한 걸음씩
+가고, 취소는 Builder 의 협조적 규칙대로 `queued` 는 바로 `cancelled`, `running` 은 `cancelling` 을 거쳐 `cancelled` 다.
+모르는 run 은 404, 끝난 run 의 취소는 409 다. 그래서 build 의 제출·폴링·취소와 그 경쟁 처리(제출 전에 누른 취소,
+겹친 시작)가 두 모드에서 같은 코드를 지나고, 데모의 build 는 바로 끝나지 않고 폴링을 두 번 돈다.
+`runs/api/client.contract.test.ts` 가 job 쪽 기대를 두 구현에 돌리고, 실제 클라이언트는 데모의 job 모형으로 답하는
+Builder 에 붙인다.
+
+runs 에서 데모가 다른 곳: `list` 와 `getRun` 은 Studio 의 모델(`BuildListItem`, `BuildRun`)로 답한다. 데모 이력에는
+아직 실행 중인 run 이 있는데, `GET /builds` 는 끝난 run 만 싣고 그 상태 어휘(`ok`/`failed`/`cancelled`)로는 그것을
+나타낼 수 없기 때문이다. 화면은 그 차이를 `listsOnlyEnded` 로 묻는다. 데모 이력의 run 은 job registry 에 없어
+`getJob` 이 404 로 답하고(Builder 가 registry 에서 놓아 준 run 과 같다), 데모에 제출한 job 은 이력에 실리지 않고
+id 로만 찾는다. spec snapshot 과 이벤트 로그는 데모에 없어서 `MockUnsupportedError` 로 거부한다.
 
 ## 6. 주요 프런트엔드 영역
 
