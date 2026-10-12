@@ -32,12 +32,12 @@ import { UsersSection } from "@/features/admin/UsersSection";
 import {
   ApiError,
   builderApi,
-  isRealBuilderEnabled,
   type AdminConfigResponse,
   type AdminRunsResponse,
   type AdminUser,
   type AdminUsersResponse,
 } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 import { Button, Card, cn, PageHeader, Skeleton } from "@/shared/ui";
 
 /** Runs asked for first, and the contract's maximum `limit` for `GET /admin/runs`. */
@@ -60,7 +60,7 @@ function toLoad<T>(cause: unknown): Load<T> {
 
 export function AdminPage() {
   const { t } = useTranslation();
-  const real = isRealBuilderEnabled();
+  const real = !isDemo();
   const [config, setConfig] = useState<Load<AdminConfigResponse>>({ status: "loading" });
   const [runs, setRuns] = useState<Load<AdminRunsResponse>>({ status: "loading" });
   const [users, setUsers] = useState<Load<AdminUsersResponse>>({ status: "loading" });

@@ -3,7 +3,7 @@
  *
  * Real IdP: kpubdata-builder ADR 0015 confirmed self-hosted Keycloak + Authorization Code +
  * PKCE (S256). This screen branches by environment:
- * - Mock/demo environment (`!isRealBuilderEnabled()`): keep existing mockAuthProvider email/password
+ * - Mock/demo environment (`isDemo()`): keep existing mockAuthProvider email/password
  *   form (dev/demo only).
  * - Real connection + OIDC enabled: provide only Keycloak login redirect button. Email/password,
  *   password reset, email verification are all Keycloak's responsibility, so Studio has no input form.
@@ -22,7 +22,7 @@ import { mockAuthProvider } from "@/features/auth/mockAuthProvider";
 import { useAuthStore } from "@/features/auth/store";
 import { AuthError } from "@/features/auth/types";
 import { getOidcConfig } from "@/shared/config/env";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 import {
   BrandLogo,
   Button,
@@ -94,7 +94,7 @@ export function LoginPage() {
     }
   }
 
-  const demoMode = !isRealBuilderEnabled();
+  const demoMode = isDemo();
   const oidc = getOidcConfig();
   const returnTo = getSafeReturnTo(new URLSearchParams(location.search).get("returnTo"));
 

@@ -10,7 +10,8 @@
  */
 import { useEffect, useState } from "react";
 
-import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { ApiError, builderApi } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 
 export type UploadStatus =
   /** Nothing is known beyond what the draft remembered. */
@@ -26,7 +27,7 @@ export function useUploadStatus(uploadId: string | null): UploadStatus {
   useEffect(() => {
     setStatus({ kind: "unknown" });
     // The demo has no Builder to ask; its uploads never expire.
-    if (!uploadId || !isRealBuilderEnabled()) return;
+    if (!uploadId || isDemo()) return;
     const controller = new AbortController();
     builderApi
       .getUpload(uploadId, controller.signal)

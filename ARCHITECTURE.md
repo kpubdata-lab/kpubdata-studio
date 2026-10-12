@@ -59,6 +59,7 @@ graph TD
 - **필요 없어진 요청은 abort 합니다.** 다른 run 을 고르거나, 다른 계정이 들어오거나, 화면을 떠나면 effect 의 cleanup 이 `AbortController` 로 요청을 끊고, 끊긴 요청의 답은 상태에 쓰지 않습니다. 늦게 온 답이 새 선택이나 새 계정의 화면을 덮지 않습니다.
 - **같은 요청을 두 번 하지 않습니다.** 화면은 보여 줄 것을 한 번 묻습니다. 같은 build 를 두 번 시작해도 제출은 한 번이고(`useBuildJob`), 취소는 run 마다 한 번 보냅니다.
 - **runs 는 Builder 의 job API 높이에서 데모와 실제를 묶습니다(선택지 (a)).** 아래 §5 의 runs 문단을 봅니다. 그래서 취소와 경쟁 처리는 두 모드에서 같은 코드를 지납니다.
+- **"Builder 가 붙어 있는가" 는 `isDemo()` 한 곳에 묻습니다.** 데이터를 읽는 화면은 기능의 클라이언트에 묻습니다(§5).
 
 회귀 테스트: `__tests__/runsStatePolicy.test.tsx` 가 계정 전환 시 상태 초기화, 늦은 요청의 abort, 중복 요청이 없음, 두 모드의 취소를 runs 화면에서 확인합니다. 이 정책은 runs 화면부터 적용했고, 다른 화면도 옮길 때 같은 방식을 따릅니다.
 
@@ -174,7 +175,7 @@ Studio 는 Builder 에 붙어서도, Builder 없이 데모 fixture 로도 돈다
 지금 이 구조인 기능은 **datasets**, **artifacts**, **discover**, **preview**, **add-data**, **publish** 다
 (`src/features/<기능>/api/client.ts`; discover 와 add-data 는 `src/features/<기능>/client.ts`). #902 에서
 **monitoring**(`api/client.ts`), **sql** 의 쿼리 실행(`sql/api.ts` 의 `sqlClient()`), **spec 검증**
-(`validation/api` 의 `validationClient()`), **연결**(`provider/client.ts` 의 `providerClient()` — 키 저장·삭제·연결
+(`validation/api` 의 `validationClient()`), **연결**(`provider/client.ts` 의 `providerClient()` — 목록·키 저장·삭제·연결
 테스트·키 확인), **assistant** 의 SQL 실행과 데모 여부(`assistant/query.ts` 의 `assistantClient()`), **리포트**의 출력
 근거(`reports/evidence.ts` 의 `outputEvidence()`)가 같은 모양이 됐고, 버전 확인은 `ensureVersionChecked()` 가 데모에서
 아무것도 묻지 않고 끝나도록 그 안에서 고른다. 아래 표는
@@ -204,12 +205,16 @@ fixture 다.
 publish 에서는 거부도 계약의 일부다: 두 구현이 같은 상태 코드와 `code` 로 거부하는지 본다. 데모는 게시를
 어디에도 하지 않고, 영수증이 없으므로 reconcile·reset 에 Builder 와 같은 404 `receipt_not_found` 로 답한다.
 
-화면이 `isRealBuilderEnabled()` 를 직접 부르는 곳은 줄어들기만 한다: `scripts/real-builder-switch.mjs` 가
-파일별 수를 baseline 과 맞추고, 새 곳·늘어난 수·줄었는데 낮추지 않은 baseline 을 CI 에서 실패시킨다. 기능마다
-고르는 함수 하나는 그 스크립트의 `SELECTORS` 에 적는다.
+화면은 `isRealBuilderEnabled()` 를 직접 부르지 않는다. 데이터를 읽는 화면은 기능의 클라이언트에 묻고, 데이터가
+아니라 **Builder 가 붙어 있는가** 로만 달라지는 화면 — 셸의 데모 배너, 로그인 게이트와 로그인 화면, 버전 배너, 설정의
+계정 부분, 관리 화면, 데모에 업로드·데이터 카드가 없다는 안내 — 은 `shared/lib/demoMode.ts` 의 `isDemo()` 한 곳에
+묻는다(#902). `scripts/real-builder-switch.mjs` 가 CI 에서 둘을 지킨다: 기능마다 고르는 함수 하나는 `SELECTORS` 에
+적고 그 밖의 `isRealBuilderEnabled()` 직접 사용은 0 이며, `isDemo()` 를 부르는 파일과 횟수는 `DEMO_QUERIES` 에
+적어서 목록에 없는 화면이 데이터를 읽는 대신 `isDemo()` 로 가르면 실패한다.
 
-연결 화면의 목록(`GET /providers`)은 아직 직접 고른다: Builder 의 답은 선택을 다시 정하고 데모의 목록은 그러지
-않는데, 둘을 한 인터페이스로 묶으면 데모에서 그 차이가 화면에 드러난다.
+연결 화면의 목록(`GET /providers`)도 `providerClient().list()` 로 옮겼다. 데모의 목록도 Builder 의 답과 같은 코드를
+지나므로, 목록을 다시 읽으면 선택을 다시 정한다 — 데모의 목록은 바뀌지 않으니 화면에는 같은 선택이 남는다. 이 차이를
+받아들이기로 저장소 소유자가 정했다(2026-10-12).
 
 **runs**(`runs/api/client.ts` 의 `runsClient()`, #902)는 Builder 의 job API 를 그대로 닮은 인터페이스다: `submit`
 (`POST /builds`), `getJob`(`GET /builds/{run_id}`), `cancel`(`POST /builds/{run_id}/cancel`), `list`(`GET /builds`).

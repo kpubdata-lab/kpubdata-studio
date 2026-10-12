@@ -13,7 +13,8 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
-import { builderApiCompatibility, isRealBuilderEnabled, MIN_BUILDER_API_VERSION } from "@/shared/lib/builderApi";
+import { builderApiCompatibility, MIN_BUILDER_API_VERSION } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 
 import { ensureVersionChecked, useVersionCheckStore } from "./store";
 
@@ -23,7 +24,7 @@ export function VersionMismatchBanner() {
   const apiVersion = useVersionCheckStore((s) => s.apiVersion);
   const dismissed = useVersionCheckStore((s) => s.dismissed);
   const dismiss = useVersionCheckStore((s) => s.dismiss);
-  const realEnabled = isRealBuilderEnabled();
+  const realEnabled = !isDemo();
 
   const { pathname } = useLocation();
 

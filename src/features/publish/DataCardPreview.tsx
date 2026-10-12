@@ -25,7 +25,7 @@ import {
   type DataCard,
   type DataCardSource,
 } from "@/features/publish/card";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 import { Card, EmptyState, Skeleton } from "@/shared/ui";
 import { ActionableStatus, NormalStatus, NotEvaluatedStatus } from "@/shared/ui/StatusState";
 
@@ -56,7 +56,7 @@ export function DataCardPreview({ runId }: { runId: string }) {
 
   useEffect(() => {
     if (!runId) return;
-    if (!isRealBuilderEnabled()) {
+    if (isDemo()) {
       setState({ status: "demo" });
       return;
     }

@@ -9,13 +9,18 @@
  *
  * Read with the TypeScript parser, so a mention in a comment is not a call. Every use of
  * the name counts — a call, or the function passed or stored — except its own
- * declaration in `builderApi.ts` and an import.
+ * declaration, an import, and a member of the same name (`turn.isDemo`).
  *
  * - `SELECTORS` lists the files where choosing is the job: a feature's client selector,
  *   or a store that is the feature's one entry point. Each holds exactly one use.
  * - `BASELINE` lists every other file with its count today. A file not listed, or a count
  *   above its entry, fails. So does a count below it: lower the entry in the same change,
  *   so the debt cannot grow back into the room it left.
+ * - `isDemo()` (`src/shared/lib/demoMode.ts`) is the one place a screen asks whether a
+ *   Builder is attached, for what changes only because none is (#902). `DEMO_QUERIES`
+ *   lists the files that ask it, with their count: a file not listed, or a count above its
+ *   entry, fails, so a screen that reads data cannot use it in place of its feature's
+ *   client unnoticed. A count below its entry fails too, to keep the list exact.
  *
  * Usage:
  *   node scripts/real-builder-switch.mjs           # report; exit 1 on a finding
@@ -29,6 +34,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 const NAME = "isRealBuilderEnabled";
+const DEMO_QUERY = "isDemo";
 
 /** Files whose one use is the feature choosing its implementation. */
 export const SELECTORS = {
@@ -48,40 +54,60 @@ export const SELECTORS = {
   "src/features/reports/evidence.ts": "outputEvidence()",
   "src/features/runs/api/client.ts": "runsClient()",
   "src/features/admin/store.ts": "ensureAdminChecked() — the demo has no admin to ask",
+  "src/shared/lib/demoMode.ts": "isDemo() — whether a Builder is attached, for screens that change only on that",
   "src/features/version-check/store.ts": "ensureVersionChecked() — the demo has no version to read",
 };
 
 /** Direct uses that remain, per file. Shrink-only: lower an entry when its count drops. */
-export const BASELINE = {
-  "src/app/Layout.tsx": 1,
-  "src/features/add-data/components/ConfigureStep.tsx": 1,
-  "src/features/add-data/useUploadStatus.ts": 1,
-  "src/features/auth/LoginGate.tsx": 1,
-  "src/features/publish/DataCardPreview.tsx": 1,
-  "src/features/version-check/VersionMismatchBanner.tsx": 1,
-  "src/pages/AdminPage.tsx": 1,
-  "src/pages/LoginPage.tsx": 1,
-  "src/pages/ProviderPage.tsx": 1,
-  "src/pages/SettingsPage.tsx": 1,
+export const BASELINE = {};
+
+/** Files that ask `isDemo()`, and how often: what they change only because no Builder is attached. */
+export const DEMO_QUERIES = {
+  "src/app/Layout.tsx": 1, // the demo banner and the sign-in menu
+  "src/features/add-data/components/ConfigureStep.tsx": 1, // the demo keeps no uploads to list
+  "src/features/add-data/useUploadStatus.ts": 1, // nor their expiry
+  "src/features/auth/LoginGate.tsx": 1, // the demo needs no sign-in
+  "src/features/publish/DataCardPreview.tsx": 1, // the demo has no data cards
+  "src/features/version-check/VersionMismatchBanner.tsx": 1, // nor a version to compare
+  "src/pages/AdminPage.tsx": 1, // nor an administrator
+  "src/pages/LoginPage.tsx": 1, // the demo's sign-in form
+  "src/pages/SettingsPage.tsx": 1, // the account section
 };
 
+/** Whether `node` names a member (`turn.isDemo`, `{ isDemo: true }`) rather than the function. */
+function isMemberName(node) {
+  const parent = node.parent;
+  if (!parent) return false;
+  if (ts.isPropertyAccessExpression(parent)) return parent.name === node;
+  return (
+    (ts.isPropertyAssignment(parent) ||
+      ts.isPropertySignature(parent) ||
+      ts.isPropertyDeclaration(parent) ||
+      ts.isMethodDeclaration(parent) ||
+      ts.isMethodSignature(parent)) &&
+    parent.name === node
+  );
+}
+
 /**
- * How many times `source` uses the name, other than in an import or its declaration.
+ * How many times `source` uses the name, other than in an import, its declaration or a
+ * member of the same name.
  *
  * @param file - the file's path, which picks the parser's TS or TSX mode.
  * @param source - its text.
+ * @param name - the function counted; `isRealBuilderEnabled` unless given.
  */
-export function countUses(file, source) {
+export function countUses(file, source, name = NAME) {
   const kind = file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const root = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, false, kind);
+  const root = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, kind);
   let count = 0;
   const visit = (node) => {
     if (ts.isImportDeclaration(node)) return;
-    if (ts.isFunctionDeclaration(node) && node.name?.text === NAME) {
+    if (ts.isFunctionDeclaration(node) && node.name?.text === name) {
       if (node.body) ts.forEachChild(node.body, visit);
       return;
     }
-    if (ts.isIdentifier(node) && node.text === NAME) count += 1;
+    if (ts.isIdentifier(node) && node.text === name && !isMemberName(node)) count += 1;
     ts.forEachChild(node, visit);
   };
   visit(root);
@@ -122,13 +148,35 @@ export function findings(counts, selectors = SELECTORS, baseline = BASELINE) {
   return out;
 }
 
-/** `{ file: uses }` for the repository at `repo`. */
-export function scan(repo) {
+/**
+ * Compare the files that ask `isDemo()` with `DEMO_QUERIES`.
+ *
+ * @param counts - `{ file: uses }` of `isDemo` for files with at least one use.
+ * @returns one message per finding; empty when the tree matches.
+ */
+export function demoQueryFindings(counts, allowed = DEMO_QUERIES) {
+  const out = [];
+  for (const [file, count] of Object.entries(counts)) {
+    if (!(file in allowed)) {
+      out.push(`${file}: ${count} new isDemo() use(s) — read data through the feature's client; isDemo() is for what changes only without a Builder (#902)`);
+    } else if (count > allowed[file]) {
+      out.push(`${file}: ${count} isDemo() uses, listed ${allowed[file]} — read data through the feature's client (#902)`);
+    }
+  }
+  for (const [file, expected] of Object.entries(allowed)) {
+    const count = counts[file] ?? 0;
+    if (count < expected) out.push(`${file}: ${count} isDemo() uses, listed ${expected} — lower DEMO_QUERIES to ${count}`);
+  }
+  return out;
+}
+
+/** `{ file: uses }` of `name` for the repository at `repo`. */
+export function scan(repo, name = NAME) {
   const counts = {};
   for (const file of sourceFiles(repo)) {
     const source = readFileSync(join(repo, file), "utf8");
-    if (!source.includes(NAME)) continue;
-    const count = countUses(file, source);
+    if (!source.includes(name)) continue;
+    const count = countUses(file, source, name);
     if (count > 0) counts[file] = count;
   }
   return counts;
@@ -138,7 +186,8 @@ function main() {
   const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
   const github = process.argv.includes("--github");
   const counts = scan(repo);
-  const found = findings(counts);
+  const demoCounts = scan(repo, DEMO_QUERY);
+  const found = [...findings(counts), ...demoQueryFindings(demoCounts)];
   for (const line of found) {
     console.log(github ? `::error title=Direct real/demo switch (#902)::${line}` : `error ${line}`);
   }
@@ -149,6 +198,8 @@ function main() {
     `Direct isRealBuilderEnabled() uses: ${uses} in ${direct.length} files (baseline ${baseline} in ` +
       `${Object.keys(BASELINE).length}). Selectors: ${Object.keys(SELECTORS).length}.`,
   );
+  const demoUses = Object.values(demoCounts).reduce((sum, count) => sum + count, 0);
+  console.log(`isDemo() uses: ${demoUses} in ${Object.keys(demoCounts).length} files (listed in DEMO_QUERIES).`);
   if (found.length > 0) process.exit(1);
 }
 

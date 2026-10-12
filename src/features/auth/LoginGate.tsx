@@ -2,7 +2,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { isDevAuthBypassEnabled } from "@/shared/config/env";
-import { isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { isDemo } from "@/shared/lib/demoMode";
 import { useAuthStore } from "./store";
 
 export function LoginGate({ children }: { children: ReactNode }) {
@@ -10,7 +10,7 @@ export function LoginGate({ children }: { children: ReactNode }) {
   const oidcStatus = useAuthStore((state) => state.oidcStatus);
   const location = useLocation();
 
-  if (!isRealBuilderEnabled() || isDevAuthBypassEnabled()) return <>{children}</>;
+  if (isDemo() || isDevAuthBypassEnabled()) return <>{children}</>;
   if (oidcStatus === "authenticated" || (oidcStatus === "disabled" && token)) return <>{children}</>;
 
   const returnTo = `${location.pathname}${location.search}${location.hash}`;
