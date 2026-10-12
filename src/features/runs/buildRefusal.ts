@@ -17,7 +17,8 @@
  * off until a deployment sets them (#939): 503 `disk_space_low` (the server's disk has
  * less free space than a build needs) and 409 `run_storage_quota_exceeded` (the user's
  * runs would pass the bytes one user may keep; the body gives `limit_bytes` and
- * `used_bytes`). A Builder before 1.118.0 never sends either.
+ * `used_bytes`). A Builder before 1.118.0 never sends either from `POST /builds`;
+ * contract 1.123.0 applies the same configured checks to synchronous `POST /build`.
  */
 import { i18n } from "@/shared/i18n";
 import { ApiError } from "@/shared/lib/builderApi";
