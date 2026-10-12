@@ -61,7 +61,7 @@ export const MOCK_PUBLISH_READINESS: Record<string, PublishReadinessResponse> = 
     run_id: "apt-2026-08-14",
     target: "huggingface",
     ready: false,
-    blockers: [{ code: "partial_failure", message: "source bok__index의 silver stage가 실패했습니다." }],
+    blockers: [{ code: "partial_failure", message: "source datago__rent의 silver stage가 실패했습니다." }],
     warnings: [],
   },
   "apt-2026-08-13": {

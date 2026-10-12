@@ -89,8 +89,8 @@ describe("Dataset Detail P0 (#253)", () => {
     renderDetail();
     const sourceSelect = await screen.findByLabelText("소스 선택");
     await waitFor(() => expect(sourceSelect).toBeEnabled());
-    fireEvent.change(sourceSelect, { target: { value: "bok__index" } });
-    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=bok__index"));
+    fireEvent.change(sourceSelect, { target: { value: "datago__rent" } });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("source=datago__rent"));
     expect(screen.getByRole("button", { name: /bronze 완료/ })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /silver 실패/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /gold 실행 안 됨/ })).toBeInTheDocument();
@@ -143,7 +143,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
   it.each([
     ["/tables/apt-trade?source=datago__trade&tab=quality", "PASS"],
-    ["/tables/apt-trade?source=bok__index&tab=quality", "FAIL"],
+    ["/tables/apt-trade?source=datago__rent&tab=quality", "FAIL"],
     ["/tables/population?source=kosis__population&tab=quality", "N/A"],
   ])("shows actual scoped quality without inventing a score: %s", async (path, expected) => {
     renderDetail(path);
@@ -155,7 +155,7 @@ describe("Dataset Detail P0 (#253)", () => {
   it("explains a run-level failed status next to a completed/PASS selected stage instead of hiding the contradiction (audit #2)", async () => {
     renderDetail();
     // 기본 선택(latest run apt-2026-08-14, source datago__trade)은 gold stage가 completed/PASS이면서
-    // run 전체 상태는 bok__index의 silver 실패로 인해 failed다 — 두 상태 semantics는 서로 다른
+    // run 전체 상태는 datago__rent의 silver 실패로 인해 failed다 — 두 상태 semantics는 서로 다른
     // scope(run 전체 vs 선택된 source/stage)이므로 값 자체를 숨기거나 조작하지 않는다.
     await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
 
@@ -169,7 +169,7 @@ describe("Dataset Detail P0 (#253)", () => {
 
     const explanation = await screen.findByRole("alert");
     expect(explanation).toHaveTextContent(/실행은 실패했지만/);
-    expect(explanation).toHaveTextContent("bok__index");
+    expect(explanation).toHaveTextContent("datago__rent");
   });
 
   it("shows run history and links each run to build detail", async () => {
@@ -266,8 +266,8 @@ describe("Data Passport (#Phase2 UI polish)", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: /gold 완료/ })).toHaveAttribute("aria-pressed", "true"));
 
     const passport = await findPassport();
-    expect(within(passport).getByText("datago.apt_trade, bok.housing_price_index")).toBeInTheDocument();
-    expect(within(passport).getByText("아파트 매매·주택가격지수 통합 데이터")).toBeInTheDocument();
+    expect(within(passport).getByText("datago.apt_trade, datago.apt_rent")).toBeInTheDocument();
+    expect(within(passport).getByText("아파트 매매·전월세 통합 데이터")).toBeInTheDocument();
     expect(within(passport).getByText("apt-trade")).toBeInTheDocument();
     expect(within(passport).getByText("sha256:apt14")).toBeInTheDocument();
     // Schema/Artifact는 selected stage detail의 별도 비동기 조회(getBuildStageDetail) 결과라 좀 더 늦게 반영된다.

@@ -50,7 +50,7 @@ describe("loadAssistantEvidence (#256)", () => {
   });
 
   it("includes stage evidence (status/rowCount only, no raw sample rows) for the context source_key", async () => {
-    // apt-2026-08-14 is multi-source (datago__trade + bok__index), so the source must be explicit.
+    // apt-2026-08-14 is multi-source (datago__trade + datago__rent), so the source must be explicit.
     const context: AssistantContext = {
       page: "dataset-detail",
       datasetId: "apt-trade",

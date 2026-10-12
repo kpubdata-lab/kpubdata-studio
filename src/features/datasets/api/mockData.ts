@@ -13,19 +13,19 @@ export const MOCK_DATASETS: DatasetsResponse = {
   datasets: [
     {
       dataset_id: "apt-trade",
-      title: "아파트 매매·주택가격지수 통합 데이터",
+      title: "아파트 매매·전월세 통합 데이터",
       sources: [
         { provider: "datago", dataset: "apt_trade", alias: "trade" },
-        { provider: "bok", dataset: "housing_price_index", alias: "index" },
+        { provider: "datago", dataset: "apt_rent", alias: "rent" },
       ],
       latest_run_id: "apt-2026-08-14",
       status: "failed",
       updated_at: "2026-08-14T07:30:00Z",
-      row_counts: { datago__trade: 1000, bok__index: 200 },
+      row_counts: { datago__trade: 1000, datago__rent: 200 },
       total_row_count: 1200,
       stages: {
         datago__trade: { bronze: "completed", silver: "completed", gold: "completed" },
-        bok__index: { bronze: "completed", silver: "failed", gold: "not_run" },
+        datago__rent: { bronze: "completed", silver: "failed", gold: "not_run" },
       },
       status_axes: { refresh: "failed", completeness: "partial", health: "unknown", access: "available", maturity: "beta" },
       quality: null,
@@ -130,14 +130,14 @@ export const MOCK_STAGES: Record<string, RunStagesResponse> = {
     run_id: "apt-2026-08-14",
     sources: [
       { source_key: "datago__trade", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
-      { source_key: "bok__index", bronze: { status: "completed", available: true }, silver: { status: "failed", available: false }, gold: { status: "not_run", available: false } },
+      { source_key: "datago__rent", bronze: { status: "completed", available: true }, silver: { status: "failed", available: false }, gold: { status: "not_run", available: false } },
     ],
   },
   "apt-2026-08-13": {
     run_id: "apt-2026-08-13",
     sources: [
       { source_key: "datago__trade", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
-      { source_key: "bok__index", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
+      { source_key: "datago__rent", bronze: { status: "completed", available: true }, silver: { status: "completed", available: true }, gold: { status: "completed", available: true } },
     ],
   },
   "population-2026-08-13": {
@@ -218,9 +218,9 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
     evaluated_checks: 2,
     quality_results: {
       datago__trade: [{ source_key: "datago__trade", category: "missing", rule: "max_null_ratio", column: "deal_amount", status: "pass", actual: 0.01, threshold: 0.05, affected_rows: 10, evaluated_rows: 1000, detail: null }],
-      bok__index: [{ source_key: "bok__index", category: "schema", rule: "required_column", column: "price_index", status: "fail", actual: false, threshold: true, affected_rows: null, evaluated_rows: null, detail: "필수 컬럼이 없습니다." }],
+      datago__rent: [{ source_key: "datago__rent", category: "schema", rule: "required_column", column: "deposit", status: "fail", actual: false, threshold: true, affected_rows: null, evaluated_rows: null, detail: "필수 컬럼이 없습니다." }],
     },
-    schema_drift: { datago__trade: [], bok__index: [{ kind: "column_removed", column: "price_index", detail: "price_index 컬럼이 제거되었습니다." }] },
+    schema_drift: { datago__trade: [], datago__rent: [{ kind: "column_removed", column: "deposit", detail: "deposit 컬럼이 제거되었습니다." }] },
   },
   "apt-2026-08-13": {
     run_id: "apt-2026-08-13",
@@ -228,9 +228,9 @@ export const MOCK_QUALITY: Record<string, BuildQualityResponse> = {
     evaluated_checks: 2,
     quality_results: {
       datago__trade: [{ source_key: "datago__trade", category: "row_count", rule: "min_rows", column: null, status: "pass", actual: 1000, threshold: 100, affected_rows: null, evaluated_rows: 1000, detail: null }],
-      bok__index: [{ source_key: "bok__index", category: "missing", rule: "max_null_ratio", column: "jeonse_index", status: "warn", actual: 0.08, threshold: 0.05, affected_rows: 16, evaluated_rows: 200, detail: null }],
+      datago__rent: [{ source_key: "datago__rent", category: "missing", rule: "max_null_ratio", column: "monthly_rent", status: "warn", actual: 0.08, threshold: 0.05, affected_rows: 16, evaluated_rows: 200, detail: null }],
     },
-    schema_drift: { datago__trade: [], bok__index: [] },
+    schema_drift: { datago__trade: [], datago__rent: [] },
   },
   "population-2026-08-13": { run_id: "population-2026-08-13", availability: "unavailable", evaluated_checks: 0, quality_results: {}, schema_drift: {} },
   "transport-2026-08-12": {

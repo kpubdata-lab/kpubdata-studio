@@ -29,8 +29,8 @@ describe("resolveAssistantContext — source_key", () => {
   });
 
   it("resolves ?source= on the dataset-detail route too", () => {
-    const { context } = resolveAssistantContext("/tables/apt-trade", "?run=r1&source=bok__index&stage=gold");
-    expect(context.source).toBe("bok__index");
+    const { context } = resolveAssistantContext("/tables/apt-trade", "?run=r1&source=datago__rent&stage=gold");
+    expect(context.source).toBe("datago__rent");
   });
 });
 
@@ -42,7 +42,7 @@ describe("contextsMatch — source_key participates in the stale guard", () => {
   });
 
   it("different source_key → no match (turn goes stale)", () => {
-    expect(contextsMatch({ ...base, source: "datago__trade" }, { ...base, source: "bok__index" })).toBe(false);
+    expect(contextsMatch({ ...base, source: "datago__trade" }, { ...base, source: "datago__rent" })).toBe(false);
   });
 
   it("source_key present vs absent → no match", () => {

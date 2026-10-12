@@ -261,7 +261,7 @@ describe("useAssistantSession — evidence grounding & hallucination gate (#256)
     mockStream(() =>
       jsonText({
         answer: "현재 데이터셋 상태를 요약했습니다.",
-        evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·주택가격지수 통합 데이터" }],
+        evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·전월세 통합 데이터" }],
         generatedSql: null,
         suggestedActions: [{ type: "OPEN_BUILD", runId: "apt-2026-08-14", reason: "실패 원인을 확인하세요" }],
       }),

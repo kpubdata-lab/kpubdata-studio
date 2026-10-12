@@ -29,7 +29,7 @@ describe("buildDeterministicSections (#258 §4, §5)", () => {
     const [, pipeline] = buildDeterministicSections(evidence);
 
     expect(pipeline.markdown).toContain("datago__trade");
-    expect(pipeline.markdown).toContain("bok__index");
+    expect(pipeline.markdown).toContain("datago__rent");
     expect(pipeline.markdown).toContain("failed");
     expect(pipeline.evidenceStatus).toBe("ok");
   });

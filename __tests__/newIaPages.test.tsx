@@ -86,7 +86,7 @@ describe("새 IA placeholder 화면 (#247)", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("heading", { name: "아파트 매매·주택가격지수 통합 데이터" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "아파트 매매·전월세 통합 데이터" })).toBeInTheDocument();
     expect(screen.getByLabelText("실행 선택")).toHaveValue("apt-2026-08-14");
   });
 });

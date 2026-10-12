@@ -92,15 +92,15 @@ const DEMO_TABLES: DemoTable[] = [
   {
     // The 08-14 run failed at silver for this source: its snapshot was quarantined and the
     // table still reads the 08-13 one.
-    table: { table_id: "tbl_002", logical_name: "apt-trade.bok__index", current_snapshot_id: "snap_010", revision: 1 },
+    table: { table_id: "tbl_002", logical_name: "apt-trade.datago__rent", current_snapshot_id: "snap_010", revision: 1 },
     snapshots: [
       snapshot("snap_013", "apt-2026-08-14", null, "2026-08-14T07:25:00Z", null),
       snapshot("snap_010", "apt-2026-08-13", 200, "2026-08-13T07:18:00Z", "2026-08-13T07:19:00Z"),
     ],
     columns: [
       column("period", "string", hourly("2026-08-05T00:00:00Z")),
-      column("price_index", "float64", (index) => 21 + ((index * 3) % 11)),
-      column("jeonse_index", "float64", (index) => 48 + ((index * 11) % 40)),
+      column("deposit", "int64", (index) => 10_000 + ((index * 3) % 11) * 1_000),
+      column("monthly_rent", "int64", (index) => 48 + ((index * 11) % 40)),
     ],
   },
   {

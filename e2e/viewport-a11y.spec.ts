@@ -86,7 +86,7 @@ test("390x844에서 ⌘K 팔레트로 키보드만 써서 테이블을 연다 (#
   await expect(dialog).toBeVisible();
   await page.keyboard.type("아파트");
 
-  const table = dialog.getByRole("option", { name: /아파트 매매·주택가격지수 통합 데이터/ });
+  const table = dialog.getByRole("option", { name: /아파트 매매·전월세 통합 데이터/ });
   await expect(table).toHaveAttribute("aria-selected", "true");
   await expect(dialog.getByRole("option").last()).toContainText("Ask KPubData");
 

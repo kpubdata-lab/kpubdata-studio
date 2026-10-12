@@ -25,9 +25,9 @@ describe("fetchReportEvidence (#258)", () => {
 
     expect(evidence.schemas["datago__trade"]?.origin).toBe("silver");
     expect(evidence.schemas["datago__trade"]?.columns.length).toBeGreaterThan(0);
-    // bok__index: in mock, silver failed/gold not_run so schema unavailable.
-    expect(evidence.schemas["bok__index"]?.origin).toBe("unavailable");
-    expect(evidence.schemas["bok__index"]?.reason).toBeTruthy();
+    // datago__rent: in mock, silver failed/gold not_run so schema unavailable.
+    expect(evidence.schemas["datago__rent"]?.origin).toBe("unavailable");
+    expect(evidence.schemas["datago__rent"]?.reason).toBeTruthy();
   });
 
   it("Silver schema를 사용하고 Silver stage detail을 limit=1로 조회한다", async () => {

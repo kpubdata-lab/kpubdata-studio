@@ -23,7 +23,7 @@ test("카탈로그에서 테이블을 거쳐 SQL 로 질의한다", async ({ pag
   await expect(page).toHaveURL(/\/tables$/);
 
   // Tables → one table.
-  await page.getByText("아파트 매매·주택가격지수 통합 데이터").first().click();
+  await page.getByText("아파트 매매·전월세 통합 데이터").first().click();
   await expect(page).toHaveURL(/\/tables\/apt-trade/);
 
   // Table → SQL, bound to that table in the demo warehouse (#530).

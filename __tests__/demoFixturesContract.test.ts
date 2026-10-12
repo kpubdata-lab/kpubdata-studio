@@ -159,7 +159,7 @@ describe("the demo leads with tables and snapshots (#530)", () => {
     const air = list.rows.find((row) => row.dataset_id === "apt-trade");
     expect(air?.snapshots?.map((entry) => [entry.sourceKey, entry.current?.snapshot_id, entry.current?.row_count])).toEqual([
       ["datago__trade", "snap_012", 1000],
-      ["bok__index", "snap_010", 200],
+      ["datago__rent", "snap_010", 200],
     ]);
   });
 

@@ -52,7 +52,7 @@ test("Tables 화면이 실패 dataset의 stage 상태를 정상으로 위장하�
   await expect(page.getByRole("heading", { name: /^(테이블|Tables)$/ }).first()).toBeVisible({
     timeout: 10_000,
   });
-  await expect(page.getByText("아파트 매매·주택가격지수 통합 데이터").first()).toBeVisible();
+  await expect(page.getByText("아파트 매매·전월세 통합 데이터").first()).toBeVisible();
 
   await expectNoPageErrors(errors);
 });

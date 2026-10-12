@@ -121,7 +121,7 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
   });
 
   it("evaluated checks 기준 PASS/WARN/FAIL count, multi-source 현황, WARN/FAIL 근거, schema drift를 표시한다", async () => {
-    // apt-2026-08-14: partial availability, 2개 source(datago__trade pass / bok__index fail),
+    // apt-2026-08-14: partial availability, 2개 source(datago__trade pass / datago__rent fail),
     // schema_drift 1건이 있는 기존 mock fixture를 그대로 재사용한다(새 mock 의미를 만들지 않음).
     renderBuilds("/refresh-jobs?run=apt-2026-08-14");
 
@@ -137,10 +137,10 @@ describe("Quality 카드 보강 (#255 후속 보완 §1)", () => {
     // source_key가 나오므로 getAllByText로 확인한다).
     expect(screen.getByText("소스별 평가 현황")).toBeInTheDocument();
     expect(screen.getAllByText("datago__trade").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("bok__index").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("datago__rent").length).toBeGreaterThan(0);
 
     // WARN/FAIL 결과는 source/category/rule/column/actual/threshold를 함께 보여준다.
-    expect(screen.getByText(/bok__index · schema\/required_column · price_index/)).toBeInTheDocument();
+    expect(screen.getByText(/datago__rent · schema\/required_column · deposit/)).toBeInTheDocument();
     expect(screen.getByText(/실제값 false \/ 기준값 true/)).toBeInTheDocument();
 
     // schema drift는 별도 compact summary로 나온다.
@@ -366,8 +366,8 @@ describe("Pipeline / Stage Progress 시각화 (#255 후속 보완 §6)", () => {
     renderBuilds("/refresh-jobs?run=apt-2026-08-14");
     await waitFor(() => expect(screen.getAllByText("datago__trade").length).toBeGreaterThan(0));
 
-    expect(screen.getAllByText("bok__index").length).toBeGreaterThan(0);
-    // bok__index는 silver failed → gold not_run(미도달), datago__trade는 전부 completed다.
+    expect(screen.getAllByText("datago__rent").length).toBeGreaterThan(0);
+    // datago__rent는 silver failed → gold not_run(미도달), datago__trade는 전부 completed다.
     expect(screen.getAllByText("미도달")).toHaveLength(1);
   });
 });

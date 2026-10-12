@@ -45,7 +45,7 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
     const evidence = baseEvidence({
       dataset: {
         datasetId: "apt-trade",
-        title: "아파트 매매·주택가격지수 통합 데이터",
+        title: "아파트 매매·전월세 통합 데이터",
         providers: ["data.go.kr"],
         sources: [{ provider: "data.go.kr", dataset: "air" }],
         latestRunId: "apt-2026-08-14",
@@ -75,7 +75,7 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
 
     const response = buildAssistantDemoResponse(evidence);
 
-    expect(response.evidenceRefs).toContainEqual({ kind: "dataset", id: "apt-trade", label: "아파트 매매·주택가격지수 통합 데이터" });
+    expect(response.evidenceRefs).toContainEqual({ kind: "dataset", id: "apt-trade", label: "아파트 매매·전월세 통합 데이터" });
     expect(response.evidenceRefs).toContainEqual({
       kind: "quality",
       id: "datago__trade::missing::max_null_ratio::pm10",
@@ -89,7 +89,7 @@ describe("buildAssistantDemoResponse (#256 데모)", () => {
     const datasetOnly = baseEvidence({
       dataset: {
         datasetId: "apt-trade",
-        title: "아파트 매매·주택가격지수 통합 데이터",
+        title: "아파트 매매·전월세 통합 데이터",
         providers: [],
         sources: [],
         latestRunId: "apt-2026-08-14",

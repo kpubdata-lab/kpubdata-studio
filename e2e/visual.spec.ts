@@ -85,7 +85,7 @@ const SCREENS: Screen[] = [
     name: "table-detail",
     path: "/tables/apt-trade",
     ready: async (page) => {
-      await expect(page.getByRole("heading", { level: 1, name: "아파트 매매·주택가격지수 통합 데이터" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "아파트 매매·전월세 통합 데이터" })).toBeVisible();
       await expect(page.getByText("snap_012").first()).toBeVisible();
     },
   },

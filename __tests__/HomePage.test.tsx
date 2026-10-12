@@ -57,7 +57,7 @@ describe("HomePage (mock deployment, no warehouse)", () => {
 
     const attention = await screen.findByRole("heading", { level: 2, name: "조치가 필요한 테이블" });
     const section = attention.closest("section")!;
-    const air = within(section).getByRole("link", { name: /아파트 매매·주택가격지수 통합 데이터/ });
+    const air = within(section).getByRole("link", { name: /아파트 매매·전월세 통합 데이터/ });
     expect(air).toHaveAttribute("href", "/tables/apt-trade");
     expect(within(section).queryByText("행정구역별 인구")).not.toBeInTheDocument();
 

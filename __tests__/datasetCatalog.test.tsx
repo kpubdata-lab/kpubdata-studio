@@ -44,10 +44,10 @@ describe("Tables without a warehouse (mock deployment)", () => {
     expect(screen.getByTestId("location")).toHaveTextContent("?q=population");
   });
 
-  it("filters by any provider in a multi-source table", async () => {
+  it("filters a multi-source table by its shared provider", async () => {
     renderCatalog();
     await screen.findByText("apt-trade");
-    fireEvent.change(screen.getByLabelText("제공자"), { target: { value: "bok" } });
+    fireEvent.change(screen.getByLabelText("제공자"), { target: { value: "datago" } });
     expect(screen.getByText("apt-trade")).toBeInTheDocument();
     expect(screen.queryByText("population")).not.toBeInTheDocument();
   });
@@ -68,7 +68,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
 
   it("badges only what needs action; a healthy value is plain text (#524, #525)", async () => {
     renderCatalog();
-    const air = await screen.findByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터 상세 열기" });
+    const air = await screen.findByRole("link", { name: "아파트 매매·전월세 통합 데이터 상세 열기" });
     const isBadge = (_: string, element: Element | null) => element?.getAttribute("data-status") === "actionable";
     const [nameCell, ...axisCells] = within(air).getAllByRole("cell");
     const airBadges = axisCells.flatMap((cell) => within(cell).queryAllByText(isBadge));
@@ -94,7 +94,7 @@ describe("Tables without a warehouse (mock deployment)", () => {
 
   it("opens Table Detail on click and from the keyboard", async () => {
     renderCatalog();
-    const row = await screen.findByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터 상세 열기" });
+    const row = await screen.findByRole("link", { name: "아파트 매매·전월세 통합 데이터 상세 열기" });
     row.focus();
     fireEvent.keyDown(row, { key: "Enter" });
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/tables/apt-trade"));

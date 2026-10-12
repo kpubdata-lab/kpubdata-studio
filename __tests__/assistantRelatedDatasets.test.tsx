@@ -42,7 +42,7 @@ function configureKeyAndAsk() {
   mockStream(() =>
     jsonText({
       answer: "현재 데이터셋 상태를 요약했습니다.",
-      evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·주택가격지수 통합 데이터" }],
+      evidenceRefs: [{ kind: "dataset", id: "apt-trade", label: "아파트 매매·전월세 통합 데이터" }],
       generatedSql: null,
       suggestedActions: [],
     }),

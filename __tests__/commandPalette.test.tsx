@@ -48,7 +48,7 @@ async function openAndType(query: string, shortcut: { ctrlKey?: boolean; metaKey
   const input = within(dialog).getByRole("combobox");
   fireEvent.change(input, { target: { value: query } });
   // Tables and sources arrive asynchronously; wait for the table hit.
-  await within(dialog).findByRole("option", { name: /아파트 매매·주택가격지수 통합 데이터/ });
+  await within(dialog).findByRole("option", { name: /아파트 매매·전월세 통합 데이터/ });
   return { dialog, input };
 }
 
@@ -63,7 +63,7 @@ describe("command palette (#533)", () => {
     const { dialog, input } = await openAndType("아파트");
 
     const options = within(dialog).getAllByRole("option");
-    expect(options[0]).toHaveTextContent("아파트 매매·주택가격지수 통합 데이터");
+    expect(options[0]).toHaveTextContent("아파트 매매·전월세 통합 데이터");
     expect(options[0]).toHaveAttribute("aria-selected", "true");
     expect(within(dialog).getByRole("group", { name: "테이블" })).toBeInTheDocument();
     expect(within(within(dialog).getByRole("group", { name: "소스" })).getByRole("option", { name: /아파트 실거래가/ })).toBeInTheDocument();

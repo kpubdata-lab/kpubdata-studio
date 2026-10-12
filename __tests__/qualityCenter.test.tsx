@@ -42,14 +42,14 @@ describe("Quality Center across tables (#536)", () => {
     expect(headers).toEqual(["테이블", "소스", "규칙", "컬럼", "상태", "실제값 / 기준", "영향 행 / 검사 행", "스냅샷(실행)"]);
 
     const fail = within(table).getByRole("row", { name: /required_column/ });
-    expect(fail).toHaveTextContent("아파트 매매·주택가격지수 통합 데이터");
-    expect(fail).toHaveTextContent("bok__index");
-    expect(fail).toHaveTextContent("price_index");
+    expect(fail).toHaveTextContent("아파트 매매·전월세 통합 데이터");
+    expect(fail).toHaveTextContent("datago__rent");
+    expect(fail).toHaveTextContent("deposit");
     expect(within(fail).getByText("FAIL").closest("[data-status]")).toHaveAttribute("data-status", "actionable");
     expect(within(fail).getByRole("link", { name: "apt-2026-08-14" })).toHaveAttribute("href", "/refresh-jobs/apt-2026-08-14");
-    expect(within(fail).getByRole("link", { name: "아파트 매매·주택가격지수 통합 데이터" })).toHaveAttribute(
+    expect(within(fail).getByRole("link", { name: "아파트 매매·전월세 통합 데이터" })).toHaveAttribute(
       "href",
-      "/tables/apt-trade?run=apt-2026-08-14&source=bok__index&tab=quality",
+      "/tables/apt-trade?run=apt-2026-08-14&source=datago__rent&tab=quality",
     );
 
     const drift = within(table).getByRole("row", { name: /column_removed/ });
@@ -111,10 +111,10 @@ describe("Quality Center across tables (#536)", () => {
   });
 
   it("points an older run from a link to Table Detail instead of silently showing the latest", async () => {
-    renderQuality("/quality?dataset=apt-trade&run=apt-2026-08-13&source=bok__index");
+    renderQuality("/quality?dataset=apt-trade&run=apt-2026-08-13&source=datago__rent");
     const note = await screen.findByRole("note");
     expect(note).toHaveTextContent("apt-2026-08-13");
-    expect(within(note).getByRole("link")).toHaveAttribute("href", "/tables/apt-trade?run=apt-2026-08-13&source=bok__index&tab=quality");
+    expect(within(note).getByRole("link")).toHaveAttribute("href", "/tables/apt-trade?run=apt-2026-08-13&source=datago__rent&tab=quality");
     expect(screen.getByLabelText("테이블")).toHaveValue("apt-trade");
   });
 

@@ -21,10 +21,9 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       const evidence = await fetchReportEvidence("apt-trade", "apt-2026-08-14");
       const summary = buildOverviewSummary(evidence);
 
-      expect(summary).toContain("아파트 매매·주택가격지수 통합 데이터");
+      expect(summary).toContain("아파트 매매·전월세 통합 데이터");
       expect(summary).toContain("apt-2026-08-14");
       expect(summary).toContain("datago");
-      expect(summary).toContain("bok");
       expect(summary).toContain("failed");
     });
 
@@ -42,7 +41,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       const summary = buildPipelineSummary(evidence);
 
       expect(summary).toContain("datago__trade");
-      expect(summary).toContain("bok__index");
+      expect(summary).toContain("datago__rent");
       expect(summary).toContain("Silver 단계에서 실패하여 Gold 단계가 실행되지 않았습니다");
       expect(summary).toContain("Bronze → Silver → Gold까지 모두 정상 처리되었습니다");
     });
@@ -59,10 +58,10 @@ describe("narrativeSummary (#258 IA 개편)", () => {
       expect(summary).toContain("1건은 PASS");
       expect(summary).toContain("1건은 FAIL");
       expect(summary).not.toContain("0건은 WARN");
-      // Actual per-rule descriptions: deal_amount missing-rate PASS, price_index required-column FAIL
+      // Actual per-rule descriptions: deal_amount missing-rate PASS, deposit required-column FAIL
       expect(summary).toContain("deal_amount");
       expect(summary).toContain("1.0%");
-      expect(summary).toContain("price_index");
+      expect(summary).toContain("deposit");
       expect(summary).toContain("확인되지 않아 FAIL했습니다");
     });
 
@@ -90,7 +89,7 @@ describe("narrativeSummary (#258 IA 개편)", () => {
 
       expect(summary).toContain("observed_at");
       expect(summary).toContain("value");
-      expect(summary).toContain("bok__index");
+      expect(summary).toContain("datago__rent");
       expect(summary).toContain("해당 단계의 스키마를 확인할 수 없습니다");
     });
   });
