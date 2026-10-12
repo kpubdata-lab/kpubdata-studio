@@ -755,6 +755,15 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // listed so that Builder's examples can land. 400 on the synchronous route, whose 409 is a build response.
   "submitBuild 409 RunIdEnded": { notHandled: MESSAGE_ONLY, code: "run_id_ended", since: "1.85.0" },
   "createBuild 400 RunIdEnded": { notHandled: MESSAGE_ONLY, code: "run_id_ended", since: "1.85.0" },
+  // The synchronous route runs as a job since kpubdata-builder#1309 and so can be
+  // cancelled by the server's time limit. Studio builds through submitBuild and reads a
+  // cancelled job from its status, never from this body (#970). The example reached
+  // Builder's main between 1.123.0 and 1.124.0 without a version of its own.
+  "createBuild 409 BuildCancelledByTimeLimit": {
+    notHandled: "no screen sends the synchronous route (__tests__/noSynchronousBuildCaller.test.ts); Studio submits through submitBuild",
+    code: "time_limit_exceeded",
+    since: "1.124.0",
+  },
   "AuthThrottled 429 AuthThrottled": { notHandled: MESSAGE_ONLY, code: "auth_throttled", since: "1.80.0" },
   "ServerOverloaded 503 ServerOverloaded": {
     notHandled: `${MESSAGE_ONLY}; the response is written before the request is read`,
