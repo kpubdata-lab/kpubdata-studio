@@ -1,0 +1,2774 @@
+{
+  "packages": {
+    "node_modules/@adobe/css-tools": {
+      "name": "@adobe/css-tools",
+      "version": "4.5.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@adobe/css-tools/-/css-tools-4.5.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@alloc/quick-lru": {
+      "name": "@alloc/quick-lru",
+      "version": "5.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@alloc/quick-lru/-/quick-lru-5.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@asamuzakjp/css-color": {
+      "name": "@asamuzakjp/css-color",
+      "version": "7.1.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@asamuzakjp/css-color/-/css-color-7.1.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@asamuzakjp/dom-selector": {
+      "name": "@asamuzakjp/dom-selector",
+      "version": "9.2.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@asamuzakjp/dom-selector/-/dom-selector-9.2.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/@axe-core/playwright": {
+      "name": "@axe-core/playwright",
+      "version": "4.13.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/@axe-core/playwright/-/playwright-4.13.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/@babel/code-frame": {
+      "name": "@babel/code-frame",
+      "version": "7.29.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@babel/helper-string-parser": {
+      "name": "@babel/helper-string-parser",
+      "version": "7.29.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.29.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@babel/helper-validator-identifier": {
+      "name": "@babel/helper-validator-identifier",
+      "version": "7.29.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.29.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@babel/parser": {
+      "name": "@babel/parser",
+      "version": "7.29.9",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@babel/parser/-/parser-7.29.9.tgz",
+      "status": "declared"
+    },
+    "node_modules/@babel/runtime": {
+      "name": "@babel/runtime",
+      "version": "7.29.7",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@babel/types": {
+      "name": "@babel/types",
+      "version": "7.29.8",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@babel/types/-/types-7.29.8.tgz",
+      "status": "declared"
+    },
+    "node_modules/@bcoe/v8-coverage": {
+      "name": "@bcoe/v8-coverage",
+      "version": "1.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-1.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@bramus/specificity": {
+      "name": "@bramus/specificity",
+      "version": "2.4.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@bramus/specificity/-/specificity-2.4.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@cacheable/memory": {
+      "name": "@cacheable/memory",
+      "version": "2.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@cacheable/memory/-/memory-2.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@cacheable/utils": {
+      "name": "@cacheable/utils",
+      "version": "2.5.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@cacheable/utils/-/utils-2.5.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@csstools/color-helpers": {
+      "name": "@csstools/color-helpers",
+      "version": "6.1.2",
+      "scope": "development install",
+      "license": "MIT-0",
+      "source": "https://registry.npmjs.org/@csstools/color-helpers/-/color-helpers-6.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@csstools/css-calc": {
+      "name": "@csstools/css-calc",
+      "version": "3.4.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@csstools/css-calc/-/css-calc-3.4.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@csstools/css-color-parser": {
+      "name": "@csstools/css-color-parser",
+      "version": "4.2.6",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@csstools/css-color-parser/-/css-color-parser-4.2.6.tgz",
+      "status": "declared"
+    },
+    "node_modules/@csstools/css-parser-algorithms": {
+      "name": "@csstools/css-parser-algorithms",
+      "version": "4.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@csstools/css-parser-algorithms/-/css-parser-algorithms-4.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@csstools/css-syntax-patches-for-csstree": {
+      "name": "@csstools/css-syntax-patches-for-csstree",
+      "version": "1.1.15",
+      "scope": "development install",
+      "license": "MIT-0",
+      "source": "https://registry.npmjs.org/@csstools/css-syntax-patches-for-csstree/-/css-syntax-patches-for-csstree-1.1.15.tgz",
+      "status": "declared"
+    },
+    "node_modules/@csstools/css-tokenizer": {
+      "name": "@csstools/css-tokenizer",
+      "version": "4.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@csstools/css-tokenizer/-/css-tokenizer-4.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint-community/eslint-utils": {
+      "name": "@eslint-community/eslint-utils",
+      "version": "4.10.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@eslint-community/eslint-utils/-/eslint-utils-4.10.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint-community/eslint-utils/node_modules/eslint-visitor-keys": {
+      "name": "eslint-visitor-keys",
+      "version": "3.4.3",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-3.4.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint-community/regexpp": {
+      "name": "@eslint-community/regexpp",
+      "version": "4.12.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@eslint-community/regexpp/-/regexpp-4.12.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint/config-array": {
+      "name": "@eslint/config-array",
+      "version": "0.23.5",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@eslint/config-array/-/config-array-0.23.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint/config-helpers": {
+      "name": "@eslint/config-helpers",
+      "version": "0.7.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@eslint/config-helpers/-/config-helpers-0.7.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint/core": {
+      "name": "@eslint/core",
+      "version": "1.2.1",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@eslint/core/-/core-1.2.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint/js": {
+      "name": "@eslint/js",
+      "version": "10.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@eslint/js/-/js-10.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint/object-schema": {
+      "name": "@eslint/object-schema",
+      "version": "3.0.5",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@eslint/object-schema/-/object-schema-3.0.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/@eslint/plugin-kit": {
+      "name": "@eslint/plugin-kit",
+      "version": "0.7.3",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@eslint/plugin-kit/-/plugin-kit-0.7.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@exodus/bytes": {
+      "name": "@exodus/bytes",
+      "version": "1.16.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@exodus/bytes/-/bytes-1.16.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@humanfs/core": {
+      "name": "@humanfs/core",
+      "version": "0.19.2",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@humanfs/core/-/core-0.19.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@humanfs/node": {
+      "name": "@humanfs/node",
+      "version": "0.16.8",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@humanfs/node/-/node-0.16.8.tgz",
+      "status": "declared"
+    },
+    "node_modules/@humanfs/types": {
+      "name": "@humanfs/types",
+      "version": "0.15.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@humanfs/types/-/types-0.15.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@humanwhocodes/module-importer": {
+      "name": "@humanwhocodes/module-importer",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@humanwhocodes/module-importer/-/module-importer-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@humanwhocodes/retry": {
+      "name": "@humanwhocodes/retry",
+      "version": "0.4.3",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@humanwhocodes/retry/-/retry-0.4.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@inquirer/ansi": {
+      "name": "@inquirer/ansi",
+      "version": "2.0.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@inquirer/ansi/-/ansi-2.0.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@inquirer/confirm": {
+      "name": "@inquirer/confirm",
+      "version": "6.1.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@inquirer/confirm/-/confirm-6.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@inquirer/core": {
+      "name": "@inquirer/core",
+      "version": "11.2.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@inquirer/core/-/core-11.2.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@inquirer/figures": {
+      "name": "@inquirer/figures",
+      "version": "2.0.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@inquirer/figures/-/figures-2.0.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@inquirer/type": {
+      "name": "@inquirer/type",
+      "version": "4.0.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@inquirer/type/-/type-4.0.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/@jridgewell/gen-mapping": {
+      "name": "@jridgewell/gen-mapping",
+      "version": "0.3.13",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz",
+      "status": "declared"
+    },
+    "node_modules/@jridgewell/remapping": {
+      "name": "@jridgewell/remapping",
+      "version": "2.3.5",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@jridgewell/remapping/-/remapping-2.3.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/@jridgewell/resolve-uri": {
+      "name": "@jridgewell/resolve-uri",
+      "version": "3.1.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@jridgewell/sourcemap-codec": {
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.6.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@jridgewell/trace-mapping": {
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.31",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz",
+      "status": "declared"
+    },
+    "node_modules/@keyv/bigmap": {
+      "name": "@keyv/bigmap",
+      "version": "1.3.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@keyv/bigmap/-/bigmap-1.3.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@keyv/serialize": {
+      "name": "@keyv/serialize",
+      "version": "1.1.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@keyv/serialize/-/serialize-1.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@msw/url": {
+      "name": "@msw/url",
+      "version": "0.1.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@msw/url/-/url-0.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@mswjs/interceptors": {
+      "name": "@mswjs/interceptors",
+      "version": "0.45.6",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@mswjs/interceptors/-/interceptors-0.45.6.tgz",
+      "status": "declared"
+    },
+    "node_modules/@open-draft/until": {
+      "name": "@open-draft/until",
+      "version": "3.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@open-draft/until/-/until-3.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@oxc-project/types": {
+      "name": "@oxc-project/types",
+      "version": "0.152.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@oxc-project/types/-/types-0.152.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@playwright/test": {
+      "name": "@playwright/test",
+      "version": "1.64.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@playwright/test/-/test-1.64.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-android-arm-eabi": {
+      "name": "@rolldown/binding-android-arm-eabi",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-android-arm-eabi/-/binding-android-arm-eabi-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-android-arm64": {
+      "name": "@rolldown/binding-android-arm64",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-darwin-arm64": {
+      "name": "@rolldown/binding-darwin-arm64",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-darwin-x64": {
+      "name": "@rolldown/binding-darwin-x64",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-freebsd-x64": {
+      "name": "@rolldown/binding-freebsd-x64",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-arm-gnueabihf": {
+      "name": "@rolldown/binding-linux-arm-gnueabihf",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-arm64-gnu": {
+      "name": "@rolldown/binding-linux-arm64-gnu",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-arm64-musl": {
+      "name": "@rolldown/binding-linux-arm64-musl",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-ppc64-gnu": {
+      "name": "@rolldown/binding-linux-ppc64-gnu",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-s390x-gnu": {
+      "name": "@rolldown/binding-linux-s390x-gnu",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-x64-gnu": {
+      "name": "@rolldown/binding-linux-x64-gnu",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-linux-x64-musl": {
+      "name": "@rolldown/binding-linux-x64-musl",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-openharmony-arm64": {
+      "name": "@rolldown/binding-openharmony-arm64",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-win32-arm64-msvc": {
+      "name": "@rolldown/binding-win32-arm64-msvc",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/binding-win32-x64-msvc": {
+      "name": "@rolldown/binding-win32-x64-msvc",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@rolldown/pluginutils": {
+      "name": "@rolldown/pluginutils",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/node": {
+      "name": "@tailwindcss/node",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/node/-/node-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide": {
+      "name": "@tailwindcss/oxide",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-android-arm64": {
+      "name": "@tailwindcss/oxide-android-arm64",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-android-arm64/-/oxide-android-arm64-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-darwin-arm64": {
+      "name": "@tailwindcss/oxide-darwin-arm64",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-darwin-arm64/-/oxide-darwin-arm64-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-darwin-x64": {
+      "name": "@tailwindcss/oxide-darwin-x64",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-darwin-x64/-/oxide-darwin-x64-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-freebsd-x64": {
+      "name": "@tailwindcss/oxide-freebsd-x64",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-freebsd-x64/-/oxide-freebsd-x64-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-linux-arm-gnueabihf": {
+      "name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-linux-arm-gnueabihf/-/oxide-linux-arm-gnueabihf-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-linux-arm64-gnu": {
+      "name": "@tailwindcss/oxide-linux-arm64-gnu",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-linux-arm64-gnu/-/oxide-linux-arm64-gnu-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-linux-arm64-musl": {
+      "name": "@tailwindcss/oxide-linux-arm64-musl",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-linux-arm64-musl/-/oxide-linux-arm64-musl-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-linux-x64-gnu": {
+      "name": "@tailwindcss/oxide-linux-x64-gnu",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-gnu/-/oxide-linux-x64-gnu-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-linux-x64-musl": {
+      "name": "@tailwindcss/oxide-linux-x64-musl",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-linux-x64-musl/-/oxide-linux-x64-musl-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi": {
+      "name": "@tailwindcss/oxide-wasm32-wasi",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-wasm32-wasi/-/oxide-wasm32-wasi-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/core": {
+      "name": "@emnapi/core",
+      "version": "1.11.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/%40emnapi%2Fcore",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/runtime": {
+      "name": "@emnapi/runtime",
+      "version": "1.11.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/%40emnapi%2Fruntime",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@emnapi/wasi-threads": {
+      "name": "@emnapi/wasi-threads",
+      "version": "1.2.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/%40emnapi%2Fwasi-threads",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@napi-rs/wasm-runtime": {
+      "name": "@napi-rs/wasm-runtime",
+      "version": "1.1.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/%40napi-rs%2Fwasm-runtime",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/@tybys/wasm-util": {
+      "name": "@tybys/wasm-util",
+      "version": "0.10.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/%40tybys%2Fwasm-util",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-wasm32-wasi/node_modules/tslib": {
+      "name": "tslib",
+      "version": "2.8.1",
+      "scope": "development install",
+      "license": "0BSD",
+      "source": "https://www.npmjs.com/package/tslib",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-win32-arm64-msvc": {
+      "name": "@tailwindcss/oxide-win32-arm64-msvc",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-win32-arm64-msvc/-/oxide-win32-arm64-msvc-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/oxide-win32-x64-msvc": {
+      "name": "@tailwindcss/oxide-win32-x64-msvc",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/oxide-win32-x64-msvc/-/oxide-win32-x64-msvc-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@tailwindcss/postcss": {
+      "name": "@tailwindcss/postcss",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/postcss/-/postcss-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@testing-library/dom": {
+      "name": "@testing-library/dom",
+      "version": "10.4.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@testing-library/dom/-/dom-10.4.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@testing-library/jest-dom": {
+      "name": "@testing-library/jest-dom",
+      "version": "7.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@testing-library/jest-dom/-/jest-dom-7.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@testing-library/jest-dom/node_modules/dom-accessibility-api": {
+      "name": "dom-accessibility-api",
+      "version": "0.6.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.6.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@testing-library/react": {
+      "name": "@testing-library/react",
+      "version": "16.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@testing-library/react/-/react-16.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/aria-query": {
+      "name": "@types/aria-query",
+      "version": "5.0.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/aria-query/-/aria-query-5.0.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/chai": {
+      "name": "@types/chai",
+      "version": "5.2.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/chai/-/chai-5.2.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/debug": {
+      "name": "@types/debug",
+      "version": "4.1.13",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/debug/-/debug-4.1.13.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/deep-eql": {
+      "name": "@types/deep-eql",
+      "version": "4.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/deep-eql/-/deep-eql-4.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/esrecurse": {
+      "name": "@types/esrecurse",
+      "version": "4.3.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/esrecurse/-/esrecurse-4.3.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/estree": {
+      "name": "@types/estree",
+      "version": "1.0.9",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/json-schema": {
+      "name": "@types/json-schema",
+      "version": "7.0.15",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.15.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/ms": {
+      "name": "@types/ms",
+      "version": "2.1.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/node": {
+      "name": "@types/node",
+      "version": "26.6.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/node/-/node-26.6.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/react": {
+      "name": "@types/react",
+      "version": "19.3.0",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/react/-/react-19.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/react-dom": {
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/react-dom/-/react-dom-19.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/@types/set-cookie-parser": {
+      "name": "@types/set-cookie-parser",
+      "version": "2.4.10",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/set-cookie-parser/-/set-cookie-parser-2.4.10.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/eslint-plugin": {
+      "name": "@typescript-eslint/eslint-plugin",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/eslint-plugin/node_modules/ignore": {
+      "name": "ignore",
+      "version": "7.0.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ignore/-/ignore-7.0.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/parser": {
+      "name": "@typescript-eslint/parser",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/project-service": {
+      "name": "@typescript-eslint/project-service",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/project-service/-/project-service-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/scope-manager": {
+      "name": "@typescript-eslint/scope-manager",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/scope-manager/-/scope-manager-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/tsconfig-utils": {
+      "name": "@typescript-eslint/tsconfig-utils",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/tsconfig-utils/-/tsconfig-utils-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/type-utils": {
+      "name": "@typescript-eslint/type-utils",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/type-utils/-/type-utils-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/types": {
+      "name": "@typescript-eslint/types",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/types/-/types-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/typescript-estree": {
+      "name": "@typescript-eslint/typescript-estree",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/typescript-estree/-/typescript-estree-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/utils": {
+      "name": "@typescript-eslint/utils",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/utils/-/utils-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@typescript-eslint/visitor-keys": {
+      "name": "@typescript-eslint/visitor-keys",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@typescript-eslint/visitor-keys/-/visitor-keys-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@vitejs/plugin-react": {
+      "name": "@vitejs/plugin-react",
+      "version": "6.1.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-6.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/@vitest/coverage-v8": {
+      "name": "@vitest/coverage-v8",
+      "version": "5.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitest/coverage-v8/-/coverage-v8-5.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/@vitest/istanbul-lib-coverage": {
+      "name": "@vitest/istanbul-lib-coverage",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitest/istanbul-lib-coverage/-/istanbul-lib-coverage-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@vitest/istanbul-lib-report": {
+      "name": "@vitest/istanbul-lib-report",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitest/istanbul-lib-report/-/istanbul-lib-report-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/@vitest/spy": {
+      "name": "@vitest/spy",
+      "version": "5.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitest/spy/-/spy-5.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/acorn": {
+      "name": "acorn",
+      "version": "8.18.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/acorn/-/acorn-8.18.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/acorn-jsx": {
+      "name": "acorn-jsx",
+      "version": "5.3.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/acorn-jsx/-/acorn-jsx-5.3.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/ajv": {
+      "name": "ajv",
+      "version": "6.15.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ajv/-/ajv-6.15.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/ansi-regex": {
+      "name": "ansi-regex",
+      "version": "5.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/ansi-styles": {
+      "name": "ansi-styles",
+      "version": "6.2.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-6.2.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/aria-query": {
+      "name": "aria-query",
+      "version": "5.3.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/aria-query/-/aria-query-5.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/assertion-error": {
+      "name": "assertion-error",
+      "version": "2.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/ast-v8-to-istanbul": {
+      "name": "ast-v8-to-istanbul",
+      "version": "1.0.6",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ast-v8-to-istanbul/-/ast-v8-to-istanbul-1.0.6.tgz",
+      "status": "declared"
+    },
+    "node_modules/ast-v8-to-istanbul/node_modules/js-tokens": {
+      "name": "js-tokens",
+      "version": "10.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/js-tokens/-/js-tokens-10.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/axe-core": {
+      "name": "axe-core",
+      "version": "4.13.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/axe-core/-/axe-core-4.13.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/balanced-match": {
+      "name": "balanced-match",
+      "version": "4.0.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/bidi-js": {
+      "name": "bidi-js",
+      "version": "1.1.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/bidi-js/-/bidi-js-1.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/brace-expansion": {
+      "name": "brace-expansion",
+      "version": "5.0.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/cacheable": {
+      "name": "cacheable",
+      "version": "2.5.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/cacheable/-/cacheable-2.5.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/chai": {
+      "name": "chai",
+      "version": "6.2.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/chai/-/chai-6.2.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/cli-width": {
+      "name": "cli-width",
+      "version": "4.1.0",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/cli-width/-/cli-width-4.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/cliui": {
+      "name": "cliui",
+      "version": "9.0.1",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/cliui/-/cliui-9.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/cliui/node_modules/string-width": {
+      "name": "string-width",
+      "version": "7.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/string-width/-/string-width-7.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/cookie": {
+      "name": "cookie",
+      "version": "1.1.1",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/cross-spawn": {
+      "name": "cross-spawn",
+      "version": "7.0.6",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz",
+      "status": "declared"
+    },
+    "node_modules/css-tree": {
+      "name": "css-tree",
+      "version": "3.2.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/css-tree/-/css-tree-3.2.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/css.escape": {
+      "name": "css.escape",
+      "version": "1.5.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/css.escape/-/css.escape-1.5.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/csstype": {
+      "name": "csstype",
+      "version": "3.2.3",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/data-urls": {
+      "name": "data-urls",
+      "version": "8.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/data-urls/-/data-urls-8.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/debug": {
+      "name": "debug",
+      "version": "4.4.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/decimal.js": {
+      "name": "decimal.js",
+      "version": "10.6.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/decimal.js/-/decimal.js-10.6.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/deep-is": {
+      "name": "deep-is",
+      "version": "0.1.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/deep-is/-/deep-is-0.1.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/dequal": {
+      "name": "dequal",
+      "version": "2.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/detect-libc": {
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/dom-accessibility-api": {
+      "name": "dom-accessibility-api",
+      "version": "0.5.16",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.16.tgz",
+      "status": "declared"
+    },
+    "node_modules/emoji-regex": {
+      "name": "emoji-regex",
+      "version": "10.6.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-10.6.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/enhanced-resolve": {
+      "name": "enhanced-resolve",
+      "version": "5.24.5",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.24.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/entities": {
+      "name": "entities",
+      "version": "8.0.0",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/entities/-/entities-8.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/es-module-lexer": {
+      "name": "es-module-lexer",
+      "version": "2.3.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-2.3.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/escalade": {
+      "name": "escalade",
+      "version": "3.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/escalade/-/escalade-3.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/escape-string-regexp": {
+      "name": "escape-string-regexp",
+      "version": "4.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/eslint": {
+      "name": "eslint",
+      "version": "10.12.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/eslint/-/eslint-10.12.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/eslint-scope": {
+      "name": "eslint-scope",
+      "version": "9.1.2",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/eslint-scope/-/eslint-scope-9.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/eslint-visitor-keys": {
+      "name": "eslint-visitor-keys",
+      "version": "5.0.1",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-5.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/espree": {
+      "name": "espree",
+      "version": "11.2.0",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/espree/-/espree-11.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/esquery": {
+      "name": "esquery",
+      "version": "1.7.0",
+      "scope": "development install",
+      "license": "BSD-3-Clause",
+      "source": "https://registry.npmjs.org/esquery/-/esquery-1.7.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/esrecurse": {
+      "name": "esrecurse",
+      "version": "4.3.0",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/esrecurse/-/esrecurse-4.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/estraverse": {
+      "name": "estraverse",
+      "version": "5.3.0",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/estraverse/-/estraverse-5.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/estree-walker": {
+      "name": "estree-walker",
+      "version": "3.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/esutils": {
+      "name": "esutils",
+      "version": "2.0.3",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/esutils/-/esutils-2.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/expect-type": {
+      "name": "expect-type",
+      "version": "1.4.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/expect-type/-/expect-type-1.4.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/fast-deep-equal": {
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/fast-json-stable-stringify": {
+      "name": "fast-json-stable-stringify",
+      "version": "2.1.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fast-json-stable-stringify/-/fast-json-stable-stringify-2.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/fast-levenshtein": {
+      "name": "fast-levenshtein",
+      "version": "2.0.6",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz",
+      "status": "declared"
+    },
+    "node_modules/fast-string-truncated-width": {
+      "name": "fast-string-truncated-width",
+      "version": "3.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fast-string-truncated-width/-/fast-string-truncated-width-3.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/fast-string-width": {
+      "name": "fast-string-width",
+      "version": "3.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fast-string-width/-/fast-string-width-3.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/fast-wrap-ansi": {
+      "name": "fast-wrap-ansi",
+      "version": "0.2.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fast-wrap-ansi/-/fast-wrap-ansi-0.2.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/fdir": {
+      "name": "fdir",
+      "version": "6.5.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/file-entry-cache": {
+      "name": "file-entry-cache",
+      "version": "11.1.5",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/file-entry-cache/-/file-entry-cache-11.1.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/find-up": {
+      "name": "find-up",
+      "version": "5.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/find-up/-/find-up-5.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/flat-cache": {
+      "name": "flat-cache",
+      "version": "6.1.23",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/flat-cache/-/flat-cache-6.1.23.tgz",
+      "status": "declared"
+    },
+    "node_modules/flatted": {
+      "name": "flatted",
+      "version": "3.4.4",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/flatted/-/flatted-3.4.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/get-caller-file": {
+      "name": "get-caller-file",
+      "version": "2.0.5",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/get-east-asian-width": {
+      "name": "get-east-asian-width",
+      "version": "1.7.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/get-east-asian-width/-/get-east-asian-width-1.7.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/glob-parent": {
+      "name": "glob-parent",
+      "version": "6.0.2",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/glob-parent/-/glob-parent-6.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/globals": {
+      "name": "globals",
+      "version": "17.13.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/globals/-/globals-17.13.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/graceful-fs": {
+      "name": "graceful-fs",
+      "version": "4.2.11",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz",
+      "status": "declared"
+    },
+    "node_modules/hashery": {
+      "name": "hashery",
+      "version": "1.5.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/hashery/-/hashery-1.5.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/headers-polyfill": {
+      "name": "headers-polyfill",
+      "version": "5.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/headers-polyfill/-/headers-polyfill-5.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/hookified": {
+      "name": "hookified",
+      "version": "1.15.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/hookified/-/hookified-1.15.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/html-encoding-sniffer": {
+      "name": "html-encoding-sniffer",
+      "version": "7.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/html-encoding-sniffer/-/html-encoding-sniffer-7.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/html-parse-stringify": {
+      "name": "html-parse-stringify",
+      "version": "4.0.1",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/html-parse-stringify/-/html-parse-stringify-4.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/i18next": {
+      "name": "i18next",
+      "version": "26.4.2",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/i18next/-/i18next-26.4.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/i18next-browser-languagedetector": {
+      "name": "i18next-browser-languagedetector",
+      "version": "8.2.1",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/i18next-browser-languagedetector/-/i18next-browser-languagedetector-8.2.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/ignore": {
+      "name": "ignore",
+      "version": "5.3.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ignore/-/ignore-5.3.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/imurmurhash": {
+      "name": "imurmurhash",
+      "version": "0.1.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/imurmurhash/-/imurmurhash-0.1.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/indent-string": {
+      "name": "indent-string",
+      "version": "4.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/indent-string/-/indent-string-4.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/is-extglob": {
+      "name": "is-extglob",
+      "version": "2.1.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/is-extglob/-/is-extglob-2.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/is-glob": {
+      "name": "is-glob",
+      "version": "4.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/is-glob/-/is-glob-4.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/is-node-process": {
+      "name": "is-node-process",
+      "version": "1.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/is-node-process/-/is-node-process-1.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/is-potential-custom-element-name": {
+      "name": "is-potential-custom-element-name",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/is-potential-custom-element-name/-/is-potential-custom-element-name-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/isexe": {
+      "name": "isexe",
+      "version": "2.0.0",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/isexe/-/isexe-2.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/jiti": {
+      "name": "jiti",
+      "version": "2.7.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/jiti/-/jiti-2.7.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/js-tokens": {
+      "name": "js-tokens",
+      "version": "4.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/jsdom": {
+      "name": "jsdom",
+      "version": "30.1.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/jsdom/-/jsdom-30.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/json-schema-traverse": {
+      "name": "json-schema-traverse",
+      "version": "0.4.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-0.4.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/json-stable-stringify-without-jsonify": {
+      "name": "json-stable-stringify-without-jsonify",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/keycloak-js": {
+      "name": "keycloak-js",
+      "version": "26.2.4",
+      "scope": "production install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/keycloak-js/-/keycloak-js-26.2.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/keyv": {
+      "name": "keyv",
+      "version": "5.6.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/keyv/-/keyv-5.6.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/levn": {
+      "name": "levn",
+      "version": "0.4.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/levn/-/levn-0.4.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/lightningcss": {
+      "name": "lightningcss",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-android-arm64": {
+      "name": "lightningcss-android-arm64",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-darwin-arm64": {
+      "name": "lightningcss-darwin-arm64",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-darwin-x64": {
+      "name": "lightningcss-darwin-x64",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-freebsd-x64": {
+      "name": "lightningcss-freebsd-x64",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-linux-arm-gnueabihf": {
+      "name": "lightningcss-linux-arm-gnueabihf",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-linux-arm64-gnu": {
+      "name": "lightningcss-linux-arm64-gnu",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-linux-arm64-musl": {
+      "name": "lightningcss-linux-arm64-musl",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-linux-x64-gnu": {
+      "name": "lightningcss-linux-x64-gnu",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-linux-x64-musl": {
+      "name": "lightningcss-linux-x64-musl",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-win32-arm64-msvc": {
+      "name": "lightningcss-win32-arm64-msvc",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lightningcss-win32-x64-msvc": {
+      "name": "lightningcss-win32-x64-msvc",
+      "version": "1.32.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.32.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/locate-path": {
+      "name": "locate-path",
+      "version": "6.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/locate-path/-/locate-path-6.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/lru-cache": {
+      "name": "lru-cache",
+      "version": "11.5.3",
+      "scope": "development install",
+      "license": "BlueOak-1.0.0",
+      "source": "https://registry.npmjs.org/lru-cache/-/lru-cache-11.5.3.tgz",
+      "status": "needs review"
+    },
+    "node_modules/lz-string": {
+      "name": "lz-string",
+      "version": "1.5.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/lz-string/-/lz-string-1.5.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/magic-string": {
+      "name": "magic-string",
+      "version": "0.30.21",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz",
+      "status": "declared"
+    },
+    "node_modules/magicast": {
+      "name": "magicast",
+      "version": "0.5.5",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/magicast/-/magicast-0.5.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/mdn-data": {
+      "name": "mdn-data",
+      "version": "2.27.1",
+      "scope": "development install",
+      "license": "CC0-1.0",
+      "source": "https://registry.npmjs.org/mdn-data/-/mdn-data-2.27.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/min-indent": {
+      "name": "min-indent",
+      "version": "1.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/min-indent/-/min-indent-1.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/minimatch": {
+      "name": "minimatch",
+      "version": "10.2.6",
+      "scope": "development install",
+      "license": "BlueOak-1.0.0",
+      "source": "https://registry.npmjs.org/minimatch/-/minimatch-10.2.6.tgz",
+      "status": "needs review"
+    },
+    "node_modules/ms": {
+      "name": "ms",
+      "version": "2.1.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/msw": {
+      "name": "msw",
+      "version": "3.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/msw/-/msw-3.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/msw/node_modules/cookie": {
+      "name": "cookie",
+      "version": "2.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/cookie/-/cookie-2.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/mute-stream": {
+      "name": "mute-stream",
+      "version": "3.0.0",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/mute-stream/-/mute-stream-3.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/nanoid": {
+      "name": "nanoid",
+      "version": "3.3.20",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz",
+      "status": "declared"
+    },
+    "node_modules/natural-compare": {
+      "name": "natural-compare",
+      "version": "1.4.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/obug": {
+      "name": "obug",
+      "version": "2.1.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/obug/-/obug-2.1.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/optionator": {
+      "name": "optionator",
+      "version": "0.9.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/optionator/-/optionator-0.9.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/outvariant": {
+      "name": "outvariant",
+      "version": "1.4.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/outvariant/-/outvariant-1.4.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/p-limit": {
+      "name": "p-limit",
+      "version": "3.1.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/p-limit/-/p-limit-3.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/p-locate": {
+      "name": "p-locate",
+      "version": "5.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/p-locate/-/p-locate-5.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/parse5": {
+      "name": "parse5",
+      "version": "8.0.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/parse5/-/parse5-8.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/path-exists": {
+      "name": "path-exists",
+      "version": "4.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/path-exists/-/path-exists-4.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/path-key": {
+      "name": "path-key",
+      "version": "3.1.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/path-key/-/path-key-3.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/picocolors": {
+      "name": "picocolors",
+      "version": "1.1.1",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/picomatch": {
+      "name": "picomatch",
+      "version": "4.0.7",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.7.tgz",
+      "status": "declared"
+    },
+    "node_modules/playwright": {
+      "name": "playwright",
+      "version": "1.64.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/playwright/-/playwright-1.64.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/playwright-core": {
+      "name": "playwright-core",
+      "version": "1.64.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/postcss": {
+      "name": "postcss",
+      "version": "8.5.28",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/postcss/-/postcss-8.5.28.tgz",
+      "status": "declared"
+    },
+    "node_modules/prelude-ls": {
+      "name": "prelude-ls",
+      "version": "1.2.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/prelude-ls/-/prelude-ls-1.2.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/pretty-format": {
+      "name": "pretty-format",
+      "version": "27.5.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/pretty-format/-/pretty-format-27.5.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/pretty-format/node_modules/ansi-styles": {
+      "name": "ansi-styles",
+      "version": "5.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-5.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/punycode": {
+      "name": "punycode",
+      "version": "2.3.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/punycode/-/punycode-2.3.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/qified": {
+      "name": "qified",
+      "version": "0.10.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/qified/-/qified-0.10.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/qified/node_modules/hookified": {
+      "name": "hookified",
+      "version": "2.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/hookified/-/hookified-2.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/react": {
+      "name": "react",
+      "version": "19.3.0",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react/-/react-19.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-dom": {
+      "name": "react-dom",
+      "version": "19.3.0",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-hook-form": {
+      "name": "react-hook-form",
+      "version": "7.89.0",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.89.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-i18next": {
+      "name": "react-i18next",
+      "version": "17.0.16",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-i18next/-/react-i18next-17.0.16.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-is": {
+      "name": "react-is",
+      "version": "17.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-router": {
+      "name": "react-router",
+      "version": "7.18.4",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-router/-/react-router-7.18.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-router-dom": {
+      "name": "react-router-dom",
+      "version": "7.18.4",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-router-dom/-/react-router-dom-7.18.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/react-router/node_modules/set-cookie-parser": {
+      "name": "set-cookie-parser",
+      "version": "2.7.2",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/set-cookie-parser/-/set-cookie-parser-2.7.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/redent": {
+      "name": "redent",
+      "version": "3.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/redent/-/redent-3.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/require-from-string": {
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/rettime": {
+      "name": "rettime",
+      "version": "0.11.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/rettime/-/rettime-0.11.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/rolldown": {
+      "name": "rolldown",
+      "version": "1.2.12",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/rolldown/-/rolldown-1.2.12.tgz",
+      "status": "declared"
+    },
+    "node_modules/saxes": {
+      "name": "saxes",
+      "version": "6.0.0",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/saxes/-/saxes-6.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/scheduler": {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/semver": {
+      "name": "semver",
+      "version": "7.8.5",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/semver/-/semver-7.8.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/set-cookie-parser": {
+      "name": "set-cookie-parser",
+      "version": "3.1.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/set-cookie-parser/-/set-cookie-parser-3.1.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/shebang-command": {
+      "name": "shebang-command",
+      "version": "2.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/shebang-command/-/shebang-command-2.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/shebang-regex": {
+      "name": "shebang-regex",
+      "version": "3.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/signal-exit": {
+      "name": "signal-exit",
+      "version": "4.1.0",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/signal-exit/-/signal-exit-4.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/source-map-js": {
+      "name": "source-map-js",
+      "version": "1.2.2",
+      "scope": "development install",
+      "license": "BSD-3-Clause",
+      "source": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/std-env": {
+      "name": "std-env",
+      "version": "4.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/std-env/-/std-env-4.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/string-width": {
+      "name": "string-width",
+      "version": "8.3.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/string-width/-/string-width-8.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/strip-ansi": {
+      "name": "strip-ansi",
+      "version": "7.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-7.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/strip-ansi/node_modules/ansi-regex": {
+      "name": "ansi-regex",
+      "version": "6.4.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.4.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/strip-indent": {
+      "name": "strip-indent",
+      "version": "3.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/strip-indent/-/strip-indent-3.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/tagged-tag": {
+      "name": "tagged-tag",
+      "version": "1.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tagged-tag/-/tagged-tag-1.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/tailwindcss": {
+      "name": "tailwindcss",
+      "version": "4.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tailwindcss/-/tailwindcss-4.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/tapable": {
+      "name": "tapable",
+      "version": "2.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tapable/-/tapable-2.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/tinybench": {
+      "name": "tinybench",
+      "version": "6.1.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tinybench/-/tinybench-6.1.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/tinyexec": {
+      "name": "tinyexec",
+      "version": "1.3.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tinyexec/-/tinyexec-1.3.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/tinyglobby": {
+      "name": "tinyglobby",
+      "version": "0.2.17",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.17.tgz",
+      "status": "declared"
+    },
+    "node_modules/tinyrainbow": {
+      "name": "tinyrainbow",
+      "version": "3.1.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tinyrainbow/-/tinyrainbow-3.1.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/tldts": {
+      "name": "tldts",
+      "version": "7.4.10",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tldts/-/tldts-7.4.10.tgz",
+      "status": "declared"
+    },
+    "node_modules/tldts-core": {
+      "name": "tldts-core",
+      "version": "7.4.10",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tldts-core/-/tldts-core-7.4.10.tgz",
+      "status": "declared"
+    },
+    "node_modules/tough-cookie": {
+      "name": "tough-cookie",
+      "version": "6.0.2",
+      "scope": "development install",
+      "license": "BSD-3-Clause",
+      "source": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-6.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/tr46": {
+      "name": "tr46",
+      "version": "7.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tr46/-/tr46-7.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/ts-api-utils": {
+      "name": "ts-api-utils",
+      "version": "2.5.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/ts-api-utils/-/ts-api-utils-2.5.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/type-check": {
+      "name": "type-check",
+      "version": "0.4.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/type-check/-/type-check-0.4.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/type-fest": {
+      "name": "type-fest",
+      "version": "5.8.0",
+      "scope": "development install",
+      "license": "(MIT OR CC0-1.0)",
+      "source": "https://registry.npmjs.org/type-fest/-/type-fest-5.8.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/typescript": {
+      "name": "typescript",
+      "version": "6.0.3",
+      "scope": "production install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/typescript-eslint": {
+      "name": "typescript-eslint",
+      "version": "8.71.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/typescript-eslint/-/typescript-eslint-8.71.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/undici": {
+      "name": "undici",
+      "version": "8.11.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/undici/-/undici-8.11.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/undici-types": {
+      "name": "undici-types",
+      "version": "8.9.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/undici-types/-/undici-types-8.9.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/until-async": {
+      "name": "until-async",
+      "version": "3.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/until-async/-/until-async-3.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/uri-js": {
+      "name": "uri-js",
+      "version": "4.4.1",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/uri-js/-/uri-js-4.4.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/use-sync-external-store": {
+      "name": "use-sync-external-store",
+      "version": "1.6.0",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/vite": {
+      "name": "vite",
+      "version": "8.3.4",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/vite/-/vite-8.3.4.tgz",
+      "status": "declared"
+    },
+    "node_modules/vite/node_modules/fsevents": {
+      "name": "fsevents",
+      "version": "2.3.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/vite/node_modules/lightningcss": {
+      "name": "lightningcss",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-android-arm64": {
+      "name": "lightningcss-android-arm64",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-darwin-arm64": {
+      "name": "lightningcss-darwin-arm64",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-darwin-x64": {
+      "name": "lightningcss-darwin-x64",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-freebsd-x64": {
+      "name": "lightningcss-freebsd-x64",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-linux-arm-gnueabihf": {
+      "name": "lightningcss-linux-arm-gnueabihf",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-linux-arm64-gnu": {
+      "name": "lightningcss-linux-arm64-gnu",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-linux-arm64-musl": {
+      "name": "lightningcss-linux-arm64-musl",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-linux-x64-gnu": {
+      "name": "lightningcss-linux-x64-gnu",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-linux-x64-musl": {
+      "name": "lightningcss-linux-x64-musl",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-win32-arm64-msvc": {
+      "name": "lightningcss-win32-arm64-msvc",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/lightningcss-win32-x64-msvc": {
+      "name": "lightningcss-win32-x64-msvc",
+      "version": "1.33.0",
+      "scope": "development install",
+      "license": "MPL-2.0",
+      "source": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.33.0.tgz",
+      "status": "needs review"
+    },
+    "node_modules/vite/node_modules/postcss": {
+      "name": "postcss",
+      "version": "8.5.29",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/postcss/-/postcss-8.5.29.tgz",
+      "status": "declared"
+    },
+    "node_modules/vitest": {
+      "name": "vitest",
+      "version": "5.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/vitest/-/vitest-5.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/vitest/node_modules/@vitest/mocker": {
+      "name": "@vitest/mocker",
+      "version": "5.0.3",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitest/mocker/-/mocker-5.0.3.tgz",
+      "status": "declared"
+    },
+    "node_modules/vitest/node_modules/magic-string": {
+      "name": "magic-string",
+      "version": "1.4.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/magic-string/-/magic-string-1.4.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/w3c-xmlserializer": {
+      "name": "w3c-xmlserializer",
+      "version": "6.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/w3c-xmlserializer/-/w3c-xmlserializer-6.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/webidl-conversions": {
+      "name": "webidl-conversions",
+      "version": "8.0.1",
+      "scope": "development install",
+      "license": "BSD-2-Clause",
+      "source": "https://registry.npmjs.org/webidl-conversions/-/webidl-conversions-8.0.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/whatwg-mimetype": {
+      "name": "whatwg-mimetype",
+      "version": "5.0.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/whatwg-mimetype/-/whatwg-mimetype-5.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/whatwg-url": {
+      "name": "whatwg-url",
+      "version": "17.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/whatwg-url/-/whatwg-url-17.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/which": {
+      "name": "which",
+      "version": "2.0.2",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/which/-/which-2.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/why-is-node-running": {
+      "name": "why-is-node-running",
+      "version": "3.2.1",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-3.2.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/word-wrap": {
+      "name": "word-wrap",
+      "version": "1.2.5",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/word-wrap/-/word-wrap-1.2.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/wrap-ansi": {
+      "name": "wrap-ansi",
+      "version": "9.0.2",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-9.0.2.tgz",
+      "status": "declared"
+    },
+    "node_modules/wrap-ansi/node_modules/string-width": {
+      "name": "string-width",
+      "version": "7.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/string-width/-/string-width-7.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/xml-name-validator": {
+      "name": "xml-name-validator",
+      "version": "5.0.0",
+      "scope": "development install",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/xml-name-validator/-/xml-name-validator-5.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/xmlchars": {
+      "name": "xmlchars",
+      "version": "2.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/y18n": {
+      "name": "y18n",
+      "version": "5.0.8",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz",
+      "status": "declared"
+    },
+    "node_modules/yaml": {
+      "name": "yaml",
+      "version": "2.9.1",
+      "scope": "production install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/yaml/-/yaml-2.9.1.tgz",
+      "status": "declared"
+    },
+    "node_modules/yargs": {
+      "name": "yargs",
+      "version": "18.2.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/yargs/-/yargs-18.2.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/yargs-parser": {
+      "name": "yargs-parser",
+      "version": "22.0.0",
+      "scope": "development install",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-22.0.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/yocto-queue": {
+      "name": "yocto-queue",
+      "version": "0.1.0",
+      "scope": "development install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz",
+      "status": "declared"
+    },
+    "node_modules/zod": {
+      "name": "zod",
+      "version": "4.6.5",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/zod/-/zod-4.6.5.tgz",
+      "status": "declared"
+    },
+    "node_modules/zustand": {
+      "name": "zustand",
+      "version": "5.0.15",
+      "scope": "production install",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/zustand/-/zustand-5.0.15.tgz",
+      "status": "declared"
+    }
+  },
+  "assets": [
+    {
+      "id": "brand-artwork",
+      "paths": [
+        "assets/logo/kpubdata-brand-assets/*",
+        "assets/logo/social/*"
+      ],
+      "distributed": "source archive; selected SVGs in browser bundle",
+      "origin": "KPubData Brand v2; wordmark paths based on Pretendard (brand assets README)",
+      "terms": "Pretendard declares SIL OFL 1.1; treatment of outlined paths needs review",
+      "source": "https://github.com/orioncactus/pretendard/blob/main/LICENSE",
+      "status": "needs review"
+    },
+    {
+      "id": "product-screenshots",
+      "paths": [
+        "assets/screenshots/*"
+      ],
+      "distributed": "repository only",
+      "origin": "captured from this project's UI",
+      "terms": "screen content and any provider data shown need review",
+      "source": "assets/screenshots/",
+      "status": "needs review"
+    },
+    {
+      "id": "documentation-brand-copies",
+      "paths": [
+        "docs/brand/assets/*"
+      ],
+      "distributed": "repository documentation",
+      "origin": "copies of this project's brand artwork",
+      "terms": "same Pretendard-derived wordmark review as brand artwork",
+      "source": "assets/logo/kpubdata-brand-assets/README.md",
+      "status": "needs review"
+    },
+    {
+      "id": "prototype-screenshots",
+      "paths": [
+        "docs/prototype/warehouse/screens/*"
+      ],
+      "distributed": "repository documentation",
+      "origin": "captured from this project's prototype",
+      "terms": "review any third-party data visible in the screenshots",
+      "source": "docs/prototype/warehouse/",
+      "status": "needs review"
+    },
+    {
+      "id": "visual-test-baselines",
+      "paths": [
+        "e2e/visual.spec.ts-snapshots/*"
+      ],
+      "distributed": "test source only",
+      "origin": "generated from this project's UI in Playwright",
+      "terms": "same rights as displayed assets and data",
+      "source": "e2e/visual.spec.ts",
+      "status": "needs review"
+    },
+    {
+      "id": "public-template-icons",
+      "paths": [
+        "public/file.svg",
+        "public/globe.svg",
+        "public/window.svg"
+      ],
+      "distributed": "browser static files and Docker image",
+      "origin": "source of original template icons is not documented",
+      "terms": "needs provenance and license review, even if the UI does not link to them",
+      "source": "public/",
+      "status": "needs review"
+    },
+    {
+      "id": "legacy-favicon",
+      "paths": [
+        "src/app/favicon.ico"
+      ],
+      "distributed": "repository; current page uses the Brand v2 SVG",
+      "origin": "generated from Brand v2 artwork (brand assets README)",
+      "terms": "same Pretendard-derived wordmark review as brand artwork",
+      "source": "assets/logo/kpubdata-brand-assets/README.md",
+      "status": "needs review"
+    }
+  ],
+  "containerInputs": [
+    {
+      "name": "Node build stage",
+      "reference": "node:25-alpine",
+      "source": "https://github.com/nodejs/docker-node",
+      "terms": "build stage only; exact Alpine package versions unverified",
+      "status": "needs review"
+    },
+    {
+      "name": "nginx runtime base",
+      "reference": "nginxinc/nginx-unprivileged:1.31-alpine",
+      "source": "https://github.com/nginx/docker-nginx-unprivileged",
+      "terms": "runtime image; exact packages after apk upgrade unverified",
+      "status": "needs review"
+    }
+  ]
+}
