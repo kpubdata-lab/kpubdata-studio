@@ -27,6 +27,23 @@ check(){ if [ "$2" = "$3" ]; then ok "$1"; else bad "$1 (expected [$3], got [$2]
 cleanup() { docker rm -f csp-a csp-b csp-c csp-d csp-e 2>/dev/null || true; }
 trap cleanup EXIT
 
+# Wait until the container answers on its port, not until its configuration is valid.
+# `nginx -t` passes as soon as the files are in place — the image ships an empty CSP file,
+# so before the entrypoint has written the real one — and before nginx listens: the first
+# curl then met a closed port (exit 56) and every check of that case failed. A container
+# that never answers has its log printed, so the reason is in the job's output.
+wait_until_serving() {
+  name="$1"
+  port="$2"
+  for _ in $(seq 1 60); do
+    if curl -sf -o /dev/null "http://localhost:${port}/"; then return 0; fi
+    sleep 0.5
+  done
+  say "  ${name} did not answer on port ${port} within 30 s; its log:" >&2
+  docker logs "$name" >&2 2>&1 || true
+  return 0
+}
+
 # CI builds the image beforehand with a layer cache (ci.yml) and sets CSP_SMOKE_IMAGE_BUILT.
 if [ -z "${CSP_SMOKE_IMAGE_BUILT:-}" ]; then
   say "Building image..."
@@ -36,7 +53,7 @@ fi
 # --- Case 1: a valid BUILDER_API_URL puts the origin in connect-src ---
 say "Case 1: valid origin"
 docker run -d --name csp-a -e BUILDER_API_URL=https://api.example.org -p 18081:8080 "$IMAGE" >/dev/null
-for i in $(seq 1 30); do docker exec csp-a nginx -t 2>/dev/null && break; sleep 0.5; done
+wait_until_serving csp-a 18081
 
 header=$(curl -sI http://localhost:18081/ | grep -i '^Content-Security-Policy:' || true)
 [ -n "$header" ] && ok "CSP header present" || bad "CSP header missing"
@@ -72,7 +89,7 @@ check "Cache-Control on a missing bundle" "$cache_missing" "Cache-Control: no-st
 # --- Case 2: a different origin produces a different header ---
 say "Case 2: different origin"
 docker run -d --name csp-b -e BUILDER_API_URL=https://builder.other.net -p 18082:8080 "$IMAGE" >/dev/null
-for i in $(seq 1 30); do docker exec csp-b nginx -t 2>/dev/null && break; sleep 0.5; done
+wait_until_serving csp-b 18082
 
 header_b=$(curl -sI http://localhost:18082/ | grep -i '^Content-Security-Policy:' || true)
 echo "$header_b" | grep -q 'https://builder.other.net' && ok "second origin in header" || bad "second origin not in header"
@@ -115,7 +132,7 @@ fi
 say "Case 5: Ask KPubData on, with an allowed origin"
 docker run -d --name csp-d -e BUILDER_API_URL=https://api.example.org -e ASSISTANT_ENABLED=true \
   -e ASSISTANT_ALLOWED_ORIGINS=https://llm.example.org -p 18084:8080 "$IMAGE" >/dev/null
-for i in $(seq 1 30); do docker exec csp-d nginx -t 2>/dev/null && break; sleep 0.5; done
+wait_until_serving csp-d 18084
 header_d=$(curl -sI http://localhost:18084/ | grep -i '^Content-Security-Policy:' || true)
 echo "$header_d" | grep -Eq "connect-src [^;]*https://llm.example.org( |;)" && ok "allowed AI origin in connect-src" || bad "allowed AI origin not in connect-src: ${header_d}"
 echo "$header_d" | grep -Eq "connect-src [^;]*https:( |;)" && bad "connect-src allows every https host" || ok "connect-src still names its origins"
