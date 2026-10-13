@@ -151,7 +151,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | @types/estree | 1.0.9 | development install | MIT | declared | https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz |
 | @types/json-schema | 7.0.15 | development install | MIT | declared | https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.15.tgz |
 | @types/ms | 2.1.0 | development install | MIT | declared | https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz |
-| @types/node | 26.6.4 | development install | MIT | declared | https://registry.npmjs.org/@types/node/-/node-26.6.4.tgz |
+| @types/node | 26.6.5 | development install | MIT | declared | https://registry.npmjs.org/@types/node/-/node-26.6.5.tgz |
 | @types/react | 19.3.0 | production install | MIT | declared | https://registry.npmjs.org/@types/react/-/react-19.3.0.tgz |
 | @types/react-dom | 19.3.0 | development install | MIT | declared | https://registry.npmjs.org/@types/react-dom/-/react-dom-19.3.0.tgz |
 | @types/set-cookie-parser | 2.4.10 | development install | MIT | declared | https://registry.npmjs.org/@types/set-cookie-parser/-/set-cookie-parser-2.4.10.tgz |
@@ -277,7 +277,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | min-indent | 1.0.1 | development install | MIT | declared | https://registry.npmjs.org/min-indent/-/min-indent-1.0.1.tgz |
 | minimatch | 10.2.6 | development install | BlueOak-1.0.0 | needs review | https://registry.npmjs.org/minimatch/-/minimatch-10.2.6.tgz |
 | ms | 2.1.3 | development install | MIT | declared | https://registry.npmjs.org/ms/-/ms-2.1.3.tgz |
-| msw | 3.0.2 | development install | MIT | declared | https://registry.npmjs.org/msw/-/msw-3.0.2.tgz |
+| msw | 3.0.3 | development install | MIT | declared | https://registry.npmjs.org/msw/-/msw-3.0.3.tgz |
 | cookie | 2.0.1 | development install | MIT | declared | https://registry.npmjs.org/cookie/-/cookie-2.0.1.tgz |
 | mute-stream | 3.0.0 | development install | ISC | declared | https://registry.npmjs.org/mute-stream/-/mute-stream-3.0.0.tgz |
 | nanoid | 3.3.20 | development install | MIT | declared | https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz |
