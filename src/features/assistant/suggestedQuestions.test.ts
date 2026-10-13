@@ -6,7 +6,7 @@
  * - If there is a recent response turn, change follow-ups based on its structured cues (no LLM re-call).
  */
 import { describe, expect, it } from "vitest";
-import { START_QUESTIONS, getSuggestedQuestions } from "./suggestedQuestions";
+import { getStartQuestions, getSuggestedQuestions } from "./suggestedQuestions";
 import type { AssistantContext, AssistantEvidence, AssistantTurn } from "./types";
 
 /** Minimal evidence with only required fields (tests override specific fields). */
@@ -41,7 +41,7 @@ const ask = (context: AssistantContext, turns: AssistantTurn[] = []) =>
 describe("getSuggestedQuestions — context별 초기 추천", () => {
   it("A. Dataset/Run/Quality가 없으면 시작 질문만 노출한다", () => {
     const result = ask({ page: "assistant" });
-    expect(result).toEqual(START_QUESTIONS);
+    expect(result).toEqual(getStartQuestions());
     const joined = result.join(" ");
     expect(joined).not.toMatch(/Quality/);
     expect(joined).not.toMatch(/실패/);
@@ -49,13 +49,13 @@ describe("getSuggestedQuestions — context별 초기 추천", () => {
   });
 
   it("home context도 시작 질문을 준다", () => {
-    expect(ask({ page: "home" })).toEqual(START_QUESTIONS);
+    expect(ask({ page: "home" })).toEqual(getStartQuestions());
   });
 
   it("B. Dataset context가 있으면 Dataset 질문을 노출한다", () => {
     const result = ask({ page: "dataset-detail", datasetId: "ds-1" });
     expect(result.some((q) => q.includes("테이블의 구조"))).toBe(true);
-    expect(result).not.toEqual(START_QUESTIONS);
+    expect(result).not.toEqual(getStartQuestions());
   });
 
   it("C. Run context가 있으면 Run 질문을 노출한다", () => {
@@ -69,7 +69,7 @@ describe("getSuggestedQuestions — context별 초기 추천", () => {
   });
 
   it("D. Quality page라도 run/dataset이 없으면 Quality-specific을 넣지 않는다", () => {
-    expect(ask({ page: "quality" })).toEqual(START_QUESTIONS);
+    expect(ask({ page: "quality" })).toEqual(getStartQuestions());
   });
 
   it("D. Quality page + run이 있으면 Quality 질문을 노출한다", () => {
@@ -146,7 +146,7 @@ describe("getSuggestedQuestions — 최근 대화 기반 follow-up", () => {
       turns: [turn({ evidence: evidence({ catalog: { providers: ["datago"], datasetsByProvider: {} } }) })],
       isStale: () => true,
     });
-    expect(result).toEqual(START_QUESTIONS);
+    expect(result).toEqual(getStartQuestions());
   });
 
   it("구조화 단서가 없는 turn 뒤에는 generic follow-up으로 fallback한다", () => {

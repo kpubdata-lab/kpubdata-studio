@@ -24,8 +24,11 @@ import { create } from "zustand";
 import { checkLlmBaseUrl } from "./baseUrl";
 
 const STORAGE_KEY = "kpubdata-assist-key";
-const STORAGE_WARNING =
-  i18n.t("assistant.config.persistWarning");
+/**
+ * Translated when consent is asked, never at module load (#978): the locale chunks arrive
+ * after this module is evaluated, and the reader may have switched language since.
+ */
+const STORAGE_WARNING_KEY = "assistant.config.persistWarning";
 
 interface AssistConfigState {
   apiKey: string;
@@ -108,7 +111,11 @@ export const useAssistConfig = create<AssistConfigState>((set, get) => ({
     if (get().persistToStorage) savePersistedKey(config.apiKey);
   },
   enablePersistence: () => {
-    if (typeof window !== "undefined" && window.confirm(STORAGE_WARNING)) {
+    if (typeof window === "undefined") return;
+    // No locale loaded means no warning to show: consent asked with a key identifier is
+    // not informed consent, so the key is not saved.
+    if (!i18n.exists(STORAGE_WARNING_KEY)) return;
+    if (window.confirm(i18n.t(STORAGE_WARNING_KEY))) {
       set({ persistToStorage: true });
       savePersistedKey(get().apiKey);
     }
