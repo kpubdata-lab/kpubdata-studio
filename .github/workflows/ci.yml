@@ -189,11 +189,38 @@ jobs:
       # Run on its own first so a drift failure shows under this step's name; the
       # coverage step below runs the whole suite again, drift file included. A failed
       # Builder checkout fails the leg at the checkout step, as the drift job did.
-      - name: Builder contract drift
+      - name: Builder contract drift (Builder main)
         if: matrix.coverage
         env:
           BUILDER_CONTRACT: .builder/contract/builder-api.yaml
         run: npx vitest run src/shared/lib/contractDrift.test.ts
+
+      # A release pull request (`release/v<version>`) also runs the drift test against
+      # the Builder tag it pairs with, as the release job will (#980). Builder main above
+      # stays the early warning; this is the contract the release ships against. Other
+      # pull requests show these three steps as skipped by their condition.
+      - name: Read the paired Builder tag
+        id: paired
+        if: matrix.coverage && startsWith(github.head_ref, 'release/')
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Builder's contract at the paired tag
+        if: matrix.coverage && startsWith(github.head_ref, 'release/')
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: kpubdata-lab/kpubdata-builder
+          ref: ${{ steps.paired.outputs.tag }}
+          path: .builder-release
+          sparse-checkout: contract
+
+      - name: Builder contract drift (paired release tag)
+        if: matrix.coverage && startsWith(github.head_ref, 'release/')
+        env:
+          TAG: ${{ steps.paired.outputs.tag }}
+        run: >-
+          node scripts/release-contract-drift.mjs
+          --contract .builder-release/contract/builder-api.yaml
+          --tag "${TAG}"
 
       # `!cancelled()` lets coverage report even when the drift step failed; the job
       # still fails because the drift step's own failure is not overridden.

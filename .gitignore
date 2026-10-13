@@ -64,8 +64,9 @@ yarn-error.log*
 e2e/**/*-darwin.png
 e2e/**/*-win32.png
 
-# Builder contract checkout used by the Node 22 test leg in CI (ci.yml `test`)
+# Builder contract checkouts used by the Node 22 test leg in CI (ci.yml `test`): main, and a release pull request's paired tag
 .builder/
+.builder-release/
 
 # Python bytecode from running the scripts/ checks locally.
 __pycache__/
