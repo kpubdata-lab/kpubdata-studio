@@ -41,7 +41,7 @@
     "contract:enums": "node scripts/generate-builder-enums.mjs"
   },
   "dependencies": {
-    "i18next": "^26.4.2",
+    "i18next": "^26.4.3",
     "i18next-browser-languagedetector": "^8.2.1",
     "keycloak-js": "^26.2.4",
     "react": "19.3.0",
