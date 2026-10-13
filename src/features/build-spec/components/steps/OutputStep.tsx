@@ -3,11 +3,28 @@ import { useTranslation } from "react-i18next";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 
 import { i18n } from "@/shared/i18n";
+import { describeExportPathProblem } from "@/shared/lib/exportPathMessages";
+import { defaultExportPath, exportPathProblems } from "@/shared/lib/exportPaths";
 import { exportFormatSchema } from "@/shared/lib/schemas";
 import { FormField, TextInput } from "@/shared/ui";
 import type { BuildFormValues } from "@/features/build-spec/newBuildModel";
 
 const exportFormats = exportFormatSchema.options;
+
+/**
+ * Why Builder would refuse the exports this path gives the chosen formats, or `true`
+ * (kpubdata-builder#1320). An empty path is left to the `required` rule.
+ */
+function outputPathError(path: string, formats: readonly string[] | undefined): string | true {
+  if (path === "") return true;
+  const selected = formats ?? [];
+  const exports = selected.map((format, index) => ({
+    kind: format,
+    output_path: defaultExportPath(path, format, index, selected.length),
+  }));
+  const problem = exportPathProblems(exports)[0];
+  return problem ? describeExportPathProblem(problem) : true;
+}
 
 export interface OutputStepProps {
   register: UseFormRegister<BuildFormValues>;
@@ -66,6 +83,7 @@ export function OutputStep({ register, errors, pathWhenEmpty }: OutputStepProps)
             {...field}
             {...register("outputPath", {
               required: pathWhenEmpty === undefined ? i18n.t("newBuild.errors.outputPathRequired") : false,
+              validate: (path, values) => outputPathError(path, values.exportFormats),
             })}
           />
         )}

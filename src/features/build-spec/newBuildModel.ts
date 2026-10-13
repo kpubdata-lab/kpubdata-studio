@@ -14,6 +14,9 @@ import {
 import { i18n } from "@/shared/i18n";
 import type { CatalogDataset, CatalogProvider } from "@/shared/lib/builderApi";
 import { buildSpecSchema } from "@/shared/lib/schemas";
+import { toBuilderSpec } from "@/features/build-spec/specMapping";
+import { describeExportPathProblem } from "@/shared/lib/exportPathMessages";
+import { defaultExportPath, exportPathProblems } from "@/shared/lib/exportPaths";
 import type { BuildSpec, ExportTarget, JsonValue, SourceRef } from "@/shared/lib/types";
 import type { StepItem } from "@/shared/ui";
 
@@ -130,11 +133,18 @@ export function toBuildSpec(
   const baseOutputPath = typeof base?.metadata.outputPath === "string" ? base.metadata.outputPath : "";
   const outputPathEdited = !base || values.outputPath !== baseOutputPath;
 
-  const exports: ExportTarget[] = values.exportFormats.map((format) => {
+  // The Hugging Face folder is the form's path only when it is the sole export; beside
+  // others it takes a sibling folder, since Builder refuses one export containing another
+  // (kpubdata-builder#1320).
+  const exportCount = values.exportFormats.length;
+  const exports: ExportTarget[] = values.exportFormats.map((format, index) => {
     const baseOptions = base?.exports.find((target) => target.format === format)?.options;
     const keepBaseOutputPath = !outputPathEdited && baseOptions?.outputPath !== undefined;
+    const huggingFacePath = values.outputPath === ""
+      ? ""
+      : defaultExportPath(values.outputPath, format, index, exportCount);
     const options = format === "huggingface" && !keepBaseOutputPath
-      ? { ...baseOptions, outputPath: values.outputPath }
+      ? { ...baseOptions, outputPath: huggingFacePath }
       : baseOptions;
     // Omit the key rather than writing `options: undefined`, so a round-trip serializes
     // to the same JSON as the original.
@@ -172,6 +182,10 @@ export function toBuildSpec(
   const result = buildSpecSchema.safeParse(candidate);
   if (!result.success) {
     return { error: result.error.issues[0]?.message ?? i18n.t("newBuild.errors.specInvalid") };
+  }
+  const pathProblem = exportPathProblems(toBuilderSpec(result.data).exports)[0];
+  if (pathProblem) {
+    return { error: describeExportPathProblem(pathProblem) };
   }
   return { spec: result.data };
 }

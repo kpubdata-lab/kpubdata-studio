@@ -22,6 +22,7 @@ import type {
   SourceKind,
   SourceRef,
 } from "@/shared/lib/types";
+import { defaultExportPath } from "@/shared/lib/exportPaths";
 
 /** Export target expected by Builder (snake_case). */
 interface BuilderExport {
@@ -169,14 +170,7 @@ const KNOWN_TOP_LEVEL_FIELDS = new Set([
   "metadata",
 ]);
 
-const FORMAT_EXTENSION: Record<string, string> = {
-  jsonl: "jsonl",
-  markdown: "md",
-  parquet: "parquet",
-  huggingface: "",
-};
-
-/** Derive output_path per export. huggingface targets a directory; others target file paths. */
+/** Derive output_path per export: the export's own path, else the default below the spec's folder. */
 function deriveOutputPath(spec: BuildSpec, target: ExportTarget, index: number): string {
   const explicitPath = target.options?.["outputPath"];
   if (typeof explicitPath === "string" && explicitPath.length > 0) return explicitPath;
@@ -184,12 +178,7 @@ function deriveOutputPath(spec: BuildSpec, target: ExportTarget, index: number):
   const base = typeof spec.metadata["outputPath"] === "string"
     ? spec.metadata["outputPath"]
     : `artifacts/builds/${spec.datasetId}`;
-  if (target.format === "huggingface") {
-    return index === 0 ? base : `${base}-${index + 1}`;
-  }
-  const extension = FORMAT_EXTENSION[target.format] ?? target.format;
-  const suffix = index === 0 ? "" : `-${index + 1}`;
-  return `${base}/data${suffix}.${extension}`;
+  return defaultExportPath(base, target.format, index, spec.exports.length);
 }
 
 /**

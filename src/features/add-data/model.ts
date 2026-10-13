@@ -14,6 +14,9 @@ import { identityFromUrl } from "@/features/add-data/identity";
 import { endpointHasRedactedSecret, redactUrlEndpoint, urlHasUserinfo } from "@/features/add-data/urlRedaction";
 import { jsonValueHasRedactedSecret, redactSourceParamsObject, sourceParamsHasRedactedSecret } from "@/features/add-data/paramsRedaction";
 import { buildSpecSchema } from "@/shared/lib/schemas";
+import { toBuilderSpec } from "@/features/build-spec/specMapping";
+import { describeExportPathProblem } from "@/shared/lib/exportPathMessages";
+import { defaultExportPath, exportPathProblems } from "@/shared/lib/exportPaths";
 import { redactSpecTopLevel } from "@/features/build-spec/specStore";
 import type { BuildSpec, JsonValue, SourceFormat, SourceKind, SourceRef } from "@/shared/lib/types";
 import { i18n } from "@/shared/i18n";
@@ -230,7 +233,11 @@ function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
   // options/output_path — consume each base export by index once to preserve per-
   // occurrence settings.
   const usedBaseExportIndices = new Set<number>();
-  const exports = draft.exportFormats.map((format) => {
+  // A typed path is where a single export writes. With several formats it is their
+  // folder, and each export gets its own path below or beside it: Builder refuses
+  // exports that share a path or contain one another (kpubdata-builder#1320).
+  const exportCount = draft.exportFormats.length;
+  const exports = draft.exportFormats.map((format, index) => {
     const preservedIndex = base?.exports.findIndex(
       (item, index) => item.format === format && !usedBaseExportIndices.has(index),
     );
@@ -241,7 +248,9 @@ function buildCandidateFromDraft(draft: AddDataDraft): CandidateResult {
       format,
       options: {
         ...(preserved?.options ?? {}),
-        ...(draft.outputPath ? { outputPath: draft.outputPath } : {}),
+        ...(draft.outputPath
+          ? { outputPath: exportCount === 1 ? draft.outputPath : defaultExportPath(draft.outputPath, format, index, exportCount) }
+          : {}),
       },
     };
   });
@@ -285,6 +294,10 @@ export function buildSpecFromDraft(draft: AddDataDraft): BuildSpecResult {
   const result = buildSpecSchema.safeParse(candidate);
   if (!result.success) {
     return { error: result.error.issues[0]?.message ?? t("specInvalid") };
+  }
+  const pathProblem = exportPathProblems(toBuilderSpec(result.data as BuildSpec).exports)[0];
+  if (pathProblem) {
+    return { error: describeExportPathProblem(pathProblem) };
   }
   return { spec: result.data as BuildSpec };
 }

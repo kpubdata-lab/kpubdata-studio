@@ -462,6 +462,44 @@ test("Public API source가 Builder 를 거쳐 성공 빌드로 끝난다 @real-b
   await expectNoPageErrors(errors);
 });
 
+test("A table exported in two formats at once builds: each export gets its own path (kpubdata-builder#1320) @real-builder", async ({
+  request,
+}) => {
+  test.skip(
+    !process.env.REAL_BUILDER_REPLAY,
+    "Builder replay 모드 필요 — scripts/run-real-e2e.mjs 로 kpubdata-builder#837 이후 Builder 를 띄우세요",
+  );
+  // As Studio submits it: the Hugging Face folder first, a file export beside it, under one
+  // output folder. Builder refuses exports that share a path or contain one another.
+  const id = `two-formats-${Date.now()}`;
+  const spec = serializeSpec({
+    datasetId: id,
+    title: "Two formats",
+    description: "Hugging Face and JSONL from one run",
+    sources: [
+      {
+        provider: "datago",
+        dataset: "air_station",
+        params: { station: "강남구", term: "daily", page: 1, page_size: 100 },
+      },
+    ],
+    exports: [{ format: "huggingface" }, { format: "jsonl" }],
+    metadata: { outputPath: `out/${id}` },
+  });
+  const paths = (JSON.parse(spec) as BuilderSpec).exports.map((target) => target.output_path);
+  expect(paths).toEqual([`out/${id}-1`, `out/${id}/data-2.jsonl`]);
+
+  const validated = await request.post(`${BUILDER_URL}/validate`, { data: { spec } });
+  expect(await validated.json()).toMatchObject({ status: "valid" });
+  const response = await request.post(`${BUILDER_URL}/build`, {
+    data: { spec, run_id: `${id}-run` },
+    timeout: 60_000,
+  });
+  const body = (await response.json()) as { status?: string; outcomes?: Array<{ error?: string | null }> };
+  expect(body.status).toBe("ok");
+  expect(body.outcomes?.[0]?.error ?? null).toBeNull();
+});
+
 /**
  * The same replay source without an alias (#602): Builder keys it `datago.air_station`, so
  * the warehouse table is `<dataset_id>.datago.air_station`. The dataset id has a dot too.

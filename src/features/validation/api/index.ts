@@ -7,6 +7,7 @@
  */
 import { serializeSpec } from "@/features/build-spec/specMapping";
 import { ApiError, builderApi, isRealBuilderEnabled } from "@/shared/lib/builderApi";
+import { localizeBuilderProblems } from "@/shared/lib/exportPathMessages";
 import type { BuildSpec } from "@/shared/lib/types";
 
 /** Determines whether ApiError.details is Builder's invalid response ({status, problems}). */
@@ -14,7 +15,9 @@ export function asInvalidDetails(details: unknown): { problems: string[] } | nul
   if (details && typeof details === "object" && "status" in details) {
     const record = details as { status?: unknown; problems?: unknown };
     if (record.status === "invalid") {
-      return { problems: Array.isArray(record.problems) ? record.problems.map(String) : [] };
+      // Export-path refusals (kpubdata-builder#1320) are shown in the user's language.
+      const problems = Array.isArray(record.problems) ? record.problems.map(String) : [];
+      return { problems: localizeBuilderProblems(details, problems) };
     }
   }
   return null;

@@ -3548,6 +3548,11 @@
       "unavailable": "정보 없음"
     }
   },
+  "exportPaths": {
+    "unsafe_export_path": "{{n}}번째 내보내기의 출력 경로는 쓸 수 없습니다. 맨 앞의 /나 '..' 없이 실행 결과 폴더 안의 상대 경로를 지정하세요 (예: out/data.jsonl).",
+    "reserved_export_path": "{{n}}번째 내보내기의 출력 경로가 실행이 직접 쓰는 파일(table.parquet, package.json, splits, README.md, card.json)을 덮어씁니다. 다른 경로를 지정하세요.",
+    "export_path_collision": "{{n}}번째 내보내기의 출력 경로가 다른 내보내기의 경로와 같거나 그 안에 있습니다. 형식마다 서로 다른 경로를 지정하세요."
+  },
   "policy": {
     "label": "약관과 문의",
     "privacy": "개인정보 처리방침",
