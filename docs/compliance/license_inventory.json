@@ -2758,7 +2758,7 @@
   "containerInputs": [
     {
       "name": "Node build stage",
-      "reference": "node:25-alpine",
+      "reference": "node:22-alpine",
       "source": "https://github.com/nodejs/docker-node",
       "terms": "build stage only; exact Alpine package versions unverified",
       "status": "needs review"

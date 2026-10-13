@@ -403,5 +403,5 @@ described in the brand asset README; the upstream declaration is [SIL OFL 1.1](h
 
 | Stage | Reference | Source | Gap | Status |
 | --- | --- | --- | --- | --- |
-| Node build stage | `node:25-alpine` | https://github.com/nodejs/docker-node | build stage only; exact Alpine package versions unverified | needs review |
+| Node build stage | `node:22-alpine` | https://github.com/nodejs/docker-node | build stage only; exact Alpine package versions unverified | needs review |
 | nginx runtime base | `nginxinc/nginx-unprivileged:1.31-alpine` | https://github.com/nginx/docker-nginx-unprivileged | runtime image; exact packages after apk upgrade unverified | needs review |
