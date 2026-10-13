@@ -31,9 +31,9 @@ function git(args: string[], cwd = repo): string {
 }
 
 /** Run the gate in the fixture repository and return its exit code and output. */
-function runGate(base: string): { code: number; out: string } {
+function runGate(base: string, ...flags: string[]): { code: number; out: string } {
   try {
-    const out = execFileSync("node", [SCRIPT, "--base", base], {
+    const out = execFileSync("node", [SCRIPT, "--base", base, ...flags], {
       cwd: repo,
       env: { ...process.env, STALE_UI_REPO_ROOT: repo },
       encoding: "utf8",
@@ -213,9 +213,51 @@ describe("stale UI literal gate", () => {
     expect(runGate("HEAD~2").code).toBe(1);
   });
 
-  it("skips rather than fails when the base ref is missing", () => {
-    const { code, out } = runGate("origin/does-not-exist");
+  it("fails when the base ref is missing, so a comparison that did not run cannot pass (studio#989)", () => {
+    // What CI has after a fetch of origin/main failed: the ref is not there.
+    const { code, out } = runGate("origin/main");
+
+    expect(code).toBe(1);
+    expect(out).toContain("origin/main");
+    expect(out).toContain("--allow-missing-base");
+  });
+
+  it("fails on a missing base even when a removed string is still asserted (studio#989)", () => {
+    // The stale assertion the gate exists for, hidden by a base it could not read.
+    writeLocales("합성된새문구입니다테스트전용");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "rename"]);
+
+    expect(runGate("origin/main").code).toBe(1);
+    expect(runGate("HEAD~1").code).toBe(1);
+  });
+
+  it("skips a missing base only when told to (studio#989)", () => {
+    const { code, out } = runGate("origin/main", "--allow-missing-base");
+
     expect(code).toBe(0);
     expect(out).toContain("건너뛴다");
+  });
+
+  it("does not let the skip flag hide a comparison that can run (studio#989)", () => {
+    writeLocales("합성된새문구입니다테스트전용");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "rename"]);
+
+    expect(runGate("HEAD~1", "--allow-missing-base").code).toBe(1);
+  });
+
+  it("fails when the base resolves but holds no locale file (studio#989)", () => {
+    git(["checkout", "-q", "--orphan", "empty"]);
+    git(["rm", "-rqf", "."]);
+    writeFileSync(join(repo, "README.md"), "no locales here\n");
+    git(["add", "-A"]);
+    git(["commit", "-qm", "no locales"]);
+    git(["checkout", "-q", "main"]);
+
+    const { code, out } = runGate("empty");
+
+    expect(code).toBe(1);
+    expect(out).toContain("locale");
   });
 });
