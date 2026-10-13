@@ -889,6 +889,8 @@
       "scopeNote": "Whether the API key is actually valid for the selected source dataset and whether required parameters are correct is verified in the Create Table preview step. This screen only manages provider credential registration status.",
       "credTitle": "Credential Status",
       "delete": "Delete",
+      "deleteConfirm": "Delete the credential saved for {{provider}}? Previews and runs that use this provider fall back to the Builder's default credential if there is one, and otherwise fail until you register a key again.",
+      "deleted": "Deleted the {{provider}} credential.",
       "register": "Register",
       "registered": "User credential registered",
       "noCredNote": "This provider can be used without credentials. There is no credential to register or delete.",
