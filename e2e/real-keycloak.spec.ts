@@ -204,7 +204,8 @@ async function signInAsAdministrator(page: Page): Promise<void> {
 
 /**
  * Answer the next `GET /builds` with 401, so Studio asks for a forced refresh, and open the
- * screen that sends it (leaving it first, so it is sent again).
+ * screen that sends it — leaving it first only when it is already open, because the 401 can
+ * sign the user out and take the menu away before a second click (Home may send it too).
  */
 async function builderRefusesOnce(page: Page): Promise<void> {
   await page.route(
@@ -215,8 +216,11 @@ async function builderRefusesOnce(page: Page): Promise<void> {
         : route.fallback(),
     { times: 1 },
   );
-  await mainMenu(page).getByRole("link", { name: t("nav.home"), exact: true }).first().click();
-  await mainMenu(page).getByRole("link", { name: t("nav.builds"), exact: true }).first().click();
+  const history = mainMenu(page).getByRole("link", { name: t("nav.builds"), exact: true }).first();
+  if ((await history.getAttribute("aria-current")) === "page") {
+    await mainMenu(page).getByRole("link", { name: t("nav.home"), exact: true }).first().click();
+  }
+  await history.click();
 }
 
 /** Studio's uncaught exceptions on `page`, not Keycloak's. */
