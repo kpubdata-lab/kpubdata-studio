@@ -184,3 +184,111 @@ test("가입하고 이메일을 인증한 계정은 관리자 승인 뒤에 들�
   await expectNoPageErrors(errors);
   await member.close();
 });
+
+/** The token endpoint of the realm, and whether a request to it is the refresh grant. */
+const tokenEndpoint = () => `${ISSUER}/protocol/openid-connect/token`;
+const isRefreshGrant = (body: string | null) => new URLSearchParams(body ?? "").get("grant_type") === "refresh_token";
+
+/** Sign the administrator in on `page` and wait for Studio's shell. */
+async function signInAsAdministrator(page: Page): Promise<void> {
+  await page.goto("/login");
+  await page.waitForLoadState("networkidle");
+  await page.getByRole("button", { name: t("auth.page.emailLogin") }).click();
+  await page.waitForURL((url) => url.origin === keycloakOrigin(), { timeout: 30_000 });
+  await page.locator("#username").fill(ADMIN_EMAIL);
+  await page.locator("#password").fill(ADMIN_PASSWORD);
+  await page.locator('[type="submit"]').click();
+  await backInStudio(page);
+  await expect(mainMenu(page)).toBeVisible({ timeout: 30_000 });
+}
+
+/**
+ * Answer the next `GET /builds` with 401, so Studio asks for a forced refresh, and open the
+ * screen that sends it (leaving it first, so it is sent again).
+ */
+async function builderRefusesOnce(page: Page): Promise<void> {
+  await page.route(
+    (url) => url.href.startsWith(`${BUILDER_URL}/builds`),
+    (route) =>
+      route.request().method() === "GET"
+        ? route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ code: "unauthorized" }) })
+        : route.fallback(),
+    { times: 1 },
+  );
+  await mainMenu(page).getByRole("link", { name: t("nav.home"), exact: true }).first().click();
+  await mainMenu(page).getByRole("link", { name: t("nav.builds"), exact: true }).first().click();
+}
+
+/** Studio's uncaught exceptions on `page`, not Keycloak's. */
+function studioErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => {
+    if (new URL(page.url()).origin !== keycloakOrigin()) errors.push(`pageerror: ${error.message} (${page.url()})`);
+  });
+  return errors;
+}
+
+/**
+ * A refresh the identity provider cannot answer keeps the session (#983). The realm's token
+ * endpoint is intercepted only for the refresh grant.
+ */
+test("Keycloak 에 닿지 않는 토큰 갱신은 로그인을 유지하고, 다시 닿으면 갱신한다 (#983) @keycloak", async ({ page }) => {
+  const errors = studioErrors(page);
+  const notice = page.locator('[data-auth-notice="idp-unreachable"]');
+  await test.step("sign in", () => signInAsAdministrator(page));
+
+  await test.step("the token endpoint cannot be reached: still signed in, with a notice", async () => {
+    let refreshAttempts = 0;
+    await page.route(tokenEndpoint(), (route) => {
+      if (!isRefreshGrant(route.request().postData())) return route.continue();
+      refreshAttempts += 1;
+      return route.abort("connectionrefused");
+    });
+    await builderRefusesOnce(page);
+    await expect(notice).toBeVisible({ timeout: 30_000 });
+    // The other requests on the screen, refused in turn without a token, do not start
+    // their own retries: watched for longer than the 5s cool-down, which also lets the
+    // next step's forced refresh ask the provider again.
+    await page.waitForTimeout(6_000);
+    expect(refreshAttempts, "bounded retries").toBeGreaterThan(1);
+    expect(refreshAttempts, "bounded retries").toBeLessThanOrEqual(3);
+    expect(new URL(page.url()).pathname.startsWith("/login")).toBe(false);
+    await expect(mainMenu(page)).toBeVisible();
+    await page.unroute(tokenEndpoint());
+  });
+
+  await test.step("the token endpoint answers again: renewed, and the notice goes", async () => {
+    const renewed = page.waitForResponse(
+      (answer) => answer.url() === tokenEndpoint() && isRefreshGrant(answer.request().postData()),
+    );
+    await builderRefusesOnce(page);
+    expect((await renewed).status()).toBe(200);
+    await expect(notice).toHaveCount(0, { timeout: 30_000 });
+    await expect(mainMenu(page)).toBeVisible();
+  });
+
+  await expectNoPageErrors(errors);
+});
+
+/** A refresh token the realm refuses still ends the session at once (#983). */
+test("거부된 토큰 갱신(invalid_grant)은 재시도 없이 로그아웃한다 (#983) @keycloak", async ({ page }) => {
+  const errors = studioErrors(page);
+  await signInAsAdministrator(page);
+
+  let refreshAttempts = 0;
+  await page.route(tokenEndpoint(), (route) => {
+    if (!isRefreshGrant(route.request().postData())) return route.continue();
+    refreshAttempts += 1;
+    return route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "invalid_grant", error_description: "Token is not active" }),
+    });
+  });
+  await builderRefusesOnce(page);
+  await page.waitForURL((url) => url.pathname.startsWith("/login"), { timeout: 30_000 });
+  expect(refreshAttempts, "a refusal is not retried").toBe(1);
+  await expect(page.locator('[data-auth-notice="idp-unreachable"]')).toHaveCount(0);
+
+  await expectNoPageErrors(errors);
+});

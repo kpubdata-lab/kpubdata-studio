@@ -1581,6 +1581,7 @@
     "builderBaseUrl": "KPubData Builder API base URL"
   },
   "auth": {
+    "idpUnreachable": "The sign-in service cannot be reached right now. You are still signed in; requests that need sign-in will fail until it answers again.",
     "page": {
       "introLabel": "About KPubData Studio",
       "introTitle": "Turn public data into trusted tables",

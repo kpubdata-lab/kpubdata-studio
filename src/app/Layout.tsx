@@ -17,6 +17,7 @@ import { AccountMenu } from "./AccountMenu";
 import { crumbsFor, documentTitleFor } from "./breadcrumb";
 import { CommandSearch, type SearchDestination } from "./CommandSearch";
 import { ensureAdminChecked, useAdminStore } from "@/features/admin/store";
+import { IdentityProviderUnreachableNotice } from "@/features/auth/IdentityProviderUnreachableNotice";
 import { OwnerScope } from "@/features/auth/OwnerScope";
 import { signOutOfOidc } from "@/features/auth/signOut";
 import { useStorageOwnerKey } from "@/features/auth/storageOwner";
@@ -579,6 +580,7 @@ export function Layout() {
           </header>
 
           <VersionMismatchBanner />
+          <IdentityProviderUnreachableNotice />
 
           {/* The one main landmark: pages render inside it and never add their own (#660). */}
           <main
