@@ -15,6 +15,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 
 - npm `@axe-core/playwright` 4.13.0: `MPL-2.0`
 - npm `axe-core` 4.13.0: `MPL-2.0`
+- npm `caniuse-lite` 1.0.30001816: `CC-BY-4.0`
 - npm `lightningcss` 1.32.0: `MPL-2.0`
 - npm `lightningcss-android-arm64` 1.32.0: `MPL-2.0`
 - npm `lightningcss-darwin-arm64` 1.32.0: `MPL-2.0`
@@ -55,10 +56,24 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | @asamuzakjp/dom-selector | 9.2.4 | development install | MIT | declared | https://registry.npmjs.org/@asamuzakjp/dom-selector/-/dom-selector-9.2.4.tgz |
 | @axe-core/playwright | 4.13.0 | development install | MPL-2.0 | needs review | https://registry.npmjs.org/@axe-core/playwright/-/playwright-4.13.0.tgz |
 | @babel/code-frame | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz |
+| @babel/compat-data | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.29.7.tgz |
+| @babel/core | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/core/-/core-7.29.7.tgz |
+| semver | 6.3.1 | development install | ISC | declared | https://registry.npmjs.org/semver/-/semver-6.3.1.tgz |
+| @babel/generator | 7.29.8 | development install | MIT | declared | https://registry.npmjs.org/@babel/generator/-/generator-7.29.8.tgz |
+| @babel/helper-compilation-targets | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.29.7.tgz |
+| lru-cache | 5.1.1 | development install | ISC | declared | https://registry.npmjs.org/lru-cache/-/lru-cache-5.1.1.tgz |
+| semver | 6.3.1 | development install | ISC | declared | https://registry.npmjs.org/semver/-/semver-6.3.1.tgz |
+| @babel/helper-globals | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-globals/-/helper-globals-7.29.7.tgz |
+| @babel/helper-module-imports | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-module-imports/-/helper-module-imports-7.29.7.tgz |
+| @babel/helper-module-transforms | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-module-transforms/-/helper-module-transforms-7.29.7.tgz |
 | @babel/helper-string-parser | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.29.7.tgz |
 | @babel/helper-validator-identifier | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.29.7.tgz |
+| @babel/helper-validator-option | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/helper-validator-option/-/helper-validator-option-7.29.7.tgz |
+| @babel/helpers | 7.29.10 | development install | MIT | declared | https://registry.npmjs.org/@babel/helpers/-/helpers-7.29.10.tgz |
 | @babel/parser | 7.29.9 | development install | MIT | declared | https://registry.npmjs.org/@babel/parser/-/parser-7.29.9.tgz |
 | @babel/runtime | 7.29.7 | production install | MIT | declared | https://registry.npmjs.org/@babel/runtime/-/runtime-7.29.7.tgz |
+| @babel/template | 7.29.7 | development install | MIT | declared | https://registry.npmjs.org/@babel/template/-/template-7.29.7.tgz |
+| @babel/traverse | 7.29.10 | development install | MIT | declared | https://registry.npmjs.org/@babel/traverse/-/traverse-7.29.10.tgz |
 | @babel/types | 7.29.8 | development install | MIT | declared | https://registry.npmjs.org/@babel/types/-/types-7.29.8.tgz |
 | @bcoe/v8-coverage | 1.0.2 | development install | MIT | declared | https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-1.0.2.tgz |
 | @bramus/specificity | 2.4.2 | development install | MIT | declared | https://registry.npmjs.org/@bramus/specificity/-/specificity-2.4.2.tgz |
@@ -182,13 +197,17 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | js-tokens | 10.0.0 | development install | MIT | declared | https://registry.npmjs.org/js-tokens/-/js-tokens-10.0.0.tgz |
 | axe-core | 4.13.0 | development install | MPL-2.0 | needs review | https://registry.npmjs.org/axe-core/-/axe-core-4.13.0.tgz |
 | balanced-match | 4.0.4 | development install | MIT | declared | https://registry.npmjs.org/balanced-match/-/balanced-match-4.0.4.tgz |
+| baseline-browser-mapping | 2.11.28 | development install | Apache-2.0 | declared | https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.28.tgz |
 | bidi-js | 1.1.0 | development install | MIT | declared | https://registry.npmjs.org/bidi-js/-/bidi-js-1.1.0.tgz |
 | brace-expansion | 5.0.12 | development install | MIT | declared | https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz |
+| browserslist | 4.29.3 | development install | MIT | declared | https://registry.npmjs.org/browserslist/-/browserslist-4.29.3.tgz |
 | cacheable | 2.5.0 | development install | MIT | declared | https://registry.npmjs.org/cacheable/-/cacheable-2.5.0.tgz |
+| caniuse-lite | 1.0.30001816 | development install | CC-BY-4.0 | needs review | https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001816.tgz |
 | chai | 6.2.2 | development install | MIT | declared | https://registry.npmjs.org/chai/-/chai-6.2.2.tgz |
 | cli-width | 4.1.0 | development install | ISC | declared | https://registry.npmjs.org/cli-width/-/cli-width-4.1.0.tgz |
 | cliui | 9.0.1 | development install | ISC | declared | https://registry.npmjs.org/cliui/-/cliui-9.0.1.tgz |
 | string-width | 7.2.0 | development install | MIT | declared | https://registry.npmjs.org/string-width/-/string-width-7.2.0.tgz |
+| convert-source-map | 2.0.0 | development install | MIT | declared | https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz |
 | cookie | 1.1.1 | production install | MIT | declared | https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz |
 | cross-spawn | 7.0.6 | development install | MIT | declared | https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.6.tgz |
 | css-tree | 3.2.1 | development install | MIT | declared | https://registry.npmjs.org/css-tree/-/css-tree-3.2.1.tgz |
@@ -201,6 +220,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | dequal | 2.0.3 | development install | MIT | declared | https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz |
 | detect-libc | 2.1.2 | development install | Apache-2.0 | declared | https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz |
 | dom-accessibility-api | 0.5.16 | development install | MIT | declared | https://registry.npmjs.org/dom-accessibility-api/-/dom-accessibility-api-0.5.16.tgz |
+| electron-to-chromium | 1.5.453 | development install | ISC | declared | https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.453.tgz |
 | emoji-regex | 10.6.0 | development install | MIT | declared | https://registry.npmjs.org/emoji-regex/-/emoji-regex-10.6.0.tgz |
 | enhanced-resolve | 5.24.5 | development install | MIT | declared | https://registry.npmjs.org/enhanced-resolve/-/enhanced-resolve-5.24.5.tgz |
 | entities | 8.0.0 | development install | BSD-2-Clause | declared | https://registry.npmjs.org/entities/-/entities-8.0.0.tgz |
@@ -208,6 +228,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | escalade | 3.2.0 | development install | MIT | declared | https://registry.npmjs.org/escalade/-/escalade-3.2.0.tgz |
 | escape-string-regexp | 4.0.0 | development install | MIT | declared | https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz |
 | eslint | 10.12.0 | development install | MIT | declared | https://registry.npmjs.org/eslint/-/eslint-10.12.0.tgz |
+| eslint-plugin-react-hooks | 7.1.1 | development install | MIT | declared | https://registry.npmjs.org/eslint-plugin-react-hooks/-/eslint-plugin-react-hooks-7.1.1.tgz |
 | eslint-scope | 9.1.2 | development install | BSD-2-Clause | declared | https://registry.npmjs.org/eslint-scope/-/eslint-scope-9.1.2.tgz |
 | eslint-visitor-keys | 5.0.1 | development install | Apache-2.0 | declared | https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-5.0.1.tgz |
 | espree | 11.2.0 | development install | BSD-2-Clause | declared | https://registry.npmjs.org/espree/-/espree-11.2.0.tgz |
@@ -228,6 +249,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | find-up | 5.0.0 | development install | MIT | declared | https://registry.npmjs.org/find-up/-/find-up-5.0.0.tgz |
 | flat-cache | 6.1.23 | development install | MIT | declared | https://registry.npmjs.org/flat-cache/-/flat-cache-6.1.23.tgz |
 | flatted | 3.4.4 | development install | ISC | declared | https://registry.npmjs.org/flatted/-/flatted-3.4.4.tgz |
+| gensync | 1.0.0-beta.2 | development install | MIT | declared | https://registry.npmjs.org/gensync/-/gensync-1.0.0-beta.2.tgz |
 | get-caller-file | 2.0.5 | development install | ISC | declared | https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz |
 | get-east-asian-width | 1.7.0 | development install | MIT | declared | https://registry.npmjs.org/get-east-asian-width/-/get-east-asian-width-1.7.0.tgz |
 | glob-parent | 6.0.2 | development install | ISC | declared | https://registry.npmjs.org/glob-parent/-/glob-parent-6.0.2.tgz |
@@ -235,6 +257,8 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | graceful-fs | 4.2.11 | development install | ISC | declared | https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz |
 | hashery | 1.5.1 | development install | MIT | declared | https://registry.npmjs.org/hashery/-/hashery-1.5.1.tgz |
 | headers-polyfill | 5.0.1 | development install | MIT | declared | https://registry.npmjs.org/headers-polyfill/-/headers-polyfill-5.0.1.tgz |
+| hermes-estree | 0.25.1 | development install | MIT | declared | https://registry.npmjs.org/hermes-estree/-/hermes-estree-0.25.1.tgz |
+| hermes-parser | 0.25.1 | development install | MIT | declared | https://registry.npmjs.org/hermes-parser/-/hermes-parser-0.25.1.tgz |
 | hookified | 1.15.1 | development install | MIT | declared | https://registry.npmjs.org/hookified/-/hookified-1.15.1.tgz |
 | html-encoding-sniffer | 7.0.0 | development install | MIT | declared | https://registry.npmjs.org/html-encoding-sniffer/-/html-encoding-sniffer-7.0.0.tgz |
 | html-parse-stringify | 4.0.1 | production install | MIT | declared | https://registry.npmjs.org/html-parse-stringify/-/html-parse-stringify-4.0.1.tgz |
@@ -251,8 +275,10 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | jiti | 2.7.0 | development install | MIT | declared | https://registry.npmjs.org/jiti/-/jiti-2.7.0.tgz |
 | js-tokens | 4.0.0 | development install | MIT | declared | https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz |
 | jsdom | 30.1.2 | development install | MIT | declared | https://registry.npmjs.org/jsdom/-/jsdom-30.1.2.tgz |
+| jsesc | 3.1.0 | development install | MIT | declared | https://registry.npmjs.org/jsesc/-/jsesc-3.1.0.tgz |
 | json-schema-traverse | 0.4.1 | development install | MIT | declared | https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-0.4.1.tgz |
 | json-stable-stringify-without-jsonify | 1.0.1 | development install | MIT | declared | https://registry.npmjs.org/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz |
+| json5 | 2.2.3 | development install | MIT | declared | https://registry.npmjs.org/json5/-/json5-2.2.3.tgz |
 | keycloak-js | 26.2.4 | production install | Apache-2.0 | declared | https://registry.npmjs.org/keycloak-js/-/keycloak-js-26.2.4.tgz |
 | keyv | 5.6.0 | development install | MIT | declared | https://registry.npmjs.org/keyv/-/keyv-5.6.0.tgz |
 | levn | 0.4.1 | development install | MIT | declared | https://registry.npmjs.org/levn/-/levn-0.4.1.tgz |
@@ -282,6 +308,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | mute-stream | 3.0.0 | development install | ISC | declared | https://registry.npmjs.org/mute-stream/-/mute-stream-3.0.0.tgz |
 | nanoid | 3.3.20 | development install | MIT | declared | https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz |
 | natural-compare | 1.4.0 | development install | MIT | declared | https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz |
+| node-releases | 2.0.58 | development install | MIT | declared | https://registry.npmjs.org/node-releases/-/node-releases-2.0.58.tgz |
 | obug | 2.1.4 | development install | MIT | declared | https://registry.npmjs.org/obug/-/obug-2.1.4.tgz |
 | optionator | 0.9.4 | development install | MIT | declared | https://registry.npmjs.org/optionator/-/optionator-0.9.4.tgz |
 | outvariant | 1.4.3 | development install | MIT | declared | https://registry.npmjs.org/outvariant/-/outvariant-1.4.3.tgz |
@@ -345,6 +372,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | undici | 8.11.2 | development install | MIT | declared | https://registry.npmjs.org/undici/-/undici-8.11.2.tgz |
 | undici-types | 8.9.0 | development install | MIT | declared | https://registry.npmjs.org/undici-types/-/undici-types-8.9.0.tgz |
 | until-async | 3.0.2 | development install | MIT | declared | https://registry.npmjs.org/until-async/-/until-async-3.0.2.tgz |
+| update-browserslist-db | 1.3.4 | development install | MIT | declared | https://registry.npmjs.org/update-browserslist-db/-/update-browserslist-db-1.3.4.tgz |
 | uri-js | 4.4.1 | development install | BSD-2-Clause | declared | https://registry.npmjs.org/uri-js/-/uri-js-4.4.1.tgz |
 | use-sync-external-store | 1.6.0 | production install | MIT | declared | https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz |
 | vite | 8.3.4 | development install | MIT | declared | https://registry.npmjs.org/vite/-/vite-8.3.4.tgz |
@@ -377,11 +405,13 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | xml-name-validator | 5.0.0 | development install | Apache-2.0 | declared | https://registry.npmjs.org/xml-name-validator/-/xml-name-validator-5.0.0.tgz |
 | xmlchars | 2.2.0 | development install | MIT | declared | https://registry.npmjs.org/xmlchars/-/xmlchars-2.2.0.tgz |
 | y18n | 5.0.8 | development install | ISC | declared | https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz |
+| yallist | 3.1.1 | development install | ISC | declared | https://registry.npmjs.org/yallist/-/yallist-3.1.1.tgz |
 | yaml | 2.9.1 | production install | ISC | declared | https://registry.npmjs.org/yaml/-/yaml-2.9.1.tgz |
 | yargs | 18.2.0 | development install | MIT | declared | https://registry.npmjs.org/yargs/-/yargs-18.2.0.tgz |
 | yargs-parser | 22.0.0 | development install | ISC | declared | https://registry.npmjs.org/yargs-parser/-/yargs-parser-22.0.0.tgz |
 | yocto-queue | 0.1.0 | development install | MIT | declared | https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz |
 | zod | 4.6.5 | production install | MIT | declared | https://registry.npmjs.org/zod/-/zod-4.6.5.tgz |
+| zod-validation-error | 4.0.2 | development install | MIT | declared | https://registry.npmjs.org/zod-validation-error/-/zod-validation-error-4.0.2.tgz |
 | zustand | 5.0.15 | production install | MIT | declared | https://registry.npmjs.org/zustand/-/zustand-5.0.15.tgz |
 
 ## Tracked visual assets

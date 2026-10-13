@@ -1,6 +1,7 @@
 import js from "@eslint/js";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 const eslintConfig = defineConfig([
@@ -16,17 +17,33 @@ const eslintConfig = defineConfig([
     "node_modules/**",
     "docs/**",
     "site/**",
+    // Deliberate violations for __tests__/lintHooksGate.test.ts, which lints them itself.
+    "__tests__/lint-fixtures/**",
   ]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  // React Hooks correctness (#982). Debt that existed when the rules were turned on
+  // is frozen in eslint-suppressions.json: a new violation fails, and a fixed one
+  // fails until `npm run lint:prune` lowers the baseline.
+  reactHooks.configs.flat.recommended,
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       globals: {
         ...globals.browser,
       },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+      // Recommended ships this one as a warning; an error is what the baseline can hold.
+      "react-hooks/incompatible-library": "error",
+      // A promise nobody awaits or catches loses its rejection (#982).
+      "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
