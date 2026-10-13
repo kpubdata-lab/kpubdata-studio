@@ -89,7 +89,7 @@ function EditSpecWizard({ buildId }: { buildId: string }) {
   const [formReady, setFormReady] = useState(false);
   const [catalog, setCatalog] = useState<CatalogState>({ status: "loading", providers: [] });
   const [saveSpecMessage, setSaveSpecMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const job = useBuildJob();
+  const job = useBuildJob("new-build");
 
   const {
     formState: { errors, isDirty },

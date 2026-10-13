@@ -9,7 +9,7 @@
 import { i18n } from "@/shared/i18n";
 import { saveBuildSpec } from "@/features/build-spec/specStore";
 import { serializeSpec } from "@/features/build-spec/specMapping";
-import type { BuildJob } from "@/shared/lib/builderApi";
+import { ApiError, type BuildJob } from "@/shared/lib/builderApi";
 import { buildJobResponseSchema, type BuildJobResponse } from "@/shared/lib/builderApi.schema";
 import { keysWereLost } from "@/shared/lib/missingProviderKey";
 import type { BuildListItem, BuildRun, BuildRunStatus, BuildSpec } from "@/shared/lib/types";
@@ -199,6 +199,61 @@ export async function pollBuildJobUntilTerminal(
   return job;
 }
 
+/**
+ * Whether a failed request ended without an answer read — a lost connection or a timeout.
+ * Builder may still have acted on it.
+ */
+function answerWasLost(cause: unknown): boolean {
+  return cause instanceof ApiError && (cause.status === 0 || cause.status === 408);
+}
+
+/**
+ * `POST /builds`, sent once (#986, #999).
+ *
+ * The request is not given the caller's signal. The signal belongs to the screen that
+ * watches the build, and leaving the screen cannot take back a write already sent: Builder
+ * may accept it whatever the browser does next, so the answer is read to the end and the
+ * run id it names is kept. Only watching the run stops with the screen.
+ *
+ * When the answer is lost, the job is asked for by the run id the request carried — a
+ * read, never the write again. Found, it is the accepted job. Otherwise nobody can tell
+ * whether Builder started it, and the error says to look for it before starting again.
+ */
+async function submitOnce(
+  spec: BuildSpec,
+  runId: string,
+  signal: AbortSignal | undefined,
+  retryOf?: string,
+  ifAbsent?: boolean,
+): Promise<BuildJob> {
+  const client = runsClient();
+  try {
+    return await client.submit(serializeSpec(spec), runId, undefined, retryOf, ifAbsent);
+  } catch (cause) {
+    if (!answerWasLost(cause)) throw cause;
+    const found = await client.getJob(runId, signal).catch(() => null);
+    if (found) return found;
+    throw new ApiError((cause as ApiError).status, i18n.t("runs.build.submitUnknown", { runId }));
+  }
+}
+
+/**
+ * Follow a job Builder has already accepted to its end (#986): for a screen opened again
+ * after the one that submitted it was left. Read, never submitted again.
+ */
+export async function followBuild(
+  runId: string,
+  spec: BuildSpec,
+  signal: AbortSignal,
+  onJobStatus?: (status: BuilderJobStatus) => void,
+): Promise<BuildRun> {
+  const current = await runsClient().getJob(runId, signal);
+  onJobStatus?.(current.status);
+  const job = await pollBuildJobUntilTerminal(runId, current, signal, (polled) => onJobStatus?.(polled.status));
+  saveBuildSpec(job.run_id, spec);
+  return buildRunFromJob(job, spec, current.created_at);
+}
+
 async function runAsyncBuild(
   spec: BuildSpec,
   runId: string,
@@ -209,7 +264,7 @@ async function runAsyncBuild(
   retryOf?: string,
   ifAbsent?: boolean,
 ): Promise<BuildRun> {
-  const submitted = await runsClient().submit(serializeSpec(spec), runId, signal, retryOf, ifAbsent);
+  const submitted = await submitOnce(spec, runId, signal, retryOf, ifAbsent);
   // Server-returned run_id is authoritative. Only from here can cooperative cancel
   // (POST /builds/{run_id}/cancel) be sent — before submit, Cancel is kept as pending
   // intent and applied exactly once via handle exposed here (F03).
