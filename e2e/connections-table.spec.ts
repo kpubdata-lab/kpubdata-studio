@@ -44,3 +44,30 @@ test("연결 표는 390px 에서 표 안에서만 가로로 스크롤되고 키�
 
   await expectNoPageErrors(errors);
 });
+
+test("Deleting a stored key asks first; dismissing keeps it and accepting says it was deleted (#988)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  await page.goto("/connections?provider=kosis");
+  await expect(page.getByRole("heading", { name: /kosis/ })).toBeVisible({ timeout: 10_000 });
+  const remove = page.getByRole("button", { name: t("provider.detail.delete"), exact: true });
+  await expect(remove).toBeVisible();
+  const confirmText = t("provider.detail.deleteConfirm").replace("{{provider}}", "kosis");
+
+  const dismissed = page.waitForEvent("dialog");
+  void remove.click();
+  const first = await dismissed;
+  expect(first.type()).toBe("confirm");
+  expect(first.message()).toBe(confirmText);
+  await first.dismiss();
+  await expect(remove).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: t("provider.detail.deleted").replace("{{provider}}", "kosis") })).toHaveCount(0);
+
+  page.once("dialog", (dialog) => void dialog.accept());
+  await remove.click();
+  await expect(page.getByRole("status").filter({ hasText: t("provider.detail.deleted").replace("{{provider}}", "kosis") })).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+
+  await expectNoPageErrors(errors);
+});

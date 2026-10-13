@@ -193,6 +193,13 @@ export function ProviderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
+  // A delete of a stored key is confirmed first and sent once (#988): the ref is set
+  // before the request leaves, so a second click in the same tick finds it, and the
+  // state disables the button until the request settles. `deleted` is the provider
+  // whose key this visit deleted, said in a status line until another action.
+  const deletingRef = useRef<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletedId, setDeletedId] = useState<string | null>(null);
   // Builder refused to store a key (403 `credential_storage_disabled`) — the fallback
   // signal when `GET /version` does not say where keys come from.
   const [storageRefused, setStorageRefused] = useState(false);
@@ -318,6 +325,7 @@ export function ProviderPage() {
     selectedProviderIdRef.current = provider.id;
     ++credentialRequestGeneration.current;
     setSelectedProvider(provider);
+    setDeletedId(null);
     setShowCredentialForm(false);
     setCredentialForm({ credential: "" });
     setJustSavedCredential(false);
@@ -365,6 +373,7 @@ export function ProviderPage() {
     }
     const provider = selectedProvider;
     setError(null);
+    setDeletedId(null);
     try {
       // PUT /providers/{provider}/credential; body is only
       // { credential }. The plaintext is not expected back in the response,
@@ -410,12 +419,21 @@ export function ProviderPage() {
   };
 
   const handleCredentialDelete = async () => {
-    if (!selectedProvider) return;
+    if (!selectedProvider || deletingRef.current !== null) return;
     const provider = selectedProvider;
+    if (!window.confirm(i18n.t("provider.detail.deleteConfirm", { provider: provider.id }))) return;
+    deletingRef.current = provider.id;
+    setDeletingId(provider.id);
     setError(null);
+    setDeletedId(null);
     try {
+      // Sent once: a write is never repeated on its own (#999). Builder answers an
+      // already-absent key with the same 200, so a delete is not misreported.
       await providerClient().deleteCredential(provider.id);
+      deletingRef.current = null;
+      setDeletingId(null);
       if (selectedProviderIdRef.current === provider.id) {
+        setDeletedId(provider.id);
         // Deleted, so this user has no key of their own here any more (#845). Whether a
         // default key is left is the list's to say, once it has been read again.
         ++credentialRequestGeneration.current;
@@ -431,6 +449,10 @@ export function ProviderPage() {
         await loadCredentialMeta(provider, { afterMutation: true });
       }
     } catch (cause) {
+      if (deletingRef.current === provider.id) {
+        deletingRef.current = null;
+        setDeletingId(null);
+      }
       // If the user moved to another provider mid-delete, do not surface
       // this failure on the current screen.
       if (selectedProviderIdRef.current !== provider.id) return;
@@ -505,7 +527,7 @@ export function ProviderPage() {
 
       {error && (
         <Card variant="error">
-          <p className="font-semibold">{error}</p>
+          <p className="font-semibold" role="alert">{error}</p>
         </Card>
       )}
 
@@ -558,7 +580,13 @@ export function ProviderPage() {
                     ) : null}
                   </div>
                   {keysPerRequest ? null : userCredentialConfigured ? (
-                    <Button size="sm" variant="danger" onClick={handleCredentialDelete}>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      disabled={deletingId !== null}
+                      loading={deletingId === selectedProvider.id}
+                      onClick={() => void handleCredentialDelete()}
+                    >
                       {t("provider.detail.delete")}
                     </Button>
                   ) : canRegisterCredential && !showCredentialForm ? (
@@ -569,6 +597,11 @@ export function ProviderPage() {
                     </Button>
                   ) : null}
                 </div>
+                {deletedId === selectedProvider.id ? (
+                  <p className="mt-2 text-sm text-status-success" role="status">
+                    {t("provider.detail.deleted", { provider: selectedProvider.id })}
+                  </p>
+                ) : null}
 
                 {!selectedProvider.requiresCredential ? (
                   <p className="mt-4 text-sm text-muted-foreground">

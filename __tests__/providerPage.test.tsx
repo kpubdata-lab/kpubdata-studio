@@ -200,9 +200,12 @@ describe("ProviderPage real mode (#S01)", () => {
       .spyOn(builderApi, "deleteProviderCredential")
       .mockResolvedValue(undefined);
 
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+
     renderPage();
     fireEvent.click(await screen.findByText("datago"));
     fireEvent.click(await screen.findByRole("button", { name: "삭제" }));
+    expect(confirm).toHaveBeenCalledTimes(1);
 
     credSpy.mockResolvedValue({
       configured: false,

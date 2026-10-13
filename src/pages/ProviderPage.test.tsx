@@ -42,9 +42,12 @@ async function selectProvider(name: string) {
 beforeEach(() => {
   vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
   mswServer.use(http.get(`${API_BASE}/providers`, () => HttpResponse.json(PROVIDERS)));
+  // Delete asks first (#988); these tests are about what follows a confirmed delete.
+  vi.spyOn(window, "confirm").mockReturnValue(true);
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
 
