@@ -54,7 +54,7 @@ import { classifyQueryError } from "@/features/sql/api";
 import { asInvalidDetails } from "@/features/validation/api";
 import en from "@/shared/i18n/locales/en.json";
 import ko from "@/shared/i18n/locales/ko.json";
-import { builderApi, httpError, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
+import { builderApi, httpError, LIST_LIMIT_MAX, PUBLISH_CREDENTIAL_HEADER } from "./builderApi";
 import * as schemas from "./builderApi.schema";
 import { BUILDER_ENUMS_CONTRACT_VERSION } from "./builderEnums";
 import { forgetAllProviderKeys, holdProviderKey, PROVIDER_KEY_HEADER } from "./providerKeys";
@@ -1569,6 +1569,31 @@ describe.skipIf(!contractPath)("generated Builder enums against the contract (#7
     );
     expect(order).not.toBe(0);
   });
+});
+
+/**
+ * Studio caps "show more" and the palette at {@link LIST_LIMIT_MAX} (kpubdata-builder#1327).
+ * Each history listing Studio pages through must declare exactly that `maximum`: a lower
+ * one would make Studio's last step a 400, a higher one would hide history Builder could send.
+ */
+describe.skipIf(!contractPath)("history listing limit maximum against the contract (builder#1327)", () => {
+  type Parameter = { $ref?: string; name?: string; in?: string; schema?: { maximum?: number } };
+  const doc = contractPath && existsSync(contractPath)
+    ? (parse(readFileSync(contractPath, "utf8")) as {
+        paths: Record<string, Record<string, { parameters?: Parameter[] }>>;
+        components?: { parameters?: Record<string, Parameter> };
+      })
+    : { paths: {} };
+
+  it.each(["/builds", "/datasets", "/datasets/{dataset_id}/runs", "/datasets/{dataset_id}/quality/history"])(
+    "GET %s declares limit maximum LIST_LIMIT_MAX",
+    (path) => {
+      const limit = (doc.paths[path]?.get?.parameters ?? [])
+        .map((p) => (p.$ref ? doc.components?.parameters?.[p.$ref.split("/").pop() ?? ""] : p))
+        .find((p) => p?.in === "query" && p.name === "limit");
+      expect(limit?.schema?.maximum).toBe(LIST_LIMIT_MAX);
+    },
+  );
 });
 
 /** Client functions the placeholder call cannot drive to a request, each with its reason. */

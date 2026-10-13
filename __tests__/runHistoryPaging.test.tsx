@@ -97,6 +97,33 @@ describe("Table Detail run view: show more (#653)", () => {
   });
 });
 
+describe("Table Detail run view: Builder's maximum limit (builder#1327)", () => {
+  beforeEach(() => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "false");
+    hideDemoWarehouse();
+  });
+
+  it("asks 50 → 150 → 450 → 1000 and then stops, saying older runs may exist", async () => {
+    const spy = vi.spyOn(datasetsApi, "listDatasetRuns").mockImplementation(async (datasetId, limit = 50) => {
+      if (limit > 1000) throw new Error("limit must be at most 1000");
+      return { dataset_id: datasetId, runs: runs(limit) };
+    });
+    renderAt("/tables/apt-trade?tab=builds", <DatasetDetailPage />, "/tables/:datasetId");
+
+    const panel = await screen.findByRole("tabpanel", { name: "실행 기록" });
+    await within(panel).findByText("run-049");
+    for (const [next, last] of [[150, "run-149"], [450, "run-449"], [1000, "run-999"]] as const) {
+      fireEvent.click(within(panel).getByRole("button", { name: `더 보기 (최대 ${next}건)` }));
+      await within(panel).findByText(last);
+    }
+
+    expect(spy.mock.calls.map((call) => call[1])).toEqual([50, 150, 450, 1000]);
+    expect(within(panel).queryByRole("alert")).not.toBeInTheDocument();
+    expect(within(panel).queryByRole("button", { name: /더 보기/ })).not.toBeInTheDocument();
+    expect(within(panel).getByText(/최근 실행 1000건.*한 번에 최대 1000건/)).toBeInTheDocument();
+  });
+});
+
 describe("Table Detail Snapshots tab: same first limit and show more (#653)", () => {
   const limits: string[] = [];
 
@@ -179,6 +206,30 @@ describe("Refresh history: show more past 100 (#653)", () => {
     await screen.findByText("build-179");
     expect(spy.mock.calls.map((call) => call[0])).toEqual([100, 300]);
     await waitFor(() => expect(screen.queryByRole("button", { name: /더 보기/ })).not.toBeInTheDocument());
+  });
+
+  it("stops at Builder's maximum limit of 1000 instead of asking for 2700 (builder#1327)", async () => {
+    // Every page comes back full, so the history may always reach further back.
+    const spy = vi.spyOn(runsApi, "listBuilds").mockImplementation(async (limit) => {
+      if ((limit ?? 0) > 1000) throw new Error("limit must be at most 1000");
+      return items(limit ?? 100);
+    });
+    renderAt("/refresh-jobs", <BuildsPage />, "/refresh-jobs");
+
+    await screen.findByText("build-099");
+    fireEvent.click(screen.getByRole("button", { name: "더 보기 (최대 300건)" }));
+    await screen.findByText("build-299");
+    fireEvent.click(screen.getByRole("button", { name: "더 보기 (최대 900건)" }));
+    await screen.findByText("build-899");
+    fireEvent.click(screen.getByRole("button", { name: "더 보기 (최대 1000건)" }));
+    await screen.findByText("build-999");
+
+    expect(spy.mock.calls.map((call) => call[0])).toEqual([100, 300, 900, 1000]);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    // A full page at the maximum may still hide older runs: say so, and offer no more.
+    expect(screen.queryByRole("button", { name: /더 보기/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/모두 표시했습니다/)).not.toBeInTheDocument();
+    expect(screen.getByText(/최근 실행 1000건.*한 번에 최대 1000건/)).toBeInTheDocument();
   });
 
   it("offers no more when the first page is short", async () => {

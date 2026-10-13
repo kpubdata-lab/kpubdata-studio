@@ -770,6 +770,15 @@ export type RevertRevisionRequest = schemas.RevertRevisionRequest;
  * contract 1.67.0): `<VARIABLE>=<value>`, the same form as `X-Provider-Key`. A multi-user
  * Builder publishes only with this header; a single-user Builder ignores it.
  */
+/**
+ * The largest `limit` Builder accepts on its history listings — `GET /builds`,
+ * `GET /datasets`, `GET /datasets/{dataset_id}/runs` and
+ * `GET /datasets/{dataset_id}/quality/history` (contract 1.125.0, `maximum: 1000`;
+ * kpubdata-builder#1327). A larger one is refused with 400. `contractDrift.test.ts`
+ * fails when the contract's maximum moves.
+ */
+export const LIST_LIMIT_MAX = 1000;
+
 export const PUBLISH_CREDENTIAL_HEADER = "X-Publish-Credential";
 
 /**

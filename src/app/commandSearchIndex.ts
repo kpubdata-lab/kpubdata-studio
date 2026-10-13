@@ -9,6 +9,7 @@
  */
 import { listDatasetsPage } from "@/features/datasets/api";
 import { loadCatalog } from "@/features/discover/api";
+import { LIST_LIMIT_MAX } from "@/shared/lib/builderApi";
 
 /** How many tables the palette asks Builder for first. */
 export const PALETTE_TABLE_LIMIT = 100;
@@ -17,8 +18,9 @@ export const PALETTE_TABLE_LIMIT = 100;
  * The most tables the palette ever asks for (#659). When Builder's `total` shows more than
  * the first page, the palette asks again with `limit` up to this many — `GET /datasets`
  * takes only `limit`, with no offset or query — and says so when even this is not all.
+ * It is Builder's maximum `limit`; a larger one is refused (kpubdata-builder#1327).
  */
-export const PALETTE_TABLE_CEILING = 1000;
+export const PALETTE_TABLE_CEILING = LIST_LIMIT_MAX;
 
 /** How many hits of one kind the palette shows, so one kind never pushes the others out. */
 export const PALETTE_GROUP_LIMIT = 5;
