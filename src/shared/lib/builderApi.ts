@@ -187,7 +187,12 @@ interface RequestOptions {
   signal?: AbortSignal;
   /** Auto timeout (ms). Uses DEFAULT_TIMEOUT_MS if not set. ≤0 disables timeout. */
   timeoutMs?: number;
-  /** Additional retry count on network errors/5xx (exponential backoff). Uses DEFAULT_RETRIES if not set. */
+  /**
+   * Additional retry count on network errors/5xx (exponential backoff). If not set, a GET uses
+   * DEFAULT_RETRIES and every other method uses 0 (#990): a write whose answer was lost may
+   * already have been applied, so sending it again is the caller's decision, stated here with
+   * the reason the repeat is safe.
+   */
   retries?: number;
   /** Omit auth header (for unauthenticated endpoints like /healthz, #186). */
   skipAuth?: boolean;
@@ -294,8 +299,19 @@ export const PROFILE_TIMEOUT_MS = 75_000;
  */
 export const PROBE_TIMEOUT_MS = 75_000;
 
-/** Default retry count for network errors/5xx (additional count beyond initial attempt). */
+/** Default retry count of a GET for network errors/5xx (additional count beyond initial attempt). */
 export const DEFAULT_RETRIES = 2;
+
+/**
+ * How many times a request is sent again when its options do not say (#990).
+ *
+ * Reading twice changes nothing, so a GET is retried. A POST, PUT or DELETE is not: when the
+ * first attempt was applied and only its answer was lost, the repeat is a second write — a
+ * delete that succeeded comes back as 404. A write that is safe to repeat says so itself.
+ */
+function defaultRetries(method: RequestOptions["method"]): number {
+  return method === undefined || method === "GET" ? DEFAULT_RETRIES : 0;
+}
 
 /** ApiError status value to identify if request was aborted by timeout. */
 const TIMEOUT_STATUS = 408;
@@ -349,7 +365,7 @@ async function fetchWithRetries(path: string, options: RequestOptions): Promise<
     body,
     signal,
     timeoutMs = DEFAULT_TIMEOUT_MS,
-    retries = DEFAULT_RETRIES,
+    retries = defaultRetries(method),
   } = options;
 
   let response: Response | undefined;
@@ -850,9 +866,12 @@ export const builderApi = {
       schemas.warehouseQueryResponseSchema,
     ),
 
-  /** DELETE /analyses/{id} — delete it and release its snapshot hold. */
+  /**
+   * DELETE /analyses/{id} — delete it and release its snapshot hold. Sent once (#990): a repeat
+   * after a delete that succeeded answers 404, which the screen would show as a failure.
+   */
   deleteAnalysis: (analysisId: string, signal?: AbortSignal) =>
-    apiFetch(`/analyses/${encodeURIComponent(analysisId)}`, { method: "DELETE", signal }, schemas.analysisDeletedResponseSchema),
+    apiFetch(`/analyses/${encodeURIComponent(analysisId)}`, { method: "DELETE", signal, retries: 0 }, schemas.analysisDeletedResponseSchema),
 
   /** GET /admin/config — live policy state; 403 for anyone but an administrator (builder#679). */
   adminConfig: (signal?: AbortSignal) =>
@@ -890,9 +909,13 @@ export const builderApi = {
   version: (signal?: AbortSignal) =>
     apiFetch("/version", { signal }, schemas.versionResponseSchema),
 
-  /** POST /validate — BuildSpec YAML validation. */
+  /** POST /validate — BuildSpec YAML validation. Retried like a read: it stores and starts nothing. */
   validate: (specYaml: string, signal?: AbortSignal) =>
-    apiFetch("/validate", { method: "POST", body: { spec: specYaml }, signal }, schemas.validateResponseSchema),
+    apiFetch(
+      "/validate",
+      { method: "POST", body: { spec: specYaml }, signal, retries: DEFAULT_RETRIES },
+      schemas.validateResponseSchema,
+    ),
 
    /**
     * POST /preview — sample preview based on BuildSpec.
@@ -1345,7 +1368,8 @@ export const builderApi = {
    * 409 `revision_conflict` (with `current_revision`) when another save came first; 400
    * `credential_in_content` when the content carries a credential. The automatic retry on
    * a network error or 5xx is safe because the body carries the same `idempotency_key`:
-   * Builder answers a repeat with the revision the first attempt made.
+   * Builder answers a repeat with the revision the first attempt made. A save without a key is
+   * sent once (#990) — its repeat would meet the revision the first attempt made as a conflict.
    */
   saveRevision: (
     kind: schemas.RevisionKind,
@@ -1355,7 +1379,7 @@ export const builderApi = {
   ) =>
     apiFetch(
       `/revisions/${kind}/${encodeURIComponent(docId)}`,
-      { method: "PUT", body: request, signal },
+      { method: "PUT", body: request, signal, retries: request.idempotency_key ? DEFAULT_RETRIES : 0 },
       schemas.documentRevisionSchema,
     ),
 
