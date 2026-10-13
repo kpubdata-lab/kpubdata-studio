@@ -8,6 +8,7 @@
 # Also: the security headers every response carries, and the page's lang (#841), and
 # that a browser refuses to show the page in a frame of another origin
 # (kpubdata-builder#1107) when CSP_SMOKE_BROWSER names a Chrome or Chromium.
+# And that nginx names no version and sends text gzipped (#994).
 #
 # Runs outside CI (manually) and in CI (ci.yml's docker-csp job). Requires a
 # Docker daemon. Exits nonzero on the first failure.
@@ -86,6 +87,50 @@ cache_found=$(curl -sI "http://localhost:18081/assets/${asset}" | grep -i '^Cach
 check "Cache-Control on a bundle that exists" "$cache_found" "Cache-Control: public, max-age=31536000, immutable"
 cache_missing=$(curl -sI http://localhost:18081/assets/none.js | grep -i '^Cache-Control:' | tr -d '\r' || true)
 check "Cache-Control on a missing bundle" "$cache_missing" "Cache-Control: no-store"
+
+# No version in the Server header or on nginx's own error pages, and text compressed on
+# the way out with the same type, caching and fallback as before (#994).
+server=$(curl -sI http://localhost:18081/ | grep -i '^Server:' | tr -d '\r' || true)
+check "Server header names no version" "$server" "Server: nginx"
+curl -s http://localhost:18081/assets/none.js | grep -q 'nginx/[0-9]' && bad "error page names the nginx version" || ok "error page names no version"
+
+js=$(docker exec csp-a sh -c 'cd /usr/share/nginx/html/assets && ls -S *.js | head -n 1')
+js_headers=$(curl -s -o /dev/null -D - -H 'Accept-Encoding: gzip' "http://localhost:18081/assets/${js}" | tr -d '\r')
+echo "$js_headers" | grep -qi '^Content-Encoding: gzip$' && ok "a bundle is sent gzipped" || bad "a bundle is not sent gzipped"
+echo "$js_headers" | grep -qi '^Content-Type: application/javascript' && ok "a gzipped bundle keeps its type" || bad "a gzipped bundle lost its type"
+echo "$js_headers" | grep -qi '^Vary: Accept-Encoding' && ok "a gzipped bundle varies on Accept-Encoding" || bad "Vary: Accept-Encoding missing on a bundle"
+echo "$js_headers" | grep -qi '^Cache-Control: public, max-age=31536000, immutable' && ok "a gzipped bundle is still cached for a year" || bad "a gzipped bundle lost its Cache-Control"
+js_raw=$(curl -s -o /dev/null -w '%{size_download}' "http://localhost:18081/assets/${js}")
+js_gzip=$(curl -s -o /dev/null -w '%{size_download}' -H 'Accept-Encoding: gzip' "http://localhost:18081/assets/${js}")
+if [ "$js_gzip" -gt 0 ] && [ $((js_gzip * 2)) -lt "$js_raw" ]; then
+  ok "a bundle transfers in less than half its size (${js_gzip} of ${js_raw} bytes)"
+else
+  bad "a bundle transfers in ${js_gzip} of ${js_raw} bytes, not under half"
+fi
+plain=$(curl -sI "http://localhost:18081/assets/${js}" | grep -ci '^Content-Encoding:' || true)
+check "a client that does not ask for gzip gets the bundle as it is" "$plain" "0"
+
+# A file that is compressed already is sent as it is, gzip asked for or not. The build
+# ships none, so one of each kind is put in for the check: 4 KiB is over gzip_min_length,
+# and nginx goes by the extension, not the content.
+work_bin=$(mktemp -d)
+head -c 4096 /dev/urandom > "$work_bin/compressed.png"
+cp "$work_bin/compressed.png" "$work_bin/compressed.woff2"
+for file in compressed.png compressed.woff2; do
+  docker cp "$work_bin/$file" "csp-a:/usr/share/nginx/html/assets/$file" >/dev/null
+  enc=$(curl -sI -H 'Accept-Encoding: gzip' "http://localhost:18081/assets/$file" | grep -ci '^Content-Encoding:' || true)
+  check "an already compressed ${file##*.} is not compressed again" "$enc" "0"
+done
+rm -rf "$work_bin"
+
+# The page fallback still serves index.html for a client-side route, now gzipped, with
+# its policy and no caching.
+route_headers=$(curl -s -o /dev/null -D - -H 'Accept-Encoding: gzip' http://localhost:18081/runs/some-run | tr -d '\r')
+echo "$route_headers" | grep -q '^HTTP/1.1 200' && ok "a client-side route is answered" || bad "a client-side route is not answered 200"
+echo "$route_headers" | grep -qi '^Content-Type: text/html' && ok "a client-side route is the page" || bad "a client-side route is not HTML"
+echo "$route_headers" | grep -qi '^Content-Security-Policy:' && ok "a client-side route keeps its policy" || bad "a client-side route lost its policy"
+echo "$route_headers" | grep -qi '^Cache-Control: no-cache' && ok "a client-side route is not cached" || bad "a client-side route lost Cache-Control: no-cache"
+curl -s --compressed http://localhost:18081/runs/some-run | grep -q '<html lang="ko"' && ok "a client-side route decompresses to the page" || bad "a client-side route is not the page"
 
 # --- Case 2: a different origin produces a different header ---
 say "Case 2: different origin"
