@@ -308,28 +308,41 @@ function delay(ms: number): Promise<void> {
 /**
  * Combine user cancel signal and timeout signal; whichever fires first aborts request.
  *
+ * Nothing is left on the caller's signal once the request settles (#985): a signal that outlives
+ * its requests — a screen's, reused by every poll — would otherwise collect one abort listener
+ * per request for as long as it lives. `AbortSignal.any` follows the caller's signal without a
+ * listener of ours, and goes on following it while the response body is read. Where the browser
+ * does not have it, a listener does the same until `cleanup`, which removes it.
+ *
  * @param signal - Abort signal provided by caller (optional).
  * @param timeoutMs - Auto timeout (ms). If ≤0, timeout omitted and signal only used.
- * @returns Combined signal and cleanup function to clear timeout timer.
+ * @returns Combined signal and a cleanup function that clears the timeout timer and any
+ *   listener put on the caller's signal. Safe to call more than once.
  */
 function withTimeout(
   signal: AbortSignal | undefined,
   timeoutMs: number,
 ): { signal: AbortSignal | undefined; cleanup: () => void } {
   if (timeoutMs <= 0) return { signal, cleanup: () => {} };
+  if (signal?.aborted) return { signal, cleanup: () => {} };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(new DOMException("Timeout", "TimeoutError")), timeoutMs);
-  const cleanup = () => clearTimeout(timer);
+  if (!signal) return { signal: controller.signal, cleanup: () => clearTimeout(timer) };
 
-  if (!signal) return { signal: controller.signal, cleanup };
-  if (signal.aborted) {
-    cleanup();
-    return { signal, cleanup: () => {} };
+  if (typeof AbortSignal.any === "function") {
+    return { signal: AbortSignal.any([signal, controller.signal]), cleanup: () => clearTimeout(timer) };
   }
   // if user cancels, also abort timeout controller to immediately cut fetch.
-  signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
-  return { signal: controller.signal, cleanup };
+  const onAbort = () => controller.abort(signal.reason);
+  signal.addEventListener("abort", onAbort, { once: true });
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", onAbort);
+    },
+  };
 }
 
 /** distinguish abort from timeout vs user cancel. */

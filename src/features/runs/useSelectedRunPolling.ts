@@ -50,47 +50,58 @@ export function useSelectedRunPolling(runId: string | null, attempt = 0): Select
   // Last confirmed job. Keep separately so transient errors don't overwrite it as "failed".
   const lastJobRef = useRef<BuildJob | null>(null);
 
-  // Always fetch the current run_id — abort previous requests on run change and ignore responses for aborted signals
-  // so old responses cannot overwrite the new selection.
-  const fetchNow = useCallback(async () => {
-    if (!runId) return;
-    controllerRef.current?.abort();
+  // One request per watched run at a time (#979): a tick that arrives while the previous answer is
+  // still on its way joins it instead of aborting it, so an answer slower than the interval is
+  // still read. Only a change of run, owner or attempt (the effect below) aborts — and responses
+  // for an aborted signal are ignored, so an old response cannot overwrite the new selection.
+  const inFlightRef = useRef<Promise<void> | null>(null);
+  const fetchNow = useCallback((): Promise<void> => {
+    if (!runId) return Promise.resolve();
+    if (inFlightRef.current) return inFlightRef.current;
     const controller = new AbortController();
     controllerRef.current = controller;
-    try {
-      const job = await runsClient().getJob(runId, controller.signal);
-      if (controller.signal.aborted) return;
-      lastJobRef.current = job;
-      // Successfully fetched; clear any previous transient error warning.
-      setState({ kind: "job", job });
-    } catch (cause) {
-      if (controller.signal.aborted) return;
-      const kind = classifyRunApiError(cause);
-      if (kind === "not_found") {
-        lastJobRef.current = null;
-        setState({ kind: "not_in_registry" });
-        return;
+    const request = (async () => {
+      try {
+        const job = await runsClient().getJob(runId, controller.signal);
+        if (controller.signal.aborted) return;
+        lastJobRef.current = job;
+        // Successfully fetched; clear any previous transient error warning.
+        setState({ kind: "job", job });
+      } catch (cause) {
+        if (controller.signal.aborted) return;
+        const kind = classifyRunApiError(cause);
+        if (kind === "not_found") {
+          lastJobRef.current = null;
+          setState({ kind: "not_in_registry" });
+          return;
+        }
+        if (kind === "permission_denied") {
+          lastJobRef.current = null;
+          setState({ kind: "permission_denied" });
+          return;
+        }
+        // Transient network/server error (#255 §10 polling lifecycle + follow-up).
+        // If a job was already confirmed, keep it and attach only a warning — polling continues.
+        // Only show error kind when no job was confirmed yet (first fetch failed).
+        const message = cause instanceof Error ? cause.message : i18n.t("runs.errors.pollFailed");
+        if (lastJobRef.current) {
+          setState({ kind: "job", job: lastJobRef.current, warning: message });
+        } else {
+          setState({ kind: "error", message });
+        }
+      } finally {
+        // A newer request has its own controller; only the request still current clears the slot.
+        if (controllerRef.current === controller) inFlightRef.current = null;
       }
-      if (kind === "permission_denied") {
-        lastJobRef.current = null;
-        setState({ kind: "permission_denied" });
-        return;
-      }
-      // Transient network/server error (#255 §10 polling lifecycle + follow-up).
-      // If a job was already confirmed, keep it and attach only a warning — polling continues.
-      // Only show error kind when no job was confirmed yet (first fetch failed).
-      const message = cause instanceof Error ? cause.message : i18n.t("runs.errors.pollFailed");
-      if (lastJobRef.current) {
-        setState({ kind: "job", job: lastJobRef.current, warning: message });
-      } else {
-        setState({ kind: "error", message });
-      }
-    }
+    })();
+    inFlightRef.current = request;
+    return request;
   }, [runId]);
 
   useEffect(() => {
     if (!runId) {
       controllerRef.current?.abort();
+      inFlightRef.current = null;
       lastJobRef.current = null;
       setState({ kind: "idle" });
       return;
@@ -101,6 +112,7 @@ export function useSelectedRunPolling(runId: string | null, attempt = 0): Select
     void fetchNow();
     return () => {
       controllerRef.current?.abort();
+      inFlightRef.current = null;
     };
     // fetchNow is derived only from runId (useCallback deps: [runId]), so runId alone is sufficient.
   }, [runId, attempt, owner]);
@@ -111,7 +123,7 @@ export function useSelectedRunPolling(runId: string | null, attempt = 0): Select
   const nonTerminal = state.kind === "job" && !isTerminalBuilderStatus(state.job.status);
   const pollingEnabled = Boolean(runId) && nonTerminal;
 
-  useVisibilityAwarePolling(() => void fetchNow(), POLL_INTERVAL_MS, pollingEnabled);
+  useVisibilityAwarePolling(fetchNow, POLL_INTERVAL_MS, pollingEnabled);
 
   return state;
 }
