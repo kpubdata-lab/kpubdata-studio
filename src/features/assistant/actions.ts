@@ -9,7 +9,7 @@
  */
 import { loadBuildSpec, saveBuildSpec } from "@/features/build-spec/specStore";
 import { resolveStorageOwnerKey } from "@/features/auth/storageOwner";
-import { saveDraft } from "@/features/build-spec/draftStorage";
+import { loadDraft, saveDraft } from "@/features/build-spec/draftStorage";
 import { validateSpec } from "@/features/validation/api";
 import { hasSecretPlaceholder, isSecretKey, redactSecrets } from "@/features/assistant/scrub";
 import { i18n } from "@/shared/i18n";
@@ -200,9 +200,19 @@ export function draftValuesFromAction(
   });
 }
 
-/** Write values to New Build Wizard's single initial slot. Overwrites existing unsaved draft if present (warn on approve screen). */
+/**
+ * Write values to the form-shaped draft slot. A draft already waiting there is replaced:
+ * the caller asks first (#992).
+ *
+ * @throws When storage did not take the draft — `saveDraft` swallows that failure, and
+ *   reporting "saved" would hide that the waiting draft, if any, is still the old one.
+ */
 export function applyCreateBuildDraft(action: Extract<AssistantAction, { type: "CREATE_BUILD_DRAFT" }>): void {
-  saveDraft(draftValuesFromAction(action));
+  const values = draftValuesFromAction(action);
+  saveDraft(values);
+  if (JSON.stringify(loadDraft(buildFormValuesSchema)) !== JSON.stringify(values)) {
+    throw new Error(t("draftNotSaved"));
+  }
 }
 
 /** Queue ADD_REPORT_BLOCK approve result to Reports entry point (#258; full edit feature not included). */
