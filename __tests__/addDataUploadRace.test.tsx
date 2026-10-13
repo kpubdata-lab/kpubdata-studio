@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { AddDataPage } from "./AddDataPage";
+import { AddDataPage } from "@/pages/AddDataPage";
 import { OwnerScope } from "@/features/auth/OwnerScope";
 import { useAuthStore } from "@/features/auth/store";
 import { ApiError, type UploadMetadata } from "@/shared/lib/builderApi";
