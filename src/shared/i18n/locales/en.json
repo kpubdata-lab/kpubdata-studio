@@ -3500,6 +3500,7 @@
   "runHistory": {
     "scopeMore": "The latest {{count}} runs (asked for up to {{limit}}). Older runs may exist.",
     "scopeAll": "All {{count}} accessible runs are shown.",
+    "scopeAtMax": "Showing the latest {{count}} runs. KPubData Builder sends at most {{max}} at a time, so older runs may exist that cannot be loaded here.",
     "loadMore": "Show more (up to {{limit}})",
     "moreFailed": "Could not load up to {{limit}} runs. KPubData Builder may refuse a very large limit — the list above is unchanged."
   },

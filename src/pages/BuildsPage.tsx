@@ -18,6 +18,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { getBuildQuality, listBuildStages } from "@/features/datasets/api";
 import { LoadMoreRuns } from "@/features/datasets/components/LoadMoreRuns";
 import {
+  atRunHistoryMax,
   BUILD_HISTORY_LIMIT,
   mayHaveMoreRuns,
   nextRunHistoryLimit,
@@ -107,6 +108,7 @@ export function BuildsPage() {
 
   // The loaded list stays on screen while the larger one loads, and when it fails.
   function loadMore() {
+    if (atRunHistoryMax(listLimit)) return;
     const limit = nextRunHistoryLimit(listLimit);
     const request = ++moreRequest.current;
     setMore({ status: "loading" });
