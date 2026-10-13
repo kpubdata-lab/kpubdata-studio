@@ -18,7 +18,12 @@
 # The site is the same files on every platform, so it is built once, natively, and only
 # the nginx stage is per platform: an arm64 `npm ci` and Vite build under emulation
 # would take many times as long for the same output (#904).
-FROM --platform=$BUILDPLATFORM node:25-alpine AS build
+# The Node major is the LTS line `.nvmrc` names and CI's test matrix runs, so the site
+# that ships is built by a toolchain CI has exercised (#981). An odd-numbered major is
+# never LTS. __tests__/localToolchainGate.test.ts fails when this line drifts, and
+# Dependabot does not propose a new Node major here: moving it is a change to `.nvmrc`,
+# the CI matrix and this line together.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --no-audit --no-fund

@@ -81,7 +81,7 @@ export const assets = [
 export const containerInputs = [
   {
     name: "Node build stage",
-    reference: "node:25-alpine",
+    reference: "node:22-alpine",
     source: "https://github.com/nodejs/docker-node",
     terms: "build stage only; exact Alpine package versions unverified",
     status: "needs review",
@@ -183,7 +183,7 @@ export function check(inventory, files = trackedFiles()) {
     if (!files.some((file) => asset.paths.some((pattern) => matches(file, pattern)))) problems.push(`asset declaration matches no file: ${asset.id}`);
   }
   const dockerfile = readFileSync(join(root, "Dockerfile"), "utf8");
-  for (const token of ["node:25-alpine", "nginxinc/nginx-unprivileged:1.31-alpine", "apk upgrade --no-cache", "COPY --from=build /app/dist /usr/share/nginx/html"]) {
+  for (const token of ["node:22-alpine", "nginxinc/nginx-unprivileged:1.31-alpine", "apk upgrade --no-cache", "COPY --from=build /app/dist /usr/share/nginx/html"]) {
     if (!dockerfile.includes(token)) problems.push(`container reference changed: ${token}`);
   }
   if (!readFileSync(join(root, "index.html"), "utf8").includes("/src/main.tsx")) problems.push("browser entry changed; recheck bundled assets");

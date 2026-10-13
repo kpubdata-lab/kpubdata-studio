@@ -5,6 +5,10 @@
  * repository-scoped `.npmrc` points npm at the registry the lockfile was resolved
  * against. Each can drift from the thing it mirrors without anything noticing, so
  * this test checks both — and checks that the checks fail when they should.
+ *
+ * The Dockerfile's build stage is a third copy of the Node choice: the site that ships
+ * is built there, so its Node major must be the LTS line `.nvmrc` names and CI's test
+ * matrix runs (#981).
  */
 
 import { readFileSync } from "node:fs";
@@ -53,12 +57,38 @@ function lockfileRegistries(lock: string): Set<string> {
   return hosts;
 }
 
+/** The Node major of the Dockerfile's `node:<major>…` build stage, or undefined. */
+function dockerNodeMajor(dockerfile: string): number | undefined {
+  const m = /^FROM\s+(?:--\S+\s+)*node:(\d+)\b.*\bAS\s+build\s*$/im.exec(dockerfile);
+  return m ? Number(m[1]) : undefined;
+}
+
+/** Every Node major the CI test matrix lists as `- node-version: "<major>"`. */
+function ciMatrixMajors(workflow: string): number[] {
+  return [...workflow.matchAll(/^\s*-\s*node-version:\s*["']?(\d+)["']?\s*$/gm)].map((m) => Number(m[1]));
+}
+
+/** Node release lines with an even major become LTS; an odd one never does. */
+function isLtsMajor(major: number): boolean {
+  return major % 2 === 0;
+}
+
 describe("local toolchain gate (#431)", () => {
   it(".nvmrc names a Node major that engines accepts", () => {
     const nvmrc = read(".nvmrc").trim();
     const engines = (JSON.parse(read("package.json")) as { engines: { node: string } }).engines.node;
     expect(nvmrc).toMatch(/^\d+$/);
     expect(enginesAdmitMajor(engines, Number(nvmrc))).toBe(true);
+  });
+
+  it("the Dockerfile builds with the LTS Node major .nvmrc names and CI tests (#981)", () => {
+    const docker = dockerNodeMajor(read("Dockerfile"));
+    const nvmrc = Number(read(".nvmrc").trim());
+    const matrix = ciMatrixMajors(read(".github/workflows/ci.yml"));
+    expect(matrix.length).toBeGreaterThan(0);
+    expect(docker).toBe(nvmrc);
+    expect(matrix).toContain(docker);
+    expect(isLtsMajor(docker as number)).toBe(true);
   });
 
   it(".npmrc points at the one registry the lockfile resolves from", () => {
@@ -75,6 +105,20 @@ describe("local toolchain gate (#431)", () => {
       expect(enginesAdmitMajor("^22.13.0 || >=24", 20)).toBe(false);
       expect(enginesAdmitMajor("^22.13.0 || >=24", 23)).toBe(false);
       expect(enginesAdmitMajor("^22.13.0 || >=24", 26)).toBe(true);
+    });
+
+    it("reads the build stage's Node major, and nothing from a stage that is not it", () => {
+      expect(dockerNodeMajor("FROM --platform=$BUILDPLATFORM node:25-alpine AS build\n")).toBe(25);
+      expect(dockerNodeMajor("FROM node:24.11-alpine3.22 AS build\n")).toBe(24);
+      expect(dockerNodeMajor("FROM node:22-alpine AS deps\nFROM nginx:1 AS build\n")).toBeUndefined();
+    });
+
+    it("rejects a Dockerfile Node major CI does not test or that is not LTS", () => {
+      const matrix = ciMatrixMajors('        include:\n          - node-version: "22"\n          - node-version: "24"\n');
+      expect(matrix).toEqual([22, 24]);
+      expect(matrix).not.toContain(25);
+      expect(isLtsMajor(25)).toBe(false);
+      expect(matrix).not.toContain(20);
     });
 
     it("sees a registry the lockfile does not use", () => {
