@@ -144,6 +144,56 @@ interface CommittedTable {
  * same rows; what is checked is that the first table is not committed to again. A file
  * source cannot show this: each upload is a source key of its own.
  */
+test("A slow upload answering after a newer one does not replace the file chosen last (#987) @real-builder", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  // Hold the first POST /uploads on a slow network until the second has answered.
+  let releaseFirst: () => void = () => undefined;
+  const firstHeld = new Promise<void>((resolve) => {
+    releaseFirst = resolve;
+  });
+  let uploadsSeen = 0;
+  await page.route("**/uploads?**", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    uploadsSeen += 1;
+    if (uploadsSeen === 1) {
+      await firstHeld;
+      // The browser gave up on this request when the second file was picked.
+      return route.continue().catch(() => undefined);
+    }
+    return route.continue();
+  });
+
+  await openCreateTable(page);
+  await page.getByRole("button", { name: "파일 업로드" }).first().click();
+  await page.getByLabel("포맷 (Format)").selectOption("csv");
+  const fileInput = page.getByLabel("파일");
+  await fileInput.setInputFiles({
+    name: "slow-alpha.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("id,name\n1,alpha\n", "utf8"),
+  });
+  await expect(page.getByText(t("addData.configure.uploading"))).toBeVisible();
+  await fileInput.setInputFiles({
+    name: "fast-bravo.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from("id,name\n1,bravo\n", "utf8"),
+  });
+  await expect(page.getByText(/업로드 완료: fast-bravo\.csv/).first()).toBeVisible({ timeout: 30_000 });
+
+  releaseFirst();
+  // Give the held request time to finish if it still could; the screen keeps bravo.
+  await page.waitForTimeout(1_000);
+  await expect(page.getByText(/업로드 완료: fast-bravo\.csv/).first()).toBeVisible();
+  await expect(page.getByText(/slow-alpha\.csv/)).toHaveCount(0);
+  expect(uploadsSeen).toBe(2);
+
+  await expectNoPageErrors(errors);
+});
+
 test("같은 데이터셋을 다시 추가해도 이미 있는 테이블은 그대로 남는다 (#837) @real-builder", async ({ page, request }) => {
   test.skip(
     !process.env.REAL_BUILDER_REPLAY,
