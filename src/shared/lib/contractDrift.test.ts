@@ -466,7 +466,10 @@ type SchemaName = keyof typeof schemas;
  * contract's, mapped to the Studio schema `builderApi` reads it with — or to why none
  * does. Mapped operations get the same sample check as mirrored schemas.
  */
-const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejectsAdditive: string } | { skip: string }> = {
+const OPERATION_SCHEMAS: Record<
+  string,
+  SchemaName | { schema: SchemaName; rejectsAdditive: string } | { skip: string; since?: string }
+> = {
   createBuild: "buildResponseSchema",
   getBuildManifest: "buildManifestResponseSchema",
   // The contract calls this response ProviderListResponse; Studio reads it with
@@ -476,7 +479,7 @@ const OPERATION_SCHEMAS: Record<string, SchemaName | { schema: SchemaName; rejec
     schema: "providerCredentialResponseSchema",
     rejectsAdditive: "strict on purpose (#497): an unknown field may be a leaked secret",
   },
-  readyz: { skip: "builderApi does not call it; it is an operator probe" },
+  readyz: { skip: "builderApi does not call it; it is an operator probe", since: "1.117.0" },
   putProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   deleteProviderCredential: { skip: "builderApi does not parse the body; ProviderPage reads nothing from it" },
   // Declared with the recovery routes (builder#1009, contract 1.81.0). Studio settles an
@@ -635,6 +638,28 @@ function predates(since: string | undefined, version: string | null = CONTRACT_V
   return since !== undefined && version !== null && version !== "" && compareVersions(version, since) < 0;
 }
 
+/**
+ * Studio's list of names without those a contract older than their `since` does not name
+ * yet (#1019). Studio may know a code an older Builder never sends; every other name, and
+ * every name against a contract at or after its `since`, is still compared exactly.
+ */
+function knownBy(list: readonly string[], since: Record<string, string>, version: string | null = CONTRACT_VERSION): string[] {
+  return list.filter((name) => !predates(since[name], version));
+}
+
+/** The contract version that first names each `PUBLISH_ISSUE_CODES` entry a contract from 1.96.0 lacks (#954). */
+const PUBLISH_ISSUE_CODES_SINCE: Record<string, string> = {
+  pii_scan_missing: "1.121.0",
+  pii_scan_pending: "1.121.0",
+  pii_scan_failed: "1.121.0",
+  pii_scan_unverified: "1.121.0",
+};
+
+/** The contract version that first names each `RUN_FAILURE_CODES` entry 1.116.0 lacks, the first to list them (#906). */
+const RUN_FAILURE_CODES_SINCE: Record<string, string> = {
+  failed_without_manifest: "1.122.0",
+};
+
 const MESSAGE_ONLY = "shown as its `error` message (httpError → formatApiErrorMessage); Studio reads nothing else from it";
 const NOT_CALLED = "builderApi does not call this route, so Studio never receives this body";
 
@@ -650,7 +675,7 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
     check: (_status, body) =>
       (asInvalidDetails(body)?.problems.length ?? 0) > 0 ? [] : ["asInvalidDetails: no problems read from the body"],
   },
-  "readyz 503 DiskLow": { notHandled: "builderApi does not call it; it is an operator probe" },
+  "readyz 503 DiskLow": { notHandled: "builderApi does not call it; it is an operator probe", since: "1.117.0" },
   "validateSpec 400 MalformedYaml": { notHandled: MESSAGE_ONLY },
   "previewBuild 400 InvalidLimit": { notHandled: `${MESSAGE_ONLY}; Studio always sends a valid limit` },
   "createBuild 400 UnsafeRunId": { notHandled: `${MESSAGE_ONLY}; Studio submits through submitBuild` },
@@ -758,11 +783,12 @@ const ERROR_READERS: Record<string, ErrorReader | NotHandled> = {
   // The synchronous route runs as a job since kpubdata-builder#1309 and so can be
   // cancelled by the server's time limit. Studio builds through submitBuild and reads a
   // cancelled job from its status, never from this body (#970). The example reached
-  // Builder's main between 1.123.0 and 1.124.0 without a version of its own.
+  // Builder's main within 1.123.0 without a version of its own, so the last contract
+  // labelled 1.123.0 — the one `npm run contract:floor` reads for it — carries it (#1019).
   "createBuild 409 BuildCancelledByTimeLimit": {
     notHandled: "no screen sends the synchronous route (__tests__/noSynchronousBuildCaller.test.ts); Studio submits through submitBuild",
     code: "time_limit_exceeded",
-    since: "1.124.0",
+    since: "1.123.0",
   },
   "AuthThrottled 429 AuthThrottled": { notHandled: MESSAGE_ONLY, code: "auth_throttled", since: "1.80.0" },
   "ServerOverloaded 503 ServerOverloaded": {
@@ -988,6 +1014,14 @@ describe("error fixture checks (#701)", () => {
     expect(predates(undefined, "1.0.0")).toBe(false);
   });
 
+  it("leaves out only the names a contract older than their since does not have yet (#1019)", () => {
+    const since = { later: "9.0.0" };
+
+    expect(knownBy(["a", "later"], since, "8.9.0")).toEqual(["a"]);
+    expect(knownBy(["a", "later"], since, "9.0.0")).toEqual(["a", "later"]);
+    expect(knownBy(["a", "later"], since, null)).toEqual(["a", "later"]);
+  });
+
   it("reports listed examples the contract no longer has", () => {
     expect(errorReaderCoverage(SAMPLE_ERROR_FIXTURES, { "saveRevision 409 RevisionConflict": {}, "gone 400 Old": {} })).toEqual({
       unlisted: ["SignupNotApproved 403 SignupPending", "SignupNotApproved 403 SignupRejected", "listBuildArtifacts 404 RunNotFound"],
@@ -1152,7 +1186,8 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
     const broken = Object.entries(OPERATION_SCHEMAS).filter(([operationId, mapped]) => {
       // A skipped operation reads nothing, so its response need not be a named schema;
       // it must still exist in the contract.
-      if (typeof mapped !== "string" && "skip" in mapped) return !operationExists(operationId);
+      // Before its `since` the operation may be absent (#1019).
+      if (typeof mapped !== "string" && "skip" in mapped) return !operationExists(operationId) && !predates(mapped.since);
       if (operationSchemaName(operationId) === null) return true;
       return !((typeof mapped === "string" ? mapped : mapped.schema) in schemas);
     });
@@ -1234,7 +1269,7 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
   it("lists every PublishIssue x-code in Studio's PUBLISH_ISSUE_CODES, and no other", () => {
     const codes = contractIssueCodesOf(contract);
     expect(codes.length).toBeGreaterThan(0);
-    expect(issueCodeDrift(PUBLISH_ISSUE_CODES, codes)).toEqual([]);
+    expect(issueCodeDrift(knownBy(PUBLISH_ISSUE_CODES, PUBLISH_ISSUE_CODES_SINCE), codes)).toEqual([]);
   });
 
   it("has a ko and an en message and next step for every PublishIssue x-code", () => {
@@ -1255,7 +1290,7 @@ describe.skipIf(!contractPath)("Builder contract drift", () => {
         .filter((name) => !["error", "error_code"].includes(name));
 
     it.skipIf(!run.error_code)("lists every error_code the contract names, and no other", () => {
-      expect([...new Set(named("error_code"))].sort()).toEqual([...RUN_FAILURE_CODES].sort());
+      expect([...new Set(named("error_code"))].sort()).toEqual(knownBy(RUN_FAILURE_CODES, RUN_FAILURE_CODES_SINCE).sort());
     });
 
     it.skipIf(!run.error_stage)("lists every error_stage the contract names, and no other", () => {
@@ -1571,10 +1606,16 @@ describe.skipIf(!contractPath)("generated Builder enums against the contract (#7
   });
 });
 
+/** The contract version that bounded the history listings' `limit` (kpubdata-builder#1327). */
+const LIST_LIMIT_MAX_SINCE = "1.125.0";
+
 /**
  * Studio caps "show more" and the palette at {@link LIST_LIMIT_MAX} (kpubdata-builder#1327).
  * Each history listing Studio pages through must declare exactly that `maximum`: a lower
  * one would make Studio's last step a 400, a higher one would hide history Builder could send.
+ * A contract before {@link LIST_LIMIT_MAX_SINCE} declared no maximum — none in Builder's history
+ * before 1.125.0 did — so it accepts Studio's 1000; one that declares a maximum
+ * below it would refuse Studio's last step and still fails (#1019).
  */
 describe.skipIf(!contractPath)("history listing limit maximum against the contract (builder#1327)", () => {
   type Parameter = { $ref?: string; name?: string; in?: string; schema?: { maximum?: number } };
@@ -1591,7 +1632,12 @@ describe.skipIf(!contractPath)("history listing limit maximum against the contra
       const limit = (doc.paths[path]?.get?.parameters ?? [])
         .map((p) => (p.$ref ? doc.components?.parameters?.[p.$ref.split("/").pop() ?? ""] : p))
         .find((p) => p?.in === "query" && p.name === "limit");
-      expect(limit?.schema?.maximum).toBe(LIST_LIMIT_MAX);
+      expect(limit, `GET ${path} declares no query limit`).toBeDefined();
+      if (predates(LIST_LIMIT_MAX_SINCE)) {
+        expect(limit?.schema?.maximum ?? Number.POSITIVE_INFINITY).toBeGreaterThanOrEqual(LIST_LIMIT_MAX);
+      } else {
+        expect(limit?.schema?.maximum).toBe(LIST_LIMIT_MAX);
+      }
     },
   );
 });
