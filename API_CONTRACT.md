@@ -110,7 +110,7 @@ Builder 와 Studio 는 같은 버전으로 나가므로(kpubdata ADR 0004) 표 �
 (#725, #790). `npm run contract:floor -- --builder-root ../kpubdata-builder` 는 Builder
 체크아웃의 `contract/builder-api.yaml` 이력에 있는 계약 버전마다 Studio 의 드리프트 테스트
 (`src/shared/lib/contractDrift.test.ts`)를 최신부터 돌리고, 통과하는 가장 오래된 버전을
-하한으로 보고합니다. 상수가 하한보다 낮으면 exit 1 입니다. 드리프트 테스트는 두 가지를
+하한으로 보고합니다. 상수가 하한보다 낮으면 exit 1 입니다. 릴리스 잡은 짝이 되는 Builder 태그의 이력으로 이 측정을 돌리고(`Builder contract floor (paired release tag)`, #1019), 하한보다 낮으면 태그를 만들지 않습니다. 새 이름(코드·예시·상한)을 정확히 비교하는 드리프트 검사는 그 이름이 처음 나온 계약 버전(`since`)을 함께 적어, 그 전 계약에서는 없어도 실패하지 않게 합니다. 드리프트 테스트는 두 가지를
 봅니다: `builderApi` 가 부르는 모든 method·path 가 그 계약에 선언돼 있는지, 그리고 그
 계약이 허용하는 모든 응답을 Studio 스키마가 읽는지.
 

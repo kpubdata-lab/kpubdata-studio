@@ -304,6 +304,9 @@ jobs:
           ref: ${{ steps.tag.outputs.tag }}
           path: .builder
           sparse-checkout: contract
+          # The whole history, so the floor below can read every contract version
+          # up to the tag, not only the tag's own.
+          fetch-depth: 0
 
       - name: Builder contract drift (paired release tag)
         env:
@@ -313,6 +316,15 @@ jobs:
           node scripts/release-contract-drift.mjs
           --contract .builder/contract/builder-api.yaml
           --tag "${TAG}" --expect-version "${API}"
+
+      # MIN_BUILDER_API_VERSION measured against the paired tag's contract history
+      # (#1019): the drift test runs against every contract version up to the tag,
+      # newest first, and the step fails when the minimum is below the oldest that
+      # passes — Studio would accept a Builder it cannot fully talk to.
+      - name: Builder contract floor (paired release tag)
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: npm run contract:floor -- --builder-root .builder --ref "${TAG}"
 
       # Everything that has to be true before a tag exists. A failure here leaves no
       # tag, no release and nothing to clean up. The suite runs with the paired tag's
