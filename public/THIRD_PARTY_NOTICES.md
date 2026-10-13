@@ -238,7 +238,7 @@ The deployed site serves this notice at `/THIRD_PARTY_NOTICES.md`.
 | hookified | 1.15.1 | development install | MIT | declared | https://registry.npmjs.org/hookified/-/hookified-1.15.1.tgz |
 | html-encoding-sniffer | 7.0.0 | development install | MIT | declared | https://registry.npmjs.org/html-encoding-sniffer/-/html-encoding-sniffer-7.0.0.tgz |
 | html-parse-stringify | 4.0.1 | production install | MIT | declared | https://registry.npmjs.org/html-parse-stringify/-/html-parse-stringify-4.0.1.tgz |
-| i18next | 26.4.2 | production install | MIT | declared | https://registry.npmjs.org/i18next/-/i18next-26.4.2.tgz |
+| i18next | 26.4.3 | production install | MIT | declared | https://registry.npmjs.org/i18next/-/i18next-26.4.3.tgz |
 | i18next-browser-languagedetector | 8.2.1 | production install | MIT | declared | https://registry.npmjs.org/i18next-browser-languagedetector/-/i18next-browser-languagedetector-8.2.1.tgz |
 | ignore | 5.3.2 | development install | MIT | declared | https://registry.npmjs.org/ignore/-/ignore-5.3.2.tgz |
 | imurmurhash | 0.1.4 | development install | MIT | declared | https://registry.npmjs.org/imurmurhash/-/imurmurhash-0.1.4.tgz |

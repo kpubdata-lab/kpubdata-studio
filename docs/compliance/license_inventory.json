@@ -1514,10 +1514,10 @@
     },
     "node_modules/i18next": {
       "name": "i18next",
-      "version": "26.4.2",
+      "version": "26.4.3",
       "scope": "production install",
       "license": "MIT",
-      "source": "https://registry.npmjs.org/i18next/-/i18next-26.4.2.tgz",
+      "source": "https://registry.npmjs.org/i18next/-/i18next-26.4.3.tgz",
       "status": "declared"
     },
     "node_modules/i18next-browser-languagedetector": {
