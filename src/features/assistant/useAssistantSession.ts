@@ -36,6 +36,7 @@ import {
 import type { AssistantAction } from "./schema";
 import type { AssistantActionRunState, AssistantContext, AssistantTurn } from "./types";
 import { i18n } from "@/shared/i18n";
+import { hasDraft } from "@/features/build-spec/draftStorage";
 
 /**
  * All text strings in this file under `assistant.session.*` (#350).
@@ -430,6 +431,11 @@ export function useAssistantSession(): UseAssistantSessionResult {
       if (!turn || !action) return;
       if (!contextsMatch(turn.context, liveContext)) {
         setActionState(turnId, index, { status: "error", message: msg("contextChangedApply") });
+        return;
+      }
+      // The draft slot holds one draft. One still waiting there has not been opened, so
+      // replacing it is asked for; cancelling leaves it and the action as they were (#992).
+      if (action.type === "CREATE_BUILD_DRAFT" && hasDraft() && !window.confirm(msg("replaceDraftConfirm"))) {
         return;
       }
 

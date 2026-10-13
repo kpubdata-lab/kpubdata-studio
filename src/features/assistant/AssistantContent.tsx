@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cellValue, encodingsOf, type WireEncoding } from "@/shared/lib/cellValue";
 import { SpecDiff } from "@/features/build-spec/components/SpecDiff";
+import { hasDraft } from "@/features/build-spec/draftStorage";
 import { MaskedCell, MaskedColumnBadge, maskedSet } from "@/features/data-table/masked";
 import { useAssistConfig } from "@/features/assistant/config";
 import { Button, Card, Disclosure, TermHelp, Textarea } from "@/shared/ui";
@@ -341,6 +342,9 @@ function ActionCard({
         <pre className="mt-2 overflow-x-auto rounded-lg bg-muted/50 p-2 text-[11px]">
           {JSON.stringify(action.values, null, 2)}
         </pre>
+      ) : null}
+      {state.status === "approved" && action.type === "CREATE_BUILD_DRAFT" && hasDraft() ? (
+        <p className="mt-2 text-status-warning">{t("assistant.action.replacesDraft")}</p>
       ) : null}
 
       <div className={`${isNavigation ? "" : "mt-2"} flex flex-wrap items-center gap-2`}>

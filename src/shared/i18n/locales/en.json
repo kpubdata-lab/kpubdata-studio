@@ -407,7 +407,8 @@
       "apply": "Apply",
       "applying": "Applying…",
       "rejected": "Rejected",
-      "staleCantRun": "Based on a previous screen — cannot run"
+      "staleCantRun": "Based on a previous screen — cannot run",
+      "replacesDraft": "A table draft is already waiting. Applying replaces it, after you confirm."
     },
     "actions": {
       "missingParent": "The parent field for path \"{{path}}\" does not exist.",
@@ -420,6 +421,7 @@
       "unresolvedPlaceholder": "It still contains an unresolved secret placeholder.",
       "paramsCredential": "Generated sourceParams must not contain credential values.",
       "paramsNotObject": "Generated sourceParams must be a JSON object.",
+      "draftNotSaved": "The draft could not be saved in this browser. Any draft already waiting was kept.",
       "describe": {
         "openProvider": "Open Connections for \"{{provider}}\"",
         "openBuild": "Open run \"{{runId}}\" details",
@@ -695,7 +697,8 @@
       "patchApplied": "Applied to the BuildSpec and it passed Builder /validate.",
       "patchAppliedInvalid": "Applied to the BuildSpec but Builder /validate failed: {{errors}}",
       "patchFailed": "The BuildSpec patch could not be applied.",
-      "draftSaved": "Saved to a new table draft."
+      "draftSaved": "Saved to a new table draft.",
+      "replaceDraftConfirm": "A table draft is already waiting and has not been opened. Replace it with this one? Cancel keeps the waiting draft."
     },
     "turn": {
       "ok": "Success",
