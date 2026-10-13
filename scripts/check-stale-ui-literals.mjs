@@ -22,9 +22,15 @@
  * 2. "Only literals near a Testing Library query." Strings get hoisted into constants
  *    (`const HERO_HEADING = "…"`), so line proximity cannot see them.
  *
+ * A base that cannot be read fails the check (studio#989). It used to print a line and exit 0,
+ * so a checkout without `origin/main` — a shallow clone, a fetch that failed — passed without
+ * comparing anything. `--allow-missing-base` is the explicit way to skip, for a local checkout
+ * that has no remote; CI does not pass it.
+ *
  * Usage:
  *   node scripts/check-stale-ui-literals.mjs             # against origin/main
  *   node scripts/check-stale-ui-literals.mjs --base HEAD~1
+ *   node scripts/check-stale-ui-literals.mjs --allow-missing-base   # skip when the base is absent
  */
 
 import { execSync } from "node:child_process";
@@ -85,14 +91,28 @@ function refExists(ref) {
   }
 }
 
+const allowMissingBase = process.argv.includes("--allow-missing-base");
+
 // Checked up front rather than inferred from an empty result. localeValuesAt skips a
 // file that did not exist at the ref, which is correct, but it made a missing ref look
 // identical to "nothing was removed" — and the gate passed without comparing anything.
-if (!refExists(base)) {
-  console.log(`기준 ref ${base} 를 찾을 수 없어 건너뛴다`);
-  process.exit(0);
+// A base that cannot be read is a failure, not a pass (studio#989).
+function baseUnreadable(reason) {
+  if (allowMissingBase) {
+    console.log(`${reason} — 건너뛴다 (--allow-missing-base)`);
+    process.exit(0);
+  }
+  console.error(reason);
+  console.error("비교하지 못했으므로 통과로 치지 않는다. 기준을 가져오거나(git fetch origin main)");
+  console.error("기준 없이 건너뛰려면 --allow-missing-base 를 준다.");
+  process.exit(1);
 }
+
+if (!base || base.startsWith("--")) baseUnreadable("--base 에 기준 ref 가 없다");
+if (!refExists(base)) baseUnreadable(`기준 ref ${base} 를 찾을 수 없다`);
 const before = localeValuesAt(base);
+// A ref that resolves but holds no locale file compares nothing either.
+if (before.size === 0) baseUnreadable(`기준 ref ${base} 에 locale 파일이 없다`);
 const after = localeValuesAt(null);
 
 const removed = [...before].filter((v) => !after.has(v) && v.length >= MIN_LENGTH);

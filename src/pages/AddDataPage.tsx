@@ -131,7 +131,10 @@ export function AddDataPage() {
   // Opening a draft over what was being typed keeps that input as this flow's saved draft (#604).
   const [inputKept, setInputKept] = useState(false);
   const [openedSavedSpecName, setOpenedSavedSpecName] = useState<string | null>(null);
-  const [draftSaved, setDraftSaved] = useState(false);
+  // What the form held at the last "Save draft". The button says "saved" only while the form
+  // still holds exactly that (#991): a flag set on save stayed set through later edits, so the
+  // button went on saying "saved" for changes that were not.
+  const [savedDraftContent, setSavedDraftContent] = useState<string | null>(null);
   const [lastPreviewSignature, setLastPreviewSignature] = useState<string | null>(null);
   const [existing, setExisting] = useState<ExistingTables>({ status: "checking" });
   const [tableChoice, setTableChoice] = useState<ExistingTableChoice>("new");
@@ -545,9 +548,15 @@ export function AddDataPage() {
     }
   }
 
+  // Compared by content, not by object: an effect that writes back the values the draft
+  // already has makes a new object and is not an edit.
+  const draftContent = useMemo(() => JSON.stringify(draft), [draft]);
+  const draftSaved = savedDraftContent === draftContent;
+
   function saveCurrentDraft() {
     saveAddDataDraft(draft);
-    setDraftSaved(true);
+    const saved = loadAddDataDraft();
+    setSavedDraftContent(saved ? JSON.stringify(saved) : null);
   }
 
   /**
@@ -565,6 +574,8 @@ export function AddDataPage() {
     }
     if (waitingDrafts.ask) discardFormDraft();
     const kept = keepCurrentInput();
+    const stored = loadAddDataDraft();
+    setSavedDraftContent(stored ? JSON.stringify(stored) : null);
     setWaitingDrafts({ saved: kept, ask: false });
     setCorruptDraft(null);
     setDraft(saved);
