@@ -89,10 +89,11 @@ describe("toBuildSpec round-trip on edit (#496)", () => {
       params: { sidoName: "부산" },
     });
     expect(spec?.sources.slice(1)).toEqual(RICH_SPEC.sources.slice(1));
-    // huggingface keeps its other options; only outputPath follows the form.
+    // huggingface keeps its other options; only outputPath follows the form, as a sibling
+    // folder of the other exports' folder (kpubdata-builder#1320).
     expect(spec?.exports[2]).toEqual({
       format: "huggingface",
-      options: { outputPath: "artifacts/builds/aq2", repoId: "org/apt-trade", private: true },
+      options: { outputPath: "artifacts/builds/aq2-3", repoId: "org/apt-trade", private: true },
     });
     expect(spec?.exports[1]).toEqual({ format: "parquet", options: { compression: "zstd" } });
     expect(spec?.metadata).toEqual({ outputPath: "artifacts/builds/aq2", owner: "team-a" });
@@ -138,7 +139,8 @@ describe("toBuildSpec round-trip on edit (#496)", () => {
       title: "t",
       description: "desc",
       sources: [{ provider: "datago", dataset: "air", params: {} }],
-      exports: [{ format: "jsonl" }, { format: "huggingface", options: { outputPath: "out" } }],
+      // The Hugging Face folder sits beside out/, never around out/data.jsonl (kpubdata-builder#1320).
+      exports: [{ format: "jsonl" }, { format: "huggingface", options: { outputPath: "out-2" } }],
       metadata: { outputPath: "out" },
     });
   });

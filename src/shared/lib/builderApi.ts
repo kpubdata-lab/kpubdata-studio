@@ -19,6 +19,7 @@ import { i18n } from "@/shared/i18n";
  * - Uses zod.parse() instead of `as T` casting to guarantee type safety.
  */
 import { API_BASE } from "@/shared/config/env";
+import { builderExportPathMessages } from "@/shared/lib/exportPathMessages";
 import { runtimeOr } from "@/shared/config/runtime";
 import * as schemas from "./builderApi.schema";
 import { AmbiguousSpecError, noteKeyProviders, providerKeyHeaders, specProviders } from "./providerKeys";
@@ -620,6 +621,10 @@ function rateLimitMessage(status: number, parsed: unknown): string | null {
 export function formatApiErrorMessage(status: number, parsed: unknown): string {
   const limited = rateLimitMessage(status, parsed);
   if (limited) return limited;
+
+  // Export paths Builder refused (kpubdata-builder#1320), said in the user's language.
+  const exportPaths = builderExportPathMessages(parsed);
+  if (exportPaths) return exportPaths.join(" ");
 
   // try extracting structured error message first
   const extracted = extractErrorMessage(parsed);

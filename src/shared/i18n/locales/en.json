@@ -3548,6 +3548,11 @@
       "unavailable": "Unavailable"
     }
   },
+  "exportPaths": {
+    "unsafe_export_path": "The output path of export {{n}} cannot be used: give a relative path inside the run's output folder, without a leading / or '..' (for example out/data.jsonl).",
+    "reserved_export_path": "The output path of export {{n}} would overwrite a file the run writes itself (table.parquet, package.json, splits, README.md or card.json). Choose another path.",
+    "export_path_collision": "The output path of export {{n}} is the same as, or inside, another export's path. Give every format its own path."
+  },
   "policy": {
     "label": "Policies and contact",
     "privacy": "Privacy policy",
