@@ -555,7 +555,8 @@ export function AddDataPage() {
 
   function saveCurrentDraft() {
     saveAddDataDraft(draft);
-    setSavedDraftContent(draftContent);
+    const saved = loadAddDataDraft();
+    setSavedDraftContent(saved ? JSON.stringify(saved) : null);
   }
 
   /**
@@ -573,6 +574,8 @@ export function AddDataPage() {
     }
     if (waitingDrafts.ask) discardFormDraft();
     const kept = keepCurrentInput();
+    const stored = loadAddDataDraft();
+    setSavedDraftContent(stored ? JSON.stringify(stored) : null);
     setWaitingDrafts({ saved: kept, ask: false });
     setCorruptDraft(null);
     setDraft(saved);

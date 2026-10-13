@@ -7,7 +7,7 @@
  * - #605: a saved draft of the wrong shape is not handed to the form; it is removed with a
  *   notice while the Ask KPubData draft and the current input stay.
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AddDataPage } from "./AddDataPage";
@@ -266,5 +266,35 @@ describe("AddDataPage — the save button says saved only for what was saved (#9
     fireEvent.click(saveButton());
     expect(savedButton()).toBeInTheDocument();
     expect(loadAddDataDraft()?.title).toBe(ASK_VALUES.title);
+  });
+
+  it("does not call a restored draft saved after keeping a newer edit in storage", async () => {
+    saveAddDataDraft({ ...INITIAL_DRAFT, sourceKind: "public_api", title: "older draft" });
+    renderApp("/add");
+    await typeInput("first save");
+    fireEvent.click(saveButton());
+    expect(savedButton()).toBeInTheDocument();
+
+    typeTitle("newer input");
+    fireEvent.click(screen.getByRole("button", { name: tr("addData.draft.restore") }));
+
+    expect(titleValue()).toBe("first save");
+    expect(loadAddDataDraft()?.title).toBe("newer input");
+    expect(saveButton()).toBeInTheDocument();
+  });
+
+  it("does not say saved when browser storage refuses the write", async () => {
+    renderApp("/add");
+    await typeInput("not persisted");
+    const write = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("storage unavailable");
+    });
+    try {
+      fireEvent.click(saveButton());
+      expect(saveButton()).toBeInTheDocument();
+      expect(loadAddDataDraft()).toBeNull();
+    } finally {
+      write.mockRestore();
+    }
   });
 });
