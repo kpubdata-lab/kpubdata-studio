@@ -131,6 +131,120 @@ describe("getFreshToken", () => {
   });
 });
 
+describe("a forced refresh next to one already out (#984)", () => {
+  /** An `updateToken` whose every call is settled by hand, in the order the calls were made. */
+  function manualRefresh() {
+    const calls: Array<{ minValidity: number; resolve: (refreshed: boolean) => void; reject: (cause: Error) => void }> = [];
+    mockKeycloak.updateToken.mockImplementation(
+      (minValidity: number) =>
+        new Promise<boolean>((resolve, reject) => {
+          calls.push({ minValidity, resolve, reject });
+        }),
+    );
+    return calls;
+  }
+
+  beforeEach(async () => {
+    mockKeycloak.authenticated = true;
+    mockKeycloak.token = "refused-by-builder";
+    await initKeycloak();
+  });
+
+  it("does not take the answer of a regular refresh that renewed nothing: it renews after it", async () => {
+    const calls = manualRefresh();
+
+    const regular = getFreshToken();
+    const forced = getFreshToken({ force: true });
+    await Promise.resolve();
+    // Only the regular one is out; the forced one has not been answered with it.
+    expect(calls.map((call) => call.minValidity)).toEqual([30]);
+
+    // The regular refresh finds the token far from expiry and renews nothing.
+    calls[0].resolve(false);
+    await expect(regular).resolves.toBe("refused-by-builder");
+    await vi.waitFor(() => expect(calls.map((call) => call.minValidity)).toEqual([30, -1]));
+
+    mockKeycloak.token = "renewed";
+    calls[1].resolve(true);
+    await expect(forced).resolves.toBe("renewed");
+  });
+
+  it("shares one renewal between forced refreshes asked for at the same time", async () => {
+    const calls = manualRefresh();
+
+    const first = getFreshToken({ force: true });
+    const second = getFreshToken({ force: true });
+    await vi.waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].minValidity).toBe(-1);
+
+    mockKeycloak.token = "renewed";
+    calls[0].resolve(true);
+    await expect(Promise.all([first, second])).resolves.toEqual(["renewed", "renewed"]);
+    expect(mockKeycloak.updateToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("answers a regular refresh asked for during a forced one with that renewal", async () => {
+    const calls = manualRefresh();
+
+    const forced = getFreshToken({ force: true });
+    const regular = getFreshToken();
+    await vi.waitFor(() => expect(calls).toHaveLength(1));
+
+    mockKeycloak.token = "renewed";
+    calls[0].resolve(true);
+    await expect(Promise.all([forced, regular])).resolves.toEqual(["renewed", "renewed"]);
+    expect(mockKeycloak.updateToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("sends nothing more when the regular refresh ended the session (refresh token refused)", async () => {
+    const calls = manualRefresh();
+
+    const regular = getFreshToken();
+    const forced = getFreshToken({ force: true });
+    await Promise.resolve();
+
+    // keycloak-js clears the session when the refresh grant is refused.
+    mockKeycloak.authenticated = false;
+    mockKeycloak.token = undefined;
+    calls[0].reject(new Error("invalid_grant"));
+
+    await expect(regular).resolves.toBeNull();
+    await expect(forced).resolves.toBeNull();
+    expect(mockKeycloak.updateToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("renews once after a regular refresh that failed without ending the session", async () => {
+    const calls = manualRefresh();
+
+    const regular = getFreshToken();
+    const forced = getFreshToken({ force: true });
+    await Promise.resolve();
+    calls[0].reject(new Error("network"));
+    await expect(regular).resolves.toBeNull();
+    await vi.waitFor(() => expect(calls).toHaveLength(2));
+
+    mockKeycloak.token = "renewed";
+    calls[1].resolve(true);
+    await expect(forced).resolves.toBe("renewed");
+  });
+
+  it("returns null when the forced renewal fails, and asks again the next time", async () => {
+    const calls = manualRefresh();
+
+    const forced = getFreshToken({ force: true });
+    await vi.waitFor(() => expect(calls).toHaveLength(1));
+    calls[0].reject(new Error("invalid_grant"));
+    await expect(forced).resolves.toBeNull();
+
+    const again = getFreshToken({ force: true });
+    await vi.waitFor(() => expect(calls).toHaveLength(2));
+    mockKeycloak.token = "renewed";
+    calls[1].resolve(true);
+    await expect(again).resolves.toBe("renewed");
+    expect(mockKeycloak.updateToken).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe("login / logout", () => {
   it("keycloakLogin keeps the existing login options when no IdP hint is supplied", async () => {
     await keycloakLogin("/refresh-jobs?run=abc");

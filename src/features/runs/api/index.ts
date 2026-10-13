@@ -152,21 +152,27 @@ export function isTerminalBuilderStatus(status: BuilderJobStatus): boolean {
   return status === "succeeded" || status === "failed" || status === "cancelled";
 }
 
+/**
+ * Wait `ms`, or reject with an AbortError as soon as `signal` aborts.
+ *
+ * The abort listener is removed when the wait ends (#985): the signal belongs to the caller and is
+ * reused for every wait of a polling loop, so a listener left behind would stay for each one.
+ */
 export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(new DOMException("aborted", "AbortError"));
       return;
     }
-    const timer = setTimeout(resolve, ms);
-    signal?.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(timer);
-        reject(new DOMException("aborted", "AbortError"));
-      },
-      { once: true },
-    );
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException("aborted", "AbortError"));
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 }
 

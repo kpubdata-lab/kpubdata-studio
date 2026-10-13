@@ -30,6 +30,35 @@ function events(overrides: Partial<BuildEventsResponse> = {}): BuildEventsRespon
   return { run_id: "run-1", events: [], ...overrides };
 }
 
+/**
+ * A Builder that answers `latencyMs` after it is asked (#979). Counts how many requests are out at
+ * once and which of them were aborted before they answered.
+ */
+function slowBuilder<T>(latencyMs: number, answers: T[]) {
+  const seen = { started: 0, aborted: 0, inFlight: 0, maxInFlight: 0 };
+  const respond = (signal?: AbortSignal): Promise<T> => {
+    const answer = answers[Math.min(seen.started, answers.length - 1)];
+    seen.started += 1;
+    seen.inFlight += 1;
+    seen.maxInFlight = Math.max(seen.maxInFlight, seen.inFlight);
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        signal?.removeEventListener("abort", onAbort);
+        seen.inFlight -= 1;
+        resolve(answer);
+      }, latencyMs);
+      const onAbort = () => {
+        clearTimeout(timer);
+        seen.inFlight -= 1;
+        seen.aborted += 1;
+        reject(new DOMException("aborted", "AbortError"));
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
+  };
+  return { seen, respond };
+}
+
 function setVisibility(state: "visible" | "hidden") {
   Object.defineProperty(document, "visibilityState", { value: state, configurable: true });
   document.dispatchEvent(new Event("visibilitychange"));
@@ -95,6 +124,65 @@ describe("useVisibilityAwarePolling", () => {
 
     vi.advanceTimersByTime(10000);
     expect(tick).not.toHaveBeenCalled();
+  });
+
+  it("waits for a tick's request to settle before counting the next interval (#979)", async () => {
+    const settle: Array<() => void> = [];
+    const tick = vi.fn(() => new Promise<void>((resolve) => settle.push(resolve)));
+    renderHook(() => useVisibilityAwarePolling(tick, 1000, true));
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tick).toHaveBeenCalledTimes(1);
+
+    // The answer takes five intervals: no second tick starts while it is out.
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(tick).toHaveBeenCalledTimes(1);
+
+    settle[0]();
+    await vi.advanceTimersByTimeAsync(999);
+    expect(tick).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(tick).toHaveBeenCalledTimes(2);
+  });
+
+  it("starts no second tick on a return to the visible tab while one is still out (#979)", async () => {
+    const settle: Array<() => void> = [];
+    const tick = vi.fn(() => new Promise<void>((resolve) => settle.push(resolve)));
+    renderHook(() => useVisibilityAwarePolling(tick, 1000, true));
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tick).toHaveBeenCalledTimes(1);
+
+    setVisibility("hidden");
+    setVisibility("visible");
+    expect(tick).toHaveBeenCalledTimes(1);
+
+    // Its settling is what schedules the next one.
+    settle[0]();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tick).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps ticking after a tick's request rejects (#979)", async () => {
+    const tick = vi.fn<() => Promise<void>>().mockRejectedValueOnce(new Error("network")).mockResolvedValue();
+    renderHook(() => useVisibilityAwarePolling(tick, 1000, true));
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tick).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(tick).toHaveBeenCalledTimes(2);
+  });
+
+  it("schedules nothing after unmount when the tick out at that moment settles (#979)", async () => {
+    const settle: Array<() => void> = [];
+    const tick = vi.fn(() => new Promise<void>((resolve) => settle.push(resolve)));
+    const { unmount } = renderHook(() => useVisibilityAwarePolling(tick, 1000, true));
+
+    await vi.advanceTimersByTimeAsync(1000);
+    unmount();
+    settle[0]();
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(tick).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -264,6 +352,77 @@ describe("useSelectedRunPolling", () => {
     expect(result.current).toEqual({ kind: "job", job: job({ run_id: "run-b", status: "succeeded" }) });
     expect(spy).toHaveBeenCalledTimes(2);
   });
+
+  it.each([1500, 3000])(
+    "reads every answer of a Builder that takes %dms, longer than the interval, through to the terminal status (#979)",
+    async (latencyMs) => {
+      const { seen, respond } = slowBuilder(latencyMs, [
+        job({ status: "queued" }),
+        job({ status: "running" }),
+        job({ status: "succeeded" }),
+      ]);
+      vi.spyOn(builderApi, "getBuildJob").mockImplementation((_runId, signal) => respond(signal));
+
+      const { result } = renderHook(() => useSelectedRunPolling("run-1"));
+      const statuses: string[] = [];
+      for (let elapsed = 0; elapsed < 20000 && statuses.at(-1) !== "succeeded"; elapsed += 100) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(100);
+        });
+        const current = result.current;
+        if (current.kind === "job" && statuses.at(-1) !== current.job.status) statuses.push(current.job.status);
+      }
+
+      expect(statuses).toEqual(["queued", "running", "succeeded"]);
+      expect(seen).toMatchObject({ started: 3, aborted: 0, maxInFlight: 1 });
+
+      // Terminal: nothing more is asked.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20000);
+      });
+      expect(seen.started).toBe(3);
+    },
+  );
+
+  it("starts no overlapping request on a return to the visible tab while an answer is still out (#979)", async () => {
+    const { seen, respond } = slowBuilder(3000, [job({ status: "running" })]);
+    vi.spyOn(builderApi, "getBuildJob").mockImplementation((_runId, signal) => respond(signal));
+
+    renderHook(() => useSelectedRunPolling("run-1"));
+    // First answer at 3000ms, second request starts 800ms after it and is still out at 4000ms.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    expect(seen).toMatchObject({ started: 2, inFlight: 1 });
+
+    await act(async () => {
+      setVisibility("hidden");
+      setVisibility("visible");
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(seen).toMatchObject({ started: 2, aborted: 0, maxInFlight: 1 });
+  });
+
+  it("aborts the answer still out on unmount and asks nothing afterwards (#979)", async () => {
+    const { seen, respond } = slowBuilder(3000, [job({ status: "running" })]);
+    vi.spyOn(builderApi, "getBuildJob").mockImplementation((_runId, signal) => respond(signal));
+
+    const { unmount } = renderHook(() => useSelectedRunPolling("run-1"));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    unmount();
+    expect(seen).toMatchObject({ started: 2, aborted: 1, inFlight: 0 });
+
+    await vi.advanceTimersByTimeAsync(20000);
+    expect(seen.started).toBe(2);
+  });
 });
 
 describe("useRunEvents", () => {
@@ -336,6 +495,35 @@ describe("useRunEvents", () => {
     // cards (Stage/Quality/Spec), so a failure cannot leak past this return
     // value.
     expect(result.current).toMatchObject({ status: "error" });
+
+    vi.unstubAllEnvs();
+  });
+
+  it("reads the timeline of a Builder slower than the interval without aborting or overlapping (#979)", async () => {
+    vi.stubEnv("VITE_USE_REAL_BUILDER", "true");
+    const first = events({ events: [] });
+    const second = events({ next_cursor: "after-first" } as Partial<BuildEventsResponse>);
+    const { seen, respond } = slowBuilder(5000, [first, second]);
+    vi.spyOn(builderApi, "getBuildEvents").mockImplementation((_runId, _query, signal) => respond(signal));
+
+    const { result } = renderHook(() => useRunEvents("run-1", true));
+    // The interval (3000ms) passes while the first answer (5000ms) is still out.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    expect(seen).toMatchObject({ started: 1, aborted: 0 });
+    expect(result.current.status).toBe("loading");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    expect(result.current).toEqual({ status: "loaded", data: first });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(result.current).toEqual({ status: "loaded", data: second });
+    expect(seen).toMatchObject({ aborted: 0, maxInFlight: 1 });
 
     vi.unstubAllEnvs();
   });
