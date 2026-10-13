@@ -19,7 +19,10 @@ const TOKEN_MIN_VALIDITY_SECONDS = 30;
 
 let instance: Keycloak | null = null;
 let initPromise: Promise<boolean> | null = null;
+/** A refresh that renews only a token close to expiry, while it is out. */
 let refreshPromise: Promise<string | null> | null = null;
+/** A refresh that renews whatever the token's remaining lifetime, from the moment it is asked for. */
+let forcedRefreshPromise: Promise<string | null> | null = null;
 
 /**
  * Create the singleton Keycloak instance only when the configuration is valid.
@@ -72,15 +75,34 @@ export function initKeycloak(): Promise<boolean> {
  * When multiple Builder requests concurrently trigger a refresh, coalesce them
  * so the actual `updateToken` call happens only once. If refresh fails return
  * null so we do not continue using a stale token.
+ *
+ * `force` is asked for after Builder refused the token (401), and means "a token issued after
+ * this moment" (#984). A regular refresh already out when it is asked may end without renewing
+ * anything — the token it looked at was not close to expiry — so a forced one does not take that
+ * answer: it waits for the regular one to end and then renews. Forced refreshes asked for
+ * meanwhile share that one renewal, and so do regular ones, which a renewal satisfies. If the
+ * regular refresh ended the session (the refresh token was refused), nothing more is sent.
  */
 export async function getFreshToken(opts?: { force?: boolean }): Promise<string | null> {
   const keycloak = instance;
   if (!keycloak?.authenticated) return null;
 
+  if (forcedRefreshPromise) return forcedRefreshPromise;
+
+  if (opts?.force) {
+    const regular = refreshPromise;
+    forcedRefreshPromise = (regular ?? Promise.resolve(null))
+      .then(() => (keycloak.authenticated ? keycloak.updateToken(-1).then(() => keycloak.token ?? null) : null))
+      .catch(() => null)
+      .finally(() => {
+        forcedRefreshPromise = null;
+      });
+    return forcedRefreshPromise;
+  }
+
   if (!refreshPromise) {
-    const minValidity = opts?.force ? -1 : TOKEN_MIN_VALIDITY_SECONDS;
     refreshPromise = keycloak
-      .updateToken(minValidity)
+      .updateToken(TOKEN_MIN_VALIDITY_SECONDS)
       .then(() => keycloak.token ?? null)
       .catch(() => null)
       .finally(() => {
@@ -108,4 +130,5 @@ export function __resetKeycloakForTests(): void {
   instance = null;
   initPromise = null;
   refreshPromise = null;
+  forcedRefreshPromise = null;
 }
