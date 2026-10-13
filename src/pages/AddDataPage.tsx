@@ -167,6 +167,10 @@ export function AddDataPage() {
   // distinguish from detail config changes like query params/output/preview.
   const lastIdentitySourceRef = useRef<string | null>(null);
   const previewRequestIdRef = useRef(0);
+  // The upload in flight, if any (#987). Starting another upload or leaving the file source
+  // aborts it and replaces this, so a response that arrives late answers for a selection
+  // that is gone and is dropped — only the latest file may fill the draft.
+  const uploadControllerRef = useRef<AbortController | null>(null);
 
   const updateDraft = useCallback((patch: Partial<AddDataDraft>) => {
     setDraft((current) => ({ ...current, ...patch }));
@@ -334,10 +338,22 @@ export function AddDataPage() {
     });
   }, [draft.sourceKind, draft.url.endpoint]);
 
+  // Leaving the page gives up on an upload still in flight (#987).
+  useEffect(() => () => uploadControllerRef.current?.abort(), []);
+
+  /** Give up on the upload in flight: its answer, if it still comes, is not used (#987). */
+  function abandonUpload() {
+    if (!uploadControllerRef.current) return;
+    uploadControllerRef.current.abort();
+    uploadControllerRef.current = null;
+    setUpload({ status: "idle" });
+  }
+
   // Changing source kind itself is the largest unit of "source replacement" — reset touched
   // flags and auto-generated identity fields so previous source metadata doesn't linger
   // (#250 final validation §1).
   function selectSource(kind: AddDataDraft["sourceKind"]) {
+    if (kind !== draft.sourceKind) abandonUpload();
     setDraft((current) => {
       if (current.sourceKind === kind) return current;
       lastIdentitySourceRef.current = null;
@@ -386,9 +402,14 @@ export function AddDataPage() {
 
   async function handleUploadFile(file: File) {
     if (!draft.file.format) return;
+    uploadControllerRef.current?.abort();
+    const controller = new AbortController();
+    uploadControllerRef.current = controller;
     setUpload({ status: "uploading" });
     try {
-      const meta = await uploadSourceFile(file, draft.file.format);
+      const meta = await uploadSourceFile(file, draft.file.format, controller.signal);
+      if (controller.signal.aborted) return;
+      uploadControllerRef.current = null;
       const identity = identityFromFilename(meta.original_filename ?? file.name);
       // Upload always means "pick (new) file" — even replacing existing file with different one
       // resets touched and applies new filename identity every time
@@ -413,6 +434,9 @@ export function AddDataPage() {
       }));
       setUpload({ status: "done" });
     } catch (cause) {
+      // A superseded upload's failure, cancellation included, is not this selection's.
+      if (controller.signal.aborted) return;
+      uploadControllerRef.current = null;
       setUpload({
         status: "error",
         error: cause instanceof Error ? cause.message : i18n.t("addData.errors.upload"),
@@ -445,7 +469,10 @@ export function AddDataPage() {
 
   function handleApplyYaml(text: string) {
     try {
-      applySpec(fromYamlText(text));
+      const spec = fromYamlText(text);
+      // The spec names its own source; an upload still in flight is not part of it (#987).
+      abandonUpload();
+      applySpec(spec);
       setYamlEditError(undefined);
     } catch (cause) {
       if (cause instanceof YamlSyntaxError) {
@@ -578,6 +605,8 @@ export function AddDataPage() {
     setSavedDraftContent(stored ? JSON.stringify(stored) : null);
     setWaitingDrafts({ saved: kept, ask: false });
     setCorruptDraft(null);
+    // The draft replaces the source; an upload still in flight is not part of it (#987).
+    abandonUpload();
     setDraft(saved);
   }
 
@@ -614,6 +643,7 @@ export function AddDataPage() {
     setWaitingDrafts({ saved: kept, ask: false });
     setCorruptDraft(null);
     setFormDraftError(null);
+    abandonUpload();
     openFormDraft(result);
   }
 
