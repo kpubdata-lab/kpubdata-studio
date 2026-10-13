@@ -20,24 +20,30 @@ import { i18n } from "@/shared/i18n";
 /**
  * Initial questions to show when Dataset/Run/Quality context missing (Home hero, empty /assistant).
  * Does not include Quality/Build failure/SQL questions.
+ *
+ * These are translation keys, not text (#978): the locale chunks load after this module is
+ * evaluated, and the reader can switch language at any time, so text is looked up only when
+ * the questions are asked for.
  */
-export const START_QUESTIONS = [
-  i18n.t("assistant.questions.q01"),
-  i18n.t("assistant.questions.q02"),
-  i18n.t("assistant.questions.q03"),
-  i18n.t("assistant.questions.q04"),
+const START_QUESTION_KEYS = [
+  "assistant.questions.q01",
+  "assistant.questions.q02",
+  "assistant.questions.q03",
+  "assistant.questions.q04",
 ];
 
+/** Initial questions in the current language. */
+export function getStartQuestions(): string[] {
+  return translateQuestions(START_QUESTION_KEYS, (key) => i18n.t(key));
+}
+
 /**
- * @deprecated Not exposed directly to UI — use `getSuggestedQuestions`. Kept for backward compatibility;
- * content is summary/quality/failure/SQL questions for "when context exists".
+ * Translates question keys, dropping any key the loaded locale does not have: a key
+ * identifier is never shown, and never sent as a question.
  */
-export const SUGGESTED_QUESTIONS = [
-  i18n.t("assistant.questions.q05"),
-  i18n.t("assistant.questions.q06"),
-  i18n.t("assistant.questions.q07"),
-  i18n.t("assistant.questions.q08"),
-];
+function translateQuestions(keys: string[], translate: (key: string) => string): string[] {
+  return keys.filter((key) => i18n.exists(key)).map((key) => translate(key));
+}
 
 export interface SuggestedQuestionsInput {
   /** Route context at this moment. */
@@ -51,50 +57,55 @@ export interface SuggestedQuestionsInput {
   isStale?: (turn: AssistantTurn) => boolean;
   /** Max number to expose (default 4). */
   limit?: number;
+  /**
+   * Translates a question key. Pass the component's `t` so the questions follow a language
+   * change; defaults to the i18n instance's current language.
+   */
+  translate?: (key: string) => string;
 }
 
 function dedupe(list: string[]): string[] {
   return Array.from(new Set(list));
 }
 
-/** Initial questions chosen by context alone (no conversation turn yet). */
+/** Initial question keys chosen by context alone (no conversation turn yet). */
 function initialQuestions(context: AssistantContext): string[] {
   // D. Quality-specific only when Quality context "actually" exists.
   if (context.page === "quality" && (context.runId || context.datasetId)) {
     return [
-      i18n.t("assistant.questions.q09"),
-      i18n.t("assistant.questions.q10"),
-      i18n.t("assistant.questions.q11"),
+      "assistant.questions.q09",
+      "assistant.questions.q10",
+      "assistant.questions.q11",
     ];
   }
   // Silver/Gold stage — columns/SQL.
   if (context.stage === "silver" || context.stage === "gold") {
     return [
-      i18n.t("assistant.questions.q12"),
-      i18n.t("assistant.questions.q13"),
-      i18n.t("assistant.questions.q14"),
+      "assistant.questions.q12",
+      "assistant.questions.q13",
+      "assistant.questions.q14",
     ];
   }
   // C. Run/failure questions only when Run context exists.
   if (context.runId) {
     return [
-      i18n.t("assistant.questions.q15"),
-      i18n.t("assistant.questions.q16"),
-      i18n.t("assistant.questions.q17"),
-      i18n.t("assistant.questions.q18"),
+      "assistant.questions.q15",
+      "assistant.questions.q16",
+      "assistant.questions.q17",
+      "assistant.questions.q18",
     ];
   }
   // B. Dataset-specific only when Dataset context exists.
   if (context.datasetId) {
     return [
-      i18n.t("assistant.questions.q19"),
-      i18n.t("assistant.questions.q20"),
-      i18n.t("assistant.questions.q21"),
-      i18n.t("assistant.questions.q22"),
+      "assistant.questions.q19",
+      "assistant.questions.q20",
+      "assistant.questions.q21",
+      "assistant.questions.q22",
     ];
   }
   // A. No context at all.
-  return START_QUESTIONS;
+  return START_QUESTION_KEYS;
 }
 
 /** Most recent "answered" turn that doesn't mismatch current context. */
@@ -111,7 +122,7 @@ function lastAnsweredTurn(
   return undefined;
 }
 
-/** Follow-up questions chosen from recent turn's structured cues. */
+/** Follow-up question keys chosen from recent turn's structured cues. */
 function followUpQuestions(turn: AssistantTurn, context: AssistantContext): string[] {
   const response = turn.response;
   const evidence = turn.evidence;
@@ -119,9 +130,9 @@ function followUpQuestions(turn: AssistantTurn, context: AssistantContext): stri
 
   if (response?.generatedSql) {
     out.push(
-      i18n.t("assistant.questions.q23"),
-      i18n.t("assistant.questions.q24"),
-      i18n.t("assistant.questions.q25"),
+      "assistant.questions.q23",
+      "assistant.questions.q24",
+      "assistant.questions.q25",
     );
   }
 
@@ -132,41 +143,41 @@ function followUpQuestions(turn: AssistantTurn, context: AssistantContext): stri
     quality.results.some((result) => result.status === "warn" || result.status === "fail");
   if (hasQualityIssue) {
     out.push(
-      i18n.t("assistant.questions.q26"),
-      i18n.t("assistant.questions.q27"),
+      "assistant.questions.q26",
+      "assistant.questions.q27",
     );
   }
 
   // Data exploration/recommendation nature — catalog evidence present or dataset/run not yet set.
   if (evidence?.catalog || (!context.datasetId && !context.runId)) {
     out.push(
-      i18n.t("assistant.questions.q28"),
-      i18n.t("assistant.questions.q29"),
-      i18n.t("assistant.questions.q30"),
-      i18n.t("assistant.questions.q31"),
+      "assistant.questions.q28",
+      "assistant.questions.q29",
+      "assistant.questions.q30",
+      "assistant.questions.q31",
     );
   }
 
   if (evidence?.dataset) {
     out.push(
-      i18n.t("assistant.questions.q32"),
-      i18n.t("assistant.questions.q33"),
+      "assistant.questions.q32",
+      "assistant.questions.q33",
     );
   }
 
   if (evidence?.stage || (evidence?.recentRuns?.length ?? 0) > 0 || context.runId) {
     out.push(
-      i18n.t("assistant.questions.q34"),
-      i18n.t("assistant.questions.q16"),
+      "assistant.questions.q34",
+      "assistant.questions.q16",
     );
   }
 
   // Structural cues insufficient — fallback to generic follow-up concretizing recent question.
   if (out.length === 0) {
     out.push(
-      i18n.t("assistant.questions.q35"),
-      i18n.t("assistant.questions.q36"),
-      i18n.t("assistant.questions.q37"),
+      "assistant.questions.q35",
+      "assistant.questions.q36",
+      "assistant.questions.q37",
     );
   }
 
@@ -181,12 +192,12 @@ function followUpQuestions(turn: AssistantTurn, context: AssistantContext): stri
  * - Result deduplicated and trimmed to `limit` (default 4).
  */
 export function getSuggestedQuestions(input: SuggestedQuestionsInput): string[] {
-  const { context, turns, isStale, limit = 4 } = input;
+  const { context, turns, isStale, limit = 4, translate = (key: string) => i18n.t(key) } = input;
 
   const recent = lastAnsweredTurn(turns, isStale);
   const questions = recent
     ? followUpQuestions(recent, context)
     : initialQuestions(context);
 
-  return dedupe(questions).slice(0, limit);
+  return translateQuestions(dedupe(questions), translate).slice(0, limit);
 }

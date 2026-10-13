@@ -608,8 +608,10 @@ export function AssistantContent({ compact = false }: AssistantContentProps) {
         context: session.liveContext,
         turns: session.turns,
         isStale: session.isStale,
+        translate: t,
       }),
-    [session.liveContext, session.turns, session.isStale],
+    // `t` changes with the language, so the questions are translated again on a switch (#978).
+    [session.liveContext, session.turns, session.isStale, t],
   );
 
   function changeContext(key: "stage" | "source", value?: string) {
