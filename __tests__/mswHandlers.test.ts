@@ -46,9 +46,10 @@ async function answeredVersion(path: string, datasetId: string): Promise<unknown
 
 describe("shared MSW handlers (#993)", () => {
   it("are started by one MSW server only", () => {
+    // This file names the call too, so it is left out of its own search.
     const callers = execFileSync("git", ["grep", "-l", "setupServer(", "--", "*.ts", "*.tsx"], { encoding: "utf8" })
       .split("\n")
-      .filter(Boolean);
+      .filter((file) => file && file !== "__tests__/mswHandlers.test.ts");
     expect(callers).toEqual(["vitest.setup.ts"]);
   });
 
