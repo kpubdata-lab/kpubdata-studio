@@ -112,7 +112,7 @@ describe("release-contract-drift.mjs", () => {
       const result = run(path, "v99.0.0");
 
       expect(result.status).toBe(1);
-      expect(result.stderr).toContain("Studio's schemas drift from kpubdata-builder v99.0.0");
+      expect(result.stderr).toContain("Studio's schemas do not match kpubdata-builder v99.0.0");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -114,7 +114,7 @@ function main(argv) {
   const output = `${run.stdout}\n${run.stderr}`;
   process.stdout.write(output);
   if (run.status !== 0) {
-    console.error(`::error::Studio's schemas drift from kpubdata-builder ${tag} (contract ${result.version})`);
+    console.error(`::error::Studio's schemas do not match kpubdata-builder ${tag} (contract ${result.version})`);
     return 1;
   }
   if (/Test Files\s.*skipped/.test(output)) {
