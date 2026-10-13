@@ -7,7 +7,7 @@
  * - #605: a saved draft of the wrong shape is not handed to the form; it is removed with a
  *   notice while the Ask KPubData draft and the current input stay.
  */
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AddDataPage } from "./AddDataPage";
@@ -203,5 +203,98 @@ describe("AddDataPage — saved draft of the wrong shape (#605)", () => {
     fireEvent.click(screen.getByRole("button", { name: tr("addData.draft.restore") }));
     expect(await screen.findByDisplayValue(ASK_VALUES.title)).toBeInTheDocument();
     expect(screen.queryByText(tr("addData.draft.savedCorrupt"))).toBeNull();
+  });
+});
+
+describe("AddDataPage — the save button says saved only for what was saved (#991)", () => {
+  const saveButton = () => screen.getByRole("button", { name: tr("addData.nav.saveDraft") });
+  const savedButton = () => screen.getByRole("button", { name: tr("addData.nav.saved") });
+  const typeTitle = (title: string) =>
+    fireEvent.change(screen.getByLabelText(tr("addData.configure.titleLabel")), { target: { value: title } });
+
+  it("goes back to Save draft after a typed edit, and a second save keeps the edit", async () => {
+    renderApp("/add");
+    await typeInput("처음 제목");
+
+    fireEvent.click(saveButton());
+    expect(savedButton()).toBeInTheDocument();
+    expect(loadAddDataDraft()?.title).toBe("처음 제목");
+
+    typeTitle("고친 제목");
+    // The edit is not in storage, and the button no longer claims it is.
+    expect(saveButton()).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: tr("addData.nav.saved") })).toBeNull();
+    expect(loadAddDataDraft()?.title).toBe("처음 제목");
+
+    fireEvent.click(saveButton());
+    expect(savedButton()).toBeInTheDocument();
+    expect(loadAddDataDraft()?.title).toBe("고친 제목");
+  });
+
+  it("stays saved through re-renders that change nothing, and when an edit is undone", async () => {
+    renderApp("/add");
+    await typeInput("그대로인 제목");
+    fireEvent.click(saveButton());
+
+    // Another tab's unrelated write re-renders the page; the form holds what was saved.
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: "unrelated" }));
+    });
+    expect(savedButton()).toBeInTheDocument();
+
+    typeTitle("잠깐 바꾼 제목");
+    expect(saveButton()).toBeInTheDocument();
+    typeTitle("그대로인 제목");
+    expect(savedButton()).toBeInTheDocument();
+  });
+
+  it("goes back to Save draft when the form is filled by an Ask KPubData draft rather than typed", async () => {
+    useAssistantStore.setState({ turns: [draftTurn({ page: "add-data" })] });
+    renderApp("/add");
+    await typeInput("직접 쓴 제목");
+    fireEvent.click(saveButton());
+    expect(savedButton()).toBeInTheDocument();
+
+    await approveAskDraft();
+    // Saved from this page, the draft is not offered back; only the Ask KPubData one is.
+    expect(await screen.findByText(tr("addData.draft.prompt"))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: tr("addData.draft.restore") }));
+    expect(await screen.findByDisplayValue(ASK_VALUES.title)).toBeInTheDocument();
+
+    // The generated values replaced the form; they are not what the button saved.
+    expect(saveButton()).toBeInTheDocument();
+    fireEvent.click(saveButton());
+    expect(savedButton()).toBeInTheDocument();
+    expect(loadAddDataDraft()?.title).toBe(ASK_VALUES.title);
+  });
+
+  it("does not call a restored draft saved after keeping a newer edit in storage", async () => {
+    saveAddDataDraft({ ...INITIAL_DRAFT, sourceKind: "public_api", title: "older draft" });
+    renderApp("/add");
+    await typeInput("first save");
+    fireEvent.click(saveButton());
+    expect(savedButton()).toBeInTheDocument();
+
+    typeTitle("newer input");
+    fireEvent.click(screen.getByRole("button", { name: tr("addData.draft.restore") }));
+
+    expect(titleValue()).toBe("first save");
+    expect(loadAddDataDraft()?.title).toBe("newer input");
+    expect(saveButton()).toBeInTheDocument();
+  });
+
+  it("does not say saved when browser storage refuses the write", async () => {
+    renderApp("/add");
+    await typeInput("not persisted");
+    const write = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("storage unavailable");
+    });
+    try {
+      fireEvent.click(saveButton());
+      expect(saveButton()).toBeInTheDocument();
+      expect(loadAddDataDraft()).toBeNull();
+    } finally {
+      write.mockRestore();
+    }
   });
 });
