@@ -292,9 +292,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The contract drift test against the Builder release this one pairs with, not
+      # Builder's main (#980). CI's drift check reads main, which has usually moved on
+      # from the tag the notes name. A missing tag fails the checkout; a contract
+      # Studio cannot read, one below MIN_BUILDER_API_VERSION, or one whose version is
+      # not what the notes will say fails the step. Either way no tag is written.
+      - name: Checkout Builder's contract at the paired tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: kpubdata-lab/kpubdata-builder
+          ref: ${{ steps.tag.outputs.tag }}
+          path: .builder
+          sparse-checkout: contract
+
+      - name: Builder contract drift (paired release tag)
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          API: ${{ steps.contract.outputs.api }}
+        run: >-
+          node scripts/release-contract-drift.mjs
+          --contract .builder/contract/builder-api.yaml
+          --tag "${TAG}" --expect-version "${API}"
+
       # Everything that has to be true before a tag exists. A failure here leaves no
-      # tag, no release and nothing to clean up.
+      # tag, no release and nothing to clean up. The suite runs with the paired tag's
+      # contract too, so every contract-dependent test reads that tag, not main.
       - name: Run quality gates
+        env:
+          BUILDER_CONTRACT: .builder/contract/builder-api.yaml
         run: |
           npm run lint
           npm run typecheck
