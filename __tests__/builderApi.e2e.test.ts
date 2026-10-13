@@ -11,6 +11,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { ApiError, apiFetch, builderApi } from "@/shared/lib/builderApi";
 import { mswServer } from "../vitest.setup";
+import { MOCK_BUILDER_API_VERSION } from "./msw/handlers";
 
 describe("Builder API 실제 HTTP E2E 테스트 (#104)", () => {
   /**
@@ -24,7 +25,7 @@ describe("Builder API 실제 HTTP E2E 테스트 (#104)", () => {
 
     expect(result).toEqual({
       service: "kpubdata-builder",
-      api_version: "1.0.0",
+      api_version: MOCK_BUILDER_API_VERSION,
     });
 
     // 타입 검증 (런타임)
@@ -53,7 +54,7 @@ sources:
     expect(result.status).toBe("valid");
     if (result.status === "valid") {
       expect(result.dataset_id).toBe("weather_report");
-      expect(result.api_version).toBe("1.0.0");
+      expect(result.api_version).toBe(MOCK_BUILDER_API_VERSION);
     }
   });
 
@@ -112,7 +113,7 @@ sources:
       error: null,
     });
     expect(result.manifest).toBe("output/run_123/manifest.json");
-    expect(result.api_version).toBe("1.0.0");
+    expect(result.api_version).toBe(MOCK_BUILDER_API_VERSION);
   });
 
   /**
@@ -127,7 +128,7 @@ sources:
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => JSON.stringify({ service: "kpubdata-builder", api_version: "1.0.0" }),
+      text: async () => JSON.stringify({ service: "kpubdata-builder", api_version: MOCK_BUILDER_API_VERSION }),
     } as Response);
 
     vi.stubGlobal("fetch", fetchMock);

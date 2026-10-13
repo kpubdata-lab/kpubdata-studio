@@ -9,6 +9,15 @@
 
 import { http, HttpResponse } from "msw";
 import { API_BASE } from "@/shared/config/env";
+import { MIN_BUILDER_API_VERSION } from "@/shared/lib/builderApi";
+
+/**
+ * The one `api_version` every shared mock answers with (#993). It follows Studio's
+ * contract floor, so a mock can never claim a Builder Studio would refuse. A test that
+ * needs an older or otherwise incompatible Builder overrides the route itself with
+ * `server.use()` and names that version in the test.
+ */
+export const MOCK_BUILDER_API_VERSION = MIN_BUILDER_API_VERSION;
 
 /**
  * 비동기 build job 모의 상태 시퀀스 (#245, builder #480/#482).
@@ -32,7 +41,7 @@ export const handlers = [
   http.get(`${API_BASE}/version`, () => {
     return HttpResponse.json({
       service: "kpubdata-builder",
-      api_version: "1.0.0",
+      api_version: MOCK_BUILDER_API_VERSION,
     });
   }),
 
@@ -71,7 +80,7 @@ export const handlers = [
       return HttpResponse.json({
         status: "valid" as const,
         dataset_id: "weather_report",
-        api_version: "1.0.0",
+        api_version: MOCK_BUILDER_API_VERSION,
       });
     }
 
@@ -101,7 +110,7 @@ export const handlers = [
     return HttpResponse.json({
       status: "valid" as const,
       dataset_id: "test_dataset",
-      api_version: "1.0.0",
+      api_version: MOCK_BUILDER_API_VERSION,
     });
   }),
 
@@ -172,7 +181,7 @@ export const handlers = [
           run_id: runId,
           outcomes: [],
           manifest: `output/${runId}/manifest.json`,
-          api_version: "1.16.0",
+          api_version: MOCK_BUILDER_API_VERSION,
         },
       });
     }
@@ -224,7 +233,7 @@ export const handlers = [
           },
         ],
         manifest: "output/run_123/manifest.json",
-        api_version: "1.0.0",
+        api_version: MOCK_BUILDER_API_VERSION,
       });
     }
 
@@ -243,7 +252,7 @@ export const handlers = [
             },
           ],
           manifest: "output/run_456/manifest.json",
-          api_version: "1.0.0",
+          api_version: MOCK_BUILDER_API_VERSION,
         },
         { status: 502 },
       );
@@ -255,7 +264,7 @@ export const handlers = [
       run_id: "run_default",
       outcomes: [],
       manifest: "output/run_default/manifest.json",
-      api_version: "1.0.0",
+      api_version: MOCK_BUILDER_API_VERSION,
     });
   }),
 
@@ -343,7 +352,7 @@ export const scenarioHandlers = {
     // 40초 지연 (builderApi.ts의 DEFAULT_TIMEOUT_MS=30000ms 초과)
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(HttpResponse.json({ service: "kpubdata-builder", api_version: "1.0.0" }));
+        resolve(HttpResponse.json({ service: "kpubdata-builder", api_version: MOCK_BUILDER_API_VERSION }));
       }, 40000);
     });
   }),
