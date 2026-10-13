@@ -104,7 +104,7 @@ export function AddDataPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const job = useBuildJob();
+  const job = useBuildJob("add-data");
 
   const [draft, setDraft] = useState<AddDataDraft>(INITIAL_DRAFT);
   const [step, setStep] = useState(0);

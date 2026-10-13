@@ -133,6 +133,68 @@ interface CommittedTable {
   current_snapshot?: { row_count: number | null } | null;
 }
 
+for (const boundary of ["before Builder accepts it", "after Builder accepts it, before the answer"] as const) {
+  test(`Leaving Create Table while the build is submitted ${boundary} does not lose the run or send it twice (#986) @real-builder`, async ({
+    page,
+  }) => {
+    const errors: string[] = [];
+    collectPageErrors(page, errors);
+
+    // Hold POST /builds while the user leaves: either before it reaches Builder, or after
+    // Builder has accepted it and before its answer reaches the page.
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let submits = 0;
+    await page.route("**/builds", async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      submits += 1;
+      if (boundary === "before Builder accepts it") {
+        await held;
+        return route.continue().catch(() => undefined);
+      }
+      const response = await route.fetch();
+      await held;
+      return route.fulfill({ response }).catch(() => undefined);
+    });
+
+    await openCreateTable(page);
+    await page.getByRole("button", { name: "파일 업로드" }).first().click();
+    await page.getByRole("button", { name: "다음" }).first().click();
+    await page.getByLabel("포맷 (Format)").selectOption("csv");
+    await page.getByLabel("파일").setInputFiles({
+      name: "leave-986.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from("id,name\n1,alpha\n2,beta\n", "utf8"),
+    });
+    await expect(page.getByText(/업로드 완료: leave-986\.csv/).first()).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: "다음" }).first().click();
+    await page.getByRole("button", { name: "미리보기 새로고침" }).first().click();
+    await expect(page.getByText("검증 결과 (Validation)")).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: "다음" }).first().click();
+    const buildButton = page.getByRole("button", { name: "테이블 만들기" });
+    await expect(buildButton).toBeEnabled({ timeout: 30_000 });
+    await buildButton.click();
+    await expect.poll(() => submits).toBe(1);
+
+    // Leave while the submission is held, then let it through.
+    await navigateViaShell(page, /^(Refresh History|갱신 이력)$/);
+    await expect(page.getByRole("heading", { name: /갱신 이력|Refresh History/i }).first()).toBeVisible();
+    release();
+
+    // Opened again, Create Table finds the run it started and opens it at once — so the
+    // page is not waited for at /add; nothing is resent.
+    await navigateViaShell(page, /^(Catalog|카탈로그)$/);
+    await page.getByRole("link", { name: /^(Create Table|테이블 만들기)$/ }).first().click();
+    await expect(page).toHaveURL(/\/refresh-jobs\/[^/?]+/, { timeout: 60_000 });
+    await expect(page.getByText("성공").and(page.locator(":visible")).first()).toBeVisible({ timeout: 60_000 });
+    expect(submits).toBe(1);
+
+    await expectNoPageErrors(errors);
+  });
+}
+
 /**
  * The reproduction of #837: the same public-API dataset added a second time. A public-API
  * source's table is `<table id>.<provider>.<dataset>` whatever was asked of the provider,

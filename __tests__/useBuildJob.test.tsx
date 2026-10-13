@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeBuild } from "@/features/runs/api";
-import { useBuildJob } from "@/features/runs/useBuildJob";
+import { forgetBuildSubmissionsForTests, useBuildJob } from "@/features/runs/useBuildJob";
 import type { BuildSpec } from "@/shared/lib/types";
 
 const spec: BuildSpec = {
@@ -22,6 +22,8 @@ function mockResponse(status: number, body: unknown): Response {
 }
 
 afterEach(() => {
+  // A submission left in flight by one case is kept for the screen opened next (#986).
+  forgetBuildSubmissionsForTests();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
