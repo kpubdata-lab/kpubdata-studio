@@ -48,6 +48,27 @@ test("File source 탭이 표시되고 업로드 UI가 존재한다", async ({ pa
   await expectNoPageErrors(errors);
 });
 
+test("저장된 초안을 수정하면 저장 표시가 사라지고 되돌리면 다시 나타난다 (#991)", async ({ page }) => {
+  const errors: string[] = [];
+  collectPageErrors(page, errors);
+
+  await page.goto("/add");
+  await page.getByRole("button", { name: /공공 API/ }).first().click();
+  const params = page.getByRole("textbox", { name: "요청 파라미터 (JSON)" });
+  await params.fill('{"region":"seoul"}');
+
+  const save = page.getByRole("button", { name: t("addData.nav.saveDraft") });
+  const saved = page.getByRole("button", { name: t("addData.nav.saved") });
+  await save.click();
+  await expect(saved).toBeVisible();
+
+  await params.fill('{"region":"busan"}');
+  await expect(save).toBeVisible();
+  await params.fill('{"region":"seoul"}');
+  await expect(saved).toBeVisible();
+  await expectNoPageErrors(errors);
+});
+
 test("Review 단계는 진입 전 단계를 거쳐야 한다(임의 진입 방어는 유닛 레벨 검증)", async ({
   page,
 }) => {
