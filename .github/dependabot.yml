@@ -54,8 +54,8 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
-    # The build stage's Node major follows `.nvmrc` and the CI test matrix, and is an LTS
-    # line (#981): a major bump here proposed node:25, which is neither. Minor and patch
+    # The build stage's Node major follows `.nvmrc` and the CI test matrix (#981):
+    # a major bump here proposed node:25, which neither uses. Minor and patch
     # updates within the line still come.
     ignore:
       - dependency-name: "node"

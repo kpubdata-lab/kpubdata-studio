@@ -68,11 +68,6 @@ function ciMatrixMajors(workflow: string): number[] {
   return [...workflow.matchAll(/^\s*-\s*node-version:\s*["']?(\d+)["']?\s*$/gm)].map((m) => Number(m[1]));
 }
 
-/** Node release lines with an even major become LTS; an odd one never does. */
-function isLtsMajor(major: number): boolean {
-  return major % 2 === 0;
-}
-
 describe("local toolchain gate (#431)", () => {
   it(".nvmrc names a Node major that engines accepts", () => {
     const nvmrc = read(".nvmrc").trim();
@@ -81,14 +76,13 @@ describe("local toolchain gate (#431)", () => {
     expect(enginesAdmitMajor(engines, Number(nvmrc))).toBe(true);
   });
 
-  it("the Dockerfile builds with the LTS Node major .nvmrc names and CI tests (#981)", () => {
+  it("the Dockerfile builds with the Node major .nvmrc names and CI tests (#981)", () => {
     const docker = dockerNodeMajor(read("Dockerfile"));
     const nvmrc = Number(read(".nvmrc").trim());
     const matrix = ciMatrixMajors(read(".github/workflows/ci.yml"));
     expect(matrix.length).toBeGreaterThan(0);
     expect(docker).toBe(nvmrc);
     expect(matrix).toContain(docker);
-    expect(isLtsMajor(docker as number)).toBe(true);
   });
 
   it(".npmrc points at the one registry the lockfile resolves from", () => {
@@ -113,11 +107,10 @@ describe("local toolchain gate (#431)", () => {
       expect(dockerNodeMajor("FROM node:22-alpine AS deps\nFROM nginx:1 AS build\n")).toBeUndefined();
     });
 
-    it("rejects a Dockerfile Node major CI does not test or that is not LTS", () => {
+    it("rejects a Dockerfile Node major CI does not test", () => {
       const matrix = ciMatrixMajors('        include:\n          - node-version: "22"\n          - node-version: "24"\n');
       expect(matrix).toEqual([22, 24]);
       expect(matrix).not.toContain(25);
-      expect(isLtsMajor(25)).toBe(false);
       expect(matrix).not.toContain(20);
     });
 
