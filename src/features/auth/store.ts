@@ -56,6 +56,13 @@ interface AuthState {
   providerId: AuthProviderId | null;
   /** OIDC bootstrap status. In mock/demo this is "disabled". */
   oidcStatus: OidcStatus;
+  /**
+   * The last token refresh could not reach the identity provider (#983) — a network error,
+   * a timeout or a 5xx, not a refused session. The identity is kept and nothing is signed
+   * out; requests go without a token until a refresh succeeds, which clears this.
+   */
+  identityProviderUnreachable: boolean;
+  setIdentityProviderUnreachable: (unreachable: boolean) => void;
   /** Store the generic {@link AuthProvider} (mock/#263) session as-is. */
   setSession: (session: AuthSession) => void;
   /**
@@ -84,6 +91,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   emailVerified: false,
   providerId: null,
   oidcStatus: "disabled",
+  identityProviderUnreachable: false,
   setSession: (session) =>
     set({
       token: session.token,
@@ -97,9 +105,19 @@ export const useAuthStore = create<AuthState>((set) => ({
   setOidcIdentity: ({ email, name, userId, issuer = null, emailVerified = false }) =>
     set({ token: null, email, name, userId, issuer, emailVerified, providerId: "keycloak" }),
   setOidcStatus: (oidcStatus) => set({ oidcStatus }),
+  setIdentityProviderUnreachable: (identityProviderUnreachable) => set({ identityProviderUnreachable }),
   clear: () => {
     // Provider keys held for this page load belong to the signed-in user (#652).
     forgetAllProviderKeys();
-    set({ token: null, email: null, name: null, userId: null, issuer: null, emailVerified: false, providerId: null });
+    set({
+      token: null,
+      email: null,
+      name: null,
+      userId: null,
+      issuer: null,
+      emailVerified: false,
+      providerId: null,
+      identityProviderUnreachable: false,
+    });
   },
 }));

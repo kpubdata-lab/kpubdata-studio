@@ -1581,6 +1581,7 @@
     "builderBaseUrl": "KPubData Builder API 기본 URL"
   },
   "auth": {
+    "idpUnreachable": "지금은 로그인 서비스에 연결할 수 없습니다. 로그인 상태는 유지되며, 로그인이 필요한 요청은 서비스가 다시 응답할 때까지 실패합니다.",
     "page": {
       "introLabel": "KPubData Studio 소개",
       "introTitle": "공공데이터를 신뢰할 수 있는 테이블로",

@@ -5,7 +5,7 @@
  */
 import { getOidcConfig, isOidcEnabled } from "@/shared/config/env";
 import { setAuthErrorCallback, setAuthTokenProvider } from "@/shared/lib/builderApi";
-import { getFreshToken, getKeycloak, initKeycloak } from "./keycloak";
+import { getKeycloak, initKeycloak, refreshAccessToken, type RefreshOutcome } from "./keycloak";
 import { migrateEmailOwnedStorage } from "./storageOwner";
 import { useAuthStore } from "./store";
 
@@ -16,20 +16,24 @@ export function initAuth(): void {
   // - Otherwise (mock/demo): return the token from the in-memory store. In mock
   //   mode null means unauthenticated requests.
   setAuthTokenProvider(() =>
-    isOidcEnabled() ? getFreshToken() : useAuthStore.getState().token,
+    isOidcEnabled() ? refreshAccessToken().then(tokenOf) : useAuthStore.getState().token,
   );
 
   setAuthErrorCallback(async () => {
     if (isOidcEnabled()) {
-      // Do not treat 401 as success. Try a single forced refresh; on failure mark
-      // the user unauthenticated so LoginGate prompts for re-login (no infinite retry).
-      // If refresh succeeds return true so builderApi retries the request once with
-      // the new token — the user won't see an error caused by token expiry during a request.
-      const token = await getFreshToken({ force: true });
-      if (token) return true;
-      const store = useAuthStore.getState();
-      store.clear();
-      store.setOidcStatus("unauthenticated");
+      // Do not treat 401 as success. Try a single forced refresh. If it succeeds return
+      // true so builderApi retries the request once with the new token — the user won't
+      // see an error caused by token expiry during a request. If the session was refused,
+      // mark the user unauthenticated so LoginGate prompts for re-login (no infinite
+      // retry). If the identity provider could not be reached, the session is not known
+      // to be over: keep it, and fail only this request (#983).
+      const outcome = await refreshAccessToken({ force: true });
+      if (tokenOf(outcome)) return true;
+      if (outcome.status === "ended") {
+        const store = useAuthStore.getState();
+        store.clear();
+        store.setOidcStatus("unauthenticated");
+      }
       return false;
     }
     // Mock/demo/Google paths have no session to refresh — just clear the session and
@@ -39,6 +43,15 @@ export function initAuth(): void {
   });
 
   bootstrapOidc();
+}
+
+/**
+ * The token a refresh produced, if any, recording on the way whether the identity
+ * provider could be reached (#983) so the shell can say so without signing anyone out.
+ */
+function tokenOf(outcome: RefreshOutcome): string | null {
+  useAuthStore.getState().setIdentityProviderUnreachable(outcome.status === "unavailable");
+  return outcome.status === "fresh" ? outcome.token : null;
 }
 
 /** Parse OIDC config and, if enabled, perform a check-sso to verify the session. */
@@ -72,7 +85,7 @@ function bootstrapOidc(): void {
         current.setOidcStatus("unauthenticated");
       };
       keycloak.onTokenExpired = () => {
-        void getFreshToken();
+        void refreshAccessToken().then(tokenOf);
       };
     })
     .catch(() => {
