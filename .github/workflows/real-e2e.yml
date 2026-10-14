@@ -47,6 +47,8 @@ on:
       - "scripts/run-keycloak-e2e.mjs"
       - "scripts/keycloak-realm.mjs"
       - "playwright.keycloak.config.ts"
+      # The reporter every one of the configs above loads (#995).
+      - "scripts/playwright-retry-summary.mjs"
       - ".github/workflows/real-e2e.yml"
       # Recordings the specs hold Builder's real answers to (#885): a pull request that
       # changes only a recording must run the suite that compares it with Builder.

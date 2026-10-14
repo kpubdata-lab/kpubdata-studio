@@ -217,6 +217,13 @@ test("A slow upload answering after a newer one does not replace the file chosen
   const firstHeld = new Promise<void>((resolve) => {
     releaseFirst = resolve;
   });
+  // Settles once the held request has finished one way or the other: the browser gave
+  // up on it (continuing throws), or its answer arrived in full (#995: a readiness
+  // condition rather than a fixed wait).
+  let settleFirst: () => void = () => undefined;
+  const firstSettled = new Promise<void>((resolve) => {
+    settleFirst = resolve;
+  });
   let uploadsSeen = 0;
   await page.route("**/uploads?**", async (route) => {
     if (route.request().method() !== "POST") return route.continue();
@@ -224,7 +231,13 @@ test("A slow upload answering after a newer one does not replace the file chosen
     if (uploadsSeen === 1) {
       await firstHeld;
       // The browser gave up on this request when the second file was picked.
-      return route.continue().catch(() => undefined);
+      return route
+        .continue()
+        .then(async () => {
+          await (await route.request().response())?.finished();
+        })
+        .catch(() => undefined)
+        .finally(settleFirst);
     }
     return route.continue();
   });
@@ -247,8 +260,8 @@ test("A slow upload answering after a newer one does not replace the file chosen
   await expect(page.getByText(/업로드 완료: fast-bravo\.csv/).first()).toBeVisible({ timeout: 30_000 });
 
   releaseFirst();
-  // Give the held request time to finish if it still could; the screen keeps bravo.
-  await page.waitForTimeout(1_000);
+  // Wait for the held request to finish if it still could; the screen keeps bravo.
+  await firstSettled;
   await expect(page.getByText(/업로드 완료: fast-bravo\.csv/).first()).toBeVisible();
   await expect(page.getByText(/slow-alpha\.csv/)).toHaveCount(0);
   expect(uploadsSeen).toBe(2);

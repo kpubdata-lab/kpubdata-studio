@@ -24,7 +24,8 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   retries: process.env.CI ? 1 : 0,
-  reporter: [["list"]],
+  // First-pass passes are counted apart from passes on retry (#995).
+  reporter: [["list"], ["./scripts/playwright-retry-summary.mjs", { suite: "E2E (Playwright)" }]],
   use: {
     baseURL: `http://localhost:${PREVIEW_PORT}`,
     trace: "retain-on-failure",

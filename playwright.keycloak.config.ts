@@ -15,7 +15,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: [["list"]],
+  // First-pass passes are counted apart from passes on retry (#995).
+  reporter: [["list"], ["./scripts/playwright-retry-summary.mjs", { suite: "Real-Keycloak E2E" }]],
   outputDir: "test-results/keycloak",
   use: {
     baseURL: `http://localhost:${studioPort}`,
