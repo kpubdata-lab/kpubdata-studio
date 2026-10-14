@@ -16,7 +16,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: [["list"]],
+  // First-pass passes are counted apart from passes on retry (#995).
+  reporter: [["list"], ["./scripts/playwright-retry-summary.mjs", { suite: "Multi-user E2E" }]],
   // Playwright empties its output directory when a run starts. This suite runs after the
   // single-user one, whose traces and screenshots of a failure are in `test-results/`.
   outputDir: "test-results/multi-user",

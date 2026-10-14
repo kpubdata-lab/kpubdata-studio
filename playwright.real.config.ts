@@ -13,7 +13,8 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  reporter: [["list"]],
+  // First-pass passes are counted apart from passes on retry (#995).
+  reporter: [["list"], ["./scripts/playwright-retry-summary.mjs", { suite: "Real-Builder E2E" }]],
   use: {
     baseURL: "http://localhost:5174",
     trace: "retain-on-failure",
