@@ -31,6 +31,17 @@ routes and workflows unless a necessary repair of an existing flow is explicitly
 justified and independently approved under POLICY section 1.3. Mock mode must
 not claim an operation succeeds where the real Builder policy refuses it.
 
+## Issue intake during stabilization
+
+Follow [the canonical stabilization and issue-triage policy](https://github.com/kpubdata-lab/kpubdata/blob/main/docs/governance/POLICY.md)
+(sections 1.3, 13 and 17). Before filing, search issues and PRs across the
+product family. Put extra evidence, unresolved acceptance criteria and
+same-scope review follow-ups in the original issue/PR. Open a distinct issue
+only for an independently reproducible bug, security finding or operational
+failure with different ownership or verification. Do not create new feature
+work or recurring alert responsibilities while scope is frozen. Never suppress
+a real security alert or bug report merely to reduce issue counts.
+
 ## Ground rules
 
 - Studio does not reimplement builder logic.
