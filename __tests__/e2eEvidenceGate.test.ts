@@ -157,8 +157,8 @@ describe("real-e2e.yml", () => {
     return found[0];
   };
 
-  it("runs nightly, by hand and on a pull request that changes the suite", () => {
-    expect(workflow.on.schedule).toBeDefined();
+  it("runs by hand and on a pull request while the nightly schedule is paused", () => {
+    expect(workflow.on.schedule).toBeUndefined();
     expect(workflow.on.workflow_dispatch).toBeDefined();
     expect(workflow.on.pull_request?.paths).toEqual(
       expect.arrayContaining(["e2e/real-*.spec.ts", "scripts/run-real-e2e.mjs", "playwright.real.config.ts"]),

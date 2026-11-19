@@ -6,12 +6,13 @@
 # mock-mode `E2E (Playwright)` job in ci.yml filters every one of these out, so until now
 # they ran only when someone ran them by hand.
 #
-# When it runs: every night, by hand (optionally against another Builder ref), and on a
-# pull request that changes the suite or its runner. It is not part of `CI gate`. A
+# When it runs: by hand (optionally against another Builder ref), and on a
+# pull request that changes the suite or its runner. The nightly schedule is paused
+# during the Builder-to-Engine migration (#1042). It is not part of `CI gate`. A
 # required check that only some pull requests produce leaves the others BLOCKED for ever,
 # and Builder main breaking would turn every unrelated Studio pull request red — the
-# reason Builder's cross-repo-contract.yml is not per-PR either. A nightly failure is the
-# signal; the evidence below is how it gets read.
+# reason Builder's cross-repo-contract.yml is not per-PR either. The evidence
+# below is how failures from manual and path-scoped PR runs are examined.
 #
 # Evidence: on failure the Playwright traces and page snapshots (test-results/) and the
 # runner's log with Builder's output are uploaded for 7 days — but only after
@@ -21,9 +22,7 @@
 name: Real-Builder E2E
 
 on:
-  schedule:
-    # 19:00 UTC (KST 04:00), after Builder's cross-repo run at 18:00.
-    - cron: "0 19 * * *"
+  # Nightly Builder-dependent jobs paused during migration (#1042).
   workflow_dispatch:
     inputs:
       builder_ref:
