@@ -157,8 +157,8 @@ describe("real-e2e.yml", () => {
     return found[0];
   };
 
-  it("runs nightly, by hand and on a pull request that changes the suite", () => {
-    expect(workflow.on.schedule).toBeDefined();
+  it("runs by hand and on a pull request while the nightly schedule is paused", () => {
+    expect(workflow.on.schedule).toBeUndefined();
     expect(workflow.on.workflow_dispatch).toBeDefined();
     expect(workflow.on.pull_request?.paths).toEqual(
       expect.arrayContaining(["e2e/real-*.spec.ts", "scripts/run-real-e2e.mjs", "playwright.real.config.ts"]),
@@ -286,16 +286,5 @@ describe("run-real-e2e.mjs", () => {
   it("reads Builder's output while the suite runs", () => {
     expect(source).toContain('builder.stdout.on("data"');
     expect(source).toContain('builder.stderr.on("data"');
-  });
-});
-
-describe("Real-Builder E2E trigger policy", () => {
-  it("keeps manual and PR verification without a nightly cron", () => {
-    const workflow = parse(readFileSync(join(ROOT, ".github/workflows/real-e2e.yml"), "utf8")) as {
-      on: Record<string, unknown>;
-    };
-    expect(workflow.on).not.toHaveProperty("schedule");
-    expect(workflow.on).toHaveProperty("workflow_dispatch");
-    expect(workflow.on).toHaveProperty("pull_request");
   });
 });
