@@ -288,3 +288,14 @@ describe("run-real-e2e.mjs", () => {
     expect(source).toContain('builder.stderr.on("data"');
   });
 });
+
+describe("Real-Builder E2E trigger policy", () => {
+  it("keeps manual and PR verification without a nightly cron", () => {
+    const workflow = parse(readFileSync(join(ROOT, ".github/workflows/real-e2e.yml"), "utf8")) as {
+      on: Record<string, unknown>;
+    };
+    expect(workflow.on).not.toHaveProperty("schedule");
+    expect(workflow.on).toHaveProperty("workflow_dispatch");
+    expect(workflow.on).toHaveProperty("pull_request");
+  });
+});
